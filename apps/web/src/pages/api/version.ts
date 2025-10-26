@@ -1,10 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import type { VersionInfo } from '@chefcloud/contracts';
 
-export default function handler(
-  req: NextApiRequest,
-  res: NextApiResponse<VersionInfo>
-) {
+export default function handler(_req: NextApiRequest, res: NextApiResponse<VersionInfo>) {
   res.status(200).json({
     version: '0.1.0',
     buildDate: new Date().toISOString(),

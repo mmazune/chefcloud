@@ -6,8 +6,16 @@ export default function Home() {
       <div style={{ marginTop: '2rem' }}>
         <h2>API Routes:</h2>
         <ul>
-          <li><a href="/api/health">/api/health</a></li>
-          <li><a href="/api/version">/api/version</a></li>
+          <li>
+            <a href="/api/health" target="_blank" rel="noopener noreferrer">
+              /api/health
+            </a>
+          </li>
+          <li>
+            <a href="/api/version" target="_blank" rel="noopener noreferrer">
+              /api/version
+            </a>
+          </li>
         </ul>
       </div>
     </main>

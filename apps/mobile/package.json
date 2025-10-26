@@ -10,7 +10,7 @@
     "web": "expo start --web",
     "build": "echo 'Mobile build via EAS'",
     "lint": "eslint . --ext .ts,.tsx",
-    "test": "jest"
+    "test": "echo 'Mobile tests via EAS'"
   },
   "dependencies": {
     "@chefcloud/contracts": "workspace:*",

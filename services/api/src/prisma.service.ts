@@ -1,5 +1,5 @@
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
-import { prisma } from '@chefcloud/db';
+import { prisma, PrismaClient } from '@chefcloud/db';
 
 @Injectable()
 export class PrismaService implements OnModuleInit, OnModuleDestroy {
@@ -11,7 +11,7 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
     await prisma.$disconnect();
   }
 
-  get client() {
+  get client(): PrismaClient {
     return prisma;
   }
 }
