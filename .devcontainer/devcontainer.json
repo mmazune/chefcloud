@@ -1,0 +1,62 @@
+{
+  "name": "ChefCloud",
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:1-20-bullseye",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {},
+    "ghcr.io/devcontainers-contrib/features/pnpm:2": {
+      "version": "8"
+    },
+    "ghcr.io/devcontainers/features/rust:1": {}
+  },
+  "forwardPorts": [3000, 3001, 5432, 6379, 1420],
+  "portsAttributes": {
+    "3000": {
+      "label": "Web (Next.js)",
+      "onAutoForward": "notify"
+    },
+    "3001": {
+      "label": "API (NestJS)",
+      "onAutoForward": "notify"
+    },
+    "5432": {
+      "label": "PostgreSQL"
+    },
+    "6379": {
+      "label": "Redis"
+    },
+    "1420": {
+      "label": "Desktop (Tauri)"
+    }
+  },
+  "postCreateCommand": "pnpm install",
+  "postStartCommand": "cd infra/docker && docker-compose up -d",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "Prisma.prisma",
+        "ms-azuretools.vscode-docker",
+        "tauri-apps.tauri-vscode",
+        "bradlc.vscode-tailwindcss"
+      ],
+      "settings": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+          "source.fixAll.eslint": true
+        },
+        "[typescript]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode"
+        },
+        "[typescriptreact]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode"
+        },
+        "[javascript]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode"
+        }
+      }
+    }
+  },
+  "remoteUser": "node"
+}

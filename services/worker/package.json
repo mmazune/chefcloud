@@ -1,0 +1,24 @@
+{
+  "name": "@chefcloud/worker",
+  "version": "0.1.0",
+  "private": true,
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "ts-node src/index.ts",
+    "start": "node dist/index.js",
+    "lint": "eslint . --ext .ts",
+    "test": "echo \"No tests yet\""
+  },
+  "dependencies": {
+    "@chefcloud/contracts": "workspace:*",
+    "@chefcloud/db": "workspace:*",
+    "bullmq": "^5.1.6",
+    "ioredis": "^5.3.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  }
+}

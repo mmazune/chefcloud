@@ -1,0 +1,235 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ===== Organization & Multi-tenancy =====
+
+model Org {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  branches Branch[]
+  users    User[]
+
+  @@map("orgs")
+}
+
+model Branch {
+  id        String   @id @default(cuid())
+  orgId     String
+  name      String
+  address   String?
+  timezone  String   @default("Africa/Kampala")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  org          Org           @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  tables       Table[]
+  orders       Order[]
+  auditEvents  AuditEvent[]
+  menuItems    MenuItem[]
+  categories   Category[]
+
+  @@map("branches")
+}
+
+// ===== Users & Authentication =====
+
+model User {
+  id           String    @id @default(cuid())
+  orgId        String
+  email        String    @unique
+  passwordHash String?
+  firstName    String
+  lastName     String
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  org         Org          @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  roles       Role[]
+  orders      Order[]
+  auditEvents AuditEvent[]
+
+  @@map("users")
+}
+
+model Role {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  level       Int      @default(1) // L1-L5
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users       User[]
+  permissions Permission[]
+
+  @@map("roles")
+}
+
+model Permission {
+  id          String   @id @default(cuid())
+  resource    String   // e.g., "orders", "inventory", "reports"
+  action      String   // e.g., "read", "create", "update", "delete"
+  conditions  Json?    // ABAC conditions
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  roles Role[]
+
+  @@unique([resource, action])
+  @@map("permissions")
+}
+
+// ===== Floor & Tables =====
+
+model Table {
+  id        String   @id @default(cuid())
+  branchId  String
+  number    String
+  capacity  Int      @default(4)
+  isActive  Boolean  @default(true)
+  metadata  Json?    // floor plan position, shape, etc.
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  branch Branch  @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  orders Order[]
+
+  @@unique([branchId, number])
+  @@map("tables")
+}
+
+// ===== Menu =====
+
+model Category {
+  id        String   @id @default(cuid())
+  branchId  String
+  name      String
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  branch    Branch     @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  menuItems MenuItem[]
+
+  @@map("categories")
+}
+
+model MenuItem {
+  id          String   @id @default(cuid())
+  branchId    String
+  categoryId  String?
+  name        String
+  description String?
+  price       Decimal  @db.Decimal(10, 2)
+  isAvailable Boolean  @default(true)
+  metadata    Json?    // modifiers, variations, etc.
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  branch     Branch      @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  category   Category?   @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  orderItems OrderItem[]
+
+  @@map("menu_items")
+}
+
+// ===== Orders =====
+
+model Order {
+  id           String   @id @default(cuid())
+  branchId     String
+  tableId      String?
+  userId       String
+  orderNumber  String
+  status       String   @default("open") // open, in_progress, ready, paid, cancelled
+  subtotal     Decimal  @db.Decimal(10, 2)
+  tax          Decimal  @db.Decimal(10, 2)
+  discount     Decimal  @db.Decimal(10, 2) @default(0)
+  total        Decimal  @db.Decimal(10, 2)
+  metadata     Json?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  branch     Branch      @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  table      Table?      @relation(fields: [tableId], references: [id], onDelete: SetNull)
+  user       User        @relation(fields: [userId], references: [id], onDelete: Restrict)
+  orderItems OrderItem[]
+  payments   Payment[]
+
+  @@unique([branchId, orderNumber])
+  @@map("orders")
+}
+
+model OrderItem {
+  id         String   @id @default(cuid())
+  orderId    String
+  menuItemId String
+  quantity   Int      @default(1)
+  price      Decimal  @db.Decimal(10, 2)
+  subtotal   Decimal  @db.Decimal(10, 2)
+  notes      String?
+  metadata   Json?    // modifiers, special instructions
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  order    Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  menuItem MenuItem @relation(fields: [menuItemId], references: [id], onDelete: Restrict)
+
+  @@map("order_items")
+}
+
+// ===== Payments =====
+
+model Payment {
+  id            String   @id @default(cuid())
+  orderId       String
+  amount        Decimal  @db.Decimal(10, 2)
+  method        String   // cash, momo, airtel, card
+  status        String   @default("pending") // pending, completed, failed, refunded
+  transactionId String?
+  metadata      Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("payments")
+}
+
+// ===== Audit & Compliance =====
+
+model AuditEvent {
+  id        String   @id @default(cuid())
+  branchId  String
+  userId    String?
+  action    String   // e.g., "order.created", "order.voided", "payment.completed"
+  resource  String   // table name
+  resourceId String? // record ID
+  before    Json?
+  after     Json?
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  branch Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  user   User?  @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([branchId, createdAt])
+  @@index([userId])
+  @@index([action])
+  @@map("audit_events")
+}

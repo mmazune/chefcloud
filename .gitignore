@@ -1,0 +1,48 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Testing
+coverage/
+*.lcov
+
+# Production
+dist/
+build/
+out/
+.next/
+*.tsbuildinfo
+
+# Misc
+.DS_Store
+*.pem
+*.log
+.env*.local
+.env
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# IDE
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*~
+
+# Tauri
+**/src-tauri/target/
+
+# Turbo
+.turbo
+
+# OS
+Thumbs.db

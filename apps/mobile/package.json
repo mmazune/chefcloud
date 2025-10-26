@@ -1,0 +1,28 @@
+{
+  "name": "@chefcloud/mobile",
+  "version": "0.1.0",
+  "main": "expo-router/entry",
+  "private": true,
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "build": "echo 'Mobile build via EAS'",
+    "lint": "eslint . --ext .ts,.tsx",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@chefcloud/contracts": "workspace:*",
+    "expo": "~50.0.6",
+    "expo-router": "~3.4.6",
+    "expo-status-bar": "~1.11.1",
+    "react": "18.2.0",
+    "react-native": "0.73.2"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.23.7",
+    "@types/react": "~18.2.47",
+    "typescript": "^5.3.3"
+  }
+}
