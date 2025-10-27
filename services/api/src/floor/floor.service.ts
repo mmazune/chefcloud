@@ -25,4 +25,67 @@ export class FloorService {
       data: { status: status as any },
     });
   }
+
+  async getAvailability(branchId: string, from?: string, to?: string): Promise<any> {
+    const tables = await this.prisma.client.table.findMany({
+      where: { branchId, isActive: true },
+      include: {
+        orders: {
+          where: { status: { in: ['NEW', 'SENT', 'IN_KITCHEN', 'READY', 'SERVED'] } },
+          select: { id: true, status: true },
+        },
+      },
+    });
+
+    // If no time range provided, just return current table statuses
+    if (!from || !to) {
+      return tables.map((table) => ({
+        id: table.id,
+        label: table.label,
+        capacity: table.capacity,
+        status: table.orders.length > 0 ? 'OCCUPIED' : table.status,
+      }));
+    }
+
+    // Get reservations in time range
+    const reservations = await this.prisma.client.reservation.findMany({
+      where: {
+        branchId,
+        status: { in: ['HELD', 'CONFIRMED', 'SEATED'] },
+        OR: [
+          {
+            AND: [
+              { startAt: { lte: new Date(to) } },
+              { endAt: { gt: new Date(from) } },
+            ],
+          },
+        ],
+      },
+      select: { tableId: true },
+    });
+
+    const reservedTableIds = new Set(
+      reservations.map((r) => r.tableId).filter((id): id is string => !!id),
+    );
+
+    return tables.map((table) => {
+      let status: string;
+      if (table.orders.length > 0) {
+        status = 'OCCUPIED';
+      } else if (reservedTableIds.has(table.id)) {
+        status = 'RESERVED';
+      } else if (table.status === 'RESERVED') {
+        status = 'HELD';
+      } else {
+        status = 'FREE';
+      }
+
+      return {
+        id: table.id,
+        label: table.label,
+        capacity: table.capacity,
+        status,
+      };
+    });
+  }
 }

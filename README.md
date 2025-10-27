@@ -141,7 +141,7 @@ MIT License - see [LICENSE](./LICENSE) for details.
 
 ## Authors
 
-- **Ssemakula Allan** - Product Owner
+- **Moses Mazune** - Product Owner
 - Built with GitHub Copilot
 
 ---

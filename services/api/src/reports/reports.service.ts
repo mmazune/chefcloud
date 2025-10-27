@@ -95,9 +95,11 @@ export class ReportsService {
       MOMO: 0,
     };
 
-    orders.flatMap((o) => o.payments).forEach((p) => {
-      paymentsByMethod[p.method] += Number(p.amount);
-    });
+    orders
+      .flatMap((o) => o.payments)
+      .forEach((p) => {
+        paymentsByMethod[p.method] += Number(p.amount);
+      });
 
     return {
       type: 'Z_REPORT',
@@ -106,7 +108,9 @@ export class ReportsService {
         openedAt: shift.openedAt,
         closedAt: shift.closedAt,
         openedBy: `${shift.openedBy.firstName} ${shift.openedBy.lastName}`,
-        closedBy: shift.closedBy ? `${shift.closedBy.firstName} ${shift.closedBy.lastName}` : undefined,
+        closedBy: shift.closedBy
+          ? `${shift.closedBy.firstName} ${shift.closedBy.lastName}`
+          : undefined,
         openingFloat: Number(shift.openingFloat),
         declaredCash: Number(shift.declaredCash),
         overShort: Number(shift.overShort),

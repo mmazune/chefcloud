@@ -97,4 +97,184 @@ export class AnalyticsService {
       };
     });
   }
+
+  // Anti-theft analytics
+  async getStaffVoids(from: string, to: string, branchId?: string) {
+    const startDate = new Date(from);
+    const endDate = new Date(to);
+
+    const voidedOrders = await this.prisma.client.order.findMany({
+      where: {
+        status: 'VOIDED',
+        createdAt: { gte: startDate, lte: endDate },
+        ...(branchId && { branchId }),
+      },
+      include: {
+        user: { select: { id: true, firstName: true, lastName: true } },
+      },
+    });
+
+    const voidsByUser = new Map<
+      string,
+      { userId: string; name: string; voidCount: number; totalAmount: number }
+    >();
+
+    voidedOrders.forEach((order) => {
+      const userId = order.userId;
+      const existing = voidsByUser.get(userId) || {
+        userId,
+        name: `${order.user.firstName} ${order.user.lastName}`,
+        voidCount: 0,
+        totalAmount: 0,
+      };
+      existing.voidCount += 1;
+      existing.totalAmount += Number(order.total);
+      voidsByUser.set(userId, existing);
+    });
+
+    return Array.from(voidsByUser.values()).sort(
+      (a, b) => b.voidCount - a.voidCount,
+    );
+  }
+
+  async getStaffDiscounts(from: string, to: string, branchId?: string) {
+    const startDate = new Date(from);
+    const endDate = new Date(to);
+
+    const discounts = await this.prisma.client.discount.findMany({
+      where: {
+        createdAt: { gte: startDate, lte: endDate },
+        ...(branchId && { order: { branchId } }),
+      },
+      include: {
+        createdBy: { select: { id: true, firstName: true, lastName: true } },
+      },
+    });
+
+    const discountsByUser = new Map<
+      string,
+      {
+        userId: string;
+        name: string;
+        discountCount: number;
+        totalAmount: number;
+      }
+    >();
+
+    discounts.forEach((discount) => {
+      const userId = discount.createdById;
+      const existing = discountsByUser.get(userId) || {
+        userId,
+        name: `${discount.createdBy.firstName} ${discount.createdBy.lastName}`,
+        discountCount: 0,
+        totalAmount: 0,
+      };
+      existing.discountCount += 1;
+      existing.totalAmount += Number(discount.value);
+      discountsByUser.set(userId, existing);
+    });
+
+    return Array.from(discountsByUser.values()).sort(
+      (a, b) => b.totalAmount - a.totalAmount,
+    );
+  }
+
+  async getNoDrinksRate(from: string, to: string, branchId?: string) {
+    const startDate = new Date(from);
+    const endDate = new Date(to);
+
+    const orders = await this.prisma.client.order.findMany({
+      where: {
+        status: 'CLOSED',
+        createdAt: { gte: startDate, lte: endDate },
+        ...(branchId && { branchId }),
+      },
+      include: {
+        orderItems: {
+          include: {
+            menuItem: { include: { category: true } },
+          },
+        },
+        user: { select: { id: true, firstName: true, lastName: true } },
+      },
+    });
+
+    const statsByUser = new Map<
+      string,
+      { userId: string; name: string; totalOrders: number; noDrinkOrders: number }
+    >();
+
+    orders.forEach((order) => {
+      const userId = order.userId;
+      const existing = statsByUser.get(userId) || {
+        userId,
+        name: `${order.user.firstName} ${order.user.lastName}`,
+        totalOrders: 0,
+        noDrinkOrders: 0,
+      };
+      existing.totalOrders += 1;
+
+      // Check if order has any DRINK category items
+      const hasDrinks = order.orderItems.some(
+        (item: any) => item.menuItem?.category?.type === 'DRINK',
+      );
+      if (!hasDrinks) {
+        existing.noDrinkOrders += 1;
+      }
+
+      statsByUser.set(userId, existing);
+    });
+
+    return Array.from(statsByUser.values()).map((stat) => ({
+      ...stat,
+      noDrinkRate:
+        stat.totalOrders > 0
+          ? ((stat.noDrinkOrders / stat.totalOrders) * 100).toFixed(2)
+          : '0.00',
+    }));
+  }
+
+  async getLateVoids(
+    from: string,
+    to: string,
+    thresholdMin: number,
+    branchId?: string,
+  ) {
+    const startDate = new Date(from);
+    const endDate = new Date(to);
+
+    const voidedOrders = await this.prisma.client.order.findMany({
+      where: {
+        status: 'VOIDED',
+        createdAt: { gte: startDate, lte: endDate },
+        ...(branchId && { branchId }),
+      },
+      include: {
+        user: { select: { id: true, firstName: true, lastName: true } },
+      },
+    });
+
+    // Filter for late voids (voided > thresholdMin after created)
+    const lateVoids = voidedOrders
+      .map((order) => {
+        const createdAt = order.createdAt.getTime();
+        const updatedAt = order.updatedAt.getTime();
+        const minutesSinceCreated = (updatedAt - createdAt) / (1000 * 60);
+
+        return {
+          orderId: order.id,
+          orderNumber: order.orderNumber,
+          userId: order.userId,
+          userName: `${order.user.firstName} ${order.user.lastName}`,
+          total: Number(order.total),
+          createdAt: order.createdAt,
+          voidedAt: order.updatedAt,
+          minutesSinceCreated: Math.round(minutesSinceCreated),
+        };
+      })
+      .filter((v) => v.minutesSinceCreated >= thresholdMin)
+      .sort((a, b) => b.minutesSinceCreated - a.minutesSinceCreated);
+
+    return lateVoids;
+  }
 }

@@ -37,11 +37,7 @@ export class ShiftsService {
     });
   }
 
-  async closeShift(
-    shiftId: string,
-    userId: string,
-    dto: CloseShiftDto,
-  ): Promise<any> {
+  async closeShift(shiftId: string, userId: string, dto: CloseShiftDto): Promise<any> {
     const shift = await this.prisma.client.shift.findUnique({
       where: { id: shiftId },
     });
@@ -85,10 +81,7 @@ export class ShiftsService {
     });
   }
 
-  async getShiftHistory(
-    branchId: string,
-    limit = 10,
-  ): Promise<any> {
+  async getShiftHistory(branchId: string, limit = 10): Promise<any> {
     return this.prisma.client.shift.findMany({
       where: { branchId },
       orderBy: { openedAt: 'desc' },

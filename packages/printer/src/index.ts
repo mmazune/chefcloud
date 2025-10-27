@@ -144,10 +144,7 @@ export const createReceipt = (data: ReceiptData): Buffer => {
     builder.text(`Table: ${data.tableNumber}`).newline();
   }
 
-  builder
-    .text(`Type: ${data.serviceType}`)
-    .newline()
-    .separator('-', 32);
+  builder.text(`Type: ${data.serviceType}`).newline().separator('-', 32);
 
   // Items
   data.items.forEach((item) => {
@@ -185,13 +182,7 @@ export const createReceipt = (data: ReceiptData): Buffer => {
     builder.align('center').text(data.footer).newline();
   }
 
-  builder
-    .align('center')
-    .text('Thank you for your visit!')
-    .newline()
-    .newline()
-    .newline()
-    .cut();
+  builder.align('center').text('Thank you for your visit!').newline().newline().newline().cut();
 
   return builder.build();
 };
@@ -315,9 +306,7 @@ export const createReport = (data: ReportData): Buffer => {
 
     if (data.shift.overShort !== undefined) {
       const status = data.shift.overShort >= 0 ? 'Over' : 'Short';
-      builder
-        .text(`Over/Short: ${status} ${Math.abs(data.shift.overShort).toFixed(2)}`)
-        .newline();
+      builder.text(`Over/Short: ${status} ${Math.abs(data.shift.overShort).toFixed(2)}`).newline();
     }
   }
 

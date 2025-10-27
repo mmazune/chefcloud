@@ -7,13 +7,13 @@ import { homedir } from 'os';
 describe('loadPrinterConfig', () => {
   const configDir = join(homedir(), '.chefcloud');
   const configPath = join(configDir, 'printer.json');
-  
+
   beforeEach(() => {
     // Clear environment variables
     delete process.env.PRINTER_HOST;
     delete process.env.PRINTER_PORT;
     delete process.env.PRINTER_SIMULATE;
-    
+
     // Remove config file if exists
     if (existsSync(configPath)) {
       rmSync(configPath);
@@ -25,7 +25,7 @@ describe('loadPrinterConfig', () => {
     delete process.env.PRINTER_HOST;
     delete process.env.PRINTER_PORT;
     delete process.env.PRINTER_SIMULATE;
-    
+
     if (existsSync(configPath)) {
       rmSync(configPath);
     }
@@ -66,7 +66,7 @@ describe('loadPrinterConfig', () => {
         host: '10.0.0.50',
         port: 9999,
         simulate: false,
-      })
+      }),
     );
 
     const config = loadPrinterConfig();
@@ -87,7 +87,7 @@ describe('loadPrinterConfig', () => {
       JSON.stringify({
         host: '192.168.1.1',
         // port and simulate missing
-      })
+      }),
     );
 
     const config = loadPrinterConfig();

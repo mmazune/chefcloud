@@ -87,7 +87,7 @@ describe('Auth (e2e)', () => {
         .send({
           employeeCode: 'MGR001',
           pin: '1234',
-          branchId: (await getMainBranchId()),
+          branchId: await getMainBranchId(),
         })
         .expect(200);
 
@@ -105,7 +105,7 @@ describe('Auth (e2e)', () => {
         .send({
           employeeCode: 'INVALID',
           pin: '1234',
-          branchId: (await getMainBranchId()),
+          branchId: await getMainBranchId(),
         })
         .expect(401);
     });
@@ -116,7 +116,7 @@ describe('Auth (e2e)', () => {
         .send({
           employeeCode: 'MGR001',
           pin: '9999',
-          branchId: (await getMainBranchId()),
+          branchId: await getMainBranchId(),
         })
         .expect(401);
     });
@@ -164,7 +164,7 @@ describe('Auth (e2e)', () => {
         .post('/auth/msr-swipe')
         .send({
           badgeId: 'CASHIER001',
-          branchId: (await getMainBranchId()),
+          branchId: await getMainBranchId(),
         })
         .expect(200);
 
@@ -176,12 +176,10 @@ describe('Auth (e2e)', () => {
     let accessToken: string;
 
     beforeAll(async () => {
-      const loginResponse = await request(app.getHttpServer())
-        .post('/auth/login')
-        .send({
-          email: 'owner@demo.local',
-          password: 'Owner#123',
-        });
+      const loginResponse = await request(app.getHttpServer()).post('/auth/login').send({
+        email: 'owner@demo.local',
+        password: 'Owner#123',
+      });
 
       accessToken = loginResponse.body.access_token;
     });
@@ -204,9 +202,7 @@ describe('Auth (e2e)', () => {
     });
 
     it('should reject request without token', async () => {
-      await request(app.getHttpServer())
-        .get('/me')
-        .expect(401);
+      await request(app.getHttpServer()).get('/me').expect(401);
     });
 
     it('should reject request with invalid token', async () => {
@@ -221,12 +217,10 @@ describe('Auth (e2e)', () => {
     let managerToken: string;
 
     beforeAll(async () => {
-      const loginResponse = await request(app.getHttpServer())
-        .post('/auth/login')
-        .send({
-          email: 'manager@demo.local',
-          password: 'Manager#123',
-        });
+      const loginResponse = await request(app.getHttpServer()).post('/auth/login').send({
+        email: 'manager@demo.local',
+        password: 'Manager#123',
+      });
 
       managerToken = loginResponse.body.access_token;
     });
@@ -237,7 +231,7 @@ describe('Auth (e2e)', () => {
         .set('Authorization', `Bearer ${managerToken}`)
         .send({
           name: 'Test POS Terminal',
-          branchId: (await getMainBranchId()),
+          branchId: await getMainBranchId(),
         })
         .expect(201);
 

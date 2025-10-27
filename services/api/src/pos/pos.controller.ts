@@ -1,7 +1,13 @@
 import { Controller, Post, Param, Body, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { PosService } from './pos.service';
-import { CreateOrderDto, ModifyOrderDto, VoidOrderDto, CloseOrderDto, ApplyDiscountDto } from './pos.dto';
+import {
+  CreateOrderDto,
+  ModifyOrderDto,
+  VoidOrderDto,
+  CloseOrderDto,
+  ApplyDiscountDto,
+} from './pos.dto';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
 import { User } from '../me/user.decorator';

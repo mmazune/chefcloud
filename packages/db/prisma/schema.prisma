@@ -27,6 +27,13 @@ enum TableStatus {
   CLEANING
 }
 
+enum ReservationStatus {
+  HELD
+  CONFIRMED
+  SEATED
+  CANCELLED
+}
+
 enum ItemType {
   FOOD
   DRINK
@@ -69,13 +76,17 @@ model Org {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  branches       Branch[]
-  users          User[]
-  settings       OrgSettings?
-  devices        Device[]
-  floorPlans     FloorPlan[]
-  taxCategories  TaxCategory[]
-  modifierGroups ModifierGroup[]
+  branches         Branch[]
+  users            User[]
+  settings         OrgSettings?
+  devices          Device[]
+  floorPlans       FloorPlan[]
+  taxCategories    TaxCategory[]
+  modifierGroups   ModifierGroup[]
+  anomalyEvents    AnomalyEvent[]
+  alertChannels    AlertChannel[]
+  scheduledAlerts  ScheduledAlert[]
+  reservations     Reservation[]
 
   @@map("orgs")
 }
@@ -118,6 +129,8 @@ model Branch {
   purchaseOrders PurchaseOrder[]
   goodsReceipts  GoodsReceipt[]
   wastageRecords Wastage[]
+  anomalyEvents  AnomalyEvent[]
+  reservations   Reservation[]
 
   @@index([orgId, id])
   @@map("branches")
@@ -139,17 +152,19 @@ model User {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
-  org               Org              @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  branch            Branch?          @relation(fields: [branchId], references: [id], onDelete: SetNull)
-  roles             Role[]
-  orders            Order[]
-  auditEvents       AuditEvent[]
-  employeeProfile   EmployeeProfile?
-  sessions          Session[]
-  openedShifts      Shift[]          @relation("ShiftOpenedBy")
-  closedShifts      Shift[]          @relation("ShiftClosedBy")
-  discounts         Discount[]       @relation("DiscountCreatedBy")
-  approvedDiscounts Discount[]       @relation("DiscountApprovedBy")
+  org                 Org                  @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  branch              Branch?              @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  roles               Role[]
+  orders              Order[]
+  auditEvents         AuditEvent[]
+  employeeProfile     EmployeeProfile?
+  sessions            Session[]
+  openedShifts        Shift[]              @relation("ShiftOpenedBy")
+  closedShifts        Shift[]              @relation("ShiftClosedBy")
+  discounts           Discount[]           @relation("DiscountCreatedBy")
+  approvedDiscounts   Discount[]           @relation("DiscountApprovedBy")
+  webAuthnCredentials WebAuthnCredential[]
+  anomalyEvents       AnomalyEvent[]
 
   @@index([orgId, id])
   @@map("users")
@@ -204,6 +219,24 @@ model Session {
   @@map("sessions")
 }
 
+model WebAuthnCredential {
+  id           String   @id @default(cuid())
+  userId       String
+  credentialId String   @unique // base64url encoded
+  publicKey    Bytes
+  counter      Int      @default(0)
+  deviceType   String // "singleDevice" or "multiDevice"
+  backedUp     Boolean  @default(false)
+  transports   String[] // ["usb", "nfc", "ble", "internal"]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("webauthn_credentials")
+}
+
 model FloorPlan {
   id        String   @id @default(cuid())
   orgId     String
@@ -213,8 +246,9 @@ model FloorPlan {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  org    Org     @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  tables Table[]
+  org          Org           @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  tables       Table[]
+  reservations Reservation[]
 
   @@index([orgId, id])
   @@map("floor_plans")
@@ -263,13 +297,43 @@ model Table {
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 
-  branch    Branch     @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  floorPlan FloorPlan? @relation(fields: [floorPlanId], references: [id], onDelete: SetNull)
-  orders    Order[]
+  branch       Branch        @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  floorPlan    FloorPlan?    @relation(fields: [floorPlanId], references: [id], onDelete: SetNull)
+  orders       Order[]
+  reservations Reservation[]
 
   @@unique([branchId, label])
   @@index([orgId, id])
   @@map("tables")
+}
+
+model Reservation {
+  id               String            @id @default(cuid())
+  orgId            String
+  branchId         String
+  floorPlanId      String?
+  tableId          String?
+  name             String
+  phone            String?
+  partySize        Int
+  startAt          DateTime
+  endAt            DateTime
+  status           ReservationStatus @default(HELD)
+  deposit          Decimal           @default(0) @db.Decimal(10, 2)
+  paymentIntentId  String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  org            Org            @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  branch         Branch         @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  floorPlan      FloorPlan?     @relation(fields: [floorPlanId], references: [id], onDelete: SetNull)
+  table          Table?         @relation(fields: [tableId], references: [id], onDelete: SetNull)
+  paymentIntent  PaymentIntent? @relation(fields: [paymentIntentId], references: [id], onDelete: SetNull)
+
+  @@index([orgId])
+  @@index([branchId])
+  @@index([tableId, startAt, endAt])
+  @@map("reservations")
 }
 
 // ===== Menu =====
@@ -317,12 +381,13 @@ model MenuItem {
 }
 
 model TaxCategory {
-  id        String   @id @default(cuid())
-  orgId     String
-  name      String
-  rate      Decimal  @db.Decimal(5, 2)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String   @id @default(cuid())
+  orgId         String
+  name          String
+  rate          Decimal  @db.Decimal(5, 2)
+  efirsTaxCode  String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   org       Org        @relation(fields: [orgId], references: [id], onDelete: Cascade)
   menuItems MenuItem[]
@@ -495,6 +560,58 @@ model Payment {
   @@map("payments")
 }
 
+model PaymentIntent {
+  id           String        @id @default(cuid())
+  orgId        String
+  branchId     String
+  orderId      String
+  provider     String // "MTN" | "AIRTEL" | "MOMO"
+  amount       Decimal       @db.Decimal(12, 2)
+  currency     String        @default("UGX")
+  status       String        @default("PENDING") // "PENDING" | "REQUIRES_ACTION" | "SUCCEEDED" | "FAILED" | "CANCELLED"
+  providerRef  String?
+  metadata     Json?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  reservations Reservation[]
+
+  @@index([orgId, orderId])
+  @@index([status, createdAt])
+  @@map("payment_intents")
+}
+
+model WebhookEvent {
+  id        String   @id @default(cuid())
+  provider  String // "MTN" | "AIRTEL"
+  eventType String
+  raw       Json
+  verified  Boolean  @default(false)
+  receivedAt DateTime @default(now())
+
+  @@index([provider, receivedAt])
+  @@map("webhook_events")
+}
+
+model FiscalInvoice {
+  id          String    @id @default(cuid())
+  orgId       String
+  branchId    String
+  orderId     String    @unique
+  status      String    @default("PENDING") // PENDING | SENT | FAILED
+  efirsTin    String?
+  deviceCode  String?
+  response    Json?
+  attempts    Int       @default(0)
+  lastTriedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([orgId, status])
+  @@index([status, lastTriedAt])
+  @@map("fiscal_invoices")
+}
+
 // ===== Audit & Compliance =====
 
 model AuditEvent {
@@ -516,6 +633,55 @@ model AuditEvent {
   @@index([userId])
   @@index([action])
   @@map("audit_events")
+}
+
+model AnomalyEvent {
+  id         String   @id @default(cuid())
+  orgId      String
+  branchId   String?
+  userId     String?
+  orderId    String?
+  type       String // NO_DRINKS | LATE_VOID | HEAVY_DISCOUNT | VOID_SPIKE
+  severity   String   @default("INFO") // INFO | WARN | CRITICAL
+  details    Json?
+  occurredAt DateTime @default(now())
+
+  org    Org     @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  branch Branch? @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([orgId, occurredAt])
+  @@index([branchId, type])
+  @@index([userId])
+  @@map("anomaly_events")
+}
+
+model AlertChannel {
+  id      String  @id @default(cuid())
+  orgId   String
+  type    String // EMAIL | SLACK
+  target  String // email address or webhook URL
+  enabled Boolean @default(true)
+
+  org Org @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@index([orgId])
+  @@map("alert_channels")
+}
+
+model ScheduledAlert {
+  id        String    @id @default(cuid())
+  orgId     String
+  name      String
+  cron      String
+  rule      String // VOID_SPIKE | LATE_VOID | HEAVY_DISCOUNT | NO_DRINKS_RATE
+  enabled   Boolean   @default(true)
+  lastRunAt DateTime?
+
+  org Org @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@index([orgId])
+  @@map("scheduled_alerts")
 }
 
 // ===== Inventory & Purchasing =====

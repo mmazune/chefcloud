@@ -1,15 +1,36 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Injectable, BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
-import { CreateOrderDto, ModifyOrderDto, VoidOrderDto, CloseOrderDto, ApplyDiscountDto } from './pos.dto';
+import {
+  CreateOrderDto,
+  ModifyOrderDto,
+  VoidOrderDto,
+  CloseOrderDto,
+  ApplyDiscountDto,
+} from './pos.dto';
 import { AuthHelpers } from '../auth/auth.helpers';
+import { EfrisService } from '../efris/efris.service';
 
 @Injectable()
 export class PosService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private efrisService: EfrisService,
+  ) {}
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async createOrder(dto: CreateOrderDto, userId: string, branchId: string): Promise<any> {
+  async createOrder(dto: CreateOrderDto, userId: string, branchId: string, clientOrderId?: string): Promise<any> {
+    // Check if client-provided orderId already exists
+    if (clientOrderId) {
+      const existing = await this.prisma.client.order.findUnique({
+        where: { id: clientOrderId },
+      });
+      
+      if (existing) {
+        return existing;
+      }
+    }
+
     // Fetch menu items with tax info
     const menuItemIds = dto.items.map((item) => item.menuItemId);
     const menuItems = await this.prisma.client.menuItem.findMany({
@@ -54,6 +75,7 @@ export class PosService {
     // Create order with items
     const order: any = await this.prisma.client.order.create({
       data: {
+        id: clientOrderId, // Use client-provided ID if available
         branchId,
         userId,
         orderNumber,
@@ -119,7 +141,12 @@ export class PosService {
     });
   }
 
-  async modifyOrder(orderId: string, dto: ModifyOrderDto, userId: string, branchId: string): Promise<any> {
+  async modifyOrder(
+    orderId: string,
+    dto: ModifyOrderDto,
+    userId: string,
+    branchId: string,
+  ): Promise<any> {
     const order = await this.prisma.client.order.findFirst({
       where: { id: orderId, branchId },
     });
@@ -190,7 +217,12 @@ export class PosService {
     return updatedOrder;
   }
 
-  async voidOrder(orderId: string, dto: VoidOrderDto, userId: string, branchId: string): Promise<any> {
+  async voidOrder(
+    orderId: string,
+    dto: VoidOrderDto,
+    userId: string,
+    branchId: string,
+  ): Promise<any> {
     const order = await this.prisma.client.order.findFirst({
       where: { id: orderId, branchId },
     });
@@ -249,7 +281,12 @@ export class PosService {
     return voidedOrder;
   }
 
-  async closeOrder(orderId: string, dto: CloseOrderDto, userId: string, branchId: string): Promise<any> {
+  async closeOrder(
+    orderId: string,
+    dto: CloseOrderDto,
+    userId: string,
+    branchId: string,
+  ): Promise<any> {
     const order = await this.prisma.client.order.findFirst({
       where: { id: orderId, branchId },
       include: {
@@ -286,7 +323,10 @@ export class PosService {
 
       for (const recipeIngredient of menuItem.recipeIngredients) {
         // If recipe ingredient is for a modifier, only consume if that modifier was selected
-        if (recipeIngredient.modifierOptionId && !modifierIds.includes(recipeIngredient.modifierOptionId)) {
+        if (
+          recipeIngredient.modifierOptionId &&
+          !modifierIds.includes(recipeIngredient.modifierOptionId)
+        ) {
           continue;
         }
 
@@ -364,6 +404,11 @@ export class PosService {
         resourceId: orderId,
         metadata: { paymentAmount: dto.amount },
       },
+    });
+
+    // Fire-and-forget EFRIS push
+    this.efrisService.push(orderId).catch(() => {
+      // Silently ignore errors (will be retried by worker)
     });
 
     return closedOrder;

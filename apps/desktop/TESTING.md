@@ -79,6 +79,7 @@ pnpm test
 ```
 
 Expected output:
+
 ```
 ✓ test/printer.test.ts (7 tests)
 ✓ test/printer-simulate.test.ts (3 tests)
@@ -99,15 +100,18 @@ The built application will be in `src-tauri/target/release/`.
 ## Troubleshooting
 
 ### "Can't find module @tauri-apps/api"
+
 Run `pnpm install` in the workspace root.
 
 ### Printer not responding
+
 1. Verify printer is on the network: `ping <PRINTER_IP>`
 2. Check port 9100 is open: `nc -zv <PRINTER_IP> 9100`
 3. Try simulate mode first to verify the app works
 4. Check printer supports ESC/POS protocol
 
 ### Build fails with GTK errors
+
 This is expected in Codespaces/containers without GUI support. The TypeScript code compiles successfully. For production builds, use a machine with GTK3 development libraries installed.
 
 ## Architecture

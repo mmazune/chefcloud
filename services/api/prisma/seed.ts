@@ -165,7 +165,7 @@ async function main() {
       id: 'tax-18',
       orgId: org.id,
       name: 'VAT 18%',
-      rate: 18.00,
+      rate: 18.0,
     },
   });
   console.log(`\n✅ Created tax category: ${taxCategory.name}`);

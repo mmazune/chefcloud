@@ -1,4 +1,4 @@
-import { Controller, Get, Patch, Param, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Patch, Param, Body, UseGuards, Query } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { FloorService } from './floor.service';
 import { UpdateTableStatusDto } from './floor.dto';
@@ -15,6 +15,16 @@ export class FloorController {
   @Roles('L1')
   async getFloor(@User() user: { branchId: string }): Promise<unknown> {
     return this.floorService.getFloor(user.branchId);
+  }
+
+  @Get('availability')
+  @Roles('L1')
+  async getAvailability(
+    @User() user: { branchId: string },
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+  ): Promise<unknown> {
+    return this.floorService.getAvailability(user.branchId, from, to);
   }
 }
 

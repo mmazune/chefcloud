@@ -70,7 +70,7 @@ describe('AuthHelpers', () => {
     it('should handle 6-digit PINs', async () => {
       const pin = '123456';
       const hash = await AuthHelpers.hashPin(pin);
-      
+
       const isValid = await AuthHelpers.verifyPin(hash, pin);
       expect(isValid).toBe(true);
     });

@@ -25,7 +25,11 @@ export class PurchasingController {
 
   @Post('po/:id/receive')
   @Roles('L3')
-  async receivePO(@Req() req: any, @Param('id') poId: string, @Body() dto: ReceivePODto): Promise<any> {
+  async receivePO(
+    @Req() req: any,
+    @Param('id') poId: string,
+    @Body() dto: ReceivePODto,
+  ): Promise<any> {
     return this.purchasingService.receivePO(poId, dto, req.user.orgId, req.user.branchId);
   }
 }

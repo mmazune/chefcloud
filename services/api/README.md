@@ -5,9 +5,11 @@ Enterprise-grade REST API for ChefCloud POS system.
 ## Authentication Routes
 
 ### POST /auth/login
+
 Standard email/password login.
 
 **Request:**
+
 ```json
 {
   "email": "manager@demo.local",
@@ -16,6 +18,7 @@ Standard email/password login.
 ```
 
 **Response:**
+
 ```json
 {
   "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
@@ -32,9 +35,11 @@ Standard email/password login.
 ```
 
 ### POST /auth/pin-login
+
 Terminal PIN login for quick employee access.
 
 **Request:**
+
 ```json
 {
   "branchId": "main-branch",
@@ -46,9 +51,11 @@ Terminal PIN login for quick employee access.
 **Response:** Same as /auth/login
 
 ### POST /auth/msr-swipe
+
 Magnetic stripe reader (MSR) card swipe authentication.
 
 **Request:**
+
 ```json
 {
   "badgeId": "CASHIER001",
@@ -61,14 +68,17 @@ Magnetic stripe reader (MSR) card swipe authentication.
 ## Protected Routes
 
 ### GET /me
+
 Get current user profile.
 
 **Headers:**
+
 ```
 Authorization: Bearer <access_token>
 ```
 
 **Response:**
+
 ```json
 {
   "id": "clxxxxxx",
@@ -97,14 +107,17 @@ Authorization: Bearer <access_token>
 ```
 
 ### POST /devices/register
+
 Register a new POS terminal device (requires L4 Manager or above).
 
 **Headers:**
+
 ```
 Authorization: Bearer <access_token>
 ```
 
 **Request:**
+
 ```json
 {
   "name": "Terminal 2",
@@ -113,6 +126,7 @@ Authorization: Bearer <access_token>
 ```
 
 **Response:**
+
 ```json
 {
   "id": "clxxxxxx",
@@ -126,6 +140,7 @@ Authorization: Bearer <access_token>
 ## Role-Based Access Control (RBAC)
 
 Role hierarchy (L5 can access everything):
+
 - **L1**: Waiter - Basic order entry
 - **L2**: Cashier/Supervisor - Process payments, voids
 - **L3**: Chef/Stock - Kitchen operations, inventory
@@ -137,9 +152,11 @@ Use `@Roles('L2')` decorator on routes to enforce minimum role level.
 ## Health Check
 
 ### GET /health
+
 Check API and database status.
 
 **Response:**
+
 ```json
 {
   "status": "ok",
@@ -170,17 +187,18 @@ pnpm dev
 
 ## Test Credentials (After Seeding)
 
-| Role       | Email                   | Password       | Extras              |
-|------------|-------------------------|----------------|---------------------|
-| Owner      | owner@demo.local        | Owner#123      | Full access         |
-| Manager    | manager@demo.local      | Manager#123    | PIN: 1234, Code: MGR001 |
-| Supervisor | supervisor@demo.local   | Supervisor#123 | Code: SUP001        |
-| Cashier    | cashier@demo.local      | Cashier#123    | Badge: CASHIER001   |
-| Waiter     | waiter@demo.local       | Waiter#123     | Code: W001          |
+| Role       | Email                 | Password       | Extras                  |
+| ---------- | --------------------- | -------------- | ----------------------- |
+| Owner      | owner@demo.local      | Owner#123      | Full access             |
+| Manager    | manager@demo.local    | Manager#123    | PIN: 1234, Code: MGR001 |
+| Supervisor | supervisor@demo.local | Supervisor#123 | Code: SUP001            |
+| Cashier    | cashier@demo.local    | Cashier#123    | Badge: CASHIER001       |
+| Waiter     | waiter@demo.local     | Waiter#123     | Code: W001              |
 
 ## Environment Variables
 
 See root `.env.example` for required environment variables:
+
 - `DATABASE_URL`: PostgreSQL connection string
 - `JWT_SECRET`: Secret for JWT token signing
 - `REDIS_HOST`, `REDIS_PORT`: Redis connection
@@ -189,6 +207,7 @@ See root `.env.example` for required environment variables:
 ## Audit Logging
 
 All authentication actions are automatically logged to the `audit_events` table with:
+
 - User ID
 - Branch ID
 - Action type (auth.login, auth.pin_login, auth.msr_swipe)

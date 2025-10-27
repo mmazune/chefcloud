@@ -27,12 +27,10 @@ describe('A3 POS Core (e2e)', () => {
     await app.init();
 
     // Login as waiter
-    const loginResponse = await request(app.getHttpServer())
-      .post('/auth/login')
-      .send({
-        email: 'waiter@demo.local',
-        password: 'Waiter#123',
-      });
+    const loginResponse = await request(app.getHttpServer()).post('/auth/login').send({
+      email: 'waiter@demo.local',
+      password: 'Waiter#123',
+    });
 
     authToken = loginResponse.body.access_token;
 

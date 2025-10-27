@@ -1,4 +1,12 @@
-import { IsString, IsEnum, IsNumber, IsOptional, IsArray, ValidateNested, IsBoolean } from 'class-validator';
+import {
+  IsString,
+  IsEnum,
+  IsNumber,
+  IsOptional,
+  IsArray,
+  ValidateNested,
+  IsBoolean,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class CreateMenuItemDto {

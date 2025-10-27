@@ -21,6 +21,7 @@ curl -X POST $API_URL/auth/login \
 ## Authentication
 
 ### Login (Email/Password)
+
 ```bash
 curl -X POST $API_URL/auth/login \
   -H "Content-Type: application/json" \
@@ -31,6 +32,7 @@ curl -X POST $API_URL/auth/login \
 ```
 
 ### Login (Badge ID)
+
 ```bash
 curl -X POST $API_URL/auth/login \
   -H "Content-Type: application/json" \
@@ -40,6 +42,7 @@ curl -X POST $API_URL/auth/login \
 ```
 
 ### Get Current User Profile
+
 ```bash
 curl $API_URL/me \
   -H "Authorization: Bearer $TOKEN"
@@ -50,6 +53,7 @@ curl $API_URL/me \
 ## Menu Management
 
 ### Create Menu Item (L4+)
+
 ```bash
 curl -X POST $API_URL/menu/items \
   -H "Authorization: Bearer $TOKEN" \
@@ -64,12 +68,14 @@ curl -X POST $API_URL/menu/items \
 ```
 
 ### List Menu Items (L1+)
+
 ```bash
 curl $API_URL/menu/items \
   -H "Authorization: Bearer $TOKEN"
 ```
 
 ### Create Modifier Group (L4+)
+
 ```bash
 curl -X POST $API_URL/menu/modifier-groups \
   -H "Authorization: Bearer $TOKEN" \
@@ -91,12 +97,14 @@ curl -X POST $API_URL/menu/modifier-groups \
 ## Floor & Table Management
 
 ### List Tables (L1+)
+
 ```bash
 curl $API_URL/floor/tables \
   -H "Authorization: Bearer $TOKEN"
 ```
 
 ### Update Table Status (L2+)
+
 ```bash
 curl -X PATCH $API_URL/floor/tables/TABLE_ID/status \
   -H "Authorization: Bearer $TOKEN" \
@@ -111,6 +119,7 @@ curl -X PATCH $API_URL/floor/tables/TABLE_ID/status \
 ## POS - Order Management
 
 ### Create Order (L2+)
+
 ```bash
 curl -X POST $API_URL/pos/orders \
   -H "Authorization: Bearer $TOKEN" \
@@ -135,12 +144,14 @@ curl -X POST $API_URL/pos/orders \
 ```
 
 ### Send Order to Kitchen (L2+)
+
 ```bash
 curl -X POST $API_URL/pos/orders/ORDER_ID/send \
   -H "Authorization: Bearer $TOKEN"
 ```
 
 ### Modify Order (Add Items) (L2+)
+
 ```bash
 curl -X POST $API_URL/pos/orders/ORDER_ID/modify \
   -H "Authorization: Bearer $TOKEN" \
@@ -156,6 +167,7 @@ curl -X POST $API_URL/pos/orders/ORDER_ID/modify \
 ```
 
 ### Void Order (L3+ or Manager PIN) (L2+)
+
 ```bash
 curl -X POST $API_URL/pos/orders/ORDER_ID/void \
   -H "Authorization: Bearer $TOKEN" \
@@ -166,6 +178,7 @@ curl -X POST $API_URL/pos/orders/ORDER_ID/void \
 ```
 
 ### Apply Discount (L3+ or Manager PIN) (L2+)
+
 ```bash
 curl -X POST $API_URL/pos/orders/ORDER_ID/discount \
   -H "Authorization: Bearer $TOKEN" \
@@ -178,7 +191,9 @@ curl -X POST $API_URL/pos/orders/ORDER_ID/discount \
 ```
 
 ### Close Order (Payment) (L2+)
+
 **Note:** This triggers FIFO inventory consumption automatically.
+
 ```bash
 curl -X POST $API_URL/pos/orders/ORDER_ID/close \
   -H "Authorization: Bearer $TOKEN" \
@@ -193,12 +208,14 @@ curl -X POST $API_URL/pos/orders/ORDER_ID/close \
 ## KDS (Kitchen Display System)
 
 ### Get KDS Tickets by Station (L1+)
+
 ```bash
 curl $API_URL/kds/tickets?station=GRILL \
   -H "Authorization: Bearer $TOKEN"
 ```
 
 ### Update Ticket Status (L1+)
+
 ```bash
 curl -X PATCH $API_URL/kds/tickets/TICKET_ID/status \
   -H "Authorization: Bearer $TOKEN" \
@@ -213,6 +230,7 @@ curl -X PATCH $API_URL/kds/tickets/TICKET_ID/status \
 ## Shifts
 
 ### Start Shift (L2+)
+
 ```bash
 curl -X POST $API_URL/shifts/start \
   -H "Authorization: Bearer $TOKEN" \
@@ -223,6 +241,7 @@ curl -X POST $API_URL/shifts/start \
 ```
 
 ### Close Shift (L2+)
+
 ```bash
 curl -X POST $API_URL/shifts/close \
   -H "Authorization: Bearer $TOKEN" \
@@ -233,6 +252,7 @@ curl -X POST $API_URL/shifts/close \
 ```
 
 ### Get Active Shift (L2+)
+
 ```bash
 curl $API_URL/shifts/active \
   -H "Authorization: Bearer $TOKEN"
@@ -243,12 +263,14 @@ curl $API_URL/shifts/active \
 ## Reports
 
 ### X Report (Mid-Shift) (L3+)
+
 ```bash
 curl $API_URL/reports/x-report \
   -H "Authorization: Bearer $TOKEN"
 ```
 
 ### Z Report (End-of-Day) (L4+)
+
 ```bash
 curl $API_URL/reports/z-report \
   -H "Authorization: Bearer $TOKEN"
@@ -259,6 +281,7 @@ curl $API_URL/reports/z-report \
 ## Analytics
 
 ### Sales by Period (L3+)
+
 ```bash
 # Today
 curl "$API_URL/analytics/sales?period=today" \
@@ -278,6 +301,7 @@ curl "$API_URL/analytics/sales?start=2025-01-01&end=2025-01-31" \
 ```
 
 ### Top Selling Items (L3+)
+
 ```bash
 curl "$API_URL/analytics/top-items?limit=10&period=week" \
   -H "Authorization: Bearer $TOKEN"
@@ -288,6 +312,7 @@ curl "$API_URL/analytics/top-items?limit=10&period=week" \
 ## Inventory Management (M2)
 
 ### Create Inventory Item (L4+)
+
 ```bash
 curl -X POST $API_URL/inventory/items \
   -H "Authorization: Bearer $TOKEN" \
@@ -303,18 +328,21 @@ curl -X POST $API_URL/inventory/items \
 ```
 
 ### List Inventory Items (L3+)
+
 ```bash
 curl $API_URL/inventory/items \
   -H "Authorization: Bearer $TOKEN"
 ```
 
 ### Get On-Hand Stock Levels (L3+)
+
 ```bash
 curl $API_URL/inventory/levels \
   -H "Authorization: Bearer $TOKEN"
 ```
 
 ### Create/Update Recipe for Menu Item (L4+)
+
 ```bash
 curl -X POST $API_URL/inventory/recipes/MENU_ITEM_ID \
   -H "Authorization: Bearer $TOKEN" \
@@ -342,12 +370,14 @@ curl -X POST $API_URL/inventory/recipes/MENU_ITEM_ID \
 ```
 
 ### Get Recipe for Menu Item (L3+)
+
 ```bash
 curl $API_URL/inventory/recipes/MENU_ITEM_ID \
   -H "Authorization: Bearer $TOKEN"
 ```
 
 ### Record Wastage (L3+)
+
 ```bash
 curl -X POST $API_URL/inventory/wastage \
   -H "Authorization: Bearer $TOKEN" \
@@ -365,6 +395,7 @@ curl -X POST $API_URL/inventory/wastage \
 ## Purchasing (M2)
 
 ### Create Purchase Order (L4+)
+
 ```bash
 curl -X POST $API_URL/purchasing/po \
   -H "Authorization: Bearer $TOKEN" \
@@ -388,13 +419,16 @@ curl -X POST $API_URL/purchasing/po \
 ```
 
 ### Place Purchase Order (Send to Supplier) (L4+)
+
 ```bash
 curl -X POST $API_URL/purchasing/po/PO_ID/place \
   -H "Authorization: Bearer $TOKEN"
 ```
 
 ### Receive Purchase Order (L3+)
+
 **Note:** Creates GoodsReceipt and StockBatch records for FIFO tracking.
+
 ```bash
 curl -X POST $API_URL/purchasing/po/PO_ID/receive \
   -H "Authorization: Bearer $TOKEN" \
@@ -416,6 +450,7 @@ curl -X POST $API_URL/purchasing/po/PO_ID/receive \
 ## Device Management
 
 ### Register Device (L4+)
+
 ```bash
 curl -X POST $API_URL/device/register \
   -H "Authorization: Bearer $TOKEN" \
@@ -430,6 +465,7 @@ curl -X POST $API_URL/device/register \
 ## Health Check
 
 ### API Health
+
 ```bash
 curl $API_URL/health
 ```
@@ -439,6 +475,7 @@ curl $API_URL/health
 ## Notes
 
 ### Role Levels (Required Permissions)
+
 - **L1**: Staff (read basic menu, KDS)
 - **L2**: Cashier/Waiter (create orders, close orders, start/close shifts)
 - **L3**: Supervisor (void orders, view reports, record wastage, receive POs)
@@ -446,10 +483,13 @@ curl $API_URL/health
 - **L5**: Owner (full access)
 
 ### Manager PIN Override
+
 High-value operations (void > 50000, large discounts) can be authorized by a manager PIN instead of requiring L3/L4 role.
 
 ### FIFO Inventory Consumption
+
 When an order is **closed** (payment completed), the system:
+
 1. Fetches the recipe for each menu item
 2. Checks for modifier-specific ingredients
 3. Consumes ingredients from oldest stock batches first (FIFO)
@@ -457,7 +497,9 @@ When an order is **closed** (payment completed), the system:
 5. Creates audit events for anomalies
 
 ### Seed Data
+
 Run `pnpm seed` in `services/api` to populate:
+
 - Users (owner, manager, supervisor, cashier, waiter)
 - Menu items (Burger, Fries, Coke)
 - Modifier group ("Add Cheese", "No Onions")

@@ -13,7 +13,10 @@ export class RecipesController {
 
   @Post(':menuItemId')
   @Roles('L4')
-  async upsertRecipe(@Param('menuItemId') menuItemId: string, @Body() dto: UpsertRecipeDto): Promise<any> {
+  async upsertRecipe(
+    @Param('menuItemId') menuItemId: string,
+    @Body() dto: UpsertRecipeDto,
+  ): Promise<any> {
     return this.recipesService.upsertRecipe(menuItemId, dto);
   }
 
