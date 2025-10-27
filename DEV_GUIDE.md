@@ -170,7 +170,158 @@ chefcloud/
 └── docs/               # Documentation
 ```
 
-### 9. Troubleshooting
+### 9. Inventory Management (M2)
+
+ChefCloud includes a complete inventory management system with FIFO consumption, recipe management, purchasing, and wastage tracking.
+
+#### 9.1 Inventory Items
+
+Create inventory items with SKU, units, and reorder levels:
+
+```bash
+# Create inventory item (L4+ required)
+curl -X POST http://localhost:3001/inventory/items \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "sku": "TOMATO-001",
+    "name": "Tomatoes",
+    "unit": "kg",
+    "category": "vegetable",
+    "reorderLevel": 10,
+    "reorderQty": 25
+  }'
+
+# Get all inventory items (L3+ required)
+curl http://localhost:3001/inventory/items \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+# Get on-hand stock levels (L3+ required)
+curl http://localhost:3001/inventory/levels \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+#### 9.2 Recipes
+
+Link menu items to inventory ingredients with waste percentages:
+
+```bash
+# Create/Update recipe for a menu item (L4+ required)
+curl -X POST http://localhost:3001/inventory/recipes/MENU_ITEM_ID \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "ingredients": [
+      {
+        "itemId": "INVENTORY_ITEM_ID",
+        "qtyPerUnit": 0.2,
+        "wastePct": 10
+      },
+      {
+        "itemId": "CHEESE_ITEM_ID",
+        "qtyPerUnit": 0.05,
+        "wastePct": 0,
+        "modifierOptionId": "ADD_CHEESE_MODIFIER_ID"
+      }
+    ]
+  }'
+
+# Get recipe for a menu item (L3+ required)
+curl http://localhost:3001/inventory/recipes/MENU_ITEM_ID \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+**Notes:**
+
+- Recipes support modifier-specific ingredients (e.g., cheese only consumed when "Add Cheese" is selected)
+- `wastePct` is the expected waste percentage during preparation
+- Ingredients are consumed via FIFO when orders are closed
+
+#### 9.3 Purchase Orders
+
+Manage the PO lifecycle: draft → placed → received:
+
+```bash
+# Create PO in draft status (L4+ required)
+curl -X POST http://localhost:3001/purchasing/po \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "supplierId": "SUPPLIER_ID",
+    "items": [
+      {
+        "inventoryItemId": "ITEM_ID",
+        "qtyOrdered": 100,
+        "unitCost": 500
+      }
+    ],
+    "notes": "Weekly restocking"
+  }'
+
+# Place PO (send to supplier) (L4+ required)
+curl -X POST http://localhost:3001/purchasing/po/PO_ID/place \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+# Receive PO (creates goods receipt & stock batches) (L3+ required)
+curl -X POST http://localhost:3001/purchasing/po/PO_ID/receive \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "items": [
+      {
+        "poItemId": "PO_ITEM_ID",
+        "qtyReceived": 98,
+        "batchNumber": "BATCH-2025-01",
+        "expiryDate": "2025-12-31"
+      }
+    ]
+  }'
+```
+
+**Notes:**
+
+- PO numbers are auto-generated (format: `PO-YYYYMMDD-XXX`)
+- Receiving a PO creates:
+  - GoodsReceipt record
+  - GoodsReceiptLine for each item
+  - StockBatch with receivedQty = remainingQty
+- Stock batches enable FIFO consumption tracking
+
+#### 9.4 Wastage Tracking
+
+Record waste with reasons:
+
+```bash
+# Record wastage (L3+ required)
+curl -X POST http://localhost:3001/inventory/wastage \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "itemId": "INVENTORY_ITEM_ID",
+    "qty": 2.5,
+    "reason": "Expired stock",
+    "reportedBy": "John Doe"
+  }'
+```
+
+#### 9.5 FIFO Consumption
+
+When an order is closed, the system automatically:
+
+1. Fetches the recipe for each menu item ordered
+2. Checks for modifier-specific ingredients (e.g., "Add Cheese")
+3. Consumes ingredients from oldest stock batches first (FIFO)
+4. Flags `NEGATIVE_STOCK` anomaly if insufficient inventory
+5. Creates audit events for stock anomalies
+
+**Example:** Closing an order with 2 burgers (with cheese) automatically:
+
+- Consumes 2 buns (oldest batch first)
+- Consumes 2 patties (oldest batch first)
+- Consumes 0.1 kg cheese (if "Add Cheese" modifier selected)
+- Flags anomalies if any ingredient runs out
+
+### 10. Troubleshooting
 
 **Build fails:**
 

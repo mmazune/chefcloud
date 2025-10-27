@@ -10,6 +10,56 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ===== Enums =====
+
+enum RoleLevel {
+  L1 // Waiter
+  L2 // Cashier/Supervisor
+  L3 // Chef/Stock
+  L4 // Manager/Accountant
+  L5 // Owner/Admin
+}
+
+enum TableStatus {
+  AVAILABLE
+  OCCUPIED
+  RESERVED
+  CLEANING
+}
+
+enum ItemType {
+  FOOD
+  DRINK
+}
+
+enum OrderStatus {
+  NEW
+  SENT
+  IN_KITCHEN
+  READY
+  SERVED
+  VOIDED
+  CLOSED
+}
+
+enum ServiceType {
+  DINE_IN
+  TAKEAWAY
+}
+
+enum StationTag {
+  GRILL
+  FRYER
+  BAR
+  OTHER
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  MOMO
+}
+
 // ===== Organization & Multi-tenancy =====
 
 model Org {
@@ -19,10 +69,31 @@ model Org {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  branches Branch[]
-  users    User[]
+  branches       Branch[]
+  users          User[]
+  settings       OrgSettings?
+  devices        Device[]
+  floorPlans     FloorPlan[]
+  taxCategories  TaxCategory[]
+  modifierGroups ModifierGroup[]
 
   @@map("orgs")
+}
+
+model OrgSettings {
+  id                        String   @id @default(cuid())
+  orgId                     String   @unique
+  vatPercent                Decimal  @default(18.00) @db.Decimal(5, 2)
+  currency                  String   @default("UGX")
+  discountApprovalThreshold Decimal  @default(5000) @db.Decimal(10, 2)
+  receiptFooter             String?
+  metadata                  Json?
+  createdAt                 DateTime @default(now())
+  updatedAt                 DateTime @updatedAt
+
+  org Org @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@map("org_settings")
 }
 
 model Branch {
@@ -34,13 +105,21 @@ model Branch {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  org          Org           @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  tables       Table[]
-  orders       Order[]
-  auditEvents  AuditEvent[]
-  menuItems    MenuItem[]
-  categories   Category[]
+  org            Org             @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  tables         Table[]
+  orders         Order[]
+  auditEvents    AuditEvent[]
+  menuItems      MenuItem[]
+  categories     Category[]
+  users          User[]
+  devices        Device[]
+  shifts         Shift[]
+  stockBatches   StockBatch[]
+  purchaseOrders PurchaseOrder[]
+  goodsReceipts  GoodsReceipt[]
+  wastageRecords Wastage[]
 
+  @@index([orgId, id])
   @@map("branches")
 }
 
@@ -49,20 +128,96 @@ model Branch {
 model User {
   id           String    @id @default(cuid())
   orgId        String
+  branchId     String?
   email        String    @unique
   passwordHash String?
+  pinHash      String?
   firstName    String
   lastName     String
+  roleLevel    RoleLevel @default(L1)
   isActive     Boolean   @default(true)
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
-  org         Org          @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  roles       Role[]
-  orders      Order[]
-  auditEvents AuditEvent[]
+  org               Org              @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  branch            Branch?          @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  roles             Role[]
+  orders            Order[]
+  auditEvents       AuditEvent[]
+  employeeProfile   EmployeeProfile?
+  sessions          Session[]
+  openedShifts      Shift[]          @relation("ShiftOpenedBy")
+  closedShifts      Shift[]          @relation("ShiftClosedBy")
+  discounts         Discount[]       @relation("DiscountCreatedBy")
+  approvedDiscounts Discount[]       @relation("DiscountApprovedBy")
 
+  @@index([orgId, id])
   @@map("users")
+}
+
+model EmployeeProfile {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  employeeCode String   @unique
+  badgeId      String?  @unique
+  metadata     Json?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("employee_profiles")
+}
+
+model Device {
+  id        String   @id @default(cuid())
+  orgId     String
+  branchId  String
+  name      String
+  deviceKey String   @unique
+  isActive  Boolean  @default(true)
+  metadata  Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  org      Org       @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  branch   Branch    @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  sessions Session[]
+
+  @@index([orgId, id])
+  @@map("devices")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  deviceId  String?
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  device Device? @relation(fields: [deviceId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("sessions")
+}
+
+model FloorPlan {
+  id        String   @id @default(cuid())
+  orgId     String
+  name      String
+  data      Json
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  org    Org     @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  tables Table[]
+
+  @@index([orgId, id])
+  @@map("floor_plans")
 }
 
 model Role {
@@ -80,12 +235,12 @@ model Role {
 }
 
 model Permission {
-  id          String   @id @default(cuid())
-  resource    String   // e.g., "orders", "inventory", "reports"
-  action      String   // e.g., "read", "create", "update", "delete"
-  conditions  Json?    // ABAC conditions
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         String   @id @default(cuid())
+  resource   String // e.g., "orders", "inventory", "reports"
+  action     String // e.g., "read", "create", "update", "delete"
+  conditions Json? // ABAC conditions
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   roles Role[]
 
@@ -96,19 +251,24 @@ model Permission {
 // ===== Floor & Tables =====
 
 model Table {
-  id        String   @id @default(cuid())
-  branchId  String
-  number    String
-  capacity  Int      @default(4)
-  isActive  Boolean  @default(true)
-  metadata  Json?    // floor plan position, shape, etc.
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String      @id @default(cuid())
+  orgId       String
+  branchId    String
+  floorPlanId String?
+  label       String
+  capacity    Int         @default(4)
+  status      TableStatus @default(AVAILABLE)
+  isActive    Boolean     @default(true)
+  metadata    Json? // floor plan position, shape, etc.
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
 
-  branch Branch  @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  orders Order[]
+  branch    Branch     @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  floorPlan FloorPlan? @relation(fields: [floorPlanId], references: [id], onDelete: SetNull)
+  orders    Order[]
 
-  @@unique([branchId, number])
+  @@unique([branchId, label])
+  @@index([orgId, id])
   @@map("tables")
 }
 
@@ -126,53 +286,177 @@ model Category {
   branch    Branch     @relation(fields: [branchId], references: [id], onDelete: Cascade)
   menuItems MenuItem[]
 
+  @@index([branchId])
   @@map("categories")
 }
 
 model MenuItem {
-  id          String   @id @default(cuid())
-  branchId    String
-  categoryId  String?
-  name        String
-  description String?
-  price       Decimal  @db.Decimal(10, 2)
-  isAvailable Boolean  @default(true)
-  metadata    Json?    // modifiers, variations, etc.
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id            String     @id @default(cuid())
+  branchId      String
+  categoryId    String?
+  name          String
+  description   String?
+  itemType      ItemType
+  station       StationTag @default(OTHER)
+  price         Decimal    @db.Decimal(10, 2)
+  taxCategoryId String?
+  isAvailable   Boolean    @default(true)
+  metadata      Json? // variations, etc.
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
 
-  branch     Branch      @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  category   Category?   @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-  orderItems OrderItem[]
+  branch            Branch             @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  category          Category?          @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  taxCategory       TaxCategory?       @relation(fields: [taxCategoryId], references: [id], onDelete: SetNull)
+  orderItems        OrderItem[]
+  modifierGroups    MenuItemOnGroup[]
+  recipeIngredients RecipeIngredient[]
 
+  @@index([branchId])
   @@map("menu_items")
+}
+
+model TaxCategory {
+  id        String   @id @default(cuid())
+  orgId     String
+  name      String
+  rate      Decimal  @db.Decimal(5, 2)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  org       Org        @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  menuItems MenuItem[]
+
+  @@map("tax_categories")
+}
+
+model ModifierGroup {
+  id        String   @id @default(cuid())
+  orgId     String
+  name      String
+  min       Int      @default(0)
+  max       Int      @default(0)
+  required  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  org       Org               @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  options   ModifierOption[]
+  menuItems MenuItemOnGroup[]
+
+  @@map("modifier_groups")
+}
+
+model ModifierOption {
+  id         String   @id @default(cuid())
+  groupId    String
+  name       String
+  priceDelta Decimal  @db.Decimal(10, 2)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  group             ModifierGroup      @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  recipeIngredients RecipeIngredient[]
+
+  @@map("modifier_options")
+}
+
+model MenuItemOnGroup {
+  id      String @id @default(cuid())
+  itemId  String
+  groupId String
+
+  item  MenuItem      @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  group ModifierGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@unique([itemId, groupId])
+  @@map("menu_item_on_group")
 }
 
 // ===== Orders =====
 
 model Order {
-  id           String   @id @default(cuid())
+  id           String      @id @default(cuid())
   branchId     String
   tableId      String?
   userId       String
   orderNumber  String
-  status       String   @default("open") // open, in_progress, ready, paid, cancelled
-  subtotal     Decimal  @db.Decimal(10, 2)
-  tax          Decimal  @db.Decimal(10, 2)
-  discount     Decimal  @db.Decimal(10, 2) @default(0)
-  total        Decimal  @db.Decimal(10, 2)
+  status       OrderStatus @default(NEW)
+  serviceType  ServiceType @default(DINE_IN)
+  subtotal     Decimal     @default(0) @db.Decimal(12, 2)
+  tax          Decimal     @default(0) @db.Decimal(12, 2)
+  discount     Decimal     @default(0) @db.Decimal(10, 2)
+  total        Decimal     @default(0) @db.Decimal(12, 2)
+  anomalyFlags String[]
   metadata     Json?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
 
   branch     Branch      @relation(fields: [branchId], references: [id], onDelete: Cascade)
   table      Table?      @relation(fields: [tableId], references: [id], onDelete: SetNull)
   user       User        @relation(fields: [userId], references: [id], onDelete: Restrict)
   orderItems OrderItem[]
   payments   Payment[]
+  kdsTickets KdsTicket[]
+  discounts  Discount[]
 
   @@unique([branchId, orderNumber])
+  @@index([branchId])
   @@map("orders")
+}
+
+model KdsTicket {
+  id        String     @id @default(cuid())
+  orderId   String
+  station   StationTag
+  status    String     @default("QUEUED")
+  createdAt DateTime   @default(now())
+  readyAt   DateTime?
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("kds_tickets")
+}
+
+model Shift {
+  id           String    @id @default(cuid())
+  orgId        String
+  branchId     String
+  openedById   String
+  closedById   String?
+  openedAt     DateTime  @default(now())
+  closedAt     DateTime?
+  openingFloat Decimal   @default(0) @db.Decimal(10, 2)
+  declaredCash Decimal?  @db.Decimal(10, 2)
+  overShort    Decimal?  @db.Decimal(10, 2)
+  notes        String?
+  metadata     Json?
+
+  branch   Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  openedBy User   @relation("ShiftOpenedBy", fields: [openedById], references: [id], onDelete: Restrict)
+  closedBy User?  @relation("ShiftClosedBy", fields: [closedById], references: [id], onDelete: Restrict)
+
+  @@index([branchId, openedAt])
+  @@map("shifts")
+}
+
+model Discount {
+  id           String   @id @default(cuid())
+  orgId        String
+  orderId      String
+  createdById  String
+  type         String // percentage, fixed
+  value        Decimal  @db.Decimal(10, 2)
+  approvedById String?
+  createdAt    DateTime @default(now())
+  metadata     Json?
+
+  order      Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  createdBy  User  @relation("DiscountCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+  approvedBy User? @relation("DiscountApprovedBy", fields: [approvedById], references: [id], onDelete: Restrict)
+
+  @@index([orderId])
+  @@map("discounts")
 }
 
 model OrderItem {
@@ -183,7 +467,7 @@ model OrderItem {
   price      Decimal  @db.Decimal(10, 2)
   subtotal   Decimal  @db.Decimal(10, 2)
   notes      String?
-  metadata   Json?    // modifiers, special instructions
+  metadata   Json? // modifiers, special instructions
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
@@ -196,15 +480,15 @@ model OrderItem {
 // ===== Payments =====
 
 model Payment {
-  id            String   @id @default(cuid())
+  id            String        @id @default(cuid())
   orderId       String
-  amount        Decimal  @db.Decimal(10, 2)
-  method        String   // cash, momo, airtel, card
-  status        String   @default("pending") // pending, completed, failed, refunded
+  amount        Decimal       @db.Decimal(10, 2)
+  method        PaymentMethod
+  status        String        @default("pending") // pending, completed, failed, refunded
   transactionId String?
   metadata      Json?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
 
   order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
@@ -214,16 +498,16 @@ model Payment {
 // ===== Audit & Compliance =====
 
 model AuditEvent {
-  id        String   @id @default(cuid())
-  branchId  String
-  userId    String?
-  action    String   // e.g., "order.created", "order.voided", "payment.completed"
-  resource  String   // table name
+  id         String   @id @default(cuid())
+  branchId   String
+  userId     String?
+  action     String // e.g., "order.created", "order.voided", "payment.completed"
+  resource   String // table name
   resourceId String? // record ID
-  before    Json?
-  after     Json?
-  metadata  Json?
-  createdAt DateTime @default(now())
+  before     Json?
+  after      Json?
+  metadata   Json?
+  createdAt  DateTime @default(now())
 
   branch Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
   user   User?  @relation(fields: [userId], references: [id], onDelete: SetNull)
@@ -232,4 +516,185 @@ model AuditEvent {
   @@index([userId])
   @@index([action])
   @@map("audit_events")
+}
+
+// ===== Inventory & Purchasing =====
+
+model Supplier {
+  id        String   @id @default(cuid())
+  orgId     String
+  name      String
+  contact   String?
+  email     String?
+  phone     String?
+  isActive  Boolean  @default(true)
+  metadata  Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  purchaseOrders PurchaseOrder[]
+
+  @@index([orgId])
+  @@map("suppliers")
+}
+
+model InventoryItem {
+  id           String   @id @default(cuid())
+  orgId        String
+  sku          String?
+  name         String
+  unit         String // kg, ltr, pcs, etc.
+  category     String?
+  reorderLevel Decimal  @default(0) @db.Decimal(10, 3)
+  reorderQty   Decimal  @default(0) @db.Decimal(10, 3)
+  isActive     Boolean  @default(true)
+  metadata     Json?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  stockBatches      StockBatch[]
+  recipeIngredients RecipeIngredient[]
+  wastageRecords    Wastage[]
+  poItems           PurchaseOrderItem[]
+  receiptLines      GoodsReceiptLine[]
+
+  @@unique([orgId, sku])
+  @@index([orgId])
+  @@map("inventory_items")
+}
+
+model StockBatch {
+  id             String    @id @default(cuid())
+  orgId          String
+  branchId       String
+  itemId         String
+  batchNumber    String?
+  receivedQty    Decimal   @db.Decimal(10, 3)
+  remainingQty   Decimal   @db.Decimal(10, 3)
+  unitCost       Decimal   @db.Decimal(10, 2)
+  expiryDate     DateTime?
+  receivedAt     DateTime  @default(now())
+  goodsReceiptId String?
+  metadata       Json?
+
+  branch       Branch        @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  item         InventoryItem @relation(fields: [itemId], references: [id], onDelete: Restrict)
+  goodsReceipt GoodsReceipt? @relation(fields: [goodsReceiptId], references: [id], onDelete: SetNull)
+
+  @@index([orgId, itemId])
+  @@index([branchId, receivedAt])
+  @@map("stock_batches")
+}
+
+model PurchaseOrder {
+  id          String    @id @default(cuid())
+  orgId       String
+  branchId    String
+  supplierId  String
+  poNumber    String
+  status      String    @default("draft") // draft, placed, received, cancelled
+  totalAmount Decimal   @default(0) @db.Decimal(12, 2)
+  placedAt    DateTime?
+  metadata    Json?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  branch        Branch              @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  supplier      Supplier            @relation(fields: [supplierId], references: [id], onDelete: Restrict)
+  items         PurchaseOrderItem[]
+  goodsReceipts GoodsReceipt[]
+
+  @@unique([orgId, poNumber])
+  @@index([orgId, branchId])
+  @@map("purchase_orders")
+}
+
+model PurchaseOrderItem {
+  id        String   @id @default(cuid())
+  poId      String
+  itemId    String
+  qty       Decimal  @db.Decimal(10, 3)
+  unitCost  Decimal  @db.Decimal(10, 2)
+  subtotal  Decimal  @db.Decimal(12, 2)
+  createdAt DateTime @default(now())
+
+  po   PurchaseOrder @relation(fields: [poId], references: [id], onDelete: Cascade)
+  item InventoryItem @relation(fields: [itemId], references: [id], onDelete: Restrict)
+
+  @@map("purchase_order_items")
+}
+
+model GoodsReceipt {
+  id         String   @id @default(cuid())
+  orgId      String
+  branchId   String
+  poId       String?
+  grNumber   String
+  receivedAt DateTime @default(now())
+  receivedBy String?
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  branch       Branch             @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  po           PurchaseOrder?     @relation(fields: [poId], references: [id], onDelete: SetNull)
+  lines        GoodsReceiptLine[]
+  stockBatches StockBatch[]
+
+  @@unique([orgId, grNumber])
+  @@index([orgId, branchId])
+  @@map("goods_receipts")
+}
+
+model GoodsReceiptLine {
+  id          String    @id @default(cuid())
+  grId        String
+  itemId      String
+  qtyReceived Decimal   @db.Decimal(10, 3)
+  unitCost    Decimal   @db.Decimal(10, 2)
+  batchNumber String?
+  expiryDate  DateTime?
+  createdAt   DateTime  @default(now())
+
+  gr   GoodsReceipt  @relation(fields: [grId], references: [id], onDelete: Cascade)
+  item InventoryItem @relation(fields: [itemId], references: [id], onDelete: Restrict)
+
+  @@map("goods_receipt_lines")
+}
+
+model RecipeIngredient {
+  id               String   @id @default(cuid())
+  menuItemId       String
+  itemId           String
+  qtyPerUnit       Decimal  @db.Decimal(10, 3) // qty of ingredient per menu item
+  wastePct         Decimal  @default(0) @db.Decimal(5, 2)
+  modifierOptionId String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  menuItem       MenuItem        @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+  item           InventoryItem   @relation(fields: [itemId], references: [id], onDelete: Restrict)
+  modifierOption ModifierOption? @relation(fields: [modifierOptionId], references: [id], onDelete: SetNull)
+
+  @@index([menuItemId])
+  @@index([itemId])
+  @@map("recipe_ingredients")
+}
+
+model Wastage {
+  id         String   @id @default(cuid())
+  orgId      String
+  branchId   String
+  itemId     String
+  qty        Decimal  @db.Decimal(10, 3)
+  reason     String?
+  reportedBy String?
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  branch Branch        @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  item   InventoryItem @relation(fields: [itemId], references: [id], onDelete: Restrict)
+
+  @@index([orgId, branchId])
+  @@index([itemId])
+  @@map("wastage")
 }
