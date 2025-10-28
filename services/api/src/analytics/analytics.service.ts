@@ -132,9 +132,7 @@ export class AnalyticsService {
       voidsByUser.set(userId, existing);
     });
 
-    return Array.from(voidsByUser.values()).sort(
-      (a, b) => b.voidCount - a.voidCount,
-    );
+    return Array.from(voidsByUser.values()).sort((a, b) => b.voidCount - a.voidCount);
   }
 
   async getStaffDiscounts(from: string, to: string, branchId?: string) {
@@ -174,9 +172,7 @@ export class AnalyticsService {
       discountsByUser.set(userId, existing);
     });
 
-    return Array.from(discountsByUser.values()).sort(
-      (a, b) => b.totalAmount - a.totalAmount,
-    );
+    return Array.from(discountsByUser.values()).sort((a, b) => b.totalAmount - a.totalAmount);
   }
 
   async getNoDrinksRate(from: string, to: string, branchId?: string) {
@@ -228,18 +224,11 @@ export class AnalyticsService {
     return Array.from(statsByUser.values()).map((stat) => ({
       ...stat,
       noDrinkRate:
-        stat.totalOrders > 0
-          ? ((stat.noDrinkOrders / stat.totalOrders) * 100).toFixed(2)
-          : '0.00',
+        stat.totalOrders > 0 ? ((stat.noDrinkOrders / stat.totalOrders) * 100).toFixed(2) : '0.00',
     }));
   }
 
-  async getLateVoids(
-    from: string,
-    to: string,
-    thresholdMin: number,
-    branchId?: string,
-  ) {
+  async getLateVoids(from: string, to: string, thresholdMin: number, branchId?: string) {
     const startDate = new Date(from);
     const endDate = new Date(to);
 

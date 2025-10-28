@@ -12,14 +12,14 @@ let db: Database.Database | null = null;
 
 async function getDbPath(): Promise<string> {
   const dataDir = await appDataDir();
-  
+
   // Ensure directory exists
   try {
     await createDir(dataDir, { recursive: true });
   } catch (error) {
     // Directory might already exist, ignore error
   }
-  
+
   return `${dataDir}/offline-queue.db`;
 }
 
@@ -27,7 +27,7 @@ async function getDb(): Promise<Database.Database> {
   if (!db) {
     const dbPath = await getDbPath();
     db = new Database(dbPath);
-    
+
     // Create table if not exists
     db.exec(`
       CREATE TABLE IF NOT EXISTS ops (
@@ -39,30 +39,24 @@ async function getDb(): Promise<Database.Database> {
       )
     `);
   }
-  
+
   return db;
 }
 
 export async function dbEnqueue(op: QueuedOp): Promise<void> {
   const database = await getDb();
   const stmt = database.prepare(
-    'INSERT INTO ops (id, type, payload, clientOrderId, at) VALUES (?, ?, ?, ?, ?)'
+    'INSERT INTO ops (id, type, payload, clientOrderId, at) VALUES (?, ?, ?, ?, ?)',
   );
-  
-  stmt.run(
-    op.clientOpId,
-    op.type,
-    JSON.stringify(op.payload),
-    op.clientOrderId || null,
-    op.at
-  );
+
+  stmt.run(op.clientOpId, op.type, JSON.stringify(op.payload), op.clientOrderId || null, op.at);
 }
 
 export async function dbDequeueMany(limit: number): Promise<QueuedOp[]> {
   const database = await getDb();
   const stmt = database.prepare('SELECT * FROM ops LIMIT ?');
   const rows = stmt.all(limit) as any[];
-  
+
   return rows.map((row) => ({
     clientOpId: row.id,
     type: row.type,
@@ -74,7 +68,7 @@ export async function dbDequeueMany(limit: number): Promise<QueuedOp[]> {
 
 export async function dbRemove(clientOpIds: string[]): Promise<void> {
   if (clientOpIds.length === 0) return;
-  
+
   const database = await getDb();
   const placeholders = clientOpIds.map(() => '?').join(',');
   const stmt = database.prepare(`DELETE FROM ops WHERE id IN (${placeholders})`);
@@ -91,7 +85,7 @@ export async function dbAll(): Promise<QueuedOp[]> {
   const database = await getDb();
   const stmt = database.prepare('SELECT * FROM ops ORDER BY at ASC');
   const rows = stmt.all() as any[];
-  
+
   return rows.map((row) => ({
     clientOpId: row.id,
     type: row.type,

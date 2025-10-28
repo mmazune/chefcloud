@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import Redis from 'ioredis';
 import { logBuffer, logger } from '../logger';
+import * as argon2 from 'argon2';
+import * as crypto from 'crypto';
 
 // Simple metrics store
 class MetricsStore {
@@ -168,5 +170,71 @@ export class OpsService {
     }
 
     return snapshot;
+  }
+
+  async createApiKey(orgId: string, name: string, scopes: string[]): Promise<any> {
+    // Generate a random API key (64 bytes = 128 hex chars)
+    const plainKey = crypto.randomBytes(64).toString('hex');
+    
+    // Hash with argon2
+    const keyHash = await argon2.hash(plainKey);
+
+    const apiKey = await this.prisma.apiKey.create({
+      data: {
+        orgId,
+        name,
+        keyHash,
+        scopes,
+      },
+    });
+
+    logger.info({ apiKeyId: apiKey.id, name, orgId }, 'API key created');
+
+    // Return plaintext key ONCE - never shown again
+    return {
+      id: apiKey.id,
+      name: apiKey.name,
+      scopes: apiKey.scopes,
+      key: plainKey, // Only time this is returned
+      createdAt: apiKey.createdAt,
+      warning: 'Save this key now. It will not be shown again.',
+    };
+  }
+
+  async listApiKeys(orgId: string): Promise<any> {
+    const apiKeys = await this.prisma.apiKey.findMany({
+      where: { orgId },
+      select: {
+        id: true,
+        name: true,
+        scopes: true,
+        lastUsedAt: true,
+        createdAt: true,
+        // Never return keyHash
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return apiKeys.map((key) => ({
+      ...key,
+      keyPreview: '••••••••', // Masked
+    }));
+  }
+
+  async deleteApiKey(orgId: string, id: string): Promise<any> {
+    // Ensure the key belongs to the org (security check)
+    const apiKey = await this.prisma.apiKey.findFirst({
+      where: { id, orgId },
+    });
+
+    if (!apiKey) {
+      throw new Error('API key not found');
+    }
+
+    await this.prisma.apiKey.delete({ where: { id } });
+
+    logger.info({ apiKeyId: id, name: apiKey.name, orgId }, 'API key deleted');
+
+    return { success: true, message: 'API key deleted' };
   }
 }

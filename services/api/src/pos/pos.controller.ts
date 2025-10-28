@@ -82,6 +82,12 @@ export class PosController {
     @Body() dto: { reason: string; managerPin?: string },
     @User() user: { userId: string; branchId: string; orgId: string },
   ): Promise<unknown> {
-    return this.posService.postCloseVoid(orderId, dto.reason, dto.managerPin, user.userId, user.orgId);
+    return this.posService.postCloseVoid(
+      orderId,
+      dto.reason,
+      dto.managerPin,
+      user.userId,
+      user.orgId,
+    );
   }
 }

@@ -1,10 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Test, TestingModule } from '@nestjs/testing';
+import { ConfigService } from '@nestjs/config';
 import { OwnerService } from './owner.service';
 import { PrismaService } from '../prisma.service';
 
 describe('OwnerService', () => {
   let service: OwnerService;
+  let mockTransporter: any;
 
   const mockPrismaService = {
     branch: {
@@ -30,6 +32,20 @@ describe('OwnerService', () => {
     },
   };
 
+  const mockConfigService = {
+    get: jest.fn((key: string, defaultValue?: any) => {
+      const config: any = {
+        SMTP_HOST: 'localhost',
+        SMTP_PORT: 1025,
+        SMTP_USER: '',
+        SMTP_PASS: '',
+        SMTP_SECURE: 'false',
+        DIGEST_FROM_EMAIL: 'test@chefcloud.local',
+      };
+      return config[key] !== undefined ? config[key] : defaultValue;
+    }),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -38,10 +54,20 @@ describe('OwnerService', () => {
           provide: PrismaService,
           useValue: mockPrismaService,
         },
+        {
+          provide: ConfigService,
+          useValue: mockConfigService,
+        },
       ],
     }).compile();
 
     service = module.get<OwnerService>(OwnerService);
+
+    // Mock the nodemailer transporter
+    mockTransporter = {
+      sendMail: jest.fn().mockResolvedValue({ messageId: 'test-message-id' }),
+    };
+    (service as any).transporter = mockTransporter;
   });
 
   afterEach(() => {
@@ -52,10 +78,7 @@ describe('OwnerService', () => {
     it('should aggregate sales, top items, and anomalies', async () => {
       const orgId = 'org-1';
 
-      mockPrismaService.branch.findMany.mockResolvedValue([
-        { id: 'branch-1' },
-        { id: 'branch-2' },
-      ]);
+      mockPrismaService.branch.findMany.mockResolvedValue([{ id: 'branch-1' }, { id: 'branch-2' }]);
 
       mockPrismaService.payment.aggregate
         .mockResolvedValueOnce({ _sum: { amount: 100000 } }) // today
@@ -138,6 +161,49 @@ describe('OwnerService', () => {
           sendOnShiftClose: false,
         },
       });
+    });
+  });
+
+  describe('sendDigestEmail', () => {
+    it('should send email via nodemailer with PDF and CSV attachments', async () => {
+      const recipients = ['owner@example.com'];
+      const orgName = 'Test Organization';
+      const overview = {
+        salesToday: '100000',
+        sales7d: '500000',
+        anomaliesToday: 3,
+        voidsToday: 1,
+        topItems: [{ name: 'Burger', qty: 10, revenue: 100.5 }],
+      };
+
+      await service.sendDigestEmail(recipients, orgName, overview);
+
+      expect(mockTransporter.sendMail).toHaveBeenCalledTimes(1);
+
+      const callArgs = mockTransporter.sendMail.mock.calls[0][0];
+      expect(callArgs.from).toBe('test@chefcloud.local');
+      expect(callArgs.to).toBe('owner@example.com');
+      expect(callArgs.subject).toContain('Owner Digest - Test Organization');
+      expect(callArgs.attachments).toHaveLength(4); // PDF + 3 CSVs
+      expect(callArgs.attachments[0].contentType).toBe('application/pdf');
+      expect(callArgs.attachments[1].filename).toBe('top-items.csv');
+      expect(callArgs.attachments[2].filename).toBe('discounts.csv');
+      expect(callArgs.attachments[3].filename).toBe('voids.csv');
+    });
+  });
+
+  describe('buildTopItemsCSV', () => {
+    it('should build CSV with headers and data rows', () => {
+      const items = [
+        { name: 'Burger', qty: 10, revenue: 100.5 },
+        { name: 'Pizza', qty: 5, revenue: 75.25 },
+      ];
+
+      const csv = service.buildTopItemsCSV(items);
+
+      expect(csv).toContain('name,qty,revenue');
+      expect(csv).toContain('"Burger",10,100.50');
+      expect(csv).toContain('"Pizza",5,75.25');
     });
   });
 });

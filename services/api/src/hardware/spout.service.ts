@@ -1,11 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { Injectable, NotFoundException, UnauthorizedException, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { EventBusService } from '../events/event-bus.service';
+import { verifySpoutSignature } from '../common/crypto.utils';
 import * as crypto from 'crypto';
 
 @Injectable()
 export class SpoutService {
+  private readonly logger = new Logger(SpoutService.name);
+
   constructor(
     private prisma: PrismaService,
     private eventBus: EventBusService,
@@ -60,14 +63,20 @@ export class SpoutService {
       throw new NotFoundException('Device not found or inactive');
     }
 
-    // 2. Verify HMAC signature if SPOUT_VERIFY is enabled
+    // 2. Verify HMAC signature if SPOUT_VERIFY is enabled and signature present
     const shouldVerify = process.env.SPOUT_VERIFY === 'true';
     if (shouldVerify && signature && device.secret) {
-      const payload = JSON.stringify({ deviceId, pulses, occurredAt: occurredAt.toISOString(), raw });
-      const isValid = this.verifySignature(payload, signature, device.secret);
-      if (!isValid) {
-        throw new UnauthorizedException('Invalid signature');
+      const timestamp = raw?.timestamp || Math.floor(Date.now() / 1000).toString();
+      const body = JSON.stringify({ deviceId, pulses, occurredAt: occurredAt.toISOString() });
+      
+      const result = verifySpoutSignature(device.secret, body, timestamp, signature);
+      
+      if (!result.valid) {
+        this.logger.warn(`Spout signature verification failed: ${result.reason}`);
+        throw new UnauthorizedException(`Invalid signature: ${result.reason}`);
       }
+      
+      this.logger.log(`Spout signature verified for device ${deviceId}`);
     }
 
     // 3. Determine ml and itemId
@@ -96,27 +105,18 @@ export class SpoutService {
     });
 
     // 5. Publish to SSE stream
-    this.eventBus.publish('spout', {
+    this.eventBus.publish(
+      'spout',
+      {
+        deviceId,
+        ml,
+        itemId,
+        occurredAt: occurredAt.toISOString(),
+      },
       deviceId,
-      ml,
-      itemId,
-      occurredAt: occurredAt.toISOString(),
-    }, deviceId);
+    );
 
     return event;
-  }
-
-  private verifySignature(payload: string, signature: string, secret: string): boolean {
-    const hmac = crypto.createHmac('sha256', secret);
-    hmac.update(payload);
-    const computed = hmac.digest('hex');
-    
-    // Ensure both strings are the same length before comparison
-    if (computed.length !== signature.length) {
-      return false;
-    }
-    
-    return crypto.timingSafeEqual(Buffer.from(computed, 'hex'), Buffer.from(signature, 'hex'));
   }
 
   async getEvents(deviceId?: string, from?: Date, to?: Date): Promise<any> {

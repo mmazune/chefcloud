@@ -8,10 +8,7 @@ export class WebhooksController {
   constructor(private paymentsService: PaymentsService) {}
 
   @Post('mtn')
-  async handleMtnWebhook(
-    @Body() payload: any,
-    @Headers('x-mtn-signature') signature?: string,
-  ) {
+  async handleMtnWebhook(@Body() payload: any, @Headers('x-mtn-signature') signature?: string) {
     this.logger.log('Received MTN webhook');
     return this.paymentsService.handleWebhook('MTN', payload, signature);
   }

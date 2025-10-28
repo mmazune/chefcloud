@@ -101,7 +101,12 @@ export interface RequestContext {
   route?: string;
 }
 
-export function logRequest(req: Request, res: Response, durationMs: number, context: RequestContext = {}) {
+export function logRequest(
+  req: Request,
+  res: Response,
+  durationMs: number,
+  context: RequestContext = {},
+) {
   logger.info({
     type: 'http_request',
     method: req.method,

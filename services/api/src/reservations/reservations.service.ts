@@ -1,5 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Injectable, ConflictException, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { CreateReservationDto } from './reservations.dto';
 
@@ -18,22 +23,13 @@ export class ReservationsService {
           status: { in: ['HELD', 'CONFIRMED', 'SEATED'] },
           OR: [
             {
-              AND: [
-                { startAt: { lte: new Date(startAt) } },
-                { endAt: { gt: new Date(startAt) } },
-              ],
+              AND: [{ startAt: { lte: new Date(startAt) } }, { endAt: { gt: new Date(startAt) } }],
             },
             {
-              AND: [
-                { startAt: { lt: new Date(endAt) } },
-                { endAt: { gte: new Date(endAt) } },
-              ],
+              AND: [{ startAt: { lt: new Date(endAt) } }, { endAt: { gte: new Date(endAt) } }],
             },
             {
-              AND: [
-                { startAt: { gte: new Date(startAt) } },
-                { endAt: { lte: new Date(endAt) } },
-              ],
+              AND: [{ startAt: { gte: new Date(startAt) } }, { endAt: { lte: new Date(endAt) } }],
             },
           ],
         },
@@ -146,7 +142,9 @@ export class ReservationsService {
     }
 
     if (!['NONE', 'HELD'].includes(reservation.depositStatus)) {
-      throw new BadRequestException(`Cannot confirm reservation with depositStatus ${reservation.depositStatus}`);
+      throw new BadRequestException(
+        `Cannot confirm reservation with depositStatus ${reservation.depositStatus}`,
+      );
     }
 
     const updateData: any = { status: 'CONFIRMED', autoCancelAt: null };
@@ -190,7 +188,10 @@ export class ReservationsService {
           data: {
             status: 'CANCELLED',
             metadata: {
-              ...((typeof reservation.paymentIntent?.metadata === 'object' && reservation.paymentIntent.metadata !== null) ? reservation.paymentIntent.metadata : {}),
+              ...(typeof reservation.paymentIntent?.metadata === 'object' &&
+              reservation.paymentIntent.metadata !== null
+                ? reservation.paymentIntent.metadata
+                : {}),
               refund_reason: 'reservation_cancelled',
             },
           },

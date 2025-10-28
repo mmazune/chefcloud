@@ -138,9 +138,9 @@ describe('SpoutService', () => {
     it('should throw NotFoundException if device does not exist', async () => {
       mockPrismaService.spoutDevice.findUnique.mockResolvedValue(null);
 
-      await expect(
-        service.calibrate('nonexistent-device', 'item-1', 1.5),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.calibrate('nonexistent-device', 'item-1', 1.5)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -210,11 +210,15 @@ describe('SpoutService', () => {
       const pulses = 100;
       const occurredAt = new Date();
       const secret = 'my-secret-key';
+      const timestamp = Math.floor(Date.now() / 1000).toString();
 
-      const payload = JSON.stringify({ deviceId, pulses, occurredAt: occurredAt.toISOString(), raw: undefined });
+      const body = JSON.stringify({ deviceId, pulses, occurredAt: occurredAt.toISOString() });
+      const data = secret + body + timestamp;
       const hmac = crypto.createHmac('sha256', secret);
-      hmac.update(payload);
+      hmac.update(data);
       const validSignature = hmac.digest('hex');
+
+      const raw = { timestamp };
 
       mockPrismaService.spoutDevice.findUnique.mockResolvedValue({
         id: deviceId,
@@ -236,16 +240,22 @@ describe('SpoutService', () => {
         pulses,
         ml: 0,
         occurredAt,
-        raw: undefined,
+        raw,
         ingestedAt: new Date(),
       });
 
-      const result = await service.ingestEvent(deviceId, pulses, occurredAt, undefined, validSignature);
+      const result = await service.ingestEvent(
+        deviceId,
+        pulses,
+        occurredAt,
+        raw,
+        validSignature,
+      );
       expect(result).toBeDefined();
 
       // Now try with invalid signature
       await expect(
-        service.ingestEvent(deviceId, pulses, occurredAt, undefined, 'invalid-signature'),
+        service.ingestEvent(deviceId, pulses, occurredAt, raw, 'invalid-signature'),
       ).rejects.toThrow(UnauthorizedException);
 
       process.env.SPOUT_VERIFY = 'false';
@@ -263,9 +273,9 @@ describe('SpoutService', () => {
         calibrations: [],
       });
 
-      await expect(
-        service.ingestEvent('device-1', 100, new Date()),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.ingestEvent('device-1', 100, new Date())).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 

@@ -91,6 +91,7 @@ model Org {
   spoutDevices     SpoutDevice[]
   spoutEvents      SpoutEvent[]
   ownerDigests     OwnerDigest[]
+  apiKeys          ApiKey[]
 
   @@map("orgs")
 }
@@ -758,6 +759,21 @@ model SupportSession {
   @@index([token])
   @@index([expiresAt])
   @@map("support_sessions")
+}
+
+model ApiKey {
+  id         String    @id @default(cuid())
+  orgId      String
+  name       String
+  keyHash    String    @unique
+  scopes     String[]
+  lastUsedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  org Org @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@index([orgId])
+  @@map("api_keys")
 }
 
 // ===== Hardware Integrations =====

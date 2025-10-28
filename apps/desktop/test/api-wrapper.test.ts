@@ -61,14 +61,14 @@ describe('API Wrapper with offline queue', () => {
         clientOrderId: 'order-1',
         at: new Date().toISOString(),
       },
-      offlineQueue
+      offlineQueue,
     );
 
     expect(result.queued).toBe(false);
     expect(result.result?.serverId).toBe('server-123');
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining('/sync/batch'),
-      expect.objectContaining({ method: 'POST' })
+      expect.objectContaining({ method: 'POST' }),
     );
 
     const count = await offlineQueue.getCount();
@@ -86,7 +86,7 @@ describe('API Wrapper with offline queue', () => {
         clientOrderId: 'order-2',
         at: new Date().toISOString(),
       },
-      offlineQueue
+      offlineQueue,
     );
 
     expect(result.queued).toBe(true);

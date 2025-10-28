@@ -1,10 +1,39 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma.service';
+import * as nodemailer from 'nodemailer';
 
 @Injectable()
 export class OwnerService {
-  constructor(private prisma: PrismaService) {}
+  private readonly logger = new Logger(OwnerService.name);
+  private transporter: nodemailer.Transporter;
+
+  constructor(
+    private prisma: PrismaService,
+    private configService: ConfigService,
+  ) {
+    // Initialize SMTP transport
+    const smtpHost = this.configService.get<string>('SMTP_HOST', 'localhost');
+    const smtpPort = this.configService.get<number>('SMTP_PORT', 1025);
+    const smtpUser = this.configService.get<string>('SMTP_USER', '');
+    const smtpPass = this.configService.get<string>('SMTP_PASS', '');
+    const smtpSecure = this.configService.get<string>('SMTP_SECURE', 'false') === 'true';
+
+    this.transporter = nodemailer.createTransport({
+      host: smtpHost,
+      port: smtpPort,
+      secure: smtpSecure,
+      auth: smtpUser
+        ? {
+            user: smtpUser,
+            pass: smtpPass,
+          }
+        : undefined,
+    });
+
+    this.logger.log(`[SMTP] Configured: ${smtpHost}:${smtpPort} (secure=${smtpSecure})`);
+  }
 
   async getOverview(orgId: string): Promise<any> {
     const now = new Date();
@@ -17,7 +46,7 @@ export class OwnerService {
       where: { orgId },
       select: { id: true },
     });
-    const branchIds = branches.map(b => b.id);
+    const branchIds = branches.map((b) => b.id);
 
     // Sales today
     const salesToday = await this.prisma.payment.aggregate({
@@ -82,7 +111,12 @@ export class OwnerService {
     const topItems = Object.values(itemCounts)
       .sort((a, b) => b.qty - a.qty)
       .slice(0, 5)
-      .map((item, idx) => ({ rank: idx + 1, name: item.name, qty: item.qty, revenue: item.revenue }));
+      .map((item, idx) => ({
+        rank: idx + 1,
+        name: item.name,
+        qty: item.qty,
+        revenue: item.revenue,
+      }));
 
     // Discounts today
     const discountsToday = await this.prisma.discount.aggregate({
@@ -122,8 +156,8 @@ export class OwnerService {
     });
 
     const paymentBreakdown: Record<string, string> = {};
-    const momoAmount = payments.find(p => p.method === 'MOMO')?._sum?.amount?.toString() || '0';
-    const cashAmount = payments.find(p => p.method === 'CASH')?._sum?.amount?.toString() || '0';
+    const momoAmount = payments.find((p) => p.method === 'MOMO')?._sum?.amount?.toString() || '0';
+    const cashAmount = payments.find((p) => p.method === 'CASH')?._sum?.amount?.toString() || '0';
     payments.forEach((p) => {
       paymentBreakdown[p.method] = p._sum?.amount?.toString() || '0';
     });
@@ -190,12 +224,15 @@ export class OwnerService {
     });
   }
 
-  async updateDigest(id: string, updates: {
-    name?: string;
-    cron?: string;
-    recipients?: string[];
-    sendOnShiftClose?: boolean;
-  }): Promise<any> {
+  async updateDigest(
+    id: string,
+    updates: {
+      name?: string;
+      cron?: string;
+      recipients?: string[];
+      sendOnShiftClose?: boolean;
+    },
+  ): Promise<any> {
     return this.prisma.ownerDigest.update({
       where: { id },
       data: updates,
@@ -216,7 +253,7 @@ export class OwnerService {
   // CSV builders
   buildTopItemsCSV(items: any[]): string {
     let csv = 'name,qty,revenue\n';
-    items.forEach(item => {
+    items.forEach((item) => {
       csv += `"${item.name}",${item.qty},${item.revenue.toFixed(2)}\n`;
     });
     return csv;
@@ -224,7 +261,7 @@ export class OwnerService {
 
   buildDiscountsCSV(discounts: any[]): string {
     let csv = 'user,count,total\n';
-    discounts.forEach(d => {
+    discounts.forEach((d) => {
       csv += `"${d.user}",${d.count},${d.total.toFixed(2)}\n`;
     });
     return csv;
@@ -232,7 +269,7 @@ export class OwnerService {
 
   buildVoidsCSV(voids: any[]): string {
     let csv = 'user,count,total\n';
-    voids.forEach(v => {
+    voids.forEach((v) => {
       csv += `"${v.user}",${v.count},${v.total.toFixed(2)}\n`;
     });
     return csv;
@@ -266,11 +303,17 @@ export class OwnerService {
       const chartWidth = 400;
       const chartHeight = 60;
       const maxSales = Math.max(...overview.sales7dArray, 1);
-      
+
       // Draw axes
       doc.strokeColor('#cccccc').lineWidth(1);
-      doc.moveTo(chartX, chartY).lineTo(chartX, chartY + chartHeight).stroke();
-      doc.moveTo(chartX, chartY + chartHeight).lineTo(chartX + chartWidth, chartY + chartHeight).stroke();
+      doc
+        .moveTo(chartX, chartY)
+        .lineTo(chartX, chartY + chartHeight)
+        .stroke();
+      doc
+        .moveTo(chartX, chartY + chartHeight)
+        .lineTo(chartX + chartWidth, chartY + chartHeight)
+        .stroke();
 
       // Draw sparkline
       doc.strokeColor('#0033FF').lineWidth(2);
@@ -294,24 +337,35 @@ export class OwnerService {
       const momoAmt = parseFloat(overview.paymentSplit.momo);
       const cashAmt = parseFloat(overview.paymentSplit.cash);
       const total = momoAmt + cashAmt;
-      
+
       if (total > 0) {
         const barX = 100;
         const barY = doc.y + 10;
         const barWidth = 400;
         const barHeight = 30;
         const momoWidth = (momoAmt / total) * barWidth;
-        
+
         // MOMO bar (blue)
         doc.fillColor('#0033FF').rect(barX, barY, momoWidth, barHeight).fill();
-        
+
         // CASH bar (green)
-        doc.fillColor('#28a745').rect(barX + momoWidth, barY, barWidth - momoWidth, barHeight).fill();
-        
+        doc
+          .fillColor('#28a745')
+          .rect(barX + momoWidth, barY, barWidth - momoWidth, barHeight)
+          .fill();
+
         // Labels
         doc.fillColor('#000000').fontSize(10);
-        doc.text(`MOMO: $${momoAmt.toFixed(2)} (${((momoAmt/total)*100).toFixed(1)}%)`, barX, barY + barHeight + 5);
-        doc.text(`CASH: $${cashAmt.toFixed(2)} (${((cashAmt/total)*100).toFixed(1)}%)`, barX + 200, barY + barHeight + 5);
+        doc.text(
+          `MOMO: $${momoAmt.toFixed(2)} (${((momoAmt / total) * 100).toFixed(1)}%)`,
+          barX,
+          barY + barHeight + 5,
+        );
+        doc.text(
+          `CASH: $${cashAmt.toFixed(2)} (${((cashAmt / total) * 100).toFixed(1)}%)`,
+          barX + 200,
+          barY + barHeight + 5,
+        );
       }
       doc.moveDown(4);
     }
@@ -328,5 +382,72 @@ export class OwnerService {
     return new Promise((resolve) => {
       doc.on('end', () => resolve(Buffer.concat(chunks)));
     });
+  }
+
+  /**
+   * Send owner digest email via SMTP with PDF and CSV attachments
+   */
+  async sendDigestEmail(recipients: string[], orgName: string, overview: any): Promise<void> {
+    const fromEmail = this.configService.get<string>(
+      'DIGEST_FROM_EMAIL',
+      'noreply@chefcloud.local',
+    );
+    const subject = `Owner Digest - ${orgName} - ${new Date().toISOString().split('T')[0]}`;
+
+    // Build attachments
+    const pdfBuffer = await this.buildDigestPDF(overview, orgName);
+    const topItemsCSV = this.buildTopItemsCSV(overview.topItems || []);
+
+    // Mock discount/void data for CSVs
+    const discountsCSV = this.buildDiscountsCSV([]);
+    const voidsCSV = this.buildVoidsCSV([]);
+
+    const mailOptions = {
+      from: fromEmail,
+      to: recipients.join(', '),
+      subject,
+      text: `Please find attached your ChefCloud owner digest for ${orgName}.\n\nSales Today: $${overview.salesToday}\nSales Last 7 Days: $${overview.sales7d}\nAnomalies Today: ${overview.anomaliesToday}`,
+      html: `
+        <h2>Owner Digest - ${orgName}</h2>
+        <p><strong>Date:</strong> ${new Date().toISOString().split('T')[0]}</p>
+        <h3>Sales Summary</h3>
+        <ul>
+          <li>Today: $${overview.salesToday}</li>
+          <li>Last 7 Days: $${overview.sales7d}</li>
+        </ul>
+        <h3>Alerts</h3>
+        <ul>
+          <li>Anomalies Today: ${overview.anomaliesToday}</li>
+          <li>Voids Today: ${overview.voidsToday}</li>
+        </ul>
+        <p>Please see attached PDF and CSVs for detailed reports.</p>
+      `,
+      attachments: [
+        {
+          filename: `digest-${new Date().toISOString().split('T')[0]}.pdf`,
+          content: pdfBuffer,
+          contentType: 'application/pdf',
+        },
+        {
+          filename: 'top-items.csv',
+          content: topItemsCSV,
+          contentType: 'text/csv',
+        },
+        {
+          filename: 'discounts.csv',
+          content: discountsCSV,
+          contentType: 'text/csv',
+        },
+        {
+          filename: 'voids.csv',
+          content: voidsCSV,
+          contentType: 'text/csv',
+        },
+      ],
+    };
+
+    await this.transporter.sendMail(mailOptions);
+
+    this.logger.log(`[SMTP] sent -> to: ${recipients.join(', ')}, subject: ${subject}`);
   }
 }

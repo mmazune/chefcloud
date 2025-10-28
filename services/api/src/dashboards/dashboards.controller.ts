@@ -87,13 +87,7 @@ export class DashboardsController {
    */
   @Get('anomalies/recent')
   @Roles('L4', 'L5')
-  async getRecentAnomalies(
-    @User() user: { orgId: string },
-    @Query('limit') limit?: string,
-  ) {
-    return this.dashboardsService.getRecentAnomalies(
-      user.orgId,
-      limit ? parseInt(limit, 10) : 100,
-    );
+  async getRecentAnomalies(@User() user: { orgId: string }, @Query('limit') limit?: string) {
+    return this.dashboardsService.getRecentAnomalies(user.orgId, limit ? parseInt(limit, 10) : 100);
   }
 }

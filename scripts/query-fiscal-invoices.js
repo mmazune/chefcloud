@@ -16,7 +16,7 @@ async function main() {
     });
 
     console.log('\n=== Recent Fiscal Invoices ===\n');
-    
+
     if (invoices.length === 0) {
       console.log('No fiscal invoices found.');
     } else {

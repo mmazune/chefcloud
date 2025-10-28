@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 /**
  * SSE Stream Example - ChefCloud Live Streams (M7-s2)
- * 
+ *
  * Connects to ChefCloud SSE endpoints and logs events in real-time.
- * 
+ *
  * Usage:
  *   node sse-example.js spout [deviceId]
  *   node sse-example.js kds [station]
- * 
+ *
  * Examples:
  *   node sse-example.js spout
  *   node sse-example.js spout device-abc123
@@ -44,8 +44,8 @@ console.log('');
 const options = {
   method: 'GET',
   headers: {
-    'Authorization': `Bearer ${TOKEN}`,
-    'Accept': 'text/event-stream',
+    Authorization: `Bearer ${TOKEN}`,
+    Accept: 'text/event-stream',
   },
 };
 

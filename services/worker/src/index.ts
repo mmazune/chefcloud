@@ -2,11 +2,11 @@ import { Worker, Queue, Job } from 'bullmq';
 import Redis from 'ioredis';
 import { PrismaClient } from '@chefcloud/db';
 import { pushToEfris, calculateBackoffDelay } from './efris-client';
-import { 
-  detectAnomalies, 
-  NO_DRINKS_RULE, 
-  LATE_VOID_RULE, 
-  HEAVY_DISCOUNT_RULE 
+import {
+  detectAnomalies,
+  NO_DRINKS_RULE,
+  LATE_VOID_RULE,
+  HEAVY_DISCOUNT_RULE,
 } from './anomaly-rules';
 import { initTelemetry } from './telemetry';
 import { logger } from './logger';
@@ -75,12 +75,15 @@ const reportsWorker = new Worker<ReportJob>(
   'reports',
   async (job: Job<ReportJob>) => {
     logger.info({ jobId: job.id, data: job.data }, 'Processing report job');
-    
+
     // Dummy processing
     await new Promise((resolve) => setTimeout(resolve, 1000));
-    
-    logger.info({ reportType: job.data.reportType, branchId: job.data.branchId }, 'Report generated');
-    
+
+    logger.info(
+      { reportType: job.data.reportType, branchId: job.data.branchId },
+      'Report generated',
+    );
+
     return {
       success: true,
       reportId: `report-${Date.now()}`,
@@ -95,7 +98,7 @@ const paymentsWorker = new Worker<ReconcilePaymentsJob>(
   'payments',
   async (job: Job<ReconcilePaymentsJob>) => {
     logger.info({ jobId: job.id }, 'Processing payment reconciliation job');
-    
+
     const expiryThreshold = new Date(Date.now() - 30 * 60 * 1000); // 30 minutes
 
     const expiredIntents = await prisma.paymentIntent.findMany({
@@ -113,8 +116,10 @@ const paymentsWorker = new Worker<ReconcilePaymentsJob>(
         data: {
           status: 'FAILED',
           metadata: {
-            ...(typeof intent.metadata === 'object' && intent.metadata !== null ? intent.metadata : {}),
-            reason: 'expired'
+            ...(typeof intent.metadata === 'object' && intent.metadata !== null
+              ? intent.metadata
+              : {}),
+            reason: 'expired',
           },
         },
       });
@@ -176,15 +181,9 @@ const efrisWorker = new Worker<EfrisRetryJob>(
           const nextAttempt = currentAttempts + 1;
           if (nextAttempt < maxAttempts) {
             const delay = calculateBackoffDelay(nextAttempt);
-            console.log(
-              `Scheduling retry ${nextAttempt} for ${orderId} in ${delay / 1000}s`,
-            );
+            console.log(`Scheduling retry ${nextAttempt} for ${orderId} in ${delay / 1000}s`);
 
-            await efrisQueue.add(
-              'efris-push',
-              { type: 'efris-push', orderId },
-              { delay },
-            );
+            await efrisQueue.add('efris-push', { type: 'efris-push', orderId }, { delay });
           }
 
           return { success: false, status: result.status, nextAttempt };
@@ -201,11 +200,7 @@ const efrisWorker = new Worker<EfrisRetryJob>(
             `Scheduling retry ${nextAttempt} for ${orderId} after error in ${delay / 1000}s`,
           );
 
-          await efrisQueue.add(
-            'efris-push',
-            { type: 'efris-push', orderId },
-            { delay },
-          );
+          await efrisQueue.add('efris-push', { type: 'efris-push', orderId }, { delay });
         }
 
         throw error; // Re-throw to mark job as failed
@@ -281,7 +276,7 @@ const anomaliesWorker = new Worker<EmitAnomaliesJob>(
       where: { orgId: order.branch.orgId },
     });
 
-    const thresholds = orgSettings?.anomalyThresholds as any || {
+    const thresholds = (orgSettings?.anomalyThresholds as any) || {
       lateVoidMin: 5,
       heavyDiscountUGX: 5000,
       noDrinksWarnRate: 0.25,
@@ -322,7 +317,10 @@ const anomaliesWorker = new Worker<EmitAnomaliesJob>(
       }
     }
 
-    console.log(`Detected ${anomalies.length} anomalies for order ${orderId} with thresholds:`, thresholds);
+    console.log(
+      `Detected ${anomalies.length} anomalies for order ${orderId} with thresholds:`,
+      thresholds,
+    );
 
     // Create AnomalyEvent records
     for (const anomaly of anomalies) {
@@ -395,7 +393,9 @@ const alertsWorker = new Worker<ScheduledAlertJob>(
       orderBy: { occurredAt: 'desc' },
     });
 
-    console.log(`Found ${anomalies.length} anomalies for rule ${schedule.rule} since ${since.toISOString()}`);
+    console.log(
+      `Found ${anomalies.length} anomalies for rule ${schedule.rule} since ${since.toISOString()}`,
+    );
 
     if (anomalies.length === 0) {
       // Update lastRunAt even if no anomalies
@@ -407,13 +407,18 @@ const alertsWorker = new Worker<ScheduledAlertJob>(
     }
 
     // Format alert message
-    const summary = `🚨 ChefCloud Alert: ${schedule.name}\n\n` +
+    const summary =
+      `🚨 ChefCloud Alert: ${schedule.name}\n\n` +
       `Found ${anomalies.length} ${schedule.rule} events since ${since.toLocaleString()}:\n\n` +
-      anomalies.slice(0, 10).map((a, i) => 
-        `${i + 1}. Order ${a.orderId} - ${a.user ? `${a.user.firstName} ${a.user.lastName}` : 'Unknown'} @ ${a.branch?.name || 'Unknown'}\n` +
-        `   ${JSON.stringify(a.details)}\n` +
-        `   ${a.occurredAt.toLocaleString()}`
-      ).join('\n') +
+      anomalies
+        .slice(0, 10)
+        .map(
+          (a, i) =>
+            `${i + 1}. Order ${a.orderId} - ${a.user ? `${a.user.firstName} ${a.user.lastName}` : 'Unknown'} @ ${a.branch?.name || 'Unknown'}\n` +
+            `   ${JSON.stringify(a.details)}\n` +
+            `   ${a.occurredAt.toLocaleString()}`,
+        )
+        .join('\n') +
       (anomalies.length > 10 ? `\n\n...and ${anomalies.length - 10} more events` : '');
 
     // Send to all enabled channels
@@ -486,7 +491,10 @@ const reservationsAutoCancelWorker = new Worker<ReservationAutoCancelJob>(
           data: {
             status: 'CANCELLED',
             metadata: {
-              ...(typeof reservation.paymentIntent?.metadata === 'object' && reservation.paymentIntent.metadata !== null ? reservation.paymentIntent.metadata : {}),
+              ...(typeof reservation.paymentIntent?.metadata === 'object' &&
+              reservation.paymentIntent.metadata !== null
+                ? reservation.paymentIntent.metadata
+                : {}),
               refund_reason: 'reservation_auto_cancelled',
               cancelledAt: now.toISOString(),
             },
@@ -530,7 +538,8 @@ const reservationsRemindersWorker = new Worker<ReservationRemindersJob>(
       const { reservation } = reminder;
 
       // Format reminder message
-      const message = `Reminder: Your reservation ` +
+      const message =
+        `Reminder: Your reservation ` +
         `for ${reservation.partySize} people is tomorrow at ${reservation.startAt.toLocaleTimeString()}. ` +
         (reservation.tableId ? `Table ID: ${reservation.tableId}. ` : '') +
         `See you soon!`;
@@ -540,7 +549,9 @@ const reservationsRemindersWorker = new Worker<ReservationRemindersJob>(
         console.log(`📱 [SMS to ${reminder.target}]\n${message}`);
       } else if (reminder.channel === 'EMAIL') {
         // TODO: Integrate with email service
-        console.log(`📧 [EMAIL to ${reminder.target}]\nSubject: Reservation Reminder\n\n${message}`);
+        console.log(
+          `📧 [EMAIL to ${reminder.target}]\nSubject: Reservation Reminder\n\n${message}`,
+        );
       }
 
       // Mark reminder as sent
@@ -612,7 +623,10 @@ const spoutConsumeWorker = new Worker<SpoutConsumeJob>(
         qtyToConsume = totalMl / 1000;
       }
 
-      logger.info({ itemId, ml: totalMl, qtyToConsume, unit: item.unit }, 'Consuming from inventory');
+      logger.info(
+        { itemId, ml: totalMl, qtyToConsume, unit: item.unit },
+        'Consuming from inventory',
+      );
 
       // Get stock batches for this item (FIFO by receivedAt)
       const stockBatches = await prisma.stockBatch.findMany({
@@ -652,7 +666,10 @@ const spoutConsumeWorker = new Worker<SpoutConsumeJob>(
             },
           });
 
-          logger.warn({ itemId, batchId: batch.id, deficit: Math.abs(newQty) }, 'Negative stock detected');
+          logger.warn(
+            { itemId, batchId: batch.id, deficit: Math.abs(newQty) },
+            'Negative stock detected',
+          );
 
           // Cap at zero
           await prisma.stockBatch.update({
@@ -719,15 +736,15 @@ const digestWorker = new Worker<OwnerDigestRunJob>(
         // Build overview (inline version for now)
         const now = new Date();
         const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        
+
         const branches = await prisma.branch.findMany({
           where: { orgId: digest.orgId },
           select: { id: true },
         });
-        const branchIds = branches.map(b => b.id);
+        const branchIds = branches.map((b) => b.id);
 
         const salesToday = await prisma.payment.aggregate({
-          where: { 
+          where: {
             order: { branchId: { in: branchIds } },
             createdAt: { gte: startOfToday },
           },
@@ -745,9 +762,9 @@ const digestWorker = new Worker<OwnerDigestRunJob>(
         const pdfPath = path.join(pdfDir, pdfFilename);
         const doc = new PDFDocument();
         const writeStream = fs.createWriteStream(pdfPath);
-        
+
         doc.pipe(writeStream);
-        
+
         doc.fontSize(20).text(`Shift Close Digest: ${digest.name}`, { align: 'center' });
         doc.moveDown();
         doc.fontSize(12).text(`Organization: ${digest.org.name}`);
@@ -761,7 +778,7 @@ const digestWorker = new Worker<OwnerDigestRunJob>(
         doc.fontSize(12).text(`Today: ${anomaliesCount} anomalies detected`);
         doc.moveDown();
         doc.fontSize(10).text(`Report ID: ${job.id}`, { align: 'right' });
-        
+
         doc.end();
 
         await new Promise<void>((resolve, reject) => {
@@ -805,10 +822,10 @@ const digestWorker = new Worker<OwnerDigestRunJob>(
       where: { orgId: digest.orgId },
       select: { id: true },
     });
-    const branchIds = branches.map(b => b.id);
+    const branchIds = branches.map((b) => b.id);
 
     const salesToday = await prisma.payment.aggregate({
-      where: { 
+      where: {
         order: { branchId: { in: branchIds } },
         createdAt: { gte: startOfToday },
       },
@@ -816,7 +833,7 @@ const digestWorker = new Worker<OwnerDigestRunJob>(
     });
 
     const sales7d = await prisma.payment.aggregate({
-      where: { 
+      where: {
         order: { branchId: { in: branchIds } },
         createdAt: { gte: sevenDaysAgo },
       },
@@ -830,13 +847,13 @@ const digestWorker = new Worker<OwnerDigestRunJob>(
     // Generate PDF
     const PDFDocument = (await import('pdfkit')).default;
     const fs = await import('fs');
-    
+
     const doc = new PDFDocument();
     const pdfPath = `/tmp/owner-digest-${digest.id}-${Date.now()}.pdf`;
     const writeStream = fs.createWriteStream(pdfPath);
-    
+
     doc.pipe(writeStream);
-    
+
     // PDF content
     doc.fontSize(20).text(`Owner Digest: ${digest.name}`, { align: 'center' });
     doc.moveDown();
@@ -851,7 +868,7 @@ const digestWorker = new Worker<OwnerDigestRunJob>(
     doc.fontSize(12).text(`Today: ${anomaliesCount} anomalies detected`);
     doc.moveDown();
     doc.fontSize(10).text(`Report ID: ${job.id}`, { align: 'right' });
-    
+
     doc.end();
 
     await new Promise<void>((resolve, reject) => {
@@ -861,12 +878,57 @@ const digestWorker = new Worker<OwnerDigestRunJob>(
 
     logger.info({ pdfPath, recipients: digest.recipients }, `Digest PDF generated at ${pdfPath}`);
 
-    // Email (console stub)
+    // Send email via SMTP (using nodemailer)
+    const nodemailer = await import('nodemailer');
     const emailFrom = process.env.DIGEST_FROM_EMAIL || 'noreply@chefcloud.local';
-    console.log(`📧 [EMAIL STUB] Sending digest to: ${digest.recipients.join(', ')}`);
-    console.log(`   From: ${emailFrom}`);
-    console.log(`   Subject: ${digest.name} - ${now.toLocaleDateString()}`);
-    console.log(`   PDF: ${pdfPath}`);
+    const smtpHost = process.env.SMTP_HOST || 'localhost';
+    const smtpPort = parseInt(process.env.SMTP_PORT || '1025', 10);
+    const smtpUser = process.env.SMTP_USER || '';
+    const smtpPass = process.env.SMTP_PASS || '';
+    const smtpSecure = process.env.SMTP_SECURE === 'true';
+
+    const transporter = nodemailer.createTransport({
+      host: smtpHost,
+      port: smtpPort,
+      secure: smtpSecure,
+      auth: smtpUser ? {
+        user: smtpUser,
+        pass: smtpPass,
+      } : undefined,
+    });
+
+    const subject = `${digest.name} - ${now.toLocaleDateString()}`;
+    const pdfBuffer = await fs.promises.readFile(pdfPath);
+
+    await transporter.sendMail({
+      from: emailFrom,
+      to: digest.recipients.join(', '),
+      subject,
+      text: `Please find attached your ChefCloud owner digest for ${digest.org.name}.\n\nSales Today: ${salesToday._sum?.amount?.toString() || '0'} UGX\nSales Last 7 Days: ${sales7d._sum?.amount?.toString() || '0'} UGX\nAnomalies Today: ${anomaliesCount}`,
+      html: `
+        <h2>Owner Digest - ${digest.org.name}</h2>
+        <p><strong>Date:</strong> ${now.toLocaleDateString()}</p>
+        <h3>Sales Summary</h3>
+        <ul>
+          <li>Today: ${salesToday._sum?.amount?.toString() || '0'} UGX</li>
+          <li>Last 7 Days: ${sales7d._sum?.amount?.toString() || '0'} UGX</li>
+        </ul>
+        <h3>Anomalies</h3>
+        <ul>
+          <li>Today: ${anomaliesCount} anomalies detected</li>
+        </ul>
+        <p>Please see attached PDF for detailed report.</p>
+      `,
+      attachments: [
+        {
+          filename: `digest-${now.toISOString().split('T')[0]}.pdf`,
+          content: pdfBuffer,
+          contentType: 'application/pdf',
+        },
+      ],
+    });
+
+    logger.info(`[SMTP] sent -> to: ${digest.recipients.join(', ')}, subject: ${subject}`);
 
     // Update lastRunAt
     await prisma.ownerDigest.update({
@@ -882,7 +944,6 @@ const digestWorker = new Worker<OwnerDigestRunJob>(
 reportsWorker.on('completed', (job) => {
   console.log(`✅ Reports job ${job.id} completed`);
 });
-
 
 reportsWorker.on('failed', (job, err) => {
   console.error(`❌ Reports job ${job?.id} failed:`, err.message);
@@ -958,8 +1019,13 @@ export const paymentsQueue = new Queue<ReconcilePaymentsJob>('payments', { conne
 export const efrisQueue = new Queue<EfrisRetryJob>('efris', { connection });
 export const anomaliesQueue = new Queue<EmitAnomaliesJob>('anomalies', { connection });
 export const alertsQueue = new Queue<ScheduledAlertJob>('alerts', { connection });
-export const reservationsQueue = new Queue<ReservationAutoCancelJob>('reservations-auto-cancel', { connection });
-export const reservationRemindersQueue = new Queue<ReservationRemindersJob>('reservation-reminders', { connection });
+export const reservationsQueue = new Queue<ReservationAutoCancelJob>('reservations-auto-cancel', {
+  connection,
+});
+export const reservationRemindersQueue = new Queue<ReservationRemindersJob>(
+  'reservation-reminders',
+  { connection },
+);
 export const spoutConsumeQueue = new Queue<SpoutConsumeJob>('spout-consume', { connection });
 export const digestQueue = new Queue<OwnerDigestRunJob>('digest', { connection });
 
@@ -1041,7 +1107,61 @@ scheduleReservationAutoCancel().catch(console.error);
 scheduleReservationReminders().catch(console.error);
 scheduleSpoutConsume().catch(console.error);
 
-console.log('🚀 ChefCloud Worker started - listening for jobs on "reports", "payments", "efris", "anomalies", "alerts", "reservations", "reservation-reminders", "spout-consume", and "digest" queues');
+// Schedule owner digest cron job - runs every minute to check digests
+async function scheduleOwnerDigestCron() {
+  // Run every minute to check if any digests need to be sent
+  setInterval(async () => {
+    try {
+      const now = new Date();
+      
+      // Get all owner digests (filter where cron is not empty string)
+      const digests = await prisma.ownerDigest.findMany({
+        where: {
+          cron: { not: '' },
+        },
+      });
+
+      for (const digest of digests) {
+        try {
+          // Simple check: if digest hasn't run yet or more than 1 day ago, run it
+          const lastRun = digest.lastRunAt;
+          const shouldRun = !lastRun || (now.getTime() - lastRun.getTime()) > 24 * 60 * 60 * 1000;
+          
+          // For cron "* * * * *" (every minute), always run if not run in last minute
+          const everyMinuteCron = digest.cron === '* * * * *';
+          const shouldRunEveryMinute = everyMinuteCron && (!lastRun || (now.getTime() - lastRun.getTime()) > 60000);
+          
+          if (shouldRun || shouldRunEveryMinute) {
+            await digestQueue.add('owner-digest-run', {
+              type: 'owner-digest-run',
+              digestId: digest.id,
+            });
+            
+            // Update lastRunAt to prevent duplicate runs
+            await prisma.ownerDigest.update({
+              where: { id: digest.id },
+              data: { lastRunAt: now },
+            });
+            
+            logger.info({ digestId: digest.id, digestName: digest.name, cron: digest.cron }, 'Enqueued owner digest via cron');
+          }
+        } catch (err) {
+          logger.error({ digestId: digest.id, cron: digest.cron, error: err }, 'Failed to process digest cron');
+        }
+      }
+    } catch (err) {
+      logger.error({ error: err }, 'Error in owner digest cron scheduler');
+    }
+  }, 60000); // Run every minute
+  
+  console.log('Scheduled owner digest cron checker (every minute)');
+}
+
+scheduleOwnerDigestCron().catch(console.error);
+
+console.log(
+  '🚀 ChefCloud Worker started - listening for jobs on "reports", "payments", "efris", "anomalies", "alerts", "reservations", "reservation-reminders", "spout-consume", and "digest" queues',
+);
 
 // Graceful shutdown
 process.on('SIGTERM', async () => {

@@ -26,7 +26,7 @@ export class PaymentsService {
     private airtelAdapter: AirtelSandboxAdapter,
   ) {
     this.adapters = new Map();
-    
+
     // Register adapters based on enabled flags
     const mtnEnabled = this.configService.get<string>('PAY_MTN_ENABLED') === 'true';
     const airtelEnabled = this.configService.get<string>('PAY_AIRTEL_ENABLED') === 'true';
@@ -128,9 +128,7 @@ export class PaymentsService {
     }
 
     if (intent.status !== 'PENDING' && intent.status !== 'REQUIRES_ACTION') {
-      throw new BadRequestException(
-        `Cannot cancel intent with status ${intent.status}`,
-      );
+      throw new BadRequestException(`Cannot cancel intent with status ${intent.status}`);
     }
 
     await this.prisma.paymentIntent.update({
@@ -187,8 +185,12 @@ export class PaymentsService {
           status: result.status,
           providerRef: result.providerRef || intent.providerRef,
           metadata: {
-            ...(typeof intent.metadata === 'object' && intent.metadata !== null ? intent.metadata : {}),
-            ...(typeof result.metadata === 'object' && result.metadata !== null ? result.metadata : {})
+            ...(typeof intent.metadata === 'object' && intent.metadata !== null
+              ? intent.metadata
+              : {}),
+            ...(typeof result.metadata === 'object' && result.metadata !== null
+              ? result.metadata
+              : {}),
           },
         },
       });
@@ -215,7 +217,10 @@ export class PaymentsService {
 
       return { success: true, intentId: result.intentId, status: result.status };
     } catch (error) {
-      this.logger.error(`Webhook processing failed: ${(error as Error).message}`, (error as Error).stack);
+      this.logger.error(
+        `Webhook processing failed: ${(error as Error).message}`,
+        (error as Error).stack,
+      );
       return { success: false, reason: (error as Error).message };
     }
   }
@@ -238,8 +243,10 @@ export class PaymentsService {
         data: {
           status: 'FAILED',
           metadata: {
-            ...(typeof intent.metadata === 'object' && intent.metadata !== null ? intent.metadata : {}),
-            reason: 'expired'
+            ...(typeof intent.metadata === 'object' && intent.metadata !== null
+              ? intent.metadata
+              : {}),
+            reason: 'expired',
           },
         },
       });
@@ -254,7 +261,7 @@ export class PaymentsService {
     // Get threshold from config
     const threshold = parseInt(
       this.configService.get<string>('REFUND_APPROVAL_THRESHOLD') || '20000',
-      10
+      10,
     );
 
     // Fetch order with payments

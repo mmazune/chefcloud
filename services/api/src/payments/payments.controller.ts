@@ -1,10 +1,4 @@
-import {
-  Controller,
-  Post,
-  Body,
-  Param,
-  Req,
-} from '@nestjs/common';
+import { Controller, Post, Body, Param, Req } from '@nestjs/common';
 import { PaymentsService } from './payments.service';
 import { CreateIntentDto } from './dto/create-intent.dto';
 
@@ -13,10 +7,7 @@ export class PaymentsController {
   constructor(private paymentsService: PaymentsService) {}
 
   @Post('intents')
-  async createIntent(
-    @Body() dto: CreateIntentDto,
-    @Req() req: any,
-  ) {
+  async createIntent(@Body() dto: CreateIntentDto, @Req() req: any) {
     // Extract from JWT or defaults for testing
     const orgId = req.user?.orgId || 'org-1';
     const branchId = req.user?.branchId || 'branch-1';

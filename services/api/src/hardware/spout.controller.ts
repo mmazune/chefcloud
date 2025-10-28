@@ -4,6 +4,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { SpoutService } from './spout.service';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
+import { ApiKeyGuard } from '../auth/api-key.guard';
 
 class IngestEventDto {
   deviceId!: string;
@@ -29,39 +30,28 @@ export class SpoutController {
   constructor(private spoutService: SpoutService) {}
 
   @Post('ingest')
-  async ingestEvent(@Headers('x-spout-signature') signature: string | undefined, @Body() dto: IngestEventDto): Promise<any> {
+  @UseGuards(ApiKeyGuard)
+  async ingestEvent(
+    @Headers('x-spout-signature') signature: string | undefined,
+    @Body() dto: IngestEventDto,
+  ): Promise<any> {
     const occurredAt = new Date(dto.occurredAt);
 
-    return this.spoutService.ingestEvent(
-      dto.deviceId,
-      dto.pulses,
-      occurredAt,
-      dto.raw,
-      signature,
-    );
+    return this.spoutService.ingestEvent(dto.deviceId, dto.pulses, occurredAt, dto.raw, signature);
   }
 
   @Post('devices')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('L4')
   async createDevice(@Req() req: any, @Body() dto: CreateDeviceDto): Promise<any> {
-    return this.spoutService.createDevice(
-      req.user.orgId,
-      dto.branchId,
-      dto.name,
-      dto.vendor,
-    );
+    return this.spoutService.createDevice(req.user.orgId, dto.branchId, dto.name, dto.vendor);
   }
 
   @Post('calibrate')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('L4')
   async calibrate(@Body() dto: CalibrateDto): Promise<any> {
-    return this.spoutService.calibrate(
-      dto.deviceId,
-      dto.inventoryItemId,
-      dto.mlPerPulse,
-    );
+    return this.spoutService.calibrate(dto.deviceId, dto.inventoryItemId, dto.mlPerPulse);
   }
 
   @Get('events')

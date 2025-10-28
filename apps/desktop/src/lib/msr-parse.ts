@@ -3,9 +3,7 @@
  * Validates CLOUDBADGE format and rejects PAN-like data.
  */
 
-export type ParsedBadge =
-  | { type: 'badge'; code: string }
-  | { type: 'rejected'; reason: string };
+export type ParsedBadge = { type: 'badge'; code: string } | { type: 'rejected'; reason: string };
 
 /**
  * Detect PAN-like track data (payment card).
@@ -13,7 +11,7 @@ export type ParsedBadge =
 function isPanLike(data: string): boolean {
   const track1Pattern = /^%B\d{12,19}\^/;
   const track2Pattern = /^;?\d{12,19}=/;
-  
+
   return track1Pattern.test(data) || track2Pattern.test(data);
 }
 

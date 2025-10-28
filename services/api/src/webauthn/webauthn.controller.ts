@@ -10,10 +10,7 @@ import {
 import { WebAuthnService } from './webauthn.service';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma.service';
-import type {
-  RegistrationResponseJSON,
-  AuthenticationResponseJSON,
-} from '@simplewebauthn/types';
+import type { RegistrationResponseJSON, AuthenticationResponseJSON } from '@simplewebauthn/types';
 
 interface WebAuthnSession {
   webAuthnChallenge?: string;
@@ -46,10 +43,7 @@ export class WebAuthnController {
 
       // Check L3+ requirement (L3, L4, L5)
       if (!['L3', 'L4', 'L5'].includes(user.roleLevel)) {
-        throw new HttpException(
-          'Passkey registration requires L3+ role',
-          HttpStatus.FORBIDDEN,
-        );
+        throw new HttpException('Passkey registration requires L3+ role', HttpStatus.FORBIDDEN);
       }
 
       return user;
@@ -95,10 +89,7 @@ export class WebAuthnController {
     delete session.webAuthnChallenge;
 
     if (!result.verified) {
-      throw new HttpException(
-        'Registration verification failed',
-        HttpStatus.UNAUTHORIZED,
-      );
+      throw new HttpException('Registration verification failed', HttpStatus.UNAUTHORIZED);
     }
 
     return { ok: true };
@@ -122,15 +113,10 @@ export class WebAuthnController {
     } else if (body.userId) {
       userId = body.userId;
     } else {
-      throw new HttpException(
-        'userId or email required',
-        HttpStatus.BAD_REQUEST,
-      );
+      throw new HttpException('userId or email required', HttpStatus.BAD_REQUEST);
     }
 
-    const options = await this.webAuthnService.generateAuthenticationOptions(
-      userId,
-    );
+    const options = await this.webAuthnService.generateAuthenticationOptions(userId);
 
     // Store challenge in session
     session.webAuthnChallenge = options.challenge;
@@ -157,10 +143,7 @@ export class WebAuthnController {
     delete session.webAuthnChallenge;
 
     if (!result.verified || !result.user) {
-      throw new HttpException(
-        'Authentication verification failed',
-        HttpStatus.UNAUTHORIZED,
-      );
+      throw new HttpException('Authentication verification failed', HttpStatus.UNAUTHORIZED);
     }
 
     // Issue JWT token (same as password login)

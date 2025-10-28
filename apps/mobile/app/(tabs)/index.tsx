@@ -1,5 +1,12 @@
 import { useEffect, useState } from 'react';
-import { StyleSheet, Text, View, ScrollView, ActivityIndicator, TouchableOpacity } from 'react-native';
+import {
+  StyleSheet,
+  Text,
+  View,
+  ScrollView,
+  ActivityIndicator,
+  TouchableOpacity,
+} from 'react-native';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -29,7 +36,7 @@ export default function Dashboard() {
 
       const response = await fetch(`${API_BASE_URL}/owner/overview`, {
         headers: {
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -91,8 +98,8 @@ export default function Dashboard() {
     );
   }
 
-  const momoTotal = data.paymentBreakdown.find(p => p.method === 'MOMO')?.amount || 0;
-  const cashTotal = data.paymentBreakdown.find(p => p.method === 'CASH')?.amount || 0;
+  const momoTotal = data.paymentBreakdown.find((p) => p.method === 'MOMO')?.amount || 0;
+  const cashTotal = data.paymentBreakdown.find((p) => p.method === 'CASH')?.amount || 0;
   const total = momoTotal + cashTotal;
   const momoPercent = total > 0 ? ((momoTotal / total) * 100).toFixed(1) : '0';
   const cashPercent = total > 0 ? ((cashTotal / total) * 100).toFixed(1) : '0';
@@ -140,8 +147,12 @@ export default function Dashboard() {
         <Text style={styles.cardTitle}>Top Items</Text>
         {data.topItems.slice(0, 5).map((item, idx) => (
           <View key={item.menuItemId} style={styles.listItem}>
-            <Text style={styles.itemName}>{idx + 1}. {item.name}</Text>
-            <Text style={styles.itemValue}>{item.quantity} sold · ${item.revenue.toFixed(2)}</Text>
+            <Text style={styles.itemName}>
+              {idx + 1}. {item.name}
+            </Text>
+            <Text style={styles.itemValue}>
+              {item.quantity} sold · ${item.revenue.toFixed(2)}
+            </Text>
           </View>
         ))}
       </View>

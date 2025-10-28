@@ -9,8 +9,7 @@ export interface AnomalyRule {
   buildDetails: (context: any) => any;
 }
 
-export const LATE_VOID_THRESHOLD_MIN =
-  parseInt(process.env.LATE_VOID_MIN || '5', 10);
+export const LATE_VOID_THRESHOLD_MIN = parseInt(process.env.LATE_VOID_MIN || '5', 10);
 
 export const NO_DRINKS_RULE: AnomalyRule = {
   type: 'NO_DRINKS',
@@ -20,9 +19,9 @@ export const NO_DRINKS_RULE: AnomalyRule = {
     // Check if order has any DRINK category items
     // Category names like "Drinks", "Beverages", "Drink", etc.
     const hasDrinks = order.orderItems.some(
-      (item: any) => 
+      (item: any) =>
         item.menuItem?.category?.name?.toLowerCase().includes('drink') ||
-        item.menuItem?.category?.name?.toLowerCase().includes('beverage')
+        item.menuItem?.category?.name?.toLowerCase().includes('beverage'),
     );
     return !hasDrinks;
   },
@@ -46,9 +45,7 @@ export const LATE_VOID_RULE: AnomalyRule = {
   buildDetails: (order: any) => {
     const createdAt = new Date(order.createdAt).getTime();
     const updatedAt = new Date(order.updatedAt).getTime();
-    const minutesSinceCreated = Math.round(
-      (updatedAt - createdAt) / (1000 * 60),
-    );
+    const minutesSinceCreated = Math.round((updatedAt - createdAt) / (1000 * 60));
     return {
       orderNumber: order.orderNumber,
       total: Number(order.total),

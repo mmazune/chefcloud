@@ -3,6 +3,7 @@
 ## Summary
 
 Enhanced the owner digest system with:
+
 1. **PDF Charts**: Sales 7d sparkline (polyline) and payment split bar chart (MOMO vs CASH)
 2. **CSV Builders**: Top items, discounts, voids (ready for email attachments)
 3. **Shift-Close Email**: Optional trigger to send digest when shift closes
@@ -10,15 +11,16 @@ Enhanced the owner digest system with:
 ## Changes
 
 ### Database
+
 - **Migration**: `20251028000412_add_send_on_shift_close`
 - **Field Added**: `OwnerDigest.sendOnShiftClose` Boolean @default(false)
 
 ### API (`services/api`)
+
 - **Controller** (`owner.controller.ts`):
   - Added `PATCH /owner/digest/:id` endpoint
   - Added `UpdateDigestDto` class
   - Modified `createDigest()` to accept `sendOnShiftClose` parameter
-  
 - **Service** (`owner.service.ts`):
   - Enhanced `getOverview()`:
     - Added `sales7dArray: number[]` (7-day daily breakdown for sparkline)
@@ -39,6 +41,7 @@ Enhanced the owner digest system with:
   - Modified `closeShift()` to enqueue `owner-digest-shift-close` job after shift close
 
 ### Worker (`services/worker`)
+
 - **Digest Worker** (`src/index.ts`):
   - Updated `OwnerDigestRunJob` interface to support both job types
   - Enhanced `digestWorker` to handle:
@@ -49,6 +52,7 @@ Enhanced the owner digest system with:
        - Logs email stub with shift ID
 
 ### Tests
+
 - **Fixed** `owner.service.spec.ts`:
   - Added `subtotal` field to mock OrderItems
   - Added `revenue` field to expected topItems
@@ -56,6 +60,7 @@ Enhanced the owner digest system with:
 - **Result**: All 50/50 tests passing ✅
 
 ### Documentation
+
 - **Updated** `DEV_GUIDE.md`:
   - Added "Owner Digest Enhancements (M8-s2b)" section
   - Documented enhanced overview response
@@ -207,6 +212,7 @@ curl -X POST http://localhost:3001/shifts/close \
 ## CSV Output Examples
 
 ### Top Items CSV
+
 ```csv
 name,qty,revenue
 Burger,125,625000
@@ -215,6 +221,7 @@ Soda,87,174000
 ```
 
 ### Discounts CSV
+
 ```csv
 user,count,total
 alice@example.com,5,15000
@@ -222,6 +229,7 @@ bob@example.com,3,8000
 ```
 
 ### Voids CSV
+
 ```csv
 user,count,total
 manager@example.com,2,12000
@@ -290,6 +298,7 @@ ALTER TABLE "owner_digests" ADD COLUMN "send_on_shift_close" BOOLEAN NOT NULL DE
 M8-s2b implementation is **COMPLETE** ✅
 
 All features working:
+
 - Enhanced PDF with sparkline and bar charts
 - CSV builders for top items, discounts, voids
 - Shift-close email trigger

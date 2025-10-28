@@ -12,8 +12,7 @@ export class AirtelSandboxAdapter implements IPaymentAdapter {
   private readonly forceFail: boolean;
 
   constructor(private configService: ConfigService) {
-    const forceFailProviders =
-      this.configService.get<string>('PAYMENTS_FORCE_FAIL') || '';
+    const forceFailProviders = this.configService.get<string>('PAYMENTS_FORCE_FAIL') || '';
     this.forceFail = forceFailProviders.toLowerCase().includes('airtel');
   }
 
@@ -44,10 +43,7 @@ export class AirtelSandboxAdapter implements IPaymentAdapter {
     };
   }
 
-  async handleWebhook(
-    payload: any,
-    signature?: string,
-  ): Promise<WebhookResult> {
+  async handleWebhook(payload: any, signature?: string): Promise<WebhookResult> {
     this.logger.log(`[Airtel Sandbox] Processing webhook`, payload);
 
     // In sandbox, verify signature if secret is set

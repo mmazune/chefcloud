@@ -31,7 +31,10 @@ export class InventoryController {
 
   @Post('adjustments')
   @Roles('L3')
-  async createAdjustment(@Req() req: any, @Body() dto: { itemId: string; deltaQty: number; reason: string }): Promise<any> {
+  async createAdjustment(
+    @Req() req: any,
+    @Body() dto: { itemId: string; deltaQty: number; reason: string },
+  ): Promise<any> {
     return this.inventoryService.createAdjustment(
       req.user.orgId,
       req.user.branchId,

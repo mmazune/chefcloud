@@ -1,5 +1,10 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { loadClientIdMap, saveClientIdMap, addMapping, getServerOrderId } from '../src/lib/client-map';
+import {
+  loadClientIdMap,
+  saveClientIdMap,
+  addMapping,
+  getServerOrderId,
+} from '../src/lib/client-map';
 import * as fs from '@tauri-apps/api/fs';
 
 // Mock Tauri APIs
@@ -27,7 +32,7 @@ describe('Client ID Mapping', () => {
 
   it('should load existing map from file', async () => {
     vi.mocked(fs.readTextFile).mockResolvedValueOnce(
-      JSON.stringify({ 'order-1': 'server-id-123' })
+      JSON.stringify({ 'order-1': 'server-id-123' }),
     );
 
     const map = await loadClientIdMap();
@@ -40,7 +45,7 @@ describe('Client ID Mapping', () => {
 
     expect(fs.writeTextFile).toHaveBeenCalledWith(
       expect.stringContaining('client-map.json'),
-      JSON.stringify(testMap, null, 2)
+      JSON.stringify(testMap, null, 2),
     );
   });
 
@@ -51,13 +56,13 @@ describe('Client ID Mapping', () => {
 
     expect(fs.writeTextFile).toHaveBeenCalledWith(
       expect.stringContaining('client-map.json'),
-      JSON.stringify({ 'order-3': 'server-id-789' }, null, 2)
+      JSON.stringify({ 'order-3': 'server-id-789' }, null, 2),
     );
   });
 
   it('should retrieve server order ID from client ID', async () => {
     vi.mocked(fs.readTextFile).mockResolvedValueOnce(
-      JSON.stringify({ 'order-4': 'server-id-999' })
+      JSON.stringify({ 'order-4': 'server-id-999' }),
     );
 
     const serverId = await getServerOrderId('order-4');

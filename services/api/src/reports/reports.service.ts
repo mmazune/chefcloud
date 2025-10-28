@@ -44,7 +44,10 @@ export class ReportsService {
 
     // Count post-close voids (orders with metadata.voidedPostClose = true)
     const postCloseVoids = orders.filter(
-      (o) => o.metadata && typeof o.metadata === 'object' && (o.metadata as any).voidedPostClose === true
+      (o) =>
+        o.metadata &&
+        typeof o.metadata === 'object' &&
+        (o.metadata as any).voidedPostClose === true,
     );
     const postCloseVoidCount = postCloseVoids.length;
     const postCloseVoidTotal = postCloseVoids.reduce((sum, o) => sum + Number(o.total), 0);
@@ -123,7 +126,10 @@ export class ReportsService {
 
     // Count post-close voids
     const postCloseVoids = orders.filter(
-      (o) => o.metadata && typeof o.metadata === 'object' && (o.metadata as any).voidedPostClose === true
+      (o) =>
+        o.metadata &&
+        typeof o.metadata === 'object' &&
+        (o.metadata as any).voidedPostClose === true,
     );
     const postCloseVoidCount = postCloseVoids.length;
     const postCloseVoidTotal = postCloseVoids.reduce((sum, o) => sum + Number(o.total), 0);

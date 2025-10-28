@@ -123,9 +123,7 @@ describe('WebAuthnService', () => {
         updatedAt: new Date(),
       };
 
-      jest
-        .spyOn(prisma.client.webAuthnCredential, 'findMany')
-        .mockResolvedValue([cred1 as any]);
+      jest.spyOn(prisma.client.webAuthnCredential, 'findMany').mockResolvedValue([cred1 as any]);
 
       const options = await service.generateAuthenticationOptions('user-1');
 

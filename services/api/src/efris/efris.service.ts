@@ -75,8 +75,7 @@ export class EfrisService {
 
   async push(orderId: string): Promise<{ status: string; message?: string }> {
     const enabled = this.config.get<string>('FISCAL_ENABLED') === 'true';
-    const forceSuccess =
-      this.config.get<string>('FISCAL_FORCE_SUCCESS') === 'true';
+    const forceSuccess = this.config.get<string>('FISCAL_FORCE_SUCCESS') === 'true';
 
     const payload = await this.buildPayload(orderId);
 

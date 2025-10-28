@@ -40,7 +40,7 @@ export default function StockCount() {
       }
 
       const response = await fetch(`${API_BASE_URL}/inventory/items`, {
-        headers: { 'Authorization': `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       if (response.status === 401) {
@@ -95,7 +95,7 @@ export default function StockCount() {
       const response = await fetch(`${API_BASE_URL}/inventory/adjustments`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -118,20 +118,16 @@ export default function StockCount() {
         return;
       }
 
-      Alert.alert(
-        'Success',
-        `Adjustment recorded: ${qty > 0 ? '+' : ''}${qty} units`,
-        [
-          {
-            text: 'OK',
-            onPress: () => {
-              setSelectedItemId('');
-              setQuantity('');
-              setReason('');
-            },
+      Alert.alert('Success', `Adjustment recorded: ${qty > 0 ? '+' : ''}${qty} units`, [
+        {
+          text: 'OK',
+          onPress: () => {
+            setSelectedItemId('');
+            setQuantity('');
+            setReason('');
           },
-        ]
-      );
+        },
+      ]);
     } catch (error) {
       console.error('Submit error:', error);
       Alert.alert('Error', 'Failed to record adjustment');
@@ -166,12 +162,8 @@ export default function StockCount() {
               enabled={!submitting}
             >
               <Picker.Item label="-- Select an item --" value="" />
-              {items.map(item => (
-                <Picker.Item
-                  key={item.id}
-                  label={`${item.name} (${item.sku})`}
-                  value={item.id}
-                />
+              {items.map((item) => (
+                <Picker.Item key={item.id} label={`${item.name} (${item.sku})`} value={item.id} />
               ))}
             </Picker>
           </View>
@@ -187,9 +179,7 @@ export default function StockCount() {
             onChangeText={setQuantity}
             editable={!submitting}
           />
-          <Text style={styles.hint}>
-            Positive adds stock, negative removes
-          </Text>
+          <Text style={styles.hint}>Positive adds stock, negative removes</Text>
         </View>
 
         <View style={styles.section}>

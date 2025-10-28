@@ -90,9 +90,7 @@ export function OfflineBadge() {
         {isSyncing ? 'Syncing...' : 'Sync'}
       </button>
       {lastSyncResult && (
-        <span style={{ fontSize: '12px', color: '#6b7280' }}>
-          {lastSyncResult}
-        </span>
+        <span style={{ fontSize: '12px', color: '#6b7280' }}>{lastSyncResult}</span>
       )}
     </div>
   );

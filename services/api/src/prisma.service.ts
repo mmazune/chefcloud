@@ -99,4 +99,16 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
   get discount(): typeof prisma.discount {
     return prisma.discount;
   }
+
+  get apiKey(): typeof prisma.apiKey {
+    return prisma.apiKey;
+  }
+
+  get org(): typeof prisma.org {
+    return prisma.org;
+  }
+
+  get session(): typeof prisma.session {
+    return prisma.session;
+  }
 }

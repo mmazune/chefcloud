@@ -1,4 +1,12 @@
-import { Controller, Post, Body, HttpCode, HttpStatus, Headers, UnauthorizedException } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  HttpCode,
+  HttpStatus,
+  Headers,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto, PinLoginDto, MsrSwipeDto, AuthResponse } from './dto/auth.dto';
 import { JwtService } from '@nestjs/jwt';
@@ -55,4 +63,3 @@ export class AuthController {
     return this.authService.enrollBadge(body.userId, body.badgeId, decoded.sub);
   }
 }
-

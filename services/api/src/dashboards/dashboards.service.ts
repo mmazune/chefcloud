@@ -9,12 +9,7 @@ export class DashboardsService {
   /**
    * Get void leaderboard - users with most voids
    */
-  async getVoidLeaderboard(
-    orgId: string,
-    from?: Date,
-    to?: Date,
-    limit = 10,
-  ): Promise<any[]> {
+  async getVoidLeaderboard(orgId: string, from?: Date, to?: Date, limit = 10): Promise<any[]> {
     const where: any = {
       branch: { orgId },
       action: 'VOID',
@@ -34,14 +29,19 @@ export class DashboardsService {
     });
 
     // Group by user
-    const userStats = new Map<string, { userId: string; name: string; voids: number; totalVoidUGX: number }>();
+    const userStats = new Map<
+      string,
+      { userId: string; name: string; voids: number; totalVoidUGX: number }
+    >();
 
     for (const voidEvent of voids) {
       if (!voidEvent.userId) continue;
 
       const key = voidEvent.userId;
       if (!userStats.has(key)) {
-        const userName = voidEvent.user ? `${voidEvent.user.firstName} ${voidEvent.user.lastName}` : 'Unknown';
+        const userName = voidEvent.user
+          ? `${voidEvent.user.firstName} ${voidEvent.user.lastName}`
+          : 'Unknown';
         userStats.set(key, {
           userId: voidEvent.userId,
           name: userName,
@@ -52,9 +52,13 @@ export class DashboardsService {
 
       const stats = userStats.get(key)!;
       stats.voids++;
-      
+
       // Extract void amount from metadata if available
-      if (voidEvent.metadata && typeof voidEvent.metadata === 'object' && 'amount' in voidEvent.metadata) {
+      if (
+        voidEvent.metadata &&
+        typeof voidEvent.metadata === 'object' &&
+        'amount' in voidEvent.metadata
+      ) {
         stats.totalVoidUGX += parseFloat(String(voidEvent.metadata.amount));
       }
     }
@@ -67,12 +71,7 @@ export class DashboardsService {
   /**
    * Get discount leaderboard - users with most discounts
    */
-  async getDiscountLeaderboard(
-    orgId: string,
-    from?: Date,
-    to?: Date,
-    limit = 10,
-  ): Promise<any[]> {
+  async getDiscountLeaderboard(orgId: string, from?: Date, to?: Date, limit = 10): Promise<any[]> {
     const where: any = {
       orgId,
     };
@@ -91,7 +90,10 @@ export class DashboardsService {
     });
 
     // Group by user
-    const userStats = new Map<string, { userId: string; name: string; discounts: number; totalDiscountUGX: number }>();
+    const userStats = new Map<
+      string,
+      { userId: string; name: string; discounts: number; totalDiscountUGX: number }
+    >();
 
     for (const discount of discounts) {
       const key = discount.createdById;
@@ -135,7 +137,10 @@ export class DashboardsService {
       include: { user: true },
     });
 
-    const byWaiter = new Map<string, { waiterId: string; name: string; orders: number; noDrinks: number }>();
+    const byWaiter = new Map<
+      string,
+      { waiterId: string; name: string; orders: number; noDrinks: number }
+    >();
 
     orders.forEach((o) => {
       const userId = o.userId!;

@@ -1,4 +1,7 @@
 import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 import { HealthController } from './health/health.controller';
 import { PrismaService } from './prisma.service';
 import { AuthModule } from './auth/auth.module';
@@ -30,6 +33,13 @@ import { LoggerMiddleware } from './logger.middleware';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000, // 1 minute
+        limit: parseInt(process.env.RATE_LIMIT_PUBLIC || '60'),
+      },
+    ]),
     AuthModule,
     MeModule,
     DeviceModule,
@@ -56,11 +66,16 @@ import { LoggerMiddleware } from './logger.middleware';
     ThresholdsModule,
   ],
   controllers: [HealthController, WebhooksController],
-  providers: [PrismaService],
+  providers: [
+    PrismaService,
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer.apply(LoggerMiddleware).forRoutes('*');
   }
 }
-

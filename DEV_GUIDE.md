@@ -388,6 +388,7 @@ ORIGIN="http://localhost:5173"       # Expected origin for registration/authenti
 ```
 
 **Important:**
+
 - `RP_ID` must match the domain where the app is hosted (without protocol/port)
 - `ORIGIN` must include the full URL with protocol
 - For local dev with Tauri desktop, use `localhost` for RP_ID
@@ -462,15 +463,18 @@ Same flow as desktop app.
 ### Troubleshooting
 
 **"Registration failed: NotAllowedError"**
+
 - User cancelled the biometric prompt
 - Browser doesn't support WebAuthn
 - HTTPS required in production (localhost OK for dev)
 
 **"RP_ID does not match origin"**
+
 - Ensure RP_ID matches the domain (e.g., `localhost` for `http://localhost:5173`)
 - Check ORIGIN environment variable includes full URL
 
 **"Challenge not found"**
+
 - Session expired or cookies not enabled
 - Challenge is stored in server-side session and must be used within 60 seconds
 
@@ -489,6 +493,7 @@ CLOUDBADGE:<CODE>
 ```
 
 Where `<CODE>` is an alphanumeric string (letters, numbers, hyphens, underscores). Examples:
+
 - `CLOUDBADGE:W001` ✅
 - `CLOUDBADGE:CHEF-ALICE` ✅
 - `CLOUDBADGE:MGR_123` ✅
@@ -507,6 +512,7 @@ The server automatically rejects payment card data to prevent security risks:
 ```
 
 Detection uses regex patterns for:
+
 - **Track 1**: `^%B\d{12,19}\^`
 - **Track 2**: `^;?\d{12,19}=`
 
@@ -650,26 +656,32 @@ Badge operations are logged to `audit_events`:
 ### Troubleshooting
 
 **"Payment card data rejected"**
+
 - Badge uses Track 1 or Track 2 format (payment card)
 - Solution: Use CLOUDBADGE format only
 
 **"Invalid badge format"**
+
 - Badge data doesn't match `CLOUDBADGE:<CODE>` pattern
 - Solution: Verify badge encoding
 
 **"Badge W001 is already assigned to another user"**
+
 - Badge is in use by another employee
 - Solution: Use a different badge or unassign existing one
 
 **"Access denied. Badge enrollment requires L4+ role"**
+
 - User attempting enrollment is L1-L3 (Waiter, Chef, Stock)
 - Solution: Log in with Manager/Admin account
 
 **MSR listener not capturing swipes**
+
 - MSR toggle is disabled
 - Solution: Click "▶ Enable MSR" button
 
 **Swipe captured but no response**
+
 - API server not running or network offline
 - Solution: Check API status, enable offline queue if needed
 
@@ -724,6 +736,7 @@ curl -X POST http://localhost:3001/payments/intents \
 **Providers**: `"MTN"` or `"AIRTEL"`
 
 **Next Actions**:
+
 - MTN: USSD code prompt
 - Airtel: Deep link for Airtel Money app
 
@@ -898,6 +911,7 @@ curl -X POST http://localhost:3001/webhooks/airtel \
 ### Database Schema
 
 **PaymentIntent**:
+
 - `id`: Unique identifier
 - `orgId`, `branchId`, `orderId`: Relations
 - `provider`: "MTN" | "AIRTEL"
@@ -908,6 +922,7 @@ curl -X POST http://localhost:3001/webhooks/airtel \
 - `metadata`: Additional data (JSON)
 
 **WebhookEvent**:
+
 - `id`: Unique identifier
 - `provider`: "MTN" | "AIRTEL"
 - `eventType`: Event classification
@@ -918,22 +933,27 @@ curl -X POST http://localhost:3001/webhooks/airtel \
 ### Troubleshooting
 
 **"Provider MTN not supported or not enabled"**
+
 - Payment adapter is disabled
 - Solution: Set `PAY_MTN_ENABLED=true` in `.env` or run in sandbox mode (both disabled)
 
 **"Order does not belong to this branch"**
+
 - Order `branchId` doesn't match authenticated user's branch
 - Solution: Verify order ownership before creating intent
 
 **"Invalid webhook signature"**
+
 - Webhook signature verification failed
 - Solution: Ensure `PAY_MTN_SECRET` / `PAY_AIRTEL_SECRET` matches provider configuration
 
 **Intent stuck in PENDING**
+
 - Webhook not received or failed
 - Solution: Check webhook delivery logs; reconciliation worker will auto-fail after 30 minutes
 
 **Payment not appearing in reports**
+
 - Webhook returned non-SUCCEEDED status
 - Solution: Check `payment_intents` table for status; verify webhook payload format
 
@@ -942,11 +962,13 @@ curl -X POST http://localhost:3001/webhooks/airtel \
 ## EFRIS Integration (Uganda Revenue Authority)
 
 ### Overview
+
 ChefCloud integrates with EFRIS (Electronic Fiscal Receipting and Invoicing Solution) to automatically submit fiscal invoices when orders are closed. In development, the system operates in simulation mode.
 
 ### Configuration
 
 Add to `.env`:
+
 ```bash
 FISCAL_ENABLED=false           # Set to true for real EFRIS integration
 EFRIS_TIN=                     # Your URA TIN number
@@ -958,6 +980,7 @@ FISCAL_FORCE_SUCCESS=false     # In simulation: false = 90% success, true = 100%
 ### Database Schema
 
 **FiscalInvoice** model tracks all fiscal submissions:
+
 - `orderId` (unique): Links to Order
 - `status`: `PENDING` | `SENT` | `FAILED`
 - `efirsTin`, `deviceCode`: EFRIS credentials
@@ -966,11 +989,13 @@ FISCAL_FORCE_SUCCESS=false     # In simulation: false = 90% success, true = 100%
 - `lastTriedAt`: Last push attempt timestamp
 
 **TaxCategory** now includes:
+
 - `efirsTaxCode`: Optional EFRIS tax code (e.g., "FOOD", "BEV", "EXEMPT"). Defaults to "STD" if not set.
 
 ### API Endpoints
 
 #### Manual Push
+
 ```bash
 # Manually push an order to EFRIS
 curl -X POST http://localhost:3001/fiscal/push/order-123 \
@@ -978,6 +1003,7 @@ curl -X POST http://localhost:3001/fiscal/push/order-123 \
 ```
 
 **Response:**
+
 ```json
 {
   "status": "SENT",
@@ -988,6 +1014,7 @@ curl -X POST http://localhost:3001/fiscal/push/order-123 \
 ### Automatic Push on Order Close
 
 When an order is closed via `POST /pos/:orderId/close`, the system automatically:
+
 1. Closes the order (existing behavior)
 2. Calls `EfrisService.push(orderId)` in fire-and-forget mode
 3. Does NOT block the close operation if EFRIS push fails
@@ -997,6 +1024,7 @@ Failed pushes are stored with `status: FAILED` for later retry by the worker.
 ### Simulation Mode (Development)
 
 With `FISCAL_ENABLED=false`:
+
 - No actual EFRIS API calls are made
 - Success rate controlled by `FISCAL_FORCE_SUCCESS`:
   - `false`: 90% success (random failures for testing)
@@ -1006,6 +1034,7 @@ With `FISCAL_ENABLED=false`:
 ### Payload Structure
 
 Example payload sent to EFRIS:
+
 ```json
 {
   "tin": "1000000000",
@@ -1034,6 +1063,7 @@ Example payload sent to EFRIS:
 ### Worker Integration
 
 The `efris` queue is registered in `services/worker`:
+
 - Queue name: `efris`
 - Job types: `efris-push`, `efris-reconcile`
 
@@ -1042,6 +1072,7 @@ The `efris` queue is registered in `services/worker`:
 When an EFRIS push fails, the worker automatically schedules retries with exponential backoff:
 
 **Backoff Schedule:**
+
 1. Attempt 1: Immediate (from order close)
 2. Attempt 2: +5 minutes
 3. Attempt 3: +15 minutes
@@ -1056,6 +1087,7 @@ After 5 failed attempts, the invoice remains in `FAILED` status and requires man
 #### Nightly Reconciliation (efris-reconcile)
 
 A scheduled job runs daily at **02:00 local time** to:
+
 1. Scan all `FAILED` FiscalInvoice records with `attempts < 5`
 2. Re-enqueue them for retry with appropriate backoff
 
@@ -1064,11 +1096,13 @@ This ensures failed invoices don't get lost and are automatically retried.
 #### Manual Retry
 
 Force a retry for a specific order:
+
 ```bash
 curl -X POST http://localhost:3001/fiscal/retry/order-123
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -1080,28 +1114,33 @@ curl -X POST http://localhost:3001/fiscal/retry/order-123
 ### Testing
 
 #### Unit Test (Backoff Logic)
+
 ```bash
 cd services/worker
 pnpm test efris-backoff.spec
 ```
 
 Tests verify:
+
 - Backoff delays (5min → 15min → 45min → 2h → 6h)
 - Exponential growth pattern
 - Max attempts cap at 5
 
 #### Unit Test (Payload Mapping)
+
 ```bash
 cd services/api
 pnpm test efris.service.spec
 ```
 
 Tests cover:
+
 - Payload mapping (burger+fries with 18% tax)
 - Tax code fallback to "STD"
 - FiscalInvoice upsert logic
 
 #### E2E Test (Failure → Retry → Success)
+
 ```bash
 # 1. Force a failure
 export FISCAL_FORCE_SUCCESS=false  # 90% success rate
@@ -1124,20 +1163,23 @@ psql $DATABASE_URL -c "SELECT orderId, status, attempts FROM fiscal_invoices WHE
 ### Viewing Fiscal Records
 
 **Prisma Studio:**
+
 ```bash
 cd packages/db
 pnpm run db:studio
 ```
+
 Navigate to `FiscalInvoice` model.
 
 **SQL:**
+
 ```sql
-SELECT 
-  id, 
-  orderId, 
-  status, 
-  efirsTin, 
-  deviceCode, 
+SELECT
+  id,
+  orderId,
+  status,
+  efirsTin,
+  deviceCode,
   attempts,
   response->>'message' as message,
   createdAt
@@ -1149,15 +1191,18 @@ LIMIT 10;
 ### Troubleshooting
 
 **FiscalInvoice not created after order close**
+
 - Check server logs for errors in `EfrisService.push()`
 - Verify order exists and has items with tax categories
 - Ensure `EfrisModule` is imported in `PosModule`
 
 **All pushes failing in simulation**
+
 - Set `FISCAL_FORCE_SUCCESS=true` in `.env`
 - Restart API server
 
 **Real EFRIS integration fails**
+
 - Verify `EFRIS_TIN` and `EFRIS_DEVICE` are correct
 - Check EFRIS API key validity
 - Review `response` field in `fiscal_invoices` table for error details
@@ -1177,13 +1222,14 @@ ChefCloud includes real-time anomaly detection and scheduled alerting to identif
 
 ### Anomaly Rules
 
-| Rule Type | Severity | Description |
-|-----------|----------|-------------|
-| `NO_DRINKS` | INFO | Order completed without any beverage items (unusual pattern) |
-| `LATE_VOID` | WARN | Void created >5 minutes after order item creation |
-| `HEAVY_DISCOUNT` | WARN | Discount exceeds threshold percentage |
+| Rule Type        | Severity | Description                                                  |
+| ---------------- | -------- | ------------------------------------------------------------ |
+| `NO_DRINKS`      | INFO     | Order completed without any beverage items (unusual pattern) |
+| `LATE_VOID`      | WARN     | Void created >5 minutes after order item creation            |
+| `HEAVY_DISCOUNT` | WARN     | Discount exceeds threshold percentage                        |
 
 **Environment Variables:**
+
 ```bash
 LATE_VOID_MIN="5"           # Threshold in minutes for late void detection
 ALERTS_EMAIL_FROM="noreply@chefcloud.local"
@@ -1195,6 +1241,7 @@ SLACK_WEBHOOK_URL=""         # Optional: Slack webhook for alerts
 All analytics endpoints require L3+ role and use date range query params: `?from=YYYY-MM-DD&to=YYYY-MM-DD`
 
 **Staff Void Report**
+
 ```bash
 GET /analytics/staff/voids?from=2025-01-01&to=2025-01-31
 
@@ -1210,6 +1257,7 @@ GET /analytics/staff/voids?from=2025-01-01&to=2025-01-31
 ```
 
 **Staff Discount Report**
+
 ```bash
 GET /analytics/staff/discounts?from=2025-01-01&to=2025-01-31
 
@@ -1225,6 +1273,7 @@ GET /analytics/staff/discounts?from=2025-01-01&to=2025-01-31
 ```
 
 **No-Drinks Rate by Waiter**
+
 ```bash
 GET /analytics/orders/no-drinks?from=2025-01-01&to=2025-01-31
 
@@ -1241,6 +1290,7 @@ GET /analytics/orders/no-drinks?from=2025-01-01&to=2025-01-31
 ```
 
 **Late Voids Detection**
+
 ```bash
 GET /analytics/late-voids?from=2025-01-01&to=2025-01-31&thresholdMin=5
 
@@ -1262,6 +1312,7 @@ GET /analytics/late-voids?from=2025-01-01&to=2025-01-31&thresholdMin=5
 ### Alerts Management API (L4+)
 
 **Create Alert Channel**
+
 ```bash
 POST /alerts/channels
 Content-Type: application/json
@@ -1282,6 +1333,7 @@ Authorization: Bearer <L4_token>
 ```
 
 **Create Scheduled Alert**
+
 ```bash
 POST /alerts/schedules
 Content-Type: application/json
@@ -1296,6 +1348,7 @@ Authorization: Bearer <L4_token>
 ```
 
 **Trigger Alert Immediately**
+
 ```bash
 POST /alerts/run-now/:scheduleId
 Authorization: Bearer <L4_token>
@@ -1306,37 +1359,41 @@ Authorization: Bearer <L4_token>
 ### Worker Integration
 
 **Emit Anomalies Job**
+
 - Queue: `anomalies`
 - Triggered: On order events (void, discount, close)
 - Action: Runs detection rules, creates `AnomalyEvent` records
 
 **Scheduled Alerts Job**
+
 - Queue: `alerts`
 - Triggered: Cron-based via BullMQ repeatable jobs
 - Action: Aggregates anomalies since last run, sends to enabled channels
 
 **Manual Testing:**
+
 ```typescript
 // Enqueue anomaly detection for an order
 import { anomaliesQueue } from '@chefcloud/worker';
 await anomaliesQueue.add('emit-anomalies', {
   type: 'emit-anomalies',
-  orderId: 'clx_example_order_id'
+  orderId: 'clx_example_order_id',
 });
 
 // Trigger scheduled alert
 import { alertsQueue } from '@chefcloud/worker';
 await alertsQueue.add('scheduled-alert', {
   type: 'scheduled-alert',
-  scheduleId: 'clx_schedule_id'
+  scheduleId: 'clx_schedule_id',
 });
 ```
 
 ### Database Inspection
 
 **View Recent Anomalies**
+
 ```sql
-SELECT 
+SELECT
   ae.type,
   ae.severity,
   ae.details,
@@ -1351,8 +1408,9 @@ LIMIT 20;
 ```
 
 **View Alert Channels**
+
 ```sql
-SELECT 
+SELECT
   ac.type,
   ac.target,
   ac.enabled,
@@ -1362,8 +1420,9 @@ JOIN orgs o ON ac.orgId = o.id;
 ```
 
 **View Scheduled Alerts**
+
 ```sql
-SELECT 
+SELECT
   name,
   cron,
   rule,
@@ -1376,17 +1435,20 @@ ORDER BY lastRunAt DESC;
 ### Troubleshooting
 
 **Anomalies not being detected**
+
 - Check worker logs for `emit-anomalies` job processing
 - Verify order has required data (orderItems with menuItem.category)
 - Confirm anomaly rules are correctly imported in `worker/index.ts`
 
 **Scheduled alerts not firing**
+
 - Verify `cron` expression is valid (use https://crontab.guru)
 - Check BullMQ repeatable jobs: `await alertsQueue.getRepeatableJobs()`
 - Ensure `enabled=true` on ScheduledAlert record
 - Review worker logs for `scheduled-alert` job errors
 
 **Email/Slack not sending**
+
 - Currently stubbed with console.log - integrate real email/Slack clients
 - Set `ALERTS_EMAIL_FROM` and `SLACK_WEBHOOK_URL` in `.env`
 - Check channel `enabled` status in database
@@ -1404,6 +1466,7 @@ ChefCloud provides comprehensive observability and remote support capabilities w
 OpenTelemetry automatically instruments HTTP requests, database queries (Prisma), and queue jobs (BullMQ).
 
 **Environment Variables:**
+
 ```bash
 # Export traces to OTLP collector (e.g., Jaeger, Honeycomb, Grafana Tempo)
 OTEL_EXPORTER_OTLP_ENDPOINT="http://localhost:4318/v1/traces"
@@ -1412,6 +1475,7 @@ OTEL_EXPORTER_OTLP_ENDPOINT="http://localhost:4318/v1/traces"
 ```
 
 **What's Instrumented:**
+
 - HTTP server requests/responses (method, path, status, duration)
 - Prisma database queries (query type, duration)
 - BullMQ job processing (queue name, job type, duration)
@@ -1422,12 +1486,14 @@ OTEL_EXPORTER_OTLP_ENDPOINT="http://localhost:4318/v1/traces"
 Sentry captures errors and performance traces with configurable sampling.
 
 **Environment Variables:**
+
 ```bash
 SENTRY_DSN="https://your-sentry-dsn@sentry.io/project-id"
 # Traces sample rate: 0.2 in production (20%), 1.0 in development
 ```
 
 **Features:**
+
 - Error stack traces with context
 - Performance monitoring (tracesSampleRate=0.2)
 - Environment tagging (development/production)
@@ -1438,6 +1504,7 @@ SENTRY_DSN="https://your-sentry-dsn@sentry.io/project-id"
 All services log in JSON format with contextual metadata.
 
 **Log Fields:**
+
 - `service`: Service name (chefcloud-api, chefcloud-worker)
 - `level`: Log level (info, warn, error)
 - `requestId`: Unique request identifier
@@ -1449,6 +1516,7 @@ All services log in JSON format with contextual metadata.
 - `timestamp`: ISO 8601 timestamp
 
 **Environment Variables:**
+
 ```bash
 LOG_LEVEL="info"  # debug | info | warn | error
 NODE_ENV="development"  # Uses pino-pretty for colored output
@@ -1508,6 +1576,7 @@ chefcloud_queue_jobs_total 89
 ```
 
 **Grafana/Prometheus Integration:**
+
 ```yaml
 # prometheus.yml
 scrape_configs:
@@ -1590,6 +1659,7 @@ curl -X POST http://localhost:3001/support/sessions \
 ```
 
 **Configuration:**
+
 ```bash
 SUPPORT_MAX_SESSION_MIN="30"  # Maximum session duration (capped at value)
 ```
@@ -1628,6 +1698,7 @@ curl -X POST http://localhost:3001/support/ingest \
 ```
 
 **Event Storage:**
+
 - Last 100 events per session stored in-memory
 - Events cleared when session is deactivated
 - Optional: Persist to Redis list for multi-instance deployments
@@ -1734,18 +1805,21 @@ export function SupportMode() {
 ### Privacy & Security Notes
 
 **Data Retention:**
+
 - Log ring buffer: Last 1000 entries in memory (cleared on restart)
 - Error tracker: Last 100 errors in memory
 - Support sessions: Last 100 events per session, cleared when session deactivated
 - Audit events: Permanent database records for DIAG_SNAPSHOT actions
 
 **Sensitive Data:**
+
 - Logs automatically redact common patterns (credit cards, passwords)
 - Support session tokens expire after 15 minutes (configurable up to `SUPPORT_MAX_SESSION_MIN`)
 - Session tokens are single-use and cannot be reused after deactivation
 - L4 role required to create sessions and view diagnostic snapshots
 
 **Production Recommendations:**
+
 - Set `OTEL_EXPORTER_OTLP_ENDPOINT` to secure collector (HTTPS)
 - Rotate Sentry DSN if exposed
 - Limit `SUPPORT_MAX_SESSION_MIN` to 30 minutes
@@ -1755,29 +1829,34 @@ export function SupportMode() {
 ### Troubleshooting
 
 **Traces not appearing in OTLP collector**
+
 - Verify `OTEL_EXPORTER_OTLP_ENDPOINT` is set and reachable
 - Check collector logs for ingestion errors
 - Confirm OTLP endpoint supports HTTP (not gRPC)
 - Review console output if endpoint is unset (traces logged locally)
 
 **Sentry errors not reporting**
+
 - Confirm `SENTRY_DSN` is set correctly
 - Check Sentry project quota and rate limits
 - Verify network connectivity to sentry.io
 - Review Sentry console for rejected events
 
 **Metrics always show 0**
+
 - Metrics are in-memory counters (reset on restart)
 - Ensure LoggerMiddleware is applied to routes (check app.module.ts)
 - Verify requests are authenticated (metrics tracked on response finish)
 
 **Support session token invalid**
+
 - Check session `expiresAt` timestamp (15-minute window)
 - Verify session `isActive` is true
 - Session may have been manually deactivated
 - Token must exactly match (64-char hex string)
 
 **Desktop support mode not streaming events**
+
 - Confirm session was created by L4 user
 - Check network connectivity from desktop to API
 - Verify `/support/ingest` endpoint is accessible (no auth guard)
@@ -1792,6 +1871,7 @@ ChefCloud provides a complete deposit lifecycle management system for reservatio
 ### Configuration
 
 Add to `OrgSettings`:
+
 ```sql
 -- reservationHoldMinutes: Time window before auto-canceling HELD reservations with deposits (default: 30 minutes)
 UPDATE org_settings SET "reservationHoldMinutes" = 30 WHERE "orgId" = 'your-org-id';
@@ -1800,12 +1880,14 @@ UPDATE org_settings SET "reservationHoldMinutes" = 30 WHERE "orgId" = 'your-org-
 ### Deposit Lifecycle
 
 **Deposit Statuses:**
+
 - `NONE`: No deposit required
 - `HELD`: Deposit payment intent created, funds on hold (auto-cancel after hold window)
 - `CAPTURED`: Reservation confirmed, deposit captured
 - `REFUNDED`: Reservation cancelled, deposit refunded
 
 **Reservation Statuses:**
+
 - `HELD`: Initial state when created
 - `CONFIRMED`: Guest confirmed arrival (deposit captured if HELD)
 - `SEATED`: Guest arrived and seated
@@ -1859,6 +1941,7 @@ curl -X POST http://localhost:3001/reservations \
 ```
 
 **Automatic Actions on Create:**
+
 - If `deposit > 0`: Creates PaymentIntent (MOMO), sets `depositStatus="HELD"`, sets `autoCancelAt = now + reservationHoldMinutes`
 - If `startAt > 24h from now`: Creates ReservationReminder for T-24h (SMS to phone)
 
@@ -1884,6 +1967,7 @@ curl -X POST http://localhost:3001/reservations/res-abc123/confirm \
 ```
 
 **Confirm Logic:**
+
 - Requires `depositStatus` in `["NONE", "HELD"]`
 - If `depositStatus="HELD"`: Captures deposit (simulated success), sets `depositStatus="CAPTURED"`
 - If `depositStatus="NONE"`: No deposit change
@@ -1905,6 +1989,7 @@ curl -X POST http://localhost:3001/reservations/res-abc123/cancel \
 ```
 
 **Cancel Logic:**
+
 - If `depositStatus="HELD"`: Marks PaymentIntent as CANCELLED, sets `depositStatus="REFUNDED"` (simulated refund)
 - If `depositStatus="CAPTURED"`: Creates Refund record, sets `depositStatus="REFUNDED"`
 - If `depositStatus="NONE"`: No refund needed
@@ -1949,6 +2034,7 @@ await reservationsQueue.add('reservations-auto-cancel', {
 ```
 
 **Logic:**
+
 1. Find reservations where `status="HELD"`, `depositStatus="HELD"`, and `autoCancelAt < now`
 2. Update `status="CANCELLED"`, `depositStatus="REFUNDED"`
 3. Mark PaymentIntent as CANCELLED with refund metadata
@@ -1969,6 +2055,7 @@ await reservationRemindersQueue.add('reservations-reminders', {
 ```
 
 **Logic:**
+
 1. Find ReservationReminder records where `scheduledAt <= now` and `sentAt=null`
 2. For each reminder:
    - Format message with party size, time, table ID
@@ -1979,6 +2066,7 @@ await reservationRemindersQueue.add('reservations-reminders', {
 **Schedule:** `*/10 * * * *` (every 10 minutes)
 
 **Reminder Creation:**
+
 - Automatically created on reservation create if `startAt > 24h from now`
 - Scheduled for `startAt - 24h`
 - Uses phone number from reservation (`channel="SMS"`, `target=phone`)
@@ -2015,6 +2103,7 @@ curl "http://localhost:3001/floor/availability?from=2025-11-01T18:00:00Z&to=2025
 ```
 
 **Status Logic:**
+
 - `OCCUPIED`: Table has active order (NEW, SENT, IN_KITCHEN, READY, SERVED)
 - `RESERVED`: Table has HELD or CONFIRMED reservation in time window
 - `FREE`: Table available
@@ -2022,6 +2111,7 @@ curl "http://localhost:3001/floor/availability?from=2025-11-01T18:00:00Z&to=2025
 ### Database Schema
 
 **Reservation Model:**
+
 ```prisma
 model Reservation {
   id              String   @id @default(cuid())
@@ -2046,6 +2136,7 @@ model Reservation {
 ```
 
 **ReservationReminder Model:**
+
 ```prisma
 model ReservationReminder {
   id            String    @id @default(cuid())
@@ -2061,6 +2152,7 @@ model ReservationReminder {
 ```
 
 **OrgSettings Addition:**
+
 ```prisma
 model OrgSettings {
   // ... existing fields
@@ -2140,24 +2232,29 @@ psql $DATABASE_URL -c "SELECT * FROM reservation_reminders WHERE \"reservationId
 ### Troubleshooting
 
 **"Cannot confirm reservation with depositStatus CAPTURED"**
+
 - Reservation already confirmed
 - Solution: Check reservation status before confirming
 
 **"Cannot confirm reservation with depositStatus REFUNDED"**
+
 - Reservation was cancelled and deposit refunded
 - Solution: Reservation cannot be re-confirmed after cancellation
 
 **Auto-cancel not running**
+
 - Worker not started or repeatable job not scheduled
 - Solution: Check worker logs for "Scheduled reservation auto-cancel job (every 5 minutes)"
 - Verify with: `await reservationsQueue.getRepeatableJobs()`
 
 **Reminders not sending**
+
 - Reminder scheduledAt in future or already sent
 - Solution: Check `reservation_reminders` table for `sentAt IS NULL` and `scheduledAt <= NOW()`
 - Verify worker logs for "Found X reminders to send"
 
 **"Table X is already reserved"**
+
 - Overlapping reservation exists in time window
 - Solution: Choose different table or time slot
 - Check existing reservations: `GET /reservations?from=...&to=...&status=HELD,CONFIRMED`
@@ -2171,6 +2268,7 @@ ChefCloud provides secure refund and post-close void capabilities with manager a
 ### Configuration
 
 Add to `.env`:
+
 ```bash
 REFUND_APPROVAL_THRESHOLD="20000"   # Refunds >= this amount require manager approval (UGX)
 POST_CLOSE_WINDOW_MIN="15"          # Time window for post-close voids (minutes)
@@ -2330,6 +2428,7 @@ curl http://localhost:3001/reports/z/shift-123 \
 ### Database Schema
 
 **Refund Model:**
+
 ```prisma
 model Refund {
   id          String   @id @default(cuid())
@@ -2352,6 +2451,7 @@ model Refund {
 ```
 
 **Order Metadata for Post-Close Voids:**
+
 ```json
 {
   "voidedPostClose": true,
@@ -2364,6 +2464,7 @@ model Refund {
 ### MOMO Refund Integration
 
 When refunding a MOMO payment, the system:
+
 1. Detects original payment method from last payment on order
 2. Extracts provider (MTN/AIRTEL) from payment metadata
 3. Calls payment adapter's refund method (simulated in sandbox)
@@ -2371,6 +2472,7 @@ When refunding a MOMO payment, the system:
 5. Logs audit event with provider and outcome
 
 **Sandbox Simulation:**
+
 - MOMO refunds: Simulated success (logs adapter call)
 - CASH/CARD refunds: Immediate completion (manual refund assumed)
 
@@ -2379,6 +2481,7 @@ When refunding a MOMO payment, the system:
 All refund and void operations create audit events:
 
 **Refund Audit Event:**
+
 ```json
 {
   "action": "REFUND",
@@ -2398,6 +2501,7 @@ All refund and void operations create audit events:
 ```
 
 **Post-Close Void Audit Event:**
+
 ```json
 {
   "action": "POST_CLOSE_VOID",
@@ -2480,34 +2584,42 @@ curl -X POST http://localhost:3001/pos/orders/$ORDER_ID/post-close-void \
 ### Troubleshooting
 
 **"Manager PIN required for refunds >= threshold"**
+
 - Refund amount meets or exceeds `REFUND_APPROVAL_THRESHOLD`
 - Solution: Include `managerPin` in request body
 
 **"Invalid manager PIN"**
+
 - PIN doesn't match user's stored `pinHash`
 - Solution: Verify PIN is correct; user may need to reset via auth flow
 
 **"Requires L3+ role for refunds >= threshold"**
+
 - Authenticated user has role L1 or L2
 - Solution: Login with Manager/Chef/Stock/Admin account (L3+)
 
 **"Requires L4+ role for post-close voids"**
+
 - Authenticated user has role L1, L2, or L3
 - Solution: Login with Manager/Accountant/Owner/Admin account (L4+)
 
 **"Post-close void window expired"**
+
 - Order was closed more than `POST_CLOSE_WINDOW_MIN` minutes ago
 - Solution: Use regular void operation or contact system administrator
 
 **"Cannot post-close void an order that is not CLOSED"**
+
 - Order status is not `CLOSED` (e.g., still `NEW`, `SENT`, or `SERVED`)
 - Solution: Ensure order is closed before attempting post-close void
 
 **"No payment found for this order"**
+
 - Order has no payment records (refund prerequisite)
 - Solution: Verify order was paid; cannot refund unpaid orders
 
 **MOMO refund stuck in PENDING**
+
 - Payment adapter communication failed
 - Solution: Check worker logs for adapter errors; refund may need manual reconciliation
 
@@ -2522,6 +2634,7 @@ ChefCloud provides owner-level dashboards with high-level KPIs, automated PDF di
 **GET /owner/overview** (L5 only - Owner/Admin)
 
 Returns JSON summary with:
+
 - Sales today and last 7 days
 - Top 5 menu items by quantity
 - Discounts, voids, and anomalies counts
@@ -2611,6 +2724,7 @@ curl -X POST http://localhost:3001/owner/digest/run-now/digest-abc123 \
 ### PDF Report Contents
 
 Generated digests include:
+
 - Organization name and report timestamp
 - Sales summary (today, last 7 days)
 - Anomaly count for the day
@@ -2625,6 +2739,7 @@ DIGEST_FROM_EMAIL="noreply@chefcloud.local"  # Sender address for digest emails
 ### Worker Integration
 
 The `digest` queue processes `owner-digest-run` jobs:
+
 - Fetches org branches and aggregates sales data
 - Generates PDF using pdfkit
 - Saves PDF to `/tmp/owner-digest-{id}-{timestamp}.pdf`
@@ -2662,18 +2777,22 @@ ls -lh /tmp/owner-digest-*.pdf
 ### Troubleshooting
 
 **"Digest not found"**
+
 - Digest ID doesn't exist
 - Solution: Verify digest was created successfully
 
 **"Access denied"**
+
 - User is not L5 (Owner/Admin)
 - Solution: Login with owner account
 
 **PDF not generated**
+
 - Worker not running or digest queue failing
 - Solution: Check worker logs, ensure pdfkit installed (`pnpm add pdfkit`)
 
 **Email not sending**
+
 - Currently stubbed to console.log
 - Solution: Integrate SMTP library (nodemailer) for production
 
@@ -2787,6 +2906,7 @@ Generated PDFs now include:
 ### CSV Formats
 
 **Top Items CSV** (`buildTopItemsCSV`):
+
 ```csv
 name,qty,revenue
 Burger,125,625000
@@ -2795,6 +2915,7 @@ Soda,87,174000
 ```
 
 **Discounts CSV** (`buildDiscountsCSV`):
+
 ```csv
 user,count,total
 alice@example.com,5,15000
@@ -2802,6 +2923,7 @@ bob@example.com,3,8000
 ```
 
 **Voids CSV** (`buildVoidsCSV`):
+
 ```csv
 user,count,total
 manager@example.com,2,12000
@@ -2848,6 +2970,7 @@ curl -X PATCH http://localhost:3001/owner/digest/$DIGEST_ID \
 ### Database Schema Changes
 
 **OwnerDigest** table:
+
 ```prisma
 model OwnerDigest {
   id               String   @id @default(uuid())
@@ -2870,6 +2993,7 @@ Migration: `20251028000412_add_send_on_shift_close`
 ### Implementation Details
 
 **API Service** (`owner.service.ts`):
+
 - `getOverview()`: Enhanced with `sales7dArray` (7-day daily sales), `revenue` in topItems, `paymentSplit` object
 - `updateDigest(id, updates)`: PATCH handler for digest config
 - `buildTopItemsCSV(items)`: Generates CSV string
@@ -2878,9 +3002,11 @@ Migration: `20251028000412_add_send_on_shift_close`
 - `buildDigestPDF(overview, orgName)`: Generates PDF Buffer with pdfkit, includes sparkline and bar charts
 
 **Shifts Service** (`shifts.service.ts`):
+
 - `closeShift()`: Enqueues `owner-digest-shift-close` job after successful close
 
 **Worker** (`services/worker/src/index.ts`):
+
 - `digestWorker`: Handles two job types:
   1. `owner-digest-run`: Scheduled digest (existing)
   2. `owner-digest-shift-close`: Triggered by shift close (NEW)
@@ -2891,18 +3017,22 @@ Migration: `20251028000412_add_send_on_shift_close`
 ### Troubleshooting
 
 **"Charts not appearing in PDF"**
+
 - pdfkit not installed
 - Solution: `cd services/api && pnpm add pdfkit @types/pdfkit`
 
 **"Shift-close digest not sending"**
+
 - `sendOnShiftClose` is false
 - Solution: PATCH digest with `{"sendOnShiftClose": true}`
 
 **"Worker not processing shift-close jobs"**
+
 - Worker not running
 - Solution: Start worker with `cd services/worker && pnpm dev`
 
 **"PDF shows [object Object] instead of chart"**
+
 - Data format issue in sales7dArray or paymentSplit
 - Solution: Check overview response format matches expected schema
 
@@ -2923,6 +3053,7 @@ ChefCloud integrates with liquor pour spouts (e.g., Berg, Poursteady) to automat
 ### Configuration
 
 Add to `.env`:
+
 ```bash
 SPOUT_VERIFY=false           # Enable HMAC signature verification for webhooks
 SPOUT_VENDOR=SANDBOX         # Vendor identifier (e.g., BERG, POURSTEADY, SANDBOX)
@@ -2931,6 +3062,7 @@ SPOUT_VENDOR=SANDBOX         # Vendor identifier (e.g., BERG, POURSTEADY, SANDBO
 ### Database Schema
 
 **SpoutDevice** (Hardware device registry):
+
 - `orgId`, `branchId`: Organization and branch links
 - `name`: Device name (e.g., "Bar Spout #1")
 - `vendor`: Vendor identifier (SANDBOX, BERG, etc.)
@@ -2938,12 +3070,14 @@ SPOUT_VENDOR=SANDBOX         # Vendor identifier (e.g., BERG, POURSTEADY, SANDBO
 - `isActive`: Device enabled/disabled flag
 
 **SpoutCalibration** (Device-to-inventory mapping):
+
 - `deviceId`: Links to SpoutDevice
 - `inventoryItemId`: Links to InventoryItem
 - `mlPerPulse`: Decimal calibration factor (e.g., 1.5 ml per pulse)
 - Unique constraint: `(deviceId, inventoryItemId)`
 
 **SpoutEvent** (Pour tracking):
+
 - `orgId`, `branchId`: Organization and branch links
 - `deviceId`: Links to SpoutDevice
 - `itemId`: Optional link to InventoryItem (populated if calibrated)
@@ -3049,6 +3183,7 @@ curl -X POST http://localhost:3001/hardware/spout/ingest \
 ```
 
 **HMAC Signature Verification:**
+
 - Enabled when `SPOUT_VERIFY=true`
 - Payload: `JSON.stringify({ deviceId, pulses, occurredAt: "...", raw: {...} })`
 - Algorithm: HMAC-SHA256
@@ -3056,6 +3191,7 @@ curl -X POST http://localhost:3001/hardware/spout/ingest \
 - Header: `X-Spout-Signature` (hex digest)
 
 **ml Computation:**
+
 - If device has calibration for an inventory item: `ml = pulses × mlPerPulse`, `itemId` set
 - If no calibration: `ml = 0`, `itemId = null`
 
@@ -3100,6 +3236,7 @@ Automatically aggregates spout events and consumes from inventory stock batches:
 **Schedule:** `* * * * *` (every minute, cron pattern)
 
 **Logic:**
+
 1. Find SpoutEvent records from last 60 seconds with `itemId != null`
 2. Aggregate total `ml` by `itemId`
 3. For each inventory item:
@@ -3115,6 +3252,7 @@ Automatically aggregates spout events and consumes from inventory stock batches:
        - Cap `remainingQty` at 0 (prevent negative values)
 
 **Example Consumption:**
+
 ```
 Event: 100ml consumed from item-vodka-001 (unit: ltr)
 Converted qty: 0.1 ltr
@@ -3128,6 +3266,7 @@ Consumption:
 ```
 
 **Manual Trigger (for testing):**
+
 ```bash
 # Requires access to worker service terminal
 import { spoutConsumeWorker } from '@chefcloud/worker';
@@ -3141,6 +3280,7 @@ await spoutConsumeWorker.add('spout-consume', {
 #### Unit Tests
 
 **Spout Service:**
+
 ```bash
 cd services/api
 pnpm test spout.service.spec
@@ -3279,26 +3419,32 @@ psql $DATABASE_URL -c "SELECT type, severity, details FROM audit_events WHERE ty
 ### Troubleshooting
 
 **Webhook returns "Device not found or inactive"**
+
 - Device ID doesn't exist or `isActive=false`
 - Solution: Verify device exists and is enabled; use correct device ID from creation response
 
 **Webhook returns "Invalid signature"**
+
 - HMAC signature verification failed
 - Solution: Ensure `SPOUT_VERIFY=true` requires correct `X-Spout-Signature` header; verify payload matches expected format
 
 **ml always shows 0 in events**
+
 - Device not calibrated for any inventory item
 - Solution: Create calibration with POST /hardware/spout/calibrate
 
 **Inventory not consuming after events ingested**
+
 - Worker not running or spout-consume job failing
 - Solution: Check worker logs for errors; verify `itemId` is set on SpoutEvent records
 
 **Stock becomes negative**
+
 - Bug in FIFO consumption logic (should cap at 0)
 - Solution: Check `StockBatch.remainingQty` values; verify NEGATIVE_STOCK audit event created
 
 **Events have wrong timestamp**
+
 - Client sending incorrect `occurredAt` format
 - Solution: Use ISO 8601 format: `YYYY-MM-DDTHH:MM:SSZ`
 
@@ -3318,6 +3464,7 @@ ChefCloud provides Server-Sent Events (SSE) endpoints for real-time updates to d
 ### Configuration
 
 Add to `.env`:
+
 ```bash
 STREAM_KEEPALIVE_SEC="15"    # Keepalive ping interval (seconds)
 STREAM_MAX_CLIENTS="200"     # Maximum concurrent SSE connections
@@ -3330,9 +3477,11 @@ STREAM_MAX_CLIENTS="200"     # Maximum concurrent SSE connections
 **Authentication**: L3+ (Manager, Shift Lead, Owner/Admin)
 
 **Query Parameters**:
+
 - `deviceId` (optional): Filter events for specific spout device
 
 **Event Format**:
+
 ```json
 {
   "deviceId": "device-abc123",
@@ -3343,11 +3492,13 @@ STREAM_MAX_CLIENTS="200"     # Maximum concurrent SSE connections
 ```
 
 **Features**:
+
 - Keepalive ping every 15 seconds (`: keepalive\n\n`)
 - Throttles to max 1 event/second per device (prevents flooding)
 - Auto-cleanup on client disconnect
 
 **curl Example**:
+
 ```bash
 curl -N http://localhost:3001/stream/spout \
   -H "Authorization: Bearer L3_MANAGER_TOKEN"
@@ -3367,9 +3518,11 @@ data: {"deviceId":"device-2","ml":75,"itemId":"item-whiskey","occurredAt":"2025-
 **Authentication**: L3+ (Manager, Shift Lead, Owner/Admin)
 
 **Query Parameters**:
+
 - `station` (optional): Filter by station (`GRILL`, `FRYER`, `BAR`, `SALAD`, `DESSERT`)
 
 **Event Format**:
+
 ```json
 {
   "ticketId": "ticket-xyz789",
@@ -3383,6 +3536,7 @@ data: {"deviceId":"device-2","ml":75,"itemId":"item-whiskey","occurredAt":"2025-
 **Statuses**: `QUEUED`, `READY`, `RECALLED`
 
 **curl Example**:
+
 ```bash
 # Stream all KDS events
 curl -N http://localhost:3001/stream/kds \
@@ -3407,8 +3561,8 @@ data: {"ticketId":"ticket-1","orderId":"order-1","station":"GRILL","status":"REA
 const token = 'YOUR_L3_TOKEN';
 const eventSource = new EventSource(`http://localhost:3001/stream/spout`, {
   headers: {
-    Authorization: `Bearer ${token}`
-  }
+    Authorization: `Bearer ${token}`,
+  },
 });
 
 eventSource.onmessage = (event) => {
@@ -3462,11 +3616,13 @@ streamKDS('GRILL');
 ### Event Publishing Points
 
 **Spout Events** (published by `hardware/spout.service.ts`):
+
 - Triggered after `SpoutEvent` saved to database
 - Includes: `deviceId`, `ml`, `itemId`, `occurredAt`
 - Throttled to 1/sec per device
 
 **KDS Events** (published by `kds/kds.service.ts` and `pos/pos.service.ts`):
+
 - `QUEUED`: When order sent to kitchen (ticket created)
 - `READY`: When kitchen marks ticket complete
 - `RECALLED`: When ticket bumped back to queue
@@ -3475,10 +3631,12 @@ streamKDS('GRILL');
 ### Throttling Behavior
 
 Spout events use RxJS `throttleTime(1000)` per device:
+
 - Multiple rapid events from same device → Only first event in 1-second window delivered
 - Different devices → All events delivered (throttle is per-device)
 
 **Example**:
+
 ```bash
 # Device A sends 5 events in 0.5 seconds
 Publish: {deviceId: 'A', ml: 10} at t=0ms
@@ -3495,6 +3653,7 @@ Publish: {deviceId: 'A', ml: 30} at t=400ms  # Dropped (throttled)
 ### Testing
 
 **Unit Tests** (`services/api/src/events/event-bus.service.spec.ts`):
+
 - Publish and subscribe to topics
 - Filter events by topic
 - Throttle spout events per deviceId (max 1/sec)
@@ -3502,6 +3661,7 @@ Publish: {deviceId: 'A', ml: 30} at t=400ms  # Dropped (throttled)
 - Drop events when max clients exceeded
 
 **Run tests**:
+
 ```bash
 cd services/api
 pnpm test event-bus.service.spec
@@ -3515,6 +3675,7 @@ pnpm test event-bus.service.spec
 ```
 
 **Manual E2E Test**:
+
 ```bash
 # Terminal 1: Start API
 cd services/api
@@ -3540,22 +3701,27 @@ curl -X POST http://localhost:3001/hardware/spout/ingest \
 ### Troubleshooting
 
 **"Connection refused" or "401 Unauthorized"**
+
 - Missing or invalid JWT token
 - Solution: Include valid L3+ token in Authorization header
 
 **"No events received"**
+
 - No events being published
 - Solution: Trigger spout ingest or KDS status change
 
 **"Events stop after a while"**
+
 - Keepalive timeout (server or proxy)
 - Solution: Check `STREAM_KEEPALIVE_SEC` is set (default 15s)
 
 **"Too many events, UI laggy"**
+
 - Client receiving all devices, not filtering
 - Solution: Add `?deviceId=specific-device` query parameter
 
 **"Max clients error in logs"**
+
 - More than 200 concurrent connections
 - Solution: Increase `STREAM_MAX_CLIENTS` or audit active connections
 
@@ -3593,11 +3759,13 @@ pnpm start
 The mobile app connects to the ChefCloud API at `http://localhost:4000` by default. To change this:
 
 **apps/mobile/app/login.tsx**, **apps/mobile/app/(tabs)/index.tsx**, **apps/mobile/app/(tabs)/stock.tsx**, **apps/mobile/app/(tabs)/alerts.tsx**:
+
 ```typescript
 const API_BASE_URL = 'http://localhost:4000'; // Update to your API URL
 ```
 
 **For physical device testing**:
+
 ```typescript
 // Replace localhost with your computer's IP address
 const API_BASE_URL = 'http://192.168.1.100:4000';
@@ -3606,12 +3774,14 @@ const API_BASE_URL = 'http://192.168.1.100:4000';
 ### Screen Overview
 
 #### Login Screen (`app/login.tsx`)
+
 - Username/password authentication
 - Calls `POST /auth/login`
 - Stores JWT token, orgId, branchId, userId in AsyncStorage
 - Redirects to dashboard on success
 
 #### KPI Dashboard (`app/(tabs)/index.tsx`)
+
 - Calls `GET /owner/overview` (requires L5 token)
 - Displays:
   - Sales today and last 7 days
@@ -3622,6 +3792,7 @@ const API_BASE_URL = 'http://192.168.1.100:4000';
 - Logout button clears session
 
 #### Stock Count Screen (`app/(tabs)/stock.tsx`)
+
 - Lists all inventory items
 - Item picker dropdown
 - Quantity input (positive to add, negative to remove)
@@ -3630,6 +3801,7 @@ const API_BASE_URL = 'http://192.168.1.100:4000';
 - Confirmation alert on success
 
 **Example Flow**:
+
 1. Select "Vodka (VDK-001)"
 2. Enter quantity: `+10` (adds 10 units) or `-5` (removes 5 units)
 3. Enter reason: "Physical count - found extra stock"
@@ -3637,6 +3809,7 @@ const API_BASE_URL = 'http://192.168.1.100:4000';
 5. Stock batches updated via FIFO (negative) or newest batch (positive)
 
 #### Alerts Screen (`app/(tabs)/alerts.tsx`)
+
 - Lists latest 50 anomaly events
 - Calls `GET /analytics/anomalies?limit=50` (L3+ required)
 - Shows:
@@ -3649,22 +3822,27 @@ const API_BASE_URL = 'http://192.168.1.100:4000';
 ### API Endpoints Used
 
 **Authentication**:
+
 - `POST /auth/login` - Username/password → JWT token
 
 **Dashboard KPIs**:
+
 - `GET /owner/overview` (L5 only) - Sales, top items, payment breakdown
 - `GET /analytics/daily` (L3+) - Alternative daily summary
 
 **Inventory Management**:
+
 - `GET /inventory/items` (L3+) - List all inventory items for picker
 - `POST /inventory/adjustments` (L3+) - Record stock adjustment
 
 **Anomaly Monitoring**:
+
 - `GET /analytics/anomalies?limit=50` (L3+) - Latest anomaly events
 
 ### Adjustment Database Model
 
 **Adjustment** (Manual inventory corrections):
+
 - `orgId`, `branchId`: Organization and branch
 - `itemId`: Links to InventoryItem
 - `deltaQty`: Decimal change (+10.5 adds, -5.0 removes)
@@ -3673,6 +3851,7 @@ const API_BASE_URL = 'http://192.168.1.100:4000';
 - `createdAt`: Timestamp
 
 **Behavior**:
+
 - **Positive delta**: Increases `remainingQty` on newest StockBatch
 - **Negative delta**: FIFO consumption from oldest batches first
 - **Insufficient stock**: Allows negative on-hand (recorded for audit)
@@ -3680,6 +3859,7 @@ const API_BASE_URL = 'http://192.168.1.100:4000';
 ### Environment Setup
 
 **Android Emulator** (via Android Studio):
+
 ```bash
 # 1. Install Android Studio with Android SDK
 # 2. Create AVD (Android Virtual Device)
@@ -3690,6 +3870,7 @@ emulator -avd Pixel_5_API_33
 ```
 
 **iOS Simulator** (macOS only):
+
 ```bash
 # 1. Install Xcode from App Store
 # 2. Open Simulator.app
@@ -3697,6 +3878,7 @@ emulator -avd Pixel_5_API_33
 ```
 
 **Physical Device** (Expo Go):
+
 ```bash
 # 1. Install Expo Go app from App/Play Store
 # 2. Start Expo dev server: pnpm start
@@ -3749,26 +3931,32 @@ psql $DATABASE_URL -c "SELECT \"remainingQty\" FROM stock_batches WHERE \"itemId
 ### Troubleshooting
 
 **"Cannot connect to API"**
+
 - Mobile app can't reach API endpoint
 - Solution: Verify API is running (`curl http://localhost:4000/health`); for physical device, use local IP instead of localhost
 
 **"401 Unauthorized" on KPI dashboard**
+
 - JWT token expired or user doesn't have L5 role
 - Solution: Re-login; verify user level is L5 for `/owner/overview` or L3+ for `/analytics/daily`
 
 **Stock adjustment fails with 403**
+
 - User doesn't have L3+ role
 - Solution: Verify logged-in user has `level='L3'` or higher
 
 **Alerts screen empty**
+
 - No anomaly events in database
 - Solution: Trigger anomaly (e.g., late void) or seed test data
 
 **AsyncStorage errors**
+
 - React Native dependency not linked
 - Solution: Run `pnpm install` and restart Expo dev server
 
 **Picker not showing items**
+
 - API endpoint `/inventory/items` failing
 - Solution: Check API logs; verify user has L3+ role; ensure items exist in database
 
@@ -3894,6 +4082,7 @@ curl "http://localhost:3001/dash/late-void-heatmap?from=2025-01-01&to=2025-01-31
 ```
 
 Matrix format:
+
 - 7 rows (Sunday=0 to Saturday=6)
 - 24 columns (hour 0-23 in UTC)
 - Values represent number of late void anomalies
@@ -4003,6 +4192,7 @@ The anomaly detection worker (`services/worker`) dynamically reads thresholds:
 5. Logs thresholds used for transparency
 
 Example log output:
+
 ```
 [Anomaly Detection] Using thresholds for org_123: {"lateVoidMin":10,"heavyDiscountUGX":8000,"noDrinksWarnRate":0.25}
 ```
@@ -4030,4 +4220,3 @@ Example log output:
 
 **License:** MIT
 **Version:** 0.1.0
-

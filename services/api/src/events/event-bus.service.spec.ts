@@ -54,7 +54,7 @@ describe('EventBusService', () => {
 
   it('should throttle spout events per deviceId (1 event/sec)', (done) => {
     jest.useFakeTimers();
-    
+
     const events: any[] = [];
     const subscription = service.subscribe('spout', 'device-1').subscribe({
       next: (event) => {
@@ -95,7 +95,7 @@ describe('EventBusService', () => {
 
   it('should drop events when max clients exceeded', () => {
     const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
-    
+
     // Set client count above max
     for (let i = 0; i < 201; i++) {
       service.incrementClientCount();
@@ -103,9 +103,7 @@ describe('EventBusService', () => {
 
     service.publish('spout', { test: 'data' }, 'device-1');
 
-    expect(consoleSpy).toHaveBeenCalledWith(
-      expect.stringContaining('Max clients'),
-    );
+    expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Max clients'));
 
     consoleSpy.mockRestore();
   });

@@ -10,14 +10,14 @@ type ClientIdMap = Record<string, string>;
 
 async function getMapPath(): Promise<string> {
   const dataDir = await appDataDir();
-  
+
   // Ensure directory exists
   try {
     await createDir(dataDir, { recursive: true });
   } catch (error) {
     // Directory might already exist, ignore error
   }
-  
+
   return `${dataDir}/client-map.json`;
 }
 

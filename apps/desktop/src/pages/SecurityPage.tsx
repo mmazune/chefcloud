@@ -301,7 +301,8 @@ export function SecurityPage() {
           style={{
             marginTop: '2rem',
             padding: '1rem',
-            backgroundColor: status.startsWith('❌') || status.startsWith('🚫') ? '#f8d7da' : '#d4edda',
+            backgroundColor:
+              status.startsWith('❌') || status.startsWith('🚫') ? '#f8d7da' : '#d4edda',
             color: status.startsWith('❌') || status.startsWith('🚫') ? '#721c24' : '#155724',
             borderRadius: '4px',
           }}

@@ -1,14 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import {
-  Controller,
-  Post,
-  Get,
-  Body,
-  Param,
-  Query,
-  UseGuards,
-  Req,
-} from '@nestjs/common';
+import { Controller, Post, Get, Body, Param, Query, UseGuards, Req } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ReservationsService } from './reservations.service';
 import { CreateReservationDto } from './reservations.dto';
@@ -51,21 +42,13 @@ export class ReservationsController {
 
   @Post(':id/seat')
   @Roles('L2')
-  seat(
-    @Req() req: any,
-    @Param('id') id: string,
-    @Body('orderId') orderId?: string,
-  ): Promise<any> {
+  seat(@Req() req: any, @Param('id') id: string, @Body('orderId') orderId?: string): Promise<any> {
     return this.reservationsService.seat(req.user.orgId, id, orderId);
   }
 
   @Get('summary')
   @Roles('L3') // Manager+
-  getSummary(
-    @Req() req: any,
-    @Query('from') from: string,
-    @Query('to') to: string,
-  ): Promise<any> {
+  getSummary(@Req() req: any, @Query('from') from: string, @Query('to') to: string): Promise<any> {
     return this.reservationsService.getSummary(req.user.orgId, from, to);
   }
 }

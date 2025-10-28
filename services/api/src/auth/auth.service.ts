@@ -1,4 +1,9 @@
-import { Injectable, UnauthorizedException, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma.service';
 import { AuthHelpers } from './auth.helpers';
@@ -14,7 +19,7 @@ export function isPanLike(trackData: string): boolean {
   // Track 1: %B1234567890123456^...
   const track1Pattern = /^%B\d{12,19}\^/;
   const track2Pattern = /^;?\d{12,19}=/;
-  
+
   return track1Pattern.test(trackData) || track2Pattern.test(trackData);
 }
 
@@ -145,7 +150,11 @@ export class AuthService {
     return this.generateAuthResponse(user);
   }
 
-  async enrollBadge(userId: string, badgeId: string, requestingUserId: string): Promise<{ success: boolean }> {
+  async enrollBadge(
+    userId: string,
+    badgeId: string,
+    requestingUserId: string,
+  ): Promise<{ success: boolean }> {
     // Validate badge format (alphanumeric, underscore, hyphen only)
     if (!/^[A-Za-z0-9_-]+$/.test(badgeId)) {
       throw new BadRequestException('Badge ID must be alphanumeric (A-Z, 0-9, _, -)');
@@ -189,13 +198,10 @@ export class AuthService {
     }
 
     // Audit event
-    await this.createAuditEvent(
-      requestingUserId,
-      user.orgId,
-      user.branchId,
-      'BADGE_ENROLL',
-      { enrolledUserId: userId, badgeId },
-    );
+    await this.createAuditEvent(requestingUserId, user.orgId, user.branchId, 'BADGE_ENROLL', {
+      enrolledUserId: userId,
+      badgeId,
+    });
 
     return { success: true };
   }

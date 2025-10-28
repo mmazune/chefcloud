@@ -111,9 +111,7 @@ describe('EfrisService', () => {
     it('should throw error if order not found', async () => {
       mockPrismaService.client.order.findUnique.mockResolvedValue(null);
 
-      await expect(service.buildPayload('nonexistent')).rejects.toThrow(
-        'Order not found',
-      );
+      await expect(service.buildPayload('nonexistent')).rejects.toThrow('Order not found');
     });
   });
 

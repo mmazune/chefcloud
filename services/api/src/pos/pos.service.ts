@@ -1,5 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Injectable, BadRequestException, UnauthorizedException, ForbiddenException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  UnauthorizedException,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import {
   CreateOrderDto,
@@ -23,13 +29,18 @@ export class PosService {
   ) {}
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async createOrder(dto: CreateOrderDto, userId: string, branchId: string, clientOrderId?: string): Promise<any> {
+  async createOrder(
+    dto: CreateOrderDto,
+    userId: string,
+    branchId: string,
+    clientOrderId?: string,
+  ): Promise<any> {
     // Check if client-provided orderId already exists
     if (clientOrderId) {
       const existing = await this.prisma.client.order.findUnique({
         where: { id: clientOrderId },
       });
-      
+
       if (existing) {
         return existing;
       }
@@ -518,11 +529,14 @@ export class PosService {
     return updatedOrder;
   }
 
-  async postCloseVoid(orderId: string, reason: string, managerPin: string | undefined, userId: string, orgId: string): Promise<any> {
-    const windowMin = parseInt(
-      this.configService.get<string>('POST_CLOSE_WINDOW_MIN') || '15',
-      10,
-    );
+  async postCloseVoid(
+    orderId: string,
+    reason: string,
+    managerPin: string | undefined,
+    userId: string,
+    orgId: string,
+  ): Promise<any> {
+    const windowMin = parseInt(this.configService.get<string>('POST_CLOSE_WINDOW_MIN') || '15', 10);
 
     // Fetch order
     const order = await this.prisma.client.order.findUnique({
@@ -599,7 +613,7 @@ export class PosService {
       where: { id: orderId },
       data: {
         metadata: {
-          ...((typeof order.metadata === 'object' && order.metadata !== null) ? order.metadata : {}),
+          ...(typeof order.metadata === 'object' && order.metadata !== null ? order.metadata : {}),
           voidedPostClose: true,
           voidReason: reason,
           voidedAt: new Date().toISOString(),

@@ -27,9 +27,9 @@ export async function pushToEfris(orderId: string): Promise<EfrisPushResult> {
 export function calculateBackoffDelay(attemptNumber: number): number {
   // Exponential backoff: 5min, 15min, 45min, 2h, 6h
   const delays = [
-    5 * 60 * 1000,      // 5 minutes
-    15 * 60 * 1000,     // 15 minutes
-    45 * 60 * 1000,     // 45 minutes
+    5 * 60 * 1000, // 5 minutes
+    15 * 60 * 1000, // 15 minutes
+    45 * 60 * 1000, // 45 minutes
     2 * 60 * 60 * 1000, // 2 hours
     6 * 60 * 60 * 1000, // 6 hours
   ];

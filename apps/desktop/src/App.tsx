@@ -120,7 +120,16 @@ function App() {
     <>
       <IdleScreensaver timeout={idleTimeout} />
       <div className="container">
-        <div style={{ position: 'absolute', top: '10px', right: '10px', display: 'flex', gap: '10px', alignItems: 'center' }}>
+        <div
+          style={{
+            position: 'absolute',
+            top: '10px',
+            right: '10px',
+            display: 'flex',
+            gap: '10px',
+            alignItems: 'center',
+          }}
+        >
           <div
             style={{
               padding: '4px 8px',
@@ -141,9 +150,7 @@ function App() {
         <div className="card">
           <h3>Demo Actions (Offline-Capable)</h3>
           <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '10px' }}>
-            <button onClick={handleCreateDemoOrder}>
-              Create Demo Order (Burger + Fries)
-            </button>
+            <button onClick={handleCreateDemoOrder}>Create Demo Order (Burger + Fries)</button>
             <button onClick={handleCloseDemoOrder} disabled={!demoOrderId}>
               Close Demo Order
             </button>

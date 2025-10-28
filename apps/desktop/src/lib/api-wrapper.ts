@@ -25,10 +25,7 @@ export interface SendResult {
 /**
  * Send a single operation or queue it if offline.
  */
-export async function sendOrQueue(
-  op: QueuedOp,
-  queue: OfflineQueue,
-): Promise<SendResult> {
+export async function sendOrQueue(op: QueuedOp, queue: OfflineQueue): Promise<SendResult> {
   try {
     const response = await fetch(`${API_BASE_URL}/sync/batch`, {
       method: 'POST',
@@ -57,7 +54,7 @@ export async function sendOrQueue(
       if (result.serverId && op.clientOrderId) {
         await addMapping(op.clientOrderId, result.serverId);
       }
-      
+
       return {
         queued: false,
         result,
@@ -95,7 +92,7 @@ export async function flushAll(_queue?: OfflineQueue): Promise<{
 
   // Process in batches
   let batch = await dbDequeueMany(BATCH_SIZE);
-  
+
   while (batch.length > 0) {
     try {
       const response = await fetch(`${API_BASE_URL}/sync/batch`, {
@@ -117,14 +114,14 @@ export async function flushAll(_queue?: OfflineQueue): Promise<{
       const results = data.results || [];
 
       const successfulIds: string[] = [];
-      
+
       // Check each result
       for (let j = 0; j < batch.length; j++) {
         const result = results[j] as BatchResultItem | undefined;
         if (result && (result.status === 'OK' || result.status === 'SKIP')) {
           flushed++;
           successfulIds.push(batch[j].clientOpId);
-          
+
           // Update client ID mapping if we got a server ID
           const clientOrderId = batch[j].clientOrderId;
           const serverId = result.serverId;
@@ -140,7 +137,7 @@ export async function flushAll(_queue?: OfflineQueue): Promise<{
       if (successfulIds.length > 0) {
         await dbRemove(successfulIds);
       }
-      
+
       // Get next batch
       batch = await dbDequeueMany(BATCH_SIZE);
     } catch (error) {

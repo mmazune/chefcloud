@@ -35,7 +35,9 @@ async function main() {
   console.log(`   Order ID: ${orderId}`);
   console.log(`\nMonitor progress:`);
   console.log(`   - Check worker logs`);
-  console.log(`   - Query: psql $DATABASE_URL -c "SELECT * FROM fiscal_invoices WHERE orderId='${orderId}'"`);
+  console.log(
+    `   - Query: psql $DATABASE_URL -c "SELECT * FROM fiscal_invoices WHERE orderId='${orderId}'"`,
+  );
 
   await connection.quit();
   process.exit(0);

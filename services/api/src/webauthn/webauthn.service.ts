@@ -31,9 +31,7 @@ export class WebAuthnService {
     this.origin = process.env.ORIGIN || 'http://localhost:5173';
   }
 
-  async generateRegistrationOptions(
-    user: User,
-  ): Promise<PublicKeyCredentialCreationOptionsJSON> {
+  async generateRegistrationOptions(user: User): Promise<PublicKeyCredentialCreationOptionsJSON> {
     // Get existing credentials for this user
     const userCredentials = await this.prisma.client.webAuthnCredential.findMany({
       where: { userId: user.id },
@@ -48,7 +46,10 @@ export class WebAuthnService {
       attestationType: 'none',
       excludeCredentials: userCredentials.map((cred) => ({
         id: cred.credentialId,
-        transports: cred.transports.length > 0 ? (cred.transports as ('ble' | 'hybrid' | 'internal' | 'nfc' | 'usb' | 'smart-card')[]) : undefined,
+        transports:
+          cred.transports.length > 0
+            ? (cred.transports as ('ble' | 'hybrid' | 'internal' | 'nfc' | 'usb' | 'smart-card')[])
+            : undefined,
       })),
       authenticatorSelection: {
         residentKey: 'preferred',
@@ -83,11 +84,7 @@ export class WebAuthnService {
     const { verified, registrationInfo } = verification;
 
     if (verified && registrationInfo) {
-      const {
-        credential,
-        credentialDeviceType,
-        credentialBackedUp,
-      } = registrationInfo;
+      const { credential, credentialDeviceType, credentialBackedUp } = registrationInfo;
 
       // Store credential in database
       const savedCredential = await this.prisma.client.webAuthnCredential.create({
@@ -134,7 +131,10 @@ export class WebAuthnService {
       timeout: 60000,
       allowCredentials: userCredentials.map((cred) => ({
         id: cred.credentialId,
-        transports: cred.transports.length > 0 ? (cred.transports as ('ble' | 'hybrid' | 'internal' | 'nfc' | 'usb' | 'smart-card')[]) : undefined,
+        transports:
+          cred.transports.length > 0
+            ? (cred.transports as ('ble' | 'hybrid' | 'internal' | 'nfc' | 'usb' | 'smart-card')[])
+            : undefined,
       })),
       userVerification: 'preferred',
       rpID: this.rpID,
@@ -167,7 +167,17 @@ export class WebAuthnService {
         id: credential.credentialId,
         publicKey: Uint8Array.from(credential.publicKey),
         counter: credential.counter,
-        transports: credential.transports.length > 0 ? (credential.transports as ('ble' | 'hybrid' | 'internal' | 'nfc' | 'usb' | 'smart-card')[]) : undefined,
+        transports:
+          credential.transports.length > 0
+            ? (credential.transports as (
+                | 'ble'
+                | 'hybrid'
+                | 'internal'
+                | 'nfc'
+                | 'usb'
+                | 'smart-card'
+              )[])
+            : undefined,
       },
     };
 

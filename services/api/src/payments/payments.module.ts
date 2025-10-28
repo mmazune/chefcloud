@@ -9,12 +9,7 @@ import { PrismaService } from '../prisma.service';
 @Module({
   imports: [ConfigModule],
   controllers: [PaymentsController],
-  providers: [
-    PaymentsService,
-    MtnSandboxAdapter,
-    AirtelSandboxAdapter,
-    PrismaService,
-  ],
+  providers: [PaymentsService, MtnSandboxAdapter, AirtelSandboxAdapter, PrismaService],
   exports: [PaymentsService],
 })
 export class PaymentsModule {}

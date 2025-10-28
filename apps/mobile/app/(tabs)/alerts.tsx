@@ -38,7 +38,7 @@ export default function Alerts() {
 
       // Fetch latest 50 anomaly events
       const response = await fetch(`${API_BASE_URL}/analytics/anomalies?limit=50`, {
-        headers: { 'Authorization': `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       if (response.status === 401) {
@@ -83,7 +83,7 @@ export default function Alerts() {
     const now = new Date();
     const diff = now.getTime() - date.getTime();
     const hours = Math.floor(diff / (1000 * 60 * 60));
-    
+
     if (hours < 1) {
       const minutes = Math.floor(diff / (1000 * 60));
       return `${minutes}m ago`;
@@ -131,7 +131,7 @@ export default function Alerts() {
         </View>
       ) : (
         <View style={styles.list}>
-          {alerts.map(alert => (
+          {alerts.map((alert) => (
             <View key={alert.id} style={styles.alertCard}>
               <View style={styles.alertHeader}>
                 <View style={styles.alertType}>
