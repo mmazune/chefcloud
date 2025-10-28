@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
+import { Injectable, ConflictException, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { CreateReservationDto } from './reservations.dto';
 
@@ -46,8 +46,17 @@ export class ReservationsService {
       }
     }
 
+    // Get reservationHoldMinutes from settings
+    const settings = await this.prisma.client.orgSettings.findUnique({
+      where: { orgId },
+    });
+    const holdMinutes = settings?.reservationHoldMinutes || 30;
+
     // Create PaymentIntent if deposit > 0
     let paymentIntentId: string | undefined;
+    let depositStatus = 'NONE';
+    let autoCancelAt: Date | undefined;
+
     if (deposit && deposit > 0) {
       const intent = await this.prisma.paymentIntent.create({
         data: {
@@ -61,6 +70,8 @@ export class ReservationsService {
         },
       });
       paymentIntentId = intent.id;
+      depositStatus = 'HELD';
+      autoCancelAt = new Date(Date.now() + holdMinutes * 60 * 1000);
     }
 
     const reservation = await this.prisma.reservation.create({
@@ -71,7 +82,9 @@ export class ReservationsService {
         startAt: new Date(startAt),
         endAt: new Date(endAt),
         deposit: deposit || 0,
+        depositStatus,
         paymentIntentId,
+        autoCancelAt,
         status: 'HELD',
       },
       include: {
@@ -79,6 +92,20 @@ export class ReservationsService {
         paymentIntent: true,
       },
     });
+
+    // Create reminder if startAt > 24h from now
+    const hoursUntilStart = (new Date(startAt).getTime() - Date.now()) / (1000 * 60 * 60);
+    if (hoursUntilStart > 24 && dto.phone) {
+      const reminderTime = new Date(new Date(startAt).getTime() - 24 * 60 * 60 * 1000);
+      await this.prisma.client.reservationReminder.create({
+        data: {
+          reservationId: reservation.id,
+          channel: 'SMS',
+          target: dto.phone,
+          scheduledAt: reminderTime,
+        },
+      });
+    }
 
     return reservation;
   }
@@ -118,9 +145,22 @@ export class ReservationsService {
       throw new ConflictException(`Cannot confirm reservation in status ${reservation.status}`);
     }
 
+    if (!['NONE', 'HELD'].includes(reservation.depositStatus)) {
+      throw new BadRequestException(`Cannot confirm reservation with depositStatus ${reservation.depositStatus}`);
+    }
+
+    const updateData: any = { status: 'CONFIRMED', autoCancelAt: null };
+
+    // If depositStatus is HELD, capture it
+    if (reservation.depositStatus === 'HELD') {
+      updateData.depositStatus = 'CAPTURED';
+      // In production, would call payment adapter to capture
+      // For now, simulate success
+    }
+
     return this.prisma.reservation.update({
       where: { id },
-      data: { status: 'CONFIRMED' },
+      data: updateData,
     });
   }
 
@@ -138,23 +178,44 @@ export class ReservationsService {
       throw new ConflictException('Cannot cancel a seated reservation');
     }
 
-    // Emit refund stub if deposit exists
-    if (reservation.paymentIntentId && Number(reservation.deposit) > 0) {
-      await this.prisma.paymentIntent.update({
-        where: { id: reservation.paymentIntentId },
-        data: {
-          status: 'CANCELLED',
-          metadata: {
-            ...((typeof reservation.paymentIntent?.metadata === 'object' && reservation.paymentIntent.metadata !== null) ? reservation.paymentIntent.metadata : {}),
-            refund_reason: 'reservation_cancelled',
+    const updateData: any = { status: 'CANCELLED' };
+
+    // Handle deposit refund based on depositStatus
+    if (reservation.depositStatus === 'HELD') {
+      // Mark as refunded (simulate via payment adapter)
+      updateData.depositStatus = 'REFUNDED';
+      if (reservation.paymentIntentId) {
+        await this.prisma.paymentIntent.update({
+          where: { id: reservation.paymentIntentId },
+          data: {
+            status: 'CANCELLED',
+            metadata: {
+              ...((typeof reservation.paymentIntent?.metadata === 'object' && reservation.paymentIntent.metadata !== null) ? reservation.paymentIntent.metadata : {}),
+              refund_reason: 'reservation_cancelled',
+            },
           },
+        });
+      }
+    } else if (reservation.depositStatus === 'CAPTURED' && Number(reservation.deposit) > 0) {
+      // Create Refund record
+      const lastPaymentId = reservation.paymentIntentId || 'unknown';
+      await this.prisma.refund.create({
+        data: {
+          orderId: 'reservation-' + reservation.id,
+          paymentId: lastPaymentId,
+          provider: 'MOMO',
+          amount: reservation.deposit,
+          reason: 'Reservation cancelled',
+          status: 'COMPLETED',
+          createdById: orgId, // Using orgId as stub - should be actual userId
         },
       });
+      updateData.depositStatus = 'REFUNDED';
     }
 
     return this.prisma.reservation.update({
       where: { id },
-      data: { status: 'CANCELLED' },
+      data: updateData,
     });
   }
 
@@ -183,5 +244,42 @@ export class ReservationsService {
       where: { id },
       data: { status: 'SEATED' },
     });
+  }
+
+  async getSummary(orgId: string, from: string, to: string): Promise<any> {
+    const reservations = await this.prisma.reservation.findMany({
+      where: {
+        orgId,
+        startAt: { gte: new Date(from) },
+        endAt: { lte: new Date(to) },
+      },
+    });
+
+    const summary = {
+      total: reservations.length,
+      byStatus: {} as Record<string, number>,
+      deposits: {
+        totalHeld: 0,
+        totalCaptured: 0,
+        totalRefunded: 0,
+      },
+    };
+
+    for (const res of reservations) {
+      // Count by status
+      summary.byStatus[res.status] = (summary.byStatus[res.status] || 0) + 1;
+
+      // Sum deposits by depositStatus
+      const amount = Number(res.deposit);
+      if (res.depositStatus === 'HELD') {
+        summary.deposits.totalHeld += amount;
+      } else if (res.depositStatus === 'CAPTURED') {
+        summary.deposits.totalCaptured += amount;
+      } else if (res.depositStatus === 'REFUNDED') {
+        summary.deposits.totalRefunded += amount;
+      }
+    }
+
+    return summary;
   }
 }

@@ -55,4 +55,48 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
   get reservation(): typeof prisma.reservation {
     return prisma.reservation;
   }
+
+  get refund(): typeof prisma.refund {
+    return prisma.refund;
+  }
+
+  get user(): typeof prisma.user {
+    return prisma.user;
+  }
+
+  get auditEvent(): typeof prisma.auditEvent {
+    return prisma.auditEvent;
+  }
+
+  get supportSession(): typeof prisma.supportSession {
+    return prisma.supportSession;
+  }
+
+  get spoutDevice(): typeof prisma.spoutDevice {
+    return prisma.spoutDevice;
+  }
+
+  get spoutCalibration(): typeof prisma.spoutCalibration {
+    return prisma.spoutCalibration;
+  }
+
+  get spoutEvent(): typeof prisma.spoutEvent {
+    return prisma.spoutEvent;
+  }
+
+  get ownerDigest(): typeof prisma.ownerDigest {
+    return prisma.ownerDigest;
+  }
+
+  get branch(): typeof prisma.branch {
+    return prisma.branch;
+  }
+
+  get orderItem(): typeof prisma.orderItem {
+    return prisma.orderItem;
+  }
+
+  get discount(): typeof prisma.discount {
+    return prisma.discount;
+  }
 }

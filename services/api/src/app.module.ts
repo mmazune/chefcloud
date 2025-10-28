@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
 import { HealthController } from './health/health.controller';
 import { PrismaService } from './prisma.service';
 import { AuthModule } from './auth/auth.module';
@@ -19,6 +19,14 @@ import { WebhooksController } from './webhooks.controller';
 import { EfrisModule } from './efris/efris.module';
 import { AlertsModule } from './alerts/alerts.module';
 import { ReservationsModule } from './reservations/reservations.module';
+import { OpsModule } from './ops/ops.module';
+import { SupportModule } from './support/support.module';
+import { HardwareModule } from './hardware/hardware.module';
+import { OwnerModule } from './owner/owner.module';
+import { StreamModule } from './stream/stream.module';
+import { DashboardsModule } from './dashboards/dashboards.module';
+import { ThresholdsModule } from './thresholds/thresholds.module';
+import { LoggerMiddleware } from './logger.middleware';
 
 @Module({
   imports: [
@@ -39,8 +47,20 @@ import { ReservationsModule } from './reservations/reservations.module';
     EfrisModule,
     AlertsModule,
     ReservationsModule,
+    OpsModule,
+    SupportModule,
+    HardwareModule,
+    OwnerModule,
+    StreamModule,
+    DashboardsModule,
+    ThresholdsModule,
   ],
   controllers: [HealthController, WebhooksController],
   providers: [PrismaService],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(LoggerMiddleware).forRoutes('*');
+  }
+}
+

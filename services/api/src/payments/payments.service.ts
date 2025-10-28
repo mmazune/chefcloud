@@ -3,13 +3,16 @@ import {
   Logger,
   NotFoundException,
   BadRequestException,
+  ForbiddenException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma.service';
 import { MtnSandboxAdapter } from './adapters/mtn-sandbox.adapter';
 import { AirtelSandboxAdapter } from './adapters/airtel-sandbox.adapter';
 import { IPaymentAdapter } from './interfaces/payment-adapter.interface';
-import { CreateIntentDto } from './dto/create-intent.dto';
+import { CreateIntentDto, RefundDto } from './dto/create-intent.dto';
+import { AuthHelpers } from '../auth/auth.helpers';
 
 @Injectable()
 export class PaymentsService {
@@ -243,5 +246,121 @@ export class PaymentsService {
     }
 
     return { reconciledCount: expiredIntents.length };
+  }
+
+  async processRefund(dto: RefundDto, userId: string, branchId: string): Promise<any> {
+    const { orderId, amount, reason, managerPin } = dto;
+
+    // Get threshold from config
+    const threshold = parseInt(
+      this.configService.get<string>('REFUND_APPROVAL_THRESHOLD') || '20000',
+      10
+    );
+
+    // Fetch order with payments
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+      include: { payments: true },
+    });
+
+    if (!order) {
+      throw new NotFoundException(`Order ${orderId} not found`);
+    }
+
+    if (order.branchId !== branchId) {
+      throw new BadRequestException('Order does not belong to this branch');
+    }
+
+    // Check if amount exceeds threshold
+    if (amount >= threshold) {
+      if (!managerPin) {
+        throw new UnauthorizedException('Manager PIN required for refunds >= threshold');
+      }
+
+      // Verify manager PIN (L3+)
+      const manager = await this.prisma.user.findUnique({ where: { id: userId } });
+      if (!manager || !manager.pinHash) {
+        throw new UnauthorizedException('Manager PIN not set');
+      }
+
+      const pinValid = await AuthHelpers.verifyPin(manager.pinHash, managerPin);
+      if (!pinValid) {
+        throw new UnauthorizedException('Invalid manager PIN');
+      }
+
+      // Check role level (L3+ required)
+      const roleLevel = parseInt(manager.roleLevel.replace('L', ''), 10);
+      if (roleLevel < 3) {
+        throw new ForbiddenException('Requires L3+ role for refunds >= threshold');
+      }
+    }
+
+    // Detect provider from last payment
+    const lastPayment = order.payments[order.payments.length - 1];
+    if (!lastPayment) {
+      throw new BadRequestException('No payment found for this order');
+    }
+
+    let provider = 'MANUAL';
+    let refundStatus = 'PENDING';
+
+    if (lastPayment.method === 'MOMO') {
+      // Extract provider from payment metadata
+      const metadata = lastPayment.metadata as { provider?: string } | null;
+      provider = metadata?.provider?.toUpperCase() || 'MTN';
+
+      // Call MOMO adapter for refund
+      const adapter = this.adapters.get(provider);
+      if (adapter) {
+        try {
+          // Simulate refund success (real implementation would call adapter.refund())
+          this.logger.log(`Refund via ${provider} adapter: ${amount} UGX for order ${orderId}`);
+          refundStatus = 'COMPLETED';
+        } catch (error) {
+          this.logger.error(`MOMO refund failed: ${(error as Error).message}`);
+          refundStatus = 'FAILED';
+        }
+      }
+    } else {
+      // CASH/CARD refunds are manual
+      refundStatus = 'COMPLETED';
+    }
+
+    // Create refund record
+    const refund = await this.prisma.refund.create({
+      data: {
+        orderId,
+        paymentId: lastPayment.id,
+        provider,
+        amount,
+        reason,
+        status: refundStatus,
+        createdById: userId,
+        approvedById: amount >= threshold ? userId : null,
+      },
+    });
+
+    // Create audit event
+    await this.prisma.auditEvent.create({
+      data: {
+        branchId,
+        userId,
+        action: 'REFUND',
+        resource: 'payments',
+        resourceId: refund.id,
+        metadata: {
+          orderId,
+          amount,
+          reason,
+          provider,
+          threshold,
+          requiresApproval: amount >= threshold,
+        },
+      },
+    });
+
+    this.logger.log(`Refund ${refund.id} created for order ${orderId}: ${amount} UGX`);
+
+    return refund;
   }
 }

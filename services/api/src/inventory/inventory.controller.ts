@@ -28,4 +28,17 @@ export class InventoryController {
   async getLevels(@Req() req: any, @Query('branchId') branchId?: string): Promise<any> {
     return this.inventoryService.getOnHandLevels(req.user.orgId, branchId);
   }
+
+  @Post('adjustments')
+  @Roles('L3')
+  async createAdjustment(@Req() req: any, @Body() dto: { itemId: string; deltaQty: number; reason: string }): Promise<any> {
+    return this.inventoryService.createAdjustment(
+      req.user.orgId,
+      req.user.branchId,
+      dto.itemId,
+      dto.deltaQty,
+      dto.reason,
+      req.user.id,
+    );
+  }
 }

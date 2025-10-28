@@ -47,11 +47,11 @@ export class FloorService {
       }));
     }
 
-    // Get reservations in time range
+    // Get reservations in time range (only HELD and CONFIRMED)
     const reservations = await this.prisma.client.reservation.findMany({
       where: {
         branchId,
-        status: { in: ['HELD', 'CONFIRMED', 'SEATED'] },
+        status: { in: ['HELD', 'CONFIRMED'] },
         OR: [
           {
             AND: [

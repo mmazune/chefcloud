@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Injectable, BadRequestException, UnauthorizedException } from '@nestjs/common';
+import { Injectable, BadRequestException, UnauthorizedException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import {
   CreateOrderDto,
@@ -10,12 +10,16 @@ import {
 } from './pos.dto';
 import { AuthHelpers } from '../auth/auth.helpers';
 import { EfrisService } from '../efris/efris.service';
+import { ConfigService } from '@nestjs/config';
+import { EventBusService } from '../events/event-bus.service';
 
 @Injectable()
 export class PosService {
   constructor(
     private prisma: PrismaService,
     private efrisService: EfrisService,
+    private configService: ConfigService,
+    private eventBus: EventBusService,
   ) {}
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -108,12 +112,21 @@ export class PosService {
     }
 
     for (const [station] of stationMap) {
-      await this.prisma.client.kdsTicket.create({
+      const ticket = await this.prisma.client.kdsTicket.create({
         data: {
           orderId: order.id,
           station: station as any,
           status: 'QUEUED',
         },
+      });
+
+      // Publish KDS event
+      this.eventBus.publish('kds', {
+        ticketId: ticket.id,
+        orderId: order.id,
+        station,
+        status: 'QUEUED',
+        at: new Date().toISOString(),
       });
     }
 
@@ -499,6 +512,99 @@ export class PosService {
       },
       include: {
         discounts: true,
+      },
+    });
+
+    return updatedOrder;
+  }
+
+  async postCloseVoid(orderId: string, reason: string, managerPin: string | undefined, userId: string, orgId: string): Promise<any> {
+    const windowMin = parseInt(
+      this.configService.get<string>('POST_CLOSE_WINDOW_MIN') || '15',
+      10,
+    );
+
+    // Fetch order
+    const order = await this.prisma.client.order.findUnique({
+      where: { id: orderId },
+      include: {
+        branch: { select: { orgId: true } },
+        payments: true,
+      },
+    });
+
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+
+    if (order.branch.orgId !== orgId) {
+      throw new ForbiddenException('Order does not belong to your organization');
+    }
+
+    if (order.status !== 'CLOSED') {
+      throw new BadRequestException('Order must be CLOSED to perform post-close void');
+    }
+
+    // Check time window
+    const now = new Date();
+    const closeTime = order.updatedAt; // Assuming updatedAt reflects close time
+    const elapsedMin = (now.getTime() - closeTime.getTime()) / (1000 * 60);
+
+    if (elapsedMin > windowMin) {
+      throw new BadRequestException(
+        `Post-close void window expired. Only ${windowMin} minutes allowed since close.`,
+      );
+    }
+
+    // Verify manager PIN (L4+)
+    if (!managerPin) {
+      throw new BadRequestException('Manager PIN required for post-close void');
+    }
+
+    const manager = await this.prisma.client.user.findFirst({
+      where: {
+        orgId,
+        roleLevel: { in: ['L4', 'L5'] },
+        pinHash: { not: null },
+      },
+    });
+
+    if (!manager || !manager.pinHash) {
+      throw new UnauthorizedException('No L4+ manager found');
+    }
+
+    const pinValid = await AuthHelpers.verifyPin(managerPin, manager.pinHash);
+    if (!pinValid) {
+      throw new UnauthorizedException('Invalid manager PIN');
+    }
+
+    // Create audit event
+    await this.prisma.client.auditEvent.create({
+      data: {
+        branchId: order.branchId,
+        userId,
+        action: 'POST_CLOSE_VOID',
+        resource: 'orders',
+        resourceId: orderId,
+        metadata: {
+          reason,
+          voidedBy: manager.id,
+          originalTotal: order.total,
+        },
+      },
+    });
+
+    // Mark order as voided in metadata
+    const updatedOrder = await this.prisma.client.order.update({
+      where: { id: orderId },
+      data: {
+        metadata: {
+          ...((typeof order.metadata === 'object' && order.metadata !== null) ? order.metadata : {}),
+          voidedPostClose: true,
+          voidReason: reason,
+          voidedAt: new Date().toISOString(),
+          voidedBy: manager.id,
+        },
       },
     });
 

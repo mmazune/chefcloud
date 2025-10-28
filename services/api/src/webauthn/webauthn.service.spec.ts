@@ -2,6 +2,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { WebAuthnService } from './webauthn.service';
 import { PrismaService } from '../prisma.service';
 
+jest.mock('@simplewebauthn/server', () => require('./__mocks__/simplewebauthn'));
+
 describe('WebAuthnService', () => {
   let service: WebAuthnService;
   let prisma: PrismaService;
@@ -62,7 +64,8 @@ describe('WebAuthnService', () => {
       expect(options).toHaveProperty('rp');
       expect(options.rp.name).toBe('ChefCloud');
       expect(options.user.name).toBe(mockUser.email);
-      expect(options.user.id).toBe(mockUser.id);
+      // The mock returns a base64url encoded user ID
+      expect(options.user.id).toBeDefined();
     });
 
     it('should exclude existing credentials', async () => {

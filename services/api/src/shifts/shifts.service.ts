@@ -54,7 +54,7 @@ export class ShiftsService {
     // This is simplified - in production you'd sum all payments for the shift
     const overShort = Number(dto.declaredCash) - Number(shift.openingFloat);
 
-    return this.prisma.client.shift.update({
+    const result = await this.prisma.client.shift.update({
       where: { id: shiftId },
       data: {
         closedById: userId,
@@ -69,6 +69,23 @@ export class ShiftsService {
         branch: { select: { id: true, name: true } },
       },
     });
+
+    // Enqueue shift-close digest jobs
+    const { Queue } = await import('bullmq');
+    const connection = {
+      host: process.env.REDIS_HOST || 'localhost',
+      port: parseInt(process.env.REDIS_PORT || '6379', 10),
+    };
+    const digestQueue = new Queue('digest', { connection });
+
+    await digestQueue.add('owner-digest-shift-close', {
+      type: 'owner-digest-shift-close',
+      orgId: shift.orgId,
+      branchId: shift.branchId,
+      shiftId: shift.id,
+    });
+
+    return result;
   }
 
   async getCurrentShift(branchId: string): Promise<any> {

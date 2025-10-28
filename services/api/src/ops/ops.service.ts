@@ -1,0 +1,172 @@
+import { Injectable } from '@nestjs/common';
+import { PrismaService } from '../prisma.service';
+import Redis from 'ioredis';
+import { logBuffer, logger } from '../logger';
+
+// Simple metrics store
+class MetricsStore {
+  private metrics: Map<string, number> = new Map();
+
+  increment(key: string, value: number = 1) {
+    this.metrics.set(key, (this.metrics.get(key) || 0) + value);
+  }
+
+  get(key: string): number {
+    return this.metrics.get(key) || 0;
+  }
+
+  getAll(): Map<string, number> {
+    return new Map(this.metrics);
+  }
+}
+
+export const metricsStore = new MetricsStore();
+
+// Error tracking
+export interface ErrorEntry {
+  timestamp: Date;
+  message: string;
+  stack?: string;
+  context?: any;
+}
+
+class ErrorTracker {
+  private errors: ErrorEntry[] = [];
+  private maxSize: number = 100;
+
+  trackError(error: Error, context?: any) {
+    this.errors.push({
+      timestamp: new Date(),
+      message: error.message,
+      stack: error.stack,
+      context,
+    });
+
+    if (this.errors.length > this.maxSize) {
+      this.errors.shift();
+    }
+
+    logger.error({ err: error, context }, 'Error tracked');
+  }
+
+  getRecent(count: number = 20): ErrorEntry[] {
+    return this.errors.slice(-count);
+  }
+}
+
+export const errorTracker = new ErrorTracker();
+
+@Injectable()
+export class OpsService {
+  private redis: Redis;
+
+  constructor(private prisma: PrismaService) {
+    this.redis = new Redis({
+      host: process.env.REDIS_HOST || 'localhost',
+      port: parseInt(process.env.REDIS_PORT || '6379'),
+      maxRetriesPerRequest: 1,
+    });
+  }
+
+  async getHealthStatus() {
+    const health: any = {
+      status: 'healthy',
+      timestamp: new Date().toISOString(),
+      checks: {},
+    };
+
+    // Check Prisma/Database
+    try {
+      await this.prisma.client.$queryRaw`SELECT 1`;
+      health.checks.database = { status: 'up' };
+    } catch (error) {
+      health.checks.database = { status: 'down', error: (error as Error).message };
+      health.status = 'unhealthy';
+    }
+
+    // Check Redis
+    try {
+      await this.redis.ping();
+      health.checks.redis = { status: 'up' };
+    } catch (error) {
+      health.checks.redis = { status: 'down', error: (error as Error).message };
+      health.status = 'unhealthy';
+    }
+
+    // Queue status (basic check)
+    try {
+      const queueKey = 'bull:orders:id';
+      const exists = await this.redis.exists(queueKey);
+      health.checks.queue = { status: 'up', monitored: exists > 0 };
+    } catch (error) {
+      health.checks.queue = { status: 'unknown', error: (error as Error).message };
+    }
+
+    return health;
+  }
+
+  getMetrics(): string {
+    const metrics = metricsStore.getAll();
+    const lines: string[] = [];
+
+    // Prometheus text format
+    lines.push('# HELP chefcloud_requests_total Total number of HTTP requests');
+    lines.push('# TYPE chefcloud_requests_total counter');
+    lines.push(`chefcloud_requests_total ${metrics.get('requests_total') || 0}`);
+
+    lines.push('# HELP chefcloud_errors_total Total number of errors');
+    lines.push('# TYPE chefcloud_errors_total counter');
+    lines.push(`chefcloud_errors_total ${metrics.get('errors_total') || 0}`);
+
+    lines.push('# HELP chefcloud_queue_jobs_total Total number of queue jobs processed');
+    lines.push('# TYPE chefcloud_queue_jobs_total counter');
+    lines.push(`chefcloud_queue_jobs_total ${metrics.get('queue_jobs_total') || 0}`);
+
+    return lines.join('\n') + '\n';
+  }
+
+  async createDiagSnapshot(userId: string) {
+    const snapshot = {
+      timestamp: new Date().toISOString(),
+      version: process.env.npm_package_version || '0.1.0',
+      service: 'chefcloud-api',
+      nodeVersion: process.version,
+      recentLogs: logBuffer.getLast(100),
+      recentErrors: errorTracker.getRecent(20),
+      metrics: Object.fromEntries(metricsStore.getAll()),
+      env: {
+        nodeEnv: process.env.NODE_ENV,
+        hasOtel: !!process.env.OTEL_EXPORTER_OTLP_ENDPOINT,
+        hasSentry: !!process.env.SENTRY_DSN,
+      },
+    };
+
+    // Create audit event
+    try {
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { branchId: true },
+      });
+
+      if (user?.branchId) {
+        await this.prisma.auditEvent.create({
+          data: {
+            branchId: user.branchId,
+            userId,
+            action: 'DIAG_SNAPSHOT',
+            resource: 'diagnostics',
+            resourceId: null,
+            metadata: {
+              logCount: snapshot.recentLogs.length,
+              errorCount: snapshot.recentErrors.length,
+            },
+          },
+        });
+      }
+    } catch (error) {
+      logger.error({ err: error }, 'Failed to create audit event for diag snapshot');
+    }
+
+    return snapshot;
+  }
+}

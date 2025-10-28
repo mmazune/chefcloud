@@ -29,6 +29,7 @@ export class ReportsService {
       include: {
         payments: true,
         discounts: true,
+        refunds: true,
       },
     });
 
@@ -36,6 +37,17 @@ export class ReportsService {
     const totalDiscount = orders.reduce((sum, o) => sum + Number(o.discount), 0);
     const cashPayments = orders.flatMap((o) => o.payments).filter((p) => p.method === 'CASH');
     const totalCash = cashPayments.reduce((sum, p) => sum + Number(p.amount), 0);
+
+    // Calculate refunds
+    const allRefunds = orders.flatMap((o) => o.refunds).filter((r) => r.status === 'COMPLETED');
+    const totalRefunds = allRefunds.reduce((sum, r) => sum + Number(r.amount), 0);
+
+    // Count post-close voids (orders with metadata.voidedPostClose = true)
+    const postCloseVoids = orders.filter(
+      (o) => o.metadata && typeof o.metadata === 'object' && (o.metadata as any).voidedPostClose === true
+    );
+    const postCloseVoidCount = postCloseVoids.length;
+    const postCloseVoidTotal = postCloseVoids.reduce((sum, o) => sum + Number(o.total), 0);
 
     return {
       type: 'X_REPORT',
@@ -50,6 +62,9 @@ export class ReportsService {
         totalSales,
         totalDiscount,
         totalCash,
+        totalRefunds,
+        postCloseVoidCount,
+        postCloseVoidTotal,
       },
       generatedAt: new Date(),
     };
@@ -83,6 +98,7 @@ export class ReportsService {
       include: {
         payments: true,
         discounts: true,
+        refunds: true,
       },
     });
 
@@ -100,6 +116,17 @@ export class ReportsService {
       .forEach((p) => {
         paymentsByMethod[p.method] += Number(p.amount);
       });
+
+    // Calculate refunds
+    const allRefunds = orders.flatMap((o) => o.refunds).filter((r) => r.status === 'COMPLETED');
+    const totalRefunds = allRefunds.reduce((sum, r) => sum + Number(r.amount), 0);
+
+    // Count post-close voids
+    const postCloseVoids = orders.filter(
+      (o) => o.metadata && typeof o.metadata === 'object' && (o.metadata as any).voidedPostClose === true
+    );
+    const postCloseVoidCount = postCloseVoids.length;
+    const postCloseVoidTotal = postCloseVoids.reduce((sum, o) => sum + Number(o.total), 0);
 
     return {
       type: 'Z_REPORT',
@@ -120,6 +147,9 @@ export class ReportsService {
         totalSales,
         totalDiscount,
         paymentsByMethod,
+        totalRefunds,
+        postCloseVoidCount,
+        postCloseVoidTotal,
       },
       generatedAt: new Date(),
     };

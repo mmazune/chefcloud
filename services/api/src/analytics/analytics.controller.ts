@@ -64,4 +64,14 @@ export class AnalyticsController {
     const threshold = thresholdMin ? parseInt(thresholdMin, 10) : 5;
     return this.analyticsService.getLateVoids(from, to, threshold, req.user.branchId);
   }
+
+  @Get('anomalies')
+  @Roles('L3')
+  async getAnomalies(
+    @Req() req: any,
+    @Query('limit') limit?: string,
+  ): Promise<any> {
+    const limitNum = limit ? parseInt(limit, 10) : 50;
+    return this.analyticsService.getAnomalies(req.user.branchId, limitNum);
+  }
 }

@@ -74,4 +74,14 @@ export class PosController {
   ): Promise<unknown> {
     return this.posService.applyDiscount(orderId, dto, user.userId, user.branchId, user.orgId);
   }
+
+  @Post(':id/post-close-void')
+  @Roles('L4') // Only L4+ can void closed orders
+  async postCloseVoid(
+    @Param('id') orderId: string,
+    @Body() dto: { reason: string; managerPin?: string },
+    @User() user: { userId: string; branchId: string; orgId: string },
+  ): Promise<unknown> {
+    return this.posService.postCloseVoid(orderId, dto.reason, dto.managerPin, user.userId, user.orgId);
+  }
 }

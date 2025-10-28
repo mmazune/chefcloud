@@ -1,10 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
+import { EventBusService } from '../events/event-bus.service';
 
 @Injectable()
 export class KdsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private eventBus: EventBusService,
+  ) {}
 
   async getQueue(station: string): Promise<any> {
     const tickets = await this.prisma.client.kdsTicket.findMany({
@@ -43,6 +47,15 @@ export class KdsService {
       },
     });
 
+    // Publish KDS event
+    this.eventBus.publish('kds', {
+      ticketId: ticket.id,
+      orderId: ticket.orderId,
+      station: ticket.station,
+      status: 'READY',
+      at: new Date().toISOString(),
+    });
+
     // Check if all tickets for this order are ready
     const allTickets = await this.prisma.client.kdsTicket.findMany({
       where: { orderId: ticket.orderId },
@@ -61,12 +74,23 @@ export class KdsService {
   }
 
   async recallTicket(ticketId: string) {
-    return this.prisma.client.kdsTicket.update({
+    const ticket = await this.prisma.client.kdsTicket.update({
       where: { id: ticketId },
       data: {
         status: 'RECALLED',
         readyAt: null,
       },
     });
+
+    // Publish KDS event
+    this.eventBus.publish('kds', {
+      ticketId: ticket.id,
+      orderId: ticket.orderId,
+      station: ticket.station,
+      status: 'RECALLED',
+      at: new Date().toISOString(),
+    });
+
+    return ticket;
   }
 }

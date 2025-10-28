@@ -8,6 +8,11 @@ import {
   LATE_VOID_RULE, 
   HEAVY_DISCOUNT_RULE 
 } from './anomaly-rules';
+import { initTelemetry } from './telemetry';
+import { logger } from './logger';
+
+// Initialize telemetry before anything else
+initTelemetry();
 
 const connection = new Redis({
   host: process.env.REDIS_HOST || 'localhost',
@@ -45,16 +50,36 @@ interface ScheduledAlertJob {
   scheduleId: string;
 }
 
+interface ReservationAutoCancelJob {
+  type: 'reservations-auto-cancel';
+}
+
+interface ReservationRemindersJob {
+  type: 'reservations-reminders';
+}
+
+interface SpoutConsumeJob {
+  type: 'spout-consume';
+}
+
+interface OwnerDigestRunJob {
+  type: 'owner-digest-run' | 'owner-digest-shift-close';
+  digestId?: string;
+  orgId?: string;
+  branchId?: string;
+  shiftId?: string;
+}
+
 // Reports queue worker
 const reportsWorker = new Worker<ReportJob>(
   'reports',
   async (job: Job<ReportJob>) => {
-    console.log(`Processing report job ${job.id}:`, job.data);
+    logger.info({ jobId: job.id, data: job.data }, 'Processing report job');
     
     // Dummy processing
     await new Promise((resolve) => setTimeout(resolve, 1000));
     
-    console.log(`Report ${job.data.reportType} generated for branch ${job.data.branchId}`);
+    logger.info({ reportType: job.data.reportType, branchId: job.data.branchId }, 'Report generated');
     
     return {
       success: true,
@@ -69,7 +94,7 @@ const reportsWorker = new Worker<ReportJob>(
 const paymentsWorker = new Worker<ReconcilePaymentsJob>(
   'payments',
   async (job: Job<ReconcilePaymentsJob>) => {
-    console.log(`Processing payment reconciliation job ${job.id}`);
+    logger.info({ jobId: job.id }, 'Processing payment reconciliation job');
     
     const expiryThreshold = new Date(Date.now() - 30 * 60 * 1000); // 30 minutes
 
@@ -251,11 +276,53 @@ const anomaliesWorker = new Worker<EmitAnomaliesJob>(
       return { success: false, reason: 'order_not_found' };
     }
 
-    // Run anomaly detection with all rules
-    const ALL_RULES = [NO_DRINKS_RULE, LATE_VOID_RULE, HEAVY_DISCOUNT_RULE];
+    // Fetch org settings for anomaly thresholds
+    const orgSettings = await prisma.orgSettings.findUnique({
+      where: { orgId: order.branch.orgId },
+    });
+
+    const thresholds = orgSettings?.anomalyThresholds as any || {
+      lateVoidMin: 5,
+      heavyDiscountUGX: 5000,
+      noDrinksWarnRate: 0.25,
+    };
+
+    // Run anomaly detection with dynamic thresholds
+    const NO_DRINKS_RULE_DYNAMIC = { ...NO_DRINKS_RULE };
+    const LATE_VOID_RULE_DYNAMIC = {
+      ...LATE_VOID_RULE,
+      detect: (order: any) => {
+        if (order.status !== 'VOIDED') return false;
+        const createdAt = new Date(order.createdAt).getTime();
+        const updatedAt = new Date(order.updatedAt).getTime();
+        const minutesSinceCreated = (updatedAt - createdAt) / (1000 * 60);
+        return minutesSinceCreated >= (thresholds.lateVoidMin || 5);
+      },
+    };
+    const HEAVY_DISCOUNT_RULE_DYNAMIC = {
+      ...HEAVY_DISCOUNT_RULE,
+      detect: (context: { discount: any; threshold: number }) => {
+        return Number(context.discount.value) >= (thresholds.heavyDiscountUGX || 5000);
+      },
+    };
+
+    const ALL_RULES = [NO_DRINKS_RULE_DYNAMIC, LATE_VOID_RULE_DYNAMIC];
     const anomalies = detectAnomalies(order, ALL_RULES);
 
-    console.log(`Detected ${anomalies.length} anomalies for order ${orderId}`);
+    // Check heavy discounts separately
+    if (order.discounts && order.discounts.length > 0) {
+      for (const discount of order.discounts) {
+        const context = { discount, order, threshold: thresholds.heavyDiscountUGX || 5000 };
+        if (HEAVY_DISCOUNT_RULE_DYNAMIC.detect(context)) {
+          anomalies.push({
+            rule: HEAVY_DISCOUNT_RULE_DYNAMIC,
+            details: HEAVY_DISCOUNT_RULE_DYNAMIC.buildDetails(context),
+          });
+        }
+      }
+    }
+
+    console.log(`Detected ${anomalies.length} anomalies for order ${orderId} with thresholds:`, thresholds);
 
     // Create AnomalyEvent records
     for (const anomaly of anomalies) {
@@ -380,9 +447,442 @@ const alertsWorker = new Worker<ScheduledAlertJob>(
   { connection },
 );
 
+// Reservation auto-cancel worker (runs every 5 min)
+const reservationsAutoCancelWorker = new Worker<ReservationAutoCancelJob>(
+  'reservations',
+  async (job: Job<ReservationAutoCancelJob>) => {
+    console.log(`Processing reservation auto-cancel job ${job.id}`);
+
+    const now = new Date();
+
+    // Find HELD reservations past autoCancelAt
+    const expiredReservations = await prisma.reservation.findMany({
+      where: {
+        status: 'HELD',
+        depositStatus: 'HELD',
+        autoCancelAt: { lt: now },
+      },
+      include: {
+        paymentIntent: true,
+      },
+    });
+
+    console.log(`Found ${expiredReservations.length} expired HELD reservations to auto-cancel`);
+
+    for (const reservation of expiredReservations) {
+      // Cancel reservation and refund deposit
+      await prisma.reservation.update({
+        where: { id: reservation.id },
+        data: {
+          status: 'CANCELLED',
+          depositStatus: 'REFUNDED',
+        },
+      });
+
+      // Update PaymentIntent status
+      if (reservation.paymentIntentId) {
+        await prisma.paymentIntent.update({
+          where: { id: reservation.paymentIntentId },
+          data: {
+            status: 'CANCELLED',
+            metadata: {
+              ...(typeof reservation.paymentIntent?.metadata === 'object' && reservation.paymentIntent.metadata !== null ? reservation.paymentIntent.metadata : {}),
+              refund_reason: 'reservation_auto_cancelled',
+              cancelledAt: now.toISOString(),
+            },
+          },
+        });
+      }
+
+      console.log(`Auto-cancelled reservation ${reservation.id} and refunded deposit`);
+    }
+
+    return {
+      success: true,
+      cancelledCount: expiredReservations.length,
+    };
+  },
+  { connection },
+);
+
+// Reservation reminders worker (runs every 10 min)
+const reservationsRemindersWorker = new Worker<ReservationRemindersJob>(
+  'reservation-reminders',
+  async (job: Job<ReservationRemindersJob>) => {
+    console.log(`Processing reservation reminders job ${job.id}`);
+
+    const now = new Date();
+
+    // Find reminders scheduled for now or past, not yet sent
+    const dueReminders = await prisma.reservationReminder.findMany({
+      where: {
+        scheduledAt: { lte: now },
+        sentAt: null,
+      },
+      include: {
+        reservation: true,
+      },
+    });
+
+    console.log(`Found ${dueReminders.length} reminders to send`);
+
+    for (const reminder of dueReminders) {
+      const { reservation } = reminder;
+
+      // Format reminder message
+      const message = `Reminder: Your reservation ` +
+        `for ${reservation.partySize} people is tomorrow at ${reservation.startAt.toLocaleTimeString()}. ` +
+        (reservation.tableId ? `Table ID: ${reservation.tableId}. ` : '') +
+        `See you soon!`;
+
+      if (reminder.channel === 'SMS') {
+        // TODO: Integrate with SMS service
+        console.log(`📱 [SMS to ${reminder.target}]\n${message}`);
+      } else if (reminder.channel === 'EMAIL') {
+        // TODO: Integrate with email service
+        console.log(`📧 [EMAIL to ${reminder.target}]\nSubject: Reservation Reminder\n\n${message}`);
+      }
+
+      // Mark reminder as sent
+      await prisma.reservationReminder.update({
+        where: { id: reminder.id },
+        data: { sentAt: now },
+      });
+    }
+
+    return {
+      success: true,
+      sentCount: dueReminders.length,
+    };
+  },
+  { connection },
+);
+
+// Spout consume worker (runs every minute)
+const spoutConsumeWorker = new Worker<SpoutConsumeJob>(
+  'spout-consume',
+  async (job: Job<SpoutConsumeJob>) => {
+    logger.info({ jobId: job.id }, 'Processing spout consume job');
+
+    const oneMinuteAgo = new Date(Date.now() - 60 * 1000);
+
+    // Find unconsumed events from last minute
+    const events = await prisma.spoutEvent.findMany({
+      where: {
+        occurredAt: { gte: oneMinuteAgo },
+        itemId: { not: null },
+      },
+      orderBy: { occurredAt: 'asc' },
+    });
+
+    logger.info({ eventCount: events.length }, 'Found spout events to consume');
+
+    const consumptions: Record<string, number> = {};
+
+    // Aggregate by inventory item
+    for (const event of events) {
+      if (!event.itemId) continue;
+
+      if (!consumptions[event.itemId]) {
+        consumptions[event.itemId] = 0;
+      }
+      consumptions[event.itemId] += parseFloat(event.ml.toString());
+    }
+
+    // Process each inventory item
+    for (const [itemId, totalMl] of Object.entries(consumptions)) {
+      const item = await prisma.inventoryItem.findUnique({
+        where: { id: itemId },
+      });
+
+      if (!item) {
+        logger.warn({ itemId }, 'Inventory item not found');
+        continue;
+      }
+
+      // Check unit compatibility (must be ml or convertible)
+      if (item.unit !== 'ml' && item.unit !== 'ltr') {
+        logger.warn({ itemId, unit: item.unit }, 'Item unit not compatible with ml');
+        continue;
+      }
+
+      // Convert ml to item unit
+      let qtyToConsume = totalMl;
+      if (item.unit === 'ltr') {
+        qtyToConsume = totalMl / 1000;
+      }
+
+      logger.info({ itemId, ml: totalMl, qtyToConsume, unit: item.unit }, 'Consuming from inventory');
+
+      // Get stock batches for this item (FIFO by receivedAt)
+      const stockBatches = await prisma.stockBatch.findMany({
+        where: {
+          itemId: itemId,
+          remainingQty: { gt: 0 },
+        },
+        orderBy: { receivedAt: 'asc' }, // FIFO
+      });
+
+      // Consume from stock batches (FIFO)
+      let remaining = qtyToConsume;
+
+      for (const batch of stockBatches) {
+        if (remaining <= 0) break;
+
+        const currentQty = parseFloat(batch.remainingQty.toString());
+        const toDeduct = Math.min(remaining, currentQty);
+        const newQty = currentQty - toDeduct;
+
+        if (newQty < 0) {
+          // Negative stock - create audit event
+          await prisma.auditEvent.create({
+            data: {
+              branchId: batch.branchId,
+              userId: null,
+              action: 'NEGATIVE_STOCK',
+              resource: 'stock_batch',
+              resourceId: batch.id,
+              metadata: {
+                source: 'SPOUT',
+                itemId,
+                attemptedDeduction: toDeduct,
+                currentQty,
+                deficit: Math.abs(newQty),
+              },
+            },
+          });
+
+          logger.warn({ itemId, batchId: batch.id, deficit: Math.abs(newQty) }, 'Negative stock detected');
+
+          // Cap at zero
+          await prisma.stockBatch.update({
+            where: { id: batch.id },
+            data: { remainingQty: 0 },
+          });
+
+          remaining -= currentQty; // Only deduct what was available
+        } else {
+          // Normal deduction
+          await prisma.stockBatch.update({
+            where: { id: batch.id },
+            data: { remainingQty: newQty },
+          });
+
+          remaining -= toDeduct;
+        }
+      }
+
+      if (remaining > 0) {
+        logger.warn({ itemId, remaining }, 'Insufficient stock to consume all ml');
+      }
+    }
+
+    return {
+      success: true,
+      eventsProcessed: events.length,
+      itemsConsumed: Object.keys(consumptions).length,
+    };
+  },
+  { connection },
+);
+
+// Owner digest worker
+const digestWorker = new Worker<OwnerDigestRunJob>(
+  'digest',
+  async (job: Job<OwnerDigestRunJob>) => {
+    logger.info({ jobId: job.id, data: job.data }, 'Processing owner digest job');
+
+    if (job.data.type === 'owner-digest-shift-close') {
+      // Handle shift-close digest
+      const { orgId, shiftId } = job.data;
+      if (!orgId) {
+        logger.error('orgId required for shift-close digest');
+        return { success: false, error: 'orgId required' };
+      }
+
+      // Find digests with sendOnShiftClose=true for this org
+      const digests = await prisma.ownerDigest.findMany({
+        where: { orgId, sendOnShiftClose: true },
+        include: { org: true },
+      });
+
+      if (digests.length === 0) {
+        logger.info({ orgId }, 'No shift-close digests configured for org');
+        return { success: true, sentCount: 0 };
+      }
+
+      // Use the OwnerService methods (import or inline)
+      const fs = await import('fs');
+      const path = await import('path');
+
+      for (const digest of digests) {
+        // Build overview (inline version for now)
+        const now = new Date();
+        const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        
+        const branches = await prisma.branch.findMany({
+          where: { orgId: digest.orgId },
+          select: { id: true },
+        });
+        const branchIds = branches.map(b => b.id);
+
+        const salesToday = await prisma.payment.aggregate({
+          where: { 
+            order: { branchId: { in: branchIds } },
+            createdAt: { gte: startOfToday },
+          },
+          _sum: { amount: true },
+        });
+
+        const anomaliesCount = await prisma.anomalyEvent.count({
+          where: { orgId: digest.orgId, occurredAt: { gte: startOfToday } },
+        });
+
+        // Generate PDF
+        const PDFDocument = (await import('pdfkit')).default;
+        const pdfDir = '/tmp';
+        const pdfFilename = `owner-digest-shift-${shiftId || 'unknown'}-${Date.now()}.pdf`;
+        const pdfPath = path.join(pdfDir, pdfFilename);
+        const doc = new PDFDocument();
+        const writeStream = fs.createWriteStream(pdfPath);
+        
+        doc.pipe(writeStream);
+        
+        doc.fontSize(20).text(`Shift Close Digest: ${digest.name}`, { align: 'center' });
+        doc.moveDown();
+        doc.fontSize(12).text(`Organization: ${digest.org.name}`);
+        doc.text(`Shift ID: ${shiftId || 'N/A'}`);
+        doc.text(`Generated: ${now.toISOString()}`);
+        doc.moveDown();
+        doc.fontSize(14).text('Sales Summary', { underline: true });
+        doc.fontSize(12).text(`Today: ${salesToday._sum?.amount?.toString() || '0'} UGX`);
+        doc.moveDown();
+        doc.fontSize(14).text('Anomalies', { underline: true });
+        doc.fontSize(12).text(`Today: ${anomaliesCount} anomalies detected`);
+        doc.moveDown();
+        doc.fontSize(10).text(`Report ID: ${job.id}`, { align: 'right' });
+        
+        doc.end();
+
+        await new Promise<void>((resolve, reject) => {
+          writeStream.on('finish', resolve);
+          writeStream.on('error', reject);
+        });
+
+        logger.info({ pdfPath, recipients: digest.recipients }, 'Shift-close digest PDF generated');
+
+        // Email (console stub)
+        const emailFrom = process.env.DIGEST_FROM_EMAIL || 'noreply@chefcloud.local';
+        console.log(`📧 [SHIFT CLOSE EMAIL] Sending digest to: ${digest.recipients.join(', ')}`);
+        console.log(`   From: ${emailFrom}`);
+        console.log(`   Subject: Shift Close - ${digest.name} - ${now.toLocaleDateString()}`);
+        console.log(`   PDF: ${pdfPath}`);
+        console.log(`   Shift ID: ${shiftId}`);
+      }
+
+      return { success: true, sentCount: digests.length };
+    }
+
+    // Regular digest (scheduled)
+    const digest = await prisma.ownerDigest.findUnique({
+      where: { id: job.data.digestId },
+      include: { org: true },
+    });
+
+    if (!digest) {
+      logger.error({ digestId: job.data.digestId }, 'Digest not found');
+      return { success: false, error: 'Digest not found' };
+    }
+
+    // Generate overview data
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const sevenDaysAgo = new Date(startOfToday);
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    // Aggregate sales data
+    const branches = await prisma.branch.findMany({
+      where: { orgId: digest.orgId },
+      select: { id: true },
+    });
+    const branchIds = branches.map(b => b.id);
+
+    const salesToday = await prisma.payment.aggregate({
+      where: { 
+        order: { branchId: { in: branchIds } },
+        createdAt: { gte: startOfToday },
+      },
+      _sum: { amount: true },
+    });
+
+    const sales7d = await prisma.payment.aggregate({
+      where: { 
+        order: { branchId: { in: branchIds } },
+        createdAt: { gte: sevenDaysAgo },
+      },
+      _sum: { amount: true },
+    });
+
+    const anomaliesCount = await prisma.anomalyEvent.count({
+      where: { orgId: digest.orgId, occurredAt: { gte: startOfToday } },
+    });
+
+    // Generate PDF
+    const PDFDocument = (await import('pdfkit')).default;
+    const fs = await import('fs');
+    
+    const doc = new PDFDocument();
+    const pdfPath = `/tmp/owner-digest-${digest.id}-${Date.now()}.pdf`;
+    const writeStream = fs.createWriteStream(pdfPath);
+    
+    doc.pipe(writeStream);
+    
+    // PDF content
+    doc.fontSize(20).text(`Owner Digest: ${digest.name}`, { align: 'center' });
+    doc.moveDown();
+    doc.fontSize(12).text(`Organization: ${digest.org.name}`);
+    doc.text(`Generated: ${now.toISOString()}`);
+    doc.moveDown();
+    doc.fontSize(14).text('Sales Summary', { underline: true });
+    doc.fontSize(12).text(`Today: ${salesToday._sum?.amount?.toString() || '0'} UGX`);
+    doc.text(`Last 7 days: ${sales7d._sum?.amount?.toString() || '0'} UGX`);
+    doc.moveDown();
+    doc.fontSize(14).text('Anomalies', { underline: true });
+    doc.fontSize(12).text(`Today: ${anomaliesCount} anomalies detected`);
+    doc.moveDown();
+    doc.fontSize(10).text(`Report ID: ${job.id}`, { align: 'right' });
+    
+    doc.end();
+
+    await new Promise<void>((resolve, reject) => {
+      writeStream.on('finish', resolve);
+      writeStream.on('error', reject);
+    });
+
+    logger.info({ pdfPath, recipients: digest.recipients }, `Digest PDF generated at ${pdfPath}`);
+
+    // Email (console stub)
+    const emailFrom = process.env.DIGEST_FROM_EMAIL || 'noreply@chefcloud.local';
+    console.log(`📧 [EMAIL STUB] Sending digest to: ${digest.recipients.join(', ')}`);
+    console.log(`   From: ${emailFrom}`);
+    console.log(`   Subject: ${digest.name} - ${now.toLocaleDateString()}`);
+    console.log(`   PDF: ${pdfPath}`);
+
+    // Update lastRunAt
+    await prisma.ownerDigest.update({
+      where: { id: digest.id },
+      data: { lastRunAt: now },
+    });
+
+    return { success: true, pdfPath, recipients: digest.recipients };
+  },
+  { connection },
+);
+
 reportsWorker.on('completed', (job) => {
   console.log(`✅ Reports job ${job.id} completed`);
 });
+
 
 reportsWorker.on('failed', (job, err) => {
   console.error(`❌ Reports job ${job?.id} failed:`, err.message);
@@ -420,12 +920,48 @@ alertsWorker.on('failed', (job, err) => {
   console.error(`❌ Alerts job ${job?.id} failed:`, err.message);
 });
 
+reservationsAutoCancelWorker.on('completed', (job) => {
+  console.log(`✅ Reservations auto-cancel job ${job.id} completed`);
+});
+
+reservationsAutoCancelWorker.on('failed', (job, err) => {
+  console.error(`❌ Reservations auto-cancel job ${job?.id} failed:`, err.message);
+});
+
+reservationsRemindersWorker.on('completed', (job) => {
+  console.log(`✅ Reservations reminders job ${job.id} completed`);
+});
+
+reservationsRemindersWorker.on('failed', (job, err) => {
+  console.error(`❌ Reservations reminders job ${job?.id} failed:`, err.message);
+});
+
+spoutConsumeWorker.on('completed', (job) => {
+  console.log(`✅ Spout consume job ${job.id} completed`);
+});
+
+spoutConsumeWorker.on('failed', (job, err) => {
+  console.error(`❌ Spout consume job ${job?.id} failed:`, err.message);
+});
+
+digestWorker.on('completed', (job) => {
+  console.log(`✅ Owner digest job ${job.id} completed`);
+});
+
+digestWorker.on('failed', (job, err) => {
+  console.error(`❌ Owner digest job ${job?.id} failed:`, err.message);
+});
+
 // Export queues for testing
 export const reportsQueue = new Queue<ReportJob>('reports', { connection });
 export const paymentsQueue = new Queue<ReconcilePaymentsJob>('payments', { connection });
 export const efrisQueue = new Queue<EfrisRetryJob>('efris', { connection });
 export const anomaliesQueue = new Queue<EmitAnomaliesJob>('anomalies', { connection });
 export const alertsQueue = new Queue<ScheduledAlertJob>('alerts', { connection });
+export const reservationsQueue = new Queue<ReservationAutoCancelJob>('reservations-auto-cancel', { connection });
+export const reservationRemindersQueue = new Queue<ReservationRemindersJob>('reservation-reminders', { connection });
+export const spoutConsumeQueue = new Queue<SpoutConsumeJob>('spout-consume', { connection });
+export const digestQueue = new Queue<OwnerDigestRunJob>('digest', { connection });
 
 // Schedule nightly EFRIS reconciliation at 02:00
 async function scheduleNightlyReconciliation() {
@@ -457,7 +993,55 @@ async function scheduleNightlyReconciliation() {
 // Initialize nightly job
 scheduleNightlyReconciliation().catch(console.error);
 
-console.log('🚀 ChefCloud Worker started - listening for jobs on "reports", "payments", "efris", "anomalies", and "alerts" queues');
+// Schedule reservation auto-cancel every 5 minutes
+async function scheduleReservationAutoCancel() {
+  await reservationsQueue.add(
+    'reservations-auto-cancel',
+    { type: 'reservations-auto-cancel' },
+    {
+      repeat: {
+        pattern: '*/5 * * * *', // Every 5 minutes
+      },
+      jobId: 'reservations-auto-cancel-recurring',
+    },
+  );
+  console.log('Scheduled reservation auto-cancel job (every 5 minutes)');
+}
+
+// Schedule reservation reminders every 10 minutes
+async function scheduleReservationReminders() {
+  await reservationRemindersQueue.add(
+    'reservations-reminders',
+    { type: 'reservations-reminders' },
+    {
+      repeat: {
+        pattern: '*/10 * * * *', // Every 10 minutes
+      },
+      jobId: 'reservations-reminders-recurring',
+    },
+  );
+  console.log('Scheduled reservation reminders job (every 10 minutes)');
+}
+
+async function scheduleSpoutConsume() {
+  await spoutConsumeQueue.add(
+    'spout-consume',
+    { type: 'spout-consume' },
+    {
+      repeat: {
+        pattern: '* * * * *', // Every minute
+      },
+      jobId: 'spout-consume-recurring',
+    },
+  );
+  console.log('Scheduled spout consume job (every minute)');
+}
+
+scheduleReservationAutoCancel().catch(console.error);
+scheduleReservationReminders().catch(console.error);
+scheduleSpoutConsume().catch(console.error);
+
+console.log('🚀 ChefCloud Worker started - listening for jobs on "reports", "payments", "efris", "anomalies", "alerts", "reservations", "reservation-reminders", "spout-consume", and "digest" queues');
 
 // Graceful shutdown
 process.on('SIGTERM', async () => {
@@ -467,6 +1051,10 @@ process.on('SIGTERM', async () => {
   await efrisWorker.close();
   await anomaliesWorker.close();
   await alertsWorker.close();
+  await reservationsAutoCancelWorker.close();
+  await reservationsRemindersWorker.close();
+  await spoutConsumeWorker.close();
+  await digestWorker.close();
   await prisma.$disconnect();
   await connection.quit();
   process.exit(0);

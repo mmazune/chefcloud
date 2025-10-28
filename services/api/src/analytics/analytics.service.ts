@@ -277,4 +277,20 @@ export class AnalyticsService {
 
     return lateVoids;
   }
+
+  async getAnomalies(branchId: string, limit = 50): Promise<any> {
+    const anomalies = await this.prisma.client.anomalyEvent.findMany({
+      where: { branchId },
+      orderBy: { occurredAt: 'desc' },
+      take: limit,
+    });
+
+    return anomalies.map((anomaly) => ({
+      id: anomaly.id,
+      type: anomaly.type,
+      severity: anomaly.severity,
+      description: (anomaly.details as any)?.message || `Anomaly of type ${anomaly.type}`,
+      createdAt: anomaly.occurredAt,
+    }));
+  }
 }

@@ -107,4 +107,91 @@ export class InventoryService {
       consumed,
     };
   }
+
+  // Manual inventory adjustment (for mobile stock counts)
+  async createAdjustment(
+    orgId: string,
+    branchId: string,
+    itemId: string,
+    deltaQty: number,
+    reason: string,
+    adjustedBy: string,
+  ): Promise<any> {
+    return this.prisma.client.$transaction(async (tx) => {
+      // Record the adjustment
+      const adjustment = await tx.adjustment.create({
+        data: {
+          orgId,
+          branchId,
+          itemId,
+          deltaQty,
+          reason,
+          adjustedBy,
+        },
+      });
+
+      // Update stock batches
+      // For positive delta (adding stock), find the newest batch or create a virtual one
+      // For negative delta (removing stock), use FIFO
+      if (deltaQty > 0) {
+        // Add stock: find newest batch and increase remainingQty
+        const newestBatch = await tx.stockBatch.findFirst({
+          where: { branchId, itemId },
+          orderBy: { receivedAt: 'desc' },
+        });
+
+        if (newestBatch) {
+          await tx.stockBatch.update({
+            where: { id: newestBatch.id },
+            data: {
+              remainingQty: Number(newestBatch.remainingQty) + deltaQty,
+            },
+          });
+        } else {
+          // No batch exists, create one (adjustment-based)
+          await tx.stockBatch.create({
+            data: {
+              orgId,
+              branchId,
+              itemId,
+              receivedQty: deltaQty,
+              remainingQty: deltaQty,
+              receivedAt: new Date(),
+              unitCost: 0, // Unknown cost for adjustments
+            },
+          });
+        }
+      } else if (deltaQty < 0) {
+        // Remove stock: use FIFO consumption logic
+        const batches = await tx.stockBatch.findMany({
+          where: {
+            branchId,
+            itemId,
+            remainingQty: { gt: 0 },
+          },
+          orderBy: { receivedAt: 'asc' },
+        });
+
+        let remaining = Math.abs(deltaQty);
+        for (const batch of batches) {
+          if (remaining <= 0) break;
+
+          const available = Number(batch.remainingQty);
+          const toRemove = Math.min(available, remaining);
+
+          await tx.stockBatch.update({
+            where: { id: batch.id },
+            data: { remainingQty: available - toRemove },
+          });
+
+          remaining -= toRemove;
+        }
+
+        // If we couldn't remove all (insufficient stock), we still record the adjustment
+        // This allows negative on-hand which can be flagged in reporting
+      }
+
+      return adjustment;
+    });
+  }
 }
