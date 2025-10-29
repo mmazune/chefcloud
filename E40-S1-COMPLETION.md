@@ -61,19 +61,19 @@ Successfully implemented E40 Accounting Core for ChefCloud, providing double-ent
 
 ### Chart of Accounts (11 accounts)
 
-| Code | Name | Type | Purpose |
-|------|------|------|---------|
-| 1000 | Cash | ASSET | Cash on hand |
-| 1010 | Bank Account | ASSET | Bank deposits |
-| 1100 | Accounts Receivable | ASSET | Customer receivables |
-| 1200 | Inventory | ASSET | Stock value |
-| 2000 | Accounts Payable | LIABILITY | Vendor bills |
-| 3000 | Owner Equity | EQUITY | Capital |
-| 4000 | Sales Revenue | REVENUE | Food/beverage sales |
-| 4100 | Service Revenue | REVENUE | Service charges |
-| 5000 | Cost of Goods Sold | COGS | Ingredient costs |
-| 6000 | Operating Expenses | EXPENSE | General expenses |
-| 6100 | Utilities | EXPENSE | Power/water/internet |
+| Code | Name                | Type      | Purpose              |
+| ---- | ------------------- | --------- | -------------------- |
+| 1000 | Cash                | ASSET     | Cash on hand         |
+| 1010 | Bank Account        | ASSET     | Bank deposits        |
+| 1100 | Accounts Receivable | ASSET     | Customer receivables |
+| 1200 | Inventory           | ASSET     | Stock value          |
+| 2000 | Accounts Payable    | LIABILITY | Vendor bills         |
+| 3000 | Owner Equity        | EQUITY    | Capital              |
+| 4000 | Sales Revenue       | REVENUE   | Food/beverage sales  |
+| 4100 | Service Revenue     | REVENUE   | Service charges      |
+| 5000 | Cost of Goods Sold  | COGS      | Ingredient costs     |
+| 6000 | Operating Expenses  | EXPENSE   | General expenses     |
+| 6100 | Utilities           | EXPENSE   | Power/water/internet |
 
 - File: `services/api/prisma/seed.ts`
 - Status: ✅ Seeded successfully
@@ -87,17 +87,20 @@ Successfully implemented E40 Accounting Core for ChefCloud, providing double-ent
 **Purpose:** Double-entry GL posting logic
 
 **Methods:**
+
 - `postSale(orderId, userId)` - Dr Cash 1000, Cr Sales Revenue 4000
 - `postCOGS(orderId, userId)` - Dr COGS 5000, Cr Inventory 1200
 - `postRefund(refundId, userId)` - Dr Sales Revenue 4000, Cr Cash 1000
 - `postCashMovement(movementId, userId)` - Dr/Cr Cash 1000 based on movement type
 
 **Integration Points:**
+
 - Called from `pos.service.ts` after order closed
 - Called from `payments.service.ts` after refund created
 - Called from `cash.service.ts` after cash movement created
 
 **Error Handling:**
+
 - Fire-and-forget pattern with `.catch()` logging
 - Idempotent - skips duplicate postings for same `sourceId`
 - Logs to `AuditEvent` on posting errors
@@ -107,21 +110,26 @@ Successfully implemented E40 Accounting Core for ChefCloud, providing double-ent
 **Purpose:** Business logic for accounting operations
 
 **Vendor Management:**
+
 - `createVendor(orgId, data)` - Create vendor master record
 - `getVendors(orgId)` - List all vendors for org
 
 **Vendor Bill Management:**
+
 - `createVendorBill(orgId, data)` - Create bill in DRAFT status
 - `openVendorBill(billId)` - Mark bill as OPEN (approved)
 
 **Vendor Payment Management:**
+
 - `createVendorPayment(orgId, data)` - Record payment, auto-mark bill as PAID when fully paid
 
 **Aging Reports:**
+
 - `getAPAging(orgId)` - Accounts Payable aging (0-30, 31-60, 61-90, 90+ days)
 - `getARAging(orgId)` - Accounts Receivable aging
 
 **Financial Statements:**
+
 - `getTrialBalance(orgId, asOf?)` - All accounts with debit/credit balances
 - `getProfitAndLoss(orgId, from?, to?)` - Revenue - COGS - Expenses = Net Income
 - `getBalanceSheet(orgId, asOf?)` - Assets = Liabilities + Equity
@@ -136,18 +144,18 @@ Successfully implemented E40 Accounting Core for ChefCloud, providing double-ent
 
 **Endpoints:**
 
-| Method | Path | Handler | Description |
-|--------|------|---------|-------------|
-| POST | `/accounting/vendors` | `createVendor()` | Create vendor |
-| GET | `/accounting/vendors` | `getVendors()` | List vendors |
-| POST | `/accounting/vendor-bills` | `createVendorBill()` | Create bill |
-| POST | `/accounting/vendor-bills/:billId/open` | `openVendorBill()` | Approve bill |
-| POST | `/accounting/vendor-payments` | `createVendorPayment()` | Record payment |
-| GET | `/accounting/ap/aging` | `getAPAging()` | AP aging report |
-| GET | `/accounting/ar/aging` | `getARAging()` | AR aging report |
-| GET | `/accounting/trial-balance` | `getTrialBalance()` | Trial balance |
-| GET | `/accounting/pnl` | `getProfitAndLoss()` | P&L statement |
-| GET | `/accounting/balance-sheet` | `getBalanceSheet()` | Balance sheet |
+| Method | Path                                    | Handler                 | Description     |
+| ------ | --------------------------------------- | ----------------------- | --------------- |
+| POST   | `/accounting/vendors`                   | `createVendor()`        | Create vendor   |
+| GET    | `/accounting/vendors`                   | `getVendors()`          | List vendors    |
+| POST   | `/accounting/vendor-bills`              | `createVendorBill()`    | Create bill     |
+| POST   | `/accounting/vendor-bills/:billId/open` | `openVendorBill()`      | Approve bill    |
+| POST   | `/accounting/vendor-payments`           | `createVendorPayment()` | Record payment  |
+| GET    | `/accounting/ap/aging`                  | `getAPAging()`          | AP aging report |
+| GET    | `/accounting/ar/aging`                  | `getARAging()`          | AR aging report |
+| GET    | `/accounting/trial-balance`             | `getTrialBalance()`     | Trial balance   |
+| GET    | `/accounting/pnl`                       | `getProfitAndLoss()`    | P&L statement   |
+| GET    | `/accounting/balance-sheet`             | `getBalanceSheet()`     | Balance sheet   |
 
 **Parameter Pattern:** Uses `@Request() req: RequestWithUser` to extract `req.user.orgId`
 
@@ -167,6 +175,7 @@ Successfully implemented E40 Accounting Core for ChefCloud, providing double-ent
 **Schedule:** Daily at 08:00 UTC (`0 8 * * *`)
 
 **Functionality:**
+
 1. Fetches active `ReminderSchedule` records
 2. For VENDOR_BILL reminders: Finds bills due in N days, sends EMAIL/SLACK notifications
 3. For UTILITY reminders: Sends monthly recurring reminders (e.g., "Pay electricity bill")
@@ -183,13 +192,18 @@ Successfully implemented E40 Accounting Core for ChefCloud, providing double-ent
 **Method:** `closeOrder()`
 
 **Integration:**
+
 ```typescript
 // E40-s1: Post sale and COGS to GL (fire-and-forget)
 this.postingService.postSale(order.id, userId).catch((err) => {
-  this.prisma.client.auditEvent.create({ /* log error */ });
+  this.prisma.client.auditEvent.create({
+    /* log error */
+  });
 });
 this.postingService.postCOGS(order.id, userId).catch((err) => {
-  this.prisma.client.auditEvent.create({ /* log error */ });
+  this.prisma.client.auditEvent.create({
+    /* log error */
+  });
 });
 ```
 
@@ -198,11 +212,14 @@ this.postingService.postCOGS(order.id, userId).catch((err) => {
 **Method:** `createRefund()`
 
 **Integration:**
+
 ```typescript
 // E40-s1: Post refund to GL (fire-and-forget)
 if (refund.status === 'COMPLETED') {
   this.postingService.postRefund(refund.id, userId).catch((err) => {
-    this.prisma.client.auditEvent.create({ /* log error */ });
+    this.prisma.client.auditEvent.create({
+      /* log error */
+    });
   });
 }
 ```
@@ -212,10 +229,13 @@ if (refund.status === 'COMPLETED') {
 **Method:** `createCashMovement()`
 
 **Integration:**
+
 ```typescript
 // E40-s1: Post cash movement to GL (fire-and-forget)
 this.postingService.postCashMovement(movement.id, userId).catch((err) => {
-  this.prisma.client.auditEvent.create({ /* log error */ });
+  this.prisma.client.auditEvent.create({
+    /* log error */
+  });
 });
 ```
 
@@ -224,12 +244,14 @@ this.postingService.postCashMovement(movement.id, userId).catch((err) => {
 ## Build & Test Results
 
 ### Build Status
+
 ```bash
 cd /workspaces/chefcloud/services/api && pnpm build
 # ✅ Success - no compilation errors
 ```
 
 ### Test Results
+
 ```bash
 pnpm -w test
 # Test Suites: 25 passed, 25 total
@@ -250,25 +272,30 @@ pnpm -w test
 ## Key Technical Decisions
 
 ### 1. Fire-and-Forget Posting Pattern
+
 - **Rationale:** GL posting should not block POS operations (user experience priority)
 - **Implementation:** `.catch()` error handler logs to `AuditEvent` table
 - **Trade-off:** Some postings might fail silently, but are logged for later reconciliation
 
 ### 2. Idempotency via `sourceId`
+
 - **Rationale:** Prevent duplicate GL entries if posting is retried
 - **Implementation:** Check `JournalEntry.sourceId` before creating new entry
 - **Example:** `sourceId = "ORDER-123"` - skip if journal entry already exists
 
 ### 3. Flexible Return Types (`Promise<any>`)
+
 - **Rationale:** Prisma types are complex and nested, strict typing would require extensive DTO creation
 - **Trade-off:** Less type safety, but faster development and simpler maintenance
 
 ### 4. Parameter Decorator Pattern
+
 - **Pattern:** `@Request() req: RequestWithUser` instead of custom decorators
 - **Rationale:** Existing codebase uses this pattern consistently
 - **Example:** Extract `req.user.orgId` in controller methods
 
 ### 5. Double-Entry Validation
+
 - **Rule:** Every `JournalEntry` must have balanced debits and credits
 - **Enforcement:** Database-level check (application logic, not DB constraint yet)
 - **Future:** Add CHECK constraint in migration for strict enforcement
@@ -303,6 +330,7 @@ pnpm -w test
 ## Known Issues & Future Improvements
 
 ### Known Issues
+
 - None (all tests passing, build successful)
 
 ### Future Improvements
@@ -340,6 +368,7 @@ pnpm -w test
 ## API Usage Examples
 
 ### Create Vendor
+
 ```bash
 curl -X POST http://localhost:3000/accounting/vendors \
   -H "Authorization: Bearer $JWT_TOKEN" \
@@ -353,6 +382,7 @@ curl -X POST http://localhost:3000/accounting/vendors \
 ```
 
 ### Create Vendor Bill
+
 ```bash
 curl -X POST http://localhost:3000/accounting/vendor-bills \
   -H "Authorization: Bearer $JWT_TOKEN" \
@@ -370,12 +400,14 @@ curl -X POST http://localhost:3000/accounting/vendor-bills \
 ```
 
 ### Approve Bill (Move from DRAFT to OPEN)
+
 ```bash
 curl -X POST http://localhost:3000/accounting/vendor-bills/{billId}/open \
   -H "Authorization: Bearer $JWT_TOKEN"
 ```
 
 ### Record Payment
+
 ```bash
 curl -X POST http://localhost:3000/accounting/vendor-payments \
   -H "Authorization: Bearer $JWT_TOKEN" \
@@ -391,12 +423,14 @@ curl -X POST http://localhost:3000/accounting/vendor-payments \
 ```
 
 ### Get AP Aging Report
+
 ```bash
 curl http://localhost:3000/accounting/ap/aging \
   -H "Authorization: Bearer $JWT_TOKEN"
 ```
 
 **Response:**
+
 ```json
 {
   "current": 1200000,
@@ -409,12 +443,14 @@ curl http://localhost:3000/accounting/ap/aging \
 ```
 
 ### Get Profit & Loss Statement
+
 ```bash
 curl "http://localhost:3000/accounting/pnl?from=2025-01-01&to=2025-01-31" \
   -H "Authorization: Bearer $JWT_TOKEN"
 ```
 
 **Response:**
+
 ```json
 {
   "revenue": {
@@ -455,6 +491,7 @@ The accounting module is production-ready and provides a solid foundation for fi
 ---
 
 **Next Steps:**
+
 - E41: Implement customer invoicing and AR posting
 - E42: Add multi-currency support
 - E43: Build reconciliation and audit tools

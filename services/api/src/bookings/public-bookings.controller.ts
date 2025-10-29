@@ -1,6 +1,6 @@
 /**
  * E42-s1: Public Bookings Controller
- * 
+ *
  * Public endpoints for event browsing and booking creation.
  * Rate-limited, no authentication required.
  */

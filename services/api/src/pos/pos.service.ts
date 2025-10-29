@@ -101,6 +101,33 @@ export class PosService {
     const orderCount = await this.prisma.client.order.count({ where: { branchId } });
     const orderNumber = `ORD-${Date.now()}-${orderCount + 1}`;
 
+    // E42-s2: Check for active event booking with check-in and prepaid credit
+    let prepaidCreditId: string | undefined;
+    if (dto.tableId) {
+      const activeBooking = await this.prisma.client.eventBooking.findFirst({
+        where: {
+          eventTable: { tableId: dto.tableId },
+          status: 'CONFIRMED',
+          checkedInAt: { not: null },
+          event: {
+            startsAt: { lte: new Date() },
+            endsAt: { gte: new Date() },
+          },
+        },
+        include: {
+          credits: {
+            where: {
+              consumed: { lt: this.prisma.client.prepaidCredit.fields.amount },
+            },
+          },
+        },
+      });
+
+      if (activeBooking?.credits?.[0]) {
+        prepaidCreditId = activeBooking.credits[0].id;
+      }
+    }
+
     // Create order with items
     const order: any = await this.prisma.client.order.create({
       data: {
@@ -113,6 +140,7 @@ export class PosService {
         subtotal,
         tax,
         total,
+        metadata: prepaidCreditId ? { prepaidCreditId } : undefined, // E42-s2: Attach credit
         orderItems: {
           create: orderItemsData,
         },

@@ -235,9 +235,10 @@ export class PaymentsService {
             });
 
             // Create prepaid credit
-            const creditAmount = Number(booking.eventTable.minSpend) > 0
-              ? Number(booking.eventTable.minSpend) - Number(booking.eventTable.deposit)
-              : Number(booking.eventTable.price) - Number(booking.eventTable.deposit);
+            const creditAmount =
+              Number(booking.eventTable.minSpend) > 0
+                ? Number(booking.eventTable.minSpend) - Number(booking.eventTable.deposit)
+                : Number(booking.eventTable.price) - Number(booking.eventTable.deposit);
 
             if (creditAmount > 0) {
               await tx.prepaidCredit.create({

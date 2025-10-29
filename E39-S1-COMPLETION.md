@@ -10,6 +10,7 @@
 ## Overview
 
 Successfully implemented E39 Multi-Currency & Tax Matrix (Phase 1) for ChefCloud. This provides:
+
 - Multi-currency support with exchange rate management
 - Configurable tax rules per item/category (inclusive/exclusive)
 - Service charge calculation
@@ -52,20 +53,20 @@ Successfully implemented E39 Multi-Currency & Tax Matrix (Phase 1) for ChefCloud
 
 ### Base Currencies (4)
 
-| Code | Name | Symbol | Decimals |
-|------|------|--------|----------|
-| UGX | Ugandan Shilling | USh | 0 |
-| USD | US Dollar | $ | 2 |
-| EUR | Euro | € | 2 |
-| GBP | British Pound | £ | 2 |
+| Code | Name             | Symbol | Decimals |
+| ---- | ---------------- | ------ | -------- |
+| UGX  | Ugandan Shilling | USh    | 0        |
+| USD  | US Dollar        | $      | 2        |
+| EUR  | Euro             | €      | 2        |
+| GBP  | British Pound    | £      | 2        |
 
 ### Initial Exchange Rates (3)
 
-| Base | Quote | Rate | Source |
-|------|-------|------|--------|
-| UGX | USD | 3700.0 | MANUAL |
-| UGX | EUR | 4000.0 | MANUAL |
-| USD | EUR | 0.92 | MANUAL |
+| Base | Quote | Rate   | Source |
+| ---- | ----- | ------ | ------ |
+| UGX  | USD   | 3700.0 | MANUAL |
+| UGX  | EUR   | 4000.0 | MANUAL |
+| USD  | EUR   | 0.92   | MANUAL |
 
 ---
 
@@ -76,12 +77,14 @@ Successfully implemented E39 Multi-Currency & Tax Matrix (Phase 1) for ChefCloud
 **Purpose:** Currency lookups and conversions
 
 **Methods:**
+
 - `getOrgCurrency(orgId)` - Get base currency (fallback: "UGX")
 - `getBranchCurrency(branchId)` - Get branch currency or org base
 - `convert(amount, fromCode, toCode, asOf?)` - Convert using exchange rates
 - `getCurrencyInfo(code)` - Get symbol, decimals, etc.
 
 **Key Logic:**
+
 - Tries direct rate (e.g., UGX→USD)
 - Falls back to inverse rate (USD→UGX)
 - Throws NotFoundException if no rate available
@@ -91,6 +94,7 @@ Successfully implemented E39 Multi-Currency & Tax Matrix (Phase 1) for ChefCloud
 **Purpose:** Tax calculation (inclusive/exclusive), service charge, rounding
 
 **Methods:**
+
 - `getTaxMatrix(orgId)` - Get org tax rules from settings
 - `resolveLineTax(orgId, itemId)` - Lookup tax rule for menu item
 - `calculateTax(grossOrNet, rule)` - Calculate inclusive or exclusive tax
@@ -100,6 +104,7 @@ Successfully implemented E39 Multi-Currency & Tax Matrix (Phase 1) for ChefCloud
 **Tax Calculation Examples:**
 
 **Inclusive Tax (18% VAT):**
+
 ```typescript
 const rule = { code: 'VAT_STD', rate: 0.18, inclusive: true };
 const result = taxService.calculateTax(11800, rule);
@@ -109,6 +114,7 @@ const result = taxService.calculateTax(11800, rule);
 ```
 
 **Exclusive Tax (10% Service Charge):**
+
 ```typescript
 const rule = { code: 'SERVICE', rate: 0.1, inclusive: false };
 const result = taxService.calculateTax(10000, rule);
@@ -118,6 +124,7 @@ const result = taxService.calculateTax(10000, rule);
 ```
 
 **Cash Rounding:**
+
 ```typescript
 await taxService.applyRounding('org-1', 1234, 'UGX');
 // Returns: 1250 (rounded to nearest 50)
@@ -132,15 +139,15 @@ await taxService.applyRounding('org-1', 12.34, 'USD');
 
 **Endpoints:**
 
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/settings/currency` | Get base currency |
-| PUT | `/settings/currency` | Set base currency |
-| GET | `/settings/tax-matrix` | Get tax matrix |
-| PUT | `/settings/tax-matrix` | Update tax matrix |
-| GET | `/settings/rounding` | Get rounding rules |
-| PUT | `/settings/rounding` | Set rounding rules |
-| POST | `/settings/exchange-rate` | Manually set exchange rate |
+| Method | Path                      | Description                |
+| ------ | ------------------------- | -------------------------- |
+| GET    | `/settings/currency`      | Get base currency          |
+| PUT    | `/settings/currency`      | Set base currency          |
+| GET    | `/settings/tax-matrix`    | Get tax matrix             |
+| PUT    | `/settings/tax-matrix`    | Update tax matrix          |
+| GET    | `/settings/rounding`      | Get rounding rules         |
+| PUT    | `/settings/rounding`      | Set rounding rules         |
+| POST   | `/settings/exchange-rate` | Manually set exchange rate |
 
 **Authorization:** All endpoints require **L5 (Owner/Admin)** role
 
@@ -199,6 +206,7 @@ To apply a specific tax rule to a menu item, add `taxCode` to the item's metadat
 ```
 
 When calculating tax, `TaxService.resolveLineTax()` will:
+
 1. Check item metadata for `taxCode`
 2. Look up rule in `OrgSettings.taxMatrix[taxCode]`
 3. Fallback to `taxMatrix.defaultTax` if not found
@@ -223,6 +231,7 @@ When calculating tax, `TaxService.resolveLineTax()` will:
 - No rounding - For decimal currencies (USD, EUR)
 
 **Logic:**
+
 - Cash rounding only applies to currencies with 0 decimals (like UGX)
 - USD/EUR use standard 2-decimal rounding
 
@@ -351,12 +360,14 @@ const finalTotal = await taxService.applyRounding(orgId, total, 'UGX');
 ## Build & Test Results
 
 ### Build Status
+
 ```bash
 pnpm -w build
 # ✅ Success - all packages compiled
 ```
 
 ### Test Results
+
 ```bash
 pnpm -w test
 # Test Suites: 27 passed, 27 total
@@ -406,6 +417,7 @@ pnpm -w test
 ### 1. No Hard-Coded Tax Rates
 
 **Rationale:** Tax rates vary by country/region and change over time. Hard-coding rates (e.g., `const VAT_RATE = 0.18`) creates:
+
 - Deployment issues (need code change for rate updates)
 - Compliance risk (outdated rates)
 - Multi-country challenges
@@ -415,6 +427,7 @@ pnpm -w test
 ### 2. Inclusive vs Exclusive Tax Flag
 
 **Rationale:** Different countries/businesses display prices differently:
+
 - **Inclusive** (East Africa): Menu shows 11,800 UGX (18% VAT included)
 - **Exclusive** (US): Menu shows $10.00 + tax
 
@@ -516,6 +529,7 @@ The module is production-ready for single-currency deployments and provides a fo
 ---
 
 **Next Steps:**
+
 - E40: Test tax matrix with real POS orders (integration test)
 - E41: Add multi-currency order storage (branchCurrency + orgCurrency)
 - E42: Integrate exchange rate provider API

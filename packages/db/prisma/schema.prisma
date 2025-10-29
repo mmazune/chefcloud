@@ -333,6 +333,12 @@ model User {
   timeEntries         TimeEntry[]
   approvedTimeEntries TimeEntry[]          @relation("ApprovedTimeEntries")
   stockCounts         StockCount[]         // E45-s1: Stock counts performed by user
+  paySlips            PaySlip[]            // E43-s2: Payslips for user
+  approvedPaySlips    PaySlip[]            @relation("ApprovedPaySlips") // E43-s2: Payslips approved by user
+  createdFlags        FeatureFlag[]        @relation("CreatedFlags") // E49-s1: Feature flags created by user
+  updatedFlags        FeatureFlag[]        @relation("UpdatedFlags") // E49-s1: Feature flags updated by user
+  createdMaintenanceWindows MaintenanceWindow[] @relation("CreatedMaintenanceWindows") // E49-s1: Maintenance windows created by user
+  flagAudits          FlagAudit[]          // E49-s1: Flag audit trail
 
   @@index([orgId, id])
   @@map("users")
@@ -676,6 +682,8 @@ model Order {
 
   @@unique([branchId, orderNumber])
   @@index([branchId])
+  @@index([updatedAt]) // E54-s1: For sorting/filtering by update time
+  @@index([status, updatedAt]) // E54-s1: For status-based queries with sorting
   @@map("orders")
 }
 
@@ -840,6 +848,8 @@ model Payment {
   order   Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
   refunds Refund[]
 
+  @@index([orderId]) // E54-s1: For payment lookup by order
+  @@index([status, createdAt]) // E54-s1: For payment status queries
   @@map("payments")
 }
 
@@ -960,6 +970,7 @@ model AnomalyEvent {
   @@index([orgId, occurredAt])
   @@index([branchId, type])
   @@index([userId])
+  @@index([occurredAt]) // E54-s1: For time-based queries
   @@map("anomaly_events")
 }
 
@@ -1764,6 +1775,9 @@ model EventBooking {
   depositIntentId  String? // PaymentIntent ID for deposit
   depositCaptured  Boolean            @default(false)
   creditTotal      Decimal            @default(0) @db.Decimal(12, 2) // Total credit eligible after deposit
+  ticketCode       String?            @unique // E42-s2: ULID for QR check-in
+  checkedInAt      DateTime? // E42-s2: When guest checked in
+  checkedInById    String? // E42-s2: User who performed check-in
   createdAt        DateTime           @default(now())
   updatedAt        DateTime           @updatedAt
   metadata         Json? // Additional booking details
@@ -1900,4 +1914,139 @@ model TimeEntry {
   @@index([orgId, branchId, clockInAt])
   @@index([userId, clockInAt])
   @@map("time_entries")
+}
+
+// ===== E43-s2: Payroll =====
+
+enum PayRunStatus {
+  DRAFT
+  APPROVED
+  POSTED
+}
+
+enum PayComponentType {
+  EARNING
+  DEDUCTION
+}
+
+enum PayComponentCalc {
+  FIXED
+  RATE
+  PERCENT
+}
+
+enum FlagAction {
+  CREATE
+  UPDATE
+  TOGGLE
+  KILL
+}
+
+model PayRun {
+  id          String       @id @default(cuid())
+  orgId       String
+  periodStart DateTime
+  periodEnd   DateTime
+  status      PayRunStatus @default(DRAFT)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  slips PaySlip[]
+
+  @@index([orgId, periodStart, periodEnd])
+  @@map("pay_runs")
+}
+
+model PaySlip {
+  id               String    @id @default(cuid())
+  payRunId         String
+  userId           String
+  regularMinutes   Int       @default(0)
+  overtimeMinutes  Int       @default(0)
+  gross            Decimal   @default(0) @db.Decimal(12, 2)
+  tax              Decimal   @default(0) @db.Decimal(12, 2)
+  deductions       Decimal   @default(0) @db.Decimal(12, 2)
+  net              Decimal   @default(0) @db.Decimal(12, 2)
+  approvedById     String?
+  approvedAt       DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  payRun     PayRun @relation(fields: [payRunId], references: [id], onDelete: Cascade)
+  user       User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  approvedBy User?  @relation("ApprovedPaySlips", fields: [approvedById], references: [id], onDelete: SetNull)
+
+  @@index([payRunId, userId])
+  @@map("pay_slips")
+}
+
+model PayComponent {
+  id      String            @id @default(cuid())
+  orgId   String
+  name    String
+  type    PayComponentType
+  calc    PayComponentCalc
+  value   Decimal           @db.Decimal(12, 2)
+  taxable Boolean           @default(true)
+  active  Boolean           @default(true)
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  @@index([orgId, active])
+  @@map("pay_components")
+}
+
+// ===== E49-s1: Change Control & Staged Rollouts =====
+
+model FeatureFlag {
+  id          String   @id @default(cuid())
+  orgId       String?
+  key         String   @unique
+  description String?
+  active      Boolean  @default(false)
+  rolloutPct  Int      @default(0)
+  scopes      Json?
+  createdById String?
+  updatedById String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  createdBy User? @relation("CreatedFlags", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedBy User? @relation("UpdatedFlags", fields: [updatedById], references: [id], onDelete: SetNull)
+
+  @@index([orgId, active])
+  @@index([key])
+  @@map("feature_flags")
+}
+
+model MaintenanceWindow {
+  id          String   @id @default(cuid())
+  orgId       String?
+  startsAt    DateTime
+  endsAt      DateTime
+  message     String?
+  blockWrites Boolean  @default(true)
+  createdById String?
+  createdAt   DateTime @default(now())
+
+  createdBy User? @relation("CreatedMaintenanceWindows", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([orgId, startsAt, endsAt])
+  @@map("maintenance_windows")
+}
+
+model FlagAudit {
+  id        String     @id @default(cuid())
+  flagKey   String
+  userId    String?
+  action    FlagAction
+  before    Json?
+  after     Json?
+  createdAt DateTime   @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([flagKey, createdAt])
+  @@index([userId])
+  @@map("flag_audits")
 }

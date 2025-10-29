@@ -1062,10 +1062,9 @@ export const subscriptionRemindersQueue = new Queue<SubscriptionReminderJob>(
   'subscription-reminders-billing',
   { connection },
 );
-export const accountingRemindersQueue = new Queue<AccountingRemindersJob>(
-  'accounting-reminders',
-  { connection },
-);
+export const accountingRemindersQueue = new Queue<AccountingRemindersJob>('accounting-reminders', {
+  connection,
+});
 
 // Subscription renewals worker (hourly)
 const subscriptionRenewalsWorker = new Worker<SubscriptionRenewalJob>(

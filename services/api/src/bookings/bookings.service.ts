@@ -8,6 +8,9 @@
 
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
+import { ulid } from 'ulid';
+import PDFDocument from 'pdfkit';
+import QRCode from 'qrcode';
 
 @Injectable()
 export class BookingsService {
@@ -170,6 +173,7 @@ export class BookingsService {
 
   /**
    * Manually confirm booking (L2+)
+   * E42-s2: Now generates ticketCode on confirmation
    */
   async confirmBooking(id: string, _userId: string): Promise<any> {
     const booking = await this.prisma.client.eventBooking.findUnique({
@@ -205,6 +209,9 @@ export class BookingsService {
     const expiresAt = new Date(booking.event.endsAt);
     expiresAt.setHours(expiresAt.getHours() + expiryHours);
 
+    // Generate ticket code (E42-s2)
+    const ticketCode = ulid();
+
     // Update booking status and create prepaid credit
     const [updatedBooking, credit] = await this.prisma.client.$transaction([
       this.prisma.client.eventBooking.update({
@@ -212,6 +219,7 @@ export class BookingsService {
         data: {
           status: 'CONFIRMED',
           depositCaptured: true,
+          ticketCode, // E42-s2: Store ticket code
         },
       }),
       this.prisma.client.prepaidCredit.create({
@@ -367,6 +375,75 @@ export class BookingsService {
     return this.prisma.client.event.update({
       where: { id },
       data: { isPublished: false },
+    });
+  }
+
+  /**
+   * E42-s2: Generate PDF ticket with QR code
+   */
+  async generateTicketPdf(bookingId: string): Promise<Buffer> {
+    const booking = await this.prisma.client.eventBooking.findUnique({
+      where: { id: bookingId },
+      include: {
+        event: true,
+        eventTable: true,
+      },
+    });
+
+    if (!booking) {
+      throw new NotFoundException('Booking not found');
+    }
+
+    if (!booking.ticketCode) {
+      throw new BadRequestException('Booking has no ticket code (not confirmed)');
+    }
+
+    // Generate QR code data URL
+    const qrDataUrl = await QRCode.toDataURL(booking.ticketCode, {
+      width: 200,
+      margin: 2,
+    });
+
+    // Create PDF
+    const doc = new PDFDocument({ size: 'A5', margin: 50 });
+    const chunks: Buffer[] = [];
+
+    doc.on('data', (chunk) => chunks.push(chunk));
+
+    // Header
+    doc.fontSize(20).text('ChefCloud Event Ticket', { align: 'center' });
+    doc.moveDown();
+
+    // Event details
+    doc.fontSize(14).text(booking.event.title, { align: 'center' });
+    doc.fontSize(10).text(
+      `${booking.event.startsAt.toISOString().split('T')[0]} • ${booking.event.startsAt.toTimeString().slice(0, 5)} - ${booking.event.endsAt.toTimeString().slice(0, 5)}`,
+      { align: 'center' },
+    );
+    doc.moveDown();
+
+    // Table and guest info
+    doc.fontSize(12).text(`Table: ${booking.eventTable.label}`, { align: 'center' });
+    doc.fontSize(10).text(`Guest: ${booking.name}`, { align: 'center' });
+    doc.moveDown();
+
+    // QR Code (embedded as PNG from data URL)
+    const qrImageBuffer = Buffer.from(qrDataUrl.split(',')[1], 'base64');
+    doc.image(qrImageBuffer, doc.page.width / 2 - 100, doc.y, { width: 200 });
+    doc.moveDown(12);
+
+    // Ticket code text
+    doc.fontSize(10).text(`Ticket Code: ${booking.ticketCode}`, { align: 'center' });
+    doc.moveDown();
+
+    // Footer
+    doc.fontSize(8).text('Present this ticket at the door for check-in.', { align: 'center' });
+
+    doc.end();
+
+    return new Promise((resolve, reject) => {
+      doc.on('end', () => resolve(Buffer.concat(chunks)));
+      doc.on('error', reject);
     });
   }
 }

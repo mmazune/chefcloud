@@ -1,20 +1,12 @@
 /**
  * E39-s1: Settings Controller
- * 
+ *
  * Admin APIs (L5) for managing currency, tax matrix, and rounding settings.
  */
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import {
-  Controller,
-  Get,
-  Put,
-  Post,
-  Body,
-  UseGuards,
-  Request,
-} from '@nestjs/common';
+import { Controller, Get, Put, Post, Body, UseGuards, Request } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
@@ -90,10 +82,7 @@ export class SettingsController {
    */
   @Put('tax-matrix')
   @Roles('L5')
-  async setTaxMatrix(
-    @Request() req: RequestWithUser,
-    @Body() body: any,
-  ): Promise<any> {
+  async setTaxMatrix(@Request() req: RequestWithUser, @Body() body: any): Promise<any> {
     // Basic validation: ensure defaultTax exists
     if (!body.defaultTax || typeof body.defaultTax.rate !== 'number') {
       throw new Error('taxMatrix must have defaultTax with rate');
@@ -126,10 +115,7 @@ export class SettingsController {
    */
   @Put('rounding')
   @Roles('L5')
-  async setRounding(
-    @Request() req: RequestWithUser,
-    @Body() body: any,
-  ): Promise<any> {
+  async setRounding(@Request() req: RequestWithUser, @Body() body: any): Promise<any> {
     const updated = await this.prisma.client.orgSettings.update({
       where: { orgId: req.user.orgId },
       data: { rounding: body },

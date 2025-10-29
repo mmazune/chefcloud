@@ -6852,7 +6852,6 @@ Example log output:
 **License:** MIT
 **Version:** 0.1.0
 
-
 ---
 
 ## Multi-Currency & Tax Matrix (E39-s1)
@@ -7072,3 +7071,1689 @@ These appear in `/analytics/anomalies` for managers to review.
 - Anomaly events alert on suspicious patterns
 
 ---
+
+## HA/Performance Hardening (E54-s1)
+
+ChefCloud is designed for high availability and performance under load. This section documents performance guardrails, load testing, and operational best practices.
+
+### Performance Budgets
+
+**API Response Times**:
+- p95 < 350ms for normal REST APIs
+- p99 < 800ms for all APIs
+- SSE connect < 500ms
+- Error rate < 5% under 50 RPS sustained load
+
+**Concurrency**:
+- Max 200 concurrent SSE connections (configurable via `STREAM_MAX_CLIENTS`)
+- Memory usage should remain steady under sustained load
+
+**Database**:
+- Query timeout: 5s (configurable)
+- Slow query logging: >200ms (sample 10%)
+- Connection pool: 10 connections (default)
+
+### Load Testing with k6
+
+Load tests are located in `perf/scenarios/`:
+
+```bash
+# Set up test environment
+export API_URL="http://localhost:3001"
+export AUTH_TOKEN="your-jwt-token-for-L5-admin"
+
+# Run all load tests
+cd perf
+./run.sh all
+
+# Run individual scenarios
+./run.sh sse    # 200 concurrent SSE clients
+./run.sh pos    # POS order flow (create/send/close)
+./run.sh owner  # Owner overview polling
+
+# Using k6 directly (if installed)
+k6 run --env API_URL=$API_URL --env AUTH_TOKEN=$AUTH_TOKEN scenarios/pos-happy.js
+
+# Using Docker (no k6 installation needed)
+docker run --rm -i --network host \
+  -v "$(pwd):/scripts" \
+  grafana/k6:latest run \
+  --env API_URL=$API_URL \
+  --env AUTH_TOKEN=$AUTH_TOKEN \
+  /scripts/scenarios/pos-happy.js
+```
+
+**Scenarios**:
+1. **kpis-sse.js**: Simulates 200 SSE clients connecting to `/stream/kpis` for 2 minutes
+2. **pos-happy.js**: Simulates POS workflow (70% DINE_IN, 30% TAKEAWAY) with ramp-up to 50 RPS
+3. **owner-overview.js**: Simulates 25 clients polling `/owner/overview` every 2s for 5 minutes
+
+**Thresholds**:
+- HTTP request duration p(95) < 350ms, p(99) < 800ms
+- HTTP request failure rate < 5%
+- SSE connection establishment < 500ms
+
+### Slow Query Logging
+
+Prisma middleware automatically logs slow queries:
+
+```typescript
+// Environment variables
+SLOW_QUERY_MS=200        // Log queries > 200ms
+SLOW_QUERY_SAMPLE=0.1    // Sample 10% of slow queries
+
+// Example log output
+{
+  "slowQuery": true,
+  "durationMs": 350,
+  "model": "Order",
+  "action": "findMany",
+  "params": {
+    "where": { "branchId": "branch-1" },
+    "take": 50,
+    "select": ["id", "total", "createdAt"]
+  },
+  "timestamp": "2025-10-29T21:00:00.000Z"
+}
+```
+
+**Tuning**:
+- Increase `SLOW_QUERY_MS` to reduce noise (e.g., 500ms)
+- Lower `SLOW_QUERY_SAMPLE` to reduce log volume (e.g., 0.01 = 1%)
+- Set to `SLOW_QUERY_SAMPLE=0` to disable in production
+
+### Pagination & Query Guards
+
+`QueryGuard` utility enforces safe pagination:
+
+```typescript
+import { QueryGuard } from './common/query-guard';
+
+// Cap page size to max 100 items, default 20
+const params = QueryGuard.toPrismaParams({
+  page: 2,
+  pageSize: 500,  // Will be capped to 100
+  sortBy: 'createdAt',
+  sortOrder: 'desc',
+});
+
+// Returns: { take: 100, skip: 100, orderBy: { createdAt: 'desc' } }
+
+// Get pagination metadata for response
+const meta = QueryGuard.getPaginationMeta(2, 100, 500);
+// Returns: { page: 2, pageSize: 100, totalPages: 5, hasNext: true, hasPrev: true }
+```
+
+**Benefits**:
+- Prevents resource exhaustion from large page sizes
+- Consistent sorting behavior (default: `updatedAt desc`)
+- Standard pagination metadata for frontend
+
+### Performance Indexes
+
+E54-s1 added indexes for common query patterns:
+
+```sql
+-- Orders
+CREATE INDEX idx_orders_updated_at ON orders(updated_at);
+CREATE INDEX idx_orders_status_updated_at ON orders(status, updated_at);
+
+-- Payments
+CREATE INDEX idx_payments_order_id ON payments(order_id);
+CREATE INDEX idx_payments_status_created_at ON payments(status, created_at);
+
+-- Anomaly Events
+CREATE INDEX idx_anomaly_events_occurred_at ON anomaly_events(occurred_at);
+```
+
+### SSE Connection Limits
+
+SSE endpoints enforce a hard cap on concurrent connections:
+
+```typescript
+// Environment
+STREAM_MAX_CLIENTS=200  // Default: 200
+
+// Behavior
+// - Connection count tracked in EventBusService
+// - 429 Too Many Requests returned when limit exceeded
+// - Logs: "SSE spout client connected (150/200)"
+```
+
+**Monitoring**:
+```bash
+# Check current SSE client count via metrics
+curl http://localhost:3001/ops/metrics | grep sse_clients
+
+# Or via ready probe
+curl http://localhost:3001/ops/ready
+# Response includes SSE client count in metadata
+```
+
+### Health & Readiness Probes
+
+**Liveness Probe** (`/ops/health`):
+- Checks: Database, Redis, Queue existence
+- Returns: 200 OK if all checks pass
+- Use for: K8s livenessProbe, Docker HEALTHCHECK
+
+**Readiness Probe** (`/ops/ready`):
+- Checks: Database response time (<1s), Redis, Queue backlog (<100 jobs)
+- Returns: 200 with status `ready|degraded|not_ready`
+- Use for: K8s readinessProbe, load balancer health checks
+
+**Example Kubernetes Config**:
+```yaml
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+  - name: chefcloud-api
+    image: ghcr.io/mmazune/chefcloud-api:latest
+    ports:
+    - containerPort: 3001
+    livenessProbe:
+      httpGet:
+        path: /ops/health
+        port: 3001
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      timeoutSeconds: 5
+    readinessProbe:
+      httpGet:
+        path: /ops/ready
+        port: 3001
+      initialDelaySeconds: 10
+      periodSeconds: 5
+      timeoutSeconds: 3
+    env:
+    - name: DATABASE_URL
+      valueFrom:
+        secretKeyRef:
+          name: chefcloud-secrets
+          key: database-url
+    - name: REDIS_HOST
+      value: "redis-service"
+    - name: SLOW_QUERY_MS
+      value: "500"
+    - name: STREAM_MAX_CLIENTS
+      value: "200"
+```
+
+**Example Docker Compose**:
+```yaml
+version: '3.8'
+services:
+  api:
+    image: ghcr.io/mmazune/chefcloud-api:latest
+    ports:
+      - "3001:3001"
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/chefcloud
+      REDIS_HOST: redis
+      SLOW_QUERY_MS: 500
+      STREAM_MAX_CLIENTS: 200
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/ops/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  db:
+    image: postgres:15-alpine
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+```
+
+### Production Recommendations
+
+**Database**:
+- Use connection pooling (default: 10 connections)
+- Enable statement timeout: `SET statement_timeout = '5s'`
+- Monitor slow query logs and add indexes as needed
+- Use read replicas for analytics queries
+
+**Caching**:
+- Redis for session storage and job queues
+- Set TTL on cached data (e.g., KPI cache: 60s)
+- Monitor cache hit rates
+
+**Load Balancing**:
+- Use readiness probe for load balancer health checks
+- Session affinity not required (stateless API)
+- SSE connections should use sticky sessions if using multiple instances
+
+**Monitoring**:
+- Prometheus metrics: `/ops/metrics`
+- Structured logging with Pino (JSON format)
+- Slow query logs → analyze with query analysis tools
+- APM (optional): New Relic, Datadog, or OpenTelemetry
+
+**Scaling**:
+- Horizontal scaling: Run multiple API instances behind load balancer
+- Worker scaling: Separate worker service instances (BullMQ)
+- Database: Vertical scaling first, then read replicas
+- Redis: Clustered mode for high availability
+
+### Troubleshooting
+
+**High Response Times**:
+1. Check slow query logs (`grep slowQuery logs/*.log`)
+2. Verify database indexes are being used (`EXPLAIN ANALYZE`)
+3. Check Redis connectivity and latency
+4. Review queue backlog (`/ops/ready` → `checks.queue.waiting`)
+
+**SSE Connection Issues**:
+1. Check client count: `curl /ops/ready | jq '.sseClients'`
+2. If at limit (200), increase `STREAM_MAX_CLIENTS`
+3. Verify keepalive (15s) is working (no client disconnects)
+4. Check for proxy timeout settings (nginx/ALB: >30s recommended)
+
+**Memory Leaks**:
+1. Monitor process memory with `ps aux | grep node`
+2. Check for unclosed SSE connections
+3. Review queue job completion (failed jobs accumulating?)
+4. Use `node --inspect` + Chrome DevTools for heap snapshots
+
+---
+
+## Event Bookings v2 (E42-s2)
+
+E42-s2 adds PDF ticket generation with QR codes for event bookings, door staff check-in, and automatic prepaid credit attachment at POS.
+
+### Workflow
+
+1. **Book Event** → Guest creates booking (E42-s1)
+2. **Confirm Booking** → Admin confirms, system generates `ticketCode` (ULID) and PDF ticket
+3. **Download Ticket** → Guest receives PDF with QR code
+4. **Door Check-in** → Staff scans QR code, marks `checkedInAt`, ensures prepaid credit exists
+5. **POS Auto-attach** → When order created for table with checked-in booking, prepaid credit auto-applies
+
+### API Endpoints
+
+**1. Confirm Booking (generates ticket code)**
+
+```bash
+curl -X PUT http://localhost:3001/bookings/:bookingId/confirm \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json"
+
+# Response:
+{
+  "booking": {
+    "id": "booking-123",
+    "status": "CONFIRMED",
+    "ticketCode": "01HQXYZ123ABC456",  // E42-s2: ULID for QR
+    "depositCaptured": true,
+    ...
+  },
+  "credit": {
+    "id": "credit-456",
+    "amount": 100.00,
+    "expiresAt": "2025-11-01T12:00:00Z"
+  }
+}
+```
+
+**2. Download PDF Ticket (L2+)**
+
+```bash
+curl -X GET http://localhost:3001/events/booking/:bookingId/ticket \
+  -H "Authorization: Bearer $TOKEN" \
+  --output ticket.pdf
+
+# Returns: PDF with event details, table label, guest name, and QR code
+```
+
+**3. Check-in Guest (L2+)**
+
+```bash
+curl -X POST http://localhost:3001/events/checkin \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "ticketCode": "01HQXYZ123ABC456"
+  }'
+
+# Response:
+{
+  "booking": {
+    "id": "booking-123",
+    "status": "CONFIRMED",
+    "checkedInAt": "2025-10-29T20:30:00Z",
+    "checkedInById": "user-789"
+  },
+  "credit": {
+    "id": "credit-456",
+    "amount": 100.00,
+    "consumed": 0.00,
+    "remaining": 100.00,
+    "expiresAt": "2025-11-01T12:00:00Z"
+  }
+}
+```
+
+**Validations**:
+- Event must be active (current time between `startsAt` and `endsAt`)
+- Booking must be `CONFIRMED` status
+- Cannot check in twice
+- Creates PrepaidCredit if missing (idempotent)
+
+**4. POS Auto-attach Prepaid Credit**
+
+When creating an order for a table:
+
+```bash
+curl -X POST http://localhost:3001/pos/orders \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "tableId": "table-vip-1",
+    "serviceType": "DINE_IN",
+    "items": [
+      { "menuItemId": "item-1", "qty": 2 }
+    ]
+  }'
+
+# If table has checked-in event booking:
+# - Order metadata includes: { "prepaidCreditId": "credit-456" }
+# - Credit automatically applies on order close
+```
+
+**Logic**:
+- Checks if `tableId` has active event (within time window)
+- Finds CONFIRMED booking with `checkedInAt` not null
+- Finds unconsumed PrepaidCredit linked to booking
+- Attaches `prepaidCreditId` to order metadata
+
+### PDF Ticket Format
+
+Generated using **pdfkit** + **qrcode**:
+
+- **Header**: "ChefCloud Event Ticket"
+- **Event Details**: Title, date, time range
+- **Table & Guest**: Table label, guest name
+- **QR Code**: 200x200px PNG (embedded), encodes `ticketCode`
+- **Ticket Code**: Human-readable ULID below QR
+- **Footer**: "Present this ticket at the door for check-in."
+
+**Sample PDF Structure**:
+```
+┌─────────────────────────────────┐
+│   ChefCloud Event Ticket        │
+│                                 │
+│   New Year Gala 2025            │
+│   2025-12-31 • 18:00 - 23:59    │
+│                                 │
+│   Table: VIP-1                  │
+│   Guest: John Doe               │
+│                                 │
+│   ┌───────────────────┐         │
+│   │                   │         │
+│   │   [QR CODE]       │         │
+│   │                   │         │
+│   └───────────────────┘         │
+│                                 │
+│   Ticket Code: 01HQXYZ123ABC456 │
+│                                 │
+│   Present this ticket at door.  │
+└─────────────────────────────────┘
+```
+
+### Database Schema Changes
+
+**EventBooking** (packages/db/prisma/schema.prisma):
+
+```prisma
+model EventBooking {
+  // ... existing fields
+  ticketCode       String?   @unique  // E42-s2: ULID for QR check-in
+  checkedInAt      DateTime?           // E42-s2: When guest checked in
+  checkedInById    String?             // E42-s2: User who performed check-in
+}
+```
+
+**Migration**: `20251029213732_event_booking_tickets`
+
+### Testing
+
+**Unit Tests**:
+
+1. **Ticket Code Generation** (`bookings-ticket.spec.ts`):
+   - Confirms `ticketCode` is ULID (non-empty string)
+   - Generated on booking confirmation
+
+2. **PDF Builder** (`bookings-ticket.spec.ts`):
+   - Smoke test: PDF bytes > 0
+   - Validates PDF magic number `%PDF`
+   - Throws if booking not found or no ticket code
+
+3. **Check-in State Transitions** (`checkin.service.spec.ts`):
+   - Valid check-in: marks `checkedInAt`, returns credit
+   - Invalid ticket code: throws NotFoundException
+   - Already checked in: throws BadRequestException
+   - Event not started/ended: throws BadRequestException
+   - Idempotent: creates PrepaidCredit if missing
+
+### Security Considerations
+
+- **Ticket Download**: Requires L2+ auth (or implement secret token for guest access)
+- **Check-in**: L2+ only (door staff/supervisors)
+- **QR Code**: Encodes only `ticketCode` (ULID), no PII
+- **Unique Constraint**: `ticketCode` is unique per booking (prevents duplicates)
+
+### Example Curl Workflow
+
+```bash
+# 1. Admin confirms booking (generates ticket)
+curl -X PUT http://localhost:3001/bookings/booking-123/confirm \
+  -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.booking.ticketCode'
+# Output: "01HQXYZ123ABC456"
+
+# 2. Guest downloads PDF ticket (L2+ downloads for guest)
+curl -X GET http://localhost:3001/events/booking/booking-123/ticket \
+  -H "Authorization: Bearer $STAFF_TOKEN" \
+  --output ticket-booking-123.pdf
+
+# 3. Guest arrives, door staff scans QR code
+curl -X POST http://localhost:3001/events/checkin \
+  -H "Authorization: Bearer $DOOR_STAFF_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"ticketCode": "01HQXYZ123ABC456"}' | jq '.credit.remaining'
+# Output: 100.00
+
+# 4. Guest sits at table, waiter creates order (auto-attaches credit)
+curl -X POST http://localhost:3001/pos/orders \
+  -H "Authorization: Bearer $WAITER_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "tableId": "table-vip-1",
+    "serviceType": "DINE_IN",
+    "items": [{"menuItemId": "item-1", "qty": 2}]
+  }' | jq '.metadata.prepaidCreditId'
+# Output: "credit-456"
+```
+
+---
+
+## Payroll v2 (E43-s2)
+
+E43-s2 adds payroll calculation from time entries, pay component management, and GL posting for payroll expense/payable.
+
+### Workflow
+
+1. **Build Draft Run** → Aggregate approved time entries → calculate regular/overtime hours
+2. **Apply Components** → Add earnings (bonuses, allowances) and deductions (insurance, etc.)
+3. **Calculate Tax** → Apply payroll tax percentage from org settings
+4. **Approve Run** → Manager approves payslips (L4+)
+5. **Post to GL** → Create journal entry: DR Payroll Expense / CR Payroll Payable
+
+### Database Schema
+
+**PayRun**:
+```prisma
+model PayRun {
+  id          String       @id
+  orgId       String
+  periodStart DateTime
+  periodEnd   DateTime
+  status      PayRunStatus @default(DRAFT) // DRAFT | APPROVED | POSTED
+  slips       PaySlip[]
+}
+```
+
+**PaySlip**:
+```prisma
+model PaySlip {
+  id              String
+  payRunId        String
+  userId          String
+  regularMinutes  Int      // Regular hours worked
+  overtimeMinutes Int      // Overtime hours
+  gross           Decimal  // Gross pay (before tax/deductions)
+  tax             Decimal  // Tax withheld
+  deductions      Decimal  // Other deductions
+  net             Decimal  // Net pay (take-home)
+  approvedById    String?
+  approvedAt      DateTime?
+}
+```
+
+**PayComponent**:
+```prisma
+model PayComponent {
+  id      String           @id
+  orgId   String
+  name    String           // e.g., "Night Shift Differential", "Health Insurance"
+  type    PayComponentType // EARNING | DEDUCTION
+  calc    PayComponentCalc // FIXED | RATE | PERCENT
+  value   Decimal
+  taxable Boolean          @default(true)
+  active  Boolean          @default(true)
+}
+```
+
+### Pay Component Calculation
+
+**EARNING Types**:
+- **FIXED**: Add flat amount (e.g., $500 monthly bonus)
+- **RATE**: Multiply value by hourly rate (e.g., 10 bonus hours × $25/hr = $250)
+- **PERCENT**: Apply percentage to gross (e.g., 15% performance bonus)
+
+**DEDUCTION Types**:
+- **FIXED**: Subtract flat amount (e.g., $50 union dues)
+- **PERCENT**: Subtract percentage of gross (e.g., 5% health insurance)
+
+**Hourly Rate**: Stored in `EmployeeProfile.metadata.hourlyRate`
+
+**Overtime Rate**: Configured in `OrgSettings.attendance.overtimeRate` (default: 1.5x)
+
+### API Endpoints
+
+**1. Create Draft Pay Run (L4+)**
+
+```bash
+curl -X POST http://localhost:3001/payroll/runs \
+  -H "Authorization: Bearer $MANAGER_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "orgId": "org-123",
+    "periodStart": "2025-10-01T00:00:00Z",
+    "periodEnd": "2025-10-31T23:59:59Z"
+  }'
+
+# Response:
+{
+  "payRun": {
+    "id": "run-456",
+    "orgId": "org-123",
+    "periodStart": "2025-10-01T00:00:00Z",
+    "periodEnd": "2025-10-31T23:59:59Z",
+    "status": "DRAFT"
+  },
+  "slips": [
+    {
+      "id": "slip-1",
+      "userId": "user-1",
+      "regularMinutes": 9600,  // 160 hours
+      "overtimeMinutes": 300,  // 5 hours
+      "gross": 4125.00,        // (160 × $25) + (5 × $25 × 1.5)
+      "tax": 412.50,           // 10% tax
+      "deductions": 200.00,    // Health insurance
+      "net": 3512.50
+    }
+  ]
+}
+```
+
+**Logic**:
+- Fetches approved `TimeEntry` records in period
+- Groups by user
+- Calculates: `gross = (regularMinutes / 60) × hourlyRate + (overtimeMinutes / 60) × hourlyRate × overtimeRate`
+- Applies active `PayComponent` earnings
+- Applies tax from `OrgSettings.metadata.payrollTaxPct`
+- Applies deduction components
+- Computes: `net = gross - tax - deductions`
+
+**2. Approve Pay Run (L4+)**
+
+```bash
+curl -X PATCH http://localhost:3001/payroll/runs/run-456/approve \
+  -H "Authorization: Bearer $MANAGER_TOKEN"
+
+# Response:
+{
+  "id": "run-456",
+  "status": "APPROVED",
+  "slips": [...]
+}
+```
+
+**3. Post Pay Run to GL (L4+)**
+
+```bash
+curl -X POST http://localhost:3001/payroll/runs/run-456/post \
+  -H "Authorization: Bearer $MANAGER_TOKEN"
+
+# Response:
+{
+  "entry": {
+    "id": "je-789",
+    "orgId": "org-123",
+    "date": "2025-10-29T22:00:00Z",
+    "memo": "Payroll 2025-10-01 to 2025-10-31",
+    "source": "PAYROLL",
+    "sourceId": "run-456",
+    "lines": [
+      {
+        "accountId": "acct-6000",  // Payroll Expense
+        "debit": 12375.00,         // Total gross
+        "credit": 0
+      },
+      {
+        "accountId": "acct-2000",  // Payroll Payable
+        "debit": 0,
+        "credit": 10537.50         // Total net
+      }
+    ]
+  },
+  "totalGross": 12375.00,
+  "totalTax": 1237.50,
+  "totalDeductions": 600.00,
+  "totalNet": 10537.50
+}
+```
+
+**GL Accounts**:
+- **6000**: Payroll Expense (DR on payment)
+- **2000**: Payroll Payable (CR on payment)
+
+**Note**: Tax and deductions difference (gross - net) would be posted to separate liability accounts in a full system. This implementation focuses on the core payroll-to-payable flow.
+
+**4. Get Payslips (L4+)**
+
+```bash
+curl -X GET http://localhost:3001/payroll/runs/run-456/slips \
+  -H "Authorization: Bearer $MANAGER_TOKEN"
+
+# Response:
+[
+  {
+    "id": "slip-1",
+    "userId": "user-1",
+    "user": {
+      "firstName": "John",
+      "lastName": "Doe",
+      "email": "john@example.com"
+    },
+    "regularMinutes": 9600,
+    "overtimeMinutes": 300,
+    "gross": 4125.00,
+    "tax": 412.50,
+    "deductions": 200.00,
+    "net": 3512.50,
+    "approvedById": "manager-1",
+    "approvedAt": "2025-10-29T21:00:00Z"
+  }
+]
+```
+
+**5. Upsert Pay Component (L4+)**
+
+```bash
+# Create earning component
+curl -X POST http://localhost:3001/payroll/components \
+  -H "Authorization: Bearer $MANAGER_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "orgId": "org-123",
+    "name": "Night Shift Differential",
+    "type": "EARNING",
+    "calc": "PERCENT",
+    "value": 20,
+    "taxable": true,
+    "active": true
+  }'
+
+# Create deduction component
+curl -X POST http://localhost:3001/payroll/components \
+  -H "Authorization: Bearer $MANAGER_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "orgId": "org-123",
+    "name": "Health Insurance",
+    "type": "DEDUCTION",
+    "calc": "FIXED",
+    "value": 150,
+    "taxable": false,
+    "active": true
+  }'
+
+# Update existing component
+curl -X POST http://localhost:3001/payroll/components \
+  -H "Authorization: Bearer $MANAGER_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "id": "comp-existing",
+    "orgId": "org-123",
+    "name": "Updated Bonus",
+    "type": "EARNING",
+    "calc": "FIXED",
+    "value": 750
+  }'
+```
+
+### Configuration
+
+**1. Hourly Rate**: Set in employee profile metadata
+
+```bash
+# Update employee hourly rate
+curl -X PATCH http://localhost:3001/users/user-123/profile \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "metadata": {
+      "hourlyRate": 28.50
+    }
+  }'
+```
+
+**2. Overtime Rate**: Set in org settings attendance
+
+```bash
+# Update org attendance settings
+curl -X PATCH http://localhost:3001/orgs/org-123/settings \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "attendance": {
+      "overtimeRate": 1.5,
+      "overtimeThreshold": 40
+    }
+  }'
+```
+
+**3. Payroll Tax**: Set in org settings metadata
+
+```bash
+# Update org payroll tax rate
+curl -X PATCH http://localhost:3001/orgs/org-123/settings \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "metadata": {
+      "payrollTaxPct": 12
+    }
+  }'
+```
+
+### Example Calculation
+
+**Scenario**:
+- Employee: John Doe
+- Hourly Rate: $25/hr
+- Regular Hours: 160 hours (9,600 minutes)
+- Overtime Hours: 5 hours (300 minutes)
+- Overtime Rate: 1.5x
+- Components:
+  - Night Shift Differential: EARNING, PERCENT, 10%
+  - Health Insurance: DEDUCTION, FIXED, $200
+- Payroll Tax: 10%
+
+**Calculation**:
+```
+Base Pay = (160 × $25) + (5 × $25 × 1.5)
+         = $4,000 + $187.50
+         = $4,187.50
+
+Components:
+  + Night Shift Differential (10% of base): $418.75
+
+Gross = $4,187.50 + $418.75 = $4,606.25
+
+Tax (10%): $460.63
+Deductions (Health Insurance): $200.00
+
+Net = $4,606.25 - $460.63 - $200.00 = $3,945.62
+```
+
+### GL Posting Example
+
+**Journal Entry**:
+```
+Date: 2025-10-31
+Memo: Payroll 2025-10-01 to 2025-10-31
+
+DR  Payroll Expense (6000)     $4,606.25
+  CR  Payroll Payable (2000)            $3,945.62
+```
+
+**Note**: The difference ($660.63) represents tax + deductions that would be posted to separate liability accounts (Tax Payable, Insurance Payable) in a full double-entry system.
+
+### Security & Access
+
+- **L4+ Only**: All payroll endpoints require Manager or Accountant role
+- **Org Scope**: Pay runs and components are org-scoped
+- **Audit Trail**: `approvedById` and `approvedAt` track approval
+- **GL Integration**: Posting creates immutable journal entries
+
+### Testing
+
+**Unit Tests** (`payroll.service.spec.ts`):
+- ✅ FIXED component adds value
+- ✅ RATE component multiplies by hourly rate
+- ✅ PERCENT component applies on gross
+- ✅ DEDUCTION components subtract correctly
+- ✅ Tax calculation from org settings
+- ✅ GL posting creates balanced entry (DR = CR)
+- ✅ Pay run status transitions (DRAFT → APPROVED → POSTED)
+
+---
+
+## Change Control & Staged Rollouts (E49-s1)
+
+### Overview
+
+Runtime feature flags, staged percentage rollouts, maintenance windows, and instant kill-switch for safer deployments. Full audit trail and RBAC for all changes.
+
+### Database Schema
+
+#### FeatureFlag
+
+```prisma
+model FeatureFlag {
+  id          String   @id @default(cuid())
+  orgId       String?  // Null = global flag
+  key         String   @unique
+  description String?
+  active      Boolean  @default(false)
+  rolloutPct  Int      @default(0)  // 0-100 percentage
+  scopes      Json?    // {roles:["L4","L5"], branches:["branch-1"]}
+  createdById String?
+  updatedById String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+```
+
+#### MaintenanceWindow
+
+```prisma
+model MaintenanceWindow {
+  id          String   @id @default(cuid())
+  orgId       String?  // Null = global window
+  startsAt    DateTime
+  endsAt      DateTime
+  message     String?
+  blockWrites Boolean  @default(true)
+  createdById String?
+  createdAt   DateTime @default(now())
+}
+```
+
+#### FlagAudit
+
+```prisma
+enum FlagAction {
+  CREATE
+  UPDATE
+  TOGGLE
+  KILL
+}
+
+model FlagAudit {
+  id        String     @id @default(cuid())
+  flagKey   String
+  userId    String?
+  action    FlagAction
+  before    Json?
+  after     Json?
+  createdAt DateTime   @default(now())
+}
+```
+
+### How It Works
+
+#### 1. Feature Flags
+
+**Evaluation Logic:**
+- Flag must be `active: true`
+- Check scopes (roles, branches) if defined
+- Apply percentage rollout via deterministic hash
+- Deterministic: same context always returns same result
+
+**Rollout Percentage:**
+```typescript
+// Deterministic hash based on context
+const contextKey = `${key}:${orgId}:${branchId}`;
+const hash = sha256(contextKey);
+const bucket = parseInt(hash.substring(0, 8), 16) % 100;
+if (bucket >= rolloutPct) return false; // Not in rollout
+```
+
+**Scopes:**
+```json
+{
+  "roles": ["L4", "L5"],      // Only L4+ can use
+  "branches": ["branch-1"]     // Only specific branch
+}
+```
+
+#### 2. Maintenance Windows
+
+- Block POST/PATCH/DELETE requests during window
+- L5 users can bypass with `X-Bypass-Maintenance: true` header
+- GET requests always allowed
+- Returns 503 with `{code: "MAINTENANCE", message: "..."}`
+
+#### 3. Kill Switch
+
+Instant disable of a feature:
+- Sets `active = false` and `rolloutPct = 0`
+- Creates audit trail
+- Takes effect immediately across all instances
+
+### API Endpoints (L5 Only)
+
+#### Feature Flags
+
+**Create/Update Flag**
+```bash
+curl -X POST http://localhost:3001/ops/flags \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "key": "PROMOTIONS_ENGINE",
+    "description": "Enable promotions calculation engine",
+    "active": true,
+    "rolloutPct": 25,
+    "scopes": {
+      "roles": ["L4", "L5"]
+    }
+  }'
+```
+
+**List All Flags**
+```bash
+curl http://localhost:3001/ops/flags \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "x-org-id: $ORG_ID"
+```
+
+**Get Single Flag**
+```bash
+curl http://localhost:3001/ops/flags/PROMOTIONS_ENGINE \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+**Toggle Flag (Active ↔ Inactive)**
+```bash
+curl -X PATCH http://localhost:3001/ops/flags/PROMOTIONS_ENGINE/toggle \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+**Kill Switch (Emergency Disable)**
+```bash
+curl -X POST http://localhost:3001/ops/flags/PROMOTIONS_ENGINE/kill \
+  -H "Authorization: Bearer $TOKEN"
+
+# Response
+{
+  "message": "Feature flag PROMOTIONS_ENGINE has been killed"
+}
+```
+
+**Get Audit Trail**
+```bash
+curl http://localhost:3001/ops/flags/PROMOTIONS_ENGINE/audit \
+  -H "Authorization: Bearer $TOKEN"
+
+# Response
+[
+  {
+    "id": "audit-1",
+    "flagKey": "PROMOTIONS_ENGINE",
+    "action": "KILL",
+    "before": {"active": true, "rolloutPct": 50},
+    "after": {"active": false, "rolloutPct": 0},
+    "createdAt": "2025-10-29T12:00:00Z",
+    "user": {
+      "email": "admin@example.com",
+      "firstName": "John",
+      "lastName": "Doe"
+    }
+  }
+]
+```
+
+#### Maintenance Windows
+
+**Create Maintenance Window**
+```bash
+curl -X POST http://localhost:3001/ops/maintenance \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "startsAt": "2025-10-30T02:00:00Z",
+    "endsAt": "2025-10-30T04:00:00Z",
+    "message": "Database migration in progress",
+    "blockWrites": true
+  }'
+```
+
+**Get Active Windows**
+```bash
+curl http://localhost:3001/ops/maintenance/active \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "x-org-id: $ORG_ID"
+```
+
+**List All Windows**
+```bash
+curl http://localhost:3001/ops/maintenance \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "x-org-id: $ORG_ID"
+```
+
+### Using Feature Flags in Code
+
+#### Option 1: @Flag Decorator (Guard)
+
+```typescript
+import { Flag } from '../ops/flag.decorator';
+import { UseGuards } from '@nestjs/common';
+import { FeatureFlagGuard } from '../ops/feature-flag.guard';
+
+@Post('promotions/evaluate')
+@UseGuards(FeatureFlagGuard)
+@Flag('PROMOTIONS_ENGINE')
+async evaluatePromotion(@Body() data: any) {
+  // This endpoint only works if PROMOTIONS_ENGINE flag is enabled
+  return this.promotionsService.evaluate(data);
+}
+```
+
+#### Option 2: Service Injection (Manual Check)
+
+```typescript
+import { FeatureFlagsService } from '../ops/feature-flags.service';
+
+constructor(private readonly flagsService: FeatureFlagsService) {}
+
+async someMethod(orgId: string, role: string) {
+  const enabled = await this.flagsService.get('ADVANCED_ANALYTICS', {
+    orgId,
+    role,
+  });
+  
+  if (!enabled) {
+    return { message: 'Feature not available' };
+  }
+  
+  // Feature-specific logic
+}
+```
+
+### Staged Rollout Example
+
+**Day 1: Enable for internal testing (1 org)**
+```bash
+curl -X POST http://localhost:3001/ops/flags \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "key": "NEW_FEATURE",
+    "active": true,
+    "rolloutPct": 100,
+    "scopes": {
+      "orgId": "internal-org-id"
+    }
+  }'
+```
+
+**Day 2: Expand to 10% of all orgs**
+```bash
+curl -X POST http://localhost:3001/ops/flags \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "key": "NEW_FEATURE",
+    "active": true,
+    "rolloutPct": 10,
+    "scopes": null
+  }'
+```
+
+**Day 3: Increase to 50%**
+```bash
+curl -X POST http://localhost:3001/ops/flags \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"key": "NEW_FEATURE", "rolloutPct": 50}'
+```
+
+**Day 4: Full rollout**
+```bash
+curl -X POST http://localhost:3001/ops/flags \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"key": "NEW_FEATURE", "rolloutPct": 100}'
+```
+
+**Emergency: Kill switch**
+```bash
+curl -X POST http://localhost:3001/ops/flags/NEW_FEATURE/kill \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+### Maintenance Window Workflow
+
+**1. Schedule Maintenance**
+```bash
+curl -X POST http://localhost:3001/ops/maintenance \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "startsAt": "2025-10-30T02:00:00Z",
+    "endsAt": "2025-10-30T04:00:00Z",
+    "message": "Scheduled database migration",
+    "blockWrites": true
+  }'
+```
+
+**2. During Maintenance Window**
+- All POST/PATCH/DELETE requests → `503 Service Unavailable`
+- Response body: `{code: "MAINTENANCE", message: "Scheduled database migration"}`
+- GET requests still work
+
+**3. L5 Bypass (For Admin Tasks)**
+```bash
+curl -X POST http://localhost:3001/pos/orders \
+  -H "Authorization: Bearer $L5_TOKEN" \
+  -H "X-Bypass-Maintenance: true" \
+  -d '{"items": [...]}'
+```
+
+**4. Check Active Maintenance**
+```bash
+curl http://localhost:3001/ops/maintenance/active \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+### Testing Change Control
+
+**Rollout Determinism:**
+```typescript
+// Same context = same result
+const result1 = await flagsService.get('TEST_FLAG', { orgId: 'org-1' });
+const result2 = await flagsService.get('TEST_FLAG', { orgId: 'org-1' });
+expect(result1).toBe(result2); // ✅ Always true
+```
+
+**Scope Matching:**
+```typescript
+// Role scope
+await flagsService.get('ADMIN_FEATURE', { role: 'L5' }); // ✅ true
+await flagsService.get('ADMIN_FEATURE', { role: 'L2' }); // ❌ false
+```
+
+**Kill Switch:**
+```typescript
+await flagsService.kill('DANGEROUS_FLAG', 'user-admin');
+const flag = await flagsService.findOne('DANGEROUS_FLAG');
+expect(flag.active).toBe(false);
+expect(flag.rolloutPct).toBe(0);
+```
+
+**Maintenance Write Block:**
+```typescript
+const now = new Date('2025-10-29T12:00:00Z'); // During window
+const result = await maintenanceService.isBlockedWrite(now);
+expect(result.blocked).toBe(true);
+expect(result.message).toBe('Scheduled maintenance');
+```
+
+### Configuration
+
+**Environment Variables:**
+- None required - uses existing DATABASE_URL
+
+**Default Flags (Recommended):**
+```sql
+-- Keep critical features ON by default to avoid breaking changes
+INSERT INTO feature_flags (key, active, rollout_pct, description)
+VALUES
+  ('PROMOTIONS_ENGINE', true, 100, 'Promotions calculation engine'),
+  ('EFRIS_INTEGRATION', true, 100, 'Uganda EFRIS fiscal integration'),
+  ('SPOUT_INGEST', true, 100, 'Hardware spout event ingestion');
+```
+
+### Monitoring
+
+**Audit Trail Query:**
+```sql
+SELECT 
+  fa.action,
+  fa.flag_key,
+  fa.created_at,
+  u.email,
+  fa.before->>'active' as was_active,
+  fa.after->>'active' as now_active
+FROM flag_audits fa
+LEFT JOIN users u ON fa.user_id = u.id
+WHERE fa.flag_key = 'PROMOTIONS_ENGINE'
+ORDER BY fa.created_at DESC;
+```
+
+**Active Flags:**
+```sql
+SELECT key, active, rollout_pct, scopes, updated_at
+FROM feature_flags
+WHERE active = true
+ORDER BY updated_at DESC;
+```
+
+**Upcoming Maintenance:**
+```sql
+SELECT starts_at, ends_at, message, block_writes
+FROM maintenance_windows
+WHERE starts_at > NOW()
+ORDER BY starts_at ASC;
+```
+
+### Best Practices
+
+1. **Start Small**: Begin with 5-10% rollout, gradually increase
+2. **Use Scopes**: Test with internal teams (L4+) before wider rollout
+3. **Monitor Metrics**: Track error rates during rollout phases
+4. **Audit Trail**: Review flag changes regularly
+5. **Kill Switch**: Don't hesitate to use if issues arise
+6. **Maintenance Windows**: Schedule during low-traffic hours (2-4 AM)
+7. **Default ON**: Keep critical features enabled by default
+
+### Summary
+
+- ✅ Runtime feature flags with deterministic percentage rollout
+- ✅ Scope-based targeting (roles, branches, org)
+- ✅ Instant kill-switch for emergency disables
+- ✅ Maintenance windows with write blocking
+- ✅ L5 bypass for admin operations
+- ✅ Full audit trail (CREATE/UPDATE/TOGGLE/KILL)
+- ✅ RBAC: All endpoints require L5 role
+
+---
+
+## Performance CI Gate + Chaos (E54-s2)
+
+### Overview
+
+Automated performance testing as a release gate with fault injection capabilities for stress testing under partial outages and latency. Ensures performance budgets are met before merging PRs.
+
+### Performance CI Gate
+
+#### Workflow Trigger
+
+The perf-gate workflow runs automatically when a PR is labeled with `perf`:
+
+```bash
+# Add the 'perf' label to trigger performance tests
+gh pr edit <pr-number> --add-label perf
+```
+
+#### Test Scenarios
+
+1. **owner-overview**: Dashboard overview endpoint (1m warmup + 3m test)
+2. **pos-happy**: POS happy path (ramp to 50 RPS, 3m)
+
+#### Performance Budgets
+
+- **p(95) < 350ms**: 95th percentile response time must be under 350ms
+- **error_rate < 5%**: Less than 5% of requests can fail
+
+#### Running Locally
+
+```bash
+# Start services
+cd /workspaces/chefcloud
+docker compose -f infra/docker/docker-compose.yml up -d
+cd services/api && pnpm dev
+
+# Terminal 2: Run performance tests
+cd /workspaces/chefcloud
+chmod +x perf/run.sh
+
+# Run owner-overview test
+./perf/run.sh owner-overview 3m
+
+# Run pos-happy test
+./perf/run.sh pos-happy 3m
+
+# Assert thresholds
+node perf/smoke-assert.js perf/results/owner-overview.json
+node perf/smoke-assert.js perf/results/pos-happy.json
+```
+
+#### Sample Output
+
+```
+📊 Parsing k6 results from: perf/results/owner-overview.json
+
+📈 Performance Metrics:
+  p(95) duration: 287.45ms
+  Error rate: 1.23%
+
+✅ p(95) duration within budget: 287.45ms <= 350ms
+✅ Error rate within budget: 1.23% <= 5%
+
+✅ All performance budgets met
+```
+
+### Chaos Engineering
+
+#### Fault Injection Controls
+
+All chaos features are **opt-in only** and disabled by default. Never enabled in production.
+
+**Environment Variables:**
+
+```bash
+# Inject artificial latency (milliseconds)
+CHAOS_LATENCY_MS=150
+
+# Randomly throw database timeouts (0-30%)
+CHAOS_DB_TIMEOUT_PCT=10
+
+# Randomly simulate cache misses (0-30%)
+CHAOS_REDIS_DROP_PCT=15
+```
+
+#### Running with Chaos
+
+```bash
+# Start API with chaos enabled
+cd services/api
+CHAOS_LATENCY_MS=150 CHAOS_DB_TIMEOUT_PCT=10 pnpm dev
+
+# Output shows chaos is active:
+# ⚠️  CHAOS MODE ENABLED: {
+#   latencyMs: 150,
+#   dbTimeoutPct: 10,
+#   redisDropPct: 0
+# }
+```
+
+#### Chaos Test Scenarios
+
+**1. Latency Mix Test**
+
+Tests system under moderate latency (150ms artificial delay):
+
+```bash
+# Start API with latency injection
+CHAOS_LATENCY_MS=150 pnpm dev
+
+# Terminal 2: Run latency mix test
+./perf/run.sh latency-mix 4m
+
+# Threshold: p(99) < 1200ms
+node perf/smoke-assert.js perf/results/latency-mix.json
+```
+
+**2. Offline Queue Test**
+
+Simulates API flapping (40s up / 20s down cycles) to test sync queue resilience:
+
+```bash
+# Run offline queue test
+./perf/run.sh offline-queue 3m
+
+# Asserts < 1% duplicate operations (idempotency check)
+```
+
+**Test Pattern:**
+- 40s: API up (20 concurrent users)
+- 20s: API down (0 users - simulates outage)
+- 40s: API up (20 users)
+- 20s: API down
+- 40s: API up
+
+**Expected Behavior:**
+- Server returns 409 SKIP for duplicate operation IDs
+- < 1% duplicate operations processed
+- Queue resilience validated
+
+### Observability
+
+#### New Metrics
+
+Added to `/ops/metrics` endpoint:
+
+```prometheus
+# Performance budget violations
+chefcloud_perf_budget_violation_total 0
+
+# Current SSE clients connected
+chefcloud_sse_clients_current 3
+```
+
+#### Viewing Metrics
+
+```bash
+curl http://localhost:3001/ops/metrics
+
+# Output includes:
+# HELP chefcloud_perf_budget_violation_total Performance budget violations
+# TYPE chefcloud_perf_budget_violation_total counter
+chefcloud_perf_budget_violation_total 0
+
+# HELP chefcloud_sse_clients_current Current number of SSE clients
+# TYPE chefcloud_sse_clients_current gauge
+chefcloud_sse_clients_current 3
+```
+
+### Test Scenarios Details
+
+#### owner-overview.js
+
+Tests the owner dashboard overview endpoint with realistic load:
+
+```javascript
+export const options = {
+  stages: [
+    { duration: '1m', target: 10 },  // Warmup
+    { duration: '3m', target: 30 },  // Sustained load
+    { duration: '30s', target: 0 },  // Cool down
+  ],
+  thresholds: {
+    http_req_duration: ['p(95)<350'],
+    http_req_failed: ['rate<0.05'],
+  },
+};
+```
+
+#### pos-happy.js
+
+Tests POS order creation (happy path) with ramp to 50 RPS:
+
+```javascript
+export const options = {
+  stages: [
+    { duration: '1m', target: 20 },
+    { duration: '2m', target: 50 },
+    { duration: '1m', target: 20 },
+  ],
+  thresholds: {
+    http_req_duration: ['p(95)<350'],
+    http_req_failed: ['rate<0.05'],
+  },
+};
+```
+
+#### offline-queue.js
+
+Tests sync resilience during API flaps:
+
+```javascript
+export const options = {
+  stages: [
+    { duration: '40s', target: 20 }, // Up
+    { duration: '20s', target: 0 },  // Down
+    { duration: '40s', target: 20 }, // Up
+    { duration: '20s', target: 0 },  // Down
+    { duration: '40s', target: 20 }, // Up
+  ],
+  thresholds: {
+    skip_rate: ['rate<0.01'],          // < 1% duplicates
+    http_req_failed: ['rate<0.10'],    // Allow 10% failures
+  },
+};
+```
+
+#### latency-mix.js
+
+Tests APIs under artificial latency:
+
+```javascript
+export const options = {
+  stages: [
+    { duration: '1m', target: 10 },
+    { duration: '2m', target: 30 },
+    { duration: '1m', target: 10 },
+  ],
+  thresholds: {
+    http_req_duration: ['p(99)<1200'], // p99 < 1200ms
+    http_req_failed: ['rate<0.05'],
+  },
+};
+```
+
+### CI/CD Integration
+
+#### GitHub Actions Workflow
+
+Located at `.github/workflows/perf-gate.yml`:
+
+**Trigger:**
+- Manual: Add `perf` label to PR
+- Automatic: On PR synchronize if `perf` label exists
+
+**Steps:**
+1. Start PostgreSQL + Redis services
+2. Build and migrate database
+3. Seed test data
+4. Start API server
+5. Install k6
+6. Run owner-overview test (3m)
+7. Run pos-happy test (3m)
+8. Assert thresholds (fail job if violated)
+9. Generate markdown summary
+10. Upload k6 JSON artifacts
+11. Comment PR with results
+
+**Artifacts:**
+- `perf/results/owner-overview.json`
+- `perf/results/pos-happy.json`
+- `perf/reports/summary.md`
+
+#### PR Comment Example
+
+When tests complete, a comment is added to the PR:
+
+```markdown
+# 📊 Performance Test Results
+
+## owner-overview
+✅ p(95) duration within budget: 287.45ms <= 350ms
+✅ Error rate within budget: 1.23% <= 5%
+
+## pos-happy
+✅ p(95) duration within budget: 312.89ms <= 350ms
+✅ Error rate within budget: 2.45% <= 5%
+
+### Thresholds
+- p(95) < 350ms ✅
+- error_rate < 5% ✅
+```
+
+### Chaos Safety Guards
+
+#### Automatic Caps
+
+Chaos percentages are automatically capped for safety:
+
+```typescript
+// DB timeout capped at 30%
+this.dbTimeoutPct = Math.min(30, parseInt(process.env.CHAOS_DB_TIMEOUT_PCT || '0', 10));
+
+// Redis drop capped at 30%
+this.redisDropPct = Math.min(30, parseInt(process.env.CHAOS_REDIS_DROP_PCT || '0', 10));
+```
+
+#### Warning on Startup
+
+When chaos is enabled, a warning is logged:
+
+```
+⚠️  CHAOS MODE ENABLED: {
+  latencyMs: 150,
+  dbTimeoutPct: 10,
+  redisDropPct: 15
+}
+```
+
+#### Default Disabled
+
+All chaos features default to 0 (disabled):
+
+```typescript
+// Safe defaults
+CHAOS_LATENCY_MS=0
+CHAOS_DB_TIMEOUT_PCT=0
+CHAOS_REDIS_DROP_PCT=0
+```
+
+### Best Practices
+
+1. **Always Run Locally First**: Test perf scenarios locally before pushing
+2. **Add `perf` Label Selectively**: Only run on PRs with significant perf impact
+3. **Review k6 JSON**: Download artifacts to analyze detailed metrics
+4. **Chaos = Dev/Test Only**: Never enable chaos in production
+5. **Gradual Chaos**: Start with low percentages (5-10%) and increase
+6. **Monitor During Chaos**: Watch logs for simulated failures
+7. **Budget Violations**: If budgets fail, investigate before merging
+
+### Troubleshooting
+
+#### Perf Tests Failing
+
+```bash
+# Check p95 latency
+node perf/smoke-assert.js perf/results/owner-overview.json
+
+# If p95 > 350ms:
+# 1. Check database query performance
+# 2. Review N+1 queries
+# 3. Add caching
+# 4. Optimize slow endpoints
+```
+
+#### Chaos Tests Unstable
+
+```bash
+# Reduce chaos percentages
+CHAOS_DB_TIMEOUT_PCT=5 pnpm dev  # Lower from 10% to 5%
+
+# Or test without chaos first
+pnpm dev  # All chaos disabled by default
+```
+
+#### CI Job Timeout
+
+```bash
+# Reduce test duration in workflow
+# Edit .github/workflows/perf-gate.yml:
+./perf/run.sh owner-overview 2m  # Reduce from 3m to 2m
+```
+
+### Summary
+
+- ✅ Automated perf testing on PR label `perf`
+- ✅ Performance budgets: p(95) < 350ms, errors < 5%
+- ✅ Chaos engineering with latency, DB timeout, cache miss injection
+- ✅ Offline queue resilience testing (API flaps)
+- ✅ Latency stress testing (p99 < 1200ms with 150ms chaos)
+- ✅ New Prometheus metrics: perf_budget_violation, sse_clients
+- ✅ k6 JSON artifacts uploaded to GitHub
+- ✅ Automatic PR comments with test results
+- ✅ Opt-in only chaos (never enabled by default)
+
+---
+

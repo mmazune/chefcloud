@@ -1,21 +1,12 @@
 /**
  * E40-s1: Accounting Controller
- * 
+ *
  * REST endpoints for accounting operations (L4+).
  */
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import {
-  Controller,
-  Post,
-  Get,
-  Body,
-  Param,
-  Query,
-  UseGuards,
-  Request,
-} from '@nestjs/common';
+import { Controller, Post, Get, Body, Param, Query, UseGuards, Request } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { AccountingService } from './accounting.service';
 import { RolesGuard } from '../auth/roles.guard';
@@ -123,10 +114,7 @@ export class AccountingController {
 
   @Get('trial-balance')
   @Roles('L4', 'L5')
-  async getTrialBalance(
-    @Request() req: RequestWithUser,
-    @Query('asOf') asOf?: string,
-  ) {
+  async getTrialBalance(@Request() req: RequestWithUser, @Query('asOf') asOf?: string) {
     return this.accountingService.getTrialBalance(req.user.orgId, asOf);
   }
 
@@ -142,10 +130,7 @@ export class AccountingController {
 
   @Get('balance-sheet')
   @Roles('L4', 'L5')
-  async getBalanceSheet(
-    @Request() req: RequestWithUser,
-    @Query('asOf') asOf?: string,
-  ) {
+  async getBalanceSheet(@Request() req: RequestWithUser, @Query('asOf') asOf?: string) {
     return this.accountingService.getBalanceSheet(req.user.orgId, asOf);
   }
 }

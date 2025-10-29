@@ -107,6 +107,57 @@ export class OpsService {
     return health;
   }
 
+  // E54-s1: Readiness probe - more strict than liveness
+  async getReadiness() {
+    const ready: any = {
+      status: 'ready',
+      timestamp: new Date().toISOString(),
+      checks: {},
+    };
+
+    // Database must respond quickly
+    try {
+      const start = Date.now();
+      await this.prisma.client.$queryRaw`SELECT 1`;
+      const duration = Date.now() - start;
+      ready.checks.database = { status: 'ready', responseMs: duration };
+      
+      if (duration > 1000) {
+        ready.checks.database.status = 'slow';
+        ready.status = 'degraded';
+      }
+    } catch (error) {
+      ready.checks.database = { status: 'not_ready', error: (error as Error).message };
+      ready.status = 'not_ready';
+    }
+
+    // Redis must respond
+    try {
+      await this.redis.ping();
+      ready.checks.redis = { status: 'ready' };
+    } catch (error) {
+      ready.checks.redis = { status: 'not_ready', error: (error as Error).message };
+      ready.status = 'not_ready';
+    }
+
+    // Check queue backlog
+    try {
+      const queueKey = 'bull:orders:waiting';
+      const waitingCount = await this.redis.llen(queueKey);
+      ready.checks.queue = { status: 'ready', waiting: waitingCount };
+      
+      // If more than 100 jobs waiting, mark as degraded
+      if (waitingCount > 100) {
+        ready.checks.queue.status = 'backlogged';
+        ready.status = 'degraded';
+      }
+    } catch (error) {
+      ready.checks.queue = { status: 'unknown', error: (error as Error).message };
+    }
+
+    return ready;
+  }
+
   getMetrics(): string {
     const metrics = metricsStore.getAll();
     const lines: string[] = [];
@@ -123,6 +174,16 @@ export class OpsService {
     lines.push('# HELP chefcloud_queue_jobs_total Total number of queue jobs processed');
     lines.push('# TYPE chefcloud_queue_jobs_total counter');
     lines.push(`chefcloud_queue_jobs_total ${metrics.get('queue_jobs_total') || 0}`);
+
+    // E54-s2: Performance budget violations
+    lines.push('# HELP chefcloud_perf_budget_violation_total Performance budget violations');
+    lines.push('# TYPE chefcloud_perf_budget_violation_total counter');
+    lines.push(`chefcloud_perf_budget_violation_total ${metrics.get('perf_budget_violations') || 0}`);
+
+    // E54-s2: SSE clients
+    lines.push('# HELP chefcloud_sse_clients_current Current number of SSE clients');
+    lines.push('# TYPE chefcloud_sse_clients_current gauge');
+    lines.push(`chefcloud_sse_clients_current ${metrics.get('sse_clients_current') || 0}`);
 
     return lines.join('\n') + '\n';
   }

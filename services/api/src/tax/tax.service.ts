@@ -1,6 +1,6 @@
 /**
  * E39-s1: Tax Service
- * 
+ *
  * Handles tax calculation based on org tax matrix (inclusive/exclusive),
  * service charge, and rounding rules.
  */
@@ -42,10 +42,7 @@ export class TaxService {
    * Resolve tax rule for an order item
    * Looks up taxCode from MenuItem metadata, then finds rule in taxMatrix
    */
-  async resolveLineTax(
-    orgId: string,
-    itemId: string,
-  ): Promise<TaxRule> {
+  async resolveLineTax(orgId: string, itemId: string): Promise<TaxRule> {
     const taxMatrix = await this.getTaxMatrix(orgId);
 
     // Try to get tax code from menu item metadata

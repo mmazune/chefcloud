@@ -1,6 +1,6 @@
 /**
  * E39-s1: Currency Service
- * 
+ *
  * Handles currency lookups and conversion using exchange rates.
  */
 
@@ -47,12 +47,7 @@ export class CurrencyService {
    * Convert amount from one currency to another using latest exchange rate
    * Returns converted amount as number (for simplicity)
    */
-  async convert(
-    amount: number,
-    fromCode: string,
-    toCode: string,
-    asOf?: Date,
-  ): Promise<number> {
+  async convert(amount: number, fromCode: string, toCode: string, asOf?: Date): Promise<number> {
     if (fromCode === toCode) {
       return amount;
     }
@@ -83,9 +78,7 @@ export class CurrencyService {
         return amount / rateValue;
       }
 
-      throw new NotFoundException(
-        `No exchange rate found for ${fromCode}/${toCode}`,
-      );
+      throw new NotFoundException(`No exchange rate found for ${fromCode}/${toCode}`);
     }
 
     const rateValue = Number(rate.rate);

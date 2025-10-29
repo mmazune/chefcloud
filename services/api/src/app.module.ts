@@ -45,6 +45,7 @@ import { SettingsModule } from './settings/settings.module';
 import { BookingsModule } from './bookings/bookings.module';
 import { WorkforceModule } from './workforce/workforce.module';
 import { LoggerMiddleware } from './logger.middleware';
+import { WriteBlockMiddleware } from './ops/write-block.middleware';
 
 @Module({
   imports: [
@@ -110,5 +111,6 @@ import { LoggerMiddleware } from './logger.middleware';
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer.apply(LoggerMiddleware).forRoutes('*');
+    consumer.apply(WriteBlockMiddleware).forRoutes('*');
   }
 }

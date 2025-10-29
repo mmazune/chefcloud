@@ -85,9 +85,9 @@ describe('WorkforceService', () => {
         status: 'APPROVED',
       } as any);
 
-      await expect(
-        service.approveLeaveRequest('leave-1', 'manager-1', 'APPROVED'),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.approveLeaveRequest('leave-1', 'manager-1', 'APPROVED')).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should approve pending leave request', async () => {

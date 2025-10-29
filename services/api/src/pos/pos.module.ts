@@ -11,7 +11,14 @@ import { PromotionsModule } from '../promotions/promotions.module';
 import { AccountingModule } from '../accounting/accounting.module';
 
 @Module({
-  imports: [EfrisModule, ConfigModule, InventoryModule, KpisModule, PromotionsModule, AccountingModule],
+  imports: [
+    EfrisModule,
+    ConfigModule,
+    InventoryModule,
+    KpisModule,
+    PromotionsModule,
+    AccountingModule,
+  ],
   controllers: [PosController],
   providers: [PosService, PrismaService, EventBusService],
 })

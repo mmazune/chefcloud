@@ -1,10 +1,18 @@
-import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
+import { Injectable, OnModuleInit, OnModuleDestroy, Logger } from '@nestjs/common';
 import { prisma, PrismaClient } from '@chefcloud/db';
+import { slowQueryMiddleware } from './common/slow-query';
 
 @Injectable()
 export class PrismaService implements OnModuleInit, OnModuleDestroy {
+  private readonly logger = new Logger(PrismaService.name);
+
   async onModuleInit() {
     await prisma.$connect();
+    
+    // E54-s1: Register slow query middleware
+    prisma.$use(slowQueryMiddleware(this.logger));
+    
+    this.logger.log('Prisma connected with slow-query middleware');
   }
 
   async onModuleDestroy() {
