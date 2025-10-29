@@ -50,9 +50,7 @@ describe('CostingService', () => {
     });
 
     it('should return 0 when total quantity is 0', async () => {
-      mockPrisma.client.stockBatch.findMany.mockResolvedValue([
-        { unitCost: 100, remainingQty: 0 },
-      ]);
+      mockPrisma.client.stockBatch.findMany.mockResolvedValue([{ unitCost: 100, remainingQty: 0 }]);
       const wac = await service.getWac('item-1');
       expect(wac).toBe(0);
     });
@@ -66,12 +64,8 @@ describe('CostingService', () => {
       ]);
 
       mockPrisma.client.stockBatch.findMany
-        .mockResolvedValueOnce([
-          { unitCost: 100, remainingQty: 10 },
-        ])
-        .mockResolvedValueOnce([
-          { unitCost: 50, remainingQty: 20 },
-        ]);
+        .mockResolvedValueOnce([{ unitCost: 100, remainingQty: 10 }])
+        .mockResolvedValueOnce([{ unitCost: 50, remainingQty: 20 }]);
 
       const cost = await service.getRecipeCost('menu-1');
 
@@ -91,16 +85,10 @@ describe('CostingService', () => {
       ]);
 
       mockPrisma.client.stockBatch.findMany
-        .mockResolvedValueOnce([
-          { unitCost: 100, remainingQty: 10 },
-        ])
-        .mockResolvedValueOnce([
-          { unitCost: 200, remainingQty: 5 },
-        ]);
+        .mockResolvedValueOnce([{ unitCost: 100, remainingQty: 10 }])
+        .mockResolvedValueOnce([{ unitCost: 200, remainingQty: 5 }]);
 
-      const cost = await service.getRecipeCost('menu-1', [
-        { id: 'modifier-1', selected: true },
-      ]);
+      const cost = await service.getRecipeCost('menu-1', [{ id: 'modifier-1', selected: true }]);
 
       // 1*100 + 0.5*200 = 200
       expect(cost).toBe(200);
@@ -115,9 +103,7 @@ describe('CostingService', () => {
         { unitCost: 100, remainingQty: 10 },
       ]);
 
-      const cost = await service.getRecipeCost('menu-1', [
-        { id: 'modifier-1', selected: false },
-      ]);
+      const cost = await service.getRecipeCost('menu-1', [{ id: 'modifier-1', selected: false }]);
 
       // Only base: 1*100 = 100
       expect(cost).toBe(100);

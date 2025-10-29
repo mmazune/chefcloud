@@ -99,11 +99,7 @@ export class CashController {
     @Query('drawerId') drawerId: string | undefined,
     @Request() req: RequestWithUser,
   ): Promise<any> {
-    return this.cashService.getCurrentTillSession(
-      req.user.orgId,
-      branchId,
-      drawerId,
-    );
+    return this.cashService.getCurrentTillSession(req.user.orgId, branchId, drawerId);
   }
 
   @Get('till/sessions')

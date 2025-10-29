@@ -55,12 +55,10 @@ describe('E26-s1: Live KPI Streaming (SSE)', () => {
     userId = user.id;
 
     // Login to get token
-    const loginRes = await request(app.getHttpServer())
-      .post('/auth/login')
-      .send({
-        email: 'e26-manager@test.local',
-        password: 'test123', // Won't work with dummy hash, but test structure is here
-      });
+    const loginRes = await request(app.getHttpServer()).post('/auth/login').send({
+      email: 'e26-manager@test.local',
+      password: 'test123', // Won't work with dummy hash, but test structure is here
+    });
 
     if (loginRes.status === 200) {
       managerToken = loginRes.body.accessToken;
@@ -81,9 +79,7 @@ describe('E26-s1: Live KPI Streaming (SSE)', () => {
 
   describe('GET /stream/kpis (SSE)', () => {
     it('should require authentication', async () => {
-      const res = await request(app.getHttpServer())
-        .get('/stream/kpis?scope=org')
-        .expect(401);
+      const res = await request(app.getHttpServer()).get('/stream/kpis?scope=org').expect(401);
 
       expect(res.body.message).toContain('Unauthorized');
     });

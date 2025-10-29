@@ -21,6 +21,7 @@ Implemented platform-specific access control enforcement based on user roles. Ea
 **Purpose**: Global guard that enforces platform access restrictions
 
 **Key Features**:
+
 - Extracts `X-Client-Platform` header from requests (defaults to `web`)
 - Loads `OrgSettings.platformAccess` matrix or uses default
 - Maps user `roleLevel` to role slug (WAITER, CASHIER, CHEF, STOCK, MANAGER, OWNER)
@@ -28,6 +29,7 @@ Implemented platform-specific access control enforcement based on user roles. Ea
 - Bypasses check for unauthenticated requests
 
 **Default Platform Access Matrix**:
+
 ```typescript
 const DEFAULT_PLATFORM_ACCESS = {
   WAITER: { desktop: false, web: true, mobile: true },
@@ -46,6 +48,7 @@ const DEFAULT_PLATFORM_ACCESS = {
 **Coverage**: 7 test cases
 
 **Test Scenarios**:
+
 - ✅ Allow unauthenticated requests (bypass guard)
 - ✅ Allow access when platform is permitted in matrix
 - ✅ Deny access when platform is not permitted in matrix
@@ -61,6 +64,7 @@ const DEFAULT_PLATFORM_ACCESS = {
 **Coverage**: Simplified E2E tests focusing on public route bypass
 
 **Test Scenarios**:
+
 - ✅ Allow unauthenticated access to /health with any platform
 - ✅ Allow unauthenticated POST to /auth/login
 - ✅ Default to web platform when header is missing
@@ -72,6 +76,7 @@ const DEFAULT_PLATFORM_ACCESS = {
 **Added Section**: "Platform Access Enforcement (E23-s3)"
 
 **Content**:
+
 - Architecture overview with header format
 - Default platform access matrix table
 - Example curl commands for all roles
@@ -110,6 +115,7 @@ const DEFAULT_PLATFORM_ACCESS = {
 ### Request Flow
 
 1. **Client Request**: Client sends request with `X-Client-Platform` header
+
    ```
    GET /users/me
    Authorization: Bearer eyJhbGci...
@@ -184,9 +190,10 @@ pnpm test:e2e e23-platform-access.e2e-spec
 ```
 
 Expected scenarios:
+
 - CASHIER (L2) can access from all platforms ✅
 - STOCK (L3) blocked from mobile, allowed on desktop/web ✅
-- Public routes (/health, /auth/*) bypass guard ✅
+- Public routes (/health, /auth/\*) bypass guard ✅
 
 ---
 
@@ -244,6 +251,7 @@ These routes skip platform access checks:
 ### Client Applications
 
 **Web App** (`apps/web`):
+
 ```typescript
 // Add to fetch/axios interceptor
 headers: {
@@ -252,6 +260,7 @@ headers: {
 ```
 
 **Desktop App** (`apps/desktop`):
+
 ```typescript
 // Add to Tauri API wrapper
 headers: {
@@ -260,6 +269,7 @@ headers: {
 ```
 
 **Mobile App** (`apps/mobile`):
+
 ```typescript
 // Add to API client
 headers: {
@@ -281,14 +291,14 @@ Guard applies globally to all routes after authentication. No additional configu
 try {
   const response = await fetch('/users/me', {
     headers: {
-      'Authorization': `Bearer ${token}`,
-      'X-Client-Platform': 'mobile'
-    }
+      Authorization: `Bearer ${token}`,
+      'X-Client-Platform': 'mobile',
+    },
   });
 
   if (!response.ok) {
     const error = await response.json();
-    
+
     if (error.code === 'PLATFORM_FORBIDDEN') {
       // Show error: "This role cannot access from mobile platform"
       // Suggest: "Please use desktop or web application"

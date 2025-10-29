@@ -88,10 +88,7 @@ describe('FranchiseService', () => {
       // Mock orders
       jest
         .spyOn(prisma.order, 'findMany')
-        .mockResolvedValueOnce([
-          { total: 100000 },
-          { total: 50000 },
-        ] as any) // Branch A
+        .mockResolvedValueOnce([{ total: 100000 }, { total: 50000 }] as any) // Branch A
         .mockResolvedValueOnce([{ total: 80000 }] as any); // Branch B
 
       // Mock wastage
@@ -271,9 +268,9 @@ describe('FranchiseService', () => {
         const userId = 'user-1';
 
         // Mock branches
-        jest.spyOn(prisma.branch, 'findMany').mockResolvedValue([
-          { id: 'branch-1', name: 'Branch A' },
-        ] as any);
+        jest
+          .spyOn(prisma.branch, 'findMany')
+          .mockResolvedValue([{ id: 'branch-1', name: 'Branch A' }] as any);
 
         // Mock inventory items below safety stock
         jest.spyOn(prisma.inventoryItem, 'findMany').mockResolvedValue([
@@ -318,9 +315,9 @@ describe('FranchiseService', () => {
         const orgId = 'org-1';
         const userId = 'user-1';
 
-        jest.spyOn(prisma.branch, 'findMany').mockResolvedValue([
-          { id: 'branch-1', name: 'Branch A' },
-        ] as any);
+        jest
+          .spyOn(prisma.branch, 'findMany')
+          .mockResolvedValue([{ id: 'branch-1', name: 'Branch A' }] as any);
 
         jest.spyOn(prisma.inventoryItem, 'findMany').mockResolvedValue([
           {
@@ -358,9 +355,9 @@ describe('FranchiseService', () => {
         const orgId = 'org-1';
         const userId = 'user-1';
 
-        jest.spyOn(prisma.branch, 'findMany').mockResolvedValue([
-          { id: 'branch-1', name: 'Branch A' },
-        ] as any);
+        jest
+          .spyOn(prisma.branch, 'findMany')
+          .mockResolvedValue([{ id: 'branch-1', name: 'Branch A' }] as any);
 
         jest.spyOn(prisma.inventoryItem, 'findMany').mockResolvedValue([
           {
@@ -454,7 +451,9 @@ describe('FranchiseService', () => {
           },
         ] as any);
 
-        jest.spyOn(prisma.client.purchaseOrder, 'updateMany').mockResolvedValue({ count: 2 } as any);
+        jest
+          .spyOn(prisma.client.purchaseOrder, 'updateMany')
+          .mockResolvedValue({ count: 2 } as any);
 
         await service.approvePOs(orgId, poIds);
 
@@ -465,9 +464,7 @@ describe('FranchiseService', () => {
         });
 
         // Check that email stubs were logged
-        expect(consoleLogSpy).toHaveBeenCalledWith(
-          expect.stringContaining('[EMAIL STUB]'),
-        );
+        expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('[EMAIL STUB]'));
         expect(consoleLogSpy).toHaveBeenCalledWith(
           expect.stringContaining('supplier-a@example.com'),
         );

@@ -4,6 +4,7 @@ import { PaymentsService } from './payments.service';
 import { PrismaService } from '../prisma.service';
 import { MtnSandboxAdapter } from './adapters/mtn-sandbox.adapter';
 import { AirtelSandboxAdapter } from './adapters/airtel-sandbox.adapter';
+import { PostingService } from '../accounting/posting.service';
 
 describe('PaymentsService', () => {
   let service: PaymentsService;
@@ -32,6 +33,16 @@ describe('PaymentsService', () => {
               create: jest.fn(),
               update: jest.fn(),
             },
+            client: {
+              eventBooking: {
+                findFirst: jest.fn(),
+                update: jest.fn(),
+              },
+              prepaidCredit: {
+                create: jest.fn(),
+              },
+              $transaction: jest.fn((callback) => callback({})),
+            },
           },
         },
         {
@@ -43,6 +54,12 @@ describe('PaymentsService', () => {
               if (key === 'PAYMENTS_FORCE_FAIL') return '';
               return undefined;
             }),
+          },
+        },
+        {
+          provide: PostingService,
+          useValue: {
+            postRefund: jest.fn().mockResolvedValue(undefined),
           },
         },
         MtnSandboxAdapter,
@@ -173,6 +190,8 @@ describe('PaymentsService', () => {
         status: 'SUCCEEDED',
       } as any);
       jest.spyOn(prisma.payment, 'create').mockResolvedValue({} as any);
+      // Mock event booking check (E42-s1) - returns null (no booking associated)
+      jest.spyOn(prisma.client.eventBooking, 'findFirst').mockResolvedValue(null);
 
       const result = await service.handleWebhook('MTN', {
         intentId: 'intent-1',

@@ -46,7 +46,7 @@ export class CostingService {
     menuItemId: string,
     modifiers?: Array<{ id: string; selected: boolean }>,
   ): Promise<number> {
-        // Fetch the recipe
+    // Fetch the recipe
     const recipeIngredients = await this.prisma.client.recipeIngredient.findMany({
       where: {
         menuItemId,
@@ -69,9 +69,7 @@ export class CostingService {
 
     // Add modifier ingredients if selected
     if (modifiers && modifiers.length > 0) {
-      const selectedModifierIds = modifiers
-        .filter((m) => m.selected)
-        .map((m) => m.id);
+      const selectedModifierIds = modifiers.filter((m) => m.selected).map((m) => m.id);
 
       if (selectedModifierIds.length > 0) {
         const modifierRecipes = await this.prisma.client.recipeIngredient.findMany({
@@ -87,11 +85,11 @@ export class CostingService {
         for (const recipe of modifierRecipes) {
           const wac = await this.getWac(recipe.itemId);
           const qty = Number(recipe.qtyPerUnit);
-          
+
           // Round WAC to 4 decimal places
           const roundedWac = Math.round(wac * 10000) / 10000;
           const lineCost = roundedWac * qty;
-          
+
           totalCost += lineCost;
         }
       }

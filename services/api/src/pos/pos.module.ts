@@ -8,9 +8,10 @@ import { EventBusService } from '../events/event-bus.service';
 import { InventoryModule } from '../inventory/inventory.module';
 import { KpisModule } from '../kpis/kpis.module';
 import { PromotionsModule } from '../promotions/promotions.module';
+import { AccountingModule } from '../accounting/accounting.module';
 
 @Module({
-  imports: [EfrisModule, ConfigModule, InventoryModule, KpisModule, PromotionsModule],
+  imports: [EfrisModule, ConfigModule, InventoryModule, KpisModule, PromotionsModule, AccountingModule],
   controllers: [PosController],
   providers: [PosService, PrismaService, EventBusService],
 })

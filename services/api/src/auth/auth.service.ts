@@ -3,12 +3,15 @@ import {
   UnauthorizedException,
   NotFoundException,
   BadRequestException,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma.service';
 import { AuthHelpers } from './auth.helpers';
 import { LoginDto, PinLoginDto, MsrSwipeDto, AuthResponse } from './dto/auth.dto';
 import { JwtPayload } from './jwt.strategy';
+import { WorkforceService } from '../workforce/workforce.service';
 
 /**
  * Detect PAN-like track data (payment card).
@@ -37,6 +40,8 @@ export class AuthService {
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
+    @Inject(forwardRef(() => WorkforceService))
+    private workforceService: WorkforceService,
   ) {}
 
   async login(loginDto: LoginDto): Promise<AuthResponse> {
@@ -170,6 +175,9 @@ export class AuthService {
     // Log auth event
     await this.createAuditEvent(user.id, user.orgId, user.branchId, 'BADGE_LOGIN');
 
+    // E43-s1: Auto-clock-in if enabled
+    await this.autoClockIn(user.id, user.orgId, user.branchId, 'MSR');
+
     return this.generateAuthResponse(user);
   }
 
@@ -288,6 +296,41 @@ export class AuthService {
     } catch (error) {
       // Log error but don't fail the auth request
       console.error('Failed to create audit event:', error);
+    }
+  }
+
+  /**
+   * E43-s1: Auto-clock-in on MSR/Passkey login if enabled
+   */
+  private async autoClockIn(
+    userId: string,
+    orgId: string,
+    branchId: string | null,
+    method: 'MSR' | 'PASSKEY',
+  ): Promise<void> {
+    try {
+      // Check if auto-clock-in is enabled
+      const settings = await this.prisma.client.orgSettings.findUnique({
+        where: { orgId },
+      });
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const autoClockInOnMsr = (settings?.attendance as any)?.autoClockInOnMsr ?? false;
+
+      if (!autoClockInOnMsr) {
+        return;
+      }
+
+      // Clock in via WorkforceService
+      await this.workforceService.clockIn({
+        orgId,
+        branchId: branchId || 'default',
+        userId,
+        method,
+      });
+    } catch (error) {
+      // Don't fail auth if clock-in fails (e.g., already clocked in)
+      console.log(`Auto-clock-in skipped for user ${userId}:`, (error as Error).message);
     }
   }
 }

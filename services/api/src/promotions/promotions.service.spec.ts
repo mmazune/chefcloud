@@ -27,9 +27,7 @@ describe('PromotionsService', () => {
     }).compile();
 
     service = module.get<PromotionsService>(PromotionsService);
-  }
-
-);
+  });
   describe('evaluatePromotion', () => {
     it('should match time window', async () => {
       const promotion = {

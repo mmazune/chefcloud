@@ -148,7 +148,7 @@ describe('E37 - Promotions & Pricing Engine (e2e)', () => {
       expect(response.status).toBe(200);
       expect(Array.isArray(response.body)).toBe(true);
       expect(response.body.length).toBeGreaterThan(0);
-      
+
       const promo = response.body.find((p) => p.id === promotionId);
       expect(promo).toBeDefined();
       expect(promo.active).toBe(false);
@@ -208,10 +208,10 @@ describe('E37 - Promotions & Pricing Engine (e2e)', () => {
 
       expect(closedOrder).toBeDefined();
       expect(closedOrder.discount).toBeGreaterThan(0);
-      
+
       // 20% off 20,000 = 4,000 UGX discount
       expect(closedOrder.discount).toBe(4000);
-      
+
       // Check metadata for promotions applied
       expect(closedOrder.metadata).toHaveProperty('promotionsApplied');
       const promotionsApplied = (closedOrder.metadata as any).promotionsApplied;
@@ -263,7 +263,7 @@ describe('E37 - Promotions & Pricing Engine (e2e)', () => {
 
       // No discount should be applied (or 0)
       expect(closedOrder.discount).toBe(0);
-      
+
       // No promotions in metadata
       const promotionsApplied = (closedOrder.metadata as any)?.promotionsApplied;
       expect(promotionsApplied || []).toHaveLength(0);

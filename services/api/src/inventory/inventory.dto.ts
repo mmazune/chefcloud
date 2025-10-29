@@ -1,4 +1,5 @@
-import { IsString, IsOptional, IsNumber, IsBoolean } from 'class-validator';
+import { IsString, IsOptional, IsNumber, IsBoolean, IsArray, ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class CreateInventoryItemDto {
   @IsString()
@@ -26,4 +27,30 @@ export class CreateInventoryItemDto {
   @IsBoolean()
   @IsOptional()
   isActive?: boolean;
+}
+
+// E45-s1: Stock count DTOs
+export class StockCountLineDto {
+  @IsString()
+  itemId!: string;
+
+  @IsNumber()
+  countedQty!: number;
+}
+
+export class BeginStockCountDto {
+  @IsString()
+  @IsOptional()
+  notes?: string;
+}
+
+export class SubmitStockCountDto {
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => StockCountLineDto)
+  lines!: StockCountLineDto[];
+
+  @IsString()
+  @IsOptional()
+  notes?: string;
 }

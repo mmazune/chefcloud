@@ -20,6 +20,7 @@ Provide real-time Key Performance Indicator (KPI) streaming for L4+ users (Manag
 **Purpose**: Compute and cache org/branch KPIs with 10-second TTL
 
 **Key Methods**:
+
 - `getOrgKpis(orgId)`: Returns cached org-wide KPIs or computes fresh data
 - `getBranchKpis(orgId, branchId)`: Returns cached branch-specific KPIs or computes fresh data
 - `markDirty(orgId, branchId?)`: Best-effort cache invalidation
@@ -27,6 +28,7 @@ Provide real-time Key Performance Indicator (KPI) streaming for L4+ users (Manag
 - `computeBranchKpis(orgId, branchId)`: Aggregates 9 KPI metrics for single branch
 
 **KPI Metrics**:
+
 1. `salesToday`: Total sales today (completed orders)
 2. `salesMTD`: Total sales month-to-date
 3. `paymentsMomo`: MoMo payments today
@@ -38,6 +40,7 @@ Provide real-time Key Performance Indicator (KPI) streaming for L4+ users (Manag
 9. `anomaliesToday`: Count of anomaly events today
 
 **Cache Strategy**:
+
 - In-memory Map: `cacheKey → { data, timestamp }`
 - TTL: 10 seconds
 - Keys: `org:${orgId}` or `branch:${orgId}:${branchId}`
@@ -49,17 +52,20 @@ Provide real-time Key Performance Indicator (KPI) streaming for L4+ users (Manag
 **Purpose**: SSE endpoint for real-time KPI streaming
 
 **Endpoint**:
+
 ```
 GET /stream/kpis?scope=org|branch&branchId={branchId}
 ```
 
 **Features**:
+
 - L4+ RBAC enforcement (`@Roles('L4')`)
 - RxJS Observable with `interval(15000)` for 15s updates
 - `startWith(0)` for immediate snapshot delivery
 - Returns MessageEvent with `data: KpisData` JSON payload
 
 **Usage**:
+
 ```bash
 curl -N -H "Authorization: Bearer {token}" \
   "http://localhost:3001/stream/kpis?scope=org"
@@ -72,21 +78,25 @@ curl -N -H "Authorization: Bearer {token}" \
 **Services Updated**:
 
 #### PosService (`services/api/src/pos/pos.service.ts`)
+
 - Calls `markKpisDirty(orgId, branchId)` after:
   - `createOrder()` — New order affects openOrders count
   - `closeOrder()` — Completed order affects sales, payments, openOrders
   - `voidOrder()` — Void affects anomalies, sales
 
 #### ShiftsService (`services/api/src/shifts/shifts.service.ts`)
+
 - Calls `markKpisDirty(orgId, branchId)` after:
   - `openShift()` — Affects onShiftNow count
   - `closeShift()` — Affects onShiftNow count
 
 #### InventoryService (`services/api/src/inventory/inventory.service.ts`)
+
 - Calls `markKpisDirty(orgId, branchId)` after:
   - `createAdjustment()` — Stock changes affect stockAtRisk
 
 **Pattern**:
+
 ```typescript
 constructor(
   private prisma: PrismaService,
@@ -105,10 +115,12 @@ private markKpisDirty(orgId: string, branchId: string) {
 ### 4. Module Wiring
 
 **KpisModule** (`services/api/src/kpis/kpis.module.ts`):
+
 - Exports `KpisService` with `@Inject('KpisService')` token
 - Registered in `AppModule`
 
 **Modules Importing KpisModule**:
+
 - `PosModule`
 - `ShiftsModule`
 - `InventoryModule`
@@ -118,11 +130,13 @@ private markKpisDirty(orgId: string, branchId: string) {
 ## Files Changed
 
 ### New Files
+
 1. `/workspaces/chefcloud/services/api/src/kpis/kpis.service.ts` — KPI computation and caching
 2. `/workspaces/chefcloud/services/api/src/kpis/kpis.controller.ts` — SSE streaming endpoint
 3. `/workspaces/chefcloud/services/api/src/kpis/kpis.module.ts` — Module definition
 
 ### Modified Files
+
 1. `/workspaces/chefcloud/services/api/src/app.module.ts` — Registered KpisModule
 2. `/workspaces/chefcloud/services/api/src/pos/pos.service.ts` — Added cache invalidation
 3. `/workspaces/chefcloud/services/api/src/pos/pos.module.ts` — Imported KpisModule
@@ -137,12 +151,14 @@ private markKpisDirty(orgId: string, branchId: string) {
 ## Testing
 
 ### Build Status
+
 ```bash
 $ pnpm -w build
 ✅ 11/11 packages built successfully
 ```
 
 ### Test Status
+
 ```bash
 $ cd services/api && pnpm test
 ✅ 148/148 tests passing
@@ -151,6 +167,7 @@ $ cd services/api && pnpm test
 ### Manual Testing
 
 **1. Connect as Manager (L4):**
+
 ```bash
 # Login as Manager user
 curl -X POST http://localhost:3001/auth/login \
@@ -166,6 +183,7 @@ curl -N -H "Authorization: Bearer $TOKEN" \
 ```
 
 **Expected Output:**
+
 ```
 event: message
 data: {"salesToday":0,"salesMTD":0,"paymentsMomo":0,"paymentsCash":0,"openOrders":0,"tablesOccupied":0,"onShiftNow":0,"stockAtRisk":0,"anomaliesToday":0}
@@ -177,6 +195,7 @@ data: {"salesToday":0,"salesMTD":0,"paymentsMomo":0,"paymentsCash":0,"openOrders
 ```
 
 **2. Test Cache Invalidation:**
+
 ```bash
 # Create an order (triggers markDirty)
 curl -X POST http://localhost:3001/pos/orders \
@@ -192,6 +211,7 @@ curl -X POST http://localhost:3001/pos/orders \
 ## Schema Impact
 
 **No database changes required** — All KPIs are computed from existing tables:
+
 - `Order` (salesToday, salesMTD, openOrders)
 - `Payment` (paymentsMomo, paymentsCash)
 - `Table` (tablesOccupied)
@@ -204,14 +224,17 @@ curl -X POST http://localhost:3001/pos/orders \
 ## Performance Considerations
 
 ### Cache TTL
+
 - 10-second cache significantly reduces database query load
 - At 100 concurrent SSE clients, ~10 aggregate queries/second worst-case (vs 1500 without cache)
 
 ### Invalidation Trade-offs
+
 - **Best-effort pattern**: Optional injection means cache invalidation may fail silently
 - **Natural expiration**: Cache expires after 10s regardless, ensuring eventual consistency
 
 ### Query Optimization
+
 - All KPI queries use indexed fields (orgId, branchId, status, occurredAt)
 - Prisma `groupBy` and `aggregate` operations are efficient for counting/summing
 
@@ -260,6 +283,7 @@ No database migrations to revert.
 See `DEV_GUIDE.md` — Section: **"Live Owner/Manager KPIs (E26-s1)"**
 
 Includes:
+
 - Architecture overview
 - KPI metrics table
 - SSE endpoint usage (curl + Node.js)

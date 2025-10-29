@@ -90,6 +90,10 @@ interface ProcurementNightlyJob {
   type: 'procurement-nightly';
 }
 
+interface AccountingRemindersJob {
+  type: 'accounting-reminders';
+}
+
 // Reports queue worker
 const reportsWorker = new Worker<ReportJob>(
   'reports',
@@ -911,10 +915,12 @@ const digestWorker = new Worker<OwnerDigestRunJob>(
       host: smtpHost,
       port: smtpPort,
       secure: smtpSecure,
-      auth: smtpUser ? {
-        user: smtpUser,
-        pass: smtpPass,
-      } : undefined,
+      auth: smtpUser
+        ? {
+            user: smtpUser,
+            pass: smtpPass,
+          }
+        : undefined,
     });
 
     const subject = `${digest.name} - ${now.toLocaleDateString()}`;
@@ -1056,6 +1062,10 @@ export const subscriptionRemindersQueue = new Queue<SubscriptionReminderJob>(
   'subscription-reminders-billing',
   { connection },
 );
+export const accountingRemindersQueue = new Queue<AccountingRemindersJob>(
+  'accounting-reminders',
+  { connection },
+);
 
 // Subscription renewals worker (hourly)
 const subscriptionRenewalsWorker = new Worker<SubscriptionRenewalJob>(
@@ -1103,7 +1113,10 @@ const subscriptionRenewalsWorker = new Worker<SubscriptionRenewalJob>(
             },
           });
 
-          logger.info({ orgId: subscription.orgId, planCode: subscription.plan.code }, 'Subscription renewed successfully');
+          logger.info(
+            { orgId: subscription.orgId, planCode: subscription.plan.code },
+            'Subscription renewed successfully',
+          );
         } else {
           // Payment failed - move to GRACE period
           const graceUntil = new Date(now);
@@ -1125,10 +1138,16 @@ const subscriptionRenewalsWorker = new Worker<SubscriptionRenewalJob>(
             },
           });
 
-          logger.warn({ orgId: subscription.orgId }, 'Subscription renewal failed - moved to GRACE');
+          logger.warn(
+            { orgId: subscription.orgId },
+            'Subscription renewal failed - moved to GRACE',
+          );
         }
       } catch (error) {
-        logger.error({ orgId: subscription.orgId, error }, 'Failed to process subscription renewal');
+        logger.error(
+          { orgId: subscription.orgId, error },
+          'Failed to process subscription renewal',
+        );
       }
     }
 
@@ -1202,8 +1221,11 @@ const subscriptionRemindersWorker = new Worker<SubscriptionReminderJob>(
         const message = `Your ChefCloud subscription (${subscription.plan.name}) will renew in ${days} day${days > 1 ? 's' : ''} on ${subscription.nextRenewalAt.toLocaleDateString()}.`;
 
         for (const owner of owners) {
-          logger.info({ email: owner.email, days, orgId: subscription.orgId }, 'Sending renewal reminder');
-          
+          logger.info(
+            { email: owner.email, days, orgId: subscription.orgId },
+            'Sending renewal reminder',
+          );
+
           // TODO: Send actual email via SMTP
           console.log(`📧 [RENEWAL REMINDER to ${owner.email}]\n${message}`);
         }
@@ -1233,11 +1255,122 @@ subscriptionRemindersWorker.on('failed', (job, err) => {
   logger.error({ jobId: job?.id, error: err.message }, 'Subscription reminders job failed');
 });
 
+// ===== E40: Accounting Reminders Worker =====
+
+const accountingRemindersWorker = new Worker<AccountingRemindersJob>(
+  'accounting-reminders',
+  async (job: Job<AccountingRemindersJob>) => {
+    logger.info({ jobId: job.id }, 'Processing accounting reminders');
+
+    const now = new Date();
+    let remindersSent = 0;
+
+    // Get active reminder schedules
+    const schedules = await prisma.reminderSchedule.findMany({
+      where: { isActive: true },
+    });
+
+    for (const schedule of schedules) {
+      try {
+        if (schedule.type === 'VENDOR_BILL') {
+          // Find bills due in `whenDays` days
+          const dueDate = new Date(now);
+          dueDate.setDate(dueDate.getDate() + schedule.whenDays);
+          dueDate.setHours(0, 0, 0, 0);
+
+          const nextDay = new Date(dueDate);
+          nextDay.setDate(nextDay.getDate() + 1);
+
+          const bills = await prisma.vendorBill.findMany({
+            where: {
+              orgId: schedule.orgId,
+              status: 'OPEN',
+              dueDate: { gte: dueDate, lt: nextDay },
+            },
+            include: { vendor: true },
+          });
+
+          for (const bill of bills) {
+            const message = `Vendor bill from ${bill.vendor.name} (${bill.number || bill.id.slice(-8)}) is due in ${schedule.whenDays} days on ${bill.dueDate.toLocaleDateString()}. Amount: UGX ${bill.total.toLocaleString()}`;
+
+            if (schedule.channel === 'EMAIL') {
+              logger.info(
+                { billId: bill.id, vendor: bill.vendor.name, dueDate: bill.dueDate },
+                'Sending vendor bill reminder via EMAIL',
+              );
+              // TODO: Send actual email via SMTP
+              console.log(`📧 [VENDOR BILL REMINDER]\n${message}`);
+            } else if (schedule.channel === 'SLACK') {
+              logger.info(
+                { billId: bill.id, vendor: bill.vendor.name, dueDate: bill.dueDate },
+                'Sending vendor bill reminder via SLACK',
+              );
+              // TODO: Send Slack notification
+              console.log(`💬 [SLACK - VENDOR BILL REMINDER]\n${message}`);
+            }
+
+            remindersSent++;
+          }
+        } else if (schedule.type === 'UTILITY') {
+          // Utility reminders are based on targetId (if specified)
+          if (schedule.targetId) {
+            const bill = await prisma.vendorBill.findFirst({
+              where: {
+                id: schedule.targetId,
+                orgId: schedule.orgId,
+                status: 'OPEN',
+              },
+              include: { vendor: true },
+            });
+
+            if (bill) {
+              const dueDate = new Date(bill.dueDate);
+              const daysUntilDue = Math.ceil(
+                (dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
+              );
+
+              if (daysUntilDue === schedule.whenDays) {
+                const message = `Utility bill (${bill.vendor.name}) is due in ${schedule.whenDays} days on ${bill.dueDate.toLocaleDateString()}. Amount: UGX ${bill.total.toLocaleString()}`;
+
+                if (schedule.channel === 'EMAIL') {
+                  logger.info({ billId: bill.id }, 'Sending utility reminder via EMAIL');
+                  console.log(`📧 [UTILITY REMINDER]\n${message}`);
+                } else if (schedule.channel === 'SLACK') {
+                  logger.info({ billId: bill.id }, 'Sending utility reminder via SLACK');
+                  console.log(`💬 [SLACK - UTILITY REMINDER]\n${message}`);
+                }
+
+                remindersSent++;
+              }
+            }
+          }
+        }
+      } catch (error) {
+        logger.error({ scheduleId: schedule.id, error }, 'Failed to process reminder schedule');
+      }
+    }
+
+    logger.info({ remindersSent }, 'Accounting reminders completed');
+    return { success: true, remindersSent };
+  },
+  { connection },
+);
+
+accountingRemindersWorker.on('completed', (job) => {
+  logger.info({ jobId: job.id }, 'Accounting reminders job completed');
+});
+
+accountingRemindersWorker.on('failed', (job, err) => {
+  logger.error({ jobId: job?.id, error: err.message }, 'Accounting reminders job failed');
+});
+
 // ===== E22: Franchise Workers =====
 
 const forecastBuildQueue = new Queue<ForecastBuildJob>('forecast-build', { connection });
 const rankBranchesQueue = new Queue<RankBranchesJob>('rank-branches', { connection });
-const procurementNightlyQueue = new Queue<ProcurementNightlyJob>('procurement-nightly', { connection });
+const procurementNightlyQueue = new Queue<ProcurementNightlyJob>('procurement-nightly', {
+  connection,
+});
 
 const forecastBuildWorker = new Worker<ForecastBuildJob>(
   'forecast-build',
@@ -1262,21 +1395,22 @@ const forecastBuildWorker = new Worker<ForecastBuildJob>(
         startDate.setDate(startDate.getDate() - days);
 
         // Get order items for this item
-          const orderItems = await prisma.orderItem.findMany({
-            where: {
-              order: {
-                branchId: profile.branchId,
-                status: 'CLOSED',
-                updatedAt: { gte: startDate, lte: endDate },
-              },
-              menuItem: {
-                recipeIngredients: {
-                  some: { itemId: profile.itemId },
-                },
+        const orderItems = await prisma.orderItem.findMany({
+          where: {
+            order: {
+              branchId: profile.branchId,
+              status: 'CLOSED',
+              updatedAt: { gte: startDate, lte: endDate },
+            },
+            menuItem: {
+              recipeIngredients: {
+                some: { itemId: profile.itemId },
               },
             },
-            select: { quantity: true },
-          });        const totalQty = orderItems.reduce((sum, oi) => sum + oi.quantity, 0);
+          },
+          select: { quantity: true },
+        });
+        const totalQty = orderItems.reduce((sum, oi) => sum + oi.quantity, 0);
         const avgQty = totalQty / days;
 
         // Apply uplifts for next 7 days
@@ -1293,7 +1427,11 @@ const forecastBuildWorker = new Worker<ForecastBuildJob>(
           }
 
           // Month-end uplift (last 3 days of month)
-          const daysInMonth = new Date(forecastDate.getFullYear(), forecastDate.getMonth() + 1, 0).getDate();
+          const daysInMonth = new Date(
+            forecastDate.getFullYear(),
+            forecastDate.getMonth() + 1,
+            0,
+          ).getDate();
           if (forecastDate.getDate() > daysInMonth - 3) {
             predictedQty *= 1 + Number(profile.monthEndUpliftPct) / 100;
           }
@@ -1369,14 +1507,15 @@ const rankBranchesWorker = new Worker<RankBranchesJob>(
 
         for (const branch of branches) {
           // Calculate metrics
-        const orders = await prisma.order.findMany({
-          where: {
-            branchId: branch.id,
-            status: 'CLOSED',
-            updatedAt: { gte: startDate, lte: endDate },
-          },
-          select: { total: true },
-        });          const revenue = orders.reduce((sum, o) => sum + Number(o.total), 0);
+          const orders = await prisma.order.findMany({
+            where: {
+              branchId: branch.id,
+              status: 'CLOSED',
+              updatedAt: { gte: startDate, lte: endDate },
+            },
+            select: { total: true },
+          });
+          const revenue = orders.reduce((sum, o) => sum + Number(o.total), 0);
 
           const wastage = await prisma.wastage.findMany({
             where: {
@@ -1420,8 +1559,7 @@ const rankBranchesWorker = new Worker<RankBranchesJob>(
         const scored = metrics.map((m) => {
           const revenueScore =
             maxRevenue > 0 ? (m.revenue / maxRevenue) * weights.revenue * 100 : 0;
-          const marginScore =
-            maxMargin > 0 ? (m.margin / maxMargin) * weights.margin * 100 : 0;
+          const marginScore = maxMargin > 0 ? (m.margin / maxMargin) * weights.margin * 100 : 0;
           const wasteScore = m.waste * weights.waste * 10; // Negative weight
           const slaScore = (m.sla / 100) * weights.sla * 100;
           const score = revenueScore + marginScore + wasteScore + slaScore;
@@ -1542,7 +1680,8 @@ const procurementNightlyWorker = new Worker<ProcurementNightlyJob>(
               const suggestedQty = Number(item.reorderQty) || safetyStock * 2;
 
               // Get supplier from metadata (simplified)
-              const supplierId = (item.metadata as { supplierId?: string } | null)?.supplierId || null;
+              const supplierId =
+                (item.metadata as { supplierId?: string } | null)?.supplierId || null;
 
               suggestions.push({
                 branchId: branch.id,
@@ -1714,9 +1853,15 @@ async function scheduleProcurementNightly() {
   logger.info('Scheduled procurement nightly job (daily 02:45)');
 }
 
-scheduleForecastBuild().catch((err) => logger.error({ error: err }, 'Failed to schedule forecast build'));
-scheduleRankBranches().catch((err) => logger.error({ error: err }, 'Failed to schedule rank branches'));
-scheduleProcurementNightly().catch((err) => logger.error({ error: err }, 'Failed to schedule procurement nightly'));
+scheduleForecastBuild().catch((err) =>
+  logger.error({ error: err }, 'Failed to schedule forecast build'),
+);
+scheduleRankBranches().catch((err) =>
+  logger.error({ error: err }, 'Failed to schedule rank branches'),
+);
+scheduleProcurementNightly().catch((err) =>
+  logger.error({ error: err }, 'Failed to schedule procurement nightly'),
+);
 
 // Schedule subscription renewals hourly
 async function scheduleSubscriptionRenewals() {
@@ -1748,8 +1893,12 @@ async function scheduleSubscriptionReminders() {
   logger.info('Scheduled subscription reminders job (daily 09:00)');
 }
 
-scheduleSubscriptionRenewals().catch((err) => logger.error({ error: err }, 'Failed to schedule subscription renewals'));
-scheduleSubscriptionReminders().catch((err) => logger.error({ error: err }, 'Failed to schedule subscription reminders'));
+scheduleSubscriptionRenewals().catch((err) =>
+  logger.error({ error: err }, 'Failed to schedule subscription renewals'),
+);
+scheduleSubscriptionReminders().catch((err) =>
+  logger.error({ error: err }, 'Failed to schedule subscription reminders'),
+);
 
 // Schedule nightly EFRIS reconciliation at 02:00
 async function scheduleNightlyReconciliation() {
@@ -1829,13 +1978,30 @@ scheduleReservationAutoCancel().catch(console.error);
 scheduleReservationReminders().catch(console.error);
 scheduleSpoutConsume().catch(console.error);
 
+// E40: Schedule accounting reminders daily at 08:00
+async function scheduleAccountingReminders() {
+  await accountingRemindersQueue.add(
+    'accounting-reminders',
+    { type: 'accounting-reminders' },
+    {
+      repeat: {
+        pattern: '0 8 * * *', // Daily at 08:00
+      },
+      jobId: 'accounting-reminders-recurring',
+    },
+  );
+  console.log('Scheduled accounting reminders job (daily at 08:00)');
+}
+
+scheduleAccountingReminders().catch(console.error);
+
 // Schedule owner digest cron job - runs every minute to check digests
 async function scheduleOwnerDigestCron() {
   // Run every minute to check if any digests need to be sent
   setInterval(async () => {
     try {
       const now = new Date();
-      
+
       // Get all owner digests (filter where cron is not empty string)
       const digests = await prisma.ownerDigest.findMany({
         where: {
@@ -1847,35 +2013,42 @@ async function scheduleOwnerDigestCron() {
         try {
           // Simple check: if digest hasn't run yet or more than 1 day ago, run it
           const lastRun = digest.lastRunAt;
-          const shouldRun = !lastRun || (now.getTime() - lastRun.getTime()) > 24 * 60 * 60 * 1000;
-          
+          const shouldRun = !lastRun || now.getTime() - lastRun.getTime() > 24 * 60 * 60 * 1000;
+
           // For cron "* * * * *" (every minute), always run if not run in last minute
           const everyMinuteCron = digest.cron === '* * * * *';
-          const shouldRunEveryMinute = everyMinuteCron && (!lastRun || (now.getTime() - lastRun.getTime()) > 60000);
-          
+          const shouldRunEveryMinute =
+            everyMinuteCron && (!lastRun || now.getTime() - lastRun.getTime() > 60000);
+
           if (shouldRun || shouldRunEveryMinute) {
             await digestQueue.add('owner-digest-run', {
               type: 'owner-digest-run',
               digestId: digest.id,
             });
-            
+
             // Update lastRunAt to prevent duplicate runs
             await prisma.ownerDigest.update({
               where: { id: digest.id },
               data: { lastRunAt: now },
             });
-            
-            logger.info({ digestId: digest.id, digestName: digest.name, cron: digest.cron }, 'Enqueued owner digest via cron');
+
+            logger.info(
+              { digestId: digest.id, digestName: digest.name, cron: digest.cron },
+              'Enqueued owner digest via cron',
+            );
           }
         } catch (err) {
-          logger.error({ digestId: digest.id, cron: digest.cron, error: err }, 'Failed to process digest cron');
+          logger.error(
+            { digestId: digest.id, cron: digest.cron, error: err },
+            'Failed to process digest cron',
+          );
         }
       }
     } catch (err) {
       logger.error({ error: err }, 'Error in owner digest cron scheduler');
     }
   }, 60000); // Run every minute
-  
+
   console.log('Scheduled owner digest cron checker (every minute)');
 }
 

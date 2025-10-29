@@ -662,6 +662,89 @@ async function main() {
     console.log('ℹ️  Subscription already exists for Demo Restaurant');
   }
 
+  // ===== E40: Accounting Core - Minimal Chart of Accounts =====
+  console.log('\n💰 Creating Chart of Accounts...');
+
+  const accountsData = [
+    { code: '1000', name: 'Cash', type: 'ASSET' },
+    { code: '1010', name: 'Bank', type: 'ASSET' },
+    { code: '1100', name: 'Accounts Receivable', type: 'ASSET' },
+    { code: '1200', name: 'Inventory', type: 'ASSET' },
+    { code: '2000', name: 'Accounts Payable', type: 'LIABILITY' },
+    { code: '3000', name: 'Equity', type: 'EQUITY' },
+    { code: '4000', name: 'Sales Revenue', type: 'REVENUE' },
+    { code: '4100', name: 'Service Charges', type: 'REVENUE' },
+    { code: '5000', name: 'Cost of Goods Sold', type: 'COGS' },
+    { code: '6000', name: 'Operating Expenses', type: 'EXPENSE' },
+    { code: '6100', name: 'Utilities', type: 'EXPENSE' },
+  ];
+
+  for (const accountData of accountsData) {
+    const account = await prisma.account.upsert({
+      where: {
+        orgId_code: {
+          orgId: org.id,
+          code: accountData.code,
+        },
+      },
+      update: {},
+      create: {
+        orgId: org.id,
+        code: accountData.code,
+        name: accountData.name,
+        type: accountData.type as 'ASSET' | 'LIABILITY' | 'EQUITY' | 'REVENUE' | 'COGS' | 'EXPENSE',
+        isActive: true,
+      },
+    });
+    console.log(`  ✅ ${account.code} - ${account.name} (${account.type})`);
+  }
+
+  // ===== E39-s1: Multi-currency - Base Currencies =====
+  console.log('\n💱 Creating base currencies...');
+
+  const currencies = [
+    { code: 'UGX', name: 'Ugandan Shilling', symbol: 'USh', decimals: 0 },
+    { code: 'USD', name: 'US Dollar', symbol: '$', decimals: 2 },
+    { code: 'EUR', name: 'Euro', symbol: '€', decimals: 2 },
+    { code: 'GBP', name: 'British Pound', symbol: '£', decimals: 2 },
+  ];
+
+  for (const curr of currencies) {
+    await prisma.currency.upsert({
+      where: { code: curr.code },
+      update: {},
+      create: curr,
+    });
+    console.log(`  ✅ ${curr.code} - ${curr.name} (${curr.symbol})`);
+  }
+
+  // Create initial exchange rates (example only, real rates should be updated via API)
+  const baseRates = [
+    { baseCode: 'UGX', quoteCode: 'USD', rate: 3700.0, source: 'MANUAL' },
+    { baseCode: 'UGX', quoteCode: 'EUR', rate: 4000.0, source: 'MANUAL' },
+    { baseCode: 'USD', quoteCode: 'EUR', rate: 0.92, source: 'MANUAL' },
+  ];
+
+  for (const rateData of baseRates) {
+    await prisma.exchangeRate.upsert({
+      where: {
+        baseCode_quoteCode_asOf: {
+          baseCode: rateData.baseCode,
+          quoteCode: rateData.quoteCode,
+          asOf: new Date(),
+        },
+      },
+      update: {},
+      create: {
+        baseCode: rateData.baseCode,
+        quoteCode: rateData.quoteCode,
+        rate: rateData.rate,
+        source: rateData.source,
+      },
+    });
+    console.log(`  ✅ ${rateData.baseCode}/${rateData.quoteCode} = ${rateData.rate}`);
+  }
+
   console.log('\n🎉 Seed completed successfully!');
   console.log('\n📝 Test Credentials:');
   console.log('Owner:      owner@demo.local / Owner#123');

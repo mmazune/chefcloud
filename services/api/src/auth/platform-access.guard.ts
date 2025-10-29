@@ -1,9 +1,4 @@
-import {
-  Injectable,
-  CanActivate,
-  ExecutionContext,
-  ForbiddenException,
-} from '@nestjs/common';
+import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { ROLE_TO_LEVEL } from './role-constants';
 
@@ -63,8 +58,7 @@ export class PlatformAccessGuard implements CanActivate {
     });
 
     const platformAccess =
-      (orgSettings?.platformAccess as typeof DEFAULT_PLATFORM_ACCESS) ||
-      DEFAULT_PLATFORM_ACCESS;
+      (orgSettings?.platformAccess as typeof DEFAULT_PLATFORM_ACCESS) || DEFAULT_PLATFORM_ACCESS;
 
     // Map user roleLevel to role slug
     const roleSlug = this.getRoleSlugForLevel(user.roleLevel);

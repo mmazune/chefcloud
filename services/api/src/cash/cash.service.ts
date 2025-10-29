@@ -1,11 +1,20 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Injectable, BadRequestException, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { Prisma } from '@chefcloud/db';
+import { PostingService } from '../accounting/posting.service';
 
 @Injectable()
 export class CashService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private postingService: PostingService,
+  ) {}
 
   /**
    * Open a new till session
@@ -235,17 +244,29 @@ export class CashService {
       },
     });
 
+    // E40-s1: Post cash movement to GL (fire-and-forget, idempotent)
+    this.postingService.postCashMovement(movement.id, userId).catch((err) => {
+      this.prisma.client.auditEvent.create({
+        data: {
+          branchId,
+          userId,
+          action: 'cash_movement.gl_posting.failed',
+          resource: 'CashMovement',
+          resourceId: movement.id,
+          metadata: {
+            error: err.message,
+          } as any,
+        },
+      });
+    });
+
     return movement;
   }
 
   /**
    * Get current open till session for a drawer
    */
-  async getCurrentTillSession(
-    orgId: string,
-    branchId: string,
-    drawerId?: string,
-  ): Promise<any> {
+  async getCurrentTillSession(orgId: string, branchId: string, drawerId?: string): Promise<any> {
     const where: Prisma.TillSessionWhereInput = {
       orgId,
       branchId,

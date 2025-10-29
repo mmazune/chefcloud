@@ -15,17 +15,20 @@ Implemented the Costing & Profit Engine (Phase 1) which automatically calculates
 **Migration**: `20251029053526_add_costing_fields`
 
 Added to `OrderItem`:
+
 - `costUnit` (Decimal 10,2) - Unit cost per item
 - `costTotal` (Decimal 10,2) - Total cost (costUnit × quantity)
 - `marginTotal` (Decimal 10,2) - Profit margin (lineNet - costTotal)
 - `marginPct` (Decimal 5,2) - Margin percentage
 
 Added to `OrgSettings`:
+
 - `showCostToChef` (Boolean, default: false) - Allow L3 roles to see cost data
 
 ### 2. Core Services ✅
 
 **CostingService** (`services/api/src/inventory/costing.service.ts`):
+
 - `getWac(inventoryItemId)`: Calculates Weighted Average Cost across active stock batches
   - Formula: `Σ(unitCost × remainingQty) / Σ(remainingQty)`
   - Micro-ingredient support: Rounds WAC to 4 decimals before multiplication
@@ -33,17 +36,20 @@ Added to `OrgSettings`:
 - `calculateItemCosting(params)`: Returns complete costing breakdown (costUnit, costTotal, marginTotal, marginPct)
 
 **Integration Points**:
+
 - `PosService.closeOrder()`: Automatically calculates costing for each OrderItem before creating payment
 - `AnalyticsService.getTopItems()`: Aggregates cost/margin data across orders with RBAC filtering
 
 ### 3. RBAC Visibility ✅
 
 **Access Control in Analytics**:
+
 - **Always visible**: OWNER (L5), MANAGER (L4), ACCOUNTANT (any level)
 - **Conditional**: CHEF (L3), WAITER (L2) - only if `OrgSettings.showCostToChef = true`
 - **Implementation**: `AnalyticsController.canUserSeeCostData()` helper method
 
 **Analytics Response**:
+
 ```typescript
 // Privileged user (L4+)
 {
@@ -69,11 +75,13 @@ Added to `OrgSettings`:
 ### 4. Testing ✅
 
 **Unit Tests**: 21/21 passing
+
 - `costing.service.spec.ts` (9 tests): WAC calculation, recipe costing, margin calculation
 - `analytics.controller.spec.ts` (7 tests): RBAC visibility logic
 - `analytics.service.spec.ts` (5 tests): Cost data aggregation
 
 **E2E Test**: Created (not yet run against full DB)
+
 - `test/e27-costing.e2e-spec.ts`: Full flow from order creation → close → analytics
 
 **Test Execution Time**: ~1.2s for all costing/analytics tests
@@ -81,6 +89,7 @@ Added to `OrgSettings`:
 ### 5. Documentation ✅
 
 **DEV_GUIDE.md**: Added comprehensive "Costing & Profit Engine (E27-s1)" section including:
+
 - Architecture overview
 - WAC calculation formula with examples
 - Recipe costing with modifiers
@@ -94,6 +103,7 @@ Added to `OrgSettings`:
 ### Weighted Average Cost (WAC)
 
 Example calculation:
+
 ```
 Stock Batches:
 - Batch 1: 10 units @ UGX 100 each
@@ -107,8 +117,9 @@ WAC = (100×10 + 150×20) / (10+20)
 ### Micro-ingredient Handling
 
 Prevents cost zeroing for very small quantities:
+
 ```typescript
-const wac = Math.round(rawWac * 10000) / 10000;  // 4 decimal precision
+const wac = Math.round(rawWac * 10000) / 10000; // 4 decimal precision
 const cost = wac * quantity;
 
 // Example: 0.001 kg salt @ 50,000 UGX/kg
@@ -136,6 +147,7 @@ marginPct = (marginTotal / lineNet) × 100
 ## Files Modified/Created
 
 ### Created
+
 - `services/api/src/inventory/costing.service.ts` (145 lines)
 - `services/api/src/inventory/costing.service.spec.ts` (227 lines)
 - `services/api/src/analytics/analytics.controller.spec.ts` (187 lines)
@@ -145,6 +157,7 @@ marginPct = (marginTotal / lineNet) × 100
 - `E27-S1-COMPLETION.md` (this file)
 
 ### Modified
+
 - `packages/db/prisma/schema.prisma` (added 5 fields)
 - `services/api/src/inventory/inventory.module.ts` (added CostingService)
 - `services/api/src/pos/pos.module.ts` (imported InventoryModule)
@@ -174,6 +187,7 @@ pnpm test -- --testPathPattern="(costing|analytics)"
 ### Jest Progress Indicators
 
 Updated `services/api/package.json` jest config:
+
 ```json
 {
   "verbose": true,
@@ -183,6 +197,7 @@ Updated `services/api/package.json` jest config:
 ```
 
 **Benefits**:
+
 - Shows individual test names and timing
 - Progress percentage during execution
 - Parallel execution for faster tests
@@ -191,6 +206,7 @@ Updated `services/api/package.json` jest config:
 ## Next Steps (Future Phases)
 
 ### Phase 2 (Not in Scope)
+
 - [ ] Real-time profit margin alerts (e.g., margin < 30%)
 - [ ] Cost variance tracking (actual vs standard cost)
 - [ ] Supplier price comparison analytics
@@ -198,6 +214,7 @@ Updated `services/api/package.json` jest config:
 - [ ] Cost center allocation for shared ingredients
 
 ### Phase 3 (Not in Scope)
+
 - [ ] Predictive cost modeling based on historical trends
 - [ ] Multi-currency cost tracking
 - [ ] Waste cost attribution
@@ -207,11 +224,13 @@ Updated `services/api/package.json` jest config:
 ## Dependencies
 
 **Runtime**:
+
 - `@nestjs/common` ^10.3.0
 - `@prisma/client` (via @chefcloud/db)
 - PostgreSQL database
 
 **Development**:
+
 - `jest` ^29.7.0
 - `@nestjs/testing` ^10.3.0
 - `supertest` ^6.3.4 (for E2E tests)
@@ -226,18 +245,18 @@ Updated `services/api/package.json` jest config:
 
 ## Success Criteria
 
-| Criteria | Status | Notes |
-|----------|--------|-------|
-| DB schema with cost fields | ✅ | Migration applied, 5 new fields |
-| WAC calculation service | ✅ | CostingService with 9 unit tests |
-| Recipe costing with modifiers | ✅ | Supports selected modifiers only |
-| Automatic costing on order close | ✅ | Integrated in PosService.closeOrder() |
-| RBAC visibility in analytics | ✅ | L4+ always, L3 conditional |
-| Micro-ingredient support | ✅ | 4-decimal WAC rounding |
-| Unit tests passing | ✅ | 21/21 tests (100%) |
-| E2E test created | ✅ | Full flow test ready |
-| Documentation complete | ✅ | DEV_GUIDE.md section added |
-| Build successful | ✅ | 11/11 packages |
+| Criteria                         | Status | Notes                                 |
+| -------------------------------- | ------ | ------------------------------------- |
+| DB schema with cost fields       | ✅     | Migration applied, 5 new fields       |
+| WAC calculation service          | ✅     | CostingService with 9 unit tests      |
+| Recipe costing with modifiers    | ✅     | Supports selected modifiers only      |
+| Automatic costing on order close | ✅     | Integrated in PosService.closeOrder() |
+| RBAC visibility in analytics     | ✅     | L4+ always, L3 conditional            |
+| Micro-ingredient support         | ✅     | 4-decimal WAC rounding                |
+| Unit tests passing               | ✅     | 21/21 tests (100%)                    |
+| E2E test created                 | ✅     | Full flow test ready                  |
+| Documentation complete           | ✅     | DEV_GUIDE.md section added            |
+| Build successful                 | ✅     | 11/11 packages                        |
 
 ## Conclusion
 

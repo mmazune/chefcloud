@@ -173,13 +173,13 @@ describe('DevPortalService', () => {
 
       mockPrisma.devAdmin.count.mockResolvedValue(2);
 
-      await expect(
-        service.manageDevAdmin('remove', 'dev1@chefcloud.local'),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.manageDevAdmin('remove', 'dev1@chefcloud.local')).rejects.toThrow(
+        BadRequestException,
+      );
 
-      await expect(
-        service.manageDevAdmin('remove', 'dev1@chefcloud.local'),
-      ).rejects.toThrow('Cannot remove super dev: minimum 2 required');
+      await expect(service.manageDevAdmin('remove', 'dev1@chefcloud.local')).rejects.toThrow(
+        'Cannot remove super dev: minimum 2 required',
+      );
 
       expect(mockPrisma.devAdmin.delete).not.toHaveBeenCalled();
     });
@@ -207,13 +207,13 @@ describe('DevPortalService', () => {
     });
 
     it('should reject invalid action', async () => {
-      await expect(
-        service.manageDevAdmin('invalid' as any, 'test@test.com'),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.manageDevAdmin('invalid' as any, 'test@test.com')).rejects.toThrow(
+        BadRequestException,
+      );
 
-      await expect(
-        service.manageDevAdmin('invalid' as any, 'test@test.com'),
-      ).rejects.toThrow('Invalid action');
+      await expect(service.manageDevAdmin('invalid' as any, 'test@test.com')).rejects.toThrow(
+        'Invalid action',
+      );
     });
   });
 

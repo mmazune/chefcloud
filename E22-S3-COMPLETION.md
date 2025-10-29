@@ -27,6 +27,7 @@ model Supplier {
 ```
 
 **Purpose:**
+
 - `leadTimeDays`: Tracks delivery timeline (default: 2 days)
 - `minOrderQty`: Enforces supplier minimum order thresholds
 - `packSize`: Ensures orders align with supplier packaging units
@@ -68,6 +69,7 @@ model ProcurementJob {
 ```
 
 **Migration:** `20251029_procurement_automations/migration.sql`
+
 - Created enums: `ProcurementStrategy`, `ProcurementJobStatus`
 - Altered `suppliers` table: Added `leadTimeDays`, `minOrderQty`, `packSize`
 - Created `procurement_jobs` table with indexes on `orgId` and `(orgId, status)`
@@ -83,6 +85,7 @@ model ProcurementJob {
 **Purpose:** Create draft purchase orders from safety stock suggestions
 
 **Logic:**
+
 1. Query all inventory items across specified branches (or all branches if not specified)
 2. Calculate current stock from `stock_batches.remainingQty` aggregation
 3. Identify items where `currentStock < reorderLevel`
@@ -104,6 +107,7 @@ model ProcurementJob {
    - Create `PurchaseOrderItem` records with rounded quantities
 
 **Returns:**
+
 ```typescript
 {
   jobId: string;
@@ -121,6 +125,7 @@ model ProcurementJob {
 **Purpose:** List all draft purchase orders awaiting approval
 
 **Query:**
+
 ```typescript
 prisma.purchaseOrder.findMany({
   where: { orgId, status: 'DRAFT' },
@@ -133,6 +138,7 @@ prisma.purchaseOrder.findMany({
 ```
 
 **Returns:**
+
 ```typescript
 Array<{
   poId: string;
@@ -143,7 +149,7 @@ Array<{
   branchName: string;
   itemsCount: number;
   total: number;
-}>
+}>;
 ```
 
 ##### `approvePOs(orgId, poIds[])`
@@ -151,6 +157,7 @@ Array<{
 **Purpose:** Approve draft POs and update status to PLACED
 
 **Logic:**
+
 1. Update all specified POs: `status='DRAFT'` → `status='PLACED'`
 2. Fetch approved POs with supplier details
 3. Log email stubs (console.log in dev, mailer service in production):
@@ -159,8 +166,11 @@ Array<{
    ```
 
 **Returns:**
+
 ```typescript
-{ approved: number }
+{
+  approved: number;
+}
 ```
 
 ### 3. API Controller Layer
@@ -172,6 +182,7 @@ Array<{
 ##### `POST /franchise/procurement/generate-drafts` (@Roles('L4', 'L5'))
 
 **Request:**
+
 ```typescript
 {
   strategy: 'SAFETY_STOCK' | 'FORECAST';
@@ -192,6 +203,7 @@ Array<{
 ##### `POST /franchise/procurement/approve` (@Roles('L5'))
 
 **Request:**
+
 ```typescript
 {
   poIds: string[];
@@ -203,6 +215,7 @@ Array<{
 **Access:** Owners (L5) **ONLY**
 
 **Interface Update:**
+
 ```typescript
 interface RequestWithUser extends Request {
   user?: {
@@ -224,6 +237,7 @@ interface RequestWithUser extends Request {
 **Schedule:** Daily at 02:45 (cron: `45 2 * * *`)
 
 **Job Interface:**
+
 ```typescript
 interface ProcurementNightlyJob {
   type: 'procurement-nightly';
@@ -231,11 +245,15 @@ interface ProcurementNightlyJob {
 ```
 
 **Queue:**
+
 ```typescript
-const procurementNightlyQueue = new Queue<ProcurementNightlyJob>('procurement-nightly', { connection });
+const procurementNightlyQueue = new Queue<ProcurementNightlyJob>('procurement-nightly', {
+  connection,
+});
 ```
 
 **Worker Logic:**
+
 1. Fetch all organizations
 2. For each org:
    - Get all branches
@@ -255,6 +273,7 @@ const procurementNightlyQueue = new Queue<ProcurementNightlyJob>('procurement-ni
 **Key Point:** Worker does **NOT** auto-approve POs (leaves in DRAFT status for manual review)
 
 **Returns:**
+
 ```typescript
 {
   success: true;
@@ -315,6 +334,7 @@ Added 4 new tests:
    - Verifies RBAC enforcement (only L5 can approve)
 
 **Test Results:**
+
 ```
 Test Suites: 23 passed, 23 total
 Tests:       159 passed, 159 total (5 new unit tests, 4 new E2E tests)
@@ -413,21 +433,26 @@ Added comprehensive **Central Procurement (E22-s3)** section with:
 ## Files Modified
 
 ### Database
+
 - `/packages/db/prisma/schema.prisma` - Supplier extensions, enums, ProcurementJob model
 - `/packages/db/prisma/migrations/20251029_procurement_automations/migration.sql` - Migration SQL
 
 ### API Service
+
 - `/services/api/src/franchise/franchise.service.ts` - 3 new methods (229 lines)
 - `/services/api/src/franchise/franchise.controller.ts` - 3 new endpoints, RequestWithUser update
 
 ### Worker
+
 - `/services/worker/src/index.ts` - procurement-nightly worker, queue, schedule function
 
 ### Tests
+
 - `/services/api/src/franchise/franchise.service.spec.ts` - 5 new unit tests
 - `/services/api/test/e22-franchise.e2e-spec.ts` - 4 new E2E tests
 
 ### Documentation
+
 - `/DEV_GUIDE.md` - Comprehensive Central Procurement section (300+ lines)
 
 ## Build Verification
@@ -503,18 +528,21 @@ curl -X POST http://localhost:3001/franchise/procurement/approve \
 ## Future Enhancements
 
 ### Phase 2 (E22-s4)
+
 - **FORECAST Strategy**: Use MA7/MA14/MA30 predictions instead of safety stock
 - **Auto-Scheduling**: Calculate order date based on `leadTimeDays` and forecast demand
 - **Cost Prediction**: Estimate `unitCost` from historical PO data
 - **Multi-Supplier Comparison**: Compare prices/lead times across suppliers
 
 ### Phase 3 (E22-s5)
+
 - **Email Integration**: Real supplier notifications via mailer service
 - **PO Templates**: Customizable email templates per supplier
 - **Delivery Tracking**: Update PO status based on goods receipt
 - **Analytics Dashboard**: Procurement metrics (avg lead time, fill rate, cost trends)
 
 ### Schema Improvements
+
 - Add `inventory_items.supplierId` foreign key (migrate from metadata)
 - Create `system` user in seed data (replace 'system' string literal)
 - Add `purchase_orders.deliveryDate` for expected arrival tracking

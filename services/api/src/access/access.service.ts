@@ -48,7 +48,7 @@ export class AccessService {
       select: { platformAccess: true },
     });
 
-    const platformAccess = settings?.platformAccess 
+    const platformAccess = settings?.platformAccess
       ? (settings.platformAccess as unknown as PlatformAccessMatrix)
       : DEFAULT_PLATFORM_ACCESS;
 
@@ -75,11 +75,7 @@ export class AccessService {
       }
 
       const { desktop, web, mobile } = config;
-      if (
-        typeof desktop !== 'boolean' ||
-        typeof web !== 'boolean' ||
-        typeof mobile !== 'boolean'
-      ) {
+      if (typeof desktop !== 'boolean' || typeof web !== 'boolean' || typeof mobile !== 'boolean') {
         throw new Error(
           `Invalid config for role ${role}: desktop, web, and mobile must be booleans`,
         );
@@ -116,8 +112,7 @@ export class AccessService {
 
     const currentMatrix = settings?.platformAccess as unknown as PlatformAccessMatrix;
     const isEqual =
-      currentMatrix &&
-      JSON.stringify(currentMatrix) === JSON.stringify(DEFAULT_PLATFORM_ACCESS);
+      currentMatrix && JSON.stringify(currentMatrix) === JSON.stringify(DEFAULT_PLATFORM_ACCESS);
 
     if (isEqual) {
       return {

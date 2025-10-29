@@ -57,7 +57,11 @@ export class PromotionsController {
 
   @Post(':id/toggle')
   @Roles('L4', 'L5')
-  async toggle(@Request() req: RequestWithUser, @Param('id') id: string, @Body() body: { active: boolean }): Promise<any> {
+  async toggle(
+    @Request() req: RequestWithUser,
+    @Param('id') id: string,
+    @Body() body: { active: boolean },
+  ): Promise<any> {
     const orgId = req.user!.orgId;
     return this.promotionsService.toggle(orgId, id, body.active);
   }

@@ -133,6 +133,7 @@ pnpm test:e2e -- e23-roles-access.e2e-spec.ts
 ```
 
 **E2E Configuration:**
+
 - Test DB: `chefcloud_test` (auto-created)
 - Config: `services/api/.env.e2e`
 - Setup runs migrations + seed automatically
@@ -989,26 +990,26 @@ ChefCloud uses a hierarchical role-based access control (RBAC) system with level
 
 ### Role Levels
 
-| Level | Default Roles | Description |
-|-------|---------------|-------------|
-| **L1** | Waiter | Basic POS operations, order taking |
-| **L2** | Cashier, Supervisor, Ticket Master, Assistant Chef | Payment processing, KDS operations |
-| **L3** | Chef, Stock, Procurement, Assistant Manager, Event Manager, Head Barista | Inventory management, reporting |
-| **L4** | Manager, Accountant | Full operational control, financial reports |
-| **L5** | Owner, Admin | Full system access, org settings |
+| Level  | Default Roles                                                            | Description                                 |
+| ------ | ------------------------------------------------------------------------ | ------------------------------------------- |
+| **L1** | Waiter                                                                   | Basic POS operations, order taking          |
+| **L2** | Cashier, Supervisor, Ticket Master, Assistant Chef                       | Payment processing, KDS operations          |
+| **L3** | Chef, Stock, Procurement, Assistant Manager, Event Manager, Head Barista | Inventory management, reporting             |
+| **L4** | Manager, Accountant                                                      | Full operational control, financial reports |
+| **L5** | Owner, Admin                                                             | Full system access, org settings            |
 
 ### New Roles (E23-s1)
 
 The following roles were added in E23-s1:
 
-| Role | Level | Primary Responsibilities |
-|------|-------|-------------------------|
-| **PROCUREMENT** | L3 | Purchasing, supplier management, inventory ordering |
-| **ASSISTANT_MANAGER** | L3 | Operational oversight, staff management |
-| **EVENT_MANAGER** | L3 | Reservations, event planning, table management |
-| **TICKET_MASTER** | L2 | KDS ticket management, order routing |
-| **ASSISTANT_CHEF** | L2 | Kitchen operations, recipe execution |
-| **HEAD_BARISTA** | L3 | Beverage operations, bar inventory |
+| Role                  | Level | Primary Responsibilities                            |
+| --------------------- | ----- | --------------------------------------------------- |
+| **PROCUREMENT**       | L3    | Purchasing, supplier management, inventory ordering |
+| **ASSISTANT_MANAGER** | L3    | Operational oversight, staff management             |
+| **EVENT_MANAGER**     | L3    | Reservations, event planning, table management      |
+| **TICKET_MASTER**     | L2    | KDS ticket management, order routing                |
+| **ASSISTANT_CHEF**    | L2    | Kitchen operations, recipe execution                |
+| **HEAD_BARISTA**      | L3    | Beverage operations, bar inventory                  |
 
 ### Platform Access Matrix
 
@@ -1075,20 +1076,20 @@ curl -X PATCH "http://localhost:3001/access/matrix" \
 
 The following test users are created when running `pnpm run seed`:
 
-| Email | Password | Role Level | Employee Code |
-|-------|----------|------------|---------------|
-| owner@demo.local | Owner#123 | L5 | - |
-| manager@demo.local | Manager#123 | L4 | MGR001 |
-| accountant@demo.local | Accountant#123 | L4 | - |
-| assistantmgr@demo.local | AssistantMgr#123 | L3 | AMGR001 |
-| eventmgr@demo.local | EventMgr#123 | L3 | EVMGR001 |
-| procurement@demo.local | Procurement#123 | L3 | PROC001 |
-| headbarista@demo.local | HeadBarista#123 | L3 | HBAR001 |
-| supervisor@demo.local | Supervisor#123 | L2 | SUP001 |
-| cashier@demo.local | Cashier#123 | L2 | CASH001 |
-| ticketmaster@demo.local | TicketMaster#123 | L2 | TKT001 |
-| assistantchef@demo.local | AssistantChef#123 | L2 | ACHEF001 |
-| waiter@demo.local | Waiter#123 | L1 | W001 |
+| Email                    | Password          | Role Level | Employee Code |
+| ------------------------ | ----------------- | ---------- | ------------- |
+| owner@demo.local         | Owner#123         | L5         | -             |
+| manager@demo.local       | Manager#123       | L4         | MGR001        |
+| accountant@demo.local    | Accountant#123    | L4         | -             |
+| assistantmgr@demo.local  | AssistantMgr#123  | L3         | AMGR001       |
+| eventmgr@demo.local      | EventMgr#123      | L3         | EVMGR001      |
+| procurement@demo.local   | Procurement#123   | L3         | PROC001       |
+| headbarista@demo.local   | HeadBarista#123   | L3         | HBAR001       |
+| supervisor@demo.local    | Supervisor#123    | L2         | SUP001        |
+| cashier@demo.local       | Cashier#123       | L2         | CASH001       |
+| ticketmaster@demo.local  | TicketMaster#123  | L2         | TKT001        |
+| assistantchef@demo.local | AssistantChef#123 | L2         | ACHEF001      |
+| waiter@demo.local        | Waiter#123        | L1         | W001          |
 
 ### Role-Based Endpoint Access
 
@@ -1650,17 +1651,17 @@ ChefCloud provides real-time Key Performance Indicator (KPI) streaming for Manag
 
 ### KPI Metrics
 
-| Metric          | Description                                              | Source Query                                             |
-| --------------- | -------------------------------------------------------- | -------------------------------------------------------- |
-| salesToday      | Total sales amount for today (00:00 - now)              | Sum of Order.totalAmount (status COMPLETED)             |
-| salesMTD        | Total sales amount month-to-date                         | Sum of Order.totalAmount (status COMPLETED)             |
-| paymentsMomo    | Total MoMo payments today                                | Sum of Payment.amount (method MOMO)                      |
-| paymentsCash    | Total Cash payments today                                | Sum of Payment.amount (method CASH)                      |
-| openOrders      | Count of open orders                                     | Count of Order (status NEW/SENT/IN_KITCHEN/READY/SERVED) |
-| tablesOccupied  | Count of occupied tables                                 | Count of Table (status OCCUPIED)                         |
-| onShiftNow      | Count of staff currently on shift                        | Count of Shift (closedAt null)                           |
-| stockAtRisk     | Count of items below reorder level                       | Count of InventoryItem (onHand < reorderLevel)           |
-| anomaliesToday  | Count of detected anomalies today                        | Count of AnomalyEvent (occurredAt today)                 |
+| Metric         | Description                                | Source Query                                             |
+| -------------- | ------------------------------------------ | -------------------------------------------------------- |
+| salesToday     | Total sales amount for today (00:00 - now) | Sum of Order.totalAmount (status COMPLETED)              |
+| salesMTD       | Total sales amount month-to-date           | Sum of Order.totalAmount (status COMPLETED)              |
+| paymentsMomo   | Total MoMo payments today                  | Sum of Payment.amount (method MOMO)                      |
+| paymentsCash   | Total Cash payments today                  | Sum of Payment.amount (method CASH)                      |
+| openOrders     | Count of open orders                       | Count of Order (status NEW/SENT/IN_KITCHEN/READY/SERVED) |
+| tablesOccupied | Count of occupied tables                   | Count of Table (status OCCUPIED)                         |
+| onShiftNow     | Count of staff currently on shift          | Count of Shift (closedAt null)                           |
+| stockAtRisk    | Count of items below reorder level         | Count of InventoryItem (onHand < reorderLevel)           |
+| anomaliesToday | Count of detected anomalies today          | Count of AnomalyEvent (occurredAt today)                 |
 
 ### SSE Endpoint (L4+)
 
@@ -3307,11 +3308,11 @@ Two immutable Super Dev Admins are created during seed:
 
 Three default plans are available:
 
-| Plan | Code | Price (UGX) | Features |
-|------|------|-------------|----------|
-| Basic | BASIC | 50,000 | 1 branch, 5 users, 1000 orders/month |
-| Pro | PRO | 150,000 | 5 branches, 25 users, 10K orders/month, Inventory, Analytics |
-| Enterprise | ENTERPRISE | 500,000 | Unlimited branches/users/orders, All features, Priority support |
+| Plan       | Code       | Price (UGX) | Features                                                        |
+| ---------- | ---------- | ----------- | --------------------------------------------------------------- |
+| Basic      | BASIC      | 50,000      | 1 branch, 5 users, 1000 orders/month                            |
+| Pro        | PRO        | 150,000     | 5 branches, 25 users, 10K orders/month, Inventory, Analytics    |
+| Enterprise | ENTERPRISE | 500,000     | Unlimited branches/users/orders, All features, Priority support |
 
 ### Dev Portal Endpoints
 
@@ -3965,25 +3966,26 @@ ChefCloud enforces platform-specific access control based on user roles. Each ro
 
 ### Default Platform Access Matrix
 
-| Role | Desktop | Web | Mobile |
-|------|---------|-----|--------|
-| WAITER | ✅ | ❌ | ❌ |
-| CASHIER | ✅ | ❌ | ❌ |
-| SUPERVISOR | ✅ | ❌ | ❌ |
-| TICKET_MASTER | ✅ | ❌ | ❌ |
-| HEAD_CHEF | ✅ | ❌ | ✅ |
-| ASSISTANT_CHEF | ✅ | ❌ | ✅ |
-| HEAD_BARISTA | ✅ | ❌ | ✅ |
-| STOCK | ❌ | ✅ | ✅ |
-| PROCUREMENT | ❌ | ✅ | ✅ |
-| ASSISTANT_MANAGER | ❌ | ✅ | ✅ |
-| EVENT_MANAGER | ❌ | ✅ | ✅ |
-| MANAGER | ❌ | ✅ | ✅ |
-| ACCOUNTANT | ❌ | ✅ | ✅ |
-| OWNER | ❌ | ✅ | ✅ |
-| DEV_ADMIN | ❌ | ✅ | ❌ |
+| Role              | Desktop | Web | Mobile |
+| ----------------- | ------- | --- | ------ |
+| WAITER            | ✅      | ❌  | ❌     |
+| CASHIER           | ✅      | ❌  | ❌     |
+| SUPERVISOR        | ✅      | ❌  | ❌     |
+| TICKET_MASTER     | ✅      | ❌  | ❌     |
+| HEAD_CHEF         | ✅      | ❌  | ✅     |
+| ASSISTANT_CHEF    | ✅      | ❌  | ✅     |
+| HEAD_BARISTA      | ✅      | ❌  | ✅     |
+| STOCK             | ❌      | ✅  | ✅     |
+| PROCUREMENT       | ❌      | ✅  | ✅     |
+| ASSISTANT_MANAGER | ❌      | ✅  | ✅     |
+| EVENT_MANAGER     | ❌      | ✅  | ✅     |
+| MANAGER           | ❌      | ✅  | ✅     |
+| ACCOUNTANT        | ❌      | ✅  | ✅     |
+| OWNER             | ❌      | ✅  | ✅     |
+| DEV_ADMIN         | ❌      | ✅  | ❌     |
 
 **Recommended Policy:**
+
 - **Front-of-house** (WAITER, CASHIER, SUPERVISOR, TICKET_MASTER): Desktop POS only
 - **Kitchen** (HEAD_CHEF, ASSISTANT_CHEF, HEAD_BARISTA): Desktop + Mobile
 - **Back-office** (STOCK, PROCUREMENT, MANAGER, ACCOUNTANT, OWNER): Web + Mobile
@@ -4265,6 +4267,7 @@ WAC = Σ(unitCost × remainingQty) / Σ(remainingQty)
 ```
 
 **Example:**
+
 - Batch 1: 10 units @ UGX 100 each
 - Batch 2: 20 units @ UGX 150 each
 - WAC = (100×10 + 150×20) / (10+20) = 4000 / 30 = **133.33 UGX**
@@ -4274,8 +4277,8 @@ WAC = Σ(unitCost × remainingQty) / Σ(remainingQty)
 For very small ingredient quantities (e.g., 0.001 kg salt), WAC is rounded to 4 decimal places before multiplication to prevent zeroing:
 
 ```typescript
-const wac = Math.round(rawWac * 10000) / 10000;  // e.g., 50.0001 → 50.0001
-const cost = wac * quantity;  // 50.0001 * 0.001 = 0.05 (not 0)
+const wac = Math.round(rawWac * 10000) / 10000; // e.g., 50.0001 → 50.0001
+const cost = wac * quantity; // 50.0001 * 0.001 = 0.05 (not 0)
 ```
 
 ### Recipe Costing
@@ -4307,6 +4310,7 @@ marginPct = (marginTotal / lineNet) × 100
 ```
 
 **Example:**
+
 - Item: Burger with cheese (qty: 2)
 - Unit price: 5,000 UGX
 - Modifier price: 1,000 UGX
@@ -4321,6 +4325,7 @@ marginPct = (marginTotal / lineNet) × 100
 Cost/margin data is only visible to privileged roles in analytics endpoints:
 
 **Who can see cost data:**
+
 - OWNER (L5) - Always
 - MANAGER (L4) - Always
 - ACCOUNTANT (any level) - Always
@@ -4404,22 +4409,25 @@ pnpm test:e2e -- e27-costing.e2e-spec
 ### Example Flow
 
 1. **Create Stock Batches**:
+
    ```sql
    INSERT INTO stock_batch (branch_id, inventory_item_id, batch_number, initial_qty, remaining_qty, unit_cost, received_at)
-   VALUES 
+   VALUES
      ('branch-1', 'beef-patty-id', 'B001', 100, 100, 150, NOW()),
      ('branch-1', 'cheese-id', 'C001', 200, 200, 50, NOW());
    ```
 
 2. **Create Recipe**:
+
    ```sql
    INSERT INTO recipe_ingredient (menu_item_id, item_id, quantity, is_modifier)
-   VALUES 
+   VALUES
      ('burger-id', 'beef-patty-id', 1, false),
      ('cheese-modifier-id', 'cheese-id', 1, true);
    ```
 
 3. **Create and Close Order**:
+
    ```bash
    # Create order with burger + cheese
    curl -X POST http://localhost:3001/pos/orders \
@@ -4447,7 +4455,7 @@ pnpm test:e2e -- e27-costing.e2e-spec
 
 4. **Verify Costing**:
    ```sql
-   SELECT 
+   SELECT
      menu_item_id,
      quantity,
      subtotal,
@@ -6843,3 +6851,224 @@ Example log output:
 
 **License:** MIT
 **Version:** 0.1.0
+
+
+---
+
+## Multi-Currency & Tax Matrix (E39-s1)
+
+ChefCloud supports multiple currencies, configurable tax rules, and flexible rounding. **Critical: Do NOT hard-code tax rates in code.** All rates must be stored in `OrgSettings.taxMatrix`.
+
+### Database Models
+
+See `packages/db/prisma/schema.prisma` for full schema.
+
+- **Currency**: ISO 4217 codes (UGX, USD, EUR), symbol, decimals
+- **ExchangeRate**: Conversion rates with `asOf` timestamp and source
+- **OrgSettings.baseCurrencyCode**: Base currency for accounting
+- **OrgSettings.taxMatrix**: JSON tax rules (inclusive/exclusive rates)
+- **OrgSettings.rounding**: Cash rounding rules (NEAREST_50, NEAREST_100)
+- **Branch.currencyCode**: Branch-specific currency override
+
+### Admin APIs (L5 Only)
+
+```bash
+# Get/Set Base Currency
+GET/PUT /settings/currency
+
+# Get/Set Tax Matrix
+GET/PUT /settings/tax-matrix
+
+# Get/Set Rounding Rules
+GET/PUT /settings/rounding
+
+# Set Exchange Rate
+POST /settings/exchange-rate
+```
+
+See E39-S1-COMPLETION.md for full examples and usage.
+
+---
+
+## Stock Count Gate at Shift Close (E45-s1)
+
+ChefCloud enforces stock count reconciliation before allowing a shift to close. This prevents inventory drift and ensures physical counts match expected on-hand levels.
+
+### Database Models
+
+See `packages/db/prisma/schema.prisma` for full schema.
+
+- **StockCount**: Tracks physical counts per shift
+  - `shiftId`: Links to the active shift
+  - `lines`: JSON array of `[{ itemId, countedQty }]`
+  - `countedAt`: Timestamp when count was finalized
+  - `countedById`: User who performed the count
+- **OrgSettings.inventoryTolerance**: JSON tolerance config
+  - `pct`: Percentage tolerance (e.g., 0.05 for ±5%)
+  - `absolute`: Absolute quantity tolerance (e.g., 2 units)
+
+### Stock Count APIs (L3+)
+
+```bash
+# 1. Begin a stock count for current shift (creates draft)
+curl -X POST http://localhost:3001/inventory/counts/begin \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "notes": "End-of-day count"
+  }'
+# Response: { id: "count-1", shiftId: "shift-1", lines: [] }
+
+# 2. Get current draft count
+curl -X GET http://localhost:3001/inventory/counts/current \
+  -H "Authorization: Bearer $TOKEN"
+
+# 3. Submit final count with actual quantities
+curl -X PATCH http://localhost:3001/inventory/counts/count-1/submit \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "lines": [
+      { "itemId": "item-1", "countedQty": 95 },
+      { "itemId": "item-2", "countedQty": 48 }
+    ],
+    "notes": "Counted by chef"
+  }'
+# Response: { id: "count-1", countedAt: "2025-10-29T...", lines: [...] }
+```
+
+### Shift Close Enforcement
+
+When closing a shift via `PATCH /shifts/:id/close`, the system:
+
+1. **Checks for stock count**: If no `StockCount` exists for the shift → **409 Conflict** with `code: "COUNT_REQUIRED"`
+2. **Validates tolerance**: Compares counted vs expected quantities
+   - Expected = sum of `StockBatch.remainingQty` for each item
+   - Variance = `countedQty - expectedQty`
+   - Outside tolerance if: `|variance| > absolute` **AND** `|variance/expected| > pct`
+3. **Rejects if out-of-tolerance**: Returns **409 Conflict** with `code: "COUNT_OUT_OF_TOLERANCE"` and list of problem items
+4. **Logs reconciliation**: On success, creates `AuditEvent` with reconciliation summary
+
+### Example: Successful Shift Close Flow
+
+```bash
+# 1. Open shift
+curl -X POST http://localhost:3001/shifts/open \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{ "openingFloat": 50000, "notes": "Morning shift" }'
+
+# 2. (During shift: orders, sales, inventory usage...)
+
+# 3. Begin stock count
+curl -X POST http://localhost:3001/inventory/counts/begin \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json"
+
+# 4. Submit count
+curl -X PATCH http://localhost:3001/inventory/counts/count-1/submit \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "lines": [
+      { "itemId": "flour-1kg", "countedQty": 18 },
+      { "itemId": "sugar-500g", "countedQty": 25 }
+    ]
+  }'
+
+# 5. Close shift (will validate stock count automatically)
+curl -X PATCH http://localhost:3001/shifts/shift-1/close \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{ "declaredCash": 125000 }'
+# Success: Shift closed with audit event containing reconciliation summary
+```
+
+### Example: Blocked Shift Close (No Count)
+
+```bash
+curl -X PATCH http://localhost:3001/shifts/shift-1/close \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{ "declaredCash": 125000 }'
+
+# Response: 409 Conflict
+{
+  "statusCode": 409,
+  "code": "COUNT_REQUIRED",
+  "message": "Stock count required before closing shift"
+}
+```
+
+### Example: Blocked Shift Close (Out of Tolerance)
+
+```bash
+# Tolerance: { pct: 0.05, absolute: 0 }
+# Expected: flour = 20 kg
+# Counted: flour = 10 kg (variance = -10, -50% → outside 5% tolerance)
+
+curl -X PATCH http://localhost:3001/shifts/shift-1/close \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{ "declaredCash": 125000 }'
+
+# Response: 409 Conflict
+{
+  "statusCode": 409,
+  "code": "COUNT_OUT_OF_TOLERANCE",
+  "message": "Stock count variances exceed tolerance",
+  "items": [
+    {
+      "itemId": "flour-1kg",
+      "itemName": "Flour 1kg",
+      "expected": 20,
+      "counted": 10,
+      "variance": -10,
+      "variancePct": -0.5
+    }
+  ]
+}
+```
+
+### Tolerance Configuration (L5 Admin)
+
+```bash
+# Set tolerance to ±5% or 2 units
+curl -X PUT http://localhost:3001/settings \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "inventoryTolerance": {
+      "pct": 0.05,
+      "absolute": 2
+    }
+  }'
+```
+
+**Default tolerance if not set**: `{ pct: 0.05, absolute: 0 }` (±5%, no absolute tolerance)
+
+### Anomaly Events
+
+Out-of-tolerance variances trigger anomaly events:
+
+- **NEGATIVE_STOCK**: `counted < expected` → severity: `CRITICAL`
+- **LARGE_VARIANCE**: `counted > expected` → severity: `WARN`
+
+These appear in `/analytics/anomalies` for managers to review.
+
+### Use Cases
+
+- **Prevent Shrinkage**: Catch inventory losses before they accumulate
+- **Enforce Accountability**: Require physical counts to close shifts
+- **Audit Trail**: Log all variances in `AuditEvent` for reporting
+- **Alert on Drift**: Anomaly events notify owners of large discrepancies
+- **Flexible Tolerance**: Adjust sensitivity per org (5% for high-volume, 1% for strict control)
+
+### Security
+
+- All stock count endpoints require L3+ (Chef/Stock) role
+- Shift close enforcement is automatic (no bypass)
+- Audit events log reconciliation summaries
+- Anomaly events alert on suspicious patterns
+
+---

@@ -38,6 +38,12 @@ import { BadgesModule } from './badges/badges.module';
 import { KpisModule } from './kpis/kpis.module';
 import { PromotionsModule } from './promotions/promotions.module';
 import { CashModule } from './cash/cash.module';
+import { AccountingModule } from './accounting/accounting.module';
+import { CurrencyModule } from './currency/currency.module';
+import { TaxModule } from './tax/tax.module';
+import { SettingsModule } from './settings/settings.module';
+import { BookingsModule } from './bookings/bookings.module';
+import { WorkforceModule } from './workforce/workforce.module';
 import { LoggerMiddleware } from './logger.middleware';
 
 @Module({
@@ -81,6 +87,12 @@ import { LoggerMiddleware } from './logger.middleware';
     KpisModule,
     PromotionsModule,
     CashModule,
+    AccountingModule,
+    CurrencyModule,
+    TaxModule,
+    SettingsModule,
+    BookingsModule,
+    WorkforceModule,
   ],
   controllers: [HealthController, WebhooksController],
   providers: [

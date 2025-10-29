@@ -20,10 +20,12 @@ Successfully implemented a flexible backend promotion rule engine for ChefCloud 
 ### ✅ Database Schema (Prisma Migration)
 
 **Files**:
+
 - `/packages/db/prisma/schema.prisma`
 - `/packages/db/prisma/migrations/20251029_promotions/migration.sql`
 
 **Changes**:
+
 - Added `PromotionEffectType` enum: `PERCENT_OFF`, `FIXED_OFF`, `HAPPY_HOUR`, `BUNDLE`
 - Created `promotions` table (17 fields):
   - Core: `id`, `orgId`, `name`, `code` (unique per org)
@@ -46,6 +48,7 @@ Successfully implemented a flexible backend promotion rule engine for ChefCloud 
 ### ✅ API Module (PromotionsModule)
 
 **Files**:
+
 - `/services/api/src/promotions/promotions.service.ts` (220 lines)
 - `/services/api/src/promotions/promotions.controller.ts` (95 lines)
 - `/services/api/src/promotions/promotions.module.ts` (14 lines)
@@ -71,6 +74,7 @@ Successfully implemented a flexible backend promotion rule engine for ChefCloud 
    - Prevents activating unapproved promotions
 
 **Service Methods**:
+
 - `create(orgId, dto)`: Creates promotion with effects, handles auto-activation
 - `list(orgId, filters)`: Queries with active/code filters
 - `approve(orgId, promotionId, userId)`: Approval workflow
@@ -78,6 +82,7 @@ Successfully implemented a flexible backend promotion rule engine for ChefCloud 
 - `evaluatePromotion(promotion, context)`: Core evaluation engine
 
 **Evaluation Logic**:
+
 - ✅ Time window check: `startsAt` ≤ now ≤ `endsAt`
 - ✅ Daypart matching: Day-of-week (1-7) and time range (HH:mm)
 - ✅ Branch scope: Filters by `scope.branches` array
@@ -91,11 +96,13 @@ Successfully implemented a flexible backend promotion rule engine for ChefCloud 
 ### ✅ POS Integration
 
 **Files**:
+
 - `/services/api/src/pos/pos.service.ts` (added 115 lines to `closeOrder`)
 - `/services/api/src/pos/pos.module.ts` (imported PromotionsModule)
 - `/services/api/src/pos/pos.dto.ts` (added optional `timestamp` field for testing)
 
 **Integration Points**:
+
 - **Injection**: Optional `promotionsService` in POS constructor (best-effort pattern)
 - **Timing**: Promotion evaluation happens after costing, before payment processing
 - **Query**: Fetches active approved promotions ordered by `priority DESC`
@@ -114,6 +121,7 @@ Successfully implemented a flexible backend promotion rule engine for ChefCloud 
    - Applied once per order
 
 **Order Updates**:
+
 - `order.discount`: Total discount amount in UGX
 - `order.metadata.promotionsApplied`: Array of promotion details:
   ```json
@@ -137,6 +145,7 @@ Successfully implemented a flexible backend promotion rule engine for ChefCloud 
 **File**: `/services/api/src/promotions/promotions.service.spec.ts` (330 lines)
 
 **Test Coverage** (14 tests):
+
 1. ✅ Time window matching (`startsAt`/`endsAt` validation)
 2. ✅ Expired promotion rejection
 3. ✅ Daypart day-of-week matching (Monday-Friday filter)
@@ -161,6 +170,7 @@ Successfully implemented a flexible backend promotion rule engine for ChefCloud 
 **File**: `/services/api/test/e37-promotions.e2e-spec.ts` (220 lines)
 
 **Test Scenarios** (7 tests):
+
 1. ✅ Create happy hour promotion (20% off drinks 17:00-19:00)
 2. ✅ List promotions (including inactive)
 3. ✅ Approve promotion (sets approvedById, approvedAt, active=true)
@@ -185,6 +195,7 @@ Successfully implemented a flexible backend promotion rule engine for ChefCloud 
 **File**: `/workspaces/chefcloud/DEV_GUIDE.md` (added 450+ lines)
 
 **Sections**:
+
 1. **Architecture Overview**: Models, effect types, approval workflow, POS integration
 2. **Promotion Endpoints**: 4 curl examples with request/response schemas
    - Create promotion (happy hour, weekend special, coupon code examples)
@@ -242,6 +253,7 @@ Time:        4.655s
 **Decision**: Made `promotionsService` optional in POS constructor
 
 **Rationale**:
+
 - Best-effort pattern: POS continues working if promotions module unavailable
 - No breaking changes to existing POS flow
 - Try/catch wrapper prevents promotion errors from blocking order closure
@@ -251,6 +263,7 @@ Time:        4.655s
 **Decision**: Support both `requiresApproval=true` (manual) and `requiresApproval=false` (auto-active)
 
 **Rationale**:
+
 - Flexibility for different business needs (L4+ controlled vs auto-coupon codes)
 - Default to `requiresApproval=true` for safety
 - Auto-activation for low-risk promotions (e.g., public coupon codes)
@@ -260,6 +273,7 @@ Time:        4.655s
 **Decision**: Use JSON columns instead of junction tables
 
 **Rationale**:
+
 - Simpler schema for phase 1
 - Flexible for future rule types (e.g., customer segments)
 - Query performance acceptable with GIN indexes (future enhancement)
@@ -270,6 +284,7 @@ Time:        4.655s
 **Decision**: Sort promotions by `priority DESC` and support `exclusive` flag
 
 **Rationale**:
+
 - Predictable evaluation order (higher priority first)
 - Exclusive flag prevents discount stacking (business requirement)
 - Future-proof for complex rule combinations
@@ -279,6 +294,7 @@ Time:        4.655s
 **Decision**: Added optional `timestamp` field to `CloseOrderDto` for testing
 
 **Rationale**:
+
 - Enables E2E testing of daypart promotions with specific times
 - Defaults to `new Date()` if not provided (production behavior)
 - No breaking change (optional field)
@@ -300,6 +316,7 @@ Time:        4.655s
 ## Breaking Changes
 
 **None**. All changes are additive:
+
 - New database tables (no modifications to existing tables)
 - New API module (no changes to existing endpoints)
 - Optional POS integration (best-effort, won't break if service unavailable)
@@ -309,6 +326,7 @@ Time:        4.655s
 ## Files Changed
 
 ### Created (10 files):
+
 1. `/packages/db/prisma/migrations/20251029_promotions/migration.sql`
 2. `/services/api/src/promotions/promotions.service.ts`
 3. `/services/api/src/promotions/promotions.controller.ts`
@@ -317,6 +335,7 @@ Time:        4.655s
 6. `/services/api/test/e37-promotions.e2e-spec.ts`
 
 ### Modified (6 files):
+
 1. `/packages/db/prisma/schema.prisma` (added 3 models, 1 enum, 1 relation)
 2. `/services/api/src/app.module.ts` (registered PromotionsModule)
 3. `/services/api/src/pos/pos.service.ts` (added promotion evaluation in closeOrder)
@@ -348,6 +367,7 @@ Time:        4.655s
 ## Conclusion
 
 E37-S1 (Promotions & Pricing Engine Phase 1) has been successfully implemented with:
+
 - ✅ Complete database schema with migration
 - ✅ Full-featured API module with 4 endpoints
 - ✅ POS integration with automatic discount application

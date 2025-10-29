@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException, ForbiddenException } from '@nestjs/common';
 import { CashService } from './cash.service';
 import { PrismaService } from '../prisma.service';
+import { PostingService } from '../accounting/posting.service';
 
 describe('CashService', () => {
   let service: CashService;
@@ -31,6 +32,12 @@ describe('CashService', () => {
                 create: jest.fn(),
               },
             },
+          },
+        },
+        {
+          provide: PostingService,
+          useValue: {
+            postCashMovement: jest.fn().mockResolvedValue(undefined),
           },
         },
       ],
@@ -69,13 +76,7 @@ describe('CashService', () => {
         },
       } as any);
 
-      const result = await service.openTillSession(
-        'org-1',
-        'branch-1',
-        'DRAWER-1',
-        100,
-        'user-1',
-      );
+      const result = await service.openTillSession('org-1', 'branch-1', 'DRAWER-1', 100, 'user-1');
 
       expect(result.id).toBe('till-1');
       expect(result.drawerId).toBe('DRAWER-1');

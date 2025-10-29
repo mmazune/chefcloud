@@ -48,7 +48,7 @@ export class PromotionsService {
           create: dto.effects.map((e) => ({
             type: e.type,
             value: e.value,
-            meta: e.meta as any || {},
+            meta: (e.meta as any) || {},
           })),
         },
       },
@@ -65,7 +65,10 @@ export class PromotionsService {
         ...(filters?.active !== undefined && { active: filters.active }),
         ...(filters?.code && { code: filters.code }),
       },
-      include: { effects: true, approvedBy: { select: { email: true, firstName: true, lastName: true } } },
+      include: {
+        effects: true,
+        approvedBy: { select: { email: true, firstName: true, lastName: true } },
+      },
       orderBy: { priority: 'desc' },
     });
   }
@@ -160,7 +163,11 @@ export class PromotionsService {
 
     // Check scope
     if (promotion.scope && Object.keys(promotion.scope).length > 0) {
-      const scope = promotion.scope as { branches?: string[]; categories?: string[]; items?: string[] };
+      const scope = promotion.scope as {
+        branches?: string[];
+        categories?: string[];
+        items?: string[];
+      };
 
       if (scope.branches && !scope.branches.includes(context.branchId)) {
         return false;

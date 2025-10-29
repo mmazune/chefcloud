@@ -1,12 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Query,
-  UseGuards,
-  Request,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Query, UseGuards, Request } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
@@ -69,25 +61,17 @@ export class FranchiseController {
       notes?: string;
     },
   ) {
-    return this.franchiseService.upsertBudget(
-      req.user.orgId,
-      body.branchId,
-      body.period,
-      {
-        revenueTarget: body.revenueTarget,
-        cogsTarget: body.cogsTarget,
-        expenseTarget: body.expenseTarget,
-        notes: body.notes,
-      },
-    );
+    return this.franchiseService.upsertBudget(req.user.orgId, body.branchId, body.period, {
+      revenueTarget: body.revenueTarget,
+      cogsTarget: body.cogsTarget,
+      expenseTarget: body.expenseTarget,
+      notes: body.notes,
+    });
   }
 
   @Get('budgets')
   @Roles('L5')
-  async getBudgets(
-    @Request() req: RequestWithUser,
-    @Query('period') period: string,
-  ) {
+  async getBudgets(@Request() req: RequestWithUser, @Query('period') period: string) {
     if (!period || !/^\d{4}-\d{2}$/.test(period)) {
       return { error: 'Invalid period format. Use YYYY-MM' };
     }
@@ -104,11 +88,7 @@ export class FranchiseController {
     if (!period || !/^\d{4}-\d{2}$/.test(period)) {
       return { error: 'Invalid period format. Use YYYY-MM' };
     }
-    return this.franchiseService.getForecastItems(
-      req.user.orgId,
-      period,
-      method || 'MA14',
-    );
+    return this.franchiseService.getForecastItems(req.user.orgId, period, method || 'MA14');
   }
 
   @Get('procurement/suggest')
@@ -117,10 +97,7 @@ export class FranchiseController {
     @Request() req: RequestWithUser,
     @Query('branchId') branchId?: string,
   ): Promise<ProcurementSuggestion[]> {
-    return this.franchiseService.getProcurementSuggestions(
-      req.user.orgId,
-      branchId,
-    );
+    return this.franchiseService.getProcurementSuggestions(req.user.orgId, branchId);
   }
 
   @Post('procurement/generate-drafts')
@@ -149,10 +126,7 @@ export class FranchiseController {
 
   @Post('procurement/approve')
   @Roles('L5')
-  async approvePOs(
-    @Request() req: RequestWithUser,
-    @Body() body: { poIds: string[] },
-  ) {
+  async approvePOs(@Request() req: RequestWithUser, @Body() body: { poIds: string[] }) {
     return this.franchiseService.approvePOs(req.user.orgId, body.poIds);
   }
 }

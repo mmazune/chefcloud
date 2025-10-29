@@ -1,6 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Injectable, BadRequestException, NotFoundException, Optional, Inject } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+  Optional,
+  Inject,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
+import { CountsService } from '../inventory/counts.service';
 import { OpenShiftDto, CloseShiftDto } from './shifts.dto';
 
 @Injectable()
@@ -8,6 +15,7 @@ export class ShiftsService {
   constructor(
     private prisma: PrismaService,
     @Optional() @Inject('KpisService') private kpisService?: any,
+    @Optional() private countsService?: CountsService,
   ) {}
 
   private markKpisDirty(orgId: string, branchId: string) {
@@ -62,6 +70,33 @@ export class ShiftsService {
 
     if (shift.closedAt) {
       throw new BadRequestException('Shift is already closed');
+    }
+
+    // E45-s1: Validate stock count before closing shift
+    let reconciliation: any = null;
+    if (this.countsService) {
+      try {
+        reconciliation = await this.countsService.validateShiftStockCount(shiftId);
+
+        // Log reconciliation summary to audit
+        await this.prisma.client.auditEvent.create({
+          data: {
+            branchId: shift.branchId,
+            userId,
+            action: 'shift.stock_reconciliation',
+            resource: 'shifts',
+            resourceId: shiftId,
+            metadata: reconciliation,
+          },
+        });
+      } catch (error: any) {
+        // If ConflictException, re-throw to block shift close
+        if (error.status === 409 || error.response?.code) {
+          throw error;
+        }
+        // Other errors (e.g., service unavailable), log and continue
+        console.warn('Stock count validation failed:', error.message);
+      }
     }
 
     // Calculate over/short

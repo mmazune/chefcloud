@@ -1,12 +1,4 @@
-import {
-  Controller,
-  Get,
-  Patch,
-  Post,
-  Body,
-  UseGuards,
-  Request,
-} from '@nestjs/common';
+import { Controller, Get, Patch, Post, Body, UseGuards, Request } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
@@ -39,7 +31,7 @@ export class AccessController {
    * PATCH /access/matrix
    * Update the platform access matrix for the user's organization.
    * Requires L4+ role.
-   * 
+   *
    * Body: { "ROLE_NAME": { "desktop": bool, "web": bool, "mobile": bool }, ... }
    */
   @Patch('matrix')

@@ -72,9 +72,7 @@ describe('BillingService', () => {
     it('should throw NotFoundException if no subscription exists', async () => {
       mockPrisma.orgSubscription.findUnique.mockResolvedValue(null);
 
-      await expect(service.getSubscription('org-nonexistent')).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.getSubscription('org-nonexistent')).rejects.toThrow(NotFoundException);
 
       await expect(service.getSubscription('org-nonexistent')).rejects.toThrow(
         'No active subscription',
@@ -201,9 +199,7 @@ describe('BillingService', () => {
     it('should throw NotFoundException if no subscription exists', async () => {
       mockPrisma.orgSubscription.findUnique.mockResolvedValue(null);
 
-      await expect(service.requestCancellation('org-nosub')).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.requestCancellation('org-nosub')).rejects.toThrow(NotFoundException);
     });
   });
 });

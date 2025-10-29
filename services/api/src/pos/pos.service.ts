@@ -19,6 +19,7 @@ import { EfrisService } from '../efris/efris.service';
 import { ConfigService } from '@nestjs/config';
 import { EventBusService } from '../events/event-bus.service';
 import { CostingService } from '../inventory/costing.service';
+import { PostingService } from '../accounting/posting.service';
 
 @Injectable()
 export class PosService {
@@ -28,6 +29,7 @@ export class PosService {
     private configService: ConfigService,
     private eventBus: EventBusService,
     private costingService: CostingService,
+    private postingService: PostingService,
     private promotionsService?: any, // Optional promotions service
     private kpisService?: any, // Optional, best-effort
   ) {}
@@ -612,6 +614,33 @@ export class PosService {
     // Fire-and-forget EFRIS push
     this.efrisService.push(orderId).catch(() => {
       // Silently ignore errors (will be retried by worker)
+    });
+
+    // E40-s1: Post to GL (fire-and-forget, idempotent)
+    this.postingService.postSale(orderId, userId).catch((err) => {
+      this.prisma.client.auditEvent.create({
+        data: {
+          branchId,
+          userId,
+          action: 'order.gl_posting.failed',
+          resource: 'orders',
+          resourceId: orderId,
+          metadata: { error: err.message },
+        },
+      });
+    });
+
+    this.postingService.postCOGS(orderId, userId).catch((err) => {
+      this.prisma.client.auditEvent.create({
+        data: {
+          branchId,
+          userId,
+          action: 'order.gl_cogs.failed',
+          resource: 'orders',
+          resourceId: orderId,
+          metadata: { error: err.message },
+        },
+      });
     });
 
     // Mark KPIs dirty

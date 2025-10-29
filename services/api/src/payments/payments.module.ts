@@ -5,9 +5,10 @@ import { PaymentsService } from './payments.service';
 import { MtnSandboxAdapter } from './adapters/mtn-sandbox.adapter';
 import { AirtelSandboxAdapter } from './adapters/airtel-sandbox.adapter';
 import { PrismaService } from '../prisma.service';
+import { AccountingModule } from '../accounting/accounting.module';
 
 @Module({
-  imports: [ConfigModule],
+  imports: [ConfigModule, AccountingModule],
   controllers: [PaymentsController],
   providers: [PaymentsService, MtnSandboxAdapter, AirtelSandboxAdapter, PrismaService],
   exports: [PaymentsService],

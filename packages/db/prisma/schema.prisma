@@ -113,6 +113,77 @@ enum CashMovementType {
   PICKUP
 }
 
+enum AccountType {
+  ASSET
+  LIABILITY
+  EQUITY
+  REVENUE
+  COGS
+  EXPENSE
+}
+
+enum PaymentTerms {
+  NET7
+  NET14
+  NET30
+}
+
+enum BillStatus {
+  DRAFT
+  OPEN
+  PAID
+  VOID
+}
+
+enum InvoiceStatus {
+  OPEN
+  PAID
+  VOID
+}
+
+enum ReminderType {
+  VENDOR_BILL
+  UTILITY
+}
+
+enum ReminderChannel {
+  EMAIL
+  SLACK
+}
+
+enum EventBookingStatus {
+  HELD
+  CONFIRMED
+  CANCELLED
+}
+
+enum LeaveType {
+  ANNUAL
+  SICK
+  UNPAID
+  OTHER
+}
+
+enum LeaveRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum ShiftSwapStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum TimeClockMethod {
+  MSR
+  PASSKEY
+  PASSWORD
+}
+
 // ===== Organization & Multi-tenancy =====
 
 model Org {
@@ -161,6 +232,13 @@ model OrgSettings {
   platformAccess            Json?    // { "ROLE_NAME": { "desktop": bool, "web": bool, "mobile": bool }, ... }
   franchiseWeights          Json?    // { revenue: 0.4, margin: 0.3, waste: -0.2, sla: 0.1 }
   showCostToChef            Boolean  @default(false)
+  defaults                  Json?    // Accounting defaults: { coaVersion: "v1", lockBackdate: false }
+  baseCurrencyCode          String?  // E39-s1: Base currency for accounting (falls back to currency field)
+  taxMatrix                 Json?    // E39-s1: { defaultTax: {code:"VAT_STD", rate:0.18, inclusive:true}, alcohol: {rate:0.15}, serviceCharge: {rate:0.1, inclusive:false} }
+  rounding                  Json?    // E39-s1: { cashRounding:"NEAREST_50", taxRounding:"HALF_UP" }
+  bookingPolicies           Json?    // E42-s1: { holdMinutes:30, allowPartial:true, creditExpiryHours:12 }
+  attendance                Json?    // E43-s1: { autoClockInOnMsr:true, overtimeAfterMinutes:480, hardCapAbsences:3 }
+  inventoryTolerance        Json?    // E45-s1: { pct: 0.05, absolute: 0 } - variance tolerance for stock counts
   createdAt                 DateTime @default(now())
   updatedAt                 DateTime @updatedAt
 
@@ -170,13 +248,14 @@ model OrgSettings {
 }
 
 model Branch {
-  id        String   @id @default(cuid())
-  orgId     String
-  name      String
-  address   String?
-  timezone  String   @default("Africa/Kampala")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String   @id @default(cuid())
+  orgId        String
+  name         String
+  address      String?
+  timezone     String   @default("Africa/Kampala")
+  currencyCode String?  // E39-s1: Branch-specific currency (falls back to org base)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   org            Org             @relation(fields: [orgId], references: [id], onDelete: Cascade)
   tables         Table[]
@@ -244,6 +323,16 @@ model User {
   assignedBadges      BadgeAsset[]
   procurementJobs     ProcurementJob[]
   approvedPromotions  Promotion[]          @relation("PromotionApprovals")
+  leaveRequests       LeaveRequest[]
+  approvedLeaves      LeaveRequest[]       @relation("ApprovedLeave")
+  dutyShifts          DutyShift[]
+  assignedDutyShifts  DutyShift[]          @relation("AssignedShifts")
+  swapsFrom           ShiftSwap[]          @relation("SwapFrom")
+  swapsTo             ShiftSwap[]          @relation("SwapTo")
+  approvedSwaps       ShiftSwap[]          @relation("ApprovedSwaps")
+  timeEntries         TimeEntry[]
+  approvedTimeEntries TimeEntry[]          @relation("ApprovedTimeEntries")
+  stockCounts         StockCount[]         // E45-s1: Stock counts performed by user
 
   @@index([orgId, id])
   @@map("users")
@@ -621,9 +710,31 @@ model Shift {
   openedBy     User          @relation("ShiftOpenedBy", fields: [openedById], references: [id], onDelete: Restrict)
   closedBy     User?         @relation("ShiftClosedBy", fields: [closedById], references: [id], onDelete: Restrict)
   tillSessions TillSession[]
+  stockCounts  StockCount[]  // E45-s1: Stock counts for this shift
 
   @@index([branchId, openedAt])
   @@map("shifts")
+}
+
+// E45-s1: Stock count gate at shift close
+model StockCount {
+  id          String   @id @default(cuid())
+  orgId       String
+  branchId    String
+  shiftId     String
+  countedAt   DateTime @default(now())
+  countedById String
+  notes       String?
+  lines       Json     // [{ itemId, countedQty }]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  shift     Shift @relation(fields: [shiftId], references: [id], onDelete: Cascade)
+  countedBy User  @relation(fields: [countedById], references: [id], onDelete: Restrict)
+
+  @@index([orgId, branchId, countedAt])
+  @@index([shiftId])
+  @@map("stock_counts")
 }
 
 model TillSession {
@@ -1390,4 +1501,403 @@ model FranchiseRank {
   @@unique([orgId, period, branchId])
   @@index([orgId, period, rank])
   @@map("franchise_ranks")
+}
+
+// ===== Accounting Core (E40-s1) =====
+
+model Account {
+  id        String      @id @default(cuid())
+  orgId     String
+  code      String      // Unique within org (e.g., "1000", "4000")
+  name      String      // e.g., "Cash", "Sales Revenue"
+  type      AccountType
+  isActive  Boolean     @default(true)
+  parentId  String?     // For account hierarchy
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  parent       Account?      @relation("AccountHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children     Account[]     @relation("AccountHierarchy")
+  journalLines JournalLine[]
+
+  @@unique([orgId, code])
+  @@index([orgId, type])
+  @@map("accounts")
+}
+
+model JournalEntry {
+  id         String   @id @default(cuid())
+  orgId      String
+  date       DateTime @default(now())
+  memo       String?
+  source     String?  // e.g., "POS_SALE", "REFUND", "CASH_MOVEMENT", "VENDOR_PAYMENT"
+  sourceId   String?  // Reference to source entity ID
+  postedById String?
+  createdAt  DateTime @default(now())
+
+  lines JournalLine[]
+
+  @@index([orgId, date])
+  @@index([source, sourceId])
+  @@map("journal_entries")
+}
+
+model JournalLine {
+  id        String   @id @default(cuid())
+  entryId   String
+  accountId String
+  branchId  String?
+  debit     Decimal  @default(0) @db.Decimal(12, 2)
+  credit    Decimal  @default(0) @db.Decimal(12, 2)
+  meta      Json?    // Additional context
+  createdAt DateTime @default(now())
+
+  entry   JournalEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  account Account      @relation(fields: [accountId], references: [id], onDelete: Restrict)
+
+  @@index([entryId])
+  @@index([accountId])
+  @@map("journal_lines")
+}
+
+model Vendor {
+  id            String        @id @default(cuid())
+  orgId         String
+  name          String
+  email         String?
+  phone         String?
+  defaultTerms  PaymentTerms? // Default payment terms
+  metadata      Json?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  bills    VendorBill[]
+  payments VendorPayment[]
+
+  @@index([orgId])
+  @@map("vendors")
+}
+
+model VendorBill {
+  id        String     @id @default(cuid())
+  orgId     String
+  vendorId  String
+  number    String?    // Vendor's bill number
+  billDate  DateTime   @default(now())
+  dueDate   DateTime
+  subtotal  Decimal    @db.Decimal(12, 2)
+  tax       Decimal    @default(0) @db.Decimal(12, 2)
+  total     Decimal    @db.Decimal(12, 2)
+  status    BillStatus @default(DRAFT)
+  memo      String?
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  vendor   Vendor          @relation(fields: [vendorId], references: [id], onDelete: Restrict)
+  payments VendorPayment[]
+
+  @@index([orgId, status])
+  @@index([vendorId])
+  @@index([dueDate])
+  @@map("vendor_bills")
+}
+
+model VendorPayment {
+  id        String   @id @default(cuid())
+  orgId     String
+  vendorId  String
+  billId    String?  // Optional link to specific bill
+  amount    Decimal  @db.Decimal(12, 2)
+  paidAt    DateTime @default(now())
+  method    String   // CASH, CARD, MOMO, BANK
+  ref       String?  // Payment reference number
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  vendor Vendor      @relation(fields: [vendorId], references: [id], onDelete: Restrict)
+  bill   VendorBill? @relation(fields: [billId], references: [id], onDelete: SetNull)
+
+  @@index([orgId])
+  @@index([vendorId])
+  @@index([billId])
+  @@map("vendor_payments")
+}
+
+model CustomerAccount {
+  id          String   @id @default(cuid())
+  orgId       String
+  name        String
+  email       String?
+  phone       String?
+  creditLimit Decimal? @db.Decimal(12, 2)
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  invoices CustomerInvoice[]
+
+  @@index([orgId])
+  @@map("customer_accounts")
+}
+
+model CustomerInvoice {
+  id          String        @id @default(cuid())
+  orgId       String
+  customerId  String
+  number      String?       // Invoice number
+  invoiceDate DateTime      @default(now())
+  dueDate     DateTime
+  subtotal    Decimal       @db.Decimal(12, 2)
+  tax         Decimal       @default(0) @db.Decimal(12, 2)
+  total       Decimal       @db.Decimal(12, 2)
+  status      InvoiceStatus @default(OPEN)
+  metadata    Json?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  customer CustomerAccount @relation(fields: [customerId], references: [id], onDelete: Restrict)
+
+  @@index([orgId, status])
+  @@index([customerId])
+  @@index([dueDate])
+  @@map("customer_invoices")
+}
+
+model ReminderSchedule {
+  id        String          @id @default(cuid())
+  orgId     String
+  type      ReminderType
+  targetId  String?         // Vendor ID for VENDOR_BILL, null for UTILITY
+  channel   ReminderChannel
+  whenDays  Int             // Days before due date
+  isActive  Boolean         @default(true)
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  @@index([orgId, isActive])
+  @@map("reminder_schedules")
+}
+
+// ===== E39-s1: Multi-currency & Tax Matrix =====
+
+model Currency {
+  code     String @id // ISO 4217: "UGX", "USD", "EUR"
+  name     String // "Ugandan Shilling", "US Dollar"
+  symbol   String // "USh", "$", "€"
+  decimals Int    @default(0) // 0 for UGX, 2 for USD
+
+  baseRates  ExchangeRate[] @relation("BaseCurrency")
+  quoteRates ExchangeRate[] @relation("QuoteCurrency")
+
+  @@map("currencies")
+}
+
+model ExchangeRate {
+  id        String   @id @default(cuid())
+  baseCode  String // "UGX"
+  quoteCode String // "USD"
+  rate      Decimal  @db.Decimal(18, 6) // 3700.000000 UGX per 1 USD
+  asOf      DateTime @default(now())
+  source    String? // "MANUAL", "BOU", "XE"
+  createdAt DateTime @default(now())
+
+  base  Currency @relation("BaseCurrency", fields: [baseCode], references: [code], onDelete: Cascade)
+  quote Currency @relation("QuoteCurrency", fields: [quoteCode], references: [code], onDelete: Cascade)
+
+  @@unique([baseCode, quoteCode, asOf])
+  @@index([baseCode, quoteCode])
+  @@map("exchange_rates")
+}
+
+// ===== E42-s1: Public Bookings Portal =====
+
+model Event {
+  id                 String   @id @default(cuid())
+  orgId              String
+  branchId           String
+  slug               String   @unique
+  title              String
+  description        String?
+  startsAt           DateTime
+  endsAt             DateTime
+  isPublished        Boolean  @default(false)
+  floorPlanSnapshot  Json? // Snapshot of floor plan for historical reference
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  tables   EventTable[]
+  bookings EventBooking[]
+
+  @@index([orgId, branchId])
+  @@index([slug])
+  @@index([isPublished, startsAt])
+  @@map("events")
+}
+
+model EventTable {
+  id           String  @id @default(cuid())
+  eventId      String
+  tableId      String? // Optional link to actual floor plan table
+  label        String // "VIP Table 1", "Rooftop A"
+  capacity     Int
+  price        Decimal @db.Decimal(12, 2) // Full table price
+  minSpend     Decimal @db.Decimal(12, 2) // Minimum spend requirement
+  deposit      Decimal @db.Decimal(12, 2) // Upfront deposit required
+  allowPartial Boolean @default(true) // Allow partial bookings
+  isActive     Boolean @default(true)
+
+  event    Event          @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  bookings EventBooking[]
+
+  @@index([eventId, isActive])
+  @@map("event_tables")
+}
+
+model EventBooking {
+  id               String             @id @default(cuid())
+  eventId          String
+  eventTableId     String
+  name             String
+  phone            String
+  email            String?
+  status           EventBookingStatus @default(HELD)
+  depositIntentId  String? // PaymentIntent ID for deposit
+  depositCaptured  Boolean            @default(false)
+  creditTotal      Decimal            @default(0) @db.Decimal(12, 2) // Total credit eligible after deposit
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  metadata         Json? // Additional booking details
+
+  event       Event           @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventTable  EventTable      @relation(fields: [eventTableId], references: [id], onDelete: Cascade)
+  credits     PrepaidCredit[]
+
+  @@index([eventId, status])
+  @@index([eventTableId])
+  @@index([phone])
+  @@map("event_bookings")
+}
+
+model PrepaidCredit {
+  id               String    @id @default(cuid())
+  orgId            String
+  branchId         String
+  eventBookingId   String? // Link to event booking if applicable
+  tableId          String? // Link to actual table when applied
+  amount           Decimal   @db.Decimal(12, 2) // Total credit amount
+  consumed         Decimal   @default(0) @db.Decimal(12, 2) // Amount already used
+  expiresAt        DateTime
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  eventBooking EventBooking? @relation(fields: [eventBookingId], references: [id], onDelete: SetNull)
+
+  @@index([orgId, branchId, expiresAt])
+  @@index([eventBookingId])
+  @@index([tableId])
+  @@map("prepaid_credits")
+}
+
+// ===== E43-s1: Workforce Management =====
+
+model LeavePolicy {
+  id                     String   @id @default(cuid())
+  orgId                  String
+  name                   String
+  accrualHoursPerMonth   Decimal  @default(0) @db.Decimal(10, 2)
+  maxCarryOverHours      Decimal  @default(0) @db.Decimal(10, 2)
+  maxUninformedAbsences  Int      @default(0)
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  @@index([orgId])
+  @@map("leave_policies")
+}
+
+model LeaveRequest {
+  id           String             @id @default(cuid())
+  orgId        String
+  userId       String
+  type         LeaveType
+  startDate    DateTime
+  endDate      DateTime
+  status       LeaveRequestStatus @default(PENDING)
+  approvedById String?
+  approvedAt   DateTime?
+  reason       String?
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+
+  user       User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  approvedBy User? @relation("ApprovedLeave", fields: [approvedById], references: [id], onDelete: SetNull)
+
+  @@index([orgId, userId, status])
+  @@index([startDate, endDate])
+  @@map("leave_requests")
+}
+
+model DutyShift {
+  id           String   @id @default(cuid())
+  orgId        String
+  branchId     String
+  userId       String
+  startsAt     DateTime
+  endsAt       DateTime
+  roleSlug     String
+  assignedById String?
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  assignedBy User?       @relation("AssignedShifts", fields: [assignedById], references: [id], onDelete: SetNull)
+  swaps      ShiftSwap[]
+
+  @@index([orgId, branchId, startsAt])
+  @@index([userId, startsAt])
+  @@map("duty_shifts")
+}
+
+model ShiftSwap {
+  id           String          @id @default(cuid())
+  orgId        String
+  fromUserId   String
+  toUserId     String
+  dutyShiftId  String
+  status       ShiftSwapStatus @default(PENDING)
+  approvedById String?
+  decidedAt    DateTime?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  fromUser   User       @relation("SwapFrom", fields: [fromUserId], references: [id], onDelete: Cascade)
+  toUser     User       @relation("SwapTo", fields: [toUserId], references: [id], onDelete: Cascade)
+  dutyShift  DutyShift  @relation(fields: [dutyShiftId], references: [id], onDelete: Cascade)
+  approvedBy User?      @relation("ApprovedSwaps", fields: [approvedById], references: [id], onDelete: SetNull)
+
+  @@index([orgId, status])
+  @@index([dutyShiftId])
+  @@map("shift_swaps")
+}
+
+model TimeEntry {
+  id               String          @id @default(cuid())
+  orgId            String
+  branchId         String
+  userId           String
+  clockInAt        DateTime
+  clockOutAt       DateTime?
+  method           TimeClockMethod
+  approved         Boolean         @default(false)
+  approvedById     String?
+  overtimeMinutes  Int             @default(0)
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  user       User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  approvedBy User? @relation("ApprovedTimeEntries", fields: [approvedById], references: [id], onDelete: SetNull)
+
+  @@index([orgId, branchId, clockInAt])
+  @@index([userId, clockInAt])
+  @@map("time_entries")
 }

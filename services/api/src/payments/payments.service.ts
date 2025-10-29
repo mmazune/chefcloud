@@ -13,6 +13,7 @@ import { AirtelSandboxAdapter } from './adapters/airtel-sandbox.adapter';
 import { IPaymentAdapter } from './interfaces/payment-adapter.interface';
 import { CreateIntentDto, RefundDto } from './dto/create-intent.dto';
 import { AuthHelpers } from '../auth/auth.helpers';
+import { PostingService } from '../accounting/posting.service';
 
 @Injectable()
 export class PaymentsService {
@@ -20,10 +21,11 @@ export class PaymentsService {
   private readonly adapters: Map<string, IPaymentAdapter>;
 
   constructor(
-    private prisma: PrismaService,
+    public prisma: PrismaService,
     private configService: ConfigService,
     private mtnAdapter: MtnSandboxAdapter,
     private airtelAdapter: AirtelSandboxAdapter,
+    private postingService: PostingService,
   ) {
     this.adapters = new Map();
 
@@ -213,6 +215,44 @@ export class PaymentsService {
         });
 
         this.logger.log(`Payment recorded for intent ${intent.id}`);
+
+        // E42-s1: Auto-confirm event booking if deposit payment succeeded
+        const booking = await this.prisma.client.eventBooking.findFirst({
+          where: { depositIntentId: intent.id },
+          include: { eventTable: true },
+        });
+
+        if (booking && booking.status === 'HELD' && !booking.depositCaptured) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          await this.prisma.client.$transaction(async (tx: any) => {
+            // Mark deposit as captured
+            await tx.eventBooking.update({
+              where: { id: booking.id },
+              data: {
+                status: 'CONFIRMED',
+                depositCaptured: true,
+              },
+            });
+
+            // Create prepaid credit
+            const creditAmount = Number(booking.eventTable.minSpend) > 0
+              ? Number(booking.eventTable.minSpend) - Number(booking.eventTable.deposit)
+              : Number(booking.eventTable.price) - Number(booking.eventTable.deposit);
+
+            if (creditAmount > 0) {
+              await tx.prepaidCredit.create({
+                data: {
+                  bookingId: booking.id,
+                  amount: creditAmount,
+                  balance: creditAmount,
+                  expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+                },
+              });
+            }
+          });
+
+          this.logger.log(`Event booking ${booking.id} auto-confirmed via payment webhook`);
+        }
       }
 
       return { success: true, intentId: result.intentId, status: result.status };
@@ -367,6 +407,22 @@ export class PaymentsService {
     });
 
     this.logger.log(`Refund ${refund.id} created for order ${orderId}: ${amount} UGX`);
+
+    // E40-s1: Post refund to GL (fire-and-forget, idempotent)
+    if (refundStatus === 'COMPLETED') {
+      this.postingService.postRefund(refund.id, userId).catch((err) => {
+        this.prisma.auditEvent.create({
+          data: {
+            branchId,
+            userId,
+            action: 'refund.gl_posting.failed',
+            resource: 'refunds',
+            resourceId: refund.id,
+            metadata: { error: err.message },
+          },
+        });
+      });
+    }
 
     return refund;
   }

@@ -33,10 +33,7 @@ describe('E23 Platform Access (e2e)', () => {
         .set('X-Client-Platform', 'desktop')
         .expect(200);
 
-      await request(app.getHttpServer())
-        .get('/health')
-        .set('X-Client-Platform', 'web')
-        .expect(200);
+      await request(app.getHttpServer()).get('/health').set('X-Client-Platform', 'web').expect(200);
     });
 
     it('should allow unauthenticated POST to /auth/login', async () => {
@@ -57,4 +54,3 @@ describe('E23 Platform Access (e2e)', () => {
     });
   });
 });
-

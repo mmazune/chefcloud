@@ -44,10 +44,7 @@ export interface ProcurementSuggestion {
 export class FranchiseService {
   constructor(private prisma: PrismaService) {}
 
-  async getOverview(
-    orgId: string,
-    period: string,
-  ): Promise<BranchOverview[]> {
+  async getOverview(orgId: string, period: string): Promise<BranchOverview[]> {
     const [year, month] = period.split('-').map(Number);
     const startDate = new Date(year, month - 1, 1);
     const endDate = new Date(year, month, 0, 23, 59, 59);
@@ -70,10 +67,7 @@ export class FranchiseService {
         select: { total: true },
       });
 
-      const sales = orders.reduce(
-        (sum, o) => sum + Number(o.total),
-        0,
-      );
+      const sales = orders.reduce((sum, o) => sum + Number(o.total), 0);
 
       // Get wastage
       const wastage = await this.prisma.wastage.findMany({
@@ -85,10 +79,7 @@ export class FranchiseService {
       });
 
       // Estimate cost at 5000 UGX per unit (simplified)
-      const totalWaste = wastage.reduce(
-        (sum, w) => sum + Number(w.qty) * 5000,
-        0,
-      );
+      const totalWaste = wastage.reduce((sum, w) => sum + Number(w.qty) * 5000, 0);
 
       // Simplified metrics (in production would calculate actual COGS and SLA)
       const grossMargin = sales * 0.65; // Assume 65% margin
@@ -108,10 +99,7 @@ export class FranchiseService {
     return results;
   }
 
-  async getRankings(
-    orgId: string,
-    period: string,
-  ): Promise<BranchRanking[]> {
+  async getRankings(orgId: string, period: string): Promise<BranchRanking[]> {
     // Check if rankings exist
     const existingRanks = await this.prisma.franchiseRank.findMany({
       where: { orgId, period },
@@ -157,14 +145,9 @@ export class FranchiseService {
     const maxMargin = Math.max(...overview.map((b) => b.grossMargin));
 
     const scored = overview.map((branch) => {
-      const revenueScore =
-        maxRevenue > 0
-          ? (branch.sales / maxRevenue) * weights.revenue * 100
-          : 0;
+      const revenueScore = maxRevenue > 0 ? (branch.sales / maxRevenue) * weights.revenue * 100 : 0;
       const marginScore =
-        maxMargin > 0
-          ? (branch.grossMargin / maxMargin) * weights.margin * 100
-          : 0;
+        maxMargin > 0 ? (branch.grossMargin / maxMargin) * weights.margin * 100 : 0;
       const wasteScore = branch.wastePercent * weights.waste * 10; // Negative weight
       const slaScore = (branch.sla / 100) * weights.sla * 100;
 
@@ -233,10 +216,7 @@ export class FranchiseService {
     };
   }
 
-  async getBudgets(
-    orgId: string,
-    period: string,
-  ): Promise<Record<string, unknown>[]> {
+  async getBudgets(orgId: string, period: string): Promise<Record<string, unknown>[]> {
     const budgets = await this.prisma.branchBudget.findMany({
       where: { orgId, period },
       include: { branch: { select: { name: true } } },
@@ -317,10 +297,7 @@ export class FranchiseService {
     const suggestions: ProcurementSuggestion[] = [];
 
     for (const item of items) {
-      const currentStock = item.stockBatches.reduce(
-        (sum, b) => sum + Number(b.remainingQty),
-        0,
-      );
+      const currentStock = item.stockBatches.reduce((sum, b) => sum + Number(b.remainingQty), 0);
       const safetyStock = Number(item.reorderLevel);
 
       if (currentStock < safetyStock) {
@@ -411,10 +388,7 @@ export class FranchiseService {
       });
 
       for (const item of items) {
-        const currentStock = item.stockBatches.reduce(
-          (sum, b) => sum + Number(b.remainingQty),
-          0,
-        );
+        const currentStock = item.stockBatches.reduce((sum, b) => sum + Number(b.remainingQty), 0);
         const safetyStock = Number(item.reorderLevel);
 
         if (currentStock < safetyStock) {
@@ -566,10 +540,7 @@ export class FranchiseService {
     }));
   }
 
-  async approvePOs(
-    orgId: string,
-    poIds: string[],
-  ): Promise<{ approved: number }> {
+  async approvePOs(orgId: string, poIds: string[]): Promise<{ approved: number }> {
     // Update PO status
     await this.prisma.client.purchaseOrder.updateMany({
       where: { orgId, id: { in: poIds }, status: 'DRAFT' },
@@ -594,4 +565,3 @@ export class FranchiseService {
     return { approved: poIds.length };
   }
 }
-

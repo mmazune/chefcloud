@@ -38,10 +38,13 @@ export class InventoryService {
     });
   }
 
-  async getOnHandLevels(orgId: string, branchId?: string): Promise<any> {
+  async getOnHandLevels(orgId: string, branchId?: string, itemIds?: string[]): Promise<any> {
     const where: any = { orgId };
     if (branchId) {
       where.branchId = branchId;
+    }
+    if (itemIds && itemIds.length > 0) {
+      where.itemId = { in: itemIds };
     }
 
     // Get all stock batches
@@ -67,6 +70,16 @@ export class InventoryService {
       existing.batches += 1;
       levels.set(batch.itemId, existing);
     });
+
+    // If itemIds specified, return as object keyed by itemId for easy lookup
+    if (itemIds && itemIds.length > 0) {
+      const result: any = {};
+      itemIds.forEach((id) => {
+        const level = levels.get(id);
+        result[id] = level ? level.onHand : 0;
+      });
+      return result;
+    }
 
     return Array.from(levels.values()).sort((a, b) => a.itemName.localeCompare(b.itemName));
   }
