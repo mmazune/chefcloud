@@ -120,6 +120,21 @@ export class AuthService {
       throw new BadRequestException('Invalid badge format. Expected: CLOUDBADGE:<CODE>');
     }
 
+    // Check BadgeAsset state enforcement
+    const badgeAsset = await this.prisma.client.badgeAsset.findUnique({
+      where: { code: badgeCode },
+    });
+
+    if (badgeAsset) {
+      // Deny if badge is REVOKED or LOST
+      if (badgeAsset.state === 'REVOKED') {
+        throw new UnauthorizedException('Badge has been revoked');
+      }
+      if (badgeAsset.state === 'LOST') {
+        throw new UnauthorizedException('Badge reported as lost');
+      }
+    }
+
     const employeeProfile = await this.prisma.client.employeeProfile.findUnique({
       where: { badgeId: badgeCode },
       include: {
@@ -142,6 +157,14 @@ export class AuthService {
     // Optionally verify branch if provided
     if (msrSwipeDto.branchId && user.branchId !== msrSwipeDto.branchId) {
       throw new UnauthorizedException('Employee not assigned to this branch');
+    }
+
+    // Update BadgeAsset lastUsedAt on successful login
+    if (badgeAsset) {
+      await this.prisma.client.badgeAsset.update({
+        where: { code: badgeCode },
+        data: { lastUsedAt: new Date() },
+      });
     }
 
     // Log auth event

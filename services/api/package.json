@@ -58,13 +58,15 @@
     "@types/argon2": "^0.15.4",
     "@types/express": "^4.17.21",
     "@types/jest": "^29.5.11",
-    "@types/node": "^20.11.0",
+    "@types/node": "^20.19.23",
     "@types/nodemailer": "^7.0.3",
     "@types/passport-jwt": "^4.0.1",
+    "@types/pg": "^8.15.6",
     "@types/supertest": "^6.0.2",
     "@typescript-eslint/eslint-plugin": "^6.19.0",
     "@typescript-eslint/parser": "^6.19.0",
     "jest": "^29.7.0",
+    "pg": "^8.16.3",
     "supertest": "^6.3.4",
     "ts-jest": "^29.1.1",
     "ts-loader": "^9.5.1",
@@ -90,6 +92,11 @@
     "testEnvironment": "node",
     "setupFilesAfterEnv": [
       "<rootDir>/../jest.setup.ts"
-    ]
+    ],
+    "verbose": true,
+    "reporters": [
+      "default"
+    ],
+    "maxWorkers": "50%"
   }
 }

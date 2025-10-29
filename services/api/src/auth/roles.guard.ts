@@ -1,14 +1,7 @@
 import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { ROLES_KEY } from './roles.decorator';
-
-const ROLE_HIERARCHY = {
-  L1: 1,
-  L2: 2,
-  L3: 3,
-  L4: 4,
-  L5: 5,
-};
+import { ROLE_HIERARCHY, ROLE_TO_LEVEL, RoleSlug, RoleLevel } from './role-constants';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -36,9 +29,14 @@ export class RolesGuard implements CanActivate {
     }
 
     // Check if user's role level meets minimum requirement
-    const userLevel = ROLE_HIERARCHY[user.roleLevel as keyof typeof ROLE_HIERARCHY] || 0;
+    const userLevel = ROLE_HIERARCHY[user.roleLevel as RoleLevel] || 0;
     return requiredRoles.some((role) => {
-      const requiredLevel = ROLE_HIERARCHY[role as keyof typeof ROLE_HIERARCHY] || 0;
+      // Support both level-based (L1-L5) and named roles (WAITER, PROCUREMENT, etc.)
+      const roleLevel = (role as RoleLevel) in ROLE_HIERARCHY 
+        ? (role as RoleLevel)
+        : ROLE_TO_LEVEL[role as RoleSlug];
+      
+      const requiredLevel = ROLE_HIERARCHY[roleLevel as RoleLevel] || 0;
       return userLevel >= requiredLevel;
     });
   }

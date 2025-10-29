@@ -116,6 +116,28 @@ pnpm format
 pnpm format:check
 ```
 
+#### E2E Tests Quickstart
+
+E2E tests require a running PostgreSQL database and use a separate test database to avoid conflicts.
+
+```bash
+# 1. Start PostgreSQL (if not running)
+docker compose -f infra/docker/docker-compose.yml up -d
+
+# 2. Run E2E tests (they will auto-setup test DB)
+cd services/api
+pnpm test:e2e
+
+# 3. Run specific E2E test
+pnpm test:e2e -- e23-roles-access.e2e-spec.ts
+```
+
+**E2E Configuration:**
+- Test DB: `chefcloud_test` (auto-created)
+- Config: `services/api/.env.e2e`
+- Setup runs migrations + seed automatically
+- Uses mocked WebAuthn for speed
+
 ### 6. Environment Variables
 
 Copy `.env.example` to `.env` and update as needed:
@@ -959,6 +981,165 @@ curl -X POST http://localhost:3001/webhooks/airtel \
 
 ---
 
+## Roles & Platform Access Matrix (E23-s1)
+
+### Overview
+
+ChefCloud uses a hierarchical role-based access control (RBAC) system with levels L1-L5. Each level inherits permissions from lower levels, and roles can be mapped to specific levels while maintaining named role semantics.
+
+### Role Levels
+
+| Level | Default Roles | Description |
+|-------|---------------|-------------|
+| **L1** | Waiter | Basic POS operations, order taking |
+| **L2** | Cashier, Supervisor, Ticket Master, Assistant Chef | Payment processing, KDS operations |
+| **L3** | Chef, Stock, Procurement, Assistant Manager, Event Manager, Head Barista | Inventory management, reporting |
+| **L4** | Manager, Accountant | Full operational control, financial reports |
+| **L5** | Owner, Admin | Full system access, org settings |
+
+### New Roles (E23-s1)
+
+The following roles were added in E23-s1:
+
+| Role | Level | Primary Responsibilities |
+|------|-------|-------------------------|
+| **PROCUREMENT** | L3 | Purchasing, supplier management, inventory ordering |
+| **ASSISTANT_MANAGER** | L3 | Operational oversight, staff management |
+| **EVENT_MANAGER** | L3 | Reservations, event planning, table management |
+| **TICKET_MASTER** | L2 | KDS ticket management, order routing |
+| **ASSISTANT_CHEF** | L2 | Kitchen operations, recipe execution |
+| **HEAD_BARISTA** | L3 | Beverage operations, bar inventory |
+
+### Platform Access Matrix
+
+Each organization can configure which platforms (Desktop/Web/Mobile) each role can access. This is stored in `OrgSettings.platformAccess` and can be managed via the `/access/matrix` endpoint.
+
+#### Default Platform Access
+
+```json
+{
+  "WAITER": { "desktop": false, "web": true, "mobile": true },
+  "CASHIER": { "desktop": true, "web": true, "mobile": true },
+  "SUPERVISOR": { "desktop": true, "web": true, "mobile": true },
+  "TICKET_MASTER": { "desktop": true, "web": true, "mobile": true },
+  "ASSISTANT_CHEF": { "desktop": false, "web": true, "mobile": true },
+  "CHEF": { "desktop": false, "web": true, "mobile": true },
+  "STOCK": { "desktop": true, "web": true, "mobile": false },
+  "PROCUREMENT": { "desktop": true, "web": true, "mobile": false },
+  "ASSISTANT_MANAGER": { "desktop": true, "web": true, "mobile": true },
+  "EVENT_MANAGER": { "desktop": true, "web": true, "mobile": true },
+  "HEAD_BARISTA": { "desktop": true, "web": true, "mobile": true },
+  "MANAGER": { "desktop": true, "web": true, "mobile": true },
+  "ACCOUNTANT": { "desktop": true, "web": true, "mobile": false },
+  "OWNER": { "desktop": true, "web": true, "mobile": true },
+  "ADMIN": { "desktop": true, "web": true, "mobile": true }
+}
+```
+
+### Access Matrix API
+
+#### Get Platform Access Matrix (L4+ only)
+
+```bash
+# Get current matrix for your organization
+curl -X GET "http://localhost:3001/access/matrix" \
+  -H "Authorization: Bearer $MANAGER_TOKEN" | jq .
+
+# Response:
+# {
+#   "platformAccess": {
+#     "WAITER": { "desktop": false, "web": true, "mobile": true },
+#     "CASHIER": { "desktop": true, "web": true, "mobile": true },
+#     ...
+#   },
+#   "defaults": { ... }
+# }
+```
+
+#### Update Platform Access Matrix (L4+ only)
+
+```bash
+# Update access for specific roles
+curl -X PATCH "http://localhost:3001/access/matrix" \
+  -H "Authorization: Bearer $MANAGER_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "ASSISTANT_MANAGER": {"desktop": false, "web": true, "mobile": true},
+    "PROCUREMENT": {"desktop": true, "web": false, "mobile": false}
+  }'
+
+# Response: Updated platformAccess object
+```
+
+### Test Credentials (Seed Data)
+
+The following test users are created when running `pnpm run seed`:
+
+| Email | Password | Role Level | Employee Code |
+|-------|----------|------------|---------------|
+| owner@demo.local | Owner#123 | L5 | - |
+| manager@demo.local | Manager#123 | L4 | MGR001 |
+| accountant@demo.local | Accountant#123 | L4 | - |
+| assistantmgr@demo.local | AssistantMgr#123 | L3 | AMGR001 |
+| eventmgr@demo.local | EventMgr#123 | L3 | EVMGR001 |
+| procurement@demo.local | Procurement#123 | L3 | PROC001 |
+| headbarista@demo.local | HeadBarista#123 | L3 | HBAR001 |
+| supervisor@demo.local | Supervisor#123 | L2 | SUP001 |
+| cashier@demo.local | Cashier#123 | L2 | CASH001 |
+| ticketmaster@demo.local | TicketMaster#123 | L2 | TKT001 |
+| assistantchef@demo.local | AssistantChef#123 | L2 | ACHEF001 |
+| waiter@demo.local | Waiter#123 | L1 | W001 |
+
+### Role-Based Endpoint Access
+
+Endpoints enforce role requirements using the `@Roles()` decorator:
+
+```typescript
+// Require L4+ (Manager, Accountant, Owner, Admin)
+@Roles('L4')
+async getMatrix() { ... }
+
+// Require specific named role
+@Roles('PROCUREMENT')
+async getPurchaseOrders() { ... }
+
+// Multiple roles (OR logic)
+@Roles('MANAGER', 'OWNER')
+async deleteUser() { ... }
+```
+
+### Authorization Rules
+
+1. **L5 (Owner/Admin)** can access everything
+2. **Level-based**: Users with level >= required level can access
+3. **Named roles**: Mapped to levels via `ROLE_TO_LEVEL` constant
+4. **Inheritance**: Higher levels inherit lower level permissions
+
+### Database Schema
+
+```prisma
+model OrgSettings {
+  // ... other fields
+  platformAccess Json? // { "ROLE_NAME": { "desktop": bool, "web": bool, "mobile": bool } }
+}
+
+model User {
+  // ... other fields
+  roleLevel RoleLevel @default(L1) // L1, L2, L3, L4, L5
+}
+```
+
+### Implementation Files
+
+- **Role Constants**: `services/api/src/auth/role-constants.ts`
+- **Roles Guard**: `services/api/src/auth/roles.guard.ts`
+- **Access Module**: `services/api/src/access/`
+- **Migration**: `packages/db/prisma/migrations/20251028095950_add_platform_access/`
+- **Seed Data**: `services/api/prisma/seed.ts`
+- **Tests**: `services/api/src/access/access.service.spec.ts`, `services/api/test/e23-roles-access.e2e-spec.ts`
+
+---
+
 ## EFRIS Integration (Uganda Revenue Authority)
 
 ### Overview
@@ -1455,6 +1636,1285 @@ ORDER BY lastRunAt DESC;
 
 ---
 
+## Live Owner/Manager KPIs (E26-s1)
+
+ChefCloud provides real-time Key Performance Indicator (KPI) streaming for Managers (L4) and Owners (L5) via Server-Sent Events (SSE). KPIs are computed on-demand with an in-memory cache (10-second TTL) to keep compute costs low while providing near-real-time visibility.
+
+### Architecture
+
+- **SSE Streaming**: HTTP long-lived connection delivering `event: message` payloads every 15 seconds
+- **In-Memory Cache**: Map-based cache with 10s TTL per org/branch scope
+- **Best-Effort Invalidation**: Services mark cache dirty after meaningful changes (orders, payments, inventory, shifts)
+- **RBAC**: L4+ roles only (@Roles('L4') guard)
+- **Scope**: Org-wide or branch-specific KPIs
+
+### KPI Metrics
+
+| Metric          | Description                                              | Source Query                                             |
+| --------------- | -------------------------------------------------------- | -------------------------------------------------------- |
+| salesToday      | Total sales amount for today (00:00 - now)              | Sum of Order.totalAmount (status COMPLETED)             |
+| salesMTD        | Total sales amount month-to-date                         | Sum of Order.totalAmount (status COMPLETED)             |
+| paymentsMomo    | Total MoMo payments today                                | Sum of Payment.amount (method MOMO)                      |
+| paymentsCash    | Total Cash payments today                                | Sum of Payment.amount (method CASH)                      |
+| openOrders      | Count of open orders                                     | Count of Order (status NEW/SENT/IN_KITCHEN/READY/SERVED) |
+| tablesOccupied  | Count of occupied tables                                 | Count of Table (status OCCUPIED)                         |
+| onShiftNow      | Count of staff currently on shift                        | Count of Shift (closedAt null)                           |
+| stockAtRisk     | Count of items below reorder level                       | Count of InventoryItem (onHand < reorderLevel)           |
+| anomaliesToday  | Count of detected anomalies today                        | Count of AnomalyEvent (occurredAt today)                 |
+
+### SSE Endpoint (L4+)
+
+**Connect to KPI stream:**
+
+```bash
+# Org-wide KPIs
+curl -N -H "Authorization: Bearer {token}" \
+  "http://localhost:3001/stream/kpis?scope=org"
+
+# Branch-specific KPIs
+curl -N -H "Authorization: Bearer {token}" \
+  "http://localhost:3001/stream/kpis?scope=branch&branchId={branchId}"
+```
+
+**Response Format:**
+
+```
+event: message
+data: {"salesToday":12450.50,"salesMTD":45230.75,"paymentsMomo":5600.00,"paymentsCash":6850.50,"openOrders":3,"tablesOccupied":8,"onShiftNow":12,"stockAtRisk":4,"anomaliesToday":2}
+
+event: message
+data: {"salesToday":12650.50,"salesMTD":45430.75,"paymentsMomo":5700.00,"paymentsCash":6950.50,"openOrders":4,"tablesOccupied":9,"onShiftNow":12,"stockAtRisk":4,"anomaliesToday":2}
+
+...
+```
+
+**Node.js Client Example:**
+
+```typescript
+import { EventSource } from 'eventsource';
+
+const token = 'your-jwt-token';
+const url = `http://localhost:3001/stream/kpis?scope=org`;
+
+const eventSource = new EventSource(url, {
+  headers: {
+    Authorization: `Bearer ${token}`,
+  },
+});
+
+eventSource.onmessage = (event) => {
+  const kpis = JSON.parse(event.data);
+  console.log('KPIs updated:', kpis);
+  // Update dashboard UI with new values
+};
+
+eventSource.onerror = (error) => {
+  console.error('SSE connection error:', error);
+  eventSource.close();
+};
+```
+
+### Cache Behavior
+
+- **TTL**: 10 seconds per cache entry
+- **Keys**: `${scope}:${orgId}` or `${scope}:${orgId}:${branchId}`
+- **Invalidation**: Best-effort `markDirty(orgId, branchId?)` calls from:
+  - **PosService**: After createOrder, closeOrder, voidOrder
+  - **ShiftsService**: After openShift, closeShift
+  - **InventoryService**: After createAdjustment
+
+**Note**: Cache invalidation is optional (best-effort). If a service fails to inject KpisService, the cache will still expire naturally after 10s.
+
+### Database Inspection
+
+**View Active Shifts:**
+
+```sql
+SELECT
+  s.id,
+  s.branchId,
+  s.openedAt,
+  u.firstName || ' ' || u.lastName as openedBy
+FROM shifts s
+JOIN users u ON s.openedById = u.id
+WHERE s.closedAt IS NULL
+ORDER BY s.openedAt DESC;
+```
+
+**View Stock At Risk:**
+
+```sql
+SELECT
+  ii.name,
+  ii.reorderLevel,
+  ii.unit,
+  SUM(sb.remainingQty) as onHand
+FROM inventory_items ii
+LEFT JOIN stock_batches sb ON sb.itemId = ii.id
+WHERE ii.orgId = 'your-org-id'
+GROUP BY ii.id, ii.name, ii.reorderLevel, ii.unit
+HAVING SUM(sb.remainingQty) < ii.reorderLevel
+ORDER BY ii.name;
+```
+
+### Troubleshooting
+
+**KPIs not updating**
+
+- Verify user has L4+ role (`SELECT role FROM users WHERE id = 'user-id'`)
+- Check Authorization header is present and valid
+- Review `GET /stream/kpis?scope=org` query params (scope required, branchId for branch scope)
+- Ensure SSE client supports `text/event-stream` content type
+
+**KPIs showing stale data**
+
+- Normal behavior: cache has 10s TTL
+- Force refresh by waiting for cache expiration or triggering a write operation (create order, close shift, etc.)
+- Check if cache invalidation calls are being made (best-effort, may not fire if KpisService injection fails)
+
+**SSE connection drops frequently**
+
+- Ensure client sends keepalive or reconnects on error
+- Check server logs for NestJS errors in KpisController
+- Verify network/proxy allows long-lived HTTP connections (some proxies timeout SSE after 60s)
+
+**Branch KPIs incorrect**
+
+- Confirm `branchId` query param matches existing branch ID
+- Verify branch data exists in database (`SELECT * FROM branches WHERE id = 'branch-id'`)
+- Check that org-level vs branch-level queries are using correct filters (FloorPlan has `orgId`, Table has `branchId`)
+
+---
+
+## Franchise Management (E22-s2)
+
+ChefCloud provides comprehensive franchise management capabilities including demand forecasting, branch performance rankings, budgeting, and procurement suggestions. These features help multi-branch operators optimize inventory, identify top-performing locations, and maintain operational excellence.
+
+### Architecture
+
+- **Forecasting Workers**: Nightly jobs (02:30) compute MA7/MA14/MA30 forecasts with weekend/month-end uplifts
+- **Ranking Workers**: Monthly jobs (1st @ 01:00) calculate branch scores and persist rankings
+- **Custom Weights**: Org-level configuration for ranking formula (revenue, margin, waste, SLA)
+- **RBAC**: L5 (Owner) for budgets/rankings, L4+ (Manager/Owner) for forecasts/procurement
+
+### Franchise Endpoints
+
+#### Branch Overview (L5)
+
+Get aggregated metrics for all branches in a period:
+
+```bash
+GET /franchise/overview?period=2025-10
+
+curl -H "Authorization: Bearer {token}" \
+  "http://localhost:3001/franchise/overview?period=2025-10"
+```
+
+**Response:**
+
+```json
+[
+  {
+    "branchId": "branch-123",
+    "branchName": "Downtown",
+    "sales": 1250000,
+    "grossMargin": 812500,
+    "wastePercent": 3.2,
+    "sla": 96
+  },
+  {
+    "branchId": "branch-456",
+    "branchName": "Uptown",
+    "sales": 980000,
+    "grossMargin": 637000,
+    "wastePercent": 5.1,
+    "sla": 92
+  }
+]
+```
+
+#### Branch Rankings (L5)
+
+Get performance rankings with calculated scores:
+
+```bash
+GET /franchise/rankings?period=2025-10
+
+curl -H "Authorization: Bearer {token}" \
+  "http://localhost:3001/franchise/rankings?period=2025-10"
+```
+
+**Response:**
+
+```json
+[
+  {
+    "branchId": "branch-123",
+    "branchName": "Downtown",
+    "score": 85.4,
+    "rank": 1,
+    "metrics": {
+      "revenue": 1250000,
+      "margin": 812500,
+      "waste": 3.2,
+      "sla": 96
+    }
+  },
+  {
+    "branchId": "branch-456",
+    "branchName": "Uptown",
+    "score": 72.1,
+    "rank": 2,
+    "metrics": {
+      "revenue": 980000,
+      "margin": 637000,
+      "waste": 5.1,
+      "sla": 92
+    }
+  }
+]
+```
+
+**Ranking Formula:**
+
+Default weights (can be customized via `org_settings.franchiseWeights`):
+
+- **Revenue**: 40% (normalized to max)
+- **Margin**: 30% (normalized to max)
+- **Waste**: -20% (penalty)
+- **SLA**: 10% (service level agreement)
+
+#### Budgets - Upsert (L5)
+
+Create or update a branch budget for a period:
+
+```bash
+POST /franchise/budgets
+
+curl -X POST http://localhost:3001/franchise/budgets \
+  -H "Authorization: Bearer {token}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "branchId": "branch-123",
+    "period": "2025-11",
+    "revenueTarget": 1500000,
+    "cogsTarget": 600000,
+    "expenseTarget": 300000,
+    "notes": "Q4 growth target"
+  }'
+```
+
+**Response:**
+
+```json
+{
+  "id": "budget-xyz",
+  "branchId": "branch-123",
+  "period": "2025-11",
+  "revenueTarget": 1500000,
+  "cogsTarget": 600000,
+  "expenseTarget": 300000,
+  "notes": "Q4 growth target"
+}
+```
+
+#### Budgets - List (L5)
+
+Fetch all budgets for a period:
+
+```bash
+GET /franchise/budgets?period=2025-11
+
+curl -H "Authorization: Bearer {token}" \
+  "http://localhost:3001/franchise/budgets?period=2025-11"
+```
+
+**Response:**
+
+```json
+[
+  {
+    "id": "budget-xyz",
+    "branchId": "branch-123",
+    "branchName": "Downtown",
+    "period": "2025-11",
+    "revenueTarget": 1500000,
+    "cogsTarget": 600000,
+    "expenseTarget": 300000,
+    "notes": "Q4 growth target"
+  }
+]
+```
+
+#### Forecast Items (L4+)
+
+Get demand forecasts for inventory items:
+
+```bash
+GET /franchise/forecast/items?period=2025-11&method=MA14
+
+curl -H "Authorization: Bearer {token}" \
+  "http://localhost:3001/franchise/forecast/items?period=2025-11&method=MA14"
+```
+
+**Response:**
+
+```json
+[
+  {
+    "itemId": "item-123",
+    "itemName": "Rice (50kg)",
+    "forecasts": [
+      { "date": "2025-11-01", "predictedQty": 12.5 },
+      { "date": "2025-11-02", "predictedQty": 15.2 },
+      { "date": "2025-11-03", "predictedQty": 18.7 }
+    ]
+  }
+]
+```
+
+**Methods**: `MA7`, `MA14`, `MA30` (Moving Average over 7/14/30 days)
+
+#### Procurement Suggestions (L4+)
+
+Get items below safety stock that need reordering:
+
+```bash
+GET /franchise/procurement/suggest
+GET /franchise/procurement/suggest?branchId={branchId}
+
+curl -H "Authorization: Bearer {token}" \
+  "http://localhost:3001/franchise/procurement/suggest"
+```
+
+**Response:**
+
+```json
+[
+  {
+    "itemId": "item-123",
+    "itemName": "Rice (50kg)",
+    "currentStock": 45,
+    "safetyStock": 100,
+    "suggestedQty": 200
+  },
+  {
+    "itemId": "item-456",
+    "itemName": "Cooking Oil (20L)",
+    "currentStock": 8,
+    "safetyStock": 20,
+    "suggestedQty": 40
+  }
+]
+```
+
+### Custom Ranking Weights
+
+Override default ranking weights by setting `franchiseWeights` in `org_settings`:
+
+```sql
+UPDATE org_settings
+SET "franchiseWeights" = '{
+  "revenue": 0.5,
+  "margin": 0.3,
+  "waste": -0.15,
+  "sla": 0.05
+}'::jsonb
+WHERE "orgId" = 'your-org-id';
+```
+
+**Example Use Cases:**
+
+- **Quality-Focused**: Increase waste penalty: `{"revenue": 0.3, "margin": 0.3, "waste": -0.3, "sla": 0.1}`
+- **Revenue-Focused**: Maximize revenue weight: `{"revenue": 0.6, "margin": 0.2, "waste": -0.1, "sla": 0.1}`
+- **Service-Focused**: Increase SLA weight: `{"revenue": 0.3, "margin": 0.2, "waste": -0.2, "sla": 0.3}`
+
+### Forecast Workers
+
+#### forecast-build (Nightly @ 02:30)
+
+Computes forecasts for top inventory items per branch:
+
+**Logic:**
+
+1. Fetch all `ForecastProfile` records (defines which items to forecast)
+2. For each profile, calculate Moving Average (MA7/MA14/MA30) from historical consumption
+3. Apply weekend uplift (Sat/Sun): `predictedQty *= 1 + weekendUpliftPct/100`
+4. Apply month-end uplift (last 3 days): `predictedQty *= 1 + monthEndUpliftPct/100`
+5. Upsert 7 days of `ForecastPoint` records
+
+**Manual Trigger:**
+
+```typescript
+import { Queue } from 'bullmq';
+const forecastQueue = new Queue('forecast-build', { connection });
+await forecastQueue.add('forecast-build', { type: 'forecast-build' });
+```
+
+#### rank-branches (Monthly @ 01:00 on 1st)
+
+Calculates branch rankings for the prior month:
+
+**Logic:**
+
+1. For each org, fetch all branches
+2. Calculate metrics: revenue (closed orders), margin (simplified), waste %, SLA (placeholder)
+3. Load custom weights from `org_settings.franchiseWeights` or use defaults
+4. Compute score: `(revenue_norm * w.revenue + margin_norm * w.margin + waste_pct * w.waste + sla_norm * w.sla) * 100`
+5. Sort by score (descending), assign ranks
+6. Upsert `FranchiseRank` records
+
+**Manual Trigger:**
+
+```typescript
+import { Queue } from 'bullmq';
+const rankQueue = new Queue('rank-branches', { connection });
+await rankQueue.add('rank-branches', { type: 'rank-branches' });
+```
+
+### Database Inspection
+
+**View Forecasts:**
+
+```sql
+SELECT
+  fp.date,
+  ii.name as item_name,
+  fp.predictedQty,
+  b.name as branch_name
+FROM forecast_points fp
+JOIN inventory_items ii ON fp.itemId = ii.id
+JOIN branches b ON fp.branchId = b.id
+WHERE fp.orgId = 'your-org-id'
+  AND fp.date >= CURRENT_DATE
+ORDER BY fp.date, ii.name;
+```
+
+**View Rankings:**
+
+```sql
+SELECT
+  fr.period,
+  fr.rank,
+  b.name as branch_name,
+  fr.score,
+  fr.meta->>'revenue' as revenue,
+  fr.meta->>'waste' as waste_pct
+FROM franchise_ranks fr
+JOIN branches b ON fr.branchId = b.id
+WHERE fr.orgId = 'your-org-id'
+  AND fr.period = '2025-10'
+ORDER BY fr.rank;
+```
+
+**View Budgets:**
+
+```sql
+SELECT
+  bb.period,
+  b.name as branch_name,
+  bb.revenueTarget,
+  bb.cogsTarget,
+  bb.expenseTarget,
+  bb.notes
+FROM branch_budgets bb
+JOIN branches b ON bb.branchId = b.id
+WHERE bb.orgId = 'your-org-id'
+ORDER BY bb.period DESC, b.name;
+```
+
+### Troubleshooting
+
+**Forecasts not generating**
+
+- Check worker logs for `forecast-build` job processing
+- Verify `ForecastProfile` records exist for items you want to forecast
+- Ensure `ForecastProfile.method` is set to `MA7`, `MA14`, or `MA30`
+- Confirm historical order data exists (need `CLOSED` orders with order items)
+
+**Rankings show unexpected order**
+
+- Review custom weights in `org_settings.franchiseWeights`
+- Check if branch metrics (sales, waste) are calculated correctly
+
+---
+
+## Central Procurement (E22-s3)
+
+ChefCloud's Central Procurement Automation helps multi-branch organizations streamline inventory ordering by automatically generating draft purchase orders (POs) based on safety stock levels or demand forecasts. The system groups items by supplier and branch, applies supplier-specific constraints (pack sizes, minimum order quantities), and provides approval workflows for owners.
+
+### Architecture
+
+- **Procurement Worker**: Nightly job (02:45) auto-generates draft POs using SAFETY_STOCK strategy
+- **Manual Generation**: L4+ users can trigger draft PO generation on-demand via API
+- **Approval Workflow**: L5 (Owner) exclusive approval rights, updates PO status to PLACED
+- **Email Notifications**: Console stub logs (production: send supplier emails)
+- **Rounding Logic**: Enforces `supplier.packSize` rounding and `supplier.minOrderQty` thresholds
+
+### Procurement Endpoints
+
+#### Generate Draft POs (L4+)
+
+Automatically create draft purchase orders for items below safety stock:
+
+```bash
+POST /franchise/procurement/generate-drafts
+
+# Generate for all branches with SAFETY_STOCK strategy
+curl -X POST http://localhost:3001/franchise/procurement/generate-drafts \
+  -H "Authorization: Bearer {token}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "strategy": "SAFETY_STOCK"
+  }'
+
+# Generate for specific branches only
+curl -X POST http://localhost:3001/franchise/procurement/generate-drafts \
+  -H "Authorization: Bearer {token}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "strategy": "SAFETY_STOCK",
+    "branchIds": ["branch-123", "branch-456"]
+  }'
+```
+
+**Request Body:**
+
+- `strategy` (required): `"SAFETY_STOCK"` or `"FORECAST"`
+  - `SAFETY_STOCK`: Items where `currentStock < reorderLevel`
+  - `FORECAST`: Items based on MA7/MA14/MA30 predictions (future enhancement)
+- `branchIds` (optional): Array of branch IDs to limit scope. Omit to process all branches.
+
+**Response:**
+
+```json
+{
+  "jobId": "job-xyz",
+  "drafts": [
+    {
+      "poId": "po-abc",
+      "supplierId": "supplier-123",
+      "branchId": "branch-123",
+      "itemsCount": 3
+    },
+    {
+      "poId": "po-def",
+      "supplierId": "supplier-456",
+      "branchId": "branch-456",
+      "itemsCount": 2
+    }
+  ]
+}
+```
+
+**Rounding Logic:**
+
+1. **Pack Size Rounding**: If `supplier.packSize` is set, qty is rounded **up** to nearest multiple.
+   - Example: `suggestedQty=42`, `packSize=10` → `qty=50`
+2. **Minimum Order Qty**: If `supplier.minOrderQty` is set and rounded qty < minOrderQty, enforce minimum.
+   - Example: `roundedQty=15`, `minOrderQty=50` → `qty=50`
+
+**Grouping Strategy:**
+
+- Items are grouped by `(supplierId, branchId)` into separate POs
+- Each PO contains all items for that supplier-branch combination
+- Supplier ID is extracted from `inventory_items.metadata->>'supplierId'`
+
+#### List Draft POs (L4+)
+
+Retrieve all draft purchase orders awaiting approval:
+
+```bash
+GET /franchise/procurement/drafts
+
+curl -H "Authorization: Bearer {token}" \
+  "http://localhost:3001/franchise/procurement/drafts"
+```
+
+**Response:**
+
+```json
+[
+  {
+    "poId": "po-abc",
+    "poNumber": "DRAFT-1730217600000",
+    "supplierId": "supplier-123",
+    "supplierName": "Fresh Produce Ltd",
+    "branchId": "branch-123",
+    "branchName": "Downtown",
+    "itemsCount": 3,
+    "total": 0
+  },
+  {
+    "poId": "po-def",
+    "poNumber": "DRAFT-1730217601000",
+    "supplierId": "supplier-456",
+    "supplierName": "Grain Wholesalers",
+    "branchId": "branch-456",
+    "branchName": "Uptown",
+    "itemsCount": 2,
+    "total": 0
+  }
+]
+```
+
+**Notes:**
+
+- `total` is 0 because `unitCost` is set to 0 in draft POs (awaiting supplier quotes)
+- `poNumber` format: `DRAFT-{timestamp}` (system-generated)
+- Only POs with `status='DRAFT'` are returned
+
+#### Approve POs (L5 Only)
+
+Approve draft purchase orders and update status to PLACED:
+
+```bash
+POST /franchise/procurement/approve
+
+curl -X POST http://localhost:3001/franchise/procurement/approve \
+  -H "Authorization: Bearer {token}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "poIds": ["po-abc", "po-def"]
+  }'
+```
+
+**Request Body:**
+
+- `poIds` (required): Array of PO IDs to approve
+
+**Response:**
+
+```json
+{
+  "approved": 2
+}
+```
+
+**Side Effects:**
+
+1. Updates `purchase_orders.status` from `'DRAFT'` to `'PLACED'`
+2. Logs email stub to console for each supplier:
+   ```
+   [EMAIL STUB] To: supplier@example.com, Subject: PO DRAFT-123 for Supplier Name, Items: 3
+   ```
+3. In production: Would trigger actual email via mailer service
+
+**RBAC:**
+
+- Only **L5 (Owner)** can approve POs
+- L4 (Manager) receives 403 Forbidden
+
+### Procurement Worker
+
+#### procurement-nightly (Daily @ 02:45)
+
+Automatically generates draft POs for all orgs using SAFETY_STOCK strategy:
+
+**Logic:**
+
+1. For each org, fetch all branches
+2. Query `inventory_items` where `currentStock < reorderLevel` (aggregated from `stock_batches.remainingQty`)
+3. Group items by `(supplierId, branchId)` extracted from `inventory_items.metadata->>'supplierId'`
+4. For each group:
+   - Fetch supplier to get `packSize` and `minOrderQty`
+   - Apply rounding logic (see above)
+   - Create `ProcurementJob` record with `status='DRAFT'`
+   - Create `PurchaseOrder` with `status='DRAFT'`, `totalAmount=0`
+   - Create `PurchaseOrderItem` records with `qty` (rounded), `unitCost=0`, `subtotal=0`
+5. Log job summary: `jobsCreated`, `totalDraftPOs`
+
+**Key Points:**
+
+- Worker does **NOT** auto-approve POs (leaves in DRAFT status)
+- `createdById` is set to `'system'` placeholder user ID
+- `period` format: `YYYY-MM` (e.g., `'2025-10'`)
+
+**Manual Trigger:**
+
+```typescript
+import { Queue } from 'bullmq';
+const procurementQueue = new Queue('procurement-nightly', { connection });
+await procurementQueue.add('procurement-nightly', { type: 'procurement-nightly' });
+```
+
+### Supplier Configuration
+
+To enable automated procurement, suppliers must have the following fields configured:
+
+```sql
+-- Add packSize and minOrderQty to existing supplier
+UPDATE suppliers
+SET
+  "packSize" = 10,       -- Items come in packs of 10
+  "minOrderQty" = 50,    -- Minimum order is 50 units
+  "leadTimeDays" = 3     -- Delivery takes 3 days
+WHERE id = 'supplier-123';
+```
+
+**Field Descriptions:**
+
+- `packSize` (Decimal, optional): Items must be ordered in multiples of this quantity
+  - Example: Flour comes in 50kg bags → `packSize=50`
+- `minOrderQty` (Decimal, optional): Minimum total quantity per order
+  - Example: Supplier requires min 100 units per order → `minOrderQty=100`
+- `leadTimeDays` (Int, default: 2): Days from order placement to delivery
+  - Used for future auto-scheduling enhancements
+
+**Link Items to Suppliers:**
+
+```sql
+-- Set supplierId in item metadata
+UPDATE inventory_items
+SET metadata = jsonb_set(
+  COALESCE(metadata, '{}'::jsonb),
+  '{supplierId}',
+  '"supplier-123"'
+)
+WHERE id = 'item-456';
+```
+
+**Note:** Future enhancement will add a proper `inventory_items.supplierId` foreign key.
+
+### Database Inspection
+
+**View Draft POs:**
+
+```sql
+SELECT
+  po.id,
+  po.poNumber,
+  po.status,
+  s.name as supplier_name,
+  b.name as branch_name,
+  COUNT(poi.id) as items_count
+FROM purchase_orders po
+JOIN suppliers s ON po.supplierId = s.id
+JOIN branches b ON po.branchId = b.id
+LEFT JOIN purchase_order_items poi ON po.id = poi.poId
+WHERE po.orgId = 'your-org-id'
+  AND po.status = 'DRAFT'
+GROUP BY po.id, s.name, b.name
+ORDER BY po.createdAt DESC;
+```
+
+**View Procurement Jobs:**
+
+```sql
+SELECT
+  pj.id,
+  pj.period,
+  pj.strategy,
+  pj.draftPoCount,
+  pj.status,
+  pj.createdAt,
+  u.email as created_by
+FROM procurement_jobs pj
+LEFT JOIN users u ON pj.createdById = u.id
+WHERE pj.orgId = 'your-org-id'
+ORDER BY pj.createdAt DESC
+LIMIT 10;
+```
+
+**Check Rounding Application:**
+
+```sql
+SELECT
+  poi.id,
+  ii.name as item_name,
+  poi.qty,
+  s.packSize,
+  s.minOrderQty
+FROM purchase_order_items poi
+JOIN inventory_items ii ON poi.itemId = ii.id
+JOIN purchase_orders po ON poi.poId = po.id
+JOIN suppliers s ON po.supplierId = s.id
+WHERE po.status = 'DRAFT'
+  AND po.orgId = 'your-org-id';
+```
+
+**Expected Pattern:**
+
+- `qty` should be a multiple of `packSize` (if set)
+- `qty` should be >= `minOrderQty` (if set)
+
+### Troubleshooting
+
+**Draft POs not generating automatically**
+
+1. Check worker logs for `procurement-nightly` job execution
+2. Verify `stock_batches.remainingQty` aggregates correctly for each item
+3. Ensure items have `inventory_items.metadata->>'supplierId'` set
+4. Confirm `inventory_items.reorderLevel` and `reorderQty` are configured
+5. Check if current stock is actually below reorder level
+
+**Rounding not applied correctly**
+
+- Verify `suppliers.packSize` and `suppliers.minOrderQty` data types (Decimal, not String)
+- Check for NULL values (rounding only applies if fields are non-null)
+- Review worker logs for specific item calculations
+
+**Approval fails with 403 Forbidden**
+
+- Ensure user has `role='L5'` (Owner)
+- Check `RolesGuard` is enabled on `/franchise/procurement/approve` endpoint
+- Verify JWT token includes correct user role
+
+**Email stubs not appearing**
+
+- Check `suppliers.email` field is populated
+- Review console logs (search for `[EMAIL STUB]`)
+- In production: Verify mailer service integration
+
+**POs created but no items**
+
+- Items with `supplierId=null` in metadata are skipped
+- Check `inventory_items.metadata` structure: `{"supplierId": "supplier-id-here"}`
+- Verify supplier exists in `suppliers` table
+- Verify period format is `YYYY-MM`
+- Rankings are computed on-the-fly if not in database; monthly worker persists them
+
+**Procurement suggestions empty**
+
+- Verify `inventoryItem.reorderLevel` is set correctly
+- Check `stockBatches.remainingQty` for current stock levels
+- Ensure items have `isActive = true`
+- Suggestions only appear when `currentStock < reorderLevel`
+
+**Budget upsert fails**
+
+- Ensure `period` format is `YYYY-MM` (7 chars exactly)
+- Verify `branchId` exists and belongs to user's org
+- Check that all numeric fields are provided (revenueTarget, cogsTarget, expenseTarget)
+
+---
+
+## Promotions & Pricing Engine (E37-s1)
+
+ChefCloud's Promotions & Pricing Engine provides a flexible backend rule engine for applying automatic discounts at the point of sale. The system supports time-based promotions (happy hour), percentage/fixed discounts, item/category-specific rules, coupon codes, and multi-level approval workflows.
+
+### Architecture
+
+- **Promotion Models**: `promotions` and `promotion_effects` tables with flexible JSON scope/daypart fields
+- **Effect Types**: PERCENT_OFF, FIXED_OFF, HAPPY_HOUR (phase 1); BUNDLE (future)
+- **Approval Workflow**: Promotions require L4+ approval before activation (configurable via `requiresApproval` flag)
+- **POS Integration**: Promotion evaluation happens during `closeOrder` before payment processing
+- **Priority & Exclusivity**: Promotions sorted by priority (desc); exclusive flag stops after first match
+- **Scope Filtering**: Supports branch-specific, category-specific, and item-specific promotions
+- **Time Controls**: Start/end dates and daypart matching (day of week + time range)
+
+### Promotion Endpoints
+
+#### Create Promotion (L4+)
+
+Create a new promotion with one or more effects:
+
+```bash
+POST /promotions
+
+# Happy hour: 20% off drinks Monday-Friday 17:00-19:00
+curl -X POST http://localhost:3001/promotions \
+  -H "Authorization: Bearer {token}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Happy Hour - Drinks",
+    "active": false,
+    "startsAt": "2025-01-01T00:00:00Z",
+    "endsAt": "2025-12-31T23:59:59Z",
+    "scope": {
+      "categories": ["category-drinks-id"]
+    },
+    "daypart": {
+      "days": [1, 2, 3, 4, 5],
+      "start": "17:00",
+      "end": "19:00"
+    },
+    "priority": 100,
+    "exclusive": false,
+    "requiresApproval": true,
+    "effects": [
+      {
+        "type": "HAPPY_HOUR",
+        "value": 20,
+        "meta": {
+          "description": "Happy hour discount on drinks"
+        }
+      }
+    ]
+  }'
+
+# Weekend special: 5000 UGX off orders
+curl -X POST http://localhost:3001/promotions \
+  -H "Authorization: Bearer {token}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Weekend Special",
+    "startsAt": "2025-01-01T00:00:00Z",
+    "endsAt": "2025-12-31T23:59:59Z",
+    "daypart": {
+      "days": [6, 7]
+    },
+    "priority": 90,
+    "requiresApproval": true,
+    "effects": [
+      {
+        "type": "FIXED_OFF",
+        "value": 5000,
+        "meta": {
+          "description": "Weekend fixed discount"
+        }
+      }
+    ]
+  }'
+
+# Coupon code: NEWCUSTOMER10 for 10% off
+curl -X POST http://localhost:3001/promotions \
+  -H "Authorization: Bearer {token}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "New Customer Discount",
+    "code": "NEWCUSTOMER10",
+    "startsAt": "2025-01-01T00:00:00Z",
+    "endsAt": "2025-03-31T23:59:59Z",
+    "priority": 50,
+    "requiresApproval": false,
+    "effects": [
+      {
+        "type": "PERCENT_OFF",
+        "value": 10
+      }
+    ]
+  }'
+```
+
+**Request Body:**
+
+- `name` (required): Human-readable promotion name
+- `code` (optional): Coupon code for customer entry (must be unique per org)
+- `active` (optional): Start as active (default: `false`; auto-set to `true` if `requiresApproval=false`)
+- `startsAt` (optional): Promotion start timestamp (ISO 8601)
+- `endsAt` (optional): Promotion end timestamp (ISO 8601)
+- `scope` (optional): JSON object with `branches`, `categories`, or `items` arrays
+  - `branches`: Array of branch IDs
+  - `categories`: Array of category IDs
+  - `items`: Array of menu item IDs
+- `daypart` (optional): JSON object with `days` (1-7, Monday=1), `start` (HH:mm), `end` (HH:mm)
+- `priority` (optional): Sort order for evaluation (default: `100`, higher = first)
+- `exclusive` (optional): Stop after this promotion matches (default: `false`)
+- `requiresApproval` (optional): Require L4+ approval before activation (default: `true`)
+- `effects` (required): Array of effect objects:
+  - `type`: `'PERCENT_OFF'` | `'FIXED_OFF'` | `'HAPPY_HOUR'`
+  - `value`: Discount percentage (for PERCENT_OFF/HAPPY_HOUR) or fixed amount in UGX (for FIXED_OFF)
+  - `meta` (optional): JSON metadata for custom fields
+
+**Response:**
+
+```json
+{
+  "id": "promo-abc123",
+  "orgId": "org-xyz",
+  "name": "Happy Hour - Drinks",
+  "code": null,
+  "active": false,
+  "startsAt": "2025-01-01T00:00:00.000Z",
+  "endsAt": "2025-12-31T23:59:59.000Z",
+  "scope": {
+    "categories": ["category-drinks-id"]
+  },
+  "daypart": {
+    "days": [1, 2, 3, 4, 5],
+    "start": "17:00",
+    "end": "19:00"
+  },
+  "priority": 100,
+  "exclusive": false,
+  "requiresApproval": true,
+  "approvedById": null,
+  "approvedAt": null,
+  "createdAt": "2025-01-29T12:00:00.000Z",
+  "updatedAt": "2025-01-29T12:00:00.000Z",
+  "effects": [
+    {
+      "id": "effect-def456",
+      "promotionId": "promo-abc123",
+      "type": "HAPPY_HOUR",
+      "value": "20",
+      "meta": {
+        "description": "Happy hour discount on drinks"
+      },
+      "createdAt": "2025-01-29T12:00:00.000Z"
+    }
+  ]
+}
+```
+
+**Notes:**
+
+- Promotions with `requiresApproval=true` are created as `active=false`
+- Promotions with `requiresApproval=false` are auto-activated
+- `code` must be unique per organization (enforced by database constraint)
+
+---
+
+#### List Promotions (L4+)
+
+Retrieve all promotions for the organization with optional filters:
+
+```bash
+GET /promotions
+
+# List all promotions
+curl http://localhost:3001/promotions \
+  -H "Authorization: Bearer {token}"
+
+# List only active promotions
+curl http://localhost:3001/promotions?active=true \
+  -H "Authorization: Bearer {token}"
+
+# Find promotion by coupon code
+curl http://localhost:3001/promotions?code=NEWCUSTOMER10 \
+  -H "Authorization: Bearer {token}"
+```
+
+**Query Parameters:**
+
+- `active` (optional): Filter by active status (`true` | `false`)
+- `code` (optional): Filter by coupon code (exact match, case-sensitive)
+
+**Response:**
+
+```json
+[
+  {
+    "id": "promo-abc123",
+    "name": "Happy Hour - Drinks",
+    "code": null,
+    "active": true,
+    "approvedById": "user-manager-id",
+    "approvedAt": "2025-01-29T13:00:00.000Z",
+    "approvedBy": {
+      "id": "user-manager-id",
+      "name": "Manager Name",
+      "email": "manager@restaurant.test"
+    },
+    "effects": [
+      {
+        "type": "HAPPY_HOUR",
+        "value": "20"
+      }
+    ]
+  }
+]
+```
+
+---
+
+#### Approve Promotion (L4+)
+
+Approve a promotion to activate it (sets `approvedById`, `approvedAt`, and `active=true`):
+
+```bash
+POST /promotions/:id/approve
+
+curl -X POST http://localhost:3001/promotions/promo-abc123/approve \
+  -H "Authorization: Bearer {token}"
+```
+
+**Response:**
+
+```json
+{
+  "id": "promo-abc123",
+  "active": true,
+  "approvedById": "user-manager-id",
+  "approvedAt": "2025-01-29T13:00:00.000Z"
+}
+```
+
+**Validation:**
+
+- Promotion must have `requiresApproval=true`
+- Returns 400 Bad Request if already approved
+- Sets `approvedById` to the authenticated user's ID
+
+---
+
+#### Toggle Promotion (L4+)
+
+Activate or deactivate a promotion:
+
+```bash
+POST /promotions/:id/toggle
+
+# Deactivate promotion
+curl -X POST http://localhost:3001/promotions/promo-abc123/toggle \
+  -H "Authorization: Bearer {token}" \
+  -H "Content-Type: application/json" \
+  -d '{ "active": false }'
+
+# Reactivate promotion
+curl -X POST http://localhost:3001/promotions/promo-abc123/toggle \
+  -H "Authorization: Bearer {token}" \
+  -H "Content-Type: application/json" \
+  -d '{ "active": true }'
+```
+
+**Request Body:**
+
+- `active` (required): Boolean to set active status
+
+**Response:**
+
+```json
+{
+  "id": "promo-abc123",
+  "active": false
+}
+```
+
+**Validation:**
+
+- Cannot activate unapproved promotions (returns 400 Bad Request)
+- Can deactivate any promotion regardless of approval status
+
+---
+
+### Promotion Evaluation Logic
+
+Promotions are evaluated during `POS.closeOrder()` in the following order:
+
+1. **Fetch Active Promotions**: Query all promotions where `active=true` AND `approvedById IS NOT NULL`, ordered by `priority DESC`
+2. **Time Window Check**: Skip if current time is outside `[startsAt, endsAt]` range
+3. **Daypart Matching**:
+   - Check if current day-of-week (1-7, Monday=1) is in `daypart.days` array
+   - Check if current time (HH:mm) is within `[daypart.start, daypart.end]` range
+4. **Scope Filtering**:
+   - **Branch Scope**: Skip if `scope.branches` exists and current branch is not in array
+   - **Category Scope**: Skip if `scope.categories` exists and order items' categories are not in array
+   - **Item Scope**: Skip if `scope.items` exists and order items are not in array
+5. **Coupon Validation**: Skip if promotion has `code` and order metadata doesn't match
+6. **Exclusive Handling**: If promotion is exclusive, stop evaluation after first match
+
+### Discount Application
+
+Once a promotion is matched, discounts are applied based on effect type:
+
+- **PERCENT_OFF / HAPPY_HOUR**:
+  - For each matching order item: `discount += (itemTotal * value / 100)`
+  - Scope filters determine which items receive discount
+- **FIXED_OFF**:
+  - Apply flat discount to order total: `discount = value`
+  - No per-item breakdown
+
+**Order Updates:**
+
+- `order.discount`: Total discount amount in UGX
+- `order.metadata.promotionsApplied`: Array of promotion details:
+  ```json
+  [
+    {
+      "orderItemId": "item-123",
+      "promotionId": "promo-abc",
+      "promotionName": "Happy Hour - Drinks",
+      "effect": "HAPPY_HOUR",
+      "valueApplied": 2000
+    }
+  ]
+  ```
+
+### Database Inspection
+
+**View Active Promotions:**
+
+```sql
+SELECT
+  p.id,
+  p.name,
+  p.code,
+  p.active,
+  p.priority,
+  p.exclusive,
+  u.name as approved_by,
+  p.approvedAt,
+  COUNT(pe.id) as effects_count
+FROM promotions p
+LEFT JOIN users u ON p.approvedById = u.id
+LEFT JOIN promotion_effects pe ON p.id = pe.promotionId
+WHERE p.orgId = 'your-org-id'
+  AND p.active = true
+GROUP BY p.id, u.name
+ORDER BY p.priority DESC;
+```
+
+**View Orders with Promotions:**
+
+```sql
+SELECT
+  o.id,
+  o.total,
+  o.discount,
+  o.metadata->>'promotionsApplied' as promotions
+FROM orders o
+WHERE o.branchId = 'your-branch-id'
+  AND o.discount > 0
+  AND o.metadata ? 'promotionsApplied'
+ORDER BY o.createdAt DESC
+LIMIT 10;
+```
+
+**Promotion Effect Breakdown:**
+
+```sql
+SELECT
+  p.name as promotion_name,
+  pe.type,
+  pe.value,
+  pe.meta
+FROM promotion_effects pe
+JOIN promotions p ON pe.promotionId = p.id
+WHERE p.orgId = 'your-org-id'
+  AND p.active = true;
+```
+
+### Troubleshooting
+
+**Promotion not applying at POS**
+
+1. Verify promotion is `active=true` and `approvedById IS NOT NULL`
+2. Check time window: current time must be within `[startsAt, endsAt]`
+3. Verify daypart: check `daypart.days` (1=Monday) and time range `[start, end]`
+4. Review scope filters: ensure order items match `scope.categories` or `scope.items`
+5. Validate coupon: if `code` is set, check `order.metadata.couponCode` matches
+6. Check POS service logs for promotion evaluation errors (best-effort, logged but not thrown)
+
+**Discount amount incorrect**
+
+- **PERCENT_OFF/HAPPY_HOUR**: Verify `value` is percentage (e.g., `20` for 20%), not decimal (`0.20`)
+- **FIXED_OFF**: Ensure `value` is in UGX minor units (e.g., `5000` for 5,000 UGX)
+- Check scope filters: only matching items receive percentage discounts
+- Review `order.metadata.promotionsApplied` for per-item breakdown
+
+**Cannot approve promotion (400 Bad Request)**
+
+- Verify promotion has `requiresApproval=true` (cannot approve promotions with `requiresApproval=false`)
+- Check if already approved (`approvedById IS NOT NULL`)
+- Ensure user has L4+ role
+
+**Exclusive promotion not stopping evaluation**
+
+- Verify `exclusive=true` is set in database
+- Check priority: exclusive flag only stops after match, not before
+- Ensure promotion actually matches (check time/scope/coupon filters)
+
+**Coupon code not working**
+
+- Verify code is stored in `promotions.code` (case-sensitive)
+- Check POS sends coupon in `order.metadata.couponCode` field
+- Ensure promotion is active and approved
+- Confirm time/scope filters also pass
+
+---
+
 ## Observability & Remote Support (A11-s1)
 
 ChefCloud provides comprehensive observability and remote support capabilities with OpenTelemetry traces, Sentry error tracking, structured JSON logs, health checks, metrics, and remote debugging sessions.
@@ -1818,6 +3278,634 @@ export function SupportMode() {
 - Session tokens are single-use and cannot be reused after deactivation
 - L4 role required to create sessions and view diagnostic snapshots
 
+---
+
+## Subscriptions & Dev Portal (E24-s1)
+
+ChefCloud includes a complete subscription management system with developer portal, billing endpoints, automated renewals, grace periods, and subscription reminders.
+
+### Architecture
+
+- **Dev Portal**: Admin interface for super devs to manage organizations, plans, and subscriptions
+- **Billing**: Owner-facing endpoints to view subscription status, change plans, and cancel
+- **Worker Jobs**: Automated renewal processing (hourly) and reminder emails (daily 09:00)
+- **Grace Period**: 7-day grace period for failed renewals before cancellation
+
+### Dev Admin Setup
+
+Two immutable Super Dev Admins are created during seed:
+
+```bash
+# Super Dev Admins (created in seed.ts)
+# dev1@chefcloud.local
+# dev2@chefcloud.local
+```
+
+**Immutability Rule**: The system refuses to delete super dev admins if only 2 exist.
+
+### Subscription Plans
+
+Three default plans are available:
+
+| Plan | Code | Price (UGX) | Features |
+|------|------|-------------|----------|
+| Basic | BASIC | 50,000 | 1 branch, 5 users, 1000 orders/month |
+| Pro | PRO | 150,000 | 5 branches, 25 users, 10K orders/month, Inventory, Analytics |
+| Enterprise | ENTERPRISE | 500,000 | Unlimited branches/users/orders, All features, Priority support |
+
+### Dev Portal Endpoints
+
+All dev portal endpoints require the `X-Dev-Admin` header with a registered dev admin email.
+
+#### POST /dev/orgs (DevAdmin)
+
+Create a new organization with owner invite and active subscription.
+
+```bash
+curl -X POST http://localhost:3001/dev/orgs \
+  -H "X-Dev-Admin: dev1@chefcloud.local" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "ownerEmail": "newowner@testorg.local",
+    "orgName": "Test Restaurant",
+    "planCode": "BASIC"
+  }'
+
+# Response (201):
+{
+  "org": {
+    "id": "org-123",
+    "name": "Test Restaurant",
+    "slug": "test-restaurant"
+  },
+  "owner": {
+    "id": "user-456",
+    "email": "newowner@testorg.local"
+  },
+  "subscription": {
+    "id": "sub-789",
+    "orgId": "org-123",
+    "planId": "plan-basic",
+    "status": "ACTIVE",
+    "nextRenewalAt": "2025-11-29T00:00:00.000Z"
+  }
+}
+```
+
+**What happens:**
+
+1. Creates `Org` with slug
+2. Creates `OrgSettings` with defaults
+3. Creates main `Branch` (name: "Main Branch")
+4. Creates owner `User` (L5) with password: `ChangeMe#123`
+5. Creates `OrgSubscription` with status `ACTIVE`, renewal in 30 days
+6. Creates `SubscriptionEvent` type `RENEWED` (initial=true)
+
+#### GET /dev/subscriptions (DevAdmin)
+
+List all subscriptions with org and plan details.
+
+```bash
+curl http://localhost:3001/dev/subscriptions \
+  -H "X-Dev-Admin: dev1@chefcloud.local"
+
+# Response (200):
+[
+  {
+    "id": "sub-1",
+    "orgId": "org-001",
+    "planId": "plan-pro",
+    "status": "ACTIVE",
+    "nextRenewalAt": "2025-11-15T00:00:00.000Z",
+    "graceUntil": null,
+    "org": {
+      "id": "org-001",
+      "name": "Demo Restaurant",
+      "slug": "demo-restaurant"
+    },
+    "plan": {
+      "code": "PRO",
+      "name": "Pro Plan"
+    }
+  },
+  {
+    "id": "sub-2",
+    "orgId": "org-002",
+    "planId": "plan-basic",
+    "status": "GRACE",
+    "nextRenewalAt": "2025-10-20T00:00:00.000Z",
+    "graceUntil": "2025-10-27T00:00:00.000Z",
+    "org": {
+      "id": "org-002",
+      "name": "Pizza Place",
+      "slug": "pizza-place"
+    },
+    "plan": {
+      "code": "BASIC",
+      "name": "Basic Plan"
+    }
+  }
+]
+```
+
+#### POST /dev/plans (SuperDev)
+
+Create or update a subscription plan. Requires `isSuper=true`.
+
+```bash
+curl -X POST http://localhost:3001/dev/plans \
+  -H "X-Dev-Admin: dev1@chefcloud.local" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "code": "CUSTOM",
+    "name": "Custom Plan",
+    "priceUGX": 250000,
+    "features": {
+      "maxBranches": 10,
+      "maxUsers": 50,
+      "features": ["POS", "KDS", "Inventory", "Analytics", "Custom Integration"]
+    },
+    "isActive": true
+  }'
+
+# Response (201):
+{
+  "id": "plan-custom",
+  "code": "CUSTOM",
+  "name": "Custom Plan",
+  "priceUGX": "250000.00",
+  "features": { ... },
+  "isActive": true
+}
+```
+
+**Upsert Behavior**: Updates existing plan if `code` matches, otherwise creates new.
+
+#### POST /dev/superdevs (SuperDev)
+
+Add or remove dev admins. Requires `isSuper=true`. Refuses to delete if only 2 super devs exist.
+
+```bash
+# Add regular dev admin
+curl -X POST http://localhost:3001/dev/superdevs \
+  -H "X-Dev-Admin: dev1@chefcloud.local" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "action": "add",
+    "email": "regulardev@chefcloud.local",
+    "isSuper": false
+  }'
+
+# Add super dev admin
+curl -X POST http://localhost:3001/dev/superdevs \
+  -H "X-Dev-Admin: dev1@chefcloud.local" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "action": "add",
+    "email": "dev3@chefcloud.local",
+    "isSuper": true
+  }'
+
+# Remove regular dev admin
+curl -X POST http://localhost:3001/dev/superdevs \
+  -H "X-Dev-Admin: dev1@chefcloud.local" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "action": "remove",
+    "email": "regulardev@chefcloud.local"
+  }'
+
+# Try to remove super dev (fails if only 2 exist)
+curl -X POST http://localhost:3001/dev/superdevs \
+  -H "X-Dev-Admin: dev1@chefcloud.local" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "action": "remove",
+    "email": "dev2@chefcloud.local"
+  }'
+
+# Response (400 if only 2 super devs):
+{
+  "statusCode": 400,
+  "message": "Cannot remove super dev: minimum 2 required"
+}
+```
+
+### Owner Billing Endpoints
+
+Owners (L5) can view and manage their organization's subscription.
+
+#### GET /billing/subscription (L5)
+
+Get current subscription details.
+
+```bash
+# Login as owner
+curl -X POST http://localhost:3001/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "owner@demo.local",
+    "password": "Owner#123"
+  }'
+
+# Save JWT token
+TOKEN="eyJhbGci..."
+
+# Get subscription
+curl http://localhost:3001/billing/subscription \
+  -H "Authorization: Bearer $TOKEN"
+
+# Response (200):
+{
+  "plan": {
+    "id": "plan-pro",
+    "code": "PRO",
+    "name": "Pro Plan",
+    "priceUGX": "150000.00",
+    "features": {
+      "maxBranches": 5,
+      "maxUsers": 25,
+      "maxOrders": 10000,
+      "features": ["POS", "KDS", "Reports", "Inventory", "Analytics", "Alerts"]
+    },
+    "isActive": true
+  },
+  "status": "ACTIVE",
+  "nextRenewalAt": "2025-11-29T00:00:00.000Z",
+  "graceUntil": null
+}
+```
+
+#### POST /billing/plan/change (L5)
+
+Request a plan change (effective next renewal cycle).
+
+```bash
+curl -X POST http://localhost:3001/billing/plan/change \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "planCode": "ENTERPRISE"
+  }'
+
+# Response (201):
+{
+  "message": "Plan change requested. Will take effect on next renewal.",
+  "currentPlan": "plan-pro",
+  "requestedPlan": "plan-enterprise",
+  "effectiveDate": "2025-11-29T00:00:00.000Z"
+}
+```
+
+**Implementation Note**: Creates a `RENEWAL_DUE` subscription event with `meta.requestedPlan`. Actual plan change must be processed by renewal worker (future enhancement).
+
+#### POST /billing/cancel (L5)
+
+Request cancellation (access continues until period end).
+
+```bash
+curl -X POST http://localhost:3001/billing/cancel \
+  -H "Authorization: Bearer $TOKEN"
+
+# Response (201):
+{
+  "message": "Cancellation scheduled. Access continues until period end.",
+  "effectiveDate": "2025-11-29T00:00:00.000Z"
+}
+```
+
+**Implementation Note**: Creates a `CANCELLED` subscription event. Actual cancellation must be processed by renewal worker (future enhancement).
+
+### Worker Jobs
+
+#### Subscription Renewals (Hourly)
+
+Queue: `subscription-renewals`  
+Schedule: Every hour at `:00` (cron: `0 * * * *`)
+
+**Logic:**
+
+1. Find subscriptions where `nextRenewalAt <= now` and `status IN ('ACTIVE', 'GRACE')`
+2. For each subscription:
+   - Simulate payment (currently always succeeds - integrate payment gateway later)
+   - **Success**: Update `status=ACTIVE`, `nextRenewalAt += 30 days`, `graceUntil=null`, create `RENEWED` event
+   - **Failure**: Update `status=GRACE`, `graceUntil = now + 7 days`, create `PAST_DUE` event
+3. Find subscriptions where `status=GRACE` and `graceUntil <= now`
+4. For each expired grace subscription:
+   - Update `status=CANCELLED`, create `CANCELLED` event with `reason: 'grace_period_expired'`
+
+**Manual Trigger:**
+
+```typescript
+import { subscriptionRenewalsQueue } from '@chefcloud/worker';
+
+await subscriptionRenewalsQueue.add('subscription-renewals', {
+  type: 'subscription-renewals',
+});
+```
+
+#### Subscription Reminders (Daily 09:00)
+
+Queue: `subscription-reminders-billing`  
+Schedule: Daily at 09:00 (cron: `0 9 * * *`)
+
+**Logic:**
+
+1. For each window (7 days, 3 days, 1 day before renewal):
+   - Find subscriptions with `nextRenewalAt` in target window and `status=ACTIVE`
+   - For each subscription, get owners (L5 users)
+   - Send reminder email/Slack to each owner
+
+**Reminder Message Example:**
+
+```
+Your ChefCloud subscription (Pro Plan) will renew in 3 days on 2025-11-29.
+```
+
+**Manual Trigger:**
+
+```typescript
+import { subscriptionRemindersQueue } from '@chefcloud/worker';
+
+await subscriptionRemindersQueue.add('subscription-reminders', {
+  type: 'subscription-reminders',
+});
+```
+
+### Database Schema
+
+**DevAdmin:**
+
+- `id`: cuid
+- `email`: unique
+- `isSuper`: boolean (default: false)
+- `createdAt`: timestamp
+
+**SubscriptionPlan:**
+
+- `id`: cuid
+- `code`: unique string
+- `name`: string
+- `priceUGX`: decimal
+- `features`: JSON
+- `isActive`: boolean (default: true)
+
+**OrgSubscription:**
+
+- `id`: cuid
+- `orgId`: unique foreign key
+- `planId`: foreign key
+- `status`: enum (ACTIVE, GRACE, PAST_DUE, CANCELLED)
+- `nextRenewalAt`: timestamp
+- `graceUntil`: timestamp (nullable)
+- `createdAt`, `updatedAt`: timestamps
+
+**SubscriptionEvent:**
+
+- `id`: cuid
+- `orgId`: foreign key
+- `type`: enum (RENEWAL_DUE, RENEWED, PAST_DUE, CANCELLED)
+- `meta`: JSON
+- `at`: timestamp (default: now)
+
+### Subscription Lifecycle
+
+```
+          ┌─────────┐
+          │ ACTIVE  │ ◄──── Initial state (30-day renewal)
+          └────┬────┘
+               │
+               │ nextRenewalAt reached
+               │
+          ┌────▼────────┐
+          │  Renewal    │
+          │   Check     │
+          └─┬────────┬──┘
+            │        │
+     Success│        │Failure
+            │        │
+       ┌────▼────┐  ┌▼──────┐
+       │ ACTIVE  │  │ GRACE │ (7 days)
+       │ +30 days│  └───┬───┘
+       └─────────┘      │
+                        │ graceUntil reached
+                        │
+                   ┌────▼────────┐
+                   │  CANCELLED  │
+                   └─────────────┘
+```
+
+### Testing
+
+#### Unit Tests
+
+```bash
+# Dev portal service tests
+cd services/api
+pnpm test dev-portal.service.spec
+
+# Billing service tests
+pnpm test billing.service.spec
+```
+
+#### E2E Tests
+
+```bash
+cd services/api
+pnpm test:e2e e24-subscriptions.e2e-spec
+```
+
+**Test Coverage:**
+
+- Create org via dev portal → verify ACTIVE subscription
+- List subscriptions as dev admin
+- Upsert plans as super dev
+- Reject non-super dev from plan management
+- Manage dev admins (add/remove)
+- Refuse to delete super dev if only 2 exist
+- Owner views subscription
+- Owner requests plan change
+- Owner requests cancellation
+- Reject non-owner from billing endpoints
+
+### Example: Complete Subscription Flow
+
+```bash
+# 1. Super dev creates a custom plan
+curl -X POST http://localhost:3001/dev/plans \
+  -H "X-Dev-Admin: dev1@chefcloud.local" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "code": "STARTER",
+    "name": "Starter Plan",
+    "priceUGX": 30000,
+    "features": { "maxBranches": 1, "maxUsers": 3 },
+    "isActive": true
+  }'
+
+# 2. Super dev creates new org with STARTER plan
+curl -X POST http://localhost:3001/dev/orgs \
+  -H "X-Dev-Admin: dev1@chefcloud.local" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "ownerEmail": "cafe@local.test",
+    "orgName": "Corner Cafe",
+    "planCode": "STARTER"
+  }'
+
+# Save org details from response
+ORG_ID="org-xyz"
+OWNER_EMAIL="cafe@local.test"
+DEFAULT_PASSWORD="ChangeMe#123"
+
+# 3. Owner logs in and views subscription
+curl -X POST http://localhost:3001/auth/login \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"email\": \"$OWNER_EMAIL\",
+    \"password\": \"$DEFAULT_PASSWORD\"
+  }"
+
+OWNER_TOKEN="eyJhbGci..."
+
+curl http://localhost:3001/billing/subscription \
+  -H "Authorization: Bearer $OWNER_TOKEN"
+
+# 4. Owner upgrades to PRO plan
+curl -X POST http://localhost:3001/billing/plan/change \
+  -H "Authorization: Bearer $OWNER_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "planCode": "PRO"
+  }'
+
+# 5. Simulate renewal (manual trigger)
+# In production, this runs hourly automatically
+psql $DATABASE_URL << EOF
+-- Fast-forward renewal date to trigger renewal
+UPDATE org_subscriptions
+SET "nextRenewalAt" = NOW() - INTERVAL '1 hour'
+WHERE "orgId" = '$ORG_ID';
+EOF
+
+# Trigger worker job manually (requires BullMQ connection)
+# Or wait for hourly cron
+
+# 6. Check subscription events
+psql $DATABASE_URL << EOF
+SELECT type, meta, at
+FROM subscription_events
+WHERE "orgId" = '$ORG_ID'
+ORDER BY at DESC;
+EOF
+
+# Expected output:
+#     type     |              meta               |           at
+# -------------+---------------------------------+------------------------
+#  RENEWAL_DUE | {"requestedPlan": "PRO", ...}  | 2025-10-29 14:30:00
+#  RENEWED     | {"planCode": "STARTER", ...}   | 2025-10-29 12:00:00
+```
+
+### Curl Cheatsheet
+
+```bash
+# ===== Dev Portal =====
+
+# Create org with BASIC plan
+curl -X POST http://localhost:3001/dev/orgs \
+  -H "X-Dev-Admin: dev1@chefcloud.local" \
+  -H "Content-Type: application/json" \
+  -d '{"ownerEmail":"test@test.com","orgName":"Test Org","planCode":"BASIC"}'
+
+# List all subscriptions
+curl http://localhost:3001/dev/subscriptions \
+  -H "X-Dev-Admin: dev1@chefcloud.local"
+
+# Create/update plan (super dev only)
+curl -X POST http://localhost:3001/dev/plans \
+  -H "X-Dev-Admin: dev1@chefcloud.local" \
+  -H "Content-Type: application/json" \
+  -d '{"code":"TEST","name":"Test Plan","priceUGX":99000,"features":{"max":10},"isActive":true}'
+
+# Add dev admin
+curl -X POST http://localhost:3001/dev/superdevs \
+  -H "X-Dev-Admin: dev1@chefcloud.local" \
+  -H "Content-Type: application/json" \
+  -d '{"action":"add","email":"newdev@chefcloud.local","isSuper":false}'
+
+# Remove dev admin (fails if super and only 2 exist)
+curl -X POST http://localhost:3001/dev/superdevs \
+  -H "X-Dev-Admin: dev1@chefcloud.local" \
+  -H "Content-Type: application/json" \
+  -d '{"action":"remove","email":"regulardev@chefcloud.local"}'
+
+# ===== Owner Billing =====
+
+# Login as owner
+TOKEN=$(curl -X POST http://localhost:3001/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"owner@demo.local","password":"Owner#123"}' \
+  | jq -r .access_token)
+
+# View subscription
+curl http://localhost:3001/billing/subscription \
+  -H "Authorization: Bearer $TOKEN"
+
+# Request plan change
+curl -X POST http://localhost:3001/billing/plan/change \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"planCode":"ENTERPRISE"}'
+
+# Request cancellation
+curl -X POST http://localhost:3001/billing/cancel \
+  -H "Authorization: Bearer $TOKEN"
+
+# ===== Simulate Renewal =====
+
+# Fast-forward renewal date (requires PostgreSQL access)
+psql $DATABASE_URL -c "UPDATE org_subscriptions SET \"nextRenewalAt\" = NOW() - INTERVAL '1 hour' WHERE \"orgId\" = 'org-id-here';"
+
+# Trigger renewal worker manually (requires Redis/BullMQ)
+# Use worker queue: subscriptionRenewalsQueue.add(...)
+```
+
+### Troubleshooting
+
+**"Invalid dev admin" (401)**
+
+- Email not registered in `dev_admins` table
+- Solution: Add dev admin via seed or manual DB insert
+
+**"Super dev admin access required" (403)**
+
+- Dev admin exists but `isSuper=false`
+- Solution: Update `isSuper=true` or use super dev email
+
+**"Cannot remove super dev: minimum 2 required" (400)**
+
+- Only 2 super devs exist, trying to delete one
+- Solution: Add a 3rd super dev first, then remove
+
+**"Invalid or inactive plan" (400)**
+
+- Plan code doesn't exist or `isActive=false`
+- Solution: Create plan or set `isActive=true`
+
+**Subscription not renewing**
+
+- Worker not running or cron schedule incorrect
+- Check worker logs for `subscription-renewals` job
+- Verify `nextRenewalAt` is in the past
+- Confirm `status IN ('ACTIVE', 'GRACE')`
+
+**Reminders not sending**
+
+- Worker not running or cron schedule incorrect (should be 09:00 daily)
+- Check for L5 users in org
+- Verify `nextRenewalAt` is within 7/3/1 days
+- Email/Slack integration may be stubbed (console.log only in dev)
+
 **Production Recommendations:**
 
 - Set `OTEL_EXPORTER_OTLP_ENDPOINT` to secure collector (HTTPS)
@@ -1861,6 +3949,541 @@ export function SupportMode() {
 - Check network connectivity from desktop to API
 - Verify `/support/ingest` endpoint is accessible (no auth guard)
 - Review browser console for fetch errors
+
+---
+
+## Platform Access Enforcement (E23-s3)
+
+ChefCloud enforces platform-specific access control based on user roles. Each role has a platform access matrix that determines which platforms (web, desktop, mobile) the role can use.
+
+### Architecture
+
+- **Platform Detection**: `X-Client-Platform` header (values: `web`, `desktop`, `mobile`)
+- **Access Matrix**: Stored in `OrgSettings.platformAccess` as JSON
+- **Guard**: `PlatformAccessGuard` enforces access before route handlers
+- **Default Behavior**: Missing header defaults to `web`
+
+### Default Platform Access Matrix
+
+| Role | Desktop | Web | Mobile |
+|------|---------|-----|--------|
+| WAITER | ✅ | ❌ | ❌ |
+| CASHIER | ✅ | ❌ | ❌ |
+| SUPERVISOR | ✅ | ❌ | ❌ |
+| TICKET_MASTER | ✅ | ❌ | ❌ |
+| HEAD_CHEF | ✅ | ❌ | ✅ |
+| ASSISTANT_CHEF | ✅ | ❌ | ✅ |
+| HEAD_BARISTA | ✅ | ❌ | ✅ |
+| STOCK | ❌ | ✅ | ✅ |
+| PROCUREMENT | ❌ | ✅ | ✅ |
+| ASSISTANT_MANAGER | ❌ | ✅ | ✅ |
+| EVENT_MANAGER | ❌ | ✅ | ✅ |
+| MANAGER | ❌ | ✅ | ✅ |
+| ACCOUNTANT | ❌ | ✅ | ✅ |
+| OWNER | ❌ | ✅ | ✅ |
+| DEV_ADMIN | ❌ | ✅ | ❌ |
+
+**Recommended Policy:**
+- **Front-of-house** (WAITER, CASHIER, SUPERVISOR, TICKET_MASTER): Desktop POS only
+- **Kitchen** (HEAD_CHEF, ASSISTANT_CHEF, HEAD_BARISTA): Desktop + Mobile
+- **Back-office** (STOCK, PROCUREMENT, MANAGER, ACCOUNTANT, OWNER): Web + Mobile
+
+### Platform Header
+
+All authenticated requests should include the `X-Client-Platform` header:
+
+```bash
+# Desktop client
+curl http://localhost:3001/users/me \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "X-Client-Platform: desktop"
+
+# Web client
+curl http://localhost:3001/users/me \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "X-Client-Platform: web"
+
+# Mobile client
+curl http://localhost:3001/users/me \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "X-Client-Platform: mobile"
+```
+
+### Example: STOCK Role Restriction
+
+STOCK roles (L3) are restricted from mobile platforms by default:
+
+```bash
+# Login as STOCK user
+curl -X POST http://localhost:3001/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "stock@demo.local",
+    "password": "Stock#123"
+  }'
+
+TOKEN="eyJhbGci..."
+
+# ✅ ALLOWED: Desktop access
+curl http://localhost:3001/users/me \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "X-Client-Platform: desktop"
+
+# Response (200):
+{
+  "id": "user-stock",
+  "roleLevel": "L3",
+  "email": "stock@demo.local"
+}
+
+# ✅ ALLOWED: Web access
+curl http://localhost:3001/users/me \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "X-Client-Platform: web"
+
+# Response (200):
+{
+  "id": "user-stock",
+  "roleLevel": "L3",
+  "email": "stock@demo.local"
+}
+
+# ❌ DENIED: Mobile access
+curl http://localhost:3001/users/me \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "X-Client-Platform: mobile"
+
+# Response (403):
+{
+  "statusCode": 403,
+  "code": "PLATFORM_FORBIDDEN",
+  "message": "Access denied for mobile platform",
+  "role": "STOCK",
+  "platform": "mobile"
+}
+```
+
+### Custom Platform Access Matrix
+
+Organizations can customize their platform access matrix in `OrgSettings`:
+
+```sql
+-- Example: Allow WAITER role on desktop for specific org
+UPDATE org_settings
+SET "platformAccess" = '{
+  "WAITER": {"desktop": true, "web": true, "mobile": true},
+  "CASHIER": {"desktop": true, "web": true, "mobile": true},
+  "CHEF": {"desktop": true, "web": true, "mobile": true},
+  "STOCK": {"desktop": true, "web": true, "mobile": false},
+  "MANAGER": {"desktop": true, "web": true, "mobile": true},
+  "OWNER": {"desktop": true, "web": true, "mobile": true}
+}'::jsonb
+WHERE "orgId" = 'org-xyz';
+```
+
+### Public Routes (Bypass Platform Guard)
+
+The following routes bypass platform access checks:
+
+- `/health` - Health check endpoint
+- `/auth/*` - Authentication endpoints (login, register, etc.)
+- `/webauthn/*` - WebAuthn endpoints
+- `/stream/*` - SSE streaming endpoints
+- `/webhooks/*` - Webhook endpoints
+- Unauthenticated requests (no `user` in request context)
+
+### Testing
+
+#### Unit Test
+
+```bash
+cd /workspaces/chefcloud/services/api
+pnpm test platform-access.guard.spec
+```
+
+#### E2E Test
+
+```bash
+cd /workspaces/chefcloud/services/api
+pnpm test:e2e e23-platform-access.e2e-spec
+```
+
+### Error Response Format
+
+When platform access is denied:
+
+```json
+{
+  "statusCode": 403,
+  "code": "PLATFORM_FORBIDDEN",
+  "message": "Access denied for {platform} platform",
+  "role": "{roleSlug}",
+  "platform": "{platform}"
+}
+```
+
+### Troubleshooting
+
+**Problem**: All requests return 403 with PLATFORM_FORBIDDEN
+
+- **Solution**: Check if `X-Client-Platform` header is set correctly
+- **Solution**: Verify user's role in platform access matrix
+- **Solution**: Check `OrgSettings.platformAccess` for custom overrides
+
+**Problem**: Platform guard not enforcing restrictions
+
+- **Solution**: Verify `PlatformAccessGuard` is registered as `APP_GUARD` in `app.module.ts`
+- **Solution**: Check guard order (should run after `ThrottlerGuard`)
+- **Solution**: Ensure `PrismaService` is available for database queries
+
+**Problem**: Public routes blocked by platform guard
+
+- **Solution**: Add route pattern to public routes bypass list in `canActivate()`
+- **Solution**: Check if route matches `/health`, `/auth/*`, `/webauthn/*`, `/stream/*`, or `/webhooks/*`
+
+### Curl Cheatsheet
+
+```bash
+# ===== Platform Access Examples =====
+
+# As OWNER (L5): reset to recommended defaults
+TOKEN=$(curl -s http://localhost:3001/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"owner@demo.local","password":"Owner#123"}' | jq -r .access_token)
+
+curl -s -X POST http://localhost:3001/access/matrix/reset-defaults \
+  -H "Authorization: Bearer $TOKEN" | jq .
+
+# Response (first call):
+# {
+#   "updated": true,
+#   "matrix": { ... DEFAULT_PLATFORM_ACCESS ... }
+# }
+
+# Response (second call):
+# {
+#   "updated": false,
+#   "matrix": { ... DEFAULT_PLATFORM_ACCESS ... }
+# }
+
+# Verify corrected matrix
+curl -s http://localhost:3001/access/matrix \
+  -H "Authorization: Bearer $TOKEN" | jq .
+
+# Login as different roles
+curl -X POST http://localhost:3001/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"waiter@demo.local","password":"Waiter#123"}'
+
+WAITER_TOKEN="eyJhbGci..."
+
+curl -X POST http://localhost:3001/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"stock@demo.local","password":"Stock#123"}'
+
+STOCK_TOKEN="eyJhbGci..."
+
+# Test WAITER - desktop allowed, web/mobile denied
+curl http://localhost:3001/users/me \
+  -H "Authorization: Bearer $WAITER_TOKEN" \
+  -H "X-Client-Platform: desktop"
+# Expected: 200 OK
+
+# Test WAITER - web denied
+curl http://localhost:3001/users/me \
+  -H "Authorization: Bearer $WAITER_TOKEN" \
+  -H "X-Client-Platform: web"
+# Expected: 403 PLATFORM_FORBIDDEN
+
+# Test STOCK - web allowed, desktop denied
+curl http://localhost:3001/users/me \
+  -H "Authorization: Bearer $STOCK_TOKEN" \
+  -H "X-Client-Platform: web"
+# Expected: 200 OK
+
+# Test STOCK - desktop denied
+curl http://localhost:3001/users/me \
+  -H "Authorization: Bearer $STOCK_TOKEN" \
+  -H "X-Client-Platform: desktop"
+# Expected: 403 PLATFORM_FORBIDDEN
+
+# Test STOCK (L3) - desktop allowed
+curl http://localhost:3001/users/me \
+  -H "Authorization: Bearer $STOCK_TOKEN" \
+  -H "X-Client-Platform: desktop"
+# Expected: 200 OK
+
+# Public route (no auth) - always allowed
+curl http://localhost:3001/health \
+  -H "X-Client-Platform: mobile"
+# Expected: 200 OK
+```
+
+---
+
+## Costing & Profit Engine (E27-s1)
+
+ChefCloud automatically calculates cost and profit margins for each order item when an order is closed. The system uses **Weighted Average Cost (WAC)** to determine ingredient costs and supports recipe-based costing with modifiers.
+
+### Architecture
+
+- **Costing Service**: Calculates WAC, recipe costs, and item margins
+- **Automatic Calculation**: Triggered when `PosService.closeOrder()` is called
+- **Persistence**: Cost/margin data stored in `OrderItem` fields
+- **RBAC Visibility**: Cost data shown only to privileged roles
+- **Micro-ingredient Support**: Prevents cost zeroing for small quantities
+
+### Database Schema
+
+New fields added to `OrderItem`:
+
+```prisma
+model OrderItem {
+  // ... existing fields
+  costUnit      Decimal? @db.Decimal(10, 2)  // Unit cost per item
+  costTotal     Decimal? @db.Decimal(10, 2)  // Total cost (costUnit * quantity)
+  marginTotal   Decimal? @db.Decimal(10, 2)  // Profit margin (lineNet - costTotal)
+  marginPct     Decimal? @db.Decimal(5, 2)   // Margin percentage
+}
+```
+
+New field added to `OrgSettings`:
+
+```prisma
+model OrgSettings {
+  // ... existing fields
+  showCostToChef Boolean @default(false)  // Allow L3 roles to see cost data
+}
+```
+
+### Weighted Average Cost (WAC)
+
+WAC is calculated across all active stock batches for an inventory item:
+
+```
+WAC = Σ(unitCost × remainingQty) / Σ(remainingQty)
+```
+
+**Example:**
+- Batch 1: 10 units @ UGX 100 each
+- Batch 2: 20 units @ UGX 150 each
+- WAC = (100×10 + 150×20) / (10+20) = 4000 / 30 = **133.33 UGX**
+
+**Micro-ingredient Handling:**
+
+For very small ingredient quantities (e.g., 0.001 kg salt), WAC is rounded to 4 decimal places before multiplication to prevent zeroing:
+
+```typescript
+const wac = Math.round(rawWac * 10000) / 10000;  // e.g., 50.0001 → 50.0001
+const cost = wac * quantity;  // 50.0001 * 0.001 = 0.05 (not 0)
+```
+
+### Recipe Costing
+
+Recipe costs are calculated by summing ingredient costs, including selected modifiers:
+
+```typescript
+// Base recipe (Burger)
+- Beef Patty: 1 pc @ WAC 150 = 150 UGX
+- Bun: 1 pc @ WAC 30 = 30 UGX
+Total: 180 UGX
+
+// With modifier (+ Add Cheese)
+- Beef Patty: 1 pc @ WAC 150 = 150 UGX
+- Bun: 1 pc @ WAC 30 = 30 UGX
+- Cheese Slice: 1 pc @ WAC 50 = 50 UGX (modifier)
+Total: 230 UGX
+```
+
+### Margin Calculation
+
+For each order item:
+
+```typescript
+costUnit = getRecipeCost(menuItemId, modifiers)
+costTotal = costUnit × quantity
+marginTotal = lineNet - costTotal
+marginPct = (marginTotal / lineNet) × 100
+```
+
+**Example:**
+- Item: Burger with cheese (qty: 2)
+- Unit price: 5,000 UGX
+- Modifier price: 1,000 UGX
+- Line net: (5,000 + 1,000) × 2 = 12,000 UGX
+- Cost unit: 230 UGX (from recipe)
+- Cost total: 230 × 2 = 460 UGX
+- Margin total: 12,000 - 460 = 11,540 UGX
+- Margin %: (11,540 / 12,000) × 100 = **96.17%**
+
+### RBAC Visibility
+
+Cost/margin data is only visible to privileged roles in analytics endpoints:
+
+**Who can see cost data:**
+- OWNER (L5) - Always
+- MANAGER (L4) - Always
+- ACCOUNTANT (any level) - Always
+- CHEF/WAITER (L3/L2) - Only if `OrgSettings.showCostToChef = true`
+
+**Analytics Endpoint:**
+
+```bash
+# As MANAGER (L4) - includes cost data
+curl http://localhost:3001/analytics/top-items?limit=10 \
+  -H "Authorization: Bearer $MANAGER_TOKEN"
+
+# Response:
+[
+  {
+    "id": "item-1",
+    "name": "Burger",
+    "totalQuantity": 150,
+    "orderCount": 75,
+    "totalRevenue": 750000,
+    "totalCost": 30000,
+    "totalMargin": 720000,
+    "marginPct": 96.00
+  }
+]
+
+# As CHEF (L3) with showCostToChef=false - excludes cost data
+curl http://localhost:3001/analytics/top-items?limit=10 \
+  -H "Authorization: Bearer $CHEF_TOKEN"
+
+# Response:
+[
+  {
+    "id": "item-1",
+    "name": "Burger",
+    "totalQuantity": 150,
+    "orderCount": 75,
+    "totalRevenue": 750000
+    // No totalCost, totalMargin, or marginPct
+  }
+]
+```
+
+### Enable Cost Visibility for Chefs
+
+```bash
+# As OWNER (L5), enable cost visibility for all roles
+TOKEN=$(curl -s http://localhost:3001/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"owner@demo.local","password":"Owner#123"}' | jq -r .access_token)
+
+# Update org settings
+curl -X PATCH http://localhost:3001/orgs/settings \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"showCostToChef": true}'
+```
+
+### Testing
+
+#### Unit Tests
+
+```bash
+cd /workspaces/chefcloud/services/api
+
+# Test costing service logic
+pnpm test -- costing.service.spec
+
+# Test analytics RBAC
+pnpm test -- analytics.controller.spec
+pnpm test -- analytics.service.spec
+```
+
+#### E2E Test
+
+```bash
+cd /workspaces/chefcloud/services/api
+pnpm test:e2e -- e27-costing.e2e-spec
+```
+
+### Example Flow
+
+1. **Create Stock Batches**:
+   ```sql
+   INSERT INTO stock_batch (branch_id, inventory_item_id, batch_number, initial_qty, remaining_qty, unit_cost, received_at)
+   VALUES 
+     ('branch-1', 'beef-patty-id', 'B001', 100, 100, 150, NOW()),
+     ('branch-1', 'cheese-id', 'C001', 200, 200, 50, NOW());
+   ```
+
+2. **Create Recipe**:
+   ```sql
+   INSERT INTO recipe_ingredient (menu_item_id, item_id, quantity, is_modifier)
+   VALUES 
+     ('burger-id', 'beef-patty-id', 1, false),
+     ('cheese-modifier-id', 'cheese-id', 1, true);
+   ```
+
+3. **Create and Close Order**:
+   ```bash
+   # Create order with burger + cheese
+   curl -X POST http://localhost:3001/pos/orders \
+     -H "Authorization: Bearer $TOKEN" \
+     -H "Content-Type: application/json" \
+     -d '{
+       "branchId": "branch-1",
+       "tableNumber": "T1",
+       "items": [{
+         "menuItemId": "burger-id",
+         "quantity": 2,
+         "modifiers": [{"menuItemId": "cheese-modifier-id", "quantity": 1}]
+       }]
+     }'
+
+   # Close order (triggers costing)
+   curl -X POST http://localhost:3001/pos/orders/{orderId}/close \
+     -H "Authorization: Bearer $TOKEN" \
+     -H "Content-Type: application/json" \
+     -d '{
+       "paymentMethod": "CASH",
+       "amountTendered": 15000
+     }'
+   ```
+
+4. **Verify Costing**:
+   ```sql
+   SELECT 
+     menu_item_id,
+     quantity,
+     subtotal,
+     cost_unit,      -- Should be: 150 (beef) + 50 (cheese) = 200
+     cost_total,     -- Should be: 200 * 2 = 400
+     margin_total,   -- Should be: lineNet - 400
+     margin_pct      -- Should be: (margin_total / lineNet) * 100
+   FROM order_item
+   WHERE order_id = '{orderId}';
+   ```
+
+### Troubleshooting
+
+**Problem**: Cost fields are null after closing order
+
+- **Solution**: Verify stock batches exist with `remainingQty > 0`
+- **Solution**: Check recipe ingredients are properly linked
+- **Solution**: Ensure `CostingService` is injected in `PosService`
+
+**Problem**: WAC calculation returns 0
+
+- **Solution**: Check if all batches have `remainingQty = 0`
+- **Solution**: Verify `unitCost` is set on stock batches
+- **Solution**: Check for micro-ingredients (use 4-decimal rounding)
+
+**Problem**: Margin percentage seems incorrect
+
+- **Solution**: Verify `lineNet` includes base price + modifiers
+- **Solution**: Check if discounts are being applied
+- **Solution**: Ensure `costTotal` is calculated before margin
+
+**Problem**: CHEF role sees cost data when showCostToChef=false
+
+- **Solution**: Verify `OrgSettings.showCostToChef` value in database
+- **Solution**: Check `canUserSeeCostData()` logic in analytics controller
+- **Solution**: Clear any cached org settings
 
 ---
 

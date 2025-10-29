@@ -5,5 +5,9 @@
   "testRegex": ".e2e-spec.ts$",
   "transform": {
     "^.+\\.(t|j)s$": "ts-jest"
+  },
+  "globalSetup": "<rootDir>/jest-e2e.setup.ts",
+  "moduleNameMapper": {
+    "^@simplewebauthn/server$": "<rootDir>/__mocks__/simplewebauthn.e2e.ts"
   }
 }

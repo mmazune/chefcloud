@@ -31,6 +31,25 @@ async function main() {
       orgId: org.id,
       vatPercent: 18.0,
       currency: 'UGX',
+      platformAccess: {
+        WAITER: { desktop: true, web: false, mobile: false },
+        CASHIER: { desktop: true, web: false, mobile: false },
+        SUPERVISOR: { desktop: true, web: false, mobile: false },
+        HEAD_CHEF: { desktop: true, web: false, mobile: true },
+        ASSISTANT_CHEF: { desktop: true, web: false, mobile: true },
+        HEAD_BARISTA: { desktop: true, web: false, mobile: true },
+        STOCK: { desktop: false, web: true, mobile: true },
+        PROCUREMENT: { desktop: false, web: true, mobile: true },
+        ASSISTANT_MANAGER: { desktop: false, web: true, mobile: true },
+        EVENT_MANAGER: { desktop: false, web: true, mobile: true },
+        TICKET_MASTER: { desktop: true, web: false, mobile: false },
+        MANAGER: { desktop: false, web: true, mobile: true },
+        ACCOUNTANT: { desktop: false, web: true, mobile: true },
+        OWNER: { desktop: false, web: true, mobile: true },
+        DEV_ADMIN: { desktop: false, web: true, mobile: false },
+        CHEF: { desktop: true, web: false, mobile: true },
+        ADMIN: { desktop: false, web: true, mobile: true },
+      },
     },
   });
 
@@ -97,6 +116,66 @@ async function main() {
       lastName: 'Waiter',
       roleLevel: 'L1',
       employeeCode: 'W001',
+      pin: null,
+      badgeId: null,
+    },
+    {
+      email: 'procurement@demo.local',
+      password: 'Procurement#123',
+      firstName: 'Frank',
+      lastName: 'Procurement',
+      roleLevel: 'L3',
+      employeeCode: 'PROC001',
+      pin: null,
+      badgeId: null,
+    },
+    {
+      email: 'assistantmgr@demo.local',
+      password: 'AssistantMgr#123',
+      firstName: 'Grace',
+      lastName: 'Asst Manager',
+      roleLevel: 'L3',
+      employeeCode: 'AMGR001',
+      pin: null,
+      badgeId: null,
+    },
+    {
+      email: 'eventmgr@demo.local',
+      password: 'EventMgr#123',
+      firstName: 'Henry',
+      lastName: 'Event Manager',
+      roleLevel: 'L3',
+      employeeCode: 'EVMGR001',
+      pin: null,
+      badgeId: null,
+    },
+    {
+      email: 'ticketmaster@demo.local',
+      password: 'TicketMaster#123',
+      firstName: 'Iris',
+      lastName: 'Ticket Master',
+      roleLevel: 'L2',
+      employeeCode: 'TKT001',
+      pin: null,
+      badgeId: null,
+    },
+    {
+      email: 'assistantchef@demo.local',
+      password: 'AssistantChef#123',
+      firstName: 'Jack',
+      lastName: 'Asst Chef',
+      roleLevel: 'L2',
+      employeeCode: 'ACHEF001',
+      pin: null,
+      badgeId: null,
+    },
+    {
+      email: 'headbarista@demo.local',
+      password: 'HeadBarista#123',
+      firstName: 'Kelly',
+      lastName: 'Head Barista',
+      roleLevel: 'L3',
+      employeeCode: 'HBAR001',
       pin: null,
       badgeId: null,
     },
@@ -474,6 +553,115 @@ async function main() {
     console.log(`  └─ ${table.label} (${table.id})`);
   }
 
+  // ===== E24: Subscriptions & Dev Portal =====
+
+  // Create TWO immutable Super Dev Admins
+  const dev1 = await prisma.devAdmin.upsert({
+    where: { email: 'dev1@chefcloud.local' },
+    update: {},
+    create: {
+      email: 'dev1@chefcloud.local',
+      isSuper: true,
+    },
+  });
+  console.log('\n✅ Created super dev admin:', dev1.email);
+
+  const dev2 = await prisma.devAdmin.upsert({
+    where: { email: 'dev2@chefcloud.local' },
+    update: {},
+    create: {
+      email: 'dev2@chefcloud.local',
+      isSuper: true,
+    },
+  });
+  console.log('✅ Created super dev admin:', dev2.email);
+
+  // Create subscription plans
+  const basicPlan = await prisma.subscriptionPlan.upsert({
+    where: { code: 'BASIC' },
+    update: {},
+    create: {
+      code: 'BASIC',
+      name: 'Basic Plan',
+      priceUGX: 50000,
+      features: {
+        maxBranches: 1,
+        maxUsers: 5,
+        maxOrders: 1000,
+        features: ['POS', 'KDS', 'Reports'],
+      },
+      isActive: true,
+    },
+  });
+  console.log('\n✅ Created subscription plan:', basicPlan.name);
+
+  const proPlan = await prisma.subscriptionPlan.upsert({
+    where: { code: 'PRO' },
+    update: {},
+    create: {
+      code: 'PRO',
+      name: 'Pro Plan',
+      priceUGX: 150000,
+      features: {
+        maxBranches: 5,
+        maxUsers: 25,
+        maxOrders: 10000,
+        features: ['POS', 'KDS', 'Reports', 'Inventory', 'Analytics', 'Alerts'],
+      },
+      isActive: true,
+    },
+  });
+  console.log('✅ Created subscription plan:', proPlan.name);
+
+  const enterprisePlan = await prisma.subscriptionPlan.upsert({
+    where: { code: 'ENTERPRISE' },
+    update: {},
+    create: {
+      code: 'ENTERPRISE',
+      name: 'Enterprise Plan',
+      priceUGX: 500000,
+      features: {
+        maxBranches: 9999,
+        maxUsers: 9999,
+        maxOrders: 9999999,
+        features: ['All Features', 'Priority Support', 'Custom Integration', 'EFRIS'],
+      },
+      isActive: true,
+    },
+  });
+  console.log('✅ Created subscription plan:', enterprisePlan.name);
+
+  // Create subscription for demo org
+  const existingSubscription = await prisma.orgSubscription.findUnique({
+    where: { orgId: org.id },
+  });
+
+  if (!existingSubscription) {
+    const nextRenewalAt = new Date();
+    nextRenewalAt.setDate(nextRenewalAt.getDate() + 30);
+
+    await prisma.orgSubscription.create({
+      data: {
+        orgId: org.id,
+        planId: proPlan.id,
+        status: 'ACTIVE',
+        nextRenewalAt,
+      },
+    });
+    console.log('✅ Created subscription for Demo Restaurant (PRO plan)');
+
+    await prisma.subscriptionEvent.create({
+      data: {
+        orgId: org.id,
+        type: 'RENEWED',
+        meta: { planCode: proPlan.code, initial: true },
+      },
+    });
+    console.log('✅ Created initial subscription event');
+  } else {
+    console.log('ℹ️  Subscription already exists for Demo Restaurant');
+  }
+
   console.log('\n🎉 Seed completed successfully!');
   console.log('\n📝 Test Credentials:');
   console.log('Owner:      owner@demo.local / Owner#123');
@@ -481,6 +669,9 @@ async function main() {
   console.log('Supervisor: supervisor@demo.local / Supervisor#123');
   console.log('Cashier:    cashier@demo.local / Cashier#123 (Badge: CASHIER001)');
   console.log('Waiter:     waiter@demo.local / Waiter#123 (Code: W001)');
+  console.log('\n📝 Dev Portal:');
+  console.log('Super Dev 1: dev1@chefcloud.local');
+  console.log('Super Dev 2: dev2@chefcloud.local');
 }
 
 main()

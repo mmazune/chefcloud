@@ -111,4 +111,54 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
   get session(): typeof prisma.session {
     return prisma.session;
   }
+
+  get orgSettings(): typeof prisma.orgSettings {
+    return prisma.orgSettings;
+  }
+
+  // E24: Subscriptions & Dev Portal
+  get devAdmin(): typeof prisma.devAdmin {
+    return prisma.devAdmin;
+  }
+
+  get subscriptionPlan(): typeof prisma.subscriptionPlan {
+    return prisma.subscriptionPlan;
+  }
+
+  get orgSubscription(): typeof prisma.orgSubscription {
+    return prisma.orgSubscription;
+  }
+
+  get subscriptionEvent(): typeof prisma.subscriptionEvent {
+    return prisma.subscriptionEvent;
+  }
+
+  // E22: Franchise
+  get branchBudget(): typeof prisma.branchBudget {
+    return prisma.branchBudget;
+  }
+
+  get forecastProfile(): typeof prisma.forecastProfile {
+    return prisma.forecastProfile;
+  }
+
+  get forecastPoint(): typeof prisma.forecastPoint {
+    return prisma.forecastPoint;
+  }
+
+  get franchiseRank(): typeof prisma.franchiseRank {
+    return prisma.franchiseRank;
+  }
+
+  get inventoryItem(): typeof prisma.inventoryItem {
+    return prisma.inventoryItem;
+  }
+
+  get wastage(): typeof prisma.wastage {
+    return prisma.wastage;
+  }
+
+  get menuItem(): typeof prisma.menuItem {
+    return prisma.menuItem;
+  }
 }

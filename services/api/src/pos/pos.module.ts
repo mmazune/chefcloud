@@ -5,9 +5,12 @@ import { PosService } from './pos.service';
 import { PrismaService } from '../prisma.service';
 import { EfrisModule } from '../efris/efris.module';
 import { EventBusService } from '../events/event-bus.service';
+import { InventoryModule } from '../inventory/inventory.module';
+import { KpisModule } from '../kpis/kpis.module';
+import { PromotionsModule } from '../promotions/promotions.module';
 
 @Module({
-  imports: [EfrisModule, ConfigModule],
+  imports: [EfrisModule, ConfigModule, InventoryModule, KpisModule, PromotionsModule],
   controllers: [PosController],
   providers: [PosService, PrismaService, EventBusService],
 })

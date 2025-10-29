@@ -52,6 +52,46 @@ export class ReportsService {
     const postCloseVoidCount = postCloseVoids.length;
     const postCloseVoidTotal = postCloseVoids.reduce((sum, o) => sum + Number(o.total), 0);
 
+    // Get open till sessions for this shift period
+    const tillSessions = await this.prisma.client.tillSession.findMany({
+      where: {
+        branchId,
+        openedAt: { gte: shift.openedAt },
+        closedAt: null,
+      },
+      include: {
+        cashMovements: true,
+      },
+    });
+
+    // Calculate cash movements totals
+    const cashMovementsSummary = {
+      paidIn: 0,
+      paidOut: 0,
+      safeDrop: 0,
+      pickup: 0,
+    };
+
+    tillSessions.forEach((session) => {
+      session.cashMovements.forEach((m) => {
+        const amount = Number(m.amount);
+        switch (m.type) {
+          case 'PAID_IN':
+            cashMovementsSummary.paidIn += amount;
+            break;
+          case 'PAID_OUT':
+            cashMovementsSummary.paidOut += amount;
+            break;
+          case 'SAFE_DROP':
+            cashMovementsSummary.safeDrop += amount;
+            break;
+          case 'PICKUP':
+            cashMovementsSummary.pickup += amount;
+            break;
+        }
+      });
+    });
+
     return {
       type: 'X_REPORT',
       shift: {
@@ -69,6 +109,13 @@ export class ReportsService {
         postCloseVoidCount,
         postCloseVoidTotal,
       },
+      cashMovements: cashMovementsSummary,
+      tillSessions: tillSessions.map((s) => ({
+        id: s.id,
+        drawerId: s.drawerId,
+        openingFloat: Number(s.openingFloat),
+        movementsCount: s.cashMovements.length,
+      })),
       generatedAt: new Date(),
     };
   }
@@ -134,6 +181,52 @@ export class ReportsService {
     const postCloseVoidCount = postCloseVoids.length;
     const postCloseVoidTotal = postCloseVoids.reduce((sum, o) => sum + Number(o.total), 0);
 
+    // Get till sessions for this shift period
+    const tillSessions = await this.prisma.client.tillSession.findMany({
+      where: {
+        branchId,
+        openedAt: { gte: shift.openedAt },
+        closedAt: { lte: shift.closedAt },
+      },
+      include: {
+        cashMovements: true,
+      },
+    });
+
+    // Calculate cash movements totals and variance
+    const cashMovementsSummary = {
+      paidIn: 0,
+      paidOut: 0,
+      safeDrop: 0,
+      pickup: 0,
+    };
+
+    let totalVariance = 0;
+
+    tillSessions.forEach((session) => {
+      session.cashMovements.forEach((m) => {
+        const amount = Number(m.amount);
+        switch (m.type) {
+          case 'PAID_IN':
+            cashMovementsSummary.paidIn += amount;
+            break;
+          case 'PAID_OUT':
+            cashMovementsSummary.paidOut += amount;
+            break;
+          case 'SAFE_DROP':
+            cashMovementsSummary.safeDrop += amount;
+            break;
+          case 'PICKUP':
+            cashMovementsSummary.pickup += amount;
+            break;
+        }
+      });
+
+      if (session.variance) {
+        totalVariance += Number(session.variance);
+      }
+    });
+
     return {
       type: 'Z_REPORT',
       shift: {
@@ -157,6 +250,16 @@ export class ReportsService {
         postCloseVoidCount,
         postCloseVoidTotal,
       },
+      cashMovements: cashMovementsSummary,
+      tillSessions: tillSessions.map((s) => ({
+        id: s.id,
+        drawerId: s.drawerId,
+        openingFloat: Number(s.openingFloat),
+        closingCount: s.closingCount ? Number(s.closingCount) : null,
+        variance: s.variance ? Number(s.variance) : null,
+        movementsCount: s.cashMovements.length,
+      })),
+      totalVariance,
       generatedAt: new Date(),
     };
   }

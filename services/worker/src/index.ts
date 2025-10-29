@@ -70,6 +70,26 @@ interface OwnerDigestRunJob {
   shiftId?: string;
 }
 
+interface SubscriptionRenewalJob {
+  type: 'subscription-renewals';
+}
+
+interface SubscriptionReminderJob {
+  type: 'subscription-reminders';
+}
+
+interface ForecastBuildJob {
+  type: 'forecast-build';
+}
+
+interface RankBranchesJob {
+  type: 'rank-branches';
+}
+
+interface ProcurementNightlyJob {
+  type: 'procurement-nightly';
+}
+
 // Reports queue worker
 const reportsWorker = new Worker<ReportJob>(
   'reports',
@@ -1028,6 +1048,708 @@ export const reservationRemindersQueue = new Queue<ReservationRemindersJob>(
 );
 export const spoutConsumeQueue = new Queue<SpoutConsumeJob>('spout-consume', { connection });
 export const digestQueue = new Queue<OwnerDigestRunJob>('digest', { connection });
+export const subscriptionRenewalsQueue = new Queue<SubscriptionRenewalJob>(
+  'subscription-renewals',
+  { connection },
+);
+export const subscriptionRemindersQueue = new Queue<SubscriptionReminderJob>(
+  'subscription-reminders-billing',
+  { connection },
+);
+
+// Subscription renewals worker (hourly)
+const subscriptionRenewalsWorker = new Worker<SubscriptionRenewalJob>(
+  'subscription-renewals',
+  async (job: Job<SubscriptionRenewalJob>) => {
+    logger.info({ jobId: job.id }, 'Processing subscription renewals');
+
+    const now = new Date();
+
+    // Find subscriptions due for renewal
+    const dueSubscriptions = await prisma.orgSubscription.findMany({
+      where: {
+        nextRenewalAt: { lte: now },
+        status: { in: ['ACTIVE', 'GRACE'] },
+      },
+      include: { org: true, plan: true },
+    });
+
+    logger.info({ count: dueSubscriptions.length }, 'Found subscriptions due for renewal');
+
+    for (const subscription of dueSubscriptions) {
+      try {
+        // Simulate payment (success for now, can add failure logic later)
+        const paymentSuccess = true; // In real impl: call payment gateway
+
+        if (paymentSuccess) {
+          // Extend renewal date by 30 days
+          const newRenewalDate = new Date(subscription.nextRenewalAt);
+          newRenewalDate.setDate(newRenewalDate.getDate() + 30);
+
+          await prisma.orgSubscription.update({
+            where: { id: subscription.id },
+            data: {
+              status: 'ACTIVE',
+              nextRenewalAt: newRenewalDate,
+              graceUntil: null,
+            },
+          });
+
+          await prisma.subscriptionEvent.create({
+            data: {
+              orgId: subscription.orgId,
+              type: 'RENEWED',
+              meta: { planCode: subscription.plan.code, renewedAt: now.toISOString() },
+            },
+          });
+
+          logger.info({ orgId: subscription.orgId, planCode: subscription.plan.code }, 'Subscription renewed successfully');
+        } else {
+          // Payment failed - move to GRACE period
+          const graceUntil = new Date(now);
+          graceUntil.setDate(graceUntil.getDate() + 7);
+
+          await prisma.orgSubscription.update({
+            where: { id: subscription.id },
+            data: {
+              status: 'GRACE',
+              graceUntil,
+            },
+          });
+
+          await prisma.subscriptionEvent.create({
+            data: {
+              orgId: subscription.orgId,
+              type: 'PAST_DUE',
+              meta: { graceUntil: graceUntil.toISOString() },
+            },
+          });
+
+          logger.warn({ orgId: subscription.orgId }, 'Subscription renewal failed - moved to GRACE');
+        }
+      } catch (error) {
+        logger.error({ orgId: subscription.orgId, error }, 'Failed to process subscription renewal');
+      }
+    }
+
+    // Check GRACE subscriptions that expired
+    const expiredGraceSubscriptions = await prisma.orgSubscription.findMany({
+      where: {
+        status: 'GRACE',
+        graceUntil: { lte: now },
+      },
+    });
+
+    for (const subscription of expiredGraceSubscriptions) {
+      await prisma.orgSubscription.update({
+        where: { id: subscription.id },
+        data: { status: 'CANCELLED' },
+      });
+
+      await prisma.subscriptionEvent.create({
+        data: {
+          orgId: subscription.orgId,
+          type: 'CANCELLED',
+          meta: { reason: 'grace_period_expired' },
+        },
+      });
+
+      logger.warn({ orgId: subscription.orgId }, 'Subscription cancelled - grace period expired');
+    }
+
+    return {
+      success: true,
+      renewed: dueSubscriptions.length - expiredGraceSubscriptions.length,
+      cancelled: expiredGraceSubscriptions.length,
+    };
+  },
+  { connection },
+);
+
+// Subscription reminders worker (daily at 09:00)
+const subscriptionRemindersWorker = new Worker<SubscriptionReminderJob>(
+  'subscription-reminders-billing',
+  async (job: Job<SubscriptionReminderJob>) => {
+    logger.info({ jobId: job.id }, 'Processing subscription reminders');
+
+    const now = new Date();
+
+    // Check for subscriptions expiring in 7, 3, or 1 days
+    const reminderWindows = [7, 3, 1];
+    let remindersSent = 0;
+
+    for (const days of reminderWindows) {
+      const targetDate = new Date(now);
+      targetDate.setDate(targetDate.getDate() + days);
+      targetDate.setHours(0, 0, 0, 0);
+
+      const nextDay = new Date(targetDate);
+      nextDay.setDate(nextDay.getDate() + 1);
+
+      const subscriptions = await prisma.orgSubscription.findMany({
+        where: {
+          nextRenewalAt: { gte: targetDate, lt: nextDay },
+          status: 'ACTIVE',
+        },
+        include: {
+          org: { include: { users: { where: { roleLevel: 'L5' } } } },
+          plan: true,
+        },
+      });
+
+      for (const subscription of subscriptions) {
+        const owners = subscription.org.users;
+        const message = `Your ChefCloud subscription (${subscription.plan.name}) will renew in ${days} day${days > 1 ? 's' : ''} on ${subscription.nextRenewalAt.toLocaleDateString()}.`;
+
+        for (const owner of owners) {
+          logger.info({ email: owner.email, days, orgId: subscription.orgId }, 'Sending renewal reminder');
+          
+          // TODO: Send actual email via SMTP
+          console.log(`📧 [RENEWAL REMINDER to ${owner.email}]\n${message}`);
+        }
+
+        remindersSent++;
+      }
+    }
+
+    return { success: true, remindersSent };
+  },
+  { connection },
+);
+
+subscriptionRenewalsWorker.on('completed', (job) => {
+  logger.info({ jobId: job.id }, 'Subscription renewals job completed');
+});
+
+subscriptionRenewalsWorker.on('failed', (job, err) => {
+  logger.error({ jobId: job?.id, error: err.message }, 'Subscription renewals job failed');
+});
+
+subscriptionRemindersWorker.on('completed', (job) => {
+  logger.info({ jobId: job.id }, 'Subscription reminders job completed');
+});
+
+subscriptionRemindersWorker.on('failed', (job, err) => {
+  logger.error({ jobId: job?.id, error: err.message }, 'Subscription reminders job failed');
+});
+
+// ===== E22: Franchise Workers =====
+
+const forecastBuildQueue = new Queue<ForecastBuildJob>('forecast-build', { connection });
+const rankBranchesQueue = new Queue<RankBranchesJob>('rank-branches', { connection });
+const procurementNightlyQueue = new Queue<ProcurementNightlyJob>('procurement-nightly', { connection });
+
+const forecastBuildWorker = new Worker<ForecastBuildJob>(
+  'forecast-build',
+  async (job: Job<ForecastBuildJob>) => {
+    logger.info({ jobId: job.id }, 'Building forecasts');
+
+    // Get all orgs with forecast profiles
+    const profiles = await prisma.forecastProfile.findMany({
+      include: { branch: true, item: true },
+    });
+
+    let forecastsCreated = 0;
+
+    for (const profile of profiles) {
+      try {
+        if (!profile.branchId || !profile.itemId) continue;
+
+        // Calculate MA based on method
+        const days = profile.method === 'MA7' ? 7 : profile.method === 'MA14' ? 14 : 30;
+        const endDate = new Date();
+        const startDate = new Date();
+        startDate.setDate(startDate.getDate() - days);
+
+        // Get order items for this item
+          const orderItems = await prisma.orderItem.findMany({
+            where: {
+              order: {
+                branchId: profile.branchId,
+                status: 'CLOSED',
+                updatedAt: { gte: startDate, lte: endDate },
+              },
+              menuItem: {
+                recipeIngredients: {
+                  some: { itemId: profile.itemId },
+                },
+              },
+            },
+            select: { quantity: true },
+          });        const totalQty = orderItems.reduce((sum, oi) => sum + oi.quantity, 0);
+        const avgQty = totalQty / days;
+
+        // Apply uplifts for next 7 days
+        for (let i = 0; i < 7; i++) {
+          const forecastDate = new Date();
+          forecastDate.setDate(forecastDate.getDate() + i);
+
+          let predictedQty = avgQty;
+
+          // Weekend uplift (Sat=6, Sun=0)
+          const dayOfWeek = forecastDate.getDay();
+          if (dayOfWeek === 0 || dayOfWeek === 6) {
+            predictedQty *= 1 + Number(profile.weekendUpliftPct) / 100;
+          }
+
+          // Month-end uplift (last 3 days of month)
+          const daysInMonth = new Date(forecastDate.getFullYear(), forecastDate.getMonth() + 1, 0).getDate();
+          if (forecastDate.getDate() > daysInMonth - 3) {
+            predictedQty *= 1 + Number(profile.monthEndUpliftPct) / 100;
+          }
+
+          await prisma.forecastPoint.upsert({
+            where: {
+              orgId_branchId_itemId_date: {
+                orgId: profile.orgId,
+                branchId: profile.branchId,
+                itemId: profile.itemId,
+                date: forecastDate,
+              },
+            },
+            create: {
+              orgId: profile.orgId,
+              branchId: profile.branchId,
+              itemId: profile.itemId,
+              date: forecastDate,
+              predictedQty,
+            },
+            update: { predictedQty },
+          });
+
+          forecastsCreated++;
+        }
+      } catch (err) {
+        logger.error({ profileId: profile.id, error: err }, 'Failed to build forecast for profile');
+      }
+    }
+
+    logger.info({ forecastsCreated }, 'Forecasts built');
+    return { success: true, forecastsCreated };
+  },
+  { connection },
+);
+
+const rankBranchesWorker = new Worker<RankBranchesJob>(
+  'rank-branches',
+  async (job: Job<RankBranchesJob>) => {
+    logger.info({ jobId: job.id }, 'Ranking branches');
+
+    const now = new Date();
+    const period = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+    // Get all orgs
+    const orgs = await prisma.org.findMany({
+      select: { id: true },
+    });
+
+    let ranksCreated = 0;
+
+    for (const org of orgs) {
+      try {
+        // Get branches for this org
+        const branches = await prisma.branch.findMany({
+          where: { orgId: org.id },
+          select: { id: true, name: true },
+        });
+
+        if (branches.length === 0) continue;
+
+        const [year, month] = period.split('-').map(Number);
+        const startDate = new Date(year, month - 1, 1);
+        const endDate = new Date(year, month, 0, 23, 59, 59);
+
+        const metrics: Array<{
+          branchId: string;
+          revenue: number;
+          margin: number;
+          waste: number;
+          sla: number;
+        }> = [];
+
+        for (const branch of branches) {
+          // Calculate metrics
+        const orders = await prisma.order.findMany({
+          where: {
+            branchId: branch.id,
+            status: 'CLOSED',
+            updatedAt: { gte: startDate, lte: endDate },
+          },
+          select: { total: true },
+        });          const revenue = orders.reduce((sum, o) => sum + Number(o.total), 0);
+
+          const wastage = await prisma.wastage.findMany({
+            where: {
+              branchId: branch.id,
+              createdAt: { gte: startDate, lte: endDate },
+            },
+            select: { qty: true },
+          });
+
+          // Estimate cost at 5000 UGX per unit (simplified)
+          const totalWaste = wastage.reduce((sum, w) => sum + Number(w.qty) * 5000, 0);
+          const wastePercent = revenue > 0 ? (totalWaste / revenue) * 100 : 0;
+
+          metrics.push({
+            branchId: branch.id,
+            revenue,
+            margin: revenue * 0.65, // Simplified
+            waste: wastePercent,
+            sla: 95, // Placeholder
+          });
+        }
+
+        // Calculate scores with custom or default weights
+        const maxRevenue = Math.max(...metrics.map((m) => m.revenue));
+        const maxMargin = Math.max(...metrics.map((m) => m.margin));
+
+        const orgSettings = await prisma.orgSettings.findUnique({
+          where: { orgId: org.id },
+          select: { franchiseWeights: true },
+        });
+
+        const weights = orgSettings?.franchiseWeights
+          ? (orgSettings.franchiseWeights as {
+              revenue: number;
+              margin: number;
+              waste: number;
+              sla: number;
+            })
+          : { revenue: 0.4, margin: 0.3, waste: -0.2, sla: 0.1 };
+
+        const scored = metrics.map((m) => {
+          const revenueScore =
+            maxRevenue > 0 ? (m.revenue / maxRevenue) * weights.revenue * 100 : 0;
+          const marginScore =
+            maxMargin > 0 ? (m.margin / maxMargin) * weights.margin * 100 : 0;
+          const wasteScore = m.waste * weights.waste * 10; // Negative weight
+          const slaScore = (m.sla / 100) * weights.sla * 100;
+          const score = revenueScore + marginScore + wasteScore + slaScore;
+
+          return {
+            branchId: m.branchId,
+            score,
+            meta: m,
+          };
+        });
+
+        // Sort and save ranks
+        scored.sort((a, b) => b.score - a.score);
+
+        for (let i = 0; i < scored.length; i++) {
+          await prisma.franchiseRank.upsert({
+            where: {
+              orgId_period_branchId: {
+                orgId: org.id,
+                period,
+                branchId: scored[i].branchId,
+              },
+            },
+            create: {
+              orgId: org.id,
+              period,
+              branchId: scored[i].branchId,
+              score: scored[i].score,
+              rank: i + 1,
+              meta: scored[i].meta,
+            },
+            update: {
+              score: scored[i].score,
+              rank: i + 1,
+              meta: scored[i].meta,
+            },
+          });
+
+          ranksCreated++;
+        }
+      } catch (err) {
+        logger.error({ orgId: org.id, error: err }, 'Failed to rank branches for org');
+      }
+    }
+
+    logger.info({ ranksCreated }, 'Branch rankings completed');
+    return { success: true, ranksCreated };
+  },
+  { connection },
+);
+
+forecastBuildWorker.on('completed', (job) => {
+  logger.info({ jobId: job.id }, 'Forecast build job completed');
+});
+
+forecastBuildWorker.on('failed', (job, err) => {
+  logger.error({ jobId: job?.id, error: err.message }, 'Forecast build job failed');
+});
+
+rankBranchesWorker.on('completed', (job) => {
+  logger.info({ jobId: job.id }, 'Rank branches job completed');
+});
+
+rankBranchesWorker.on('failed', (job, err) => {
+  logger.error({ jobId: job?.id, error: err.message }, 'Rank branches job failed');
+});
+
+const procurementNightlyWorker = new Worker<ProcurementNightlyJob>(
+  'procurement-nightly',
+  async (job: Job<ProcurementNightlyJob>) => {
+    logger.info({ jobId: job.id }, 'Running procurement nightly job');
+
+    // Get all orgs
+    const orgs = await prisma.org.findMany({
+      select: { id: true },
+    });
+
+    let jobsCreated = 0;
+    let totalDraftPOs = 0;
+
+    for (const org of orgs) {
+      try {
+        // Get all branches for this org
+        const branches = await prisma.branch.findMany({
+          where: { orgId: org.id },
+          select: { id: true },
+        });
+
+        if (branches.length === 0) continue;
+
+        // Collect items below safety stock per branch
+        const suggestions: Array<{
+          branchId: string;
+          itemId: string;
+          supplierId: string | null;
+          suggestedQty: number;
+        }> = [];
+
+        for (const branch of branches) {
+          const items = await prisma.inventoryItem.findMany({
+            where: { orgId: org.id, isActive: true },
+            include: {
+              stockBatches: {
+                where: { branchId: branch.id },
+                select: { remainingQty: true },
+              },
+            },
+          });
+
+          for (const item of items) {
+            const currentStock = item.stockBatches.reduce(
+              (sum, b) => sum + Number(b.remainingQty),
+              0,
+            );
+            const safetyStock = Number(item.reorderLevel);
+
+            if (currentStock < safetyStock) {
+              const suggestedQty = Number(item.reorderQty) || safetyStock * 2;
+
+              // Get supplier from metadata (simplified)
+              const supplierId = (item.metadata as { supplierId?: string } | null)?.supplierId || null;
+
+              suggestions.push({
+                branchId: branch.id,
+                itemId: item.id,
+                supplierId,
+                suggestedQty,
+              });
+            }
+          }
+        }
+
+        if (suggestions.length === 0) {
+          logger.info({ orgId: org.id }, 'No procurement suggestions for org');
+          continue;
+        }
+
+        // Group by supplier + branch
+        const grouped = suggestions.reduce(
+          (acc, s) => {
+            if (!s.supplierId) return acc;
+            const key = `${s.supplierId}:${s.branchId}`;
+            if (!acc[key]) {
+              acc[key] = {
+                supplierId: s.supplierId,
+                branchId: s.branchId,
+                items: [],
+              };
+            }
+            acc[key].items.push({ itemId: s.itemId, qty: s.suggestedQty });
+            return acc;
+          },
+          {} as Record<
+            string,
+            {
+              supplierId: string;
+              branchId: string;
+              items: Array<{ itemId: string; qty: number }>;
+            }
+          >,
+        );
+
+        // Create ProcurementJob
+        const procurementJob = await prisma.procurementJob.create({
+          data: {
+            orgId: org.id,
+            createdById: 'system', // System-generated user ID placeholder
+            period: new Date().toISOString().slice(0, 7), // YYYY-MM
+            strategy: 'SAFETY_STOCK',
+            draftPoCount: Object.keys(grouped).length,
+            status: 'DRAFT',
+          },
+        });
+
+        // Create draft POs
+        for (const group of Object.values(grouped)) {
+          // Get supplier to apply packSize/minOrderQty
+          const supplier = await prisma.supplier.findUnique({
+            where: { id: group.supplierId },
+            select: { packSize: true, minOrderQty: true },
+          });
+
+          const poItems = group.items.map((itm) => {
+            let qty = itm.qty;
+
+            // Round up to packSize
+            if (supplier?.packSize && Number(supplier.packSize) > 0) {
+              const packSize = Number(supplier.packSize);
+              qty = Math.ceil(qty / packSize) * packSize;
+            }
+
+            // Ensure minOrderQty
+            if (supplier?.minOrderQty && qty < Number(supplier.minOrderQty)) {
+              qty = Number(supplier.minOrderQty);
+            }
+
+            return {
+              itemId: itm.itemId,
+              qty,
+              unitCost: 0, // Unknown until supplier quote
+              subtotal: 0,
+            };
+          });
+
+          const total = poItems.reduce((sum, i) => sum + Number(i.subtotal), 0);
+
+          await prisma.purchaseOrder.create({
+            data: {
+              orgId: org.id,
+              branchId: group.branchId,
+              supplierId: group.supplierId,
+              poNumber: `DRAFT-${Date.now()}`,
+              status: 'DRAFT',
+              totalAmount: total,
+              items: {
+                create: poItems,
+              },
+            },
+          });
+
+          totalDraftPOs++;
+        }
+
+        jobsCreated++;
+        logger.info(
+          { orgId: org.id, jobId: procurementJob.id, draftPOs: Object.keys(grouped).length },
+          'Created procurement job',
+        );
+      } catch (err) {
+        logger.error({ orgId: org.id, error: err }, 'Failed to create procurement job for org');
+      }
+    }
+
+    logger.info({ jobsCreated, totalDraftPOs }, 'Procurement nightly job completed');
+    return { success: true, jobsCreated, totalDraftPOs };
+  },
+  { connection },
+);
+
+procurementNightlyWorker.on('completed', (job) => {
+  logger.info({ jobId: job.id }, 'Procurement nightly job completed');
+});
+
+procurementNightlyWorker.on('failed', (job, err) => {
+  logger.error({ jobId: job?.id, error: err.message }, 'Procurement nightly job failed');
+});
+
+// Schedule forecast build nightly at 02:30
+async function scheduleForecastBuild() {
+  await forecastBuildQueue.add(
+    'forecast-build',
+    { type: 'forecast-build' },
+    {
+      repeat: {
+        pattern: '30 2 * * *', // Daily at 02:30
+      },
+      jobId: 'forecast-build-recurring',
+    },
+  );
+  logger.info('Scheduled forecast build job (nightly 02:30)');
+}
+
+// Schedule branch ranking monthly on 1st at 01:00
+async function scheduleRankBranches() {
+  await rankBranchesQueue.add(
+    'rank-branches',
+    { type: 'rank-branches' },
+    {
+      repeat: {
+        pattern: '0 1 1 * *', // Monthly on 1st at 01:00
+      },
+      jobId: 'rank-branches-recurring',
+    },
+  );
+  logger.info('Scheduled rank branches job (monthly 1st 01:00)');
+}
+
+// Schedule procurement nightly at 02:45
+async function scheduleProcurementNightly() {
+  await procurementNightlyQueue.add(
+    'procurement-nightly',
+    { type: 'procurement-nightly' },
+    {
+      repeat: {
+        pattern: '45 2 * * *', // Daily at 02:45
+      },
+      jobId: 'procurement-nightly-recurring',
+    },
+  );
+  logger.info('Scheduled procurement nightly job (daily 02:45)');
+}
+
+scheduleForecastBuild().catch((err) => logger.error({ error: err }, 'Failed to schedule forecast build'));
+scheduleRankBranches().catch((err) => logger.error({ error: err }, 'Failed to schedule rank branches'));
+scheduleProcurementNightly().catch((err) => logger.error({ error: err }, 'Failed to schedule procurement nightly'));
+
+// Schedule subscription renewals hourly
+async function scheduleSubscriptionRenewals() {
+  await subscriptionRenewalsQueue.add(
+    'subscription-renewals',
+    { type: 'subscription-renewals' },
+    {
+      repeat: {
+        pattern: '0 * * * *', // Every hour at :00
+      },
+      jobId: 'subscription-renewals-recurring',
+    },
+  );
+  logger.info('Scheduled subscription renewals job (hourly)');
+}
+
+// Schedule subscription reminders daily at 09:00
+async function scheduleSubscriptionReminders() {
+  await subscriptionRemindersQueue.add(
+    'subscription-reminders',
+    { type: 'subscription-reminders' },
+    {
+      repeat: {
+        pattern: '0 9 * * *', // Daily at 09:00
+      },
+      jobId: 'subscription-reminders-recurring',
+    },
+  );
+  logger.info('Scheduled subscription reminders job (daily 09:00)');
+}
+
+scheduleSubscriptionRenewals().catch((err) => logger.error({ error: err }, 'Failed to schedule subscription renewals'));
+scheduleSubscriptionReminders().catch((err) => logger.error({ error: err }, 'Failed to schedule subscription reminders'));
 
 // Schedule nightly EFRIS reconciliation at 02:00
 async function scheduleNightlyReconciliation() {
@@ -1160,7 +1882,7 @@ async function scheduleOwnerDigestCron() {
 scheduleOwnerDigestCron().catch(console.error);
 
 console.log(
-  '🚀 ChefCloud Worker started - listening for jobs on "reports", "payments", "efris", "anomalies", "alerts", "reservations", "reservation-reminders", "spout-consume", and "digest" queues',
+  '🚀 ChefCloud Worker started - listening for jobs on "reports", "payments", "efris", "anomalies", "alerts", "reservations", "reservation-reminders", "spout-consume", "digest", "subscription-renewals", "subscription-reminders-billing", "forecast-build", and "rank-branches" queues',
 );
 
 // Graceful shutdown
@@ -1175,6 +1897,10 @@ process.on('SIGTERM', async () => {
   await reservationsRemindersWorker.close();
   await spoutConsumeWorker.close();
   await digestWorker.close();
+  await subscriptionRenewalsWorker.close();
+  await subscriptionRemindersWorker.close();
+  await forecastBuildWorker.close();
+  await rankBranchesWorker.close();
   await prisma.$disconnect();
   await connection.quit();
   process.exit(0);

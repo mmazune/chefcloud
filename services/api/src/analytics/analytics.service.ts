@@ -57,7 +57,7 @@ export class AnalyticsService {
     };
   }
 
-  async getTopItems(branchId: string, limit = 10): Promise<any> {
+  async getTopItems(branchId: string, limit = 10, includeCostData = false): Promise<any> {
     // Simple aggregation - get top items by quantity sold
     const items = await this.prisma.client.orderItem.groupBy({
       by: ['menuItemId'],
@@ -69,6 +69,11 @@ export class AnalyticsService {
       },
       _sum: {
         quantity: true,
+        subtotal: true,
+        ...(includeCostData && {
+          costTotal: true,
+          marginTotal: true,
+        }),
       },
       _count: true,
       orderBy: {
@@ -89,12 +94,30 @@ export class AnalyticsService {
 
     return items.map((item: any) => {
       const menuItem: any = menuItemMap.get(item.menuItemId);
-      return {
+      const baseData = {
         id: item.menuItemId,
         name: menuItem?.name || 'Unknown',
         totalQuantity: item._sum.quantity,
         orderCount: item._count,
+        totalRevenue: item._sum.subtotal ? Number(item._sum.subtotal) : 0,
       };
+
+      // Only include cost/margin if requested
+      if (includeCostData && item._sum.costTotal !== null && item._sum.marginTotal !== null) {
+        const totalCost = Number(item._sum.costTotal);
+        const totalMargin = Number(item._sum.marginTotal);
+        const totalRevenue = baseData.totalRevenue;
+        const marginPct = totalRevenue > 0 ? (totalMargin / totalRevenue) * 100 : 0;
+
+        return {
+          ...baseData,
+          totalCost,
+          totalMargin,
+          marginPct: Number(marginPct.toFixed(2)),
+        };
+      }
+
+      return baseData;
     });
   }
 

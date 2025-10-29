@@ -18,6 +18,7 @@ import { AuthHelpers } from '../auth/auth.helpers';
 import { EfrisService } from '../efris/efris.service';
 import { ConfigService } from '@nestjs/config';
 import { EventBusService } from '../events/event-bus.service';
+import { CostingService } from '../inventory/costing.service';
 
 @Injectable()
 export class PosService {
@@ -26,7 +27,18 @@ export class PosService {
     private efrisService: EfrisService,
     private configService: ConfigService,
     private eventBus: EventBusService,
+    private costingService: CostingService,
+    private promotionsService?: any, // Optional promotions service
+    private kpisService?: any, // Optional, best-effort
   ) {}
+
+  private markKpisDirty(orgId: string, branchId?: string) {
+    try {
+      this.kpisService?.markDirty(orgId, branchId);
+    } catch {
+      // Best-effort, no throw
+    }
+  }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async createOrder(
@@ -140,6 +152,10 @@ export class PosService {
         at: new Date().toISOString(),
       });
     }
+
+    // Mark KPIs dirty
+    const orgId = (await this.prisma.client.branch.findUnique({ where: { id: branchId } }))?.orgId;
+    if (orgId) this.markKpisDirty(orgId, branchId);
 
     return order;
   }
@@ -302,6 +318,10 @@ export class PosService {
       },
     });
 
+    // Mark KPIs dirty
+    const orgId = (await this.prisma.client.branch.findUnique({ where: { id: branchId } }))?.orgId;
+    if (orgId) this.markKpisDirty(orgId, branchId);
+
     return voidedOrder;
   }
 
@@ -386,6 +406,165 @@ export class PosService {
       }
     }
 
+    // Calculate costing for each order item
+    for (const orderItem of order.orderItems) {
+      const modifiers = orderItem.metadata
+        ? ((orderItem.metadata as any).modifiers || []).map((m: any) => ({
+            id: m.modifierOptionId,
+            selected: true,
+          }))
+        : [];
+
+      const modifiersPrice = orderItem.metadata
+        ? ((orderItem.metadata as any).modifiers || []).reduce(
+            (sum: number, m: any) => sum + (m.price || 0),
+            0,
+          )
+        : 0;
+
+      const costing = await this.costingService.calculateItemCosting({
+        menuItemId: orderItem.menuItemId,
+        quantity: orderItem.quantity,
+        unitPrice: Number(orderItem.price),
+        modifiersPrice,
+        discount: 0, // Individual item discount not tracked here
+        modifiers,
+      });
+
+      // Update order item with costing fields
+      await this.prisma.client.orderItem.update({
+        where: { id: orderItem.id },
+        data: {
+          costUnit: costing.costUnit,
+          costTotal: costing.costTotal,
+          marginTotal: costing.marginTotal,
+          marginPct: costing.marginPct,
+        },
+      });
+    }
+
+    // E37: Apply promotions if available
+    let totalDiscountFromPromotions = 0;
+    const promotionMetadata: any[] = [];
+
+    if (this.promotionsService) {
+      try {
+        // Get orgId from branch (need to fetch it)
+        const branch = await this.prisma.client.branch.findUnique({
+          where: { id: branchId },
+          select: { orgId: true },
+        });
+
+        if (!branch) throw new Error('Branch not found');
+
+        // Get coupon code from order metadata
+        const couponCode = (order.metadata as any)?.couponCode;
+
+        // Fetch active approved promotions for this org
+        const promotions = await this.prisma.client.promotion.findMany({
+          where: {
+            orgId: branch.orgId,
+            active: true,
+            approvedById: { not: null }, // Must be approved
+          },
+          include: { effects: true },
+          orderBy: { priority: 'desc' },
+        });
+
+        const applicablePromotions: any[] = [];
+
+        // Evaluate each promotion
+        for (const promotion of promotions) {
+          const context = {
+            branchId,
+            items: order.orderItems.map((oi: any) => ({
+              menuItemId: oi.menuItemId,
+              category: oi.menuItem.categoryId,
+            })),
+            timestamp: dto.timestamp ? new Date(dto.timestamp) : new Date(),
+            couponCode,
+          };
+
+          const applies = await this.promotionsService.evaluatePromotion(promotion, context);
+          if (applies) {
+            applicablePromotions.push(promotion);
+            if (promotion.exclusive) {
+              // If exclusive, stop after first match (already sorted by priority)
+              break;
+            }
+          }
+        }
+
+        // Apply promotions to order items (cap at 1 promotion per line for phase 1)
+        for (const promotion of applicablePromotions) {
+          for (const effect of promotion.effects) {
+            if (effect.type === 'PERCENT_OFF' || effect.type === 'HAPPY_HOUR') {
+              const discountPct = Number(effect.value) / 100;
+
+              for (const orderItem of order.orderItems) {
+                // Check if item matches scope
+                const scope = promotion.scope as any;
+                const itemMatches =
+                  !scope ||
+                  !scope.items ||
+                  scope.items.length === 0 ||
+                  scope.items.includes(orderItem.menuItemId);
+
+                const categoryMatches =
+                  !scope ||
+                  !scope.categories ||
+                  scope.categories.length === 0 ||
+                  scope.categories.includes(orderItem.menuItem.categoryId);
+
+                if (itemMatches && categoryMatches) {
+                  const itemTotal = Number(orderItem.price) * orderItem.quantity;
+                  const discountAmount = itemTotal * discountPct;
+
+                  totalDiscountFromPromotions += discountAmount;
+
+                  promotionMetadata.push({
+                    orderItemId: orderItem.id,
+                    promotionId: promotion.id,
+                    promotionName: promotion.name,
+                    effect: effect.type,
+                    valueApplied: discountAmount,
+                  });
+                }
+              }
+            } else if (effect.type === 'FIXED_OFF') {
+              // Fixed discount applied to total (phase 1: simple split)
+              const discountAmount = Number(effect.value);
+              totalDiscountFromPromotions += discountAmount;
+
+              promotionMetadata.push({
+                promotionId: promotion.id,
+                promotionName: promotion.name,
+                effect: effect.type,
+                valueApplied: discountAmount,
+              });
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Promotion evaluation error:', err);
+        // Best-effort: continue without promotions
+      }
+    }
+
+    // Update order with promotion metadata
+    if (promotionMetadata.length > 0) {
+      await this.prisma.client.order.update({
+        where: { id: orderId },
+        data: {
+          metadata: {
+            ...(order.metadata as object),
+            promotionsApplied: promotionMetadata,
+          },
+          discount: totalDiscountFromPromotions,
+        },
+      });
+    }
+
     // Create payment stub
     await this.prisma.client.payment.create({
       data: {
@@ -434,6 +613,10 @@ export class PosService {
     this.efrisService.push(orderId).catch(() => {
       // Silently ignore errors (will be retried by worker)
     });
+
+    // Mark KPIs dirty
+    const orgId = (await this.prisma.client.branch.findUnique({ where: { id: branchId } }))?.orgId;
+    if (orgId) this.markKpisDirty(orgId, branchId);
 
     return closedOrder;
   }

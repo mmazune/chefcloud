@@ -55,6 +55,10 @@ export class VoidOrderDto {
 export class CloseOrderDto {
   @IsNumber()
   amount!: number;
+
+  @IsString()
+  @IsOptional()
+  timestamp?: string; // ISO timestamp for testing daypart promotions
 }
 
 export class ApplyDiscountDto {

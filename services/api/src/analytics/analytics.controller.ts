@@ -4,11 +4,15 @@ import { AuthGuard } from '@nestjs/passport';
 import { AnalyticsService } from './analytics.service';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
+import { PrismaService } from '../prisma.service';
 
 @Controller('analytics')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 export class AnalyticsController {
-  constructor(private analyticsService: AnalyticsService) {}
+  constructor(
+    private analyticsService: AnalyticsService,
+    private prisma: PrismaService,
+  ) {}
 
   @Get('daily')
   @Roles('L3')
@@ -20,7 +24,31 @@ export class AnalyticsController {
   @Roles('L3')
   async getTopItems(@Req() req: any, @Query('limit') limit?: string): Promise<any> {
     const limitNum = limit ? parseInt(limit, 10) : 10;
-    return this.analyticsService.getTopItems(req.user.branchId, limitNum);
+
+    // Determine if user can see cost data
+    const canSeeCost = await this.canUserSeeCostData(req.user);
+
+    return this.analyticsService.getTopItems(req.user.branchId, limitNum, canSeeCost);
+  }
+
+  /**
+   * Check if user can see cost/margin data based on role or org settings
+   * - OWNER (L5), MANAGER (L4), or ACCOUNTANT roles can always see
+   * - CHEF (L3) and WAITER (L2) can see if showCostToChef=true in OrgSettings
+   */
+  private async canUserSeeCostData(user: any): Promise<boolean> {
+    // L4+ (MANAGER, OWNER) and ACCOUNTANT can always see
+    const roleLevel = parseInt(user.roleLevel.replace('L', ''), 10);
+    if (roleLevel >= 4 || user.role === 'ACCOUNTANT') {
+      return true;
+    }
+
+    // For L3 and below, check OrgSettings
+    const orgSettings = await this.prisma.client.orgSettings.findUnique({
+      where: { orgId: user.orgId },
+    });
+
+    return orgSettings?.showCostToChef || false;
   }
 
   @Get('staff/voids')

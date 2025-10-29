@@ -1,11 +1,20 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException, Optional, Inject } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { OpenShiftDto, CloseShiftDto } from './shifts.dto';
 
 @Injectable()
 export class ShiftsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    @Optional() @Inject('KpisService') private kpisService?: any,
+  ) {}
+
+  private markKpisDirty(orgId: string, branchId: string) {
+    if (this.kpisService) {
+      this.kpisService.markDirty(orgId, branchId);
+    }
+  }
 
   async openShift(
     orgId: string,
@@ -22,7 +31,7 @@ export class ShiftsService {
       throw new BadRequestException('A shift is already open for this branch');
     }
 
-    return this.prisma.client.shift.create({
+    const result = await this.prisma.client.shift.create({
       data: {
         orgId,
         branchId,
@@ -35,6 +44,11 @@ export class ShiftsService {
         branch: { select: { id: true, name: true } },
       },
     });
+
+    // Invalidate KPI cache
+    this.markKpisDirty(orgId, branchId);
+
+    return result;
   }
 
   async closeShift(shiftId: string, userId: string, dto: CloseShiftDto): Promise<any> {
@@ -84,6 +98,9 @@ export class ShiftsService {
       branchId: shift.branchId,
       shiftId: shift.id,
     });
+
+    // Invalidate KPI cache
+    this.markKpisDirty(shift.orgId, shift.branchId);
 
     return result;
   }

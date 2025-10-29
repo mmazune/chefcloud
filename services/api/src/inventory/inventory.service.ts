@@ -1,11 +1,20 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Injectable } from '@nestjs/common';
+import { Injectable, Optional, Inject } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { CreateInventoryItemDto } from './inventory.dto';
 
 @Injectable()
 export class InventoryService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    @Optional() @Inject('KpisService') private kpisService?: any,
+  ) {}
+
+  private markKpisDirty(orgId: string, branchId: string) {
+    if (this.kpisService) {
+      this.kpisService.markDirty(orgId, branchId);
+    }
+  }
 
   async createItem(orgId: string, dto: CreateInventoryItemDto): Promise<any> {
     return this.prisma.client.inventoryItem.create({
@@ -117,7 +126,7 @@ export class InventoryService {
     reason: string,
     adjustedBy: string,
   ): Promise<any> {
-    return this.prisma.client.$transaction(async (tx) => {
+    const result = await this.prisma.client.$transaction(async (tx) => {
       // Record the adjustment
       const adjustment = await tx.adjustment.create({
         data: {
@@ -193,5 +202,10 @@ export class InventoryService {
 
       return adjustment;
     });
+
+    // Invalidate KPI cache after adjustment
+    this.markKpisDirty(orgId, branchId);
+
+    return result;
   }
 }

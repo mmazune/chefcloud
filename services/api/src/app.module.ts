@@ -5,6 +5,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { HealthController } from './health/health.controller';
 import { PrismaService } from './prisma.service';
 import { AuthModule } from './auth/auth.module';
+import { PlatformAccessGuard } from './auth/platform-access.guard';
 import { MeModule } from './me/me.module';
 import { DeviceModule } from './device/device.module';
 import { MenuModule } from './menu/menu.module';
@@ -29,6 +30,14 @@ import { OwnerModule } from './owner/owner.module';
 import { StreamModule } from './stream/stream.module';
 import { DashboardsModule } from './dashboards/dashboards.module';
 import { ThresholdsModule } from './thresholds/thresholds.module';
+import { AccessModule } from './access/access.module';
+import { DevPortalModule } from './dev-portal/dev-portal.module';
+import { BillingModule } from './billing/billing.module';
+import { FranchiseModule } from './franchise/franchise.module';
+import { BadgesModule } from './badges/badges.module';
+import { KpisModule } from './kpis/kpis.module';
+import { PromotionsModule } from './promotions/promotions.module';
+import { CashModule } from './cash/cash.module';
 import { LoggerMiddleware } from './logger.middleware';
 
 @Module({
@@ -64,6 +73,14 @@ import { LoggerMiddleware } from './logger.middleware';
     StreamModule,
     DashboardsModule,
     ThresholdsModule,
+    AccessModule,
+    DevPortalModule,
+    BillingModule,
+    FranchiseModule,
+    BadgesModule,
+    KpisModule,
+    PromotionsModule,
+    CashModule,
   ],
   controllers: [HealthController, WebhooksController],
   providers: [
@@ -71,6 +88,10 @@ import { LoggerMiddleware } from './logger.middleware';
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: PlatformAccessGuard,
     },
   ],
 })
