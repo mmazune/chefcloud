@@ -4,6 +4,8 @@ import { BillingService } from './billing.service';
 import { PrismaService } from '../prisma.service';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { PlanRateLimiterGuard } from '../common/plan-rate-limiter.guard';
+import { RedisService } from '../common/redis.service';
 
 @Module({
   imports: [
@@ -17,6 +19,6 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
     }),
   ],
   controllers: [BillingController],
-  providers: [BillingService, PrismaService],
+  providers: [BillingService, PrismaService, PlanRateLimiterGuard, RedisService],
 })
 export class BillingModule {}

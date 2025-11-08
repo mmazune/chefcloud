@@ -1,0 +1,192 @@
+.
+├── apps
+│   ├── desktop
+│   │   ├── A6a-s2-IMPLEMENTATION.md
+│   │   ├── index.html
+│   │   ├── package.json
+│   │   ├── README.md
+│   │   ├── src
+│   │   ├── src-tauri
+│   │   ├── test
+│   │   ├── TESTING.md
+│   │   ├── tsconfig.json
+│   │   ├── tsconfig.node.json
+│   │   ├── tsconfig.tsbuildinfo
+│   │   ├── vite.config.ts
+│   │   └── vitest.config.ts
+│   ├── mobile
+│   │   ├── app
+│   │   ├── app.json
+│   │   ├── assets
+│   │   ├── babel.config.js
+│   │   ├── package.json
+│   │   └── tsconfig.json
+│   └── web
+│       ├── next.config.js
+│       ├── next-env.d.ts
+│       ├── package.json
+│       ├── src
+│       └── tsconfig.json
+├── B1-SMTP-SLACK-DELIVERY.md
+├── B2-API-KEY-EXAMPLES.sh
+├── B2-SECURITY-HARDENING.md
+├── ChefCloud_Engineering_Blueprint_v0.1.md
+├── commitlint.config.js
+├── CONTRIBUTING.md
+├── CURL_CHEATSHEET.md
+├── curl-examples-m10-s2.sh
+├── DEV_GUIDE.md
+├── docs
+│   ├── A2_COMPLETION_SUMMARY.md
+│   └── CHEFCLOUD_BLUEPRINT.md
+├── E22-S2-COMPLETION.md
+├── E22-S3-COMPLETION.md
+├── E23-S1-COMPLETION.md
+├── E23-S3-COMPLETION.md
+├── E24-CURL-CHEATSHEET.md
+├── E24-PLAN-RATE-LIMITING-COMPLETION.md
+├── E24-WEBHOOK-SECURITY-COMPLETION.md
+├── E25-BADGE-REVOCATION-COMPLETION.md
+├── E25-S1-COMPLETION.md
+├── E26-S1-COMPLETION.md
+├── E26-SSE-SECURITY-COMPLETION.md
+├── E27-S1-COMPLETION.md
+├── E37-S1-COMPLETION.md
+├── E39-S1-COMPLETION.md
+├── E40-S1-COMPLETION.md
+├── E40-S2-COMPLETION.md
+├── E42-S1-COMPLETION.md
+├── E45-S1-COMPLETION.md
+├── E55-S1-STATUS.md
+├── infra
+│   ├── deploy
+│   │   └── README.md
+│   └── docker
+│       ├── docker-compose.yml
+│       └── README.md
+├── LICENSE
+├── M10-s2-SUMMARY.md
+├── M7-S1-SUMMARY.md
+├── M8-S2B-COMPLETION.md
+├── package.json
+├── packages
+│   ├── auth
+│   │   ├── package.json
+│   │   ├── src
+│   │   ├── tsconfig.json
+│   │   └── tsconfig.tsbuildinfo
+│   ├── contracts
+│   │   ├── package.json
+│   │   ├── src
+│   │   ├── tsconfig.json
+│   │   └── tsconfig.tsbuildinfo
+│   ├── db
+│   │   ├── package.json
+│   │   ├── prisma
+│   │   ├── src
+│   │   ├── tsconfig.json
+│   │   └── tsconfig.tsbuildinfo
+│   ├── printer
+│   │   ├── package.json
+│   │   ├── src
+│   │   ├── tsconfig.json
+│   │   └── tsconfig.tsbuildinfo
+│   └── ui
+│       ├── package.json
+│       ├── src
+│       ├── tsconfig.json
+│       └── tsconfig.tsbuildinfo
+├── perf
+│   ├── run.sh
+│   ├── scenarios
+│   │   ├── kpis-sse.js
+│   │   ├── latency-mix.js
+│   │   ├── offline-queue.js
+│   │   ├── owner-overview.js
+│   │   └── pos-happy.js
+│   └── smoke-assert.js
+├── pnpm-lock.yaml
+├── pnpm-workspace.yaml
+├── README.md
+├── reports
+│   ├── artifacts
+│   │   ├── curl_examples.sh
+│   │   ├── curl_smoke.sh
+│   │   ├── e24-validation.sh
+│   │   ├── epics_matrix.json
+│   │   ├── epic_status.csv
+│   │   ├── inferred_endpoints.txt
+│   │   ├── test_coverage.json
+│   │   └── webhook-security-test.sh
+│   ├── AUDIT_SUMMARY.md
+│   ├── logs
+│   │   ├── 00_env.txt
+│   │   ├── 01_git_log.txt
+│   │   ├── 02_git_status.txt
+│   │   ├── 03_tree_L3.txt
+│   │   ├── 10_pnpm_install.txt
+│   │   ├── 11_build.txt
+│   │   ├── 12_lint.txt
+│   │   ├── 13_typecheck.txt
+│   │   ├── 14_test.txt
+│   │   ├── 15_coverage.txt
+│   │   ├── 40_endpoints_grep.txt
+│   │   ├── 41_api_meta.txt
+│   │   ├── 42_billing_webhooks.txt
+│   │   ├── 43_governance.txt
+│   │   ├── 44_costing_inventory.txt
+│   │   ├── 45_franchise_forecast.txt
+│   │   ├── 46_sse.txt
+│   │   ├── 47_currency_tax.txt
+│   │   ├── 48_migrations.txt
+│   │   ├── 49_obs.txt
+│   │   ├── 50_todos.txt
+│   │   └── 60_sse_guard_tests.txt
+│   └── README.md
+├── scripts
+│   ├── analyze_coverage.js
+│   ├── analyze_epics.js
+│   ├── enqueue-efris-retry.js
+│   ├── extract_endpoints.sh
+│   ├── query-fiscal-invoices.js
+│   ├── step1_bootstrap.sh
+│   └── step2_node_build.sh
+├── SECURITY.md
+├── services
+│   ├── api
+│   │   ├── coverage
+│   │   ├── cycle-report.txt
+│   │   ├── E55-FIX7-SOLUTION.md
+│   │   ├── jest-e2e.config.ts
+│   │   ├── jest-e2e.setup.ts
+│   │   ├── jest.setup.ts
+│   │   ├── nest-cli.json
+│   │   ├── package.json
+│   │   ├── prisma
+│   │   ├── README.md
+│   │   ├── reports
+│   │   ├── src
+│   │   ├── test
+│   │   ├── tsconfig.e2e.json
+│   │   ├── tsconfig.e2e.tsbuildinfo
+│   │   └── tsconfig.json
+│   ├── sync
+│   │   ├── package.json
+│   │   ├── src
+│   │   ├── tsconfig.json
+│   │   └── tsconfig.tsbuildinfo
+│   └── worker
+│       ├── jest.config.js
+│       ├── package.json
+│       ├── src
+│       ├── tsconfig.json
+│       └── tsconfig.tsbuildinfo
+├── sse-example.js
+├── tools
+│   ├── audit-org-scope.js
+│   └── audit-org-scope.ts
+├── tsconfig.base.json
+├── tsconfig.json
+└── turbo.json
+
+44 directories, 145 files

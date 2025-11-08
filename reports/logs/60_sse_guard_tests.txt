@@ -1,0 +1,62 @@
+
+> @chefcloud/api@0.1.0 test /workspaces/chefcloud/services/api
+> jest --passWithNoTests "src/common/sse-rate-limiter.guard.spec.ts"
+
+FAIL src/common/sse-rate-limiter.guard.spec.ts
+  SseRateLimiterGuard
+    Rate Limiting - Per User
+      ✕ should allow requests under the rate limit (11 ms)
+      ✕ should block requests exceeding rate limit (3 ms)
+      ✓ should include Retry-After header on rate limit exceeded (3 ms)
+    Rate Limiting - Per IP
+      ✓ should rate limit by IP when no user (3 ms)
+      ✓ should extract IP from X-Forwarded-For header (2 ms)
+    Concurrent Connection Limiting
+      ✓ should track active connections per user (3 ms)
+      ✓ should block when max concurrent connections exceeded (2 ms)
+      ✓ should decrement connections on request close (2 ms)
+      ✓ should track total active connections (2 ms)
+    Sliding Window
+      ✓ should allow requests after window expires (2 ms)
+    Error Messages
+      ✓ should return clear error message on rate limit (2 ms)
+      ✓ should return clear error message on concurrent limit (2 ms)
+
+  ● SseRateLimiterGuard › Rate Limiting - Per User › should allow requests under the rate limit
+
+    HttpException: Maximum 2 concurrent SSE connections allowed per user. Please close existing connections.
+
+      73 |           `SSE concurrent connection limit exceeded for user ${userId} (${activeConns}/${this.maxConcurrentPerUser})`,
+      74 |         );
+    > 75 |         throw new HttpException(
+         |               ^
+      76 |           {
+      77 |             statusCode: HttpStatus.TOO_MANY_REQUESTS,
+      78 |             message: `Maximum ${this.maxConcurrentPerUser} concurrent SSE connections allowed per user. Please close existing connections.`,
+
+      at SseRateLimiterGuard.canActivate (common/sse-rate-limiter.guard.ts:75:15)
+      at Object.<anonymous> (common/sse-rate-limiter.guard.spec.ts:45:36)
+
+  ● SseRateLimiterGuard › Rate Limiting - Per User › should block requests exceeding rate limit
+
+    HttpException: Maximum 2 concurrent SSE connections allowed per user. Please close existing connections.
+
+      73 |           `SSE concurrent connection limit exceeded for user ${userId} (${activeConns}/${this.maxConcurrentPerUser})`,
+      74 |         );
+    > 75 |         throw new HttpException(
+         |               ^
+      76 |           {
+      77 |             statusCode: HttpStatus.TOO_MANY_REQUESTS,
+      78 |             message: `Maximum ${this.maxConcurrentPerUser} concurrent SSE connections allowed per user. Please close existing connections.`,
+
+      at SseRateLimiterGuard.canActivate (common/sse-rate-limiter.guard.ts:75:15)
+      at Object.<anonymous> (common/sse-rate-limiter.guard.spec.ts:59:40)
+
+Test Suites: 1 failed, 1 total
+Tests:       2 failed, 10 passed, 12 total
+Snapshots:   0 total
+Time:        0.912 s
+Ran all test suites matching /src\/common\/sse-rate-limiter.guard.spec.ts/i.
+Jest did not exit one second after the test run has completed.
+
+'This usually means that there are asynchronous operations that weren't stopped in your tests. Consider running Jest with `--detectOpenHandles` to troubleshoot this issue.

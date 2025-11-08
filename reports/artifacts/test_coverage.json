@@ -1,0 +1,12 @@
+{
+  "language": "node",
+  "totalSuites": 38,
+  "passedSuites": 37,
+  "failedSuites": 1,
+  "totalTests": 311,
+  "passedTests": 306,
+  "failedTests": 2,
+  "skippedTests": 3,
+  "packages": [],
+  "failures": []
+}

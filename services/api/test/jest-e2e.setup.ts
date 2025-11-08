@@ -1,3 +1,5 @@
+import 'reflect-metadata';
+import 'source-map-support/register';
 import * as dotenv from 'dotenv';
 import { resolve } from 'path';
 

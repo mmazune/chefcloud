@@ -4,7 +4,7 @@ import { PosController } from './pos.controller';
 import { PosService } from './pos.service';
 import { PrismaService } from '../prisma.service';
 import { EfrisModule } from '../efris/efris.module';
-import { EventBusService } from '../events/event-bus.service';
+import { EventsModule } from '../events/events.module';
 import { InventoryModule } from '../inventory/inventory.module';
 import { KpisModule } from '../kpis/kpis.module';
 import { PromotionsModule } from '../promotions/promotions.module';
@@ -14,12 +14,13 @@ import { AccountingModule } from '../accounting/accounting.module';
   imports: [
     EfrisModule,
     ConfigModule,
+    EventsModule,
     InventoryModule,
     KpisModule,
     PromotionsModule,
     AccountingModule,
   ],
   controllers: [PosController],
-  providers: [PosService, PrismaService, EventBusService],
+  providers: [PosService, PrismaService],
 })
 export class PosModule {}

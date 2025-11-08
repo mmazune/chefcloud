@@ -5,6 +5,7 @@ import {
   UnauthorizedException,
   ForbiddenException,
   NotFoundException,
+  Optional,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import {
@@ -20,6 +21,8 @@ import { ConfigService } from '@nestjs/config';
 import { EventBusService } from '../events/event-bus.service';
 import { CostingService } from '../inventory/costing.service';
 import { PostingService } from '../accounting/posting.service';
+import { PromotionsService } from '../promotions/promotions.service';
+import { KpisService } from '../kpis/kpis.service';
 
 @Injectable()
 export class PosService {
@@ -30,8 +33,8 @@ export class PosService {
     private eventBus: EventBusService,
     private costingService: CostingService,
     private postingService: PostingService,
-    private promotionsService?: any, // Optional promotions service
-    private kpisService?: any, // Optional, best-effort
+    @Optional() private promotionsService?: PromotionsService,
+    @Optional() private kpisService?: KpisService,
   ) {}
 
   private markKpisDirty(orgId: string, branchId?: string) {

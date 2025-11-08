@@ -1,0 +1,959 @@
+
+> @chefcloud/api@0.1.0 test:cov /workspaces/chefcloud/services/api
+> jest --coverage
+
+  console.warn
+    ⚠️  CHAOS MODE ENABLED: { latencyMs: 100, dbTimeoutPct: 0, redisDropPct: 0 }
+
+      22 |
+      23 |     if (this.isEnabled()) {
+    > 24 |       console.warn('⚠️  CHAOS MODE ENABLED:', {
+         |               ^
+      25 |         latencyMs: this.latencyMs,
+      26 |         dbTimeoutPct: this.dbTimeoutPct,
+      27 |         redisDropPct: this.redisDropPct,
+
+      at new warn (common/chaos.ts:24:15)
+      at Object.<anonymous> (common/chaos.spec.ts:56:21)
+
+  console.warn
+    ⚠️  CHAOS MODE ENABLED: { latencyMs: 0, dbTimeoutPct: 30, redisDropPct: 0 }
+
+      22 |
+      23 |     if (this.isEnabled()) {
+    > 24 |       console.warn('⚠️  CHAOS MODE ENABLED:', {
+         |               ^
+      25 |         latencyMs: this.latencyMs,
+      26 |         dbTimeoutPct: this.dbTimeoutPct,
+      27 |         redisDropPct: this.redisDropPct,
+
+      at new warn (common/chaos.ts:24:15)
+      at Object.<anonymous> (common/chaos.spec.ts:71:21)
+
+  console.warn
+    ⚠️  CHAOS MODE ENABLED: { latencyMs: 0, dbTimeoutPct: 30, redisDropPct: 0 }
+
+      22 |
+      23 |     if (this.isEnabled()) {
+    > 24 |       console.warn('⚠️  CHAOS MODE ENABLED:', {
+         |               ^
+      25 |         latencyMs: this.latencyMs,
+      26 |         dbTimeoutPct: this.dbTimeoutPct,
+      27 |         redisDropPct: this.redisDropPct,
+
+      at new warn (common/chaos.ts:24:15)
+      at Object.<anonymous> (common/chaos.spec.ts:79:21)
+
+  console.warn
+    ⚠️  CHAOS MODE ENABLED: { latencyMs: 0, dbTimeoutPct: 0, redisDropPct: 30 }
+
+      22 |
+      23 |     if (this.isEnabled()) {
+    > 24 |       console.warn('⚠️  CHAOS MODE ENABLED:', {
+         |               ^
+      25 |         latencyMs: this.latencyMs,
+      26 |         dbTimeoutPct: this.dbTimeoutPct,
+      27 |         redisDropPct: this.redisDropPct,
+
+      at new warn (common/chaos.ts:24:15)
+      at Object.<anonymous> (common/chaos.spec.ts:89:21)
+
+  console.warn
+    ⚠️  CHAOS MODE ENABLED: { latencyMs: 0, dbTimeoutPct: 0, redisDropPct: 30 }
+
+      22 |
+      23 |     if (this.isEnabled()) {
+    > 24 |       console.warn('⚠️  CHAOS MODE ENABLED:', {
+         |               ^
+      25 |         latencyMs: this.latencyMs,
+      26 |         dbTimeoutPct: this.dbTimeoutPct,
+      27 |         redisDropPct: this.redisDropPct,
+
+      at new warn (common/chaos.ts:24:15)
+      at Object.<anonymous> (common/chaos.spec.ts:97:21)
+
+  console.warn
+    ⚠️  CHAOS MODE ENABLED: { latencyMs: 50, dbTimeoutPct: 10, redisDropPct: 5 }
+
+      22 |
+      23 |     if (this.isEnabled()) {
+    > 24 |       console.warn('⚠️  CHAOS MODE ENABLED:', {
+         |               ^
+      25 |         latencyMs: this.latencyMs,
+      26 |         dbTimeoutPct: this.dbTimeoutPct,
+      27 |         redisDropPct: this.redisDropPct,
+
+      at new warn (common/chaos.ts:24:15)
+      at Object.<anonymous> (common/chaos.spec.ts:110:21)
+
+FAIL src/common/chaos.spec.ts
+  ChaosService
+    Default behavior (disabled)
+      ✓ should be disabled by default (6 ms)
+      ✓ should not inject latency when disabled (1 ms)
+      ✓ should not throw DB timeout when disabled (1 ms)
+      ✓ should not drop cache hits when disabled (8 ms)
+    Latency injection
+      ✓ should inject latency when enabled (134 ms)
+    DB timeout injection
+      ✓ should throw timeout when percentage is 100 (42 ms)
+      ✓ should cap timeout percentage at 30 (2 ms)
+    Cache drop injection
+      ✕ should drop cache hits when percentage is 100 (5 ms)
+      ✓ should cap drop percentage at 30 (2 ms)
+    Multiple chaos features
+      ✓ should enable when any chaos feature is active (2 ms)
+
+  ● ChaosService › Cache drop injection › should drop cache hits when percentage is 100
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      90 |
+      91 |       expect(chaos.isEnabled()).toBe(true);
+    > 92 |       expect(chaos.maybeDropCacheHit()).toBe(true);
+         |                                         ^
+      93 |     });
+      94 |
+      95 |     it('should cap drop percentage at 30', () => {
+
+      at Object.<anonymous> (common/chaos.spec.ts:92:41)
+
+PASS src/franchise/franchise.service.spec.ts
+  FranchiseService
+    getRankings
+      ✓ should use default weights if franchiseWeights not set (22 ms)
+      ✓ should use custom weights from org settings (2 ms)
+    calculateMovingAverage
+      ✓ should calculate MA14 correctly (1 ms)
+      ✓ should return 0 for no consumption (2 ms)
+    upsertBudget
+      ✓ should create new budget if not exists (3 ms)
+    getProcurementSuggestions
+      ✓ should suggest items below safety stock (7 ms)
+    E22-s3: Central Procurement
+      generateDraftPOs
+        ✓ should apply packSize rounding correctly (2 ms)
+        ✓ should enforce minOrderQty (2 ms)
+        ✓ should group items by supplier and branch (2 ms)
+      getDraftPOs
+        ✓ should return draft POs with supplier and branch details (3 ms)
+      approvePOs
+        ✓ should update PO status to PLACED and log email stubs (3 ms)
+
+PASS src/ops/change-control.spec.ts
+  E49-s1: Change Control & Staged Rollouts
+    FeatureFlagsService
+      Rollout Percentage Determinism
+        ✓ should enable flag for 100% rollout (15 ms)
+        ✓ should disable flag for 0% rollout (3 ms)
+        ✓ should use deterministic hash for percentage rollout (2 ms)
+        ✓ should distribute 50% rollout across different contexts (25 ms)
+      Scope Matching
+        ✓ should match role scope (5 ms)
+        ✓ should match branch scope (2 ms)
+        ✓ should require ALL scopes to match (3 ms)
+      Kill Switch
+        ✓ should set active=false and rolloutPct=0 (3 ms)
+        ✓ should create audit trail on kill (4 ms)
+        ✓ should throw NotFoundException if flag does not exist (23 ms)
+      Flag Upsert
+        ✓ should create new flag with CREATE audit (3 ms)
+        ✓ should update existing flag with UPDATE audit (3 ms)
+      Flag Toggle
+        ✓ should toggle active state (2 ms)
+    MaintenanceService
+      Write Blocking
+        ✓ should block writes during active maintenance window (2 ms)
+        ✓ should allow writes outside maintenance window (2 ms)
+        ✓ should return default message if none provided (2 ms)
+        ✓ should scope maintenance to org (2 ms)
+      Create Maintenance Window
+        ✓ should create maintenance window with defaults (3 ms)
+      Get Active Windows
+        ✓ should return active maintenance windows (2 ms)
+
+PASS src/dev-portal/dev-portal.service.spec.ts
+  DevPortalService
+    upsertPlan
+      ✓ should create a new plan (7 ms)
+      ✓ should update an existing plan (2 ms)
+    manageDevAdmin
+      ✓ should add a new dev admin (3 ms)
+      ✓ should add a super dev admin (2 ms)
+      ✓ should remove a regular dev admin (5 ms)
+      ✓ should refuse to remove super dev if only 2 exist (27 ms)
+      ✓ should allow removing super dev if more than 2 exist (2 ms)
+      ✓ should reject invalid action (4 ms)
+    createOrg
+      ✓ should create org with ACTIVE subscription (108 ms)
+      ✓ should reject inactive plan (4 ms)
+      ✓ should reject non-existent plan (2 ms)
+    listSubscriptions
+      ✓ should list all subscriptions with org and plan details (2 ms)
+
+PASS src/bookings/bookings-ticket.spec.ts
+  BookingsService - E42-s2 PDF Generation
+    generateTicketPdf
+      ✓ should generate PDF with QR code (smoke test: bytes > 0) (467 ms)
+      ✓ should throw NotFoundException if booking not found (45 ms)
+      ✓ should throw BadRequestException if booking has no ticket code (3 ms)
+    confirmBooking - E42-s2 ticket code generation
+      ✓ should generate ticketCode on confirmation (4 ms)
+
+PASS src/auth/auth.helpers.spec.ts
+  AuthHelpers
+    hashPassword and verifyPassword
+      ✓ should hash a password (104 ms)
+      ✓ should verify a correct password (176 ms)
+      ✓ should reject an incorrect password (136 ms)
+      ✓ should create different hashes for the same password (303 ms)
+    hashPin and verifyPin
+      ✓ should hash a PIN (64 ms)
+      ✓ should verify a correct PIN (130 ms)
+      ✓ should reject an incorrect PIN (140 ms)
+      ✓ should handle 6-digit PINs (133 ms)
+
+PASS src/owner/owner.service.spec.ts
+  OwnerService
+    getOverview
+      ✓ should aggregate sales, top items, and anomalies (18 ms)
+    createDigest
+      ✓ should create a digest configuration (5 ms)
+    sendDigestEmail
+      ✓ should send email via nodemailer with PDF and CSV attachments (108 ms)
+    buildTopItemsCSV
+      ✓ should build CSV with headers and data rows (3 ms)
+
+PASS src/auth/api-key.guard.spec.ts
+  ApiKeyGuard
+    ✓ should allow requests with valid API key (201 ms)
+    ✓ should throw UnauthorizedException for missing API key header (13 ms)
+    ✓ should throw UnauthorizedException for invalid API key (223 ms)
+    ✓ should bypass validation in dev mode with VERIFY=false (2 ms)
+    ✓ should enforce validation in dev mode with VERIFY=true (1 ms)
+    ✓ should update lastUsedAt timestamp on successful validation (143 ms)
+
+  console.error
+    RangeError: Port should be >= 0 and < 65536. Received type number (NaN).
+        at lookupAndConnect (node:net:1302:5)
+        at Socket.connect (node:net:1259:5)
+        at connect (node:net:242:17)
+        at /workspaces/chefcloud/node_modules/.pnpm/ioredis@5.8.2/node_modules/ioredis/built/connectors/StandaloneConnector.js:54:66
+        at processTicksAndRejections (node:internal/process/task_queues:77:11) {
+      code: 'ERR_SOCKET_BAD_PORT'
+    }
+
+      at Queue.emit (../../../node_modules/.pnpm/bullmq@5.61.2/node_modules/bullmq/src/classes/queue-base.ts:129:17)
+      at Queue.emit (../../../node_modules/.pnpm/bullmq@5.61.2/node_modules/bullmq/src/classes/queue.ts:203:18)
+      at RedisConnection.<anonymous> (../../../node_modules/.pnpm/bullmq@5.61.2/node_modules/bullmq/src/classes/queue-base.ts:75:56)
+      at EventEmitter.RedisConnection.handleClientError (../../../node_modules/.pnpm/bullmq@5.61.2/node_modules/bullmq/src/classes/redis-connection.ts:121:12)
+      at EventEmitter.silentEmit (../../../node_modules/.pnpm/ioredis@5.8.2/node_modules/ioredis/built/Redis.js:484:30)
+      at ../../../node_modules/.pnpm/ioredis@5.8.2/node_modules/ioredis/built/Redis.js:127:27
+      at tryCatcher (../../../node_modules/.pnpm/standard-as-callback@2.1.0/node_modules/standard-as-callback/built/utils.js:12:23)
+      at ../../../node_modules/.pnpm/standard-as-callback@2.1.0/node_modules/standard-as-callback/built/index.js:33:51
+
+  console.error
+    RangeError: Port should be >= 0 and < 65536. Received type number (NaN).
+        at lookupAndConnect (node:net:1302:5)
+        at Socket.connect (node:net:1259:5)
+        at connect (node:net:242:17)
+        at /workspaces/chefcloud/node_modules/.pnpm/ioredis@5.8.2/node_modules/ioredis/built/connectors/StandaloneConnector.js:54:66
+        at processTicksAndRejections (node:internal/process/task_queues:77:11) {
+      code: 'ERR_SOCKET_BAD_PORT'
+    }
+
+      at Queue.emit (../../../node_modules/.pnpm/bullmq@5.61.2/node_modules/bullmq/src/classes/queue-base.ts:129:17)
+      at Queue.emit (../../../node_modules/.pnpm/bullmq@5.61.2/node_modules/bullmq/src/classes/queue.ts:203:18)
+      at RedisConnection.<anonymous> (../../../node_modules/.pnpm/bullmq@5.61.2/node_modules/bullmq/src/classes/queue-base.ts:75:56)
+      at EventEmitter.RedisConnection.handleClientError (../../../node_modules/.pnpm/bullmq@5.61.2/node_modules/bullmq/src/classes/redis-connection.ts:121:12)
+      at EventEmitter.silentEmit (../../../node_modules/.pnpm/ioredis@5.8.2/node_modules/ioredis/built/Redis.js:484:30)
+      at ../../../node_modules/.pnpm/ioredis@5.8.2/node_modules/ioredis/built/Redis.js:127:27
+      at tryCatcher (../../../node_modules/.pnpm/standard-as-callback@2.1.0/node_modules/standard-as-callback/built/utils.js:12:23)
+      at ../../../node_modules/.pnpm/standard-as-callback@2.1.0/node_modules/standard-as-callback/built/index.js:33:51
+
+  console.error
+    RangeError: Port should be >= 0 and < 65536. Received type number (NaN).
+        at lookupAndConnect (node:net:1302:5)
+        at Socket.connect (node:net:1259:5)
+        at connect (node:net:242:17)
+        at /workspaces/chefcloud/node_modules/.pnpm/ioredis@5.8.2/node_modules/ioredis/built/connectors/StandaloneConnector.js:54:66
+        at processTicksAndRejections (node:internal/process/task_queues:77:11) {
+      code: 'ERR_SOCKET_BAD_PORT'
+    }
+
+      at Queue.emit (../../../node_modules/.pnpm/bullmq@5.61.2/node_modules/bullmq/src/classes/queue-base.ts:129:17)
+      at Queue.emit (../../../node_modules/.pnpm/bullmq@5.61.2/node_modules/bullmq/src/classes/queue.ts:203:18)
+      at RedisConnection.<anonymous> (../../../node_modules/.pnpm/bullmq@5.61.2/node_modules/bullmq/src/classes/queue-base.ts:75:56)
+      at ../../../node_modules/.pnpm/bullmq@5.61.2/node_modules/bullmq/src/classes/redis-connection.ts:133:41
+
+  console.error
+    RangeError: Port should be >= 0 and < 65536. Received type number (NaN).
+        at lookupAndConnect (node:net:1302:5)
+        at Socket.connect (node:net:1259:5)
+        at connect (node:net:242:17)
+        at /workspaces/chefcloud/node_modules/.pnpm/ioredis@5.8.2/node_modules/ioredis/built/connectors/StandaloneConnector.js:54:66
+        at processTicksAndRejections (node:internal/process/task_queues:77:11) {
+      code: 'ERR_SOCKET_BAD_PORT'
+    }
+
+      at Queue.emit (../../../node_modules/.pnpm/bullmq@5.61.2/node_modules/bullmq/src/classes/queue-base.ts:129:17)
+      at Queue.emit (../../../node_modules/.pnpm/bullmq@5.61.2/node_modules/bullmq/src/classes/queue.ts:203:18)
+      at RedisConnection.<anonymous> (../../../node_modules/.pnpm/bullmq@5.61.2/node_modules/bullmq/src/classes/queue-base.ts:75:56)
+      at ../../../node_modules/.pnpm/bullmq@5.61.2/node_modules/bullmq/src/classes/redis-connection.ts:133:41
+
+PASS src/alerts/alerts.service.spec.ts
+  AlertsService
+    sendAlert
+      ✓ should send to Slack webhook if configured (12 ms)
+      ✓ should send email via SMTP if no Slack webhook configured (4 ms)
+    Slack webhook payload shape
+      ✓ should send properly formatted Slack blocks (17 ms)
+
+PASS src/workforce/payroll.service.spec.ts
+  PayrollService
+    Pay Component Math
+      ✓ should apply FIXED component (11 ms)
+      ✓ should apply RATE component (multiply by hourly rate) (2 ms)
+      ✓ should apply PERCENT component on gross (1 ms)
+      ✓ should apply DEDUCTION PERCENT component (4 ms)
+      ✓ should apply DEDUCTION FIXED component (2 ms)
+    Tax Application
+      ✓ should calculate tax from payrollTaxPct setting (2 ms)
+      ✓ should default to 0% tax if payrollTaxPct not set (1 ms)
+    GL Posting Balance
+      ✓ should create balanced journal entry (DR Expense = CR Payable) (3 ms)
+      ✓ should mark pay run as POSTED after GL posting (2 ms)
+    Upsert Component
+      ✓ should create new component (2 ms)
+      ✓ should update existing component (2 ms)
+
+PASS src/payments/payments.service.spec.ts
+  PaymentsService
+    createIntent
+      ✓ should create a payment intent successfully (4 ms)
+      ✓ should throw error if order not found (20 ms)
+    cancelIntent
+      ✓ should cancel a pending intent (3 ms)
+      ✓ should throw error if intent already succeeded (2 ms)
+    handleWebhook
+      ✓ should process MTN webhook successfully (3 ms)
+    reconcileExpiredIntents
+      ✓ should mark expired intents as FAILED (2 ms)
+
+PASS src/cash/cash.service.spec.ts
+  CashService
+    ✓ should be defined (5 ms)
+    openTillSession
+      ✓ should open a new till session (2 ms)
+      ✓ should reject if drawer already has open session (19 ms)
+    closeTillSession
+      ✓ should close session and calculate variance (3 ms)
+      ✓ should reject if session already closed (2 ms)
+    createCashMovement
+      ✓ should create PAID_IN movement for L2 (2 ms)
+      ✓ should create SAFE_DROP movement for L3 (6 ms)
+      ✓ should reject SAFE_DROP for L2 (2 ms)
+      ✓ should reject PICKUP for L3 (2 ms)
+      ✓ should create PICKUP movement for L4 (2 ms)
+      ✓ should reject movement on closed session (2 ms)
+
+{"level":"info","time":1762549502499,"service":"chefcloud-api","env":"test","sessionId":"test-session-id","orgId":"org-1","expiresAt":"2025-11-07T21:20:02.498Z","msg":"Support session created"}
+PASS src/support/support.service.spec.ts
+  SupportService
+    ✓ should be defined (4 ms)
+    createSession
+      ✓ should create a session with 15-minute expiry (3 ms)
+    validateToken
+      ✓ should return null for expired token (1 ms)
+      ✓ should return null for inactive session (1 ms)
+      ✓ should return session for valid token (2 ms)
+
+PASS src/events/event-bus.service.spec.ts
+  EventBusService
+    ✓ should be defined (4 ms)
+    ✓ should publish and subscribe to events (3 ms)
+    ✓ should filter events by topic (102 ms)
+    ✓ should throttle spout events per deviceId (1 event/sec) (5 ms)
+    ✓ should track client count (2 ms)
+    ✓ should drop events when max clients exceeded (2 ms)
+
+PASS src/auth/auth.service.spec.ts
+  MSR Badge Security
+    isPanLike
+      ✓ should detect Track 2 format (;digits=) (1 ms)
+      ✓ should detect Track 1 format (%Bdigits^) (1 ms)
+      ✓ should reject valid badge formats
+      ✓ should reject short digit sequences (1 ms)
+      ✓ should detect 19-digit PANs
+    parseBadgeCode
+      ✓ should parse valid CLOUDBADGE format (1 ms)
+      ✓ should reject invalid formats
+      ✓ should accept alphanumeric with underscore and hyphen (1 ms)
+
+PASS src/access/access.service.spec.ts
+  AccessService
+    ✓ should be defined (6 ms)
+    getMatrix
+      ✓ should return defaults when no platformAccess is set (2 ms)
+      ✓ should return stored platformAccess when set (2 ms)
+    patchMatrix
+      ✓ should successfully update platformAccess with valid data (3 ms)
+      ✓ should reject updates with non-object values (20 ms)
+      ✓ should reject updates with null values (2 ms)
+      ✓ should reject updates with non-boolean desktop value (3 ms)
+      ✓ should reject updates with non-boolean web value (1 ms)
+      ✓ should reject updates with non-boolean mobile value (3 ms)
+      ✓ should reject updates with missing desktop flag (2 ms)
+      ✓ should handle multiple roles in one update (1 ms)
+    resetToDefaults
+      ✓ should reset matrix to defaults and return updated:true (2 ms)
+      ✓ should return updated:false when matrix already matches defaults (2 ms)
+      ✓ should reset when platformAccess is null (1 ms)
+
+PASS src/inventory/counts.service.spec.ts
+  CountsService
+    beginCount
+      ✓ should create a new stock count for open shift (4 ms)
+      ✓ should return existing draft if already started (2 ms)
+      ✓ should throw if no open shift (17 ms)
+    submitCount
+      ✓ should finalize stock count with lines (2 ms)
+    validateShiftStockCount - tolerance logic
+      ✓ should pass when variances are within percentage tolerance (2 ms)
+      ✓ should pass when variance within absolute tolerance (2 ms)
+      ✓ should reject when variance exceeds both tolerances (2 ms)
+      ✓ should reject if no stock count exists (1 ms)
+      ✓ should reject if count has no lines (1 ms)
+    emitVarianceAnomalies
+      ✓ should emit NEGATIVE_STOCK for negative variance (2 ms)
+      ✓ should emit LARGE_VARIANCE for positive variance (1 ms)
+
+PASS src/hardware/spout.service.spec.ts
+  SpoutService
+    createDevice
+      ✓ should create a device with a random secret (5 ms)
+    calibrate
+      ✓ should upsert calibration for a device and inventory item (1 ms)
+      ✓ should throw NotFoundException if device does not exist (14 ms)
+    ingestEvent
+      ✓ should compute ml from pulses using calibration (3 ms)
+      ✓ should verify HMAC signature when SPOUT_VERIFY=true (3 ms)
+      ✓ should throw NotFoundException if device is inactive (2 ms)
+    getEvents
+      ✓ should filter events by deviceId and date range (3 ms)
+
+PASS src/promotions/promotions.service.spec.ts
+  PromotionsService
+    evaluatePromotion
+      ✓ should match time window (4 ms)
+      ✓ should reject expired promotion (1 ms)
+      ✓ should match daypart (day of week) (2 ms)
+      ✓ should reject wrong day of week (1 ms)
+      ✓ should match time range (happy hour) (1 ms)
+      ✓ should reject outside time range (1 ms)
+      ✓ should match branch scope (5 ms)
+      ✓ should reject wrong branch (2 ms)
+      ✓ should match item scope (1 ms)
+      ✓ should match category scope (1 ms)
+      ✓ should reject wrong category (1 ms)
+      ✓ should require coupon code (1 ms)
+      ✓ should reject wrong coupon code (2 ms)
+      ✓ should reject inactive promotion (1 ms)
+
+PASS src/workforce/workforce.service.spec.ts
+  WorkforceService
+    Leave Management
+      ✓ should create leave request (5 ms)
+      ✓ should reject approval of non-pending leave (39 ms)
+      ✓ should approve pending leave request (2 ms)
+    Shift Swaps
+      ✓ should reject swap if user does not own shift (3 ms)
+      ✓ should create swap proposal if shift belongs to user (4 ms)
+      ✓ should update duty shift when swap is approved (4 ms)
+    Time Clock
+      ✓ should reject clock-in if already clocked in (2 ms)
+      ✓ should create time entry on clock-in (1 ms)
+      ✓ should calculate overtime on clock-out (2 ms)
+      ✓ should default to 8 hours if no overtime setting (1 ms)
+    Payroll Export
+      ○ skipped should aggregate regular and overtime minutes (SKIP: mock issue)
+
+PASS src/analytics/analytics.controller.spec.ts
+  AnalyticsController
+    getTopItems - RBAC for cost data
+      ✓ should include cost data for OWNER (L5) (6 ms)
+      ✓ should include cost data for MANAGER (L4) (2 ms)
+      ✓ should include cost data for ACCOUNTANT role regardless of level (1 ms)
+      ✓ should exclude cost data for CHEF (L3) when showCostToChef=false (3 ms)
+      ✓ should include cost data for CHEF (L3) when showCostToChef=true (2 ms)
+      ✓ should exclude cost data for WAITER (L2) when showCostToChef=false (3 ms)
+      ✓ should handle custom limit parameter (2 ms)
+
+PASS src/bookings/checkin.service.spec.ts
+  CheckinService
+    checkin
+      ✓ should successfully check in a valid booking (5 ms)
+      ✓ should throw NotFoundException for invalid ticket code (25 ms)
+      ✓ should throw BadRequestException if booking not CONFIRMED (1 ms)
+      ✓ should throw BadRequestException if already checked in (1 ms)
+      ✓ should throw BadRequestException if event not started (2 ms)
+      ✓ should throw BadRequestException if event already ended (2 ms)
+      ✓ should create PrepaidCredit if missing (idempotent) (2 ms)
+    getBookingForTicket
+      ✓ should return booking details (1 ms)
+      ✓ should throw NotFoundException for invalid booking ID (1 ms)
+
+PASS src/accounting/bank-rec.spec.ts
+  Bank Reconciliation
+    upsertBankAccount
+      ✓ should create new account if not exists (4 ms)
+      ✓ should update existing account (2 ms)
+    importCSV
+      ✓ should import transactions from CSV (1 ms)
+      ✓ should throw NotFoundException if account not found (15 ms)
+      ✓ should throw BadRequestException if CSV is empty (2 ms)
+    matchTransaction
+      ✓ should match bank transaction to payment (2 ms)
+      ✓ should throw if already reconciled (1 ms)
+    autoMatch
+      ✓ should auto-match payment within ±3 days (1 ms)
+    getUnreconciled
+      ✓ should return unreconciled transactions (2 ms)
+
+PASS src/common/slow-query.spec.ts
+  slowQueryMiddleware
+    ✓ should not log fast queries (1 ms)
+    ✓ should respect sampling rate (151 ms)
+    ○ skipped should log slow queries above threshold
+    ○ skipped should sanitize params to avoid logging sensitive data
+
+PASS src/auth/platform-access.guard.spec.ts
+  PlatformAccessGuard
+    unauthenticated requests
+      ✓ should allow requests with no user (3 ms)
+    platform access enforcement
+      ✓ should allow access when platform is permitted in matrix (1 ms)
+      ✓ should deny access when platform is not permitted in matrix (14 ms)
+      ✓ should use default matrix when orgSettings is null (2 ms)
+      ✓ should default to web platform when header is missing (2 ms)
+      ✓ should deny STOCK role from mobile platform (2 ms)
+    role level mapping
+      ✓ should map L5 to OWNER by default (2 ms)
+
+PASS src/accounting/period-lock.spec.ts
+  Period Locks
+    PeriodsService.createPeriod
+      ✓ should create period when no overlap (5 ms)
+      ✓ should throw BadRequestException on overlap (14 ms)
+    PeriodsService.lockPeriod
+      ✓ should lock period and set audit fields (2 ms)
+    PeriodsService.listPeriods
+      ✓ should list all periods (2 ms)
+      ✓ should filter by status (8 ms)
+
+PASS src/ops/ops.service.spec.ts
+  MetricsStore
+    ✓ should increment counter (1 ms)
+    ✓ should return 0 for non-existent counter
+    ✓ should track multiple metrics
+
+PASS src/currency/currency.service.spec.ts
+  CurrencyService
+    ✓ should be defined (4 ms)
+    getOrgCurrency
+      ✓ should return baseCurrencyCode when set (1 ms)
+      ✓ should fallback to currency field (1 ms)
+      ✓ should default to UGX (1 ms)
+    getBranchCurrency
+      ✓ should return branch currencyCode when set (5 ms)
+      ✓ should fallback to org currency (2 ms)
+      ✓ should throw if branch not found (18 ms)
+    convert
+      ✓ should return same amount for same currency (1 ms)
+      ✓ should convert UGX to USD (1 ms)
+      ✓ should use inverse rate if direct rate not found (1 ms)
+      ✓ should throw if no rate found (1 ms)
+    getCurrencyInfo
+      ✓ should return currency metadata (2 ms)
+      ✓ should throw if currency not found (2 ms)
+
+PASS src/billing/billing.service.spec.ts
+  BillingService
+    getSubscription
+      ✓ should return subscription details (4 ms)
+      ✓ should throw NotFoundException if no subscription exists (8 ms)
+    requestPlanChange
+      ✓ should log plan change request (1 ms)
+      ✓ should throw NotFoundException for inactive plan (2 ms)
+      ✓ should throw NotFoundException for non-existent plan (1 ms)
+      ✓ should throw NotFoundException if org has no subscription (1 ms)
+    requestCancellation
+      ✓ should log cancellation request (2 ms)
+      ✓ should throw NotFoundException if no subscription exists (1 ms)
+
+PASS src/tax/tax.service.spec.ts
+  TaxService
+    ✓ should be defined (4 ms)
+    calculateTax - inclusive
+      ✓ should calculate tax when tax is inclusive (1 ms)
+      ✓ should handle 15% alcohol tax inclusive (2 ms)
+    calculateTax - exclusive
+      ✓ should calculate tax when tax is exclusive (1 ms)
+      ✓ should handle 10% service charge exclusive (1 ms)
+    calculateServiceCharge
+      ✓ should calculate service charge when enabled (2 ms)
+      ✓ should return zero when service charge not configured (2 ms)
+    applyRounding
+      ✓ should round to nearest 50 for UGX (1 ms)
+      ✓ should round to nearest 100 (1 ms)
+      ✓ should not apply cash rounding for USD (1 ms)
+
+PASS src/auth/org-scope.guard.spec.ts
+  OrgScopeGuard
+    ✓ should allow request when x-org-id matches user orgId (3 ms)
+    ✓ should throw BadRequestException when x-org-id header is missing (8 ms)
+    ✓ should throw ForbiddenException when x-org-id does not match user orgId (6 ms)
+    ✓ should throw ForbiddenException when user is not authenticated (2 ms)
+    ✓ should attach validated orgId to request (1 ms)
+
+PASS src/analytics/analytics.service.spec.ts
+  AnalyticsService
+    getTopItems
+      ✓ should return top items without cost data when includeCostData=false (4 ms)
+      ✓ should return top items WITH cost data when includeCostData=true (1 ms)
+      ✓ should calculate marginPct correctly (1 ms)
+      ✓ should handle null cost data gracefully (1 ms)
+      ✓ should respect the limit parameter (2 ms)
+
+PASS src/inventory/costing.service.spec.ts
+  CostingService
+    getWac
+      ✓ should calculate WAC correctly with multiple batches (4 ms)
+      ✓ should return 0 when no batches exist (1 ms)
+      ✓ should return 0 when total quantity is 0 (1 ms)
+    getRecipeCost
+      ✓ should calculate recipe cost without modifiers (1 ms)
+      ✓ should include modifier ingredients when selected (2 ms)
+      ✓ should exclude modifier ingredients when not selected (1 ms)
+      ✓ should handle micro-ingredients without zeroing (1 ms)
+    calculateItemCosting
+      ✓ should calculate cost and margin correctly (1 ms)
+      ✓ should return 0% margin when lineNet is zero (1 ms)
+
+PASS src/efris/efris.service.spec.ts
+  EfrisService
+    ✓ should be defined (4 ms)
+    buildPayload
+      ✓ should map burger+fries order with 18% tax (2 ms)
+      ✓ should throw error if order not found (22 ms)
+    push
+      ✓ should simulate success and upsert FiscalInvoice (1 ms)
+
+PASS src/webauthn/webauthn.service.spec.ts
+  WebAuthnService
+    ✓ should be defined (4 ms)
+    generateRegistrationOptions
+      ✓ should generate registration options for a user (2 ms)
+      ✓ should exclude existing credentials (1 ms)
+    generateAuthenticationOptions
+      ✓ should generate authentication options with allowed credentials (2 ms)
+
+PASS src/common/crypto.utils.spec.ts
+  Crypto Utils
+    verifyHMAC
+      ✓ should verify valid HMAC signature
+      ✓ should reject invalid signature
+      ✓ should reject signature with wrong secret
+      ✓ should handle empty inputs safely
+      ✓ should use constant-time comparison
+    checkTimestampWindow
+      ✓ should accept timestamp within 5 minute window (1 ms)
+      ✓ should reject timestamp outside 5 minute window
+      ✓ should support custom window size (1 ms)
+    verifyWebhookSignature
+      ✓ should verify valid webhook signature with timestamp
+      ✓ should reject signature with expired timestamp (replay attack) (1 ms)
+      ✓ should reject invalid timestamp format
+      ✓ should reject invalid signature even with valid timestamp (1 ms)
+    verifySpoutSignature
+      ✓ should verify valid spout device signature
+      ✓ should reject spout signature with wrong device secret (1 ms)
+
+PASS src/inventory/inventory.service.spec.ts
+  InventoryService - Adjustments
+    ✓ should be defined (6 ms)
+    createAdjustment
+      ✓ should create positive adjustment and update newest batch (3 ms)
+      ✓ should create negative adjustment and use FIFO consumption (2 ms)
+
+PASS src/common/query-guard.spec.ts
+  QueryGuard
+    capPageSize
+      ✓ should return default size (20) when not specified (1 ms)
+      ✓ should cap to MAX_PAGE_SIZE (100)
+      ✓ should allow valid page sizes under the cap (1 ms)
+    toPrismaParams
+      ✓ should convert pagination params with defaults
+      ✓ should calculate skip correctly for pages (1 ms)
+      ✓ should respect custom sort parameters
+      ✓ should cap page size in params
+    getPaginationMeta
+      ✓ should calculate pagination metadata correctly (1 ms)
+      ✓ should handle first page correctly
+      ✓ should handle last page correctly (1 ms)
+      ✓ should handle partial pages
+
+A worker process has failed to exit gracefully and has been force exited. This is likely caused by tests leaking due to improper teardown. Try running with --detectOpenHandles to find leaks. Active timers can also cause this, ensure that .unref() was called on them.
+--------------------------------|---------|----------|---------|---------|-------------------------------------------------------------------
+File                            | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s                                                 
+--------------------------------|---------|----------|---------|---------|-------------------------------------------------------------------
+All files                       |   28.28 |    23.22 |   25.67 |   28.54 |                                                                   
+ src                            |   10.79 |    13.15 |    6.25 |   10.24 |                                                                   
+  app.module.ts                 |       0 |        0 |       0 |       0 | 1-114                                                             
+  logger.middleware.ts          |       0 |        0 |       0 |       0 | 1-36                                                              
+  logger.ts                     |   51.51 |    27.77 |   44.44 |   51.51 | 46-55,71-72,79-84,88-93,110                                       
+  main.ts                       |       0 |        0 |       0 |       0 | 1-59                                                              
+  prisma.service.ts             |    12.5 |      100 |       0 |    8.69 | 7-170                                                             
+  telemetry.ts                  |       0 |        0 |       0 |       0 | 1-47                                                              
+  webhooks.controller.ts        |       0 |        0 |       0 |       0 | 1-22                                                              
+ src/access                     |      50 |     62.5 |      50 |   52.27 |                                                                   
+  access.controller.ts          |       0 |        0 |       0 |       0 | 1-56                                                              
+  access.module.ts              |       0 |      100 |     100 |       0 | 1-11                                                              
+  access.service.ts             |     100 |    93.75 |     100 |     100 | 36                                                                
+ src/accounting                 |   19.29 |    13.51 |   13.58 |   19.75 |                                                                   
+  accounting.controller.ts      |       0 |        0 |       0 |       0 | 9-134                                                             
+  accounting.module.ts          |       0 |      100 |     100 |       0 | 12-27                                                             
+  accounting.service.ts         |       0 |        0 |       0 |       0 | 9-458                                                             
+  bank-rec.controller.ts        |       0 |        0 |       0 |       0 | 1-51                                                              
+  bank-rec.service.ts           |   85.71 |    59.25 |    87.5 |   87.75 | 71-78,95                                                          
+  csv-parser.ts                 |    2.12 |        0 |       0 |    3.22 | 4-46                                                              
+  periods.controller.ts         |       0 |        0 |       0 |       0 | 1-33                                                              
+  periods.service.ts            |      75 |    54.54 |      80 |   73.07 | 12,40,44,64-72                                                    
+  posting-map.ts                |    92.3 |      100 |       0 |    92.3 | 24                                                                
+  posting.service.ts            |    5.76 |     6.97 |       0 |     4.3 | 21-462                                                            
+ src/alerts                     |   44.15 |    34.48 |   36.36 |   45.07 |                                                                   
+  alerts.controller.ts          |       0 |        0 |       0 |       0 | 1-28                                                              
+  alerts.dto.ts                 |       0 |      100 |     100 |       0 | 1-23                                                              
+  alerts.module.ts              |       0 |      100 |     100 |       0 | 1-13                                                              
+  alerts.service.ts             |   77.27 |    58.82 |   57.14 |   76.19 | 48-90,153                                                         
+ src/analytics                  |   35.82 |    50.54 |   22.85 |   34.71 |                                                                   
+  analytics.controller.ts       |   76.47 |    72.34 |   33.33 |      75 | 20,61,71,81,92-93,99-100                                          
+  analytics.module.ts           |       0 |      100 |     100 |       0 | 1-11                                                              
+  analytics.service.ts          |   23.65 |    27.27 |   19.23 |   21.42 | 10-49,126-300                                                     
+ src/auth                       |   42.08 |    30.12 |   44.11 |   40.24 |                                                                   
+  api-key.guard.ts              |   96.77 |    86.66 |     100 |   96.55 | 60                                                                
+  auth.controller.ts            |       0 |        0 |       0 |       0 | 1-63                                                              
+  auth.helpers.ts               |    87.5 |      100 |     100 |    87.5 | 16                                                                
+  auth.module.ts                |       0 |        0 |       0 |       0 | 1-23                                                              
+  auth.service.ts               |   15.46 |    24.07 |   18.18 |   13.68 | 41-333                                                            
+  jwt.strategy.ts               |       0 |        0 |       0 |       0 | 1-36                                                              
+  org-scope.guard.ts            |     100 |      100 |     100 |     100 |                                                                   
+  platform-access.guard.ts      |   88.88 |    68.75 |     100 |      88 | 51,89-97                                                          
+  role-constants.ts             |     100 |      100 |     100 |     100 |                                                                   
+  roles.decorator.ts            |     100 |      100 |     100 |     100 |                                                                   
+  roles.guard.ts                |   38.09 |    23.07 |   33.33 |   31.57 | 11-40                                                             
+ src/auth/dto                   |       0 |      100 |     100 |       0 |                                                                   
+  auth.dto.ts                   |       0 |      100 |     100 |       0 | 1-38                                                              
+ src/badges                     |       0 |        0 |       0 |       0 |                                                                   
+  badges.controller.ts          |       0 |        0 |       0 |       0 | 2-46                                                              
+  badges.module.ts              |       0 |      100 |     100 |       0 | 1-11                                                              
+  badges.service.ts             |       0 |        0 |       0 |       0 | 2-123                                                             
+ src/billing                    |   47.91 |    64.28 |   44.44 |      50 |                                                                   
+  billing.controller.ts         |       0 |        0 |       0 |       0 | 1-27                                                              
+  billing.module.ts             |       0 |      100 |       0 |       0 | 1-22                                                              
+  billing.service.ts            |     100 |       90 |     100 |     100 | 6                                                                 
+ src/bookings                   |   35.93 |    13.97 |   23.07 |   35.98 |                                                                   
+  bookings.controller.ts        |       0 |        0 |       0 |       0 | 10-159                                                            
+  bookings.module.ts            |       0 |      100 |     100 |       0 | 7-22                                                              
+  bookings.service.ts           |      50 |    17.07 |   31.57 |   49.46 | 23-171,188,192,196,244-375                                        
+  checkin.controller.ts         |       0 |        0 |       0 |       0 | 7-59                                                              
+  checkin.service.ts            |     100 |       80 |     100 |     100 | 14,75-76                                                          
+  public-bookings.controller.ts |       0 |        0 |       0 |       0 | 10-134                                                            
+ src/cash                       |   51.11 |    33.87 |   43.75 |   53.65 |                                                                   
+  cash.controller.ts            |       0 |        0 |       0 |       0 | 1-113                                                             
+  cash.module.ts                |       0 |      100 |     100 |       0 | 1-13                                                              
+  cash.service.ts               |   73.01 |    61.76 |      70 |   74.57 | 83,102,198,249,270-321                                            
+ src/common                     |   71.27 |    67.24 |   88.23 |   70.96 |                                                                   
+  base.service.ts               |       0 |        0 |       0 |       0 | 1-54                                                              
+  chaos.ts                      |   94.11 |    94.11 |     100 |   93.75 | 62                                                                
+  crypto.utils.ts               |   96.29 |      100 |     100 |   96.29 | 29                                                                
+  query-guard.ts                |     100 |    88.88 |     100 |     100 | 48                                                                
+  slow-query.ts                 |    37.5 |    26.31 |     100 |    37.5 | 24-60                                                             
+ src/currency                   |   82.85 |    82.35 |     100 |   87.09 |                                                                   
+  currency.module.ts            |       0 |      100 |     100 |       0 | 5-13                                                              
+  currency.service.ts           |     100 |    82.35 |     100 |     100 | 12,60,71                                                          
+ src/dashboards                 |       0 |        0 |       0 |       0 |                                                                   
+  dashboards.controller.ts      |       0 |        0 |       0 |       0 | 1-91                                                              
+  dashboards.module.ts          |       0 |      100 |     100 |       0 | 1-10                                                              
+  dashboards.service.ts         |       0 |        0 |       0 |       0 | 2-210                                                             
+ src/dev-portal                 |   58.18 |       65 |      50 |   61.22 |                                                                   
+  dev-portal.controller.ts      |       0 |        0 |       0 |       0 | 1-56                                                              
+  dev-portal.module.ts          |       0 |      100 |     100 |       0 | 1-10                                                              
+  dev-portal.service.ts         |     100 |    81.25 |     100 |     100 | 7,119-125                                                         
+ src/dev-portal/guards          |       0 |        0 |       0 |       0 |                                                                   
+  dev-admin.guard.ts            |       0 |        0 |       0 |       0 | 1-30                                                              
+  super-dev.guard.ts            |       0 |        0 |       0 |       0 | 1-18                                                              
+ src/device                     |       0 |        0 |       0 |       0 |                                                                   
+  device.controller.ts          |       0 |        0 |       0 |       0 | 1-25                                                              
+  device.module.ts              |       0 |      100 |     100 |       0 | 1-10                                                              
+  device.service.ts             |       0 |        0 |       0 |       0 | 1-31                                                              
+ src/efris                      |   50.87 |    45.71 |   57.14 |   52.94 |                                                                   
+  efris.controller.ts           |       0 |        0 |       0 |       0 | 1-38                                                              
+  efris.module.ts               |       0 |      100 |     100 |       0 | 1-13                                                              
+  efris.service.ts              |   93.54 |    59.25 |     100 |    93.1 | 96-97                                                             
+ src/events                     |   82.14 |      100 |     100 |   86.95 |                                                                   
+  event-bus.service.ts          |     100 |      100 |     100 |     100 |                                                                   
+  events.module.ts              |       0 |      100 |     100 |       0 | 1-8                                                               
+ src/floor                      |       0 |        0 |       0 |       0 |                                                                   
+  floor.controller.ts           |       0 |        0 |       0 |       0 | 1-42                                                              
+  floor.dto.ts                  |       0 |      100 |     100 |       0 | 1-5                                                               
+  floor.module.ts               |       0 |      100 |     100 |       0 | 1-10                                                              
+  floor.service.ts              |       0 |        0 |       0 |       0 | 2-83                                                              
+ src/franchise                  |   65.26 |    36.98 |   59.45 |   65.54 |                                                                   
+  franchise.controller.ts       |       0 |        0 |       0 |       0 | 1-130                                                             
+  franchise.module.ts           |       0 |      100 |     100 |       0 | 1-11                                                              
+  franchise.service.ts          |    87.2 |    69.23 |   81.48 |   88.18 | 111,220-275                                                       
+ src/hardware                   |      64 |       44 |      50 |   64.61 |                                                                   
+  hardware.module.ts            |       0 |      100 |     100 |       0 | 1-13                                                              
+  spout.controller.ts           |       0 |        0 |       0 |       0 | 2-65                                                              
+  spout.service.ts              |     100 |    84.61 |     100 |     100 | 13,69,125                                                         
+ src/health                     |       0 |        0 |       0 |       0 |                                                                   
+  health.controller.ts          |       0 |        0 |       0 |       0 | 1-21                                                              
+ src/inventory                  |   42.08 |    26.66 |   34.78 |    42.8 |                                                                   
+  costing.service.ts            |     100 |     92.3 |     100 |     100 | 6                                                                 
+  counts.controller.ts          |       0 |        0 |       0 |       0 | 2-46                                                              
+  counts.service.ts             |   90.32 |    69.44 |   85.71 |   89.83 | 89,106-114,133                                                    
+  inventory.controller.ts       |       0 |        0 |       0 |       0 | 2-38                                                              
+  inventory.dto.ts              |       0 |      100 |       0 |       0 | 1-62                                                              
+  inventory.module.ts           |       0 |      100 |     100 |       0 | 1-38                                                              
+  inventory.service.ts          |      40 |    23.33 |   36.36 |      40 | 15-127,174                                                        
+  recipes.controller.ts         |       0 |        0 |       0 |       0 | 2-26                                                              
+  recipes.dto.ts                |       0 |      100 |       0 |       0 | 1-24                                                              
+  recipes.service.ts            |       0 |        0 |       0 |       0 | 2-31                                                              
+  wastage.controller.ts         |       0 |        0 |       0 |       0 | 2-17                                                              
+  wastage.dto.ts                |       0 |      100 |     100 |       0 | 1-12                                                              
+  wastage.service.ts            |       0 |        0 |       0 |       0 | 2-16                                                              
+ src/kds                        |       0 |        0 |       0 |       0 |                                                                   
+  kds.controller.ts             |       0 |        0 |       0 |       0 | 1-27                                                              
+  kds.module.ts                 |       0 |      100 |     100 |       0 | 1-12                                                              
+  kds.service.ts                |       0 |        0 |       0 |       0 | 2-94                                                              
+ src/kpis                       |       0 |        0 |       0 |       0 |                                                                   
+  kpis.controller.ts            |       0 |        0 |       0 |       0 | 2-37                                                              
+  kpis.module.ts                |       0 |      100 |     100 |       0 | 1-11                                                              
+  kpis.service.ts               |       0 |        0 |       0 |       0 | 2-237                                                             
+ src/me                         |       0 |        0 |       0 |       0 |                                                                   
+  me.controller.ts              |       0 |        0 |       0 |       0 | 1-26                                                              
+  me.module.ts                  |       0 |      100 |     100 |       0 | 1-9                                                               
+  user.decorator.ts             |       0 |      100 |       0 |       0 | 1-5                                                               
+ src/menu                       |       0 |        0 |       0 |       0 |                                                                   
+  menu.controller.ts            |       0 |        0 |       0 |       0 | 1-54                                                              
+  menu.dto.ts                   |       0 |      100 |       0 |       0 | 1-62                                                              
+  menu.module.ts                |       0 |      100 |     100 |       0 | 1-11                                                              
+  menu.service.ts               |       0 |        0 |       0 |       0 | 1-95                                                              
+ src/ops                        |   26.47 |    35.43 |   27.45 |    25.2 |                                                                   
+  feature-flag.guard.ts         |       0 |        0 |       0 |       0 | 1-35                                                              
+  feature-flags.service.ts      |   82.35 |    72.22 |    62.5 |   84.09 | 144,172-197                                                       
+  flag.decorator.ts             |       0 |      100 |       0 |       0 | 1-9                                                               
+  maintenance.service.ts        |   92.85 |       80 |      80 |   91.66 | 75                                                                
+  ops.controller.ts             |       0 |        0 |       0 |       0 | 2-153                                                             
+  ops.module.ts                 |       0 |      100 |     100 |       0 | 1-20                                                              
+  ops.service.ts                |   16.19 |    22.58 |   31.25 |    14.7 | 40-55,65-299                                                      
+  write-block.middleware.ts     |       0 |        0 |       0 |       0 | 1-34                                                              
+ src/owner                      |   59.88 |    31.34 |    62.5 |   59.14 |                                                                   
+  owner.controller.ts           |       0 |        0 |       0 |       0 | 2-72                                                              
+  owner.module.ts               |       0 |      100 |     100 |       0 | 1-11                                                              
+  owner.service.ts              |    72.6 |       50 |   76.92 |    70.8 | 236-247,265,273,300-331,336-370                                   
+ src/payments                   |   43.79 |    43.01 |   45.45 |   44.21 |                                                                   
+  payments.controller.ts        |       0 |        0 |       0 |       0 | 1-19                                                              
+  payments.module.ts            |       0 |      100 |     100 |       0 | 1-16                                                              
+  payments.service.ts           |   51.93 |    49.38 |    62.5 |   51.18 | 37-38,41-42,66,72,115-119,129,149,180-181,227-255,261-265,300-428 
+ src/payments/adapters          |      65 |    46.87 |   66.66 |   61.11 |                                                                   
+  airtel-sandbox.adapter.ts     |      45 |    31.25 |   33.33 |   38.88 | 25-62                                                             
+  mtn-sandbox.adapter.ts        |      85 |     62.5 |     100 |   83.33 | 53-55                                                             
+ src/payments/dto               |       0 |      100 |     100 |       0 |                                                                   
+  create-intent.dto.ts          |       0 |      100 |     100 |       0 | 1-26                                                              
+ src/pos                        |       0 |        0 |       0 |       0 |                                                                   
+  pos.controller.ts             |       0 |        0 |       0 |       0 | 1-85                                                              
+  pos.dto.ts                    |       0 |      100 |       0 |       0 | 1-73                                                              
+  pos.module.ts                 |       0 |      100 |     100 |       0 | 1-26                                                              
+  pos.service.ts                |       0 |        0 |       0 |       0 | 2-868                                                             
+ src/promotions                 |    37.2 |     42.1 |   23.07 |   35.89 |                                                                   
+  promotions.controller.ts      |       0 |        0 |       0 |       0 | 1-66                                                              
+  promotions.module.ts          |       0 |      100 |     100 |       0 | 1-11                                                              
+  promotions.service.ts         |   61.53 |    54.79 |    37.5 |   58.33 | 34-117,139,156                                                    
+ src/purchasing                 |       0 |        0 |       0 |       0 |                                                                   
+  purchasing.controller.ts      |       0 |        0 |       0 |       0 | 2-33                                                              
+  purchasing.dto.ts             |       0 |      100 |       0 |       0 | 1-27                                                              
+  purchasing.module.ts          |       0 |      100 |     100 |       0 | 1-11                                                              
+  purchasing.service.ts         |       0 |        0 |       0 |       0 | 2-110                                                             
+ src/reports                    |       0 |        0 |       0 |       0 |                                                                   
+  reports.controller.ts         |       0 |        0 |       0 |       0 | 2-22                                                              
+  reports.module.ts             |       0 |      100 |     100 |       0 | 1-11                                                              
+  reports.service.ts            |       0 |        0 |       0 |       0 | 2-254                                                             
+ src/reservations               |       0 |        0 |       0 |       0 |                                                                   
+  reservations.controller.ts    |       0 |        0 |       0 |       0 | 2-52                                                              
+  reservations.dto.ts           |       0 |      100 |     100 |       0 | 1-35                                                              
+  reservations.module.ts        |       0 |      100 |     100 |       0 | 1-13                                                              
+  reservations.service.ts       |       0 |        0 |       0 |       0 | 2-284                                                             
+ src/settings                   |       0 |        0 |       0 |       0 |                                                                   
+  settings.controller.ts        |       0 |        0 |       0 |       0 | 9-158                                                             
+  settings.module.ts            |       0 |      100 |     100 |       0 | 5-13                                                              
+ src/shifts                     |       0 |        0 |       0 |       0 |                                                                   
+  shifts.controller.ts          |       0 |        0 |       0 |       0 | 2-40                                                              
+  shifts.dto.ts                 |       0 |      100 |     100 |       0 | 1-20                                                              
+  shifts.module.ts              |       0 |      100 |     100 |       0 | 1-14                                                              
+  shifts.service.ts             |       0 |        0 |       0 |       0 | 2-154                                                             
+ src/stream                     |       0 |        0 |       0 |       0 |                                                                   
+  stream.controller.ts          |       0 |        0 |       0 |       0 | 1-121                                                             
+  stream.module.ts              |       0 |      100 |     100 |       0 | 1-13                                                              
+ src/support                    |   35.38 |     42.1 |   28.57 |   35.59 |                                                                   
+  support.controller.ts         |       0 |        0 |       0 |       0 | 2-34                                                              
+  support.module.ts             |       0 |      100 |     100 |       0 | 1-11                                                              
+  support.service.ts            |   53.48 |    53.33 |      40 |   51.21 | 18-38,75,86-115                                                   
+ src/tax                        |   67.34 |       50 |   83.33 |   68.88 |                                                                   
+  tax.module.ts                 |       0 |      100 |     100 |       0 | 5-13                                                              
+  tax.service.ts                |   76.74 |       50 |   83.33 |    75.6 | 46-67,139                                                         
+ src/thresholds                 |       0 |        0 |       0 |       0 |                                                                   
+  thresholds.controller.ts      |       0 |        0 |       0 |       0 | 1-37                                                              
+  thresholds.module.ts          |       0 |      100 |     100 |       0 | 1-11                                                              
+  thresholds.service.ts         |       0 |        0 |       0 |       0 | 2-91                                                              
+ src/webauthn                   |   15.65 |    16.36 |   35.71 |   14.67 |                                                                   
+  webauthn.controller.ts        |       0 |        0 |       0 |       0 | 1-157                                                             
+  webauthn.module.ts            |       0 |        0 |       0 |       0 | 1-22                                                              
+  webauthn.service.ts           |      40 |       36 |   71.42 |    37.2 | 69-120,151-218                                                    
+ src/workforce                  |   34.15 |     22.9 |      30 |   34.64 |                                                                   
+  payroll.controller.ts         |       0 |        0 |       0 |       0 | 7-90                                                              
+  payroll.service.ts            |   51.61 |       50 |   55.55 |   50.54 | 29-132,151,192-220,234,238,265,312-326                            
+  workforce.controller.ts       |       0 |        0 |       0 |       0 | 9-219                                                             
+  workforce.module.ts           |       0 |      100 |       0 |       0 | 7-22                                                              
+  workforce.service.ts          |   39.32 |    24.32 |   58.33 |   39.75 | 65,101,130,171,175,255,297-501                                    
+--------------------------------|---------|----------|---------|---------|-------------------------------------------------------------------
+Summary of all failing tests
+FAIL common/chaos.spec.ts
+  ● ChaosService › Cache drop injection › should drop cache hits when percentage is 100
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      90 |
+      91 |       expect(chaos.isEnabled()).toBe(true);
+    > 92 |       expect(chaos.maybeDropCacheHit()).toBe(true);
+         |                                         ^
+      93 |     });
+      94 |
+      95 |     it('should cap drop percentage at 30', () => {
+
+      at Object.<anonymous> (common/chaos.spec.ts:92:41)
+
+
+Test Suites: 1 failed, 37 passed, 38 total
+Tests:       1 failed, 3 skipped, 307 passed, 311 total
+Snapshots:   0 total
+Time:        14.17 s
+Ran all test suites.
+ ELIFECYCLE  Command failed with exit code 1.

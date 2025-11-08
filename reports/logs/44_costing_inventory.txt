@@ -1,0 +1,276 @@
+./services/worker/src/index.ts:62:  type: 'spout-consume';
+./services/worker/src/index.ts:596:// Spout consume worker (runs every minute)
+./services/worker/src/index.ts:598:  'spout-consume',
+./services/worker/src/index.ts:600:    logger.info({ jobId: job.id }, 'Processing spout consume job');
+./services/worker/src/index.ts:604:    // Find unconsumed events from last minute
+./services/worker/src/index.ts:613:    logger.info({ eventCount: events.length }, 'Found spout events to consume');
+./services/worker/src/index.ts:615:    const consumptions: Record<string, number> = {};
+./services/worker/src/index.ts:621:      if (!consumptions[event.itemId]) {
+./services/worker/src/index.ts:622:        consumptions[event.itemId] = 0;
+./services/worker/src/index.ts:624:      consumptions[event.itemId] += parseFloat(event.ml.toString());
+./services/worker/src/index.ts:628:    for (const [itemId, totalMl] of Object.entries(consumptions)) {
+./services/worker/src/index.ts:655:      // Get stock batches for this item (FIFO by receivedAt)
+./services/worker/src/index.ts:656:      const stockBatches = await prisma.stockBatch.findMany({
+./services/worker/src/index.ts:664:      // Consume from stock batches (FIFO)
+./services/worker/src/index.ts:667:      for (const batch of stockBatches) {
+./services/worker/src/index.ts:675:          // Negative stock - create audit event
+./services/worker/src/index.ts:681:              resource: 'stock_batch',
+./services/worker/src/index.ts:695:            'Negative stock detected',
+./services/worker/src/index.ts:699:          await prisma.stockBatch.update({
+./services/worker/src/index.ts:707:          await prisma.stockBatch.update({
+./services/worker/src/index.ts:717:        logger.warn({ itemId, remaining }, 'Insufficient stock to consume all ml');
+./services/worker/src/index.ts:724:      itemsConsumed: Object.keys(consumptions).length,
+./services/worker/src/index.ts:1027:  console.log(`✅ Spout consume job ${job.id} completed`);
+./services/worker/src/index.ts:1031:  console.error(`❌ Spout consume job ${job?.id} failed:`, err.message);
+./services/worker/src/index.ts:1055:export const spoutConsumeQueue = new Queue<SpoutConsumeJob>('spout-consume', { connection });
+./services/worker/src/index.ts:1405:              recipeIngredients: {
+./services/worker/src/index.ts:1652:        // Collect items below safety stock per branch
+./services/worker/src/index.ts:1664:              stockBatches: {
+./services/worker/src/index.ts:1672:            const currentStock = item.stockBatches.reduce(
+./services/worker/src/index.ts:1964:    'spout-consume',
+./services/worker/src/index.ts:1965:    { type: 'spout-consume' },
+./services/worker/src/index.ts:1970:      jobId: 'spout-consume-recurring',
+./services/worker/src/index.ts:1973:  console.log('Scheduled spout consume job (every minute)');
+./services/worker/src/index.ts:2057:  '🚀 ChefCloud Worker started - listening for jobs on "reports", "payments", "efris", "anomalies", "alerts", "reservations", "reservation-reminders", "spout-consume", "digest", "subscription-renewals", "subscription-reminders-billing", "forecast-build", and "rank-branches" queues',
+./services/worker/dist/index.d.ts:32:    type: 'spout-consume';
+./services/api/src/purchasing/purchasing.service.ts:87:    // Create stock batches
+./services/api/src/purchasing/purchasing.service.ts:89:      this.prisma.client.stockBatch.create({
+./services/api/src/kpis/kpis.service.ts:13:  stockAtRisk: number;
+./services/api/src/kpis/kpis.service.ts:138:    const stockAtRisk = await this.prisma.client.stockBatch.count({
+./services/api/src/kpis/kpis.service.ts:161:      stockAtRisk,
+./services/api/src/kpis/kpis.service.ts:223:    const stockAtRisk = await this.prisma.client.stockBatch.count({
+./services/api/src/kpis/kpis.service.ts:245:      stockAtRisk,
+./services/api/src/accounting/posting.service.ts:147:                recipeIngredients: {
+./services/api/src/accounting/posting.service.ts:186:      if (item.menuItem.recipeIngredients && item.menuItem.recipeIngredients.length > 0) {
+./services/api/src/accounting/posting.service.ts:187:        for (const ingredient of item.menuItem.recipeIngredients) {
+./services/api/src/accounting/posting.service.ts:189:          const batch = await this.prisma.client.stockBatch.findFirst({
+./services/api/src/franchise/franchise.service.spec.ts:43:              stockBatch: {
+./services/api/src/franchise/franchise.service.spec.ts:162:      // Mock stock batches consumed over 14 days
+./services/api/src/franchise/franchise.service.spec.ts:163:      jest.spyOn(prisma.client.stockBatch, 'aggregate').mockResolvedValue({
+./services/api/src/franchise/franchise.service.spec.ts:176:    it('should return 0 for no consumption', async () => {
+./services/api/src/franchise/franchise.service.spec.ts:180:      jest.spyOn(prisma.client.stockBatch, 'aggregate').mockResolvedValue({
+./services/api/src/franchise/franchise.service.spec.ts:232:    it('should suggest items below safety stock', async () => {
+./services/api/src/franchise/franchise.service.spec.ts:239:          stockBatches: [
+./services/api/src/franchise/franchise.service.spec.ts:240:            { remainingQty: 30 }, // Current stock: 30
+./services/api/src/franchise/franchise.service.spec.ts:248:          stockBatches: [
+./services/api/src/franchise/franchise.service.spec.ts:249:            { remainingQty: 60 }, // Current stock: 60 (above reorder level)
+./services/api/src/franchise/franchise.service.spec.ts:275:        // Mock inventory items below safety stock
+./services/api/src/franchise/franchise.service.spec.ts:282:            stockBatches: [{ remainingQty: 30 }], // Below safety stock
+./services/api/src/franchise/franchise.service.spec.ts:328:            stockBatches: [{ remainingQty: 30 }],
+./services/api/src/franchise/franchise.service.spec.ts:368:            stockBatches: [{ remainingQty: 30 }],
+./services/api/src/franchise/franchise.service.spec.ts:375:            stockBatches: [{ remainingQty: 20 }],
+./services/api/src/franchise/franchise.service.spec.ts:382:            stockBatches: [{ remainingQty: 10 }],
+./services/api/src/franchise/franchise.service.ts:282:    // Get items below safety stock
+./services/api/src/franchise/franchise.service.ts:290:        stockBatches: {
+./services/api/src/franchise/franchise.service.ts:300:      const currentStock = item.stockBatches.reduce((sum, b) => sum + Number(b.remainingQty), 0);
+./services/api/src/franchise/franchise.service.ts:329:    // Count consumed inventory for the item
+./services/api/src/franchise/franchise.service.ts:330:    const consumed = await this.prisma.client.stockBatch.aggregate({
+./services/api/src/franchise/franchise.service.ts:342:    const receivedQty = Number(consumed._sum?.receivedQty || 0);
+./services/api/src/franchise/franchise.service.ts:343:    const remainingQty = Number(consumed._sum?.remainingQty || 0);
+./services/api/src/franchise/franchise.service.ts:344:    const consumedTotal = receivedQty - remainingQty;
+./services/api/src/franchise/franchise.service.ts:346:    return Math.max(0, consumedTotal / days);
+./services/api/src/franchise/franchise.service.ts:371:    // Collect items below safety stock per branch
+./services/api/src/franchise/franchise.service.ts:383:          stockBatches: {
+./services/api/src/franchise/franchise.service.ts:391:        const currentStock = item.stockBatches.reduce((sum, b) => sum + Number(b.remainingQty), 0);
+./services/api/src/inventory/inventory.service.ts:50:    // Get all stock batches
+./services/api/src/inventory/inventory.service.ts:51:    const batches = await this.prisma.client.stockBatch.findMany({
+./services/api/src/inventory/inventory.service.ts:87:  // FIFO consumption
+./services/api/src/inventory/inventory.service.ts:88:  async consumeIngredient(
+./services/api/src/inventory/inventory.service.ts:92:  ): Promise<{ success: boolean; consumed: number }> {
+./services/api/src/inventory/inventory.service.ts:94:    const batches = await this.prisma.client.stockBatch.findMany({
+./services/api/src/inventory/inventory.service.ts:113:        this.prisma.client.stockBatch.update({
+./services/api/src/inventory/inventory.service.ts:126:    const consumed = qtyNeeded - remaining;
+./services/api/src/inventory/inventory.service.ts:129:      consumed,
+./services/api/src/inventory/inventory.service.ts:133:  // Manual inventory adjustment (for mobile stock counts)
+./services/api/src/inventory/inventory.service.ts:155:      // Update stock batches
+./services/api/src/inventory/inventory.service.ts:156:      // For positive delta (adding stock), find the newest batch or create a virtual one
+./services/api/src/inventory/inventory.service.ts:157:      // For negative delta (removing stock), use FIFO
+./services/api/src/inventory/inventory.service.ts:159:        // Add stock: find newest batch and increase remainingQty
+./services/api/src/inventory/inventory.service.ts:160:        const newestBatch = await tx.stockBatch.findFirst({
+./services/api/src/inventory/inventory.service.ts:166:          await tx.stockBatch.update({
+./services/api/src/inventory/inventory.service.ts:174:          await tx.stockBatch.create({
+./services/api/src/inventory/inventory.service.ts:187:        // Remove stock: use FIFO consumption logic
+./services/api/src/inventory/inventory.service.ts:188:        const batches = await tx.stockBatch.findMany({
+./services/api/src/inventory/inventory.service.ts:204:          await tx.stockBatch.update({
+./services/api/src/inventory/inventory.service.ts:212:        // If we couldn't remove all (insufficient stock), we still record the adjustment
+./services/api/src/inventory/counts.service.ts:37:   * Begin a new stock count for the current shift.
+./services/api/src/inventory/counts.service.ts:56:    const existing = await this.prisma.client.stockCount.findFirst({
+./services/api/src/inventory/counts.service.ts:64:    return this.prisma.client.stockCount.create({
+./services/api/src/inventory/counts.service.ts:77:   * Submit/finalize a stock count with actual counted quantities.
+./services/api/src/inventory/counts.service.ts:84:    const count = await this.prisma.client.stockCount.findUnique({
+./services/api/src/inventory/counts.service.ts:92:    return this.prisma.client.stockCount.update({
+./services/api/src/inventory/counts.service.ts:103:   * Get the current or last stock count for the active shift.
+./services/api/src/inventory/counts.service.ts:114:    return this.prisma.client.stockCount.findFirst({
+./services/api/src/inventory/counts.service.ts:123:   * Validate that stock count exists for the shift and is within tolerance.
+./services/api/src/inventory/counts.service.ts:137:    const count = await this.prisma.client.stockCount.findFirst({
+./services/api/src/inventory/counts.service.spec.ts:17:      stockCount: {
+./services/api/src/inventory/counts.service.spec.ts:59:    it('should create a new stock count for open shift', async () => {
+./services/api/src/inventory/counts.service.spec.ts:62:      mockPrisma.client.stockCount.findFirst.mockResolvedValue(null);
+./services/api/src/inventory/counts.service.spec.ts:63:      mockPrisma.client.stockCount.create.mockResolvedValue({
+./services/api/src/inventory/counts.service.spec.ts:72:      expect(mockPrisma.client.stockCount.create).toHaveBeenCalledWith({
+./services/api/src/inventory/counts.service.spec.ts:88:      mockPrisma.client.stockCount.findFirst.mockResolvedValue(existing);
+./services/api/src/inventory/counts.service.spec.ts:93:      expect(mockPrisma.client.stockCount.create).not.toHaveBeenCalled();
+./services/api/src/inventory/counts.service.spec.ts:106:    it('should finalize stock count with lines', async () => {
+./services/api/src/inventory/counts.service.spec.ts:113:      mockPrisma.client.stockCount.findUnique.mockResolvedValue(count);
+./services/api/src/inventory/counts.service.spec.ts:114:      mockPrisma.client.stockCount.update.mockResolvedValue({
+./services/api/src/inventory/counts.service.spec.ts:123:      expect(mockPrisma.client.stockCount.update).toHaveBeenCalledWith({
+./services/api/src/inventory/counts.service.spec.ts:147:      mockPrisma.client.stockCount.findFirst.mockResolvedValue(count);
+./services/api/src/inventory/counts.service.spec.ts:171:      mockPrisma.client.stockCount.findFirst.mockResolvedValue(count);
+./services/api/src/inventory/counts.service.spec.ts:193:      mockPrisma.client.stockCount.findFirst.mockResolvedValue(count);
+./services/api/src/inventory/counts.service.spec.ts:212:    it('should reject if no stock count exists', async () => {
+./services/api/src/inventory/counts.service.spec.ts:215:      mockPrisma.client.stockCount.findFirst.mockResolvedValue(null);
+./services/api/src/inventory/counts.service.spec.ts:232:      mockPrisma.client.stockCount.findFirst.mockResolvedValue(count);
+./services/api/src/inventory/inventory.service.spec.ts:13:    stockBatch: {
+./services/api/src/inventory/inventory.service.spec.ts:53:      const reason = 'Physical count - found extra stock';
+./services/api/src/inventory/inventory.service.spec.ts:77:        mockPrismaClient.stockBatch.findFirst.mockResolvedValue(mockBatch);
+./services/api/src/inventory/inventory.service.spec.ts:78:        mockPrismaClient.stockBatch.update.mockResolvedValue({ ...mockBatch, remainingQty: 60 });
+./services/api/src/inventory/inventory.service.spec.ts:105:    it('should create negative adjustment and use FIFO consumption', async () => {
+./services/api/src/inventory/inventory.service.spec.ts:131:        mockPrismaClient.stockBatch.findMany.mockResolvedValue(mockBatches);
+./services/api/src/inventory/inventory.service.spec.ts:132:        mockPrismaClient.stockBatch.update.mockResolvedValue({});
+./services/api/src/inventory/inventory.service.spec.ts:146:      expect(mockPrismaClient.stockBatch.findMany).toHaveBeenCalledWith({
+./services/api/src/inventory/inventory.module.ts:4:import { RecipesController } from './recipes.controller';
+./services/api/src/inventory/inventory.module.ts:5:import { RecipesService } from './recipes.service';
+./services/api/src/inventory/inventory.module.ts:10:import { CostingService } from './costing.service';
+./services/api/src/inventory/costing.service.spec.ts:2:import { CostingService } from './costing.service';
+./services/api/src/inventory/costing.service.spec.ts:10:      stockBatch: {
+./services/api/src/inventory/costing.service.spec.ts:13:      recipeIngredient: {
+./services/api/src/inventory/costing.service.spec.ts:35:    it('should calculate WAC correctly with multiple batches', async () => {
+./services/api/src/inventory/costing.service.spec.ts:36:      mockPrisma.client.stockBatch.findMany.mockResolvedValue([
+./services/api/src/inventory/costing.service.spec.ts:47:      mockPrisma.client.stockBatch.findMany.mockResolvedValue([]);
+./services/api/src/inventory/costing.service.spec.ts:53:      mockPrisma.client.stockBatch.findMany.mockResolvedValue([{ unitCost: 100, remainingQty: 0 }]);
+./services/api/src/inventory/costing.service.spec.ts:60:    it('should calculate recipe cost without modifiers', async () => {
+./services/api/src/inventory/costing.service.spec.ts:61:      mockPrisma.client.recipeIngredient.findMany.mockResolvedValue([
+./services/api/src/inventory/costing.service.spec.ts:66:      mockPrisma.client.stockBatch.findMany
+./services/api/src/inventory/costing.service.spec.ts:77:      // Base recipe
+./services/api/src/inventory/costing.service.spec.ts:78:      mockPrisma.client.recipeIngredient.findMany.mockResolvedValueOnce([
+./services/api/src/inventory/costing.service.spec.ts:82:      // Modifier recipe
+./services/api/src/inventory/costing.service.spec.ts:83:      mockPrisma.client.recipeIngredient.findMany.mockResolvedValueOnce([
+./services/api/src/inventory/costing.service.spec.ts:87:      mockPrisma.client.stockBatch.findMany
+./services/api/src/inventory/costing.service.spec.ts:98:      mockPrisma.client.recipeIngredient.findMany.mockResolvedValueOnce([
+./services/api/src/inventory/costing.service.spec.ts:102:      mockPrisma.client.stockBatch.findMany.mockResolvedValueOnce([
+./services/api/src/inventory/costing.service.spec.ts:113:      mockPrisma.client.recipeIngredient.findMany.mockResolvedValue([
+./services/api/src/inventory/costing.service.spec.ts:117:      mockPrisma.client.stockBatch.findMany.mockResolvedValue([
+./services/api/src/inventory/costing.service.spec.ts:123:      // 0.001 * 50000 = 50 (rounded WAC prevents zero)
+./services/api/src/inventory/costing.service.spec.ts:131:      mockPrisma.client.recipeIngredient.findMany.mockResolvedValue([
+./services/api/src/inventory/costing.service.spec.ts:135:      mockPrisma.client.stockBatch.findMany.mockResolvedValue([
+./services/api/src/inventory/costing.service.spec.ts:159:      mockPrisma.client.recipeIngredient.findMany.mockResolvedValue([
+./services/api/src/inventory/costing.service.spec.ts:163:      mockPrisma.client.stockBatch.findMany.mockResolvedValue([
+./services/api/src/inventory/recipes.service.ts:4:import { UpsertRecipeDto } from './recipes.dto';
+./services/api/src/inventory/recipes.service.ts:12:    await this.prisma.client.recipeIngredient.deleteMany({
+./services/api/src/inventory/recipes.service.ts:17:    const ingredients = await this.prisma.client.recipeIngredient.createMany({
+./services/api/src/inventory/recipes.service.ts:31:    return this.prisma.client.recipeIngredient.findMany({
+./services/api/src/inventory/recipes.controller.ts:4:import { RecipesService } from './recipes.service';
+./services/api/src/inventory/recipes.controller.ts:5:import { UpsertRecipeDto } from './recipes.dto';
+./services/api/src/inventory/recipes.controller.ts:9:@Controller('inventory/recipes')
+./services/api/src/inventory/recipes.controller.ts:12:  constructor(private recipesService: RecipesService) {}
+./services/api/src/inventory/recipes.controller.ts:20:    return this.recipesService.upsertRecipe(menuItemId, dto);
+./services/api/src/inventory/recipes.controller.ts:26:    return this.recipesService.getRecipe(menuItemId);
+./services/api/src/inventory/costing.service.ts:9:   * Get Weighted Average Cost (WAC) for an inventory item.
+./services/api/src/inventory/costing.service.ts:10:   * WAC = sum(unitCost * remainingQty) / sum(remainingQty) across active batches.
+./services/api/src/inventory/costing.service.ts:13:    const batches = await this.prisma.client.stockBatch.findMany({
+./services/api/src/inventory/costing.service.ts:42:   * Get recipe cost for a menu item including modifiers.
+./services/api/src/inventory/costing.service.ts:49:    // Fetch the recipe
+./services/api/src/inventory/costing.service.ts:50:    const recipeIngredients = await this.prisma.client.recipeIngredient.findMany({
+./services/api/src/inventory/costing.service.ts:63:    // Base recipe cost
+./services/api/src/inventory/costing.service.ts:64:    for (const ingredient of recipeIngredients) {
+./services/api/src/inventory/costing.service.ts:75:        const modifierRecipes = await this.prisma.client.recipeIngredient.findMany({
+./services/api/src/inventory/costing.service.ts:85:        for (const recipe of modifierRecipes) {
+./services/api/src/inventory/costing.service.ts:86:          const wac = await this.getWac(recipe.itemId);
+./services/api/src/inventory/costing.service.ts:87:          const qty = Number(recipe.qtyPerUnit);
+./services/api/src/inventory/costing.service.ts:89:          // Round WAC to 4 decimal places
+./services/api/src/pos/pos.service.ts:22:import { CostingService } from '../inventory/costing.service';
+./services/api/src/pos/pos.service.ts:34:    private costingService: CostingService,
+./services/api/src/pos/pos.service.ts:123:              consumed: { lt: this.prisma.client.prepaidCredit.fields.amount },
+./services/api/src/pos/pos.service.ts:374:                recipeIngredients: {
+./services/api/src/pos/pos.service.ts:389:    // FIFO consumption: for each order item, consume ingredients
+./services/api/src/pos/pos.service.ts:401:      for (const recipeIngredient of menuItem.recipeIngredients) {
+./services/api/src/pos/pos.service.ts:402:        // If recipe ingredient is for a modifier, only consume if that modifier was selected
+./services/api/src/pos/pos.service.ts:404:          recipeIngredient.modifierOptionId &&
+./services/api/src/pos/pos.service.ts:405:          !modifierIds.includes(recipeIngredient.modifierOptionId)
+./services/api/src/pos/pos.service.ts:410:        const qtyNeeded = Number(recipeIngredient.qtyPerUnit) * quantity;
+./services/api/src/pos/pos.service.ts:412:        // Consume from stock batches (FIFO)
+./services/api/src/pos/pos.service.ts:413:        const batches = await this.prisma.client.stockBatch.findMany({
+./services/api/src/pos/pos.service.ts:416:            itemId: recipeIngredient.itemId,
+./services/api/src/pos/pos.service.ts:426:          const consumeQty = Math.min(remaining, Number(batch.remainingQty));
+./services/api/src/pos/pos.service.ts:427:          await this.prisma.client.stockBatch.update({
+./services/api/src/pos/pos.service.ts:429:            data: { remainingQty: { decrement: consumeQty } },
+./services/api/src/pos/pos.service.ts:432:          remaining -= consumeQty;
+./services/api/src/pos/pos.service.ts:437:          anomalyFlags.push(`NEGATIVE_STOCK:${recipeIngredient.item.sku}`);
+./services/api/src/pos/pos.service.ts:442:    // Calculate costing for each order item
+./services/api/src/pos/pos.service.ts:458:      const costing = await this.costingService.calculateItemCosting({
+./services/api/src/pos/pos.service.ts:467:      // Update order item with costing fields
+./services/api/src/pos/pos.service.ts:471:          costUnit: costing.costUnit,
+./services/api/src/pos/pos.service.ts:472:          costTotal: costing.costTotal,
+./services/api/src/pos/pos.service.ts:473:          marginTotal: costing.marginTotal,
+./services/api/src/pos/pos.service.ts:474:          marginPct: costing.marginPct,
+./services/api/src/pos/pos.service.ts:619:    // Audit log for ingredient consumption
+./services/api/src/pos/pos.service.ts:625:          action: 'order.closed.stock_anomaly',
+./services/api/src/bookings/bookings.service.ts:231:          consumed: 0,
+./services/api/src/bookings/checkin.service.ts:87:          consumed: 0,
+./services/api/src/bookings/checkin.service.ts:93:    const remaining = Number(credit.amount) - Number(credit.consumed);
+./services/api/src/bookings/checkin.service.ts:100:        consumed: credit.consumed,
+./services/api/src/bookings/checkin.service.spec.ts:71:            consumed: 20,
+./services/api/src/bookings/checkin.service.spec.ts:215:        consumed: 0,
+./services/api/src/bookings/checkin.service.spec.ts:238:          consumed: 0,
+./services/api/src/shifts/shifts.service.ts:75:    // E45-s1: Validate stock count before closing shift
+./services/api/src/shifts/shifts.service.ts:86:            action: 'shift.stock_reconciliation',
+./services/api/src/app.module.ts:112:  configure(consumer: MiddlewareConsumer) {
+./services/api/src/app.module.ts:113:    consumer.apply(LoggerMiddleware).forRoutes('*');
+./services/api/src/app.module.ts:114:    consumer.apply(WriteBlockMiddleware).forRoutes('*');
+./services/api/prisma/seed.ts:321:  await prisma.recipeIngredient.deleteMany({});
+./services/api/prisma/seed.ts:323:  await prisma.stockBatch.deleteMany({});
+./services/api/prisma/seed.ts:410:  await prisma.stockBatch.create({
+./services/api/prisma/seed.ts:421:  console.log(`✅ Created stock batch for ${bunItem.name} (200 pieces)`);
+./services/api/prisma/seed.ts:423:  await prisma.stockBatch.create({
+./services/api/prisma/seed.ts:434:  console.log(`✅ Created stock batch for ${pattyItem.name} (150 pieces)`);
+./services/api/prisma/seed.ts:436:  await prisma.stockBatch.create({
+./services/api/prisma/seed.ts:447:  console.log(`✅ Created stock batch for ${potatoItem.name} (50 kg)`);
+./services/api/prisma/seed.ts:449:  await prisma.stockBatch.create({
+./services/api/prisma/seed.ts:460:  console.log(`✅ Created stock batch for ${cheeseItem.name} (10 kg)`);
+./services/api/prisma/seed.ts:462:  await prisma.stockBatch.create({
+./services/api/prisma/seed.ts:473:  console.log(`✅ Created stock batch for ${cokeBottle.name} (300 bottles)`);
+./services/api/prisma/seed.ts:476:  // Burger recipe: 1 bun + 1 patty
+./services/api/prisma/seed.ts:477:  await prisma.recipeIngredient.createMany({
+./services/api/prisma/seed.ts:501:  console.log(`✅ Created recipe for ${burger.name} (1 bun, 1 patty, optional cheese)`);
+./services/api/prisma/seed.ts:503:  // Fries recipe: 0.2 kg potatoes
+./services/api/prisma/seed.ts:504:  await prisma.recipeIngredient.create({
+./services/api/prisma/seed.ts:512:  console.log(`✅ Created recipe for ${fries.name} (0.2 kg potatoes)`);
+./services/api/prisma/seed.ts:514:  // Coke recipe: 1 bottle
+./services/api/prisma/seed.ts:515:  await prisma.recipeIngredient.create({
+./services/api/prisma/seed.ts:523:  console.log(`✅ Created recipe for ${coke.name} (1 bottle)`);
+./services/api/dist/src/kpis/kpis.service.d.ts:10:    stockAtRisk: number;
+./services/api/dist/src/inventory/inventory.service.d.ts:11:    consumeIngredient(branchId: string, itemId: string, qtyNeeded: number): Promise<{
+./services/api/dist/src/inventory/inventory.service.d.ts:13:        consumed: number;
+./services/api/dist/src/inventory/recipes.service.d.ts:2:import { UpsertRecipeDto } from './recipes.dto';
+./services/api/dist/src/inventory/recipes.service.d.ts:9://# sourceMappingURL=recipes.service.d.ts.map
+./services/api/dist/src/inventory/recipes.dto.d.ts:10://# sourceMappingURL=recipes.dto.d.ts.map
+./services/api/dist/src/inventory/costing.service.spec.d.ts:2://# sourceMappingURL=costing.service.spec.d.ts.map
+./services/api/dist/src/inventory/costing.service.d.ts:27://# sourceMappingURL=costing.service.d.ts.map
+./services/api/dist/src/inventory/recipes.controller.d.ts:1:import { RecipesService } from './recipes.service';
+./services/api/dist/src/inventory/recipes.controller.d.ts:2:import { UpsertRecipeDto } from './recipes.dto';
+./services/api/dist/src/inventory/recipes.controller.d.ts:4:    private recipesService;
+./services/api/dist/src/inventory/recipes.controller.d.ts:5:    constructor(recipesService: RecipesService);
+./services/api/dist/src/inventory/recipes.controller.d.ts:9://# sourceMappingURL=recipes.controller.d.ts.map
+./services/api/dist/src/pos/pos.service.d.ts:6:import { CostingService } from '../inventory/costing.service';
+./services/api/dist/src/pos/pos.service.d.ts:15:    private costingService;
+./services/api/dist/src/pos/pos.service.d.ts:19:    constructor(prisma: PrismaService, efrisService: EfrisService, configService: ConfigService, eventBus: EventBusService, costingService: CostingService, postingService: PostingService, promotionsService?: PromotionsService | undefined, kpisService?: KpisService | undefined);
+./services/api/dist/src/app.module.d.ts:3:    configure(consumer: MiddlewareConsumer): void;
+./services/api/test/e22-franchise.e2e-spec.ts:242:    it('should return items below safety stock', async () => {
+./services/api/test/e22-franchise.e2e-spec.ts:255:      // Create stock batch with low quantity
+./services/api/test/e22-franchise.e2e-spec.ts:256:      await prisma.client.stockBatch.create({
+./services/api/test/e22-franchise.e2e-spec.ts:282:      await prisma.client.stockBatch.deleteMany({ where: { itemId: item.id } });
+./services/api/test/e22-franchise.e2e-spec.ts:321:      // Create stock batch below reorder level
+./services/api/test/e22-franchise.e2e-spec.ts:322:      await prisma.client.stockBatch.create({
+./services/api/test/e22-franchise.e2e-spec.ts:342:      await prisma.client.stockBatch.deleteMany({ where: { itemId } });
+./services/api/test/e27-costing.e2e-spec.ts:12: * 2. Close order to trigger costing calculation
+./services/api/test/e27-costing.e2e-spec.ts:43:    await prisma.client.stockBatch.deleteMany({ where: { branch: { orgId } } });
+./services/api/test/e27-costing.e2e-spec.ts:44:    await prisma.client.recipeIngredient.deleteMany({});
+./services/api/test/e27-costing.e2e-spec.ts:144:    // Create stock batches with costs
+./services/api/test/e27-costing.e2e-spec.ts:145:    await prisma.client.stockBatch.create({
+./services/api/test/e27-costing.e2e-spec.ts:157:    await prisma.client.stockBatch.create({
+./services/api/test/e27-costing.e2e-spec.ts:169:    await prisma.client.stockBatch.create({
+./services/api/test/e27-costing.e2e-spec.ts:209:    // Create recipes
+./services/api/test/e27-costing.e2e-spec.ts:210:    await prisma.client.recipeIngredient.create({
+./services/api/test/e27-costing.e2e-spec.ts:219:    await prisma.client.recipeIngredient.create({
+./services/api/test/e27-costing.e2e-spec.ts:228:    await prisma.client.recipeIngredient.create({
+./services/api/test/e27-costing.e2e-spec.ts:268:      // Step 2: Close the order (triggers costing calculation)

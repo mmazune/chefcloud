@@ -1,0 +1,10 @@
+epic,status,code_refs,test_refs,gaps_summary
+E22,🚧,"services/api/src/franchise/, services/worker/src/franchise-ranking.worker.ts","services/api/test/e22-franchise.e2e-spec.ts","Missing variance alerts; FORECAST strategy not implemented (E22-s4)"
+E23,✅,"services/api/src/access/, services/api/src/access/platform-access.guard.ts","services/api/test/e23-*.e2e-spec.ts",""
+E24,🚧,"services/api/src/billing/, services/api/src/dev-portal/, services/api/src/webhooks.controller.ts","services/api/test/e24-subscriptions.e2e-spec.ts, services/api/test/b2-apikey.e2e-spec.ts","No downgrade smoke test; missing webhook signature verification tests; no unit tests for billing service"
+E25,🧪,"services/api/src/badges/, services/api/src/auth/auth.controller.ts (msr-swipe)","services/api/src/badges/badges.service.spec.ts","No E2E tests; badge state machine not fully validated; missing custody transfer workflow"
+E26,✅,"services/api/src/stream/, services/api/src/kpis/, services/api/src/owner/","services/api/test/e26-kpis.e2e-spec.ts, services/api/src/kpis/kpis.service.spec.ts","No auth on SSE endpoint (known issue)"
+E27,✅,"services/api/src/analytics/costing.service.ts, services/api/src/pos/pos.controller.ts","services/api/test/e27-costing.e2e-spec.ts","WAC performance not benchmarked; nested recipe costing not fully tested"
+M7,✅,"services/api/src/stream/, services/api/src/owner/owner.service.ts","",""
+M8,🚧,"services/api/src/dashboards/, services/api/src/thresholds/","","Anomaly detection not fully integrated with alerting"
+M10,🧪,"services/api/src/efris/","curl-examples-m10-s2.sh","EFRIS integration needs E2E validation"

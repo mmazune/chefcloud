@@ -1,0 +1,10 @@
+./services/worker/src/index.ts:454:        // TODO: Integrate with email service
+./services/worker/src/index.ts:458:        // TODO: Integrate with Slack webhook
+./services/worker/src/index.ts:572:        // TODO: Integrate with SMS service
+./services/worker/src/index.ts:575:        // TODO: Integrate with email service
+./services/worker/src/index.ts:1228:          // TODO: Send actual email via SMTP
+./services/worker/src/index.ts:1300:              // TODO: Send actual email via SMTP
+./services/worker/src/index.ts:1307:              // TODO: Send Slack notification
+./DEV_GUIDE.md:306:- PO numbers are auto-generated (format: `PO-YYYYMMDD-XXX`)
+./DEV_GUIDE.md:1512:  "target": "https://hooks.slack.com/services/T00/B00/XXX",
+./E37-S1-COMPLETION.md:65:   - List promotions with optional filters: `?active=true&code=XXX`

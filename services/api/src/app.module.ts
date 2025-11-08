@@ -46,6 +46,8 @@ import { BookingsModule } from './bookings/bookings.module';
 import { WorkforceModule } from './workforce/workforce.module';
 import { LoggerMiddleware } from './logger.middleware';
 import { WriteBlockMiddleware } from './ops/write-block.middleware';
+import { RedisService } from './common/redis.service';
+import { WebhookVerificationGuard } from './common/webhook-verification.guard';
 
 @Module({
   imports: [
@@ -98,6 +100,8 @@ import { WriteBlockMiddleware } from './ops/write-block.middleware';
   controllers: [HealthController, WebhooksController],
   providers: [
     PrismaService,
+    RedisService,
+    WebhookVerificationGuard,
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,

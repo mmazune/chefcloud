@@ -1,0 +1,745 @@
+Scope: 11 of 12 workspace projects
+packages/auth test$ echo "No tests yet"
+packages/contracts test$ echo "No tests yet"
+packages/db test$ echo "No tests yet"
+packages/printer test$ echo "No tests yet"
+packages/auth test: No tests yet
+packages/contracts test: No tests yet
+packages/contracts test: Done
+packages/auth test: Done
+packages/db test: No tests yet
+packages/printer test: No tests yet
+packages/printer test: Done
+packages/db test: Done
+packages/ui test$ echo "No tests yet"
+packages/ui test: No tests yet
+packages/ui test: Done
+apps/desktop test$ vitest run
+apps/mobile test$ echo 'Mobile tests via EAS'
+apps/web test$ echo "No tests yet"
+services/api test$ jest --passWithNoTests
+apps/mobile test: Mobile tests via EAS
+apps/web test: No tests yet
+apps/web test: Done
+apps/mobile test: Done
+services/sync test$ echo "No tests yet"
+services/worker test$ jest
+services/sync test: No tests yet
+services/sync test: Done
+apps/desktop test:  RUN  v1.6.1 /workspaces/chefcloud/apps/desktop
+apps/desktop test: stderr | test/printer.test.ts > loadPrinterConfig > should handle invalid JSON in config file gracefully
+apps/desktop test: Failed to load printer config from file, using defaults: SyntaxError: Unexpected token 'i', "invalid json{" is not valid JSON
+apps/desktop test:     at JSON.parse (<anonymous>)
+apps/desktop test:     at Module.loadPrinterConfig (/workspaces/chefcloud/apps/desktop/src/lib/printer.ts:32:31)
+apps/desktop test:     at /workspaces/chefcloud/apps/desktop/test/printer.test.ts:106:20
+apps/desktop test:     at file:///workspaces/chefcloud/node_modules/.pnpm/@vitest+runner@1.6.1/node_modules/@vitest/runner/dist/index.js:135:14
+apps/desktop test:     at file:///workspaces/chefcloud/node_modules/.pnpm/@vitest+runner@1.6.1/node_modules/@vitest/runner/dist/index.js:60:26
+apps/desktop test:     at runTest (file:///workspaces/chefcloud/node_modules/.pnpm/@vitest+runner@1.6.1/node_modules/@vitest/runner/dist/index.js:781:17)
+apps/desktop test:     at runSuite (file:///workspaces/chefcloud/node_modules/.pnpm/@vitest+runner@1.6.1/node_modules/@vitest/runner/dist/index.js:909:15)
+apps/desktop test:     at runSuite (file:///workspaces/chefcloud/node_modules/.pnpm/@vitest+runner@1.6.1/node_modules/@vitest/runner/dist/index.js:909:15)
+apps/desktop test:     at runFiles (file:///workspaces/chefcloud/node_modules/.pnpm/@vitest+runner@1.6.1/node_modules/@vitest/runner/dist/index.js:958:5)
+apps/desktop test:     at startTests (file:///workspaces/chefcloud/node_modules/.pnpm/@vitest+runner@1.6.1/node_modules/@vitest/runner/dist/index.js:967:3)
+apps/desktop test:  ✓ test/printer.test.ts  (7 tests) 52ms
+apps/desktop test:  ✓ test/api-wrapper.test.ts  (4 tests) 251ms
+apps/desktop test:  ✓ test/offline-queue.test.ts  (6 tests) 284ms
+apps/desktop test:  ✓ test/client-map.test.ts  (6 tests) 31ms
+apps/desktop test:  ✓ test/printer-simulate.test.ts  (3 tests) 5ms
+apps/desktop test:  Test Files  5 passed (5)
+apps/desktop test:       Tests  26 passed (26)
+apps/desktop test:    Start at  21:04:38
+apps/desktop test:    Duration  1.76s (transform 430ms, setup 0ms, collect 626ms, tests 623ms, environment 1ms, prepare 1.25s)
+apps/desktop test: Done
+services/worker test: PASS src/__tests__/efris-backoff.spec.ts
+services/worker test:   EFRIS Backoff Logic
+services/worker test:     ✓ should calculate correct backoff delays (4 ms)
+services/worker test:     ✓ should follow exponential backoff pattern (2 ms)
+services/worker test:     ✓ should cap at 5 attempts with max 6-hour delay (1 ms)
+services/worker test: Test Suites: 1 passed, 1 total
+services/worker test: Tests:       3 passed, 3 total
+services/worker test: Snapshots:   0 total
+services/worker test: Time:        1.429 s
+services/worker test: Ran all test suites.
+services/worker test: Done
+services/api test: PASS src/franchise/franchise.service.spec.ts
+services/api test:   FranchiseService
+services/api test:     getRankings
+services/api test:       ✓ should use default weights if franchiseWeights not set (20 ms)
+services/api test:       ✓ should use custom weights from org settings (5 ms)
+services/api test:     calculateMovingAverage
+services/api test:       ✓ should calculate MA14 correctly (3 ms)
+services/api test:       ✓ should return 0 for no consumption (3 ms)
+services/api test:     upsertBudget
+services/api test:       ✓ should create new budget if not exists (5 ms)
+services/api test:     getProcurementSuggestions
+services/api test:       ✓ should suggest items below safety stock (4 ms)
+services/api test:     E22-s3: Central Procurement
+services/api test:       generateDraftPOs
+services/api test:         ✓ should apply packSize rounding correctly (3 ms)
+services/api test:         ✓ should enforce minOrderQty (2 ms)
+services/api test:         ✓ should group items by supplier and branch (4 ms)
+services/api test:       getDraftPOs
+services/api test:         ✓ should return draft POs with supplier and branch details (18 ms)
+services/api test:       approvePOs
+services/api test:         ✓ should update PO status to PLACED and log email stubs (7 ms)
+services/api test: PASS src/ops/change-control.spec.ts
+services/api test:   E49-s1: Change Control & Staged Rollouts
+services/api test:     FeatureFlagsService
+services/api test:       Rollout Percentage Determinism
+services/api test:         ✓ should enable flag for 100% rollout (16 ms)
+services/api test:         ✓ should disable flag for 0% rollout (3 ms)
+services/api test:         ✓ should use deterministic hash for percentage rollout (2 ms)
+services/api test:         ✓ should distribute 50% rollout across different contexts (3 ms)
+services/api test:       Scope Matching
+services/api test:         ✓ should match role scope (4 ms)
+services/api test:         ✓ should match branch scope (3 ms)
+services/api test:         ✓ should require ALL scopes to match (3 ms)
+services/api test:       Kill Switch
+services/api test:         ✓ should set active=false and rolloutPct=0 (4 ms)
+services/api test:         ✓ should create audit trail on kill (8 ms)
+services/api test:         ✓ should throw NotFoundException if flag does not exist (20 ms)
+services/api test:       Flag Upsert
+services/api test:         ✓ should create new flag with CREATE audit (3 ms)
+services/api test:         ✓ should update existing flag with UPDATE audit (3 ms)
+services/api test:       Flag Toggle
+services/api test:         ✓ should toggle active state (3 ms)
+services/api test:     MaintenanceService
+services/api test:       Write Blocking
+services/api test:         ✓ should block writes during active maintenance window (2 ms)
+services/api test:         ✓ should allow writes outside maintenance window (2 ms)
+services/api test:         ✓ should return default message if none provided (3 ms)
+services/api test:         ✓ should scope maintenance to org (3 ms)
+services/api test:       Create Maintenance Window
+services/api test:         ✓ should create maintenance window with defaults (2 ms)
+services/api test:       Get Active Windows
+services/api test:         ✓ should return active maintenance windows (1 ms)
+services/api test: PASS src/workforce/payroll.service.spec.ts
+services/api test:   PayrollService
+services/api test:     Pay Component Math
+services/api test:       ✓ should apply FIXED component (6 ms)
+services/api test:       ✓ should apply RATE component (multiply by hourly rate) (2 ms)
+services/api test:       ✓ should apply PERCENT component on gross (3 ms)
+services/api test:       ✓ should apply DEDUCTION PERCENT component (2 ms)
+services/api test:       ✓ should apply DEDUCTION FIXED component (2 ms)
+services/api test:     Tax Application
+services/api test:       ✓ should calculate tax from payrollTaxPct setting (2 ms)
+services/api test:       ✓ should default to 0% tax if payrollTaxPct not set (1 ms)
+services/api test:     GL Posting Balance
+services/api test:       ✓ should create balanced journal entry (DR Expense = CR Payable) (3 ms)
+services/api test:       ✓ should mark pay run as POSTED after GL posting (2 ms)
+services/api test:     Upsert Component
+services/api test:       ✓ should create new component (2 ms)
+services/api test:       ✓ should update existing component (3 ms)
+services/api test: PASS src/workforce/workforce.service.spec.ts
+services/api test:   WorkforceService
+services/api test:     Leave Management
+services/api test:       ✓ should create leave request (4 ms)
+services/api test:       ✓ should reject approval of non-pending leave (20 ms)
+services/api test:       ✓ should approve pending leave request (1 ms)
+services/api test:     Shift Swaps
+services/api test:       ✓ should reject swap if user does not own shift (3 ms)
+services/api test:       ✓ should create swap proposal if shift belongs to user (2 ms)
+services/api test:       ✓ should update duty shift when swap is approved (1 ms)
+services/api test:     Time Clock
+services/api test:       ✓ should reject clock-in if already clocked in (1 ms)
+services/api test:       ✓ should create time entry on clock-in (1 ms)
+services/api test:       ✓ should calculate overtime on clock-out (1 ms)
+services/api test:       ✓ should default to 8 hours if no overtime setting (1 ms)
+services/api test:     Payroll Export
+services/api test:       ○ skipped should aggregate regular and overtime minutes (SKIP: mock issue)
+services/api test: PASS src/inventory/counts.service.spec.ts
+services/api test:   CountsService
+services/api test:     beginCount
+services/api test:       ✓ should create a new stock count for open shift (5 ms)
+services/api test:       ✓ should return existing draft if already started (5 ms)
+services/api test:       ✓ should throw if no open shift (11 ms)
+services/api test:     submitCount
+services/api test:       ✓ should finalize stock count with lines (2 ms)
+services/api test:     validateShiftStockCount - tolerance logic
+services/api test:       ✓ should pass when variances are within percentage tolerance (3 ms)
+services/api test:       ✓ should pass when variance within absolute tolerance (2 ms)
+services/api test:       ✓ should reject when variance exceeds both tolerances (1 ms)
+services/api test:       ✓ should reject if no stock count exists (2 ms)
+services/api test:       ✓ should reject if count has no lines (1 ms)
+services/api test:     emitVarianceAnomalies
+services/api test:       ✓ should emit NEGATIVE_STOCK for negative variance (1 ms)
+services/api test:       ✓ should emit LARGE_VARIANCE for positive variance (1 ms)
+services/api test: PASS src/dev-portal/dev-portal.service.spec.ts
+services/api test:   DevPortalService
+services/api test:     upsertPlan
+services/api test:       ✓ should create a new plan (19 ms)
+services/api test:       ✓ should update an existing plan (2 ms)
+services/api test:     manageDevAdmin
+services/api test:       ✓ should add a new dev admin (4 ms)
+services/api test:       ✓ should add a super dev admin (1 ms)
+services/api test:       ✓ should remove a regular dev admin (1 ms)
+services/api test:       ✓ should refuse to remove super dev if only 2 exist (15 ms)
+services/api test:       ✓ should allow removing super dev if more than 2 exist (2 ms)
+services/api test:       ✓ should reject invalid action (2 ms)
+services/api test:     createOrg
+services/api test:       ✓ should create org with ACTIVE subscription (828 ms)
+services/api test:       ✓ should reject inactive plan (3 ms)
+services/api test:       ✓ should reject non-existent plan (2 ms)
+services/api test:     listSubscriptions
+services/api test:       ✓ should list all subscriptions with org and plan details (3 ms)
+services/api test: PASS src/access/access.service.spec.ts
+services/api test:   AccessService
+services/api test:     ✓ should be defined (7 ms)
+services/api test:     getMatrix
+services/api test:       ✓ should return defaults when no platformAccess is set (2 ms)
+services/api test:       ✓ should return stored platformAccess when set (2 ms)
+services/api test:     patchMatrix
+services/api test:       ✓ should successfully update platformAccess with valid data (3 ms)
+services/api test:       ✓ should reject updates with non-object values (16 ms)
+services/api test:       ✓ should reject updates with null values (2 ms)
+services/api test:       ✓ should reject updates with non-boolean desktop value (2 ms)
+services/api test:       ✓ should reject updates with non-boolean web value (2 ms)
+services/api test:       ✓ should reject updates with non-boolean mobile value (3 ms)
+services/api test:       ✓ should reject updates with missing desktop flag (2 ms)
+services/api test:       ✓ should handle multiple roles in one update (1 ms)
+services/api test:     resetToDefaults
+services/api test:       ✓ should reset matrix to defaults and return updated:true (2 ms)
+services/api test:       ✓ should return updated:false when matrix already matches defaults (2 ms)
+services/api test:       ✓ should reset when platformAccess is null (2 ms)
+services/api test: PASS src/cash/cash.service.spec.ts
+services/api test:   CashService
+services/api test:     ✓ should be defined (5 ms)
+services/api test:     openTillSession
+services/api test:       ✓ should open a new till session (2 ms)
+services/api test:       ✓ should reject if drawer already has open session (12 ms)
+services/api test:     closeTillSession
+services/api test:       ✓ should close session and calculate variance (2 ms)
+services/api test:       ✓ should reject if session already closed (3 ms)
+services/api test:     createCashMovement
+services/api test:       ✓ should create PAID_IN movement for L2 (1 ms)
+services/api test:       ✓ should create SAFE_DROP movement for L3 (1 ms)
+services/api test:       ✓ should reject SAFE_DROP for L2 (2 ms)
+services/api test:       ✓ should reject PICKUP for L3 (2 ms)
+services/api test:       ✓ should create PICKUP movement for L4 (2 ms)
+services/api test:       ✓ should reject movement on closed session (2 ms)
+services/api test: PASS src/hardware/spout.service.spec.ts
+services/api test:   SpoutService
+services/api test:     createDevice
+services/api test:       ✓ should create a device with a random secret (7 ms)
+services/api test:     calibrate
+services/api test:       ✓ should upsert calibration for a device and inventory item (3 ms)
+services/api test:       ✓ should throw NotFoundException if device does not exist (25 ms)
+services/api test:     ingestEvent
+services/api test:       ✓ should compute ml from pulses using calibration (2 ms)
+services/api test:       ✓ should verify HMAC signature when SPOUT_VERIFY=true (4 ms)
+services/api test:       ✓ should throw NotFoundException if device is inactive (2 ms)
+services/api test:     getEvents
+services/api test:       ✓ should filter events by deviceId and date range (2 ms)
+services/api test: PASS src/promotions/promotions.service.spec.ts
+services/api test:   PromotionsService
+services/api test:     evaluatePromotion
+services/api test:       ✓ should match time window (6 ms)
+services/api test:       ✓ should reject expired promotion (2 ms)
+services/api test:       ✓ should match daypart (day of week) (2 ms)
+services/api test:       ✓ should reject wrong day of week (1 ms)
+services/api test:       ✓ should match time range (happy hour) (3 ms)
+services/api test:       ✓ should reject outside time range (1 ms)
+services/api test:       ✓ should match branch scope (1 ms)
+services/api test:       ✓ should reject wrong branch (1 ms)
+services/api test:       ✓ should match item scope (1 ms)
+services/api test:       ✓ should match category scope (1 ms)
+services/api test:       ✓ should reject wrong category (1 ms)
+services/api test:       ✓ should require coupon code (1 ms)
+services/api test:       ✓ should reject wrong coupon code (1 ms)
+services/api test:       ✓ should reject inactive promotion (1 ms)
+services/api test: PASS src/bookings/checkin.service.spec.ts
+services/api test:   CheckinService
+services/api test:     checkin
+services/api test:       ✓ should successfully check in a valid booking (5 ms)
+services/api test:       ✓ should throw NotFoundException for invalid ticket code (10 ms)
+services/api test:       ✓ should throw BadRequestException if booking not CONFIRMED (2 ms)
+services/api test:       ✓ should throw BadRequestException if already checked in (2 ms)
+services/api test:       ✓ should throw BadRequestException if event not started (2 ms)
+services/api test:       ✓ should throw BadRequestException if event already ended (2 ms)
+services/api test:       ✓ should create PrepaidCredit if missing (idempotent) (2 ms)
+services/api test:     getBookingForTicket
+services/api test:       ✓ should return booking details (2 ms)
+services/api test:       ✓ should throw NotFoundException for invalid booking ID (2 ms)
+services/api test: PASS src/payments/payments.service.spec.ts
+services/api test:   PaymentsService
+services/api test:     createIntent
+services/api test:       ✓ should create a payment intent successfully (12 ms)
+services/api test:       ✓ should throw error if order not found (18 ms)
+services/api test:     cancelIntent
+services/api test:       ✓ should cancel a pending intent (2 ms)
+services/api test:       ✓ should throw error if intent already succeeded (3 ms)
+services/api test:     handleWebhook
+services/api test:       ✓ should process MTN webhook successfully (3 ms)
+services/api test:     reconcileExpiredIntents
+services/api test:       ✓ should mark expired intents as FAILED (2 ms)
+services/api test: PASS src/common/crypto.utils.spec.ts
+services/api test:   Crypto Utils
+services/api test:     verifyHMAC
+services/api test:       ✓ should verify valid HMAC signature (1 ms)
+services/api test:       ✓ should reject invalid signature (1 ms)
+services/api test:       ✓ should reject signature with wrong secret
+services/api test:       ✓ should handle empty inputs safely (1 ms)
+services/api test:       ✓ should use constant-time comparison (1 ms)
+services/api test:     checkTimestampWindow
+services/api test:       ✓ should accept timestamp within 5 minute window
+services/api test:       ✓ should reject timestamp outside 5 minute window (1 ms)
+services/api test:       ✓ should support custom window size (1 ms)
+services/api test:     verifyWebhookSignature
+services/api test:       ✓ should verify valid webhook signature with timestamp (1 ms)
+services/api test:       ✓ should reject signature with expired timestamp (replay attack) (1 ms)
+services/api test:       ✓ should reject invalid timestamp format (2 ms)
+services/api test:       ✓ should reject invalid signature even with valid timestamp (1 ms)
+services/api test:     verifySpoutSignature
+services/api test:       ✓ should verify valid spout device signature (1 ms)
+services/api test:       ✓ should reject spout signature with wrong device secret
+services/api test: PASS src/billing/billing.service.spec.ts
+services/api test:   BillingService
+services/api test:     getSubscription
+services/api test:       ✓ should return subscription details (4 ms)
+services/api test:       ✓ should throw NotFoundException if no subscription exists (7 ms)
+services/api test:     requestPlanChange
+services/api test:       ✓ should log plan change request (2 ms)
+services/api test:       ✓ should throw NotFoundException for inactive plan (1 ms)
+services/api test:       ✓ should throw NotFoundException for non-existent plan (1 ms)
+services/api test:       ✓ should throw NotFoundException if org has no subscription (2 ms)
+services/api test:     requestCancellation
+services/api test:       ✓ should log cancellation request (1 ms)
+services/api test:       ✓ should throw NotFoundException if no subscription exists (1 ms)
+services/api test: PASS src/analytics/analytics.service.spec.ts
+services/api test:   AnalyticsService
+services/api test:     getTopItems
+services/api test:       ✓ should return top items without cost data when includeCostData=false (5 ms)
+services/api test:       ✓ should return top items WITH cost data when includeCostData=true (1 ms)
+services/api test:       ✓ should calculate marginPct correctly (1 ms)
+services/api test:       ✓ should handle null cost data gracefully (1 ms)
+services/api test:       ✓ should respect the limit parameter (2 ms)
+services/api test: PASS src/inventory/costing.service.spec.ts
+services/api test:   CostingService
+services/api test:     getWac
+services/api test:       ✓ should calculate WAC correctly with multiple batches (5 ms)
+services/api test:       ✓ should return 0 when no batches exist (2 ms)
+services/api test:       ✓ should return 0 when total quantity is 0 (12 ms)
+services/api test:     getRecipeCost
+services/api test:       ✓ should calculate recipe cost without modifiers (1 ms)
+services/api test:       ✓ should include modifier ingredients when selected (2 ms)
+services/api test:       ✓ should exclude modifier ingredients when not selected (2 ms)
+services/api test:       ✓ should handle micro-ingredients without zeroing (1 ms)
+services/api test:     calculateItemCosting
+services/api test:       ✓ should calculate cost and margin correctly (2 ms)
+services/api test:       ✓ should return 0% margin when lineNet is zero (1 ms)
+services/api test: PASS src/owner/owner.service.spec.ts
+services/api test:   OwnerService
+services/api test:     getOverview
+services/api test:       ✓ should aggregate sales, top items, and anomalies (12 ms)
+services/api test:     createDigest
+services/api test:       ✓ should create a digest configuration (3 ms)
+services/api test:     sendDigestEmail
+services/api test:       ✓ should send email via nodemailer with PDF and CSV attachments (418 ms)
+services/api test:     buildTopItemsCSV
+services/api test:       ✓ should build CSV with headers and data rows (3 ms)
+services/api test: PASS src/accounting/bank-rec.spec.ts
+services/api test:   Bank Reconciliation
+services/api test:     upsertBankAccount
+services/api test:       ✓ should create new account if not exists (4 ms)
+services/api test:       ✓ should update existing account (2 ms)
+services/api test:     importCSV
+services/api test:       ✓ should import transactions from CSV (2 ms)
+services/api test:       ✓ should throw NotFoundException if account not found (15 ms)
+services/api test:       ✓ should throw BadRequestException if CSV is empty (2 ms)
+services/api test:     matchTransaction
+services/api test:       ✓ should match bank transaction to payment (2 ms)
+services/api test:       ✓ should throw if already reconciled (2 ms)
+services/api test:     autoMatch
+services/api test:       ✓ should auto-match payment within ±3 days (2 ms)
+services/api test:     getUnreconciled
+services/api test:       ✓ should return unreconciled transactions (1 ms)
+services/api test: PASS src/auth/platform-access.guard.spec.ts
+services/api test:   PlatformAccessGuard
+services/api test:     unauthenticated requests
+services/api test:       ✓ should allow requests with no user (7 ms)
+services/api test:     platform access enforcement
+services/api test:       ✓ should allow access when platform is permitted in matrix (2 ms)
+services/api test:       ✓ should deny access when platform is not permitted in matrix (9 ms)
+services/api test:       ✓ should use default matrix when orgSettings is null (2 ms)
+services/api test:       ✓ should default to web platform when header is missing (1 ms)
+services/api test:       ✓ should deny STOCK role from mobile platform (2 ms)
+services/api test:     role level mapping
+services/api test:       ✓ should map L5 to OWNER by default (2 ms)
+services/api test: PASS src/currency/currency.service.spec.ts
+services/api test:   CurrencyService
+services/api test:     ✓ should be defined (4 ms)
+services/api test:     getOrgCurrency
+services/api test:       ✓ should return baseCurrencyCode when set (2 ms)
+services/api test:       ✓ should fallback to currency field (1 ms)
+services/api test:       ✓ should default to UGX (5 ms)
+services/api test:     getBranchCurrency
+services/api test:       ✓ should return branch currencyCode when set (2 ms)
+services/api test:       ✓ should fallback to org currency (2 ms)
+services/api test:       ✓ should throw if branch not found (8 ms)
+services/api test:     convert
+services/api test:       ✓ should return same amount for same currency (2 ms)
+services/api test:       ✓ should convert UGX to USD (1 ms)
+services/api test:       ✓ should use inverse rate if direct rate not found (1 ms)
+services/api test:       ✓ should throw if no rate found (1 ms)
+services/api test:     getCurrencyInfo
+services/api test:       ✓ should return currency metadata (1 ms)
+services/api test:       ✓ should throw if currency not found (2 ms)
+services/api test: PASS src/analytics/analytics.controller.spec.ts
+services/api test:   AnalyticsController
+services/api test:     getTopItems - RBAC for cost data
+services/api test:       ✓ should include cost data for OWNER (L5) (5 ms)
+services/api test:       ✓ should include cost data for MANAGER (L4) (2 ms)
+services/api test:       ✓ should include cost data for ACCOUNTANT role regardless of level (2 ms)
+services/api test:       ✓ should exclude cost data for CHEF (L3) when showCostToChef=false (3 ms)
+services/api test:       ✓ should include cost data for CHEF (L3) when showCostToChef=true (2 ms)
+services/api test:       ✓ should exclude cost data for WAITER (L2) when showCostToChef=false (3 ms)
+services/api test:       ✓ should handle custom limit parameter (18 ms)
+services/api test:   console.error
+services/api test:     RangeError: Port should be >= 0 and < 65536. Received type number (NaN).
+services/api test:         at lookupAndConnect (node:net:1302:5)
+services/api test:         at Socket.connect (node:net:1259:5)
+services/api test:         at connect (node:net:242:17)
+services/api test:         at /workspaces/chefcloud/node_modules/.pnpm/ioredis@5.8.2/node_modules/ioredis/built/connectors/StandaloneConnector.js:54:66
+services/api test:         at processTicksAndRejections (node:internal/process/task_queues:77:11) {
+services/api test:       code: 'ERR_SOCKET_BAD_PORT'
+services/api test:     }
+services/api test:       at Queue.emit (../../../node_modules/.pnpm/bullmq@5.61.2/node_modules/bullmq/src/classes/queue-base.ts:129:17)
+services/api test:       at Queue.emit (../../../node_modules/.pnpm/bullmq@5.61.2/node_modules/bullmq/src/classes/queue.ts:203:18)
+services/api test:       at RedisConnection.<anonymous> (../../../node_modules/.pnpm/bullmq@5.61.2/node_modules/bullmq/src/classes/queue-base.ts:75:56)
+services/api test:       at EventEmitter.RedisConnection.handleClientError (../../../node_modules/.pnpm/bullmq@5.61.2/node_modules/bullmq/src/classes/redis-connection.ts:121:12)
+services/api test:       at EventEmitter.silentEmit (../../../node_modules/.pnpm/ioredis@5.8.2/node_modules/ioredis/built/Redis.js:484:30)
+services/api test:       at ../../../node_modules/.pnpm/ioredis@5.8.2/node_modules/ioredis/built/Redis.js:127:27
+services/api test:       at tryCatcher (../../../node_modules/.pnpm/standard-as-callback@2.1.0/node_modules/standard-as-callback/built/utils.js:12:23)
+services/api test:       at ../../../node_modules/.pnpm/standard-as-callback@2.1.0/node_modules/standard-as-callback/built/index.js:33:51
+services/api test:   console.error
+services/api test:     RangeError: Port should be >= 0 and < 65536. Received type number (NaN).
+services/api test:         at lookupAndConnect (node:net:1302:5)
+services/api test:         at Socket.connect (node:net:1259:5)
+services/api test:         at connect (node:net:242:17)
+services/api test:         at /workspaces/chefcloud/node_modules/.pnpm/ioredis@5.8.2/node_modules/ioredis/built/connectors/StandaloneConnector.js:54:66
+services/api test:         at processTicksAndRejections (node:internal/process/task_queues:77:11) {
+services/api test:       code: 'ERR_SOCKET_BAD_PORT'
+services/api test:     }
+services/api test:       at Queue.emit (../../../node_modules/.pnpm/bullmq@5.61.2/node_modules/bullmq/src/classes/queue-base.ts:129:17)
+services/api test:       at Queue.emit (../../../node_modules/.pnpm/bullmq@5.61.2/node_modules/bullmq/src/classes/queue.ts:203:18)
+services/api test:       at RedisConnection.<anonymous> (../../../node_modules/.pnpm/bullmq@5.61.2/node_modules/bullmq/src/classes/queue-base.ts:75:56)
+services/api test:       at EventEmitter.RedisConnection.handleClientError (../../../node_modules/.pnpm/bullmq@5.61.2/node_modules/bullmq/src/classes/redis-connection.ts:121:12)
+services/api test:       at EventEmitter.silentEmit (../../../node_modules/.pnpm/ioredis@5.8.2/node_modules/ioredis/built/Redis.js:484:30)
+services/api test:       at ../../../node_modules/.pnpm/ioredis@5.8.2/node_modules/ioredis/built/Redis.js:127:27
+services/api test:       at tryCatcher (../../../node_modules/.pnpm/standard-as-callback@2.1.0/node_modules/standard-as-callback/built/utils.js:12:23)
+services/api test:       at ../../../node_modules/.pnpm/standard-as-callback@2.1.0/node_modules/standard-as-callback/built/index.js:33:51
+services/api test:   console.error
+services/api test:     RangeError: Port should be >= 0 and < 65536. Received type number (NaN).
+services/api test:         at lookupAndConnect (node:net:1302:5)
+services/api test:         at Socket.connect (node:net:1259:5)
+services/api test:         at connect (node:net:242:17)
+services/api test:         at /workspaces/chefcloud/node_modules/.pnpm/ioredis@5.8.2/node_modules/ioredis/built/connectors/StandaloneConnector.js:54:66
+services/api test:         at processTicksAndRejections (node:internal/process/task_queues:77:11) {
+services/api test:       code: 'ERR_SOCKET_BAD_PORT'
+services/api test:     }
+services/api test:       at Queue.emit (../../../node_modules/.pnpm/bullmq@5.61.2/node_modules/bullmq/src/classes/queue-base.ts:129:17)
+services/api test:       at Queue.emit (../../../node_modules/.pnpm/bullmq@5.61.2/node_modules/bullmq/src/classes/queue.ts:203:18)
+services/api test:       at RedisConnection.<anonymous> (../../../node_modules/.pnpm/bullmq@5.61.2/node_modules/bullmq/src/classes/queue-base.ts:75:56)
+services/api test:       at ../../../node_modules/.pnpm/bullmq@5.61.2/node_modules/bullmq/src/classes/redis-connection.ts:133:41
+services/api test:   console.error
+services/api test:     RangeError: Port should be >= 0 and < 65536. Received type number (NaN).
+services/api test:         at lookupAndConnect (node:net:1302:5)
+services/api test:         at Socket.connect (node:net:1259:5)
+services/api test:         at connect (node:net:242:17)
+services/api test:         at /workspaces/chefcloud/node_modules/.pnpm/ioredis@5.8.2/node_modules/ioredis/built/connectors/StandaloneConnector.js:54:66
+services/api test:         at processTicksAndRejections (node:internal/process/task_queues:77:11) {
+services/api test:       code: 'ERR_SOCKET_BAD_PORT'
+services/api test:     }
+services/api test:       at Queue.emit (../../../node_modules/.pnpm/bullmq@5.61.2/node_modules/bullmq/src/classes/queue-base.ts:129:17)
+services/api test:       at Queue.emit (../../../node_modules/.pnpm/bullmq@5.61.2/node_modules/bullmq/src/classes/queue.ts:203:18)
+services/api test:       at RedisConnection.<anonymous> (../../../node_modules/.pnpm/bullmq@5.61.2/node_modules/bullmq/src/classes/queue-base.ts:75:56)
+services/api test:       at ../../../node_modules/.pnpm/bullmq@5.61.2/node_modules/bullmq/src/classes/redis-connection.ts:133:41
+services/api test: PASS src/alerts/alerts.service.spec.ts
+services/api test:   AlertsService
+services/api test:     sendAlert
+services/api test:       ✓ should send to Slack webhook if configured (15 ms)
+services/api test:       ✓ should send email via SMTP if no Slack webhook configured (5 ms)
+services/api test:     Slack webhook payload shape
+services/api test:       ✓ should send properly formatted Slack blocks (3 ms)
+services/api test: PASS src/auth/api-key.guard.spec.ts
+services/api test:   ApiKeyGuard
+services/api test:     ✓ should allow requests with valid API key (171 ms)
+services/api test:     ✓ should throw UnauthorizedException for missing API key header (11 ms)
+services/api test:     ✓ should throw UnauthorizedException for invalid API key (173 ms)
+services/api test:     ✓ should bypass validation in dev mode with VERIFY=false (2 ms)
+services/api test:     ✓ should enforce validation in dev mode with VERIFY=true (2 ms)
+services/api test:     ✓ should update lastUsedAt timestamp on successful validation (146 ms)
+services/api test: PASS src/accounting/period-lock.spec.ts
+services/api test:   Period Locks
+services/api test:     PeriodsService.createPeriod
+services/api test:       ✓ should create period when no overlap (5 ms)
+services/api test:       ✓ should throw BadRequestException on overlap (14 ms)
+services/api test:     PeriodsService.lockPeriod
+services/api test:       ✓ should lock period and set audit fields (2 ms)
+services/api test:     PeriodsService.listPeriods
+services/api test:       ✓ should list all periods (1 ms)
+services/api test:       ✓ should filter by status (2 ms)
+services/api test: PASS src/tax/tax.service.spec.ts
+services/api test:   TaxService
+services/api test:     ✓ should be defined (4 ms)
+services/api test:     calculateTax - inclusive
+services/api test:       ✓ should calculate tax when tax is inclusive (2 ms)
+services/api test:       ✓ should handle 15% alcohol tax inclusive (2 ms)
+services/api test:     calculateTax - exclusive
+services/api test:       ✓ should calculate tax when tax is exclusive (1 ms)
+services/api test:       ✓ should handle 10% service charge exclusive (2 ms)
+services/api test:     calculateServiceCharge
+services/api test:       ✓ should calculate service charge when enabled (2 ms)
+services/api test:       ✓ should return zero when service charge not configured (2 ms)
+services/api test:     applyRounding
+services/api test:       ✓ should round to nearest 50 for UGX (1 ms)
+services/api test:       ✓ should round to nearest 100 (1 ms)
+services/api test:       ✓ should not apply cash rounding for USD (1 ms)
+services/api test: PASS src/common/slow-query.spec.ts
+services/api test:   slowQueryMiddleware
+services/api test:     ✓ should not log fast queries (1 ms)
+services/api test:     ✓ should respect sampling rate (151 ms)
+services/api test:     ○ skipped should log slow queries above threshold
+services/api test:     ○ skipped should sanitize params to avoid logging sensitive data
+services/api test: PASS src/webauthn/webauthn.service.spec.ts
+services/api test:   WebAuthnService
+services/api test:     ✓ should be defined (7 ms)
+services/api test:     generateRegistrationOptions
+services/api test:       ✓ should generate registration options for a user (3 ms)
+services/api test:       ✓ should exclude existing credentials (3 ms)
+services/api test:     generateAuthenticationOptions
+services/api test:       ✓ should generate authentication options with allowed credentials (2 ms)
+services/api test: PASS src/inventory/inventory.service.spec.ts
+services/api test:   InventoryService - Adjustments
+services/api test:     ✓ should be defined (4 ms)
+services/api test:     createAdjustment
+services/api test:       ✓ should create positive adjustment and update newest batch (2 ms)
+services/api test:       ✓ should create negative adjustment and use FIFO consumption (2 ms)
+services/api test: PASS src/efris/efris.service.spec.ts
+services/api test:   EfrisService
+services/api test:     ✓ should be defined (4 ms)
+services/api test:     buildPayload
+services/api test:       ✓ should map burger+fries order with 18% tax (2 ms)
+services/api test:       ✓ should throw error if order not found (6 ms)
+services/api test:     push
+services/api test:       ✓ should simulate success and upsert FiscalInvoice (1 ms)
+services/api test:   console.warn
+services/api test:     ⚠️  CHAOS MODE ENABLED: { latencyMs: 100, dbTimeoutPct: 0, redisDropPct: 0 }
+services/api test:       22 |
+services/api test:       23 |     if (this.isEnabled()) {
+services/api test:     > 24 |       console.warn('⚠️  CHAOS MODE ENABLED:', {
+services/api test:          |               ^
+services/api test:       25 |         latencyMs: this.latencyMs,
+services/api test:       26 |         dbTimeoutPct: this.dbTimeoutPct,
+services/api test:       27 |         redisDropPct: this.redisDropPct,
+services/api test:       at new ChaosService (common/chaos.ts:24:15)
+services/api test:       at Object.<anonymous> (common/chaos.spec.ts:56:21)
+services/api test:   console.warn
+services/api test:     ⚠️  CHAOS MODE ENABLED: { latencyMs: 0, dbTimeoutPct: 30, redisDropPct: 0 }
+services/api test:       22 |
+services/api test:       23 |     if (this.isEnabled()) {
+services/api test:     > 24 |       console.warn('⚠️  CHAOS MODE ENABLED:', {
+services/api test:          |               ^
+services/api test:       25 |         latencyMs: this.latencyMs,
+services/api test:       26 |         dbTimeoutPct: this.dbTimeoutPct,
+services/api test:       27 |         redisDropPct: this.redisDropPct,
+services/api test:       at new ChaosService (common/chaos.ts:24:15)
+services/api test:       at Object.<anonymous> (common/chaos.spec.ts:71:21)
+services/api test:   console.warn
+services/api test:     ⚠️  CHAOS MODE ENABLED: { latencyMs: 0, dbTimeoutPct: 30, redisDropPct: 0 }
+services/api test:       22 |
+services/api test:       23 |     if (this.isEnabled()) {
+services/api test:     > 24 |       console.warn('⚠️  CHAOS MODE ENABLED:', {
+services/api test:          |               ^
+services/api test:       25 |         latencyMs: this.latencyMs,
+services/api test:       26 |         dbTimeoutPct: this.dbTimeoutPct,
+services/api test:       27 |         redisDropPct: this.redisDropPct,
+services/api test:       at new ChaosService (common/chaos.ts:24:15)
+services/api test:       at Object.<anonymous> (common/chaos.spec.ts:79:21)
+services/api test:   console.warn
+services/api test:     ⚠️  CHAOS MODE ENABLED: { latencyMs: 0, dbTimeoutPct: 0, redisDropPct: 30 }
+services/api test:       22 |
+services/api test:       23 |     if (this.isEnabled()) {
+services/api test:     > 24 |       console.warn('⚠️  CHAOS MODE ENABLED:', {
+services/api test:          |               ^
+services/api test:       25 |         latencyMs: this.latencyMs,
+services/api test:       26 |         dbTimeoutPct: this.dbTimeoutPct,
+services/api test:       27 |         redisDropPct: this.redisDropPct,
+services/api test:       at new ChaosService (common/chaos.ts:24:15)
+services/api test:       at Object.<anonymous> (common/chaos.spec.ts:89:21)
+services/api test:   console.warn
+services/api test:     ⚠️  CHAOS MODE ENABLED: { latencyMs: 0, dbTimeoutPct: 0, redisDropPct: 30 }
+services/api test:       22 |
+services/api test:       23 |     if (this.isEnabled()) {
+services/api test:     > 24 |       console.warn('⚠️  CHAOS MODE ENABLED:', {
+services/api test:          |               ^
+services/api test:       25 |         latencyMs: this.latencyMs,
+services/api test:       26 |         dbTimeoutPct: this.dbTimeoutPct,
+services/api test:       27 |         redisDropPct: this.redisDropPct,
+services/api test:       at new ChaosService (common/chaos.ts:24:15)
+services/api test:       at Object.<anonymous> (common/chaos.spec.ts:97:21)
+services/api test:   console.warn
+services/api test:     ⚠️  CHAOS MODE ENABLED: { latencyMs: 50, dbTimeoutPct: 10, redisDropPct: 5 }
+services/api test:       22 |
+services/api test:       23 |     if (this.isEnabled()) {
+services/api test:     > 24 |       console.warn('⚠️  CHAOS MODE ENABLED:', {
+services/api test:          |               ^
+services/api test:       25 |         latencyMs: this.latencyMs,
+services/api test:       26 |         dbTimeoutPct: this.dbTimeoutPct,
+services/api test:       27 |         redisDropPct: this.redisDropPct,
+services/api test:       at new ChaosService (common/chaos.ts:24:15)
+services/api test:       at Object.<anonymous> (common/chaos.spec.ts:110:21)
+services/api test: FAIL src/common/chaos.spec.ts
+services/api test:   ChaosService
+services/api test:     Default behavior (disabled)
+services/api test:       ✓ should be disabled by default (1 ms)
+services/api test:       ✓ should not inject latency when disabled (1 ms)
+services/api test:       ✓ should not throw DB timeout when disabled
+services/api test:       ✓ should not drop cache hits when disabled (11 ms)
+services/api test:     Latency injection
+services/api test:       ✓ should inject latency when enabled (132 ms)
+services/api test:     DB timeout injection
+services/api test:       ✕ should throw timeout when percentage is 100 (3 ms)
+services/api test:       ✓ should cap timeout percentage at 30 (2 ms)
+services/api test:     Cache drop injection
+services/api test:       ✕ should drop cache hits when percentage is 100 (2 ms)
+services/api test:       ✓ should cap drop percentage at 30 (1 ms)
+services/api test:     Multiple chaos features
+services/api test:       ✓ should enable when any chaos feature is active (2 ms)
+services/api test:   ● ChaosService › DB timeout injection › should throw timeout when percentage is 100
+services/api test:     expect(received).toThrow(expected)
+services/api test:     Expected substring: "Simulated database timeout"
+services/api test:     Received function did not throw
+services/api test:       72 |
+services/api test:       73 |       expect(chaos.isEnabled()).toBe(true);
+services/api test:     > 74 |       expect(() => chaos.maybeThrowDbTimeout()).toThrow('Simulated database timeout');
+services/api test:          |                                                 ^
+services/api test:       75 |     });
+services/api test:       76 |
+services/api test:       77 |     it('should cap timeout percentage at 30', () => {
+services/api test:       at Object.<anonymous> (common/chaos.spec.ts:74:49)
+services/api test:   ● ChaosService › Cache drop injection › should drop cache hits when percentage is 100
+services/api test:     expect(received).toBe(expected) // Object.is equality
+services/api test:     Expected: true
+services/api test:     Received: false
+services/api test:       90 |
+services/api test:       91 |       expect(chaos.isEnabled()).toBe(true);
+services/api test:     > 92 |       expect(chaos.maybeDropCacheHit()).toBe(true);
+services/api test:          |                                         ^
+services/api test:       93 |     });
+services/api test:       94 |
+services/api test:       95 |     it('should cap drop percentage at 30', () => {
+services/api test:       at Object.<anonymous> (common/chaos.spec.ts:92:41)
+services/api test: {"level":"info","time":1762549486418,"service":"chefcloud-api","env":"test","sessionId":"test-session-id","orgId":"org-1","expiresAt":"2025-11-07T21:19:46.417Z","msg":"Support session created"}
+services/api test: PASS src/support/support.service.spec.ts
+services/api test:   SupportService
+services/api test:     ✓ should be defined (5 ms)
+services/api test:     createSession
+services/api test:       ✓ should create a session with 15-minute expiry (3 ms)
+services/api test:     validateToken
+services/api test:       ✓ should return null for expired token (2 ms)
+services/api test:       ✓ should return null for inactive session (6 ms)
+services/api test:       ✓ should return session for valid token (1 ms)
+services/api test: PASS src/common/query-guard.spec.ts
+services/api test:   QueryGuard
+services/api test:     capPageSize
+services/api test:       ✓ should return default size (20) when not specified (1 ms)
+services/api test:       ✓ should cap to MAX_PAGE_SIZE (100)
+services/api test:       ✓ should allow valid page sizes under the cap (1 ms)
+services/api test:     toPrismaParams
+services/api test:       ✓ should convert pagination params with defaults (1 ms)
+services/api test:       ✓ should calculate skip correctly for pages (1 ms)
+services/api test:       ✓ should respect custom sort parameters (1 ms)
+services/api test:       ✓ should cap page size in params
+services/api test:     getPaginationMeta
+services/api test:       ✓ should calculate pagination metadata correctly (1 ms)
+services/api test:       ✓ should handle first page correctly (1 ms)
+services/api test:       ✓ should handle last page correctly (4 ms)
+services/api test:       ✓ should handle partial pages (1 ms)
+services/api test: PASS src/bookings/bookings-ticket.spec.ts
+services/api test:   BookingsService - E42-s2 PDF Generation
+services/api test:     generateTicketPdf
+services/api test:       ✓ should generate PDF with QR code (smoke test: bytes > 0) (439 ms)
+services/api test:       ✓ should throw NotFoundException if booking not found (20 ms)
+services/api test:       ✓ should throw BadRequestException if booking has no ticket code (3 ms)
+services/api test:     confirmBooking - E42-s2 ticket code generation
+services/api test:       ✓ should generate ticketCode on confirmation (4 ms)
+services/api test: PASS src/events/event-bus.service.spec.ts
+services/api test:   EventBusService
+services/api test:     ✓ should be defined (6 ms)
+services/api test:     ✓ should publish and subscribe to events (4 ms)
+services/api test:     ✓ should filter events by topic (103 ms)
+services/api test:     ✓ should throttle spout events per deviceId (1 event/sec) (9 ms)
+services/api test:     ✓ should track client count (2 ms)
+services/api test:     ✓ should drop events when max clients exceeded (2 ms)
+services/api test: PASS src/auth/org-scope.guard.spec.ts
+services/api test:   OrgScopeGuard
+services/api test:     ✓ should allow request when x-org-id matches user orgId (5 ms)
+services/api test:     ✓ should throw BadRequestException when x-org-id header is missing (7 ms)
+services/api test:     ✓ should throw ForbiddenException when x-org-id does not match user orgId (2 ms)
+services/api test:     ✓ should throw ForbiddenException when user is not authenticated (3 ms)
+services/api test:     ✓ should attach validated orgId to request (1 ms)
+services/api test: PASS src/auth/auth.service.spec.ts
+services/api test:   MSR Badge Security
+services/api test:     isPanLike
+services/api test:       ✓ should detect Track 2 format (;digits=) (1 ms)
+services/api test:       ✓ should detect Track 1 format (%Bdigits^)
+services/api test:       ✓ should reject valid badge formats
+services/api test:       ✓ should reject short digit sequences
+services/api test:       ✓ should detect 19-digit PANs
+services/api test:     parseBadgeCode
+services/api test:       ✓ should parse valid CLOUDBADGE format (1 ms)
+services/api test:       ✓ should reject invalid formats (5 ms)
+services/api test:       ✓ should accept alphanumeric with underscore and hyphen (1 ms)
+services/api test: PASS src/ops/ops.service.spec.ts
+services/api test:   MetricsStore
+services/api test:     ✓ should increment counter
+services/api test:     ✓ should return 0 for non-existent counter
+services/api test:     ✓ should track multiple metrics
+services/api test: PASS src/auth/auth.helpers.spec.ts
+services/api test:   AuthHelpers
+services/api test:     hashPassword and verifyPassword
+services/api test:       ✓ should hash a password (55 ms)
+services/api test:       ✓ should verify a correct password (141 ms)
+services/api test:       ✓ should reject an incorrect password (153 ms)
+services/api test:       ✓ should create different hashes for the same password (240 ms)
+services/api test:     hashPin and verifyPin
+services/api test:       ✓ should hash a PIN (67 ms)
+services/api test:       ✓ should verify a correct PIN (140 ms)
+services/api test:       ✓ should reject an incorrect PIN (84 ms)
+services/api test:       ✓ should handle 6-digit PINs (84 ms)
+services/api test: A worker process has failed to exit gracefully and has been force exited. This is likely caused by tests leaking due to improper teardown. Try running with --detectOpenHandles to find leaks. Active timers can also cause this, ensure that .unref() was called on them.
+services/api test: Summary of all failing tests
+services/api test: FAIL common/chaos.spec.ts
+services/api test:   ● ChaosService › DB timeout injection › should throw timeout when percentage is 100
+services/api test:     expect(received).toThrow(expected)
+services/api test:     Expected substring: "Simulated database timeout"
+services/api test:     Received function did not throw
+services/api test:       72 |
+services/api test:       73 |       expect(chaos.isEnabled()).toBe(true);
+services/api test:     > 74 |       expect(() => chaos.maybeThrowDbTimeout()).toThrow('Simulated database timeout');
+services/api test:          |                                                 ^
+services/api test:       75 |     });
+services/api test:       76 |
+services/api test:       77 |     it('should cap timeout percentage at 30', () => {
+services/api test:       at Object.<anonymous> (common/chaos.spec.ts:74:49)
+services/api test:   ● ChaosService › Cache drop injection › should drop cache hits when percentage is 100
+services/api test:     expect(received).toBe(expected) // Object.is equality
+services/api test:     Expected: true
+services/api test:     Received: false
+services/api test:       90 |
+services/api test:       91 |       expect(chaos.isEnabled()).toBe(true);
+services/api test:     > 92 |       expect(chaos.maybeDropCacheHit()).toBe(true);
+services/api test:          |                                         ^
+services/api test:       93 |     });
+services/api test:       94 |
+services/api test:       95 |     it('should cap drop percentage at 30', () => {
+services/api test:       at Object.<anonymous> (common/chaos.spec.ts:92:41)
+services/api test: Test Suites: 1 failed, 37 passed, 38 total
+services/api test: Tests:       2 failed, 3 skipped, 306 passed, 311 total
+services/api test: Snapshots:   0 total
+services/api test: Time:        9.262 s
+services/api test: Ran all test suites.
+services/api test: Failed
+/workspaces/chefcloud/services/api:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @chefcloud/api@0.1.0 test: `jest --passWithNoTests`
+Exit status 1

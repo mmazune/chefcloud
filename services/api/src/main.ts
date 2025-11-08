@@ -4,6 +4,7 @@ import { AppModule } from './app.module';
 import { initTelemetry } from './telemetry';
 import { logger } from './logger';
 import helmet from 'helmet';
+import { json } from 'express';
 
 // Initialize telemetry before anything else
 initTelemetry();
@@ -11,7 +12,19 @@ initTelemetry();
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     logger: false, // Disable default logger, use our pino logger
+    bodyParser: false, // Disable default body parser to use custom config
   });
+
+  // Custom JSON body parser with raw body capture for webhook verification
+  app.use(
+    json({
+      limit: '256kb',
+      verify: (req: any, _res, buf: Buffer) => {
+        // Capture raw body for HMAC signature verification (E24)
+        req.rawBody = buf.toString('utf8');
+      },
+    }),
+  );
 
   // Security: Helmet
   app.use(helmet());
@@ -24,22 +37,6 @@ async function bootstrap() {
   app.enableCors({
     origin: corsAllowlist,
     credentials: true,
-  });
-
-  // Security: Body size limit (256kb JSON)
-  app.use((req: any, res: any, next: any) => {
-    if (req.headers['content-type']?.includes('application/json')) {
-      const limit = 256 * 1024; // 256kb
-      let size = 0;
-      req.on('data', (chunk: Buffer) => {
-        size += chunk.length;
-        if (size > limit) {
-          res.status(413).json({ error: 'Payload too large' });
-          req.connection.destroy();
-        }
-      });
-    }
-    next();
   });
 
   app.useGlobalPipes(

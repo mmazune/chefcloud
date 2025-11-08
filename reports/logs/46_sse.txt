@@ -1,0 +1,30 @@
+./services/api/src/accounting/accounting.service.ts:406:        type: { in: ['ASSET', 'LIABILITY', 'EQUITY'] },
+./services/api/src/accounting/accounting.service.ts:438:        account.type === 'ASSET' ? totalDebit - totalCredit : totalCredit - totalDebit;
+./services/api/src/accounting/accounting.service.ts:446:      if (account.type === 'ASSET') {
+./services/api/src/stream/stream.controller.ts:19:   * SSE endpoint for spout events (live pour monitoring).
+./services/api/src/stream/stream.controller.ts:29:      this.logger.warn(`SSE connection rejected: max clients (${MAX_CLIENTS}) exceeded`);
+./services/api/src/stream/stream.controller.ts:30:      throw new HttpException('Too many concurrent SSE connections', HttpStatus.TOO_MANY_REQUESTS);
+./services/api/src/stream/stream.controller.ts:33:    res.setHeader('Content-Type', 'text/event-stream');
+./services/api/src/stream/stream.controller.ts:39:    this.logger.log(`SSE spout client connected (${this.eventBus.getClientCount()}/${MAX_CLIENTS})`);
+./services/api/src/stream/stream.controller.ts:52:        console.error('SSE spout stream error:', err);
+./services/api/src/stream/stream.controller.ts:70:   * SSE endpoint for KDS events (kitchen display updates).
+./services/api/src/stream/stream.controller.ts:80:      this.logger.warn(`SSE connection rejected: max clients (${MAX_CLIENTS}) exceeded`);
+./services/api/src/stream/stream.controller.ts:81:      throw new HttpException('Too many concurrent SSE connections', HttpStatus.TOO_MANY_REQUESTS);
+./services/api/src/stream/stream.controller.ts:84:    res.setHeader('Content-Type', 'text/event-stream');
+./services/api/src/stream/stream.controller.ts:90:    this.logger.log(`SSE kds client connected (${this.eventBus.getClientCount()}/${MAX_CLIENTS})`);
+./services/api/src/stream/stream.controller.ts:107:        console.error('SSE kds stream error:', err);
+./services/api/src/ops/ops.service.ts:183:    // E54-s2: SSE clients
+./services/api/src/ops/ops.service.ts:184:    lines.push('# HELP chefcloud_sse_clients_current Current number of SSE clients');
+./services/api/src/hardware/spout.service.ts:107:    // 5. Publish to SSE stream
+./services/api/prisma/seed.ts:669:    { code: '1000', name: 'Cash', type: 'ASSET' },
+./services/api/prisma/seed.ts:670:    { code: '1010', name: 'Bank', type: 'ASSET' },
+./services/api/prisma/seed.ts:671:    { code: '1100', name: 'Accounts Receivable', type: 'ASSET' },
+./services/api/prisma/seed.ts:672:    { code: '1200', name: 'Inventory', type: 'ASSET' },
+./services/api/prisma/seed.ts:695:        type: accountData.type as 'ASSET' | 'LIABILITY' | 'EQUITY' | 'REVENUE' | 'COGS' | 'EXPENSE',
+./services/api/test/e2e/factory.ts:371:    { code: '1100', name: 'Cash', type: 'ASSET' },
+./services/api/test/e2e/factory.ts:372:    { code: '1200', name: 'Accounts Receivable', type: 'ASSET' },
+./services/api/test/e26-kpis.e2e-spec.ts:8:describe('E26-s1: Live KPI Streaming (SSE)', () => {
+./services/api/test/e26-kpis.e2e-spec.ts:80:  describe('GET /stream/kpis (SSE)', () => {
+./services/api/test/e26-kpis.e2e-spec.ts:127:    // Note: Testing actual SSE streaming in Jest is complex
+./services/api/test/e26-kpis.e2e-spec.ts:131:      // This test is skipped - SSE testing requires special setup
+./services/api/test/e26-kpis.e2e-spec.ts:140:          // Would need to parse SSE chunks here

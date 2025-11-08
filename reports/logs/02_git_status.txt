@@ -1,0 +1,48 @@
+On branch main
+Your branch is ahead of 'origin/main' by 1 commit.
+  (use "git push" to publish your local commits)
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   DEV_GUIDE.md
+	modified:   package.json
+	modified:   packages/db/package.json
+	modified:   packages/db/prisma/schema.prisma
+	modified:   pnpm-lock.yaml
+	modified:   services/api/package.json
+	modified:   services/api/src/accounting/accounting.module.ts
+	modified:   services/api/src/cash/cash.module.ts
+	modified:   services/api/src/hardware/hardware.module.ts
+	modified:   services/api/src/kds/kds.module.ts
+	modified:   services/api/src/pos/pos.module.ts
+	modified:   services/api/src/pos/pos.service.ts
+	modified:   services/api/src/stream/stream.module.ts
+	modified:   services/api/test/jest-e2e.setup.ts
+	modified:   tsconfig.base.json
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	E40-S2-COMPLETION.md
+	E55-S1-STATUS.md
+	packages/db/prisma/migrations/20251030065600_period_lock_bankrec/
+	reports/
+	scripts/step1_bootstrap.sh
+	scripts/step2_node_build.sh
+	services/api/.swcrc
+	services/api/E55-FIX7-SOLUTION.md
+	services/api/cycle-report.txt
+	services/api/jest-e2e.config.ts
+	services/api/jest-e2e.setup.ts
+	services/api/src/accounting/bank-rec.controller.ts
+	services/api/src/accounting/bank-rec.service.ts
+	services/api/src/accounting/bank-rec.spec.ts
+	services/api/src/accounting/csv-parser.ts
+	services/api/src/accounting/period-lock.spec.ts
+	services/api/src/accounting/periods.controller.ts
+	services/api/src/accounting/periods.service.ts
+	services/api/src/events/events.module.ts
+	services/api/test/e2e/
+	services/api/tsconfig.e2e.json
+
+no changes added to commit (use "git add" and/or "git commit -a")

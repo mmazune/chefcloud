@@ -1,0 +1,348 @@
+{
+  "epics": [
+    {
+      "id": "E22",
+      "name": "Franchise & Multi-Branch Management",
+      "status": "🚧",
+      "stories": [
+        "E22-s2",
+        "E22-s3"
+      ],
+      "evidence": {
+        "controllers": [
+          "services/api/src/franchise/franchise.controller.ts",
+          "services/api/src/franchise/franchise.service.ts"
+        ],
+        "workers": [
+          "services/worker/src/franchise-ranking.worker.ts",
+          "services/worker/src/procurement-suggest.worker.ts"
+        ],
+        "migrations": [
+          "20251028135016_add_franchise_models",
+          "20251029_add_franchise_weights",
+          "20251029_procurement_automations"
+        ],
+        "tests": [
+          "services/api/test/e22-franchise.e2e-spec.ts",
+          "services/api/src/franchise/franchise.service.spec.ts"
+        ]
+      },
+      "endpoints": [
+        "GET /franchise/overview",
+        "GET /franchise/rankings",
+        "POST /franchise/budgets",
+        "GET /franchise/budgets",
+        "GET /franchise/forecast/items",
+        "GET /franchise/procurement/suggest",
+        "POST /franchise/procurement/generate-drafts"
+      ],
+      "curl_examples": [
+        "curl -H \"Authorization: Bearer $TOKEN\" \"$BASE/franchise/overview?orgId=$ORG_ID&range=today\"",
+        "curl -H \"Authorization: Bearer $TOKEN\" \"$BASE/franchise/rankings?orgId=$ORG_ID&metric=revenue&period=week\""
+      ],
+      "acceptance": {
+        "org_scope_rbac": true,
+        "idempotent_writes": true,
+        "migrations_present": true,
+        "endpoints_implemented": true,
+        "unit_tests": true,
+        "e2e_tests": true,
+        "docs_curl_examples": true,
+        "perf_baselines": false,
+        "offline_behavior": false
+      },
+      "gaps": [
+        "Missing variance alert notifications",
+        "No budget approval workflow",
+        "FORECAST procurement strategy not yet implemented (E22-s4)",
+        "No performance baselines or load tests"
+      ],
+      "risks": [
+        "Procurement draft generation may be slow with many branches",
+        "Ranking calculations not cached for high-frequency access"
+      ]
+    },
+    {
+      "id": "E23",
+      "name": "Roles Expansion & Platform Access Matrix",
+      "status": "✅",
+      "stories": [
+        "E23-s1",
+        "E23-s3"
+      ],
+      "evidence": {
+        "controllers": [
+          "services/api/src/access/access.controller.ts",
+          "services/api/src/access/access.service.ts"
+        ],
+        "guards": [
+          "services/api/src/access/platform-access.guard.ts"
+        ],
+        "migrations": [
+          "20251028095950_add_platform_access",
+          "20251028102056_add_platform_access"
+        ],
+        "tests": [
+          "services/api/test/e23-roles-access.e2e-spec.ts",
+          "services/api/test/e23-platform-access.e2e-spec.ts",
+          "services/api/src/access/access.service.spec.ts"
+        ]
+      },
+      "endpoints": [
+        "GET /access/matrix",
+        "POST /access/grant",
+        "POST /access/revoke"
+      ],
+      "curl_examples": [
+        "curl -H \"Authorization: Bearer $TOKEN\" \"$BASE/access/matrix?userId=$USER_ID\""
+      ],
+      "acceptance": {
+        "org_scope_rbac": true,
+        "idempotent_writes": true,
+        "migrations_present": true,
+        "endpoints_implemented": true,
+        "unit_tests": true,
+        "e2e_tests": true,
+        "docs_curl_examples": true,
+        "perf_baselines": false,
+        "offline_behavior": true
+      },
+      "gaps": [],
+      "risks": []
+    },
+    {
+      "id": "E24",
+      "name": "Subscriptions & Developer Portal",
+      "status": "🚧",
+      "stories": [
+        "E24-s1"
+      ],
+      "evidence": {
+        "controllers": [
+          "services/api/src/billing/billing.controller.ts",
+          "services/api/src/billing/billing.service.ts",
+          "services/api/src/dev-portal/dev-portal.controller.ts"
+        ],
+        "webhooks": [
+          "services/api/src/webhooks.controller.ts"
+        ],
+        "migrations": [
+          "20251028131741_add_subscriptions_dev_portal",
+          "20251028015955_add_api_keys"
+        ],
+        "tests": [
+          "services/api/test/e24-subscriptions.e2e-spec.ts",
+          "services/api/test/b2-apikey.e2e-spec.ts"
+        ]
+      },
+      "endpoints": [
+        "GET /billing/subscription",
+        "POST /billing/plan/change",
+        "POST /billing/cancel",
+        "POST /webhooks/mtn",
+        "POST /webhooks/airtel",
+        "GET /dev-portal/apps",
+        "POST /dev-portal/apps"
+      ],
+      "curl_examples": [
+        "curl -H \"Authorization: Bearer $TOKEN\" \"$BASE/billing/subscription?orgId=$ORG_ID\"",
+        "curl -X POST -H \"Authorization: Bearer $TOKEN\" -d '{\"plan\":\"PREMIUM\"}' \"$BASE/billing/plan/change\""
+      ],
+      "acceptance": {
+        "org_scope_rbac": true,
+        "idempotent_writes": true,
+        "migrations_present": true,
+        "endpoints_implemented": true,
+        "unit_tests": false,
+        "e2e_tests": true,
+        "docs_curl_examples": true,
+        "perf_baselines": false,
+        "offline_behavior": false
+      },
+      "gaps": [
+        "No downgrade smoke test",
+        "Grace period handling not fully documented",
+        "Missing webhook signature verification tests",
+        "No unit tests for billing service"
+      ],
+      "risks": [
+        "Webhook replay attacks not mitigated with timestamp checks",
+        "No rate limiting on plan change endpoint"
+      ]
+    },
+    {
+      "id": "E25",
+      "name": "Badge/MSR Lifecycle",
+      "status": "🧪",
+      "stories": [
+        "E25-s1"
+      ],
+      "evidence": {
+        "controllers": [
+          "services/api/src/badges/badges.controller.ts",
+          "services/api/src/badges/badges.service.ts"
+        ],
+        "auth": [
+          "services/api/src/auth/auth.controller.ts (msr-swipe, enroll-badge)"
+        ],
+        "migrations": [
+          "(badges integrated in auth models migration)"
+        ],
+        "tests": [
+          "services/api/src/badges/badges.service.spec.ts"
+        ]
+      },
+      "endpoints": [
+        "POST /auth/msr-swipe",
+        "POST /auth/enroll-badge",
+        "GET /badges",
+        "POST /badges/:id/revoke"
+      ],
+      "curl_examples": [
+        "curl -X POST -H \"Authorization: Bearer $TOKEN\" -d '{\"badgeId\":\"B123\",\"action\":\"REVOKE\",\"reason\":\"separation\"}' \"$BASE/badges/:id/transition\""
+      ],
+      "acceptance": {
+        "org_scope_rbac": true,
+        "idempotent_writes": true,
+        "migrations_present": true,
+        "endpoints_implemented": true,
+        "unit_tests": true,
+        "e2e_tests": false,
+        "docs_curl_examples": true,
+        "perf_baselines": false,
+        "offline_behavior": false
+      },
+      "gaps": [
+        "No E2E tests for badge lifecycle",
+        "Badge state machine transitions not fully validated",
+        "Missing custody transfer workflow",
+        "LOST -> RETURNED transition not documented"
+      ],
+      "risks": [
+        "Badge enrollment may not prevent duplicate MSR IDs",
+        "Revoke action does not invalidate existing sessions immediately"
+      ]
+    },
+    {
+      "id": "E26",
+      "name": "Real-time Owner/Manager Views (SSE)",
+      "status": "✅",
+      "stories": [
+        "E26-s1"
+      ],
+      "evidence": {
+        "controllers": [
+          "services/api/src/stream/stream.controller.ts",
+          "services/api/src/kpis/kpis.controller.ts",
+          "services/api/src/owner/owner.controller.ts"
+        ],
+        "services": [
+          "services/api/src/stream/stream.service.ts"
+        ],
+        "migrations": [
+          "(KPI aggregation via existing models)"
+        ],
+        "tests": [
+          "services/api/test/e26-kpis.e2e-spec.ts",
+          "services/api/src/kpis/kpis.service.spec.ts"
+        ]
+      },
+      "endpoints": [
+        "GET /stream/kpis (SSE)",
+        "GET /owners/digest",
+        "POST /owners/scheduled-alerts"
+      ],
+      "curl_examples": [
+        "curl -H \"Authorization: Bearer $TOKEN\" -N \"$BASE/stream/kpis?orgId=$ORG_ID\" | head -n 20"
+      ],
+      "acceptance": {
+        "org_scope_rbac": true,
+        "idempotent_writes": true,
+        "migrations_present": true,
+        "endpoints_implemented": true,
+        "unit_tests": true,
+        "e2e_tests": true,
+        "docs_curl_examples": true,
+        "perf_baselines": false,
+        "offline_behavior": false
+      },
+      "gaps": [
+        "No authentication on SSE endpoint (documented as known issue)",
+        "SSE reconnection strategy not documented for clients"
+      ],
+      "risks": [
+        "SSE connections may accumulate if clients don't close properly",
+        "No rate limiting on SSE endpoint"
+      ]
+    },
+    {
+      "id": "E27",
+      "name": "Costing & Profit Engine",
+      "status": "✅",
+      "stories": [
+        "E27-s1"
+      ],
+      "evidence": {
+        "controllers": [
+          "services/api/src/analytics/analytics.controller.ts",
+          "services/api/src/pos/pos.controller.ts (costing on close)"
+        ],
+        "services": [
+          "services/api/src/analytics/costing.service.ts"
+        ],
+        "migrations": [
+          "20251029053526_add_costing_fields"
+        ],
+        "tests": [
+          "services/api/test/e27-costing.e2e-spec.ts",
+          "services/api/src/analytics/costing.service.spec.ts"
+        ]
+      },
+      "endpoints": [
+        "GET /analytics/costing/summary",
+        "GET /analytics/items/:itemId/cost-history"
+      ],
+      "curl_examples": [
+        "curl -H \"Authorization: Bearer $TOKEN\" \"$BASE/analytics/costing/summary?orgId=$ORG_ID&since=2025-10-01\""
+      ],
+      "acceptance": {
+        "org_scope_rbac": true,
+        "idempotent_writes": true,
+        "migrations_present": true,
+        "endpoints_implemented": true,
+        "unit_tests": true,
+        "e2e_tests": true,
+        "docs_curl_examples": true,
+        "perf_baselines": false,
+        "offline_behavior": false
+      },
+      "gaps": [
+        "WAC calculation performance not benchmarked for large inventories",
+        "Recipe costing for complex items (nested BOM) not fully tested"
+      ],
+      "risks": [
+        "Costing recalculation may be expensive on high-volume order closure"
+      ]
+    }
+  ],
+  "milestones": [
+    {
+      "id": "M7",
+      "name": "Streams & Digests",
+      "status": "✅",
+      "evidence": "services/api/src/stream/, services/api/src/owner/owner.service.ts (digest)"
+    },
+    {
+      "id": "M8",
+      "name": "Anomaly Detection",
+      "status": "🚧",
+      "evidence": "services/api/src/dashboards/, services/api/src/thresholds/"
+    },
+    {
+      "id": "M10",
+      "name": "EFRIS Integration",
+      "status": "🧪",
+      "evidence": "services/api/src/efris/, curl-examples-m10-s2.sh"
+    }
+  ]
+}

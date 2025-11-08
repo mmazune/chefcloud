@@ -511,5 +511,175 @@ Run `pnpm seed` in `services/api` to populate:
 
 ---
 
+## Webhooks (Secured - E24)
+
+All webhook endpoints require HMAC signature verification and replay protection.
+
+### Required Headers
+
+- `X-Sig`: HMAC-SHA256 signature (hex format)
+- `X-Ts`: Timestamp in milliseconds
+- `X-Id`: Unique request ID
+
+### Generate Signature
+
+```bash
+# Bash helper function
+webhook_signature() {
+  local secret="$1"
+  local timestamp="$2"
+  local body="$3"
+  local payload="${timestamp}.${body}"
+  echo -n "$payload" | openssl dgst -sha256 -hmac "$secret" | sed 's/^.* //'
+}
+
+# Or using Node.js
+node -e "
+  const crypto = require('crypto');
+  const secret = '$WH_SECRET';
+  const ts = '$TS';
+  const body = '$BODY';
+  const payload = ts + '.' + body;
+  console.log(crypto.createHmac('sha256', secret).update(payload).digest('hex'));
+"
+```
+
+### Billing Webhook Example
+
+```bash
+# Set environment variables
+export WH_SECRET="your-webhook-secret-key"
+export TS=$(date +%s000)
+export BODY='{"event":"invoice.paid","id":"evt_123","amount":50000}'
+
+# Generate signature
+export SIG=$(node -e "const c=require('crypto');const s='$WH_SECRET';const ts='$TS';const b='$BODY';const p=ts+'.'+b;console.log(c.createHmac('sha256',s).update(p).digest('hex'))")
+
+# Send webhook
+curl -X POST $API_URL/webhooks/billing \
+  -H "Content-Type: application/json" \
+  -H "X-Sig: $SIG" \
+  -H "X-Ts: $TS" \
+  -H "X-Id: evt_123" \
+  -d "$BODY"
+
+# Success response (201):
+{
+  "received": true,
+  "event": "invoice.paid",
+  "id": "evt_123",
+  "timestamp": "2024-11-07T10:30:00.000Z"
+}
+
+# Replay attempt with same X-Id (409):
+{
+  "statusCode": 409,
+  "message": "Replay attack detected: request ID already processed",
+  "error": "Conflict",
+  "requestId": "evt_123"
+}
+
+# Invalid signature (401):
+{
+  "statusCode": 401,
+  "message": "Invalid signature",
+  "error": "Unauthorized"
+}
+
+# Stale timestamp (401):
+{
+  "statusCode": 401,
+  "message": "Timestamp outside valid window (±5 minutes). Clock skew: 10 minutes",
+  "error": "Unauthorized - Stale Request"
+}
+```
+
+### MTN Mobile Money Webhook
+
+```bash
+export BODY='{"intentId":"intent-123","status":"success","transactionId":"MTN-TX-987"}'
+export TS=$(date +%s000)
+export SIG=$(node -e "const c=require('crypto');const s='$WH_SECRET';const ts='$TS';const b='$BODY';const p=ts+'.'+b;console.log(c.createHmac('sha256',s).update(p).digest('hex'))")
+
+curl -X POST $API_URL/webhooks/mtn \
+  -H "Content-Type: application/json" \
+  -H "X-Sig: $SIG" \
+  -H "X-Ts: $TS" \
+  -H "X-Id: mtn-webhook-$(date +%s)" \
+  -H "x-mtn-signature: mtn-provider-sig" \
+  -d "$BODY"
+```
+
+### Airtel Money Webhook
+
+```bash
+export BODY='{"intentId":"intent-456","status":"success","transactionId":"AIRTEL-TX-123"}'
+export TS=$(date +%s000)
+export SIG=$(node -e "const c=require('crypto');const s='$WH_SECRET';const ts='$TS';const b='$BODY';const p=ts+'.'+b;console.log(c.createHmac('sha256',s).update(p).digest('hex'))")
+
+curl -X POST $API_URL/webhooks/airtel \
+  -H "Content-Type: application/json" \
+  -H "X-Sig: $SIG" \
+  -H "X-Ts: $TS" \
+  -H "X-Id: airtel-webhook-$(date +%s)" \
+  -H "x-airtel-signature: airtel-provider-sig" \
+  -d "$BODY"
+```
+
+### Security Features
+
+- **HMAC Verification**: Constant-time comparison prevents timing attacks
+- **Timestamp Validation**: ±5 minute window (300 seconds)
+- **Replay Protection**: Request IDs stored for 24 hours
+- **Rate Limiting**: Standard API rate limits apply
+
+### Error Codes
+
+- `400`: Missing required headers (X-Sig, X-Ts, X-Id)
+- `401`: Invalid signature or stale timestamp
+- `409`: Replay attack (duplicate X-Id)
+- `500`: Server misconfiguration (WH_SECRET not set)
+
+---
+
+## Real-Time SSE Streams (L4+, L5)
+
+### Live KPI Stream (Managers & Owners)
+
+**Requirements:**
+- **Auth**: L4 (Manager) or L5 (Owner) role
+- **Rate Limit**: 60 requests/min, max 2 concurrent connections per user
+
+```bash
+# Org-wide KPIs (requires L4 or L5 role)
+curl -N -H "Authorization: Bearer $TOKEN" \
+  "$API_URL/stream/kpis?scope=org"
+
+# Branch-specific KPIs
+curl -N -H "Authorization: Bearer $TOKEN" \
+  "$API_URL/stream/kpis?scope=branch&branchId=branch-123"
+
+# Save to file (first 10 events)
+curl -N -H "Authorization: Bearer $TOKEN" \
+  "$API_URL/stream/kpis" | head -n 20 > kpis.txt
+```
+
+**Response Format:**
+```
+event: message
+data: {"salesToday":12450.50,"salesMTD":45230.75,"openOrders":3,"tablesOccupied":8,...}
+
+event: message
+data: {"salesToday":12650.50,"salesMTD":45430.75,"openOrders":4,"tablesOccupied":9,...}
+```
+
+**Error Responses:**
+- `401 Unauthorized`: Missing or invalid JWT token
+- `403 Forbidden`: Requires L4 or L5 role
+- `429 Too Many Requests`: Rate limit exceeded (check `Retry-After` header)
+
+---
+
 **License:** MIT  
 **Version:** 0.1.0
+

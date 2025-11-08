@@ -1,0 +1,506 @@
+./perf/scenarios/owner-overview.js:10:      duration: '5m',
+./perf/scenarios/owner-overview.js:14:    'http_req_duration{name:owner_overview}': ['p(95)<350', 'p(99)<800'],
+./perf/scenarios/pos-happy.js:11:        { duration: '30s', target: 20 }, // Ramp up
+./perf/scenarios/pos-happy.js:12:        { duration: '3m', target: 50 },  // Sustain 50 RPS mix
+./perf/scenarios/pos-happy.js:13:        { duration: '30s', target: 0 },  // Ramp down
+./perf/scenarios/pos-happy.js:18:    'http_req_duration{name:create_order}': ['p(95)<350', 'p(99)<800'],
+./perf/scenarios/pos-happy.js:19:    'http_req_duration{name:send_order}': ['p(95)<350', 'p(99)<800'],
+./perf/scenarios/pos-happy.js:20:    'http_req_duration{name:close_order}': ['p(95)<350', 'p(99)<800'],
+./perf/scenarios/kpis-sse.js:10:      duration: '2m',
+./perf/scenarios/kpis-sse.js:14:    'http_req_duration{name:sse_connect}': ['p(95)<500'], // SSE connect < 500ms
+./perf/scenarios/offline-queue.js:16:    { duration: '40s', target: 20 }, // API up
+./perf/scenarios/offline-queue.js:17:    { duration: '20s', target: 0 },  // API down (simulated)
+./perf/scenarios/offline-queue.js:18:    { duration: '40s', target: 20 }, // API up
+./perf/scenarios/offline-queue.js:19:    { duration: '20s', target: 0 },  // API down
+./perf/scenarios/offline-queue.js:20:    { duration: '40s', target: 20 }, // API up
+./perf/scenarios/latency-mix.js:15:    { duration: '1m', target: 10 },
+./perf/scenarios/latency-mix.js:16:    { duration: '2m', target: 30 },
+./perf/scenarios/latency-mix.js:17:    { duration: '1m', target: 10 },
+./perf/scenarios/latency-mix.js:20:    http_req_duration: ['p(99)<1200'], // p99 must be under 1200ms
+./perf/scenarios/latency-mix.js:48:    'response time OK': (r) => r.timings.duration < 1200,
+./perf/smoke-assert.js:63:  'http_req_duration_p95': 350,  // p95 < 350ms
+./perf/smoke-assert.js:67:const durations = metrics.http_req_duration || [];
+./perf/smoke-assert.js:68:const p95 = percentile(durations, 95);
+./perf/smoke-assert.js:72:console.log(`  p(95) duration: ${p95.toFixed(2)}ms`);
+./perf/smoke-assert.js:78:if (p95 > budgets.http_req_duration_p95) {
+./perf/smoke-assert.js:79:  console.error(`❌ p(95) duration exceeds budget: ${p95.toFixed(2)}ms > ${budgets.http_req_duration_p95}ms`);
+./perf/smoke-assert.js:82:  console.log(`✅ p(95) duration within budget: ${p95.toFixed(2)}ms <= ${budgets.http_req_duration_p95}ms`);
+./services/worker/src/__tests__/efris-backoff.spec.ts:1:import { calculateBackoffDelay } from '../efris-client';
+./services/worker/src/index.ts:4:import { pushToEfris, calculateBackoffDelay } from './efris-client';
+./services/worker/src/index.ts:39:  type: 'efris-push' | 'efris-reconcile';
+./services/worker/src/index.ts:161:const efrisWorker = new Worker<EfrisRetryJob>(
+./services/worker/src/index.ts:162:  'efris',
+./services/worker/src/index.ts:166:    if (job.data.type === 'efris-push') {
+./services/worker/src/index.ts:169:        throw new Error('orderId is required for efris-push job');
+./services/worker/src/index.ts:210:            await efrisQueue.add('efris-push', { type: 'efris-push', orderId }, { delay });
+./services/worker/src/index.ts:227:          await efrisQueue.add('efris-push', { type: 'efris-push', orderId }, { delay });
+./services/worker/src/index.ts:232:    } else if (job.data.type === 'efris-reconcile') {
+./services/worker/src/index.ts:248:        await efrisQueue.add(
+./services/worker/src/index.ts:249:          'efris-push',
+./services/worker/src/index.ts:250:          { type: 'efris-push', orderId: invoice.orderId },
+./services/worker/src/index.ts:458:        // TODO: Integrate with Slack webhook
+./services/worker/src/index.ts:986:efrisWorker.on('completed', (job) => {
+./services/worker/src/index.ts:990:efrisWorker.on('failed', (job, err) => {
+./services/worker/src/index.ts:1045:export const efrisQueue = new Queue<EfrisRetryJob>('efris', { connection });
+./services/worker/src/index.ts:1916:  await efrisQueue.add(
+./services/worker/src/index.ts:1917:    'efris-reconcile',
+./services/worker/src/index.ts:1918:    { type: 'efris-reconcile' },
+./services/worker/src/index.ts:1921:      jobId: 'efris-reconcile-nightly', // Prevent duplicates
+./services/worker/src/index.ts:2057:  '🚀 ChefCloud Worker started - listening for jobs on "reports", "payments", "efris", "anomalies", "alerts", "reservations", "reservation-reminders", "spout-consume", "digest", "subscription-renewals", "subscription-reminders-billing", "forecast-build", and "rank-branches" queues',
+./services/worker/src/index.ts:2065:  await efrisWorker.close();
+./services/worker/dist/__tests__/efris-backoff.spec.d.ts:2://# sourceMappingURL=efris-backoff.spec.d.ts.map
+./services/worker/dist/__tests__/efris-backoff.spec.js:3:const efris_client_1 = require("../efris-client");
+./services/worker/dist/__tests__/efris-backoff.spec.js:7:        expect((0, efris_client_1.calculateBackoffDelay)(1)).toBe(5 * 60 * 1000);
+./services/worker/dist/__tests__/efris-backoff.spec.js:9:        expect((0, efris_client_1.calculateBackoffDelay)(2)).toBe(15 * 60 * 1000);
+./services/worker/dist/__tests__/efris-backoff.spec.js:11:        expect((0, efris_client_1.calculateBackoffDelay)(3)).toBe(45 * 60 * 1000);
+./services/worker/dist/__tests__/efris-backoff.spec.js:13:        expect((0, efris_client_1.calculateBackoffDelay)(4)).toBe(2 * 60 * 60 * 1000);
+./services/worker/dist/__tests__/efris-backoff.spec.js:15:        expect((0, efris_client_1.calculateBackoffDelay)(5)).toBe(6 * 60 * 60 * 1000);
+./services/worker/dist/__tests__/efris-backoff.spec.js:17:        expect((0, efris_client_1.calculateBackoffDelay)(6)).toBe(6 * 60 * 60 * 1000);
+./services/worker/dist/__tests__/efris-backoff.spec.js:18:        expect((0, efris_client_1.calculateBackoffDelay)(10)).toBe(6 * 60 * 60 * 1000);
+./services/worker/dist/__tests__/efris-backoff.spec.js:21:        const delays = [1, 2, 3, 4, 5].map(efris_client_1.calculateBackoffDelay);
+./services/worker/dist/__tests__/efris-backoff.spec.js:28:        const maxDelay = (0, efris_client_1.calculateBackoffDelay)(5);
+./services/worker/dist/__tests__/efris-backoff.spec.js:29:        const beyondMax = (0, efris_client_1.calculateBackoffDelay)(100);
+./services/worker/dist/__tests__/efris-backoff.spec.js:34://# sourceMappingURL=efris-backoff.spec.js.map
+./services/worker/dist/efris-client.js:32://# sourceMappingURL=efris-client.js.map
+./services/worker/dist/telemetry.js:5:    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+./services/worker/dist/index.d.ts:14:    type: 'efris-push' | 'efris-reconcile';
+./services/worker/dist/index.d.ts:52:export declare const efrisQueue: Queue<EfrisRetryJob, any, string, EfrisRetryJob, any, string>;
+./services/worker/dist/efris-client.d.ts:11://# sourceMappingURL=efris-client.d.ts.map
+./services/worker/dist/index.js:5:    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+./services/worker/dist/index.js:39:exports.accountingRemindersQueue = exports.subscriptionRemindersQueue = exports.subscriptionRenewalsQueue = exports.digestQueue = exports.spoutConsumeQueue = exports.reservationRemindersQueue = exports.reservationsQueue = exports.alertsQueue = exports.anomaliesQueue = exports.efrisQueue = exports.paymentsQueue = exports.reportsQueue = void 0;
+./services/worker/dist/index.js:43:const efris_client_1 = require("./efris-client");
+./services/worker/dist/index.js:98:const efrisWorker = new bullmq_1.Worker('efris', async (job) => {
+./services/worker/dist/index.js:100:    if (job.data.type === 'efris-push') {
+./services/worker/dist/index.js:103:            throw new Error('orderId is required for efris-push job');
+./services/worker/dist/index.js:125:            const result = await (0, efris_client_1.pushToEfris)(orderId);
+./services/worker/dist/index.js:136:                    await exports.efrisQueue.add('efris-push', { type: 'efris-push', orderId }, { delay });
+./services/worker/dist/index.js:149:                await exports.efrisQueue.add('efris-push', { type: 'efris-push', orderId }, { delay });
+./services/worker/dist/index.js:154:    else if (job.data.type === 'efris-reconcile') {
+./services/worker/dist/index.js:166:            const delay = (0, efris_client_1.calculateBackoffDelay)(invoice.attempts + 1);
+./services/worker/dist/index.js:167:            await exports.efrisQueue.add('efris-push', { type: 'efris-push', orderId: invoice.orderId }, { delay });
+./services/worker/dist/index.js:333:            // TODO: Integrate with Slack webhook
+./services/worker/dist/index.js:753:efrisWorker.on('completed', (job) => {
+./services/worker/dist/index.js:756:efrisWorker.on('failed', (job, err) => {
+./services/worker/dist/index.js:798:exports.efrisQueue = new bullmq_1.Queue('efris', { connection });
+./services/worker/dist/index.js:1435:    await exports.efrisQueue.add('efris-reconcile', { type: 'efris-reconcile' }, {
+./services/worker/dist/index.js:1437:        jobId: 'efris-reconcile-nightly', // Prevent duplicates
+./services/worker/dist/index.js:1533:console.log('🚀 ChefCloud Worker started - listening for jobs on "reports", "payments", "efris", "anomalies", "alerts", "reservations", "reservation-reminders", "spout-consume", "digest", "subscription-renewals", "subscription-reminders-billing", "forecast-build", and "rank-branches" queues');
+./services/worker/dist/index.js:1539:    await efrisWorker.close();
+./services/api/src/webhooks.controller.ts:4:@Controller('webhooks')
+./services/api/src/webhooks.controller.ts:10:  @Post('mtn')
+./services/api/src/webhooks.controller.ts:11:  async handleMtnWebhook(@Body() payload: any, @Headers('x-mtn-signature') signature?: string) {
+./services/api/src/webhooks.controller.ts:12:    this.logger.log('Received MTN webhook');
+./services/api/src/webhooks.controller.ts:13:    return this.paymentsService.handleWebhook('MTN', payload, signature);
+./services/api/src/webhooks.controller.ts:16:  @Post('airtel')
+./services/api/src/webhooks.controller.ts:19:    @Headers('x-airtel-signature') signature?: string,
+./services/api/src/webhooks.controller.ts:21:    this.logger.log('Received Airtel webhook');
+./services/api/src/webhooks.controller.ts:22:    return this.paymentsService.handleWebhook('AIRTEL', payload, signature);
+./services/api/src/pos/pos.module.ts:6:import { EfrisModule } from '../efris/efris.module';
+./services/api/src/pos/pos.service.ts:19:import { EfrisService } from '../efris/efris.service';
+./services/api/src/pos/pos.service.ts:31:    private efrisService: EfrisService,
+./services/api/src/pos/pos.service.ts:646:    this.efrisService.push(orderId).catch(() => {
+./services/api/src/auth/api-key.guard.spec.ts:139:        scopes: ['webhooks:receive'],
+./services/api/src/payments/interfaces/payment-adapter.interface.ts:25:  handleWebhook(payload: any, signature?: string): Promise<WebhookResult>;
+./services/api/src/payments/adapters/mtn-sandbox.adapter.ts:16:    this.forceFail = forceFailProviders.toLowerCase().includes('mtn');
+./services/api/src/payments/adapters/mtn-sandbox.adapter.ts:46:  async handleWebhook(payload: any, signature?: string): Promise<WebhookResult> {
+./services/api/src/payments/adapters/mtn-sandbox.adapter.ts:47:    this.logger.log(`[MTN Sandbox] Processing webhook`, payload);
+./services/api/src/payments/adapters/mtn-sandbox.adapter.ts:49:    // In sandbox, verify signature if secret is set
+./services/api/src/payments/adapters/mtn-sandbox.adapter.ts:51:    if (secret && signature) {
+./services/api/src/payments/adapters/mtn-sandbox.adapter.ts:52:      // Simple signature verification (in production, use HMAC)
+./services/api/src/payments/adapters/mtn-sandbox.adapter.ts:53:      const expectedSig = `mtn-${secret}`;
+./services/api/src/payments/adapters/mtn-sandbox.adapter.ts:54:      if (signature !== expectedSig) {
+./services/api/src/payments/adapters/mtn-sandbox.adapter.ts:55:        throw new Error('Invalid webhook signature');
+./services/api/src/payments/adapters/airtel-sandbox.adapter.ts:16:    this.forceFail = forceFailProviders.toLowerCase().includes('airtel');
+./services/api/src/payments/adapters/airtel-sandbox.adapter.ts:37:        data: `airtelmoney://pay?ref=${providerRef}&amount=${params.amount}`,
+./services/api/src/payments/adapters/airtel-sandbox.adapter.ts:46:  async handleWebhook(payload: any, signature?: string): Promise<WebhookResult> {
+./services/api/src/payments/adapters/airtel-sandbox.adapter.ts:47:    this.logger.log(`[Airtel Sandbox] Processing webhook`, payload);
+./services/api/src/payments/adapters/airtel-sandbox.adapter.ts:49:    // In sandbox, verify signature if secret is set
+./services/api/src/payments/adapters/airtel-sandbox.adapter.ts:51:    if (secret && signature) {
+./services/api/src/payments/adapters/airtel-sandbox.adapter.ts:52:      // Simple signature verification (in production, use HMAC)
+./services/api/src/payments/adapters/airtel-sandbox.adapter.ts:53:      const expectedSig = `airtel-${secret}`;
+./services/api/src/payments/adapters/airtel-sandbox.adapter.ts:54:      if (signature !== expectedSig) {
+./services/api/src/payments/adapters/airtel-sandbox.adapter.ts:55:        throw new Error('Invalid webhook signature');
+./services/api/src/payments/payments.module.ts:5:import { MtnSandboxAdapter } from './adapters/mtn-sandbox.adapter';
+./services/api/src/payments/payments.module.ts:6:import { AirtelSandboxAdapter } from './adapters/airtel-sandbox.adapter';
+./services/api/src/payments/payments.service.ts:11:import { MtnSandboxAdapter } from './adapters/mtn-sandbox.adapter';
+./services/api/src/payments/payments.service.ts:12:import { AirtelSandboxAdapter } from './adapters/airtel-sandbox.adapter';
+./services/api/src/payments/payments.service.ts:26:    private mtnAdapter: MtnSandboxAdapter,
+./services/api/src/payments/payments.service.ts:27:    private airtelAdapter: AirtelSandboxAdapter,
+./services/api/src/payments/payments.service.ts:33:    const mtnEnabled = this.configService.get<string>('PAY_MTN_ENABLED') === 'true';
+./services/api/src/payments/payments.service.ts:34:    const airtelEnabled = this.configService.get<string>('PAY_AIRTEL_ENABLED') === 'true';
+./services/api/src/payments/payments.service.ts:36:    if (mtnEnabled) {
+./services/api/src/payments/payments.service.ts:37:      this.adapters.set('MTN', this.mtnAdapter);
+./services/api/src/payments/payments.service.ts:40:    if (airtelEnabled) {
+./services/api/src/payments/payments.service.ts:41:      this.adapters.set('AIRTEL', this.airtelAdapter);
+./services/api/src/payments/payments.service.ts:46:    if (!mtnEnabled && !airtelEnabled) {
+./services/api/src/payments/payments.service.ts:47:      this.adapters.set('MTN', this.mtnAdapter);
+./services/api/src/payments/payments.service.ts:48:      this.adapters.set('AIRTEL', this.airtelAdapter);
+./services/api/src/payments/payments.service.ts:146:  async handleWebhook(provider: string, payload: any, signature?: string) {
+./services/api/src/payments/payments.service.ts:152:    // Store raw webhook event
+./services/api/src/payments/payments.service.ts:153:    const webhookEvent = await this.prisma.webhookEvent.create({
+./services/api/src/payments/payments.service.ts:162:    this.logger.log(`Received webhook ${webhookEvent.id} from ${provider}`);
+./services/api/src/payments/payments.service.ts:165:      // Process webhook through adapter
+./services/api/src/payments/payments.service.ts:166:      const result = await adapter.handleWebhook(payload, signature);
+./services/api/src/payments/payments.service.ts:168:      // Mark webhook as verified
+./services/api/src/payments/payments.service.ts:169:      await this.prisma.webhookEvent.update({
+./services/api/src/payments/payments.service.ts:170:        where: { id: webhookEvent.id },
+./services/api/src/payments/payments.service.ts:180:        this.logger.warn(`Intent ${result.intentId} not found for webhook ${webhookEvent.id}`);
+./services/api/src/payments/payments.service.ts:212:              webhookEventId: webhookEvent.id,
+./services/api/src/payments/payments.service.ts:255:          this.logger.log(`Event booking ${booking.id} auto-confirmed via payment webhook`);
+./services/api/src/payments/payments.service.spec.ts:5:import { MtnSandboxAdapter } from './adapters/mtn-sandbox.adapter';
+./services/api/src/payments/payments.service.spec.ts:6:import { AirtelSandboxAdapter } from './adapters/airtel-sandbox.adapter';
+./services/api/src/payments/payments.service.spec.ts:32:            webhookEvent: {
+./services/api/src/payments/payments.service.spec.ts:163:    it('should process MTN webhook successfully', async () => {
+./services/api/src/payments/payments.service.spec.ts:174:        id: 'webhook-1',
+./services/api/src/payments/payments.service.spec.ts:182:      jest.spyOn(prisma.webhookEvent, 'create').mockResolvedValue(mockWebhookEvent as any);
+./services/api/src/payments/payments.service.spec.ts:183:      jest.spyOn(prisma.webhookEvent, 'update').mockResolvedValue({
+./services/api/src/common/chaos.spec.ts:30:      const duration = Date.now() - start;
+./services/api/src/common/chaos.spec.ts:32:      expect(duration).toBeLessThan(10); // Should be nearly instant
+./services/api/src/common/chaos.spec.ts:62:      const duration = Date.now() - start;
+./services/api/src/common/chaos.spec.ts:64:      expect(duration).toBeGreaterThanOrEqual(90); // Allow some timing variance
+./services/api/src/common/crypto.utils.spec.ts:11:    it('should verify valid HMAC signature', () => {
+./services/api/src/common/crypto.utils.spec.ts:14:      const signature = createHmac('sha256', secret).update(data).digest('hex');
+./services/api/src/common/crypto.utils.spec.ts:16:      expect(verifyHMAC(secret, data, signature)).toBe(true);
+./services/api/src/common/crypto.utils.spec.ts:19:    it('should reject invalid signature', () => {
+./services/api/src/common/crypto.utils.spec.ts:22:      const wrongSignature = 'invalid-signature-hex-value';
+./services/api/src/common/crypto.utils.spec.ts:27:    it('should reject signature with wrong secret', () => {
+./services/api/src/common/crypto.utils.spec.ts:31:      const signature = createHmac('sha256', wrongSecret).update(data).digest('hex');
+./services/api/src/common/crypto.utils.spec.ts:33:      expect(verifyHMAC(secret, data, signature)).toBe(false);
+./services/api/src/common/crypto.utils.spec.ts:79:    it('should verify valid webhook signature with timestamp', () => {
+./services/api/src/common/crypto.utils.spec.ts:80:      const secret = 'webhook-secret';
+./services/api/src/common/crypto.utils.spec.ts:84:      const signature = createHmac('sha256', secret).update(data).digest('hex');
+./services/api/src/common/crypto.utils.spec.ts:86:      const result = verifyWebhookSignature(secret, body, timestamp, signature);
+./services/api/src/common/crypto.utils.spec.ts:91:    it('should reject signature with expired timestamp (replay attack)', () => {
+./services/api/src/common/crypto.utils.spec.ts:92:      const secret = 'webhook-secret';
+./services/api/src/common/crypto.utils.spec.ts:96:      const signature = createHmac('sha256', secret).update(data).digest('hex');
+./services/api/src/common/crypto.utils.spec.ts:98:      const result = verifyWebhookSignature(secret, body, oldTimestamp, signature);
+./services/api/src/common/crypto.utils.spec.ts:104:      const secret = 'webhook-secret';
+./services/api/src/common/crypto.utils.spec.ts:107:      const signature = 'dummy-signature';
+./services/api/src/common/crypto.utils.spec.ts:109:      const result = verifyWebhookSignature(secret, body, invalidTimestamp, signature);
+./services/api/src/common/crypto.utils.spec.ts:114:    it('should reject invalid signature even with valid timestamp', () => {
+./services/api/src/common/crypto.utils.spec.ts:115:      const secret = 'webhook-secret';
+./services/api/src/common/crypto.utils.spec.ts:118:      const wrongSignature = 'invalid-signature-0000000000000000';
+./services/api/src/common/crypto.utils.spec.ts:122:      expect(result.reason).toBe('Invalid signature');
+./services/api/src/common/crypto.utils.spec.ts:127:    it('should verify valid spout device signature', () => {
+./services/api/src/common/crypto.utils.spec.ts:132:      const signature = createHmac('sha256', deviceSecret).update(data).digest('hex');
+./services/api/src/common/crypto.utils.spec.ts:134:      const result = verifySpoutSignature(deviceSecret, body, timestamp, signature);
+./services/api/src/common/crypto.utils.spec.ts:138:    it('should reject spout signature with wrong device secret', () => {
+./services/api/src/common/crypto.utils.spec.ts:144:      const signature = createHmac('sha256', wrongSecret).update(data).digest('hex');
+./services/api/src/common/crypto.utils.spec.ts:146:      const result = verifySpoutSignature(correctSecret, body, timestamp, signature);
+./services/api/src/common/crypto.utils.spec.ts:148:      expect(result.reason).toBe('Invalid signature');
+./services/api/src/common/slow-query.ts:9:  durationMs: number;
+./services/api/src/common/slow-query.ts:20:    const duration = Date.now() - start;
+./services/api/src/common/slow-query.ts:23:    if (duration > SLOW_QUERY_MS && Math.random() < SLOW_QUERY_SAMPLE) {
+./services/api/src/common/slow-query.ts:26:        durationMs: duration,
+./services/api/src/common/slow-query.spec.ts:63:    let actualDuration = 0;
+./services/api/src/common/slow-query.spec.ts:68:      actualDuration = Date.now() - start;
+./services/api/src/common/slow-query.spec.ts:75:    console.log('Actual duration:', actualDuration, 'Threshold:', 50);
+./services/api/src/common/slow-query.spec.ts:83:    expect(logData.durationMs).toBeGreaterThanOrEqual(50);
+./services/api/src/common/crypto.utils.ts:4: * Verify HMAC signature with constant-time comparison
+./services/api/src/common/crypto.utils.ts:9:  signature: string,
+./services/api/src/common/crypto.utils.ts:12:  if (!secret || !data || !signature) {
+./services/api/src/common/crypto.utils.ts:19:  if (expected.length !== signature.length) {
+./services/api/src/common/crypto.utils.ts:26:      Buffer.from(signature, 'hex'),
+./services/api/src/common/crypto.utils.ts:47: * Verify webhook HMAC signature with timestamp
+./services/api/src/common/crypto.utils.ts:54:  signature: string,
+./services/api/src/common/crypto.utils.ts:68:  const valid = verifyHMAC(secret, data, signature, 'sha256');
+./services/api/src/common/crypto.utils.ts:71:    return { valid: false, reason: 'Invalid signature' };
+./services/api/src/common/crypto.utils.ts:78: * Verify Spout device signature
+./services/api/src/common/crypto.utils.ts:85:  signature: string,
+./services/api/src/common/crypto.utils.ts:87:  // Reuse webhook verification (same format)
+./services/api/src/common/crypto.utils.ts:88:  return verifyWebhookSignature(deviceSecret, body, timestamp, signature);
+./services/api/src/logger.ts:107:  durationMs: number,
+./services/api/src/logger.ts:115:    durationMs,
+./services/api/src/prisma.service.ts:39:  get webhookEvent(): typeof prisma.webhookEvent {
+./services/api/src/prisma.service.ts:40:    return prisma.webhookEvent;
+./services/api/src/workforce/payroll.service.spec.ts:136:          name: 'Health Insurance',
+./services/api/src/efris/efris.controller.ts:2:import { EfrisService } from './efris.service';
+./services/api/src/efris/efris.controller.ts:9:  private efrisQueue: Queue;
+./services/api/src/efris/efris.controller.ts:12:    private readonly efrisService: EfrisService,
+./services/api/src/efris/efris.controller.ts:21:    this.efrisQueue = new Queue('efris', { connection });
+./services/api/src/efris/efris.controller.ts:26:    const result = await this.efrisService.push(orderId);
+./services/api/src/efris/efris.controller.ts:32:    // Enqueue efris-push job
+./services/api/src/efris/efris.controller.ts:33:    const job = await this.efrisQueue.add('efris-push', {
+./services/api/src/efris/efris.controller.ts:34:      type: 'efris-push',
+./services/api/src/efris/efris.service.spec.ts:3:import { EfrisService } from './efris.service';
+./services/api/src/efris/efris.module.ts:3:import { EfrisService } from './efris.service';
+./services/api/src/efris/efris.module.ts:4:import { EfrisController } from './efris.controller';
+./services/api/src/alerts/alerts.service.ts:98:   * Send alert via Slack webhook if configured, otherwise email via SMTP
+./services/api/src/alerts/alerts.service.ts:123:   * Send alert to Slack webhook
+./services/api/src/alerts/alerts.service.ts:125:  private async sendSlackAlert(webhookUrl: string, title: string, message: string): Promise<void> {
+./services/api/src/alerts/alerts.service.ts:146:    const response = await fetch(webhookUrl, {
+./services/api/src/alerts/alerts.service.spec.ts:73:    it('should send to Slack webhook if configured', async () => {
+./services/api/src/alerts/alerts.service.spec.ts:104:    it('should send email via SMTP if no Slack webhook configured', async () => {
+./services/api/src/alerts/alerts.service.spec.ts:128:  describe('Slack webhook payload shape', () => {
+./services/api/src/alerts/alerts.dto.ts:8:  target!: string; // email or webhook URL
+./services/api/src/logger.middleware.ts:18:      const durationMs = Date.now() - startTime;
+./services/api/src/logger.middleware.ts:27:      logRequest(req, res, durationMs, context);
+./services/api/src/ops/ops.service.ts:122:      const duration = Date.now() - start;
+./services/api/src/ops/ops.service.ts:123:      ready.checks.database = { status: 'ready', responseMs: duration };
+./services/api/src/ops/ops.service.ts:125:      if (duration > 1000) {
+./services/api/src/hardware/spout.service.ts:54:    signature?: string,
+./services/api/src/hardware/spout.service.ts:66:    // 2. Verify HMAC signature if SPOUT_VERIFY is enabled and signature present
+./services/api/src/hardware/spout.service.ts:68:    if (shouldVerify && signature && device.secret) {
+./services/api/src/hardware/spout.service.ts:72:      const result = verifySpoutSignature(device.secret, body, timestamp, signature);
+./services/api/src/hardware/spout.service.ts:75:        this.logger.warn(`Spout signature verification failed: ${result.reason}`);
+./services/api/src/hardware/spout.service.ts:76:        throw new UnauthorizedException(`Invalid signature: ${result.reason}`);
+./services/api/src/hardware/spout.service.ts:79:      this.logger.log(`Spout signature verified for device ${deviceId}`);
+./services/api/src/hardware/spout.controller.ts:35:    @Headers('x-spout-signature') signature: string | undefined,
+./services/api/src/hardware/spout.controller.ts:40:    return this.spoutService.ingestEvent(dto.deviceId, dto.pulses, occurredAt, dto.raw, signature);
+./services/api/src/hardware/spout.service.spec.ts:206:    it('should verify HMAC signature when SPOUT_VERIFY=true', async () => {
+./services/api/src/hardware/spout.service.spec.ts:217:      const hmac = crypto.createHmac('sha256', secret);
+./services/api/src/hardware/spout.service.spec.ts:218:      hmac.update(data);
+./services/api/src/hardware/spout.service.spec.ts:219:      const validSignature = hmac.digest('hex');
+./services/api/src/hardware/spout.service.spec.ts:256:      // Now try with invalid signature
+./services/api/src/hardware/spout.service.spec.ts:258:        service.ingestEvent(deviceId, pulses, occurredAt, raw, 'invalid-signature'),
+./services/api/src/owner/owner.service.spec.ts:133:    it('should create a digest configuration', async () => {
+./services/api/src/app.module.ts:22:import { WebhooksController } from './webhooks.controller';
+./services/api/src/app.module.ts:23:import { EfrisModule } from './efris/efris.module';
+./services/api/prisma/seed.ts:17:    where: { slug: 'demo-restaurant' },
+./services/api/prisma/seed.ts:20:      name: 'Demo Restaurant',
+./services/api/prisma/seed.ts:21:      slug: 'demo-restaurant',
+./services/api/prisma/seed.ts:651:    console.log('✅ Created subscription for Demo Restaurant (PRO plan)');
+./services/api/prisma/seed.ts:662:    console.log('ℹ️  Subscription already exists for Demo Restaurant');
+./services/api/dist/src/app.module.js:31:const webhooks_controller_1 = require("./webhooks.controller");
+./services/api/dist/src/app.module.js:32:const efris_module_1 = require("./efris/efris.module");
+./services/api/dist/src/app.module.js:89:            efris_module_1.EfrisModule,
+./services/api/dist/src/app.module.js:114:        controllers: [health_controller_1.HealthController, webhooks_controller_1.WebhooksController],
+./services/api/dist/src/logger.middleware.js:20:            const durationMs = Date.now() - startTime;
+./services/api/dist/src/logger.middleware.js:28:            (0, logger_1.logRequest)(req, res, durationMs, context);
+./services/api/dist/src/prisma.service.d.ts:11:    get webhookEvent(): typeof prisma.webhookEvent;
+./services/api/dist/src/prisma.service.js:38:    get webhookEvent() {
+./services/api/dist/src/prisma.service.js:39:        return db_1.prisma.webhookEvent;
+./services/api/dist/src/pos/pos.module.js:15:const efris_module_1 = require("../efris/efris.module");
+./services/api/dist/src/pos/pos.module.js:27:            efris_module_1.EfrisModule,
+./services/api/dist/src/pos/pos.service.js:19:const efris_service_1 = require("../efris/efris.service");
+./services/api/dist/src/pos/pos.service.js:27:    constructor(prisma, efrisService, configService, eventBus, costingService, postingService, promotionsService, kpisService) {
+./services/api/dist/src/pos/pos.service.js:29:        this.efrisService = efrisService;
+./services/api/dist/src/pos/pos.service.js:507:        this.efrisService.push(orderId).catch(() => {
+./services/api/dist/src/pos/pos.service.js:681:        efris_service_1.EfrisService,
+./services/api/dist/src/pos/pos.service.d.ts:3:import { EfrisService } from '../efris/efris.service';
+./services/api/dist/src/pos/pos.service.d.ts:12:    private efrisService;
+./services/api/dist/src/pos/pos.service.d.ts:19:    constructor(prisma: PrismaService, efrisService: EfrisService, configService: ConfigService, eventBus: EventBusService, costingService: CostingService, postingService: PostingService, promotionsService?: PromotionsService | undefined, kpisService?: KpisService | undefined);
+./services/api/dist/src/auth/auth.helpers.js:5:    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+./services/api/dist/src/auth/api-key.guard.js:5:    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+./services/api/dist/src/auth/api-key.guard.spec.js:5:    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+./services/api/dist/src/auth/api-key.guard.spec.js:153:                scopes: ['webhooks:receive'],
+./services/api/dist/src/telemetry.js:5:    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+./services/api/dist/src/payments/payments.service.d.ts:3:import { MtnSandboxAdapter } from './adapters/mtn-sandbox.adapter';
+./services/api/dist/src/payments/payments.service.d.ts:4:import { AirtelSandboxAdapter } from './adapters/airtel-sandbox.adapter';
+./services/api/dist/src/payments/payments.service.d.ts:10:    private mtnAdapter;
+./services/api/dist/src/payments/payments.service.d.ts:11:    private airtelAdapter;
+./services/api/dist/src/payments/payments.service.d.ts:15:    constructor(prisma: PrismaService, configService: ConfigService, mtnAdapter: MtnSandboxAdapter, airtelAdapter: AirtelSandboxAdapter, postingService: PostingService);
+./services/api/dist/src/payments/payments.service.d.ts:28:    handleWebhook(provider: string, payload: any, signature?: string): Promise<{
+./services/api/dist/src/payments/interfaces/payment-adapter.interface.d.ts:22:    handleWebhook(payload: any, signature?: string): Promise<WebhookResult>;
+./services/api/dist/src/payments/adapters/mtn-sandbox.adapter.js:21:        this.forceFail = forceFailProviders.toLowerCase().includes('mtn');
+./services/api/dist/src/payments/adapters/mtn-sandbox.adapter.js:38:    async handleWebhook(payload, signature) {
+./services/api/dist/src/payments/adapters/mtn-sandbox.adapter.js:39:        this.logger.log(`[MTN Sandbox] Processing webhook`, payload);
+./services/api/dist/src/payments/adapters/mtn-sandbox.adapter.js:41:        if (secret && signature) {
+./services/api/dist/src/payments/adapters/mtn-sandbox.adapter.js:42:            const expectedSig = `mtn-${secret}`;
+./services/api/dist/src/payments/adapters/mtn-sandbox.adapter.js:43:            if (signature !== expectedSig) {
+./services/api/dist/src/payments/adapters/mtn-sandbox.adapter.js:44:                throw new Error('Invalid webhook signature');
+./services/api/dist/src/payments/adapters/mtn-sandbox.adapter.js:64://# sourceMappingURL=mtn-sandbox.adapter.js.map
+./services/api/dist/src/payments/adapters/mtn-sandbox.adapter.d.ts:14:    handleWebhook(payload: any, signature?: string): Promise<WebhookResult>;
+./services/api/dist/src/payments/adapters/mtn-sandbox.adapter.d.ts:16://# sourceMappingURL=mtn-sandbox.adapter.d.ts.map
+./services/api/dist/src/payments/adapters/airtel-sandbox.adapter.js:21:        this.forceFail = forceFailProviders.toLowerCase().includes('airtel');
+./services/api/dist/src/payments/adapters/airtel-sandbox.adapter.js:30:                data: `airtelmoney://pay?ref=${providerRef}&amount=${params.amount}`,
+./services/api/dist/src/payments/adapters/airtel-sandbox.adapter.js:38:    async handleWebhook(payload, signature) {
+./services/api/dist/src/payments/adapters/airtel-sandbox.adapter.js:39:        this.logger.log(`[Airtel Sandbox] Processing webhook`, payload);
+./services/api/dist/src/payments/adapters/airtel-sandbox.adapter.js:41:        if (secret && signature) {
+./services/api/dist/src/payments/adapters/airtel-sandbox.adapter.js:42:            const expectedSig = `airtel-${secret}`;
+./services/api/dist/src/payments/adapters/airtel-sandbox.adapter.js:43:            if (signature !== expectedSig) {
+./services/api/dist/src/payments/adapters/airtel-sandbox.adapter.js:44:                throw new Error('Invalid webhook signature');
+./services/api/dist/src/payments/adapters/airtel-sandbox.adapter.js:64://# sourceMappingURL=airtel-sandbox.adapter.js.map
+./services/api/dist/src/payments/adapters/airtel-sandbox.adapter.d.ts:14:    handleWebhook(payload: any, signature?: string): Promise<WebhookResult>;
+./services/api/dist/src/payments/adapters/airtel-sandbox.adapter.d.ts:16://# sourceMappingURL=airtel-sandbox.adapter.d.ts.map
+./services/api/dist/src/payments/payments.module.js:14:const mtn_sandbox_adapter_1 = require("./adapters/mtn-sandbox.adapter");
+./services/api/dist/src/payments/payments.module.js:15:const airtel_sandbox_adapter_1 = require("./adapters/airtel-sandbox.adapter");
+./services/api/dist/src/payments/payments.module.js:25:        providers: [payments_service_1.PaymentsService, mtn_sandbox_adapter_1.MtnSandboxAdapter, airtel_sandbox_adapter_1.AirtelSandboxAdapter, prisma_service_1.PrismaService],
+./services/api/dist/src/payments/payments.service.spec.js:7:const mtn_sandbox_adapter_1 = require("./adapters/mtn-sandbox.adapter");
+./services/api/dist/src/payments/payments.service.spec.js:8:const airtel_sandbox_adapter_1 = require("./adapters/airtel-sandbox.adapter");
+./services/api/dist/src/payments/payments.service.spec.js:32:                        webhookEvent: {
+./services/api/dist/src/payments/payments.service.spec.js:68:                mtn_sandbox_adapter_1.MtnSandboxAdapter,
+./services/api/dist/src/payments/payments.service.spec.js:69:                airtel_sandbox_adapter_1.AirtelSandboxAdapter,
+./services/api/dist/src/payments/payments.service.spec.js:138:        it('should process MTN webhook successfully', async () => {
+./services/api/dist/src/payments/payments.service.spec.js:148:                id: 'webhook-1',
+./services/api/dist/src/payments/payments.service.spec.js:155:            jest.spyOn(prisma.webhookEvent, 'create').mockResolvedValue(mockWebhookEvent);
+./services/api/dist/src/payments/payments.service.spec.js:156:            jest.spyOn(prisma.webhookEvent, 'update').mockResolvedValue({
+./services/api/dist/src/payments/payments.service.js:17:const mtn_sandbox_adapter_1 = require("./adapters/mtn-sandbox.adapter");
+./services/api/dist/src/payments/payments.service.js:18:const airtel_sandbox_adapter_1 = require("./adapters/airtel-sandbox.adapter");
+./services/api/dist/src/payments/payments.service.js:22:    constructor(prisma, configService, mtnAdapter, airtelAdapter, postingService) {
+./services/api/dist/src/payments/payments.service.js:25:        this.mtnAdapter = mtnAdapter;
+./services/api/dist/src/payments/payments.service.js:26:        this.airtelAdapter = airtelAdapter;
+./services/api/dist/src/payments/payments.service.js:30:        const mtnEnabled = this.configService.get('PAY_MTN_ENABLED') === 'true';
+./services/api/dist/src/payments/payments.service.js:31:        const airtelEnabled = this.configService.get('PAY_AIRTEL_ENABLED') === 'true';
+./services/api/dist/src/payments/payments.service.js:32:        if (mtnEnabled) {
+./services/api/dist/src/payments/payments.service.js:33:            this.adapters.set('MTN', this.mtnAdapter);
+./services/api/dist/src/payments/payments.service.js:36:        if (airtelEnabled) {
+./services/api/dist/src/payments/payments.service.js:37:            this.adapters.set('AIRTEL', this.airtelAdapter);
+./services/api/dist/src/payments/payments.service.js:40:        if (!mtnEnabled && !airtelEnabled) {
+./services/api/dist/src/payments/payments.service.js:41:            this.adapters.set('MTN', this.mtnAdapter);
+./services/api/dist/src/payments/payments.service.js:42:            this.adapters.set('AIRTEL', this.airtelAdapter);
+./services/api/dist/src/payments/payments.service.js:118:    async handleWebhook(provider, payload, signature) {
+./services/api/dist/src/payments/payments.service.js:123:        const webhookEvent = await this.prisma.webhookEvent.create({
+./services/api/dist/src/payments/payments.service.js:131:        this.logger.log(`Received webhook ${webhookEvent.id} from ${provider}`);
+./services/api/dist/src/payments/payments.service.js:133:            const result = await adapter.handleWebhook(payload, signature);
+./services/api/dist/src/payments/payments.service.js:134:            await this.prisma.webhookEvent.update({
+./services/api/dist/src/payments/payments.service.js:135:                where: { id: webhookEvent.id },
+./services/api/dist/src/payments/payments.service.js:142:                this.logger.warn(`Intent ${result.intentId} not found for webhook ${webhookEvent.id}`);
+./services/api/dist/src/payments/payments.service.js:171:                            webhookEventId: webhookEvent.id,
+./services/api/dist/src/payments/payments.service.js:203:                    this.logger.log(`Event booking ${booking.id} auto-confirmed via payment webhook`);
+./services/api/dist/src/payments/payments.service.js:344:        mtn_sandbox_adapter_1.MtnSandboxAdapter,
+./services/api/dist/src/payments/payments.service.js:345:        airtel_sandbox_adapter_1.AirtelSandboxAdapter,
+./services/api/dist/src/logger.d.ts:25:export declare function logRequest(req: Request, res: Response, durationMs: number, context?: RequestContext): void;
+./services/api/dist/src/common/slow-query.spec.js:45:        let actualDuration = 0;
+./services/api/dist/src/common/slow-query.spec.js:49:            actualDuration = Date.now() - start;
+./services/api/dist/src/common/slow-query.spec.js:53:        console.log('Actual duration:', actualDuration, 'Threshold:', 50);
+./services/api/dist/src/common/slow-query.spec.js:59:        expect(logData.durationMs).toBeGreaterThanOrEqual(50);
+./services/api/dist/src/common/chaos.spec.js:25:            const duration = Date.now() - start;
+./services/api/dist/src/common/chaos.spec.js:26:            expect(duration).toBeLessThan(10);
+./services/api/dist/src/common/chaos.spec.js:48:            const duration = Date.now() - start;
+./services/api/dist/src/common/chaos.spec.js:49:            expect(duration).toBeGreaterThanOrEqual(90);
+./services/api/dist/src/common/crypto.utils.spec.js:7:        it('should verify valid HMAC signature', () => {
+./services/api/dist/src/common/crypto.utils.spec.js:10:            const signature = (0, crypto_1.createHmac)('sha256', secret).update(data).digest('hex');
+./services/api/dist/src/common/crypto.utils.spec.js:11:            expect((0, crypto_utils_1.verifyHMAC)(secret, data, signature)).toBe(true);
+./services/api/dist/src/common/crypto.utils.spec.js:13:        it('should reject invalid signature', () => {
+./services/api/dist/src/common/crypto.utils.spec.js:16:            const wrongSignature = 'invalid-signature-hex-value';
+./services/api/dist/src/common/crypto.utils.spec.js:19:        it('should reject signature with wrong secret', () => {
+./services/api/dist/src/common/crypto.utils.spec.js:23:            const signature = (0, crypto_1.createHmac)('sha256', wrongSecret).update(data).digest('hex');
+./services/api/dist/src/common/crypto.utils.spec.js:24:            expect((0, crypto_utils_1.verifyHMAC)(secret, data, signature)).toBe(false);
+./services/api/dist/src/common/crypto.utils.spec.js:62:        it('should verify valid webhook signature with timestamp', () => {
+./services/api/dist/src/common/crypto.utils.spec.js:63:            const secret = 'webhook-secret';
+./services/api/dist/src/common/crypto.utils.spec.js:67:            const signature = (0, crypto_1.createHmac)('sha256', secret).update(data).digest('hex');
+./services/api/dist/src/common/crypto.utils.spec.js:68:            const result = (0, crypto_utils_1.verifyWebhookSignature)(secret, body, timestamp, signature);
+./services/api/dist/src/common/crypto.utils.spec.js:72:        it('should reject signature with expired timestamp (replay attack)', () => {
+./services/api/dist/src/common/crypto.utils.spec.js:73:            const secret = 'webhook-secret';
+./services/api/dist/src/common/crypto.utils.spec.js:77:            const signature = (0, crypto_1.createHmac)('sha256', secret).update(data).digest('hex');
+./services/api/dist/src/common/crypto.utils.spec.js:78:            const result = (0, crypto_utils_1.verifyWebhookSignature)(secret, body, oldTimestamp, signature);
+./services/api/dist/src/common/crypto.utils.spec.js:83:            const secret = 'webhook-secret';
+./services/api/dist/src/common/crypto.utils.spec.js:86:            const signature = 'dummy-signature';
+./services/api/dist/src/common/crypto.utils.spec.js:87:            const result = (0, crypto_utils_1.verifyWebhookSignature)(secret, body, invalidTimestamp, signature);
+./services/api/dist/src/common/crypto.utils.spec.js:91:        it('should reject invalid signature even with valid timestamp', () => {
+./services/api/dist/src/common/crypto.utils.spec.js:92:            const secret = 'webhook-secret';
+./services/api/dist/src/common/crypto.utils.spec.js:95:            const wrongSignature = 'invalid-signature-0000000000000000';
+./services/api/dist/src/common/crypto.utils.spec.js:98:            expect(result.reason).toBe('Invalid signature');
+./services/api/dist/src/common/crypto.utils.spec.js:102:        it('should verify valid spout device signature', () => {
+./services/api/dist/src/common/crypto.utils.spec.js:107:            const signature = (0, crypto_1.createHmac)('sha256', deviceSecret).update(data).digest('hex');
+./services/api/dist/src/common/crypto.utils.spec.js:108:            const result = (0, crypto_utils_1.verifySpoutSignature)(deviceSecret, body, timestamp, signature);
+./services/api/dist/src/common/crypto.utils.spec.js:111:        it('should reject spout signature with wrong device secret', () => {
+./services/api/dist/src/common/crypto.utils.spec.js:117:            const signature = (0, crypto_1.createHmac)('sha256', wrongSecret).update(data).digest('hex');
+./services/api/dist/src/common/crypto.utils.spec.js:118:            const result = (0, crypto_utils_1.verifySpoutSignature)(correctSecret, body, timestamp, signature);
+./services/api/dist/src/common/crypto.utils.spec.js:120:            expect(result.reason).toBe('Invalid signature');
+./services/api/dist/src/common/crypto.utils.js:8:function verifyHMAC(secret, data, signature, algorithm = 'sha256') {
+./services/api/dist/src/common/crypto.utils.js:9:    if (!secret || !data || !signature) {
+./services/api/dist/src/common/crypto.utils.js:13:    if (expected.length !== signature.length) {
+./services/api/dist/src/common/crypto.utils.js:17:        return (0, crypto_1.timingSafeEqual)(Buffer.from(expected, 'hex'), Buffer.from(signature, 'hex'));
+./services/api/dist/src/common/crypto.utils.js:28:function verifyWebhookSignature(secret, body, timestamp, signature) {
+./services/api/dist/src/common/crypto.utils.js:37:    const valid = verifyHMAC(secret, data, signature, 'sha256');
+./services/api/dist/src/common/crypto.utils.js:39:        return { valid: false, reason: 'Invalid signature' };
+./services/api/dist/src/common/crypto.utils.js:43:function verifySpoutSignature(deviceSecret, body, timestamp, signature) {
+./services/api/dist/src/common/crypto.utils.js:44:    return verifyWebhookSignature(deviceSecret, body, timestamp, signature);
+./services/api/dist/src/common/slow-query.js:10:        const duration = Date.now() - start;
+./services/api/dist/src/common/slow-query.js:11:        if (duration > SLOW_QUERY_MS && Math.random() < SLOW_QUERY_SAMPLE) {
+./services/api/dist/src/common/slow-query.js:14:                durationMs: duration,
+./services/api/dist/src/common/crypto.utils.d.ts:1:export declare function verifyHMAC(secret: string, data: string, signature: string, algorithm?: 'sha256' | 'sha512'): boolean;
+./services/api/dist/src/common/crypto.utils.d.ts:3:export declare function verifyWebhookSignature(secret: string, body: string, timestamp: string, signature: string): {
+./services/api/dist/src/common/crypto.utils.d.ts:7:export declare function verifySpoutSignature(deviceSecret: string, body: string, timestamp: string, signature: string): {
+./services/api/dist/src/logger.js:86:function logRequest(req, res, durationMs, context = {}) {
+./services/api/dist/src/logger.js:92:        durationMs,
+./services/api/dist/src/webhooks.controller.js:24:    async handleMtnWebhook(payload, signature) {
+./services/api/dist/src/webhooks.controller.js:25:        this.logger.log('Received MTN webhook');
+./services/api/dist/src/webhooks.controller.js:26:        return this.paymentsService.handleWebhook('MTN', payload, signature);
+./services/api/dist/src/webhooks.controller.js:28:    async handleAirtelWebhook(payload, signature) {
+./services/api/dist/src/webhooks.controller.js:29:        this.logger.log('Received Airtel webhook');
+./services/api/dist/src/webhooks.controller.js:30:        return this.paymentsService.handleWebhook('AIRTEL', payload, signature);
+./services/api/dist/src/webhooks.controller.js:35:    (0, common_1.Post)('mtn'),
+./services/api/dist/src/webhooks.controller.js:37:    __param(1, (0, common_1.Headers)('x-mtn-signature')),
+./services/api/dist/src/webhooks.controller.js:43:    (0, common_1.Post)('airtel'),
+./services/api/dist/src/webhooks.controller.js:45:    __param(1, (0, common_1.Headers)('x-airtel-signature')),
+./services/api/dist/src/webhooks.controller.js:51:    (0, common_1.Controller)('webhooks'),
+./services/api/dist/src/webhooks.controller.js:54://# sourceMappingURL=webhooks.controller.js.map
+./services/api/dist/src/workforce/payroll.service.spec.js:115:                    name: 'Health Insurance',
+./services/api/dist/src/efris/efris.controller.d.ts:1:import { EfrisService } from './efris.service';
+./services/api/dist/src/efris/efris.controller.d.ts:4:    private readonly efrisService;
+./services/api/dist/src/efris/efris.controller.d.ts:6:    private efrisQueue;
+./services/api/dist/src/efris/efris.controller.d.ts:7:    constructor(efrisService: EfrisService, config: ConfigService);
+./services/api/dist/src/efris/efris.controller.d.ts:18://# sourceMappingURL=efris.controller.d.ts.map
+./services/api/dist/src/efris/efris.module.js:12:const efris_service_1 = require("./efris.service");
+./services/api/dist/src/efris/efris.module.js:13:const efris_controller_1 = require("./efris.controller");
+./services/api/dist/src/efris/efris.module.js:21:        controllers: [efris_controller_1.EfrisController],
+./services/api/dist/src/efris/efris.module.js:22:        providers: [efris_service_1.EfrisService, prisma_service_1.PrismaService],
+./services/api/dist/src/efris/efris.module.js:23:        exports: [efris_service_1.EfrisService],
+./services/api/dist/src/efris/efris.module.js:26://# sourceMappingURL=efris.module.js.map
+./services/api/dist/src/efris/efris.module.d.ts:3://# sourceMappingURL=efris.module.d.ts.map
+./services/api/dist/src/efris/efris.service.spec.js:5:const efris_service_1 = require("./efris.service");
+./services/api/dist/src/efris/efris.service.spec.js:65:                efris_service_1.EfrisService,
+./services/api/dist/src/efris/efris.service.spec.js:70:        service = module.get(efris_service_1.EfrisService);
+./services/api/dist/src/efris/efris.service.spec.js:137://# sourceMappingURL=efris.service.spec.js.map
+./services/api/dist/src/efris/efris.service.d.ts:27://# sourceMappingURL=efris.service.d.ts.map
+./services/api/dist/src/efris/efris.service.js:122://# sourceMappingURL=efris.service.js.map
+./services/api/dist/src/efris/efris.service.spec.d.ts:2://# sourceMappingURL=efris.service.spec.d.ts.map
+./services/api/dist/src/efris/efris.controller.js:20:const efris_service_1 = require("./efris.service");
+./services/api/dist/src/efris/efris.controller.js:25:    constructor(efrisService, config) {
+./services/api/dist/src/efris/efris.controller.js:26:        this.efrisService = efrisService;
+./services/api/dist/src/efris/efris.controller.js:33:        this.efrisQueue = new bullmq_1.Queue('efris', { connection });
+./services/api/dist/src/efris/efris.controller.js:36:        const result = await this.efrisService.push(orderId);
+./services/api/dist/src/efris/efris.controller.js:40:        const job = await this.efrisQueue.add('efris-push', {
+./services/api/dist/src/efris/efris.controller.js:41:            type: 'efris-push',
+./services/api/dist/src/efris/efris.controller.js:68:    __metadata("design:paramtypes", [efris_service_1.EfrisService,
+./services/api/dist/src/efris/efris.controller.js:71://# sourceMappingURL=efris.controller.js.map
+./services/api/dist/src/alerts/alerts.service.spec.js:62:        it('should send to Slack webhook if configured', async () => {
+./services/api/dist/src/alerts/alerts.service.spec.js:85:        it('should send email via SMTP if no Slack webhook configured', async () => {
+./services/api/dist/src/alerts/alerts.service.spec.js:106:    describe('Slack webhook payload shape', () => {
+./services/api/dist/src/alerts/alerts.service.js:5:    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+./services/api/dist/src/alerts/alerts.service.js:143:    async sendSlackAlert(webhookUrl, title, message) {
+./services/api/dist/src/alerts/alerts.service.js:163:        const response = await fetch(webhookUrl, {
+./services/api/dist/src/webhooks.controller.d.ts:6:    handleMtnWebhook(payload: any, signature?: string): Promise<{
+./services/api/dist/src/webhooks.controller.d.ts:17:    handleAirtelWebhook(payload: any, signature?: string): Promise<{
+./services/api/dist/src/webhooks.controller.d.ts:29://# sourceMappingURL=webhooks.controller.d.ts.map
+./services/api/dist/src/ops/ops.service.js:5:    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+./services/api/dist/src/ops/ops.service.js:142:            const duration = Date.now() - start;
+./services/api/dist/src/ops/ops.service.js:143:            ready.checks.database = { status: 'ready', responseMs: duration };
+./services/api/dist/src/ops/ops.service.js:144:            if (duration > 1000) {
+./services/api/dist/src/hardware/spout.service.spec.js:5:    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+./services/api/dist/src/hardware/spout.service.spec.js:205:        it('should verify HMAC signature when SPOUT_VERIFY=true', async () => {
+./services/api/dist/src/hardware/spout.service.spec.js:214:            const hmac = crypto.createHmac('sha256', secret);
+./services/api/dist/src/hardware/spout.service.spec.js:215:            hmac.update(data);
+./services/api/dist/src/hardware/spout.service.spec.js:216:            const validSignature = hmac.digest('hex');
+./services/api/dist/src/hardware/spout.service.spec.js:242:            await expect(service.ingestEvent(deviceId, pulses, occurredAt, raw, 'invalid-signature')).rejects.toThrow(common_1.UnauthorizedException);
+./services/api/dist/src/hardware/spout.service.d.ts:10:    ingestEvent(deviceId: string, pulses: number, occurredAt: Date, raw?: any, signature?: string): Promise<any>;
+./services/api/dist/src/hardware/spout.controller.d.ts:21:    ingestEvent(signature: string | undefined, dto: IngestEventDto): Promise<any>;
+./services/api/dist/src/hardware/spout.controller.js:32:    async ingestEvent(signature, dto) {
+./services/api/dist/src/hardware/spout.controller.js:34:        return this.spoutService.ingestEvent(dto.deviceId, dto.pulses, occurredAt, dto.raw, signature);
+./services/api/dist/src/hardware/spout.controller.js:50:    __param(0, (0, common_1.Headers)('x-spout-signature')),
+./services/api/dist/src/hardware/spout.service.js:5:    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+./services/api/dist/src/hardware/spout.service.js:85:    async ingestEvent(deviceId, pulses, occurredAt, raw, signature) {
+./services/api/dist/src/hardware/spout.service.js:94:        if (shouldVerify && signature && device.secret) {
+./services/api/dist/src/hardware/spout.service.js:97:            const result = (0, crypto_utils_1.verifySpoutSignature)(device.secret, body, timestamp, signature);
+./services/api/dist/src/hardware/spout.service.js:99:                this.logger.warn(`Spout signature verification failed: ${result.reason}`);
+./services/api/dist/src/hardware/spout.service.js:100:                throw new common_1.UnauthorizedException(`Invalid signature: ${result.reason}`);
+./services/api/dist/src/hardware/spout.service.js:102:            this.logger.log(`Spout signature verified for device ${deviceId}`);
+./services/api/dist/src/owner/owner.controller.js:5:    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+./services/api/dist/src/owner/owner.service.spec.js:115:        it('should create a digest configuration', async () => {
+./services/api/dist/src/owner/owner.service.js:5:    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+./services/api/dist/src/dev-portal/dev-portal.service.js:5:    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+./services/api/dist/src/shifts/shifts.service.js:5:    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+./services/api/test/e2e/pos-imports-bisect.e2e-spec.ts:4:import { EfrisModule } from '../../src/efris/efris.module';
+./services/api/test/e37-promotions.e2e-spec.ts:30:        name: 'E37 Test Restaurant',
+./services/api/test/e23-roles-access.e2e-spec.ts:305:        where: { orgId: (await prisma.org.findUnique({ where: { slug: 'demo-restaurant' } }))!.id },
+./services/api/test/auth.e2e-spec.ts:57:          email: 'nonexistent@demo.restaurant',
+./services/api/test/b2-apikey.e2e-spec.ts:98:          scopes: ['spout:ingest', 'webhooks:receive'],
+./services/api/test/b2-apikey.e2e-spec.ts:106:      expect(response.body.scopes).toEqual(['spout:ingest', 'webhooks:receive']);
+./packages/contracts/src/index.ts:41:  method: z.enum(['cash', 'momo', 'airtel', 'card']),
+./packages/contracts/dist/index.d.ts:72:    method: z.ZodEnum<["cash", "momo", "airtel", "card"]>;
+./packages/contracts/dist/index.d.ts:77:    method: "cash" | "momo" | "airtel" | "card";
+./packages/contracts/dist/index.d.ts:82:    method: "cash" | "momo" | "airtel" | "card";
+./packages/contracts/dist/index.js:21:    method: zod_1.z.enum(['cash', 'momo', 'airtel', 'card']),
+./packages/db/dist/index.js:5:    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+./packages/printer/src/index.ts:11:  restaurantName: string;
+./packages/printer/src/index.ts:126:    .text(data.restaurantName)
+./packages/printer/dist/index.d.ts:7:    restaurantName: string;
+./packages/printer/dist/index.js:58:        .text(data.restaurantName)
+./scripts/enqueue-efris-retry.js:4: * Usage: node scripts/enqueue-efris-retry.js <orderId>
+./scripts/enqueue-efris-retry.js:13:  console.error('Usage: node scripts/enqueue-efris-retry.js <orderId>');
+./scripts/enqueue-efris-retry.js:24:  const efrisQueue = new Queue('efris', { connection });
+./scripts/enqueue-efris-retry.js:28:  const job = await efrisQueue.add('efris-push', {
+./scripts/enqueue-efris-retry.js:29:    type: 'efris-push',

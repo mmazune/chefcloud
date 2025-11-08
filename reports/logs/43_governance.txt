@@ -1,0 +1,343 @@
+./services/worker/src/index.ts:675:          // Negative stock - create audit event
+./services/worker/src/index.ts:676:          await prisma.auditEvent.create({
+./services/worker/src/index.ts:1213:          org: { include: { users: { where: { roleLevel: 'L5' } } } },
+./services/api/src/promotions/promotions.controller.ts:4:import { RolesGuard } from '../auth/roles.guard';
+./services/api/src/promotions/promotions.controller.ts:5:import { Roles } from '../auth/roles.decorator';
+./services/api/src/promotions/promotions.controller.ts:12:    role: string;
+./services/api/src/purchasing/purchasing.controller.ts:6:import { RolesGuard } from '../auth/roles.guard';
+./services/api/src/purchasing/purchasing.controller.ts:7:import { Roles } from '../auth/roles.decorator';
+./services/api/src/kpis/kpis.controller.ts:7:import { RolesGuard } from '../auth/roles.guard';
+./services/api/src/kpis/kpis.controller.ts:8:import { Roles } from '../auth/roles.decorator';
+./services/api/src/device/device.controller.ts:5:import { Roles } from '../auth/roles.decorator';
+./services/api/src/device/device.controller.ts:6:import { RolesGuard } from '../auth/roles.guard';
+./services/api/src/floor/floor.controller.ts:5:import { Roles } from '../auth/roles.decorator';
+./services/api/src/floor/floor.controller.ts:6:import { RolesGuard } from '../auth/roles.guard';
+./services/api/src/thresholds/thresholds.controller.ts:3:import { RolesGuard } from '../auth/roles.guard';
+./services/api/src/thresholds/thresholds.controller.ts:4:import { Roles } from '../auth/roles.decorator';
+./services/api/src/thresholds/thresholds.service.ts:37:   * Update anomaly thresholds and emit audit event
+./services/api/src/thresholds/thresholds.service.ts:69:    // Get first branch for audit event
+./services/api/src/thresholds/thresholds.service.ts:75:      // Create audit event
+./services/api/src/thresholds/thresholds.service.ts:76:      await this.prisma.client.auditEvent.create({
+./services/api/src/webauthn/webauthn.service.ts:103:      await this.prisma.client.auditEvent.create({
+./services/api/src/webauthn/webauthn.service.ts:202:      await this.prisma.client.auditEvent.create({
+./services/api/src/webauthn/webauthn.controller.ts:45:      if (!['L3', 'L4', 'L5'].includes(user.roleLevel)) {
+./services/api/src/webauthn/webauthn.controller.ts:46:        throw new HttpException('Passkey registration requires L3+ role', HttpStatus.FORBIDDEN);
+./services/api/src/webauthn/webauthn.controller.ts:153:      roleLevel: result.user.roleLevel,
+./services/api/src/webauthn/webauthn.controller.ts:164:        roleLevel: result.user.roleLevel,
+./services/api/src/webauthn/webauthn.service.spec.ts:25:              auditEvent: {
+./services/api/src/webauthn/webauthn.service.spec.ts:49:        roleLevel: 'L3',
+./services/api/src/webauthn/webauthn.service.spec.ts:77:        roleLevel: 'L3',
+./services/api/src/cash/cash.service.ts:155:    // Create audit event
+./services/api/src/cash/cash.service.ts:156:    await this.prisma.client.auditEvent.create({
+./services/api/src/cash/cash.service.ts:206:    const roleLevel = this.getRoleLevel(userRole);
+./services/api/src/cash/cash.service.ts:207:    if (type === 'SAFE_DROP' && roleLevel < 3) {
+./services/api/src/cash/cash.service.ts:210:    if (type === 'PICKUP' && roleLevel < 4) {
+./services/api/src/cash/cash.service.ts:231:    // Create audit event
+./services/api/src/cash/cash.service.ts:232:    await this.prisma.client.auditEvent.create({
+./services/api/src/cash/cash.service.ts:247:    // E40-s1: Post cash movement to GL (fire-and-forget, idempotent)
+./services/api/src/cash/cash.service.ts:249:      this.prisma.client.auditEvent.create({
+./services/api/src/cash/cash.service.ts:337:   * Helper to get numeric role level
+./services/api/src/cash/cash.service.ts:339:  private getRoleLevel(role: string): number {
+./services/api/src/cash/cash.service.ts:340:    const match = role.match(/L(\d+)/);
+./services/api/src/cash/cash.controller.ts:13:import { RolesGuard } from '../auth/roles.guard';
+./services/api/src/cash/cash.controller.ts:14:import { Roles } from '../auth/roles.decorator';
+./services/api/src/cash/cash.controller.ts:22:    role: string;
+./services/api/src/cash/cash.controller.ts:91:      req.user.role,
+./services/api/src/cash/cash.service.spec.ts:31:              auditEvent: {
+./services/api/src/cash/cash.service.spec.ts:132:      jest.spyOn(prisma.client.auditEvent, 'create').mockResolvedValue({} as any);
+./services/api/src/cash/cash.service.spec.ts:143:      expect(prisma.client.auditEvent.create).toHaveBeenCalled();
+./services/api/src/cash/cash.service.spec.ts:173:      jest.spyOn(prisma.client.auditEvent, 'create').mockResolvedValue({} as any);
+./services/api/src/cash/cash.service.spec.ts:197:      jest.spyOn(prisma.client.auditEvent, 'create').mockResolvedValue({} as any);
+./services/api/src/cash/cash.service.spec.ts:254:      jest.spyOn(prisma.client.auditEvent, 'create').mockResolvedValue({} as any);
+./services/api/src/accounting/periods.controller.ts:3:import { RolesGuard } from '../auth/roles.guard';
+./services/api/src/accounting/periods.controller.ts:4:import { Roles } from '../auth/roles.decorator';
+./services/api/src/accounting/accounting.controller.ts:12:import { RolesGuard } from '../auth/roles.guard';
+./services/api/src/accounting/accounting.controller.ts:13:import { Roles } from '../auth/roles.decorator';
+./services/api/src/accounting/accounting.controller.ts:20:    role: string;
+./services/api/src/accounting/bank-rec.controller.ts:3:import { RolesGuard } from '../auth/roles.guard';
+./services/api/src/accounting/bank-rec.controller.ts:4:import { Roles } from '../auth/roles.decorator';
+./services/api/src/accounting/period-lock.spec.ts:79:    it('should lock period and set audit fields', async () => {
+./services/api/src/dashboards/dashboards.controller.ts:3:import { RolesGuard } from '../auth/roles.guard';
+./services/api/src/dashboards/dashboards.controller.ts:4:import { Roles } from '../auth/roles.decorator';
+./services/api/src/dashboards/dashboards.service.ts:24:    const voids = await this.prisma.client.auditEvent.findMany({
+./services/api/src/billing/billing.controller.ts:4:import { RolesGuard } from '../auth/roles.guard';
+./services/api/src/billing/billing.controller.ts:5:import { Roles } from '../auth/roles.decorator';
+./services/api/src/settings/settings.controller.ts:11:import { RolesGuard } from '../auth/roles.guard';
+./services/api/src/settings/settings.controller.ts:12:import { Roles } from '../auth/roles.decorator';
+./services/api/src/settings/settings.controller.ts:20:    role: string;
+./services/api/src/franchise/franchise.controller.ts:3:import { RolesGuard } from '../auth/roles.guard';
+./services/api/src/franchise/franchise.controller.ts:4:import { Roles } from '../auth/roles.decorator';
+./services/api/src/events/event-bus.service.spec.ts:2:import { EventBusService } from './event-bus.service';
+./services/api/src/events/events.module.ts:2:import { EventBusService } from './event-bus.service';
+./services/api/src/inventory/counts.service.spec.ts:29:      auditEvent: {
+./services/api/src/inventory/inventory.controller.ts:6:import { RolesGuard } from '../auth/roles.guard';
+./services/api/src/inventory/inventory.controller.ts:7:import { Roles } from '../auth/roles.decorator';
+./services/api/src/inventory/counts.controller.ts:15:import { RolesGuard } from '../auth/roles.guard';
+./services/api/src/inventory/counts.controller.ts:16:import { Roles } from '../auth/roles.decorator';
+./services/api/src/inventory/wastage.controller.ts:6:import { RolesGuard } from '../auth/roles.guard';
+./services/api/src/inventory/wastage.controller.ts:7:import { Roles } from '../auth/roles.decorator';
+./services/api/src/inventory/recipes.controller.ts:6:import { RolesGuard } from '../auth/roles.guard';
+./services/api/src/inventory/recipes.controller.ts:7:import { Roles } from '../auth/roles.decorator';
+./services/api/src/pos/pos.controller.ts:11:import { Roles } from '../auth/roles.decorator';
+./services/api/src/pos/pos.controller.ts:12:import { RolesGuard } from '../auth/roles.guard';
+./services/api/src/pos/pos.service.ts:21:import { EventBusService } from '../events/event-bus.service';
+./services/api/src/pos/pos.service.ts:279:    await this.prisma.client.auditEvent.create({
+./services/api/src/pos/pos.service.ts:316:          roleLevel: { in: ['L4', 'L5'] },
+./services/api/src/pos/pos.service.ts:343:    await this.prisma.client.auditEvent.create({
+./services/api/src/pos/pos.service.ts:621:      await this.prisma.client.auditEvent.create({
+./services/api/src/pos/pos.service.ts:633:    // Regular audit log
+./services/api/src/pos/pos.service.ts:634:    await this.prisma.client.auditEvent.create({
+./services/api/src/pos/pos.service.ts:650:    // E40-s1: Post to GL (fire-and-forget, idempotent)
+./services/api/src/pos/pos.service.ts:652:      this.prisma.client.auditEvent.create({
+./services/api/src/pos/pos.service.ts:665:      this.prisma.client.auditEvent.create({
+./services/api/src/pos/pos.service.ts:723:          roleLevel: { in: ['L4', 'L5'] },
+./services/api/src/pos/pos.service.ts:824:        roleLevel: { in: ['L4', 'L5'] },
+./services/api/src/pos/pos.service.ts:838:    // Create audit event
+./services/api/src/pos/pos.service.ts:839:    await this.prisma.client.auditEvent.create({
+./services/api/src/reservations/reservations.controller.ts:6:import { RolesGuard } from '../auth/roles.guard';
+./services/api/src/reservations/reservations.controller.ts:7:import { Roles } from '../auth/roles.decorator';
+./services/api/src/auth/platform-access.guard.spec.ts:64:        roleLevel: 'L2',
+./services/api/src/auth/platform-access.guard.spec.ts:84:        roleLevel: 'L3',
+./services/api/src/auth/platform-access.guard.spec.ts:102:        roleLevel: 'L1', // WAITER: desktop=true, web=false, mobile=false
+./services/api/src/auth/platform-access.guard.spec.ts:119:        roleLevel: 'L3',
+./services/api/src/auth/platform-access.guard.spec.ts:134:    it('should deny STOCK role from mobile platform', async () => {
+./services/api/src/auth/platform-access.guard.spec.ts:138:        roleLevel: 'L3',
+./services/api/src/auth/platform-access.guard.spec.ts:148:            user: { ...user, roleLevel: 'L3' },
+./services/api/src/auth/platform-access.guard.spec.ts:154:      // Manually test with STOCK role mapping - STOCK has desktop=false
+./services/api/src/auth/platform-access.guard.spec.ts:165:  describe('role level mapping', () => {
+./services/api/src/auth/platform-access.guard.spec.ts:170:        roleLevel: 'L5',
+./services/api/src/auth/auth.controller.ts:59:    if (!['L4', 'L5'].includes(decoded.roleLevel)) {
+./services/api/src/auth/auth.controller.ts:60:      throw new UnauthorizedException('Badge enrollment requires L4+ role');
+./services/api/src/auth/roles.decorator.ts:3:export const ROLES_KEY = 'roles';
+./services/api/src/auth/roles.decorator.ts:4:export const Roles = (...roles: string[]) => SetMetadata(ROLES_KEY, roles);
+./services/api/src/auth/role-constants.ts:14: * Mapping of named role slugs to their corresponding levels.
+./services/api/src/auth/role-constants.ts:19:  // L1 roles
+./services/api/src/auth/role-constants.ts:22:  // L2 roles
+./services/api/src/auth/role-constants.ts:28:  // L3 roles
+./services/api/src/auth/role-constants.ts:36:  // L4 roles
+./services/api/src/auth/role-constants.ts:40:  // L5 roles (full access)
+./services/api/src/auth/platform-access.guard.ts:3:import { ROLE_TO_LEVEL } from './role-constants';
+./services/api/src/auth/platform-access.guard.ts:63:    // Map user roleLevel to role slug
+./services/api/src/auth/platform-access.guard.ts:64:    const roleSlug = this.getRoleSlugForLevel(user.roleLevel);
+./services/api/src/auth/platform-access.guard.ts:66:    // Check if platform is allowed for this role
+./services/api/src/auth/platform-access.guard.ts:67:    const roleAccess = platformAccess[roleSlug];
+./services/api/src/auth/platform-access.guard.ts:68:    if (!roleAccess || !roleAccess[platform as keyof PlatformAccess]) {
+./services/api/src/auth/platform-access.guard.ts:72:        role: roleSlug,
+./services/api/src/auth/platform-access.guard.ts:80:  private getRoleSlugForLevel(roleLevel: string): string {
+./services/api/src/auth/platform-access.guard.ts:81:    // Find first role that matches this level
+./services/api/src/auth/platform-access.guard.ts:83:      if (level === roleLevel) {
+./services/api/src/auth/platform-access.guard.ts:97:    return levelMap[roleLevel] || 'WAITER';
+./services/api/src/auth/dto/auth.dto.ts:48:    roleLevel: string;
+./services/api/src/auth/jwt.strategy.ts:10:  roleLevel: string;
+./services/api/src/auth/jwt.strategy.ts:41:      roleLevel: user.roleLevel,
+./services/api/src/auth/roles.guard.ts:3:import { ROLES_KEY } from './roles.decorator';
+./services/api/src/auth/roles.guard.ts:4:import { ROLE_HIERARCHY, ROLE_TO_LEVEL, RoleSlug, RoleLevel } from './role-constants';
+./services/api/src/auth/roles.guard.ts:27:    if (user.roleLevel === 'L5') {
+./services/api/src/auth/roles.guard.ts:31:    // Check if user's role level meets minimum requirement
+./services/api/src/auth/roles.guard.ts:32:    const userLevel = ROLE_HIERARCHY[user.roleLevel as RoleLevel] || 0;
+./services/api/src/auth/roles.guard.ts:33:    return requiredRoles.some((role) => {
+./services/api/src/auth/roles.guard.ts:34:      // Support both level-based (L1-L5) and named roles (WAITER, PROCUREMENT, etc.)
+./services/api/src/auth/roles.guard.ts:35:      const roleLevel = (role as RoleLevel) in ROLE_HIERARCHY 
+./services/api/src/auth/roles.guard.ts:36:        ? (role as RoleLevel)
+./services/api/src/auth/roles.guard.ts:37:        : ROLE_TO_LEVEL[role as RoleSlug];
+./services/api/src/auth/roles.guard.ts:39:      const requiredLevel = ROLE_HIERARCHY[roleLevel as RoleLevel] || 0;
+./services/api/src/auth/auth.service.ts:245:    roleLevel: string;
+./services/api/src/auth/auth.service.ts:253:      roleLevel: user.roleLevel,
+./services/api/src/auth/auth.service.ts:263:        roleLevel: user.roleLevel,
+./services/api/src/auth/auth.service.ts:278:      // Skip audit if no branch (shouldn't happen in normal flow)
+./services/api/src/auth/auth.service.ts:283:      await this.prisma.client.auditEvent.create({
+./services/api/src/auth/auth.service.ts:298:      console.error('Failed to create audit event:', error);
+./services/api/src/me/me.controller.ts:31:      roleLevel: fullUser.roleLevel,
+./services/api/src/badges/badges.controller.ts:5:import { RolesGuard } from '../auth/roles.guard';
+./services/api/src/badges/badges.controller.ts:6:import { Roles } from '../auth/roles.decorator';
+./services/api/src/kds/kds.service.ts:4:import { EventBusService } from '../events/event-bus.service';
+./services/api/src/kds/kds.controller.ts:4:import { Roles } from '../auth/roles.decorator';
+./services/api/src/kds/kds.controller.ts:5:import { RolesGuard } from '../auth/roles.guard';
+./services/api/src/access/access.controller.ts:3:import { RolesGuard } from '../auth/roles.guard';
+./services/api/src/access/access.controller.ts:4:import { Roles } from '../auth/roles.decorator';
+./services/api/src/access/access.controller.ts:21:   * Requires L4+ role.
+./services/api/src/access/access.controller.ts:33:   * Requires L4+ role.
+./services/api/src/access/access.controller.ts:50:   * Requires L5 (Owner) role.
+./services/api/src/access/access.service.ts:70:    for (const [role, config] of Object.entries(updates)) {
+./services/api/src/access/access.service.ts:73:          `Invalid config for role ${role}: must be an object with desktop/web/mobile flags`,
+./services/api/src/access/access.service.ts:80:          `Invalid config for role ${role}: desktop, web, and mobile must be booleans`,
+./services/api/src/access/access.service.ts:137:    // Skip audit for now or log to a separate org-level audit table if needed
+./services/api/src/access/access.service.spec.ts:129:        'Invalid config for role WAITER: must be an object with desktop/web/mobile flags',
+./services/api/src/access/access.service.spec.ts:139:        'Invalid config for role WAITER: must be an object with desktop/web/mobile flags',
+./services/api/src/access/access.service.spec.ts:149:        'Invalid config for role WAITER: desktop, web, and mobile must be booleans',
+./services/api/src/access/access.service.spec.ts:159:        'Invalid config for role WAITER: desktop, web, and mobile must be booleans',
+./services/api/src/access/access.service.spec.ts:169:        'Invalid config for role WAITER: desktop, web, and mobile must be booleans',
+./services/api/src/access/access.service.spec.ts:179:        'Invalid config for role WAITER: desktop, web, and mobile must be booleans',
+./services/api/src/access/access.service.spec.ts:183:    it('should handle multiple roles in one update', async () => {
+./services/api/src/stream/stream.controller.ts:4:import { RolesGuard } from '../auth/roles.guard';
+./services/api/src/stream/stream.controller.ts:5:import { Roles } from '../auth/roles.decorator';
+./services/api/src/stream/stream.controller.ts:6:import { EventBusService } from '../events/event-bus.service';
+./services/api/src/payments/payments.service.ts:339:      // Check role level (L3+ required)
+./services/api/src/payments/payments.service.ts:340:      const roleLevel = parseInt(manager.roleLevel.replace('L', ''), 10);
+./services/api/src/payments/payments.service.ts:341:      if (roleLevel < 3) {
+./services/api/src/payments/payments.service.ts:342:        throw new ForbiddenException('Requires L3+ role for refunds >= threshold');
+./services/api/src/payments/payments.service.ts:391:    // Create audit event
+./services/api/src/payments/payments.service.ts:392:    await this.prisma.auditEvent.create({
+./services/api/src/payments/payments.service.ts:412:    // E40-s1: Post refund to GL (fire-and-forget, idempotent)
+./services/api/src/payments/payments.service.ts:415:        this.prisma.auditEvent.create({
+./services/api/src/prisma.service.ts:75:  get auditEvent(): typeof prisma.auditEvent {
+./services/api/src/prisma.service.ts:76:    return prisma.auditEvent;
+./services/api/src/bookings/checkin.controller.ts:10:import { RolesGuard } from '../auth/roles.guard';
+./services/api/src/bookings/checkin.controller.ts:11:import { Roles } from '../auth/roles.decorator';
+./services/api/src/bookings/bookings.controller.ts:13:import { RolesGuard } from '../auth/roles.guard';
+./services/api/src/bookings/bookings.controller.ts:14:import { Roles } from '../auth/roles.decorator';
+./services/api/src/bookings/checkin.service.ts:65:    // Ensure PrepaidCredit exists (should have been created on confirmation, but idempotent)
+./services/api/src/bookings/checkin.service.spec.ts:189:    it('should create PrepaidCredit if missing (idempotent)', async () => {
+./services/api/src/reports/reports.controller.ts:5:import { RolesGuard } from '../auth/roles.guard';
+./services/api/src/reports/reports.controller.ts:6:import { Roles } from '../auth/roles.decorator';
+./services/api/src/workforce/payroll.controller.ts:9:import { RolesGuard } from '../auth/roles.guard';
+./services/api/src/workforce/payroll.controller.ts:10:import { Roles } from '../auth/roles.decorator';
+./services/api/src/workforce/workforce.service.ts:97:    roleSlug: string;
+./services/api/src/workforce/workforce.controller.ts:22:import { RolesGuard } from '../auth/roles.guard';
+./services/api/src/workforce/workforce.controller.ts:23:import { Roles } from '../auth/roles.decorator';
+./services/api/src/workforce/workforce.controller.ts:87:      roleSlug: string;
+./services/api/src/workforce/workforce.controller.ts:98:      roleSlug: body.roleSlug,
+./services/api/src/analytics/analytics.controller.ts:5:import { RolesGuard } from '../auth/roles.guard';
+./services/api/src/analytics/analytics.controller.ts:6:import { Roles } from '../auth/roles.decorator';
+./services/api/src/analytics/analytics.controller.ts:35:   * Check if user can see cost/margin data based on role or org settings
+./services/api/src/analytics/analytics.controller.ts:36:   * - OWNER (L5), MANAGER (L4), or ACCOUNTANT roles can always see
+./services/api/src/analytics/analytics.controller.ts:41:    const roleLevel = parseInt(user.roleLevel.replace('L', ''), 10);
+./services/api/src/analytics/analytics.controller.ts:42:    if (roleLevel >= 4 || user.role === 'ACCOUNTANT') {
+./services/api/src/analytics/analytics.controller.spec.ts:46:  describe('getTopItems - RBAC for cost data', () => {
+./services/api/src/analytics/analytics.controller.spec.ts:50:          roleLevel: 'L5',
+./services/api/src/analytics/analytics.controller.spec.ts:51:          role: 'OWNER',
+./services/api/src/analytics/analytics.controller.spec.ts:70:          roleLevel: 'L4',
+./services/api/src/analytics/analytics.controller.spec.ts:71:          role: 'MANAGER',
+./services/api/src/analytics/analytics.controller.spec.ts:84:    it('should include cost data for ACCOUNTANT role regardless of level', async () => {
+./services/api/src/analytics/analytics.controller.spec.ts:87:          roleLevel: 'L3',
+./services/api/src/analytics/analytics.controller.spec.ts:88:          role: 'ACCOUNTANT',
+./services/api/src/analytics/analytics.controller.spec.ts:104:          roleLevel: 'L3',
+./services/api/src/analytics/analytics.controller.spec.ts:105:          role: 'CHEF',
+./services/api/src/analytics/analytics.controller.spec.ts:127:          roleLevel: 'L3',
+./services/api/src/analytics/analytics.controller.spec.ts:128:          role: 'CHEF',
+./services/api/src/analytics/analytics.controller.spec.ts:150:          roleLevel: 'L2',
+./services/api/src/analytics/analytics.controller.spec.ts:151:          role: 'WAITER',
+./services/api/src/analytics/analytics.controller.spec.ts:171:          roleLevel: 'L5',
+./services/api/src/analytics/analytics.controller.spec.ts:172:          role: 'OWNER',
+./services/api/src/alerts/alerts.controller.ts:3:import { RolesGuard } from '../auth/roles.guard';
+./services/api/src/alerts/alerts.controller.ts:4:import { Roles } from '../auth/roles.decorator';
+./services/api/src/ops/change-control.spec.ts:112:      it('should match role scope', async () => {
+./services/api/src/ops/change-control.spec.ts:117:          scopes: { roles: ['L5', 'L4'] },
+./services/api/src/ops/change-control.spec.ts:120:        const allowed = await flagsService.get('ADMIN_FEATURE', { role: 'L5' });
+./services/api/src/ops/change-control.spec.ts:123:        const denied = await flagsService.get('ADMIN_FEATURE', { role: 'L2' });
+./services/api/src/ops/change-control.spec.ts:147:          scopes: { roles: ['L4'], branches: ['branch-1'] },
+./services/api/src/ops/change-control.spec.ts:150:        const allowed = await flagsService.get('SCOPED_FEATURE', { role: 'L4', branchId: 'branch-1' });
+./services/api/src/ops/change-control.spec.ts:153:        const deniedRole = await flagsService.get('SCOPED_FEATURE', { role: 'L2', branchId: 'branch-1' });
+./services/api/src/ops/change-control.spec.ts:156:        const deniedBranch = await flagsService.get('SCOPED_FEATURE', { role: 'L4', branchId: 'branch-2' });
+./services/api/src/ops/change-control.spec.ts:188:      it('should create audit trail on kill', async () => {
+./services/api/src/ops/change-control.spec.ts:219:      it('should create new flag with CREATE audit', async () => {
+./services/api/src/ops/change-control.spec.ts:237:      it('should update existing flag with UPDATE audit', async () => {
+./services/api/src/ops/ops.controller.ts:5:import { RolesGuard } from '../auth/roles.guard';
+./services/api/src/ops/ops.controller.ts:6:import { Roles } from '../auth/roles.decorator';
+./services/api/src/ops/ops.controller.ts:117:  @Get('flags/:key/audit')
+./services/api/src/ops/feature-flags.service.ts:8:  role?: string;
+./services/api/src/ops/feature-flags.service.ts:17:   * Checks: active, scopes (role/branch), rolloutPct via deterministic hash.
+./services/api/src/ops/feature-flags.service.ts:29:      const scopes = flag.scopes as { roles?: string[]; branches?: string[] };
+./services/api/src/ops/feature-flags.service.ts:31:      if (scopes.roles && context.role) {
+./services/api/src/ops/feature-flags.service.ts:32:        if (!scopes.roles.includes(context.role)) return false;
+./services/api/src/ops/feature-flags.service.ts:97:      scopes?: { roles?: string[]; branches?: string[] };
+./services/api/src/ops/feature-flags.service.ts:194:   * Get audit trail for a flag.
+./services/api/src/ops/feature-flag.guard.ts:26:      role: user?.roleLevel,
+./services/api/src/ops/ops.service.ts:207:    // Create audit event
+./services/api/src/ops/ops.service.ts:215:        await this.prisma.auditEvent.create({
+./services/api/src/ops/ops.service.ts:230:      logger.error({ err: error }, 'Failed to create audit event for diag snapshot');
+./services/api/src/ops/write-block.middleware.ts:19:    if (bypassHeader === 'true' && user?.roleLevel === 'L5') {
+./services/api/src/hardware/spout.service.ts:4:import { EventBusService } from '../events/event-bus.service';
+./services/api/src/hardware/spout.controller.ts:5:import { RolesGuard } from '../auth/roles.guard';
+./services/api/src/hardware/spout.controller.ts:6:import { Roles } from '../auth/roles.decorator';
+./services/api/src/hardware/spout.service.spec.ts:6:import { EventBusService } from '../events/event-bus.service';
+./services/api/src/menu/menu.controller.ts:5:import { Roles } from '../auth/roles.decorator';
+./services/api/src/menu/menu.controller.ts:6:import { RolesGuard } from '../auth/roles.guard';
+./services/api/src/owner/owner.controller.ts:5:import { RolesGuard } from '../auth/roles.guard';
+./services/api/src/owner/owner.controller.ts:6:import { Roles } from '../auth/roles.decorator';
+./services/api/src/dev-portal/dev-portal.service.ts:60:        roleLevel: 'L5',
+./services/api/src/dev-portal/dev-portal.service.spec.ts:254:        roleLevel: 'L5',
+./services/api/src/shifts/shifts.service.ts:81:        // Log reconciliation summary to audit
+./services/api/src/shifts/shifts.service.ts:82:        await this.prisma.client.auditEvent.create({
+./services/api/src/shifts/shifts.controller.ts:6:import { RolesGuard } from '../auth/roles.guard';
+./services/api/src/shifts/shifts.controller.ts:7:import { Roles } from '../auth/roles.decorator';
+./services/api/src/support/support.controller.ts:5:import { RolesGuard } from '../auth/roles.guard';
+./services/api/src/support/support.controller.ts:6:import { Roles } from '../auth/roles.decorator';
+./services/api/prisma/seed.ts:77:      roleLevel: 'L5',
+./services/api/prisma/seed.ts:87:      roleLevel: 'L4',
+./services/api/prisma/seed.ts:97:      roleLevel: 'L2',
+./services/api/prisma/seed.ts:107:      roleLevel: 'L2',
+./services/api/prisma/seed.ts:117:      roleLevel: 'L1',
+./services/api/prisma/seed.ts:127:      roleLevel: 'L3',
+./services/api/prisma/seed.ts:137:      roleLevel: 'L3',
+./services/api/prisma/seed.ts:147:      roleLevel: 'L3',
+./services/api/prisma/seed.ts:157:      roleLevel: 'L2',
+./services/api/prisma/seed.ts:167:      roleLevel: 'L2',
+./services/api/prisma/seed.ts:177:      roleLevel: 'L3',
+./services/api/prisma/seed.ts:197:        roleLevel: userData.roleLevel as 'L1' | 'L2' | 'L3' | 'L4' | 'L5',
+./services/api/prisma/seed.ts:203:    console.log(`✅ Created user: ${user.email} (${user.roleLevel})`);
+./services/api/dist/src/promotions/promotions.controller.d.ts:7:        role: string;
+./services/api/dist/src/webauthn/webauthn.controller.d.ts:33:            roleLevel: import("@chefcloud/db").$Enums.RoleLevel;
+./services/api/dist/src/cash/cash.controller.d.ts:7:        role: string;
+./services/api/dist/src/accounting/accounting.controller.d.ts:7:        role: string;
+./services/api/dist/src/prisma.service.d.ts:20:    get auditEvent(): typeof prisma.auditEvent;
+./services/api/dist/src/settings/settings.controller.d.ts:7:        role: string;
+./services/api/dist/src/events/event-bus.service.d.ts:18://# sourceMappingURL=event-bus.service.d.ts.map
+./services/api/dist/src/events/event-bus.service.spec.d.ts:2://# sourceMappingURL=event-bus.service.spec.d.ts.map
+./services/api/dist/src/pos/pos.service.d.ts:5:import { EventBusService } from '../events/event-bus.service';
+./services/api/dist/src/auth/role-constants.d.ts:27://# sourceMappingURL=role-constants.d.ts.map
+./services/api/dist/src/auth/roles.decorator.d.ts:1:export declare const ROLES_KEY = "roles";
+./services/api/dist/src/auth/roles.decorator.d.ts:2:export declare const Roles: (...roles: string[]) => import("@nestjs/common").CustomDecorator<string>;
+./services/api/dist/src/auth/roles.decorator.d.ts:3://# sourceMappingURL=roles.decorator.d.ts.map
+./services/api/dist/src/auth/dto/auth.dto.d.ts:25:        roleLevel: string;
+./services/api/dist/src/auth/roles.guard.d.ts:8://# sourceMappingURL=roles.guard.d.ts.map
+./services/api/dist/src/auth/jwt.strategy.d.ts:7:    roleLevel: string;
+./services/api/dist/src/auth/jwt.strategy.d.ts:20:        roleLevel: import("@chefcloud/db").$Enums.RoleLevel;
+./services/api/dist/src/me/me.controller.d.ts:12:        roleLevel: import("@chefcloud/db").$Enums.RoleLevel;
+./services/api/dist/src/kds/kds.service.d.ts:2:import { EventBusService } from '../events/event-bus.service';
+./services/api/dist/src/stream/stream.controller.d.ts:2:import { EventBusService } from '../events/event-bus.service';
+./services/api/dist/src/workforce/workforce.controller.d.ts:19:        roleSlug: string;
+./services/api/dist/src/workforce/workforce.service.d.ts:20:        roleSlug: string;
+./services/api/dist/src/ops/feature-flags.service.d.ts:5:    role?: string;
+./services/api/dist/src/ops/feature-flags.service.d.ts:18:            roles?: string[];
+./services/api/dist/src/hardware/spout.service.d.ts:2:import { EventBusService } from '../events/event-bus.service';
+./services/api/test/e2e/auth.e2e-spec.ts:50:      roleLevel: 'L1',
+./services/api/test/e2e/factory.ts:7: * Each factory function is idempotent (upsert) and returns IDs for test use.
+./services/api/test/e2e/factory.ts:116:      roleLevel: 'L5',
+./services/api/test/e2e/factory.ts:130:      roleLevel: 'L4',
+./services/api/test/e2e/factory.ts:144:      roleLevel: 'L2',
+./services/api/test/e2e/factory.ts:158:      roleLevel: 'L1',
+./services/api/test/e2e/factory.ts:172:      roleLevel: 'L3',
+./services/api/test/e22-franchise.e2e-spec.ts:73:        role: 'L5', // Owner
+./services/api/test/e22-franchise.e2e-spec.ts:437:            role: 'L4',
+./services/api/test/b3-multi-tenant.e2e-spec.ts:58:        roleLevel: 'L4',
+./services/api/test/b3-multi-tenant.e2e-spec.ts:115:        roleLevel: 'L4',
+./services/api/test/e37-promotions.e2e-spec.ts:41:        role: 'L4',
+./services/api/test/e37-promotions.e2e-spec.ts:81:        role: user.role,
+./services/api/test/e26-kpis.e2e-spec.ts:51:        role: 'L4', // Manager
+./services/api/test/e26-kpis.e2e-spec.ts:95:          role: 'L3',
+./services/api/test/e23-roles-access.e2e-spec.ts:177:  describe('New role authentication', () => {
+./services/api/test/e23-roles-access.e2e-spec.ts:191:        roleLevel: 'L3',
+./services/api/test/e23-roles-access.e2e-spec.ts:208:        roleLevel: 'L3',
+./services/api/test/e23-roles-access.e2e-spec.ts:225:        roleLevel: 'L3',
+./services/api/test/e23-roles-access.e2e-spec.ts:242:        roleLevel: 'L2',
+./services/api/test/e23-roles-access.e2e-spec.ts:259:        roleLevel: 'L2',
+./services/api/test/e23-roles-access.e2e-spec.ts:276:        roleLevel: 'L3',
+./services/api/test/auth.e2e-spec.ts:49:        roleLevel: 'L5',
+./services/api/test/auth.e2e-spec.ts:98:        roleLevel: 'L4',
+./services/api/test/auth.e2e-spec.ts:149:        roleLevel: 'L2',
+./services/api/test/auth.e2e-spec.ts:197:        roleLevel: 'L5',
+./services/api/test/e27-costing.e2e-spec.ts:14: * 4. Verify RBAC visibility (L4+ sees cost data, L3 doesn't unless showCostToChef=true)
+./services/api/test/e27-costing.e2e-spec.ts:92:        roleLevel: 'L4',
+./services/api/test/e27-costing.e2e-spec.ts:93:        role: 'MANAGER',
+./services/api/test/e27-costing.e2e-spec.ts:106:        roleLevel: 'L3',
+./services/api/test/e27-costing.e2e-spec.ts:107:        role: 'CHEF',
+./services/api/test/e27-costing.e2e-spec.ts:308:  describe('Analytics RBAC - Cost data visibility', () => {
+./services/api/test/e27-costing.e2e-spec.ts:309:    it('should include cost data for MANAGER (L4) role', async () => {
+./services/api/test/b2-apikey.e2e-spec.ts:51:        roleLevel: 'L5',
+./packages/auth/src/index.ts:2:// RBAC/ABAC policy enforcement
+./packages/auth/src/index.ts:17:  permissions: string[];
+./packages/auth/src/index.ts:25:  const permission = `${resource}:${action}`;
+./packages/auth/src/index.ts:26:  return context.permissions.includes(permission);
+./packages/auth/dist/index.d.ts:13:    permissions: string[];
+./tools/audit-org-scope.ts:9: * Usage: pnpm ts-node tools/audit-org-scope.ts

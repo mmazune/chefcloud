@@ -1,0 +1,300 @@
+./services/worker/src/index.ts:23:const prisma = new PrismaClient();
+./services/worker/src/index.ts:128:    const expiredIntents = await prisma.paymentIntent.findMany({
+./services/worker/src/index.ts:138:      await prisma.paymentIntent.update({
+./services/worker/src/index.ts:173:      const invoice = await prisma.fiscalInvoice.findUnique({
+./services/worker/src/index.ts:236:      const failedInvoices = await prisma.fiscalInvoice.findMany({
+./services/worker/src/index.ts:275:    const order = await prisma.order.findUnique({
+./services/worker/src/index.ts:299:    const orgSettings = await prisma.orgSettings.findUnique({
+./services/worker/src/index.ts:351:      await prisma.anomalyEvent.create({
+./services/worker/src/index.ts:382:    const schedule = await prisma.scheduledAlert.findUnique({
+./services/worker/src/index.ts:407:    const anomalies = await prisma.anomalyEvent.findMany({
+./services/worker/src/index.ts:426:      await prisma.scheduledAlert.update({
+./services/worker/src/index.ts:465:    await prisma.scheduledAlert.update({
+./services/worker/src/index.ts:488:    const expiredReservations = await prisma.reservation.findMany({
+./services/worker/src/index.ts:503:      await prisma.reservation.update({
+./services/worker/src/index.ts:513:        await prisma.paymentIntent.update({
+./services/worker/src/index.ts:549:    const dueReminders = await prisma.reservationReminder.findMany({
+./services/worker/src/index.ts:582:      await prisma.reservationReminder.update({
+./services/worker/src/index.ts:605:    const events = await prisma.spoutEvent.findMany({
+./services/worker/src/index.ts:629:      const item = await prisma.inventoryItem.findUnique({
+./services/worker/src/index.ts:656:      const stockBatches = await prisma.stockBatch.findMany({
+./services/worker/src/index.ts:676:          await prisma.auditEvent.create({
+./services/worker/src/index.ts:699:          await prisma.stockBatch.update({
+./services/worker/src/index.ts:707:          await prisma.stockBatch.update({
+./services/worker/src/index.ts:745:      const digests = await prisma.ownerDigest.findMany({
+./services/worker/src/index.ts:764:        const branches = await prisma.branch.findMany({
+./services/worker/src/index.ts:770:        const salesToday = await prisma.payment.aggregate({
+./services/worker/src/index.ts:778:        const anomaliesCount = await prisma.anomalyEvent.count({
+./services/worker/src/index.ts:828:    const digest = await prisma.ownerDigest.findUnique({
+./services/worker/src/index.ts:845:    const branches = await prisma.branch.findMany({
+./services/worker/src/index.ts:851:    const salesToday = await prisma.payment.aggregate({
+./services/worker/src/index.ts:859:    const sales7d = await prisma.payment.aggregate({
+./services/worker/src/index.ts:867:    const anomaliesCount = await prisma.anomalyEvent.count({
+./services/worker/src/index.ts:960:    await prisma.ownerDigest.update({
+./services/worker/src/index.ts:1078:    const dueSubscriptions = await prisma.orgSubscription.findMany({
+./services/worker/src/index.ts:1098:          await prisma.orgSubscription.update({
+./services/worker/src/index.ts:1107:          await prisma.subscriptionEvent.create({
+./services/worker/src/index.ts:1124:          await prisma.orgSubscription.update({
+./services/worker/src/index.ts:1132:          await prisma.subscriptionEvent.create({
+./services/worker/src/index.ts:1154:    const expiredGraceSubscriptions = await prisma.orgSubscription.findMany({
+./services/worker/src/index.ts:1162:      await prisma.orgSubscription.update({
+./services/worker/src/index.ts:1167:      await prisma.subscriptionEvent.create({
+./services/worker/src/index.ts:1207:      const subscriptions = await prisma.orgSubscription.findMany({
+./services/worker/src/index.ts:1268:    const schedules = await prisma.reminderSchedule.findMany({
+./services/worker/src/index.ts:1283:          const bills = await prisma.vendorBill.findMany({
+./services/worker/src/index.ts:1316:            const bill = await prisma.vendorBill.findFirst({
+./services/worker/src/index.ts:1380:    const profiles = await prisma.forecastProfile.findMany({
+./services/worker/src/index.ts:1397:        const orderItems = await prisma.orderItem.findMany({
+./services/worker/src/index.ts:1438:          await prisma.forecastPoint.upsert({
+./services/worker/src/index.ts:1479:    const orgs = await prisma.org.findMany({
+./services/worker/src/index.ts:1488:        const branches = await prisma.branch.findMany({
+./services/worker/src/index.ts:1509:          const orders = await prisma.order.findMany({
+./services/worker/src/index.ts:1519:          const wastage = await prisma.wastage.findMany({
+./services/worker/src/index.ts:1544:        const orgSettings = await prisma.orgSettings.findUnique({
+./services/worker/src/index.ts:1577:          await prisma.franchiseRank.upsert({
+./services/worker/src/index.ts:1635:    const orgs = await prisma.org.findMany({
+./services/worker/src/index.ts:1645:        const branches = await prisma.branch.findMany({
+./services/worker/src/index.ts:1661:          const items = await prisma.inventoryItem.findMany({
+./services/worker/src/index.ts:1726:        const procurementJob = await prisma.procurementJob.create({
+./services/worker/src/index.ts:1740:          const supplier = await prisma.supplier.findUnique({
+./services/worker/src/index.ts:1769:          await prisma.purchaseOrder.create({
+./services/worker/src/index.ts:2005:      const digests = await prisma.ownerDigest.findMany({
+./services/worker/src/index.ts:2029:            await prisma.ownerDigest.update({
+./services/worker/src/index.ts:2076:  await prisma.$disconnect();
+./services/api/src/promotions/promotions.module.ts:4:import { PrismaService } from '../prisma.service';
+./services/api/src/promotions/promotions.service.ts:2:import { PrismaService } from '../prisma.service';
+./services/api/src/promotions/promotions.service.ts:31:  constructor(private prisma: PrismaService) {}
+./services/api/src/promotions/promotions.service.ts:34:    const promotion = await this.prisma.client.promotion.create({
+./services/api/src/promotions/promotions.service.ts:62:    return this.prisma.client.promotion.findMany({
+./services/api/src/promotions/promotions.service.ts:77:    const promotion = await this.prisma.client.promotion.findUnique({
+./services/api/src/promotions/promotions.service.ts:93:    return this.prisma.client.promotion.update({
+./services/api/src/promotions/promotions.service.ts:105:    const promotion = await this.prisma.client.promotion.findUnique({
+./services/api/src/promotions/promotions.service.ts:117:    return this.prisma.client.promotion.update({
+./services/api/src/promotions/promotions.service.spec.ts:4:import { PrismaService } from '../prisma.service';
+./services/api/src/purchasing/purchasing.module.ts:4:import { PrismaService } from '../prisma.service';
+./services/api/src/purchasing/purchasing.service.ts:3:import { PrismaService } from '../prisma.service';
+./services/api/src/purchasing/purchasing.service.ts:8:  constructor(private prisma: PrismaService) {}
+./services/api/src/purchasing/purchasing.service.ts:12:    const poCount = await this.prisma.client.purchaseOrder.count({ where: { orgId } });
+./services/api/src/purchasing/purchasing.service.ts:18:    return this.prisma.client.purchaseOrder.create({
+./services/api/src/purchasing/purchasing.service.ts:43:    const po = await this.prisma.client.purchaseOrder.findUnique({ where: { id: poId } });
+./services/api/src/purchasing/purchasing.service.ts:47:    return this.prisma.client.purchaseOrder.update({
+./services/api/src/purchasing/purchasing.service.ts:54:    const po = await this.prisma.client.purchaseOrder.findUnique({
+./services/api/src/purchasing/purchasing.service.ts:63:    const grCount = await this.prisma.client.goodsReceipt.count({ where: { orgId } });
+./services/api/src/purchasing/purchasing.service.ts:67:    const gr = await this.prisma.client.goodsReceipt.create({
+./services/api/src/purchasing/purchasing.service.ts:89:      this.prisma.client.stockBatch.create({
+./services/api/src/purchasing/purchasing.service.ts:105:    await this.prisma.client.purchaseOrder.update({
+./services/api/src/kpis/kpis.service.ts:3:import { PrismaService } from '../prisma.service';
+./services/api/src/kpis/kpis.service.ts:28:  constructor(private prisma: PrismaService) {}
+./services/api/src/kpis/kpis.service.ts:81:    const salesToday = await this.prisma.client.order.aggregate({
+./services/api/src/kpis/kpis.service.ts:91:    const salesMTD = await this.prisma.client.order.aggregate({
+./services/api/src/kpis/kpis.service.ts:101:    const payments = await this.prisma.client.payment.groupBy({
+./services/api/src/kpis/kpis.service.ts:114:    const openOrders = await this.prisma.client.order.count({
+./services/api/src/kpis/kpis.service.ts:122:    const tablesOccupied = await this.prisma.client.table.count({
+./services/api/src/kpis/kpis.service.ts:130:    const onShiftNow = await this.prisma.client.shift.count({
+./services/api/src/kpis/kpis.service.ts:138:    const stockAtRisk = await this.prisma.client.stockBatch.count({
+./services/api/src/kpis/kpis.service.ts:146:    const anomaliesToday = await this.prisma.client.anomalyEvent.count({
+./services/api/src/kpis/kpis.service.ts:172:    const salesToday = await this.prisma.client.order.aggregate({
+./services/api/src/kpis/kpis.service.ts:181:    const salesMTD = await this.prisma.client.order.aggregate({
+./services/api/src/kpis/kpis.service.ts:190:    const payments = await this.prisma.client.payment.groupBy({
+./services/api/src/kpis/kpis.service.ts:202:    const openOrders = await this.prisma.client.order.count({
+./services/api/src/kpis/kpis.service.ts:209:    const tablesOccupied = await this.prisma.client.table.count({
+./services/api/src/kpis/kpis.service.ts:216:    const onShiftNow = await this.prisma.client.shift.count({
+./services/api/src/kpis/kpis.service.ts:223:    const stockAtRisk = await this.prisma.client.stockBatch.count({
+./services/api/src/kpis/kpis.service.ts:230:    const anomaliesToday = await this.prisma.client.anomalyEvent.count({
+./services/api/src/kpis/kpis.module.ts:4:import { PrismaService } from '../prisma.service';
+./services/api/src/device/device.module.ts:4:import { PrismaService } from '../prisma.service';
+./services/api/src/device/device.service.ts:2:import { PrismaService } from '../prisma.service';
+./services/api/src/device/device.service.ts:7:  constructor(private prisma: PrismaService) {}
+./services/api/src/device/device.service.ts:12:    const device = await this.prisma.client.device.create({
+./services/api/src/floor/floor.module.ts:4:import { PrismaService } from '../prisma.service';
+./services/api/src/floor/floor.service.ts:3:import { PrismaService } from '../prisma.service';
+./services/api/src/floor/floor.service.ts:7:  constructor(private prisma: PrismaService) {}
+./services/api/src/floor/floor.service.ts:10:    const floorPlans = await this.prisma.client.floorPlan.findMany({
+./services/api/src/floor/floor.service.ts:23:    return this.prisma.client.table.update({
+./services/api/src/floor/floor.service.ts:30:    const tables = await this.prisma.client.table.findMany({
+./services/api/src/floor/floor.service.ts:51:    const reservations = await this.prisma.client.reservation.findMany({
+./services/api/src/thresholds/thresholds.module.ts:4:import { PrismaService } from '../prisma.service';
+./services/api/src/thresholds/thresholds.service.ts:3:import { PrismaService } from '../prisma.service';
+./services/api/src/thresholds/thresholds.service.ts:14:  constructor(private prisma: PrismaService) {}
+./services/api/src/thresholds/thresholds.service.ts:21:    const settings = await this.prisma.client.orgSettings.findUnique({
+./services/api/src/thresholds/thresholds.service.ts:58:    const settings = await this.prisma.client.orgSettings.upsert({
+./services/api/src/thresholds/thresholds.service.ts:70:    const branch = await this.prisma.client.branch.findFirst({
+./services/api/src/thresholds/thresholds.service.ts:76:      await this.prisma.client.auditEvent.create({
+./services/api/src/webauthn/webauthn.service.ts:20:import { PrismaService } from '../prisma.service';
+./services/api/src/webauthn/webauthn.service.ts:29:  constructor(private prisma: PrismaService) {
+./services/api/src/webauthn/webauthn.service.ts:36:    const userCredentials = await this.prisma.client.webAuthnCredential.findMany({
+./services/api/src/webauthn/webauthn.service.ts:90:      const savedCredential = await this.prisma.client.webAuthnCredential.create({
+./services/api/src/webauthn/webauthn.service.ts:103:      await this.prisma.client.auditEvent.create({
+./services/api/src/webauthn/webauthn.service.ts:126:    const userCredentials = await this.prisma.client.webAuthnCredential.findMany({
+./services/api/src/webauthn/webauthn.service.ts:152:    const credential = await this.prisma.client.webAuthnCredential.findUnique({
+./services/api/src/webauthn/webauthn.service.ts:196:      await this.prisma.client.webAuthnCredential.update({
+./services/api/src/webauthn/webauthn.service.ts:202:      await this.prisma.client.auditEvent.create({
+./services/api/src/webauthn/webauthn.module.ts:6:import { PrismaService } from '../prisma.service';
+./services/api/src/webauthn/webauthn.controller.ts:12:import { PrismaService } from '../prisma.service';
+./services/api/src/webauthn/webauthn.controller.ts:24:    private prisma: PrismaService,
+./services/api/src/webauthn/webauthn.controller.ts:36:      const user = await this.prisma.client.user.findUnique({
+./services/api/src/webauthn/webauthn.controller.ts:106:      const user = await this.prisma.client.user.findUnique({
+./services/api/src/webauthn/webauthn.service.spec.ts:3:import { PrismaService } from '../prisma.service';
+./services/api/src/webauthn/webauthn.service.spec.ts:9:  let prisma: PrismaService;
+./services/api/src/webauthn/webauthn.service.spec.ts:35:    prisma = module.get<PrismaService>(PrismaService);
+./services/api/src/webauthn/webauthn.service.spec.ts:59:      jest.spyOn(prisma.client.webAuthnCredential, 'findMany').mockResolvedValue([]);
+./services/api/src/webauthn/webauthn.service.spec.ts:101:        .spyOn(prisma.client.webAuthnCredential, 'findMany')
+./services/api/src/webauthn/webauthn.service.spec.ts:126:      jest.spyOn(prisma.client.webAuthnCredential, 'findMany').mockResolvedValue([cred1 as any]);
+./services/api/src/cash/cash.module.ts:5:import { PrismaService } from '../prisma.service';
+./services/api/src/cash/cash.service.ts:8:import { PrismaService } from '../prisma.service';
+./services/api/src/cash/cash.service.ts:15:    private prisma: PrismaService,
+./services/api/src/cash/cash.service.ts:32:    const existingOpen = await this.prisma.client.tillSession.findFirst({
+./services/api/src/cash/cash.service.ts:46:    const session = await this.prisma.client.tillSession.create({
+./services/api/src/cash/cash.service.ts:75:    const session = await this.prisma.client.tillSession.findFirst({
+./services/api/src/cash/cash.service.ts:110:    const orders = await this.prisma.client.order.findMany({
+./services/api/src/cash/cash.service.ts:136:    const updated = await this.prisma.client.tillSession.update({
+./services/api/src/cash/cash.service.ts:156:    await this.prisma.client.auditEvent.create({
+./services/api/src/cash/cash.service.ts:193:    const session = await this.prisma.client.tillSession.findFirst({
+./services/api/src/cash/cash.service.ts:214:    const movement = await this.prisma.client.cashMovement.create({
+./services/api/src/cash/cash.service.ts:232:    await this.prisma.client.auditEvent.create({
+./services/api/src/cash/cash.service.ts:249:      this.prisma.client.auditEvent.create({
+./services/api/src/cash/cash.service.ts:280:    const session = await this.prisma.client.tillSession.findFirst({
+./services/api/src/cash/cash.service.ts:321:    return this.prisma.client.tillSession.findMany({
+./services/api/src/cash/cash.service.spec.ts:4:import { PrismaService } from '../prisma.service';
+./services/api/src/cash/cash.service.spec.ts:9:  let prisma: PrismaService;
+./services/api/src/cash/cash.service.spec.ts:47:    prisma = module.get<PrismaService>(PrismaService);
+./services/api/src/cash/cash.service.spec.ts:56:      jest.spyOn(prisma.client.tillSession, 'findFirst').mockResolvedValue(null);
+./services/api/src/cash/cash.service.spec.ts:57:      jest.spyOn(prisma.client.tillSession, 'create').mockResolvedValue({
+./services/api/src/cash/cash.service.spec.ts:83:      expect(prisma.client.tillSession.findFirst).toHaveBeenCalledWith({
+./services/api/src/cash/cash.service.spec.ts:89:      jest.spyOn(prisma.client.tillSession, 'findFirst').mockResolvedValue({
+./services/api/src/cash/cash.service.spec.ts:120:      jest.spyOn(prisma.client.tillSession, 'findFirst').mockResolvedValue(mockSession as any);
+./services/api/src/cash/cash.service.spec.ts:121:      jest.spyOn(prisma.client.order, 'findMany').mockResolvedValue([
+./services/api/src/cash/cash.service.spec.ts:125:      jest.spyOn(prisma.client.tillSession, 'update').mockResolvedValue({
+./services/api/src/cash/cash.service.spec.ts:132:      jest.spyOn(prisma.client.auditEvent, 'create').mockResolvedValue({} as any);
+./services/api/src/cash/cash.service.spec.ts:143:      expect(prisma.client.auditEvent.create).toHaveBeenCalled();
+./services/api/src/cash/cash.service.spec.ts:147:      jest.spyOn(prisma.client.tillSession, 'findFirst').mockResolvedValue({
+./services/api/src/cash/cash.service.spec.ts:167:      jest.spyOn(prisma.client.tillSession, 'findFirst').mockResolvedValue(mockOpenSession as any);
+./services/api/src/cash/cash.service.spec.ts:168:      jest.spyOn(prisma.client.cashMovement, 'create').mockResolvedValue({
+./services/api/src/cash/cash.service.spec.ts:173:      jest.spyOn(prisma.client.auditEvent, 'create').mockResolvedValue({} as any);
+./services/api/src/cash/cash.service.spec.ts:191:      jest.spyOn(prisma.client.tillSession, 'findFirst').mockResolvedValue(mockOpenSession as any);
+./services/api/src/cash/cash.service.spec.ts:192:      jest.spyOn(prisma.client.cashMovement, 'create').mockResolvedValue({
+./services/api/src/cash/cash.service.spec.ts:197:      jest.spyOn(prisma.client.auditEvent, 'create').mockResolvedValue({} as any);
+./services/api/src/cash/cash.service.spec.ts:214:      jest.spyOn(prisma.client.tillSession, 'findFirst').mockResolvedValue(mockOpenSession as any);
+./services/api/src/cash/cash.service.spec.ts:231:      jest.spyOn(prisma.client.tillSession, 'findFirst').mockResolvedValue(mockOpenSession as any);
+./services/api/src/cash/cash.service.spec.ts:248:      jest.spyOn(prisma.client.tillSession, 'findFirst').mockResolvedValue(mockOpenSession as any);
+./services/api/src/cash/cash.service.spec.ts:249:      jest.spyOn(prisma.client.cashMovement, 'create').mockResolvedValue({
+./services/api/src/cash/cash.service.spec.ts:254:      jest.spyOn(prisma.client.auditEvent, 'create').mockResolvedValue({} as any);
+./services/api/src/cash/cash.service.spec.ts:271:      jest.spyOn(prisma.client.tillSession, 'findFirst').mockResolvedValue({
+./services/api/src/accounting/periods.service.ts:2:import { PrismaService } from '../prisma.service';
+./services/api/src/accounting/periods.service.ts:8:  constructor(private readonly prisma: PrismaService) {}
+./services/api/src/accounting/periods.service.ts:15:    const overlap = await this.prisma.client.fiscalPeriod.findFirst({
+./services/api/src/accounting/periods.service.ts:26:    const period = await this.prisma.client.fiscalPeriod.create({
+./services/api/src/accounting/periods.service.ts:35:    const period = await this.prisma.client.fiscalPeriod.findUnique({
+./services/api/src/accounting/periods.service.ts:47:    const updated = await this.prisma.client.fiscalPeriod.update({
+./services/api/src/accounting/periods.service.ts:57:    return this.prisma.client.fiscalPeriod.findMany({
+./services/api/src/accounting/periods.service.ts:64:    const period = await this.prisma.client.fiscalPeriod.findUnique({
+./services/api/src/accounting/bank-rec.spec.ts:4:import { PrismaService } from '../prisma.service';
+./services/api/src/accounting/bank-rec.service.ts:2:import { PrismaService } from '../prisma.service';
+./services/api/src/accounting/bank-rec.service.ts:8:  constructor(private readonly prisma: PrismaService) {}
+./services/api/src/accounting/bank-rec.service.ts:11:    const existing = await this.prisma.client.bankAccount.findFirst({ where: { orgId, name } });
+./services/api/src/accounting/bank-rec.service.ts:13:      const updated = await this.prisma.client.bankAccount.update({ where: { id: existing.id }, data: { currencyCode, lastFour } });
+./services/api/src/accounting/bank-rec.service.ts:17:    const account = await this.prisma.client.bankAccount.create({ data: { orgId, name, currencyCode, lastFour } });
+./services/api/src/accounting/bank-rec.service.ts:23:    const account = await this.prisma.client.bankAccount.findUnique({ where: { id: accountId } });
+./services/api/src/accounting/bank-rec.service.ts:29:    const txns = await this.prisma.client.$transaction(rows.map(row =>
+./services/api/src/accounting/bank-rec.service.ts:30:      this.prisma.client.bankTxn.create({ data: { bankAccountId: accountId, postedAt: row.date, amount: row.amount, description: row.description, ref: row.ref, reconciled: false } })
+./services/api/src/accounting/bank-rec.service.ts:38:    const bankTxn = await this.prisma.client.bankTxn.findUnique({ where: { id: bankTxnId } });
+./services/api/src/accounting/bank-rec.service.ts:42:    const match = await this.prisma.client.reconcileMatch.create({ data: { bankTxnId, source, sourceId, matchedById: userId } });
+./services/api/src/accounting/bank-rec.service.ts:43:    await this.prisma.client.bankTxn.update({ where: { id: bankTxnId }, data: { reconciled: true } });
+./services/api/src/accounting/bank-rec.service.ts:50:    const account = await this.prisma.client.bankAccount.findUnique({ where: { id: accountId } });
+./services/api/src/accounting/bank-rec.service.ts:53:    const bankTxns = await this.prisma.client.bankTxn.findMany({
+./services/api/src/accounting/bank-rec.service.ts:60:      const payment = await this.prisma.client.payment.findFirst({
+./services/api/src/accounting/bank-rec.service.ts:64:      if (payment && !(await this.prisma.client.reconcileMatch.findFirst({ where: { source: 'PAYMENT', sourceId: payment.id } }))) {
+./services/api/src/accounting/bank-rec.service.ts:65:        await this.prisma.client.reconcileMatch.create({ data: { bankTxnId: txn.id, source: 'PAYMENT', sourceId: payment.id, matchedById: null } });
+./services/api/src/accounting/bank-rec.service.ts:66:        await this.prisma.client.bankTxn.update({ where: { id: txn.id }, data: { reconciled: true } });
+./services/api/src/accounting/bank-rec.service.ts:71:      const refund = await this.prisma.client.refund.findFirst({
+./services/api/src/accounting/bank-rec.service.ts:75:      if (refund && !(await this.prisma.client.reconcileMatch.findFirst({ where: { source: 'REFUND', sourceId: refund.id } }))) {
+./services/api/src/accounting/bank-rec.service.ts:76:        await this.prisma.client.reconcileMatch.create({ data: { bankTxnId: txn.id, source: 'REFUND', sourceId: refund.id, matchedById: null } });
+./services/api/src/accounting/bank-rec.service.ts:77:        await this.prisma.client.bankTxn.update({ where: { id: txn.id }, data: { reconciled: true } });
+./services/api/src/accounting/bank-rec.service.ts:87:    return this.prisma.client.bankTxn.findMany({
+./services/api/src/accounting/bank-rec.service.ts:95:    return this.prisma.client.bankAccount.findMany({ where: { orgId }, orderBy: { name: 'asc' } });
+./services/api/src/accounting/period-lock.spec.ts:4:import { PrismaService } from '../prisma.service';
+./services/api/src/accounting/accounting.module.ts:20:import { PrismaService } from '../prisma.service';
+./services/api/src/accounting/accounting.service.ts:10:import { PrismaService } from '../prisma.service';
+./services/api/src/accounting/accounting.service.ts:16:  constructor(private readonly prisma: PrismaService) {}
+./services/api/src/accounting/accounting.service.ts:31:    return this.prisma.client.vendor.create({
+./services/api/src/accounting/accounting.service.ts:43:    return this.prisma.client.vendor.findMany({
+./services/api/src/accounting/accounting.service.ts:65:    return this.prisma.client.vendorBill.create({
+./services/api/src/accounting/accounting.service.ts:81:    const bill = await this.prisma.client.vendorBill.findUnique({
+./services/api/src/accounting/accounting.service.ts:93:    return this.prisma.client.vendorBill.update({
+./services/api/src/accounting/accounting.service.ts:114:    const payment = await this.prisma.client.vendorPayment.create({
+./services/api/src/accounting/accounting.service.ts:127:      const bill = await this.prisma.client.vendorBill.findUnique({
+./services/api/src/accounting/accounting.service.ts:141:          await this.prisma.client.vendorBill.update({
+./services/api/src/accounting/accounting.service.ts:158:    const openBills = await this.prisma.client.vendorBill.findMany({
+./services/api/src/accounting/accounting.service.ts:221:    const openInvoices = await this.prisma.client.customerInvoice.findMany({
+./services/api/src/accounting/accounting.service.ts:279:    const accounts = await this.prisma.client.account.findMany({
+./services/api/src/accounting/accounting.service.ts:288:      const lines = await this.prisma.client.journalLine.findMany({
+./services/api/src/accounting/accounting.service.ts:331:    const accounts = await this.prisma.client.account.findMany({
+./services/api/src/accounting/accounting.service.ts:354:      const lines = await this.prisma.client.journalLine.findMany({
+./services/api/src/accounting/accounting.service.ts:402:    const accounts = await this.prisma.client.account.findMany({
+./services/api/src/accounting/accounting.service.ts:422:      const lines = await this.prisma.client.journalLine.findMany({
+./services/api/src/accounting/posting.service.ts:9:import { PrismaService } from '../prisma.service';
+./services/api/src/accounting/posting.service.ts:23:  constructor(private readonly prisma: PrismaService) {}
+./services/api/src/accounting/posting.service.ts:36:    const order = await this.prisma.client.order.findUnique({
+./services/api/src/accounting/posting.service.ts:54:    const existing = await this.prisma.client.journalEntry.findFirst({
+./services/api/src/accounting/posting.service.ts:72:    const accounts = await this.prisma.client.account.findMany({
+./services/api/src/accounting/posting.service.ts:94:    const entry = await this.prisma.client.journalEntry.create({
+./services/api/src/accounting/posting.service.ts:139:    const order = await this.prisma.client.order.findUnique({
+./services/api/src/accounting/posting.service.ts:168:    const existing = await this.prisma.client.journalEntry.findFirst({
+./services/api/src/accounting/posting.service.ts:189:          const batch = await this.prisma.client.stockBatch.findFirst({
+./services/api/src/accounting/posting.service.ts:213:    const accounts = await this.prisma.client.account.findMany({
+./services/api/src/accounting/posting.service.ts:230:    const entry = await this.prisma.client.journalEntry.create({
+./services/api/src/accounting/posting.service.ts:273:    const refund = await this.prisma.client.refund.findUnique({
+./services/api/src/accounting/posting.service.ts:289:    const existing = await this.prisma.client.journalEntry.findFirst({
+./services/api/src/accounting/posting.service.ts:306:    const accounts = await this.prisma.client.account.findMany({
+./services/api/src/accounting/posting.service.ts:323:    const entry = await this.prisma.client.journalEntry.create({
+./services/api/src/accounting/posting.service.ts:371:    const movement = await this.prisma.client.cashMovement.findUnique({
+./services/api/src/accounting/posting.service.ts:380:    const existing = await this.prisma.client.journalEntry.findFirst({
+./services/api/src/accounting/posting.service.ts:398:    const accounts = await this.prisma.client.account.findMany({
+./services/api/src/accounting/posting.service.ts:415:    const entry = await this.prisma.client.journalEntry.create({
+./services/api/src/dashboards/dashboards.service.ts:3:import { PrismaService } from '../prisma.service';
+./services/api/src/dashboards/dashboards.service.ts:7:  constructor(private prisma: PrismaService) {}
+./services/api/src/dashboards/dashboards.service.ts:24:    const voids = await this.prisma.client.auditEvent.findMany({
+./services/api/src/dashboards/dashboards.service.ts:85:    const discounts = await this.prisma.client.discount.findMany({
+./services/api/src/dashboards/dashboards.service.ts:131:    const orders = await this.prisma.client.order.findMany({
+./services/api/src/dashboards/dashboards.service.ts:186:    const events = await this.prisma.client.anomalyEvent.findMany({
+./services/api/src/dashboards/dashboards.service.ts:210:    return this.prisma.client.anomalyEvent.findMany({
+./services/api/src/dashboards/dashboards.module.ts:4:import { PrismaService } from '../prisma.service';
+./services/api/src/billing/billing.service.ts:2:import { PrismaService } from '../prisma.service';
+./services/api/src/billing/billing.service.ts:6:  constructor(private prisma: PrismaService) {}
+./services/api/src/billing/billing.service.ts:14:    const subscription = await this.prisma.orgSubscription.findUnique({
+./services/api/src/billing/billing.service.ts:34:    const newPlan = await this.prisma.subscriptionPlan.findUnique({
+./services/api/src/billing/billing.service.ts:42:    const subscription = await this.prisma.orgSubscription.findUnique({
+./services/api/src/billing/billing.service.ts:51:    await this.prisma.subscriptionEvent.create({
+./services/api/src/billing/billing.service.ts:68:    const subscription = await this.prisma.orgSubscription.findUnique({
+./services/api/src/billing/billing.service.ts:77:    await this.prisma.subscriptionEvent.create({
+./services/api/src/billing/billing.module.ts:4:import { PrismaService } from '../prisma.service';
+./services/api/src/billing/billing.service.spec.ts:4:import { PrismaService } from '../prisma.service';
+./services/api/src/settings/settings.module.ts:7:import { PrismaService } from '../prisma.service';
+./services/api/src/settings/settings.controller.ts:13:import { PrismaService } from '../prisma.service';
+./services/api/src/settings/settings.controller.ts:29:  constructor(private readonly prisma: PrismaService) {}
+./services/api/src/settings/settings.controller.ts:37:    const settings = await this.prisma.client.orgSettings.findUnique({
+./services/api/src/settings/settings.controller.ts:56:    const updated = await this.prisma.client.orgSettings.update({
+./services/api/src/settings/settings.controller.ts:72:    const settings = await this.prisma.client.orgSettings.findUnique({
+./services/api/src/settings/settings.controller.ts:91:    const updated = await this.prisma.client.orgSettings.update({
+./services/api/src/settings/settings.controller.ts:105:    const settings = await this.prisma.client.orgSettings.findUnique({
+./services/api/src/settings/settings.controller.ts:119:    const updated = await this.prisma.client.orgSettings.update({
+./services/api/src/settings/settings.controller.ts:136:    const baseCurr = await this.prisma.client.currency.findUnique({
+./services/api/src/settings/settings.controller.ts:139:    const quoteCurr = await this.prisma.client.currency.findUnique({
+./services/api/src/settings/settings.controller.ts:148:    const rate = await this.prisma.client.exchangeRate.create({
+./services/api/src/franchise/franchise.service.spec.ts:4:import { PrismaService } from '../prisma.service';
+./services/api/src/franchise/franchise.service.spec.ts:8:  let prisma: PrismaService;
+./services/api/src/franchise/franchise.service.spec.ts:64:    prisma = module.get<PrismaService>(PrismaService);
+./services/api/src/franchise/franchise.service.spec.ts:73:      jest.spyOn(prisma.franchiseRank, 'findMany').mockResolvedValue([]);
+./services/api/src/franchise/franchise.service.spec.ts:76:      jest.spyOn(prisma.orgSettings, 'findUnique').mockResolvedValue({
+./services/api/src/franchise/franchise.service.spec.ts:83:      jest.spyOn(prisma.branch, 'findMany').mockResolvedValue([
+./services/api/src/franchise/franchise.service.spec.ts:90:        .spyOn(prisma.order, 'findMany')
+./services/api/src/franchise/franchise.service.spec.ts:96:        .spyOn(prisma.wastage, 'findMany')
+./services/api/src/franchise/franchise.service.spec.ts:115:      jest.spyOn(prisma.franchiseRank, 'findMany').mockResolvedValue([]);
+./services/api/src/franchise/franchise.service.spec.ts:118:      jest.spyOn(prisma.orgSettings, 'findUnique').mockResolvedValue({
+./services/api/src/franchise/franchise.service.spec.ts:130:      jest.spyOn(prisma.branch, 'findMany').mockResolvedValue([
+./services/api/src/franchise/franchise.service.spec.ts:137:        .spyOn(prisma.order, 'findMany')
+./services/api/src/franchise/franchise.service.spec.ts:143:        .spyOn(prisma.wastage, 'findMany')
+./services/api/src/franchise/franchise.service.spec.ts:163:      jest.spyOn(prisma.client.stockBatch, 'aggregate').mockResolvedValue({
+./services/api/src/franchise/franchise.service.spec.ts:180:      jest.spyOn(prisma.client.stockBatch, 'aggregate').mockResolvedValue({
+./services/api/src/franchise/franchise.service.spec.ts:210:      jest.spyOn(prisma.branchBudget, 'upsert').mockResolvedValue(mockBudget as any);
+./services/api/src/franchise/franchise.service.spec.ts:233:      jest.spyOn(prisma.inventoryItem, 'findMany').mockResolvedValue([

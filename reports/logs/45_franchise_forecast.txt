@@ -1,0 +1,190 @@
+./services/worker/src/index.ts:82:  type: 'forecast-build';
+./services/worker/src/index.ts:1368:const forecastBuildQueue = new Queue<ForecastBuildJob>('forecast-build', { connection });
+./services/worker/src/index.ts:1374:const forecastBuildWorker = new Worker<ForecastBuildJob>(
+./services/worker/src/index.ts:1375:  'forecast-build',
+./services/worker/src/index.ts:1377:    logger.info({ jobId: job.id }, 'Building forecasts');
+./services/worker/src/index.ts:1379:    // Get all orgs with forecast profiles
+./services/worker/src/index.ts:1380:    const profiles = await prisma.forecastProfile.findMany({
+./services/worker/src/index.ts:1384:    let forecastsCreated = 0;
+./services/worker/src/index.ts:1417:          const forecastDate = new Date();
+./services/worker/src/index.ts:1418:          forecastDate.setDate(forecastDate.getDate() + i);
+./services/worker/src/index.ts:1423:          const dayOfWeek = forecastDate.getDay();
+./services/worker/src/index.ts:1430:            forecastDate.getFullYear(),
+./services/worker/src/index.ts:1431:            forecastDate.getMonth() + 1,
+./services/worker/src/index.ts:1434:          if (forecastDate.getDate() > daysInMonth - 3) {
+./services/worker/src/index.ts:1438:          await prisma.forecastPoint.upsert({
+./services/worker/src/index.ts:1444:                date: forecastDate,
+./services/worker/src/index.ts:1451:              date: forecastDate,
+./services/worker/src/index.ts:1457:          forecastsCreated++;
+./services/worker/src/index.ts:1460:        logger.error({ profileId: profile.id, error: err }, 'Failed to build forecast for profile');
+./services/worker/src/index.ts:1464:    logger.info({ forecastsCreated }, 'Forecasts built');
+./services/worker/src/index.ts:1465:    return { success: true, forecastsCreated };
+./services/worker/src/index.ts:1546:          select: { franchiseWeights: true },
+./services/worker/src/index.ts:1549:        const weights = orgSettings?.franchiseWeights
+./services/worker/src/index.ts:1550:          ? (orgSettings.franchiseWeights as {
+./services/worker/src/index.ts:1577:          await prisma.franchiseRank.upsert({
+./services/worker/src/index.ts:1613:forecastBuildWorker.on('completed', (job) => {
+./services/worker/src/index.ts:1617:forecastBuildWorker.on('failed', (job, err) => {
+./services/worker/src/index.ts:1810:// Schedule forecast build nightly at 02:30
+./services/worker/src/index.ts:1812:  await forecastBuildQueue.add(
+./services/worker/src/index.ts:1813:    'forecast-build',
+./services/worker/src/index.ts:1814:    { type: 'forecast-build' },
+./services/worker/src/index.ts:1819:      jobId: 'forecast-build-recurring',
+./services/worker/src/index.ts:1822:  logger.info('Scheduled forecast build job (nightly 02:30)');
+./services/worker/src/index.ts:1856:  logger.error({ error: err }, 'Failed to schedule forecast build'),
+./services/worker/src/index.ts:2057:  '🚀 ChefCloud Worker started - listening for jobs on "reports", "payments", "efris", "anomalies", "alerts", "reservations", "reservation-reminders", "spout-consume", "digest", "subscription-renewals", "subscription-reminders-billing", "forecast-build", and "rank-branches" queues',
+./services/worker/src/index.ts:2074:  await forecastBuildWorker.close();
+./services/api/src/cash/cash.service.ts:67:   * Computes variance: closingCount - (openingFloat + netMovements + netSales)
+./services/api/src/cash/cash.service.ts:134:    const variance = closingCount - expectedCash;
+./services/api/src/cash/cash.service.ts:142:        variance,
+./services/api/src/cash/cash.service.ts:167:          variance,
+./services/api/src/cash/cash.service.spec.ts:66:        variance: null,
+./services/api/src/cash/cash.service.spec.ts:102:    it('should close session and calculate variance', async () => {
+./services/api/src/cash/cash.service.spec.ts:130:        variance: -5,
+./services/api/src/cash/cash.service.spec.ts:137:      // variance = closingCount(240) - expected(345) = -105... wait let me recalculate
+./services/api/src/cash/cash.service.spec.ts:139:      // variance = 240 - 345 = -105... but the mock returns -5
+./services/api/src/cash/cash.service.spec.ts:140:      // This test verifies the variance is calculated, let's just check it's set
+./services/api/src/cash/cash.service.spec.ts:141:      expect(result.variance).toBeDefined();
+./services/api/src/franchise/franchise.service.spec.ts:3:import { FranchiseService } from './franchise.service';
+./services/api/src/franchise/franchise.service.spec.ts:17:            franchiseRank: {
+./services/api/src/franchise/franchise.service.spec.ts:36:            forecastPoint: {
+./services/api/src/franchise/franchise.service.spec.ts:68:    it('should use default weights if franchiseWeights not set', async () => {
+./services/api/src/franchise/franchise.service.spec.ts:73:      jest.spyOn(prisma.franchiseRank, 'findMany').mockResolvedValue([]);
+./services/api/src/franchise/franchise.service.spec.ts:79:        franchiseWeights: null,
+./services/api/src/franchise/franchise.service.spec.ts:115:      jest.spyOn(prisma.franchiseRank, 'findMany').mockResolvedValue([]);
+./services/api/src/franchise/franchise.service.spec.ts:121:        franchiseWeights: {
+./services/api/src/franchise/franchise.service.spec.ts:194:    it('should create new budget if not exists', async () => {
+./services/api/src/franchise/franchise.service.spec.ts:200:        id: 'budget-1',
+./services/api/src/franchise/franchise.service.spec.ts:220:        id: 'budget-1',
+./services/api/src/franchise/franchise.controller.ts:11:} from './franchise.service';
+./services/api/src/franchise/franchise.controller.ts:21:@Controller('franchise')
+./services/api/src/franchise/franchise.controller.ts:24:  constructor(private franchiseService: FranchiseService) {}
+./services/api/src/franchise/franchise.controller.ts:35:    return this.franchiseService.getOverview(req.user.orgId, period);
+./services/api/src/franchise/franchise.controller.ts:47:    return this.franchiseService.getRankings(req.user.orgId, period);
+./services/api/src/franchise/franchise.controller.ts:50:  @Post('budgets')
+./services/api/src/franchise/franchise.controller.ts:64:    return this.franchiseService.upsertBudget(req.user.orgId, body.branchId, body.period, {
+./services/api/src/franchise/franchise.controller.ts:72:  @Get('budgets')
+./services/api/src/franchise/franchise.controller.ts:78:    return this.franchiseService.getBudgets(req.user.orgId, period);
+./services/api/src/franchise/franchise.controller.ts:81:  @Get('forecast/items')
+./services/api/src/franchise/franchise.controller.ts:91:    return this.franchiseService.getForecastItems(req.user.orgId, period, method || 'MA14');
+./services/api/src/franchise/franchise.controller.ts:100:    return this.franchiseService.getProcurementSuggestions(req.user.orgId, branchId);
+./services/api/src/franchise/franchise.controller.ts:113:    return this.franchiseService.generateDraftPOs(
+./services/api/src/franchise/franchise.controller.ts:124:    return this.franchiseService.getDraftPOs(req.user.orgId);
+./services/api/src/franchise/franchise.controller.ts:130:    return this.franchiseService.approvePOs(req.user.orgId, body.poIds);
+./services/api/src/franchise/franchise.service.ts:29:  forecasts: Array<{
+./services/api/src/franchise/franchise.service.ts:104:    const existingRanks = await this.prisma.franchiseRank.findMany({
+./services/api/src/franchise/franchise.service.ts:131:      select: { franchiseWeights: true },
+./services/api/src/franchise/franchise.service.ts:134:    const weights = orgSettings?.franchiseWeights
+./services/api/src/franchise/franchise.service.ts:135:      ? (orgSettings.franchiseWeights as {
+./services/api/src/franchise/franchise.service.ts:187:    const budget = await this.prisma.branchBudget.upsert({
+./services/api/src/franchise/franchise.service.ts:209:      id: budget.id,
+./services/api/src/franchise/franchise.service.ts:210:      branchId: budget.branchId,
+./services/api/src/franchise/franchise.service.ts:211:      period: budget.period,
+./services/api/src/franchise/franchise.service.ts:212:      revenueTarget: Number(budget.revenueTarget),
+./services/api/src/franchise/franchise.service.ts:213:      cogsTarget: Number(budget.cogsTarget),
+./services/api/src/franchise/franchise.service.ts:214:      expenseTarget: Number(budget.expenseTarget),
+./services/api/src/franchise/franchise.service.ts:215:      notes: budget.notes,
+./services/api/src/franchise/franchise.service.ts:220:    const budgets = await this.prisma.branchBudget.findMany({
+./services/api/src/franchise/franchise.service.ts:225:    return budgets.map((b) => ({
+./services/api/src/franchise/franchise.service.ts:246:    // Get forecast points for the period
+./services/api/src/franchise/franchise.service.ts:247:    const points = await this.prisma.forecastPoint.findMany({
+./services/api/src/franchise/franchise.service.ts:263:            forecasts: [],
+./services/api/src/franchise/franchise.service.ts:266:        acc[p.itemId].forecasts.push({
+./services/api/src/franchise/franchise.service.ts:318:  // Helper for worker: calculate MA forecast
+./services/api/src/franchise/franchise.module.ts:2:import { FranchiseController } from './franchise.controller';
+./services/api/src/franchise/franchise.module.ts:3:import { FranchiseService } from './franchise.service';
+./services/api/src/inventory/counts.service.ts:25:  variance: number;
+./services/api/src/inventory/counts.service.ts:26:  variancePct: number;
+./services/api/src/inventory/counts.service.ts:176:    const variances: VarianceItem[] = [];
+./services/api/src/inventory/counts.service.ts:182:      const variance = countedQty - expectedQty;
+./services/api/src/inventory/counts.service.ts:183:      const variancePct = expectedQty > 0 ? variance / expectedQty : 0;
+./services/api/src/inventory/counts.service.ts:190:      const varianceItem: VarianceItem = {
+./services/api/src/inventory/counts.service.ts:195:        variance,
+./services/api/src/inventory/counts.service.ts:196:        variancePct,
+./services/api/src/inventory/counts.service.ts:199:      variances.push(varianceItem);
+./services/api/src/inventory/counts.service.ts:206:        Math.abs(variance) > absTolerance &&
+./services/api/src/inventory/counts.service.ts:207:        Math.abs(variancePct) > pctTolerance;
+./services/api/src/inventory/counts.service.ts:210:        outOfTolerance.push(varianceItem);
+./services/api/src/inventory/counts.service.ts:218:        message: 'Stock count variances exceed tolerance',
+./services/api/src/inventory/counts.service.ts:227:      variances,
+./services/api/src/inventory/counts.service.ts:239:    variances: VarianceItem[],
+./services/api/src/inventory/counts.service.ts:241:    for (const v of variances) {
+./services/api/src/inventory/counts.service.ts:245:      if (v.variance < 0) {
+./services/api/src/inventory/counts.service.ts:261:            variance: v.variance,
+./services/api/src/inventory/counts.service.ts:262:            variancePct: v.variancePct,
+./services/api/src/inventory/counts.service.spec.ts:135:    it('should pass when variances are within percentage tolerance', async () => {
+./services/api/src/inventory/counts.service.spec.ts:141:          { itemId: 'item-1', countedQty: 105 }, // Expected 100, variance 5%
+./services/api/src/inventory/counts.service.spec.ts:157:      expect(result.variances).toHaveLength(1);
+./services/api/src/inventory/counts.service.spec.ts:158:      expect(result.variances[0].variance).toBe(5);
+./services/api/src/inventory/counts.service.spec.ts:161:    it('should pass when variance within absolute tolerance', async () => {
+./services/api/src/inventory/counts.service.spec.ts:166:        lines: [{ itemId: 'item-1', countedQty: 3 }], // Expected 1, variance 200% but only 2 units
+./services/api/src/inventory/counts.service.spec.ts:183:    it('should reject when variance exceeds both tolerances', async () => {
+./services/api/src/inventory/counts.service.spec.ts:188:        lines: [{ itemId: 'item-1', countedQty: 150 }], // Expected 100, variance 50%
+./services/api/src/inventory/counts.service.spec.ts:241:    it('should emit NEGATIVE_STOCK for negative variance', async () => {
+./services/api/src/inventory/counts.service.spec.ts:242:      const variances = [
+./services/api/src/inventory/counts.service.spec.ts:248:          variance: -5,
+./services/api/src/inventory/counts.service.spec.ts:249:          variancePct: -0.5,
+./services/api/src/inventory/counts.service.spec.ts:253:      await service.emitVarianceAnomalies('org-1', 'branch-1', variances);
+./services/api/src/inventory/counts.service.spec.ts:262:            variance: -5,
+./services/api/src/inventory/counts.service.spec.ts:268:    it('should emit LARGE_VARIANCE for positive variance', async () => {
+./services/api/src/inventory/counts.service.spec.ts:269:      const variances = [
+./services/api/src/inventory/counts.service.spec.ts:275:          variance: 10,
+./services/api/src/inventory/counts.service.spec.ts:276:          variancePct: 1.0,
+./services/api/src/inventory/counts.service.spec.ts:280:      await service.emitVarianceAnomalies('org-1', 'branch-1', variances);
+./services/api/src/inventory/counts.service.spec.ts:289:            variance: 10,
+./services/api/src/common/chaos.spec.ts:64:      expect(duration).toBeGreaterThanOrEqual(90); // Allow some timing variance
+./services/api/src/prisma.service.ts:149:  get forecastProfile(): typeof prisma.forecastProfile {
+./services/api/src/prisma.service.ts:150:    return prisma.forecastProfile;
+./services/api/src/prisma.service.ts:153:  get forecastPoint(): typeof prisma.forecastPoint {
+./services/api/src/prisma.service.ts:154:    return prisma.forecastPoint;
+./services/api/src/prisma.service.ts:157:  get franchiseRank(): typeof prisma.franchiseRank {
+./services/api/src/prisma.service.ts:158:    return prisma.franchiseRank;
+./services/api/src/reports/reports.service.ts:196:    // Calculate cash movements totals and variance
+./services/api/src/reports/reports.service.ts:225:      if (session.variance) {
+./services/api/src/reports/reports.service.ts:226:        totalVariance += Number(session.variance);
+./services/api/src/reports/reports.service.ts:259:        variance: s.variance ? Number(s.variance) : null,
+./services/api/src/ops/ops.service.ts:178:    // E54-s2: Performance budget violations
+./services/api/src/ops/ops.service.ts:179:    lines.push('# HELP chefcloud_perf_budget_violation_total Performance budget violations');
+./services/api/src/ops/ops.service.ts:180:    lines.push('# TYPE chefcloud_perf_budget_violation_total counter');
+./services/api/src/ops/ops.service.ts:181:    lines.push(`chefcloud_perf_budget_violation_total ${metrics.get('perf_budget_violations') || 0}`);
+./services/api/src/app.module.ts:36:import { FranchiseModule } from './franchise/franchise.module';
+./services/api/dist/src/prisma.service.d.ts:38:    get forecastProfile(): typeof prisma.forecastProfile;
+./services/api/dist/src/prisma.service.d.ts:39:    get forecastPoint(): typeof prisma.forecastPoint;
+./services/api/dist/src/prisma.service.d.ts:40:    get franchiseRank(): typeof prisma.franchiseRank;
+./services/api/dist/src/franchise/franchise.service.spec.d.ts:2://# sourceMappingURL=franchise.service.spec.d.ts.map
+./services/api/dist/src/franchise/franchise.module.d.ts:3://# sourceMappingURL=franchise.module.d.ts.map
+./services/api/dist/src/franchise/franchise.service.d.ts:25:    forecasts: Array<{
+./services/api/dist/src/franchise/franchise.service.d.ts:75://# sourceMappingURL=franchise.service.d.ts.map
+./services/api/dist/src/franchise/franchise.controller.d.ts:1:import { FranchiseService, BranchOverview, BranchRanking, ForecastItemData, ProcurementSuggestion } from './franchise.service';
+./services/api/dist/src/franchise/franchise.controller.d.ts:10:    private franchiseService;
+./services/api/dist/src/franchise/franchise.controller.d.ts:11:    constructor(franchiseService: FranchiseService);
+./services/api/dist/src/franchise/franchise.controller.d.ts:62://# sourceMappingURL=franchise.controller.d.ts.map
+./services/api/dist/src/inventory/counts.service.d.ts:12:    variance: number;
+./services/api/dist/src/inventory/counts.service.d.ts:13:    variancePct: number;
+./services/api/dist/src/inventory/counts.service.d.ts:23:    emitVarianceAnomalies(orgId: string, branchId: string, variances: VarianceItem[]): Promise<void>;
+./services/api/test/e22-franchise.e2e-spec.ts:38:        franchiseWeights: {
+./services/api/test/e22-franchise.e2e-spec.ts:138:  describe('POST /franchise/budgets', () => {
+./services/api/test/e22-franchise.e2e-spec.ts:139:    it('should upsert a budget for a branch', async () => {
+./services/api/test/e22-franchise.e2e-spec.ts:141:        .post('/franchise/budgets')
+./services/api/test/e22-franchise.e2e-spec.ts:149:          notes: 'Q4 budget',
+./services/api/test/e22-franchise.e2e-spec.ts:159:    it('should update existing budget on re-upsert', async () => {
+./services/api/test/e22-franchise.e2e-spec.ts:162:        .post('/franchise/budgets')
+./services/api/test/e22-franchise.e2e-spec.ts:175:        .post('/franchise/budgets')
+./services/api/test/e22-franchise.e2e-spec.ts:190:  describe('GET /franchise/budgets', () => {
+./services/api/test/e22-franchise.e2e-spec.ts:191:    it('should fetch budgets for a period', async () => {
+./services/api/test/e22-franchise.e2e-spec.ts:193:        .get('/franchise/budgets?period=2025-11')
+./services/api/test/e22-franchise.e2e-spec.ts:205:        .get('/franchise/budgets?period=2025')
+./services/api/test/e22-franchise.e2e-spec.ts:213:  describe('GET /franchise/rankings', () => {
+./services/api/test/e22-franchise.e2e-spec.ts:218:        .get(`/franchise/rankings?period=${period}`)
+./services/api/test/e22-franchise.e2e-spec.ts:241:  describe('GET /franchise/procurement/suggest', () => {
+./services/api/test/e22-franchise.e2e-spec.ts:269:        .get('/franchise/procurement/suggest')
+./services/api/test/e22-franchise.e2e-spec.ts:347:    describe('POST /franchise/procurement/generate-drafts', () => {
+./services/api/test/e22-franchise.e2e-spec.ts:350:          .post('/franchise/procurement/generate-drafts')
+./services/api/test/e22-franchise.e2e-spec.ts:369:          .post('/franchise/procurement/generate-drafts')
+./services/api/test/e22-franchise.e2e-spec.ts:381:    describe('GET /franchise/procurement/drafts', () => {
+./services/api/test/e22-franchise.e2e-spec.ts:384:          .get('/franchise/procurement/drafts')
+./services/api/test/e22-franchise.e2e-spec.ts:401:    describe('POST /franchise/procurement/approve', () => {
+./services/api/test/e22-franchise.e2e-spec.ts:405:          .get('/franchise/procurement/drafts')
+./services/api/test/e22-franchise.e2e-spec.ts:412:          .post('/franchise/procurement/approve')
+./services/api/test/e22-franchise.e2e-spec.ts:422:          .get('/franchise/procurement/drafts')
+./services/api/test/e22-franchise.e2e-spec.ts:445:          .post('/franchise/procurement/approve')

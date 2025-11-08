@@ -1,0 +1,10 @@
+=== Environment Versions ===
+Date: Sat 08 Nov 2025 12:24:38 AM UTC
+Node: v20.19.2
+pnpm: 8.15.9
+npm: 10.8.2
+Python: Python 3.9.2
+Go: bash: go: command not found
+not found
+Git: git version 2.49.0
+OS: Linux codespaces-242710 6.8.0-1030-azure #35~22.04.1-Ubuntu SMP Mon May 26 18:08:30 UTC 2025 x86_64 GNU/Linux

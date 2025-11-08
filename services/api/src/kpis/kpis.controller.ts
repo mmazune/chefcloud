@@ -6,14 +6,34 @@ import { map, switchMap, startWith } from 'rxjs/operators';
 import { KpisService } from './kpis.service';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
+import { SseRateLimiterGuard } from '../common/sse-rate-limiter.guard';
 
 @Controller('stream/kpis')
-@UseGuards(AuthGuard('jwt'), RolesGuard)
+@UseGuards(AuthGuard('jwt'), RolesGuard, SseRateLimiterGuard)
 export class KpisController {
   constructor(private kpisService: KpisService) {}
 
+  /**
+   * SSE endpoint for live KPI streaming
+   * 
+   * Security:
+   * - Requires JWT authentication (401 if missing/invalid)
+   * - Requires L4 (Manager) or L5 (Owner) role (403 if unauthorized)
+   * - Org-scoped: only streams data for authenticated user's org
+   * - Rate limited: 60 req/min per user/IP, max 2 concurrent connections per user
+   * 
+   * Headers set:
+   * - Content-Type: text/event-stream
+   * - Cache-Control: no-cache  
+   * - Connection: keep-alive
+   * 
+   * @param req - Request with authenticated user
+   * @param scope - 'org' (default) or 'branch'
+   * @param branchId - Optional branch filter
+   * @returns Observable stream of KPI MessageEvents
+   */
   @Get()
-  @Roles('L4')
+  @Roles('L4', 'L5')
   @Sse()
   streamKpis(
     @Req() req: any,

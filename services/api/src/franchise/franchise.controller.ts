@@ -32,6 +32,7 @@ export class FranchiseController {
     if (!period || !/^\d{4}-\d{2}$/.test(period)) {
       return { error: 'Invalid period format. Use YYYY-MM' };
     }
+    // E22: Cached with 15s TTL
     return this.franchiseService.getOverview(req.user.orgId, period);
   }
 
@@ -44,6 +45,7 @@ export class FranchiseController {
     if (!period || !/^\d{4}-\d{2}$/.test(period)) {
       return { error: 'Invalid period format. Use YYYY-MM' };
     }
+    // E22: Cached with 30s TTL
     return this.franchiseService.getRankings(req.user.orgId, period);
   }
 
@@ -75,6 +77,7 @@ export class FranchiseController {
     if (!period || !/^\d{4}-\d{2}$/.test(period)) {
       return { error: 'Invalid period format. Use YYYY-MM' };
     }
+    // E22: Cached with 60s TTL
     return this.franchiseService.getBudgets(req.user.orgId, period);
   }
 
@@ -88,6 +91,7 @@ export class FranchiseController {
     if (!period || !/^\d{4}-\d{2}$/.test(period)) {
       return { error: 'Invalid period format. Use YYYY-MM' };
     }
+    // E22: Cached with 300s (5min) TTL
     return this.franchiseService.getForecastItems(req.user.orgId, period, method || 'MA14');
   }
 

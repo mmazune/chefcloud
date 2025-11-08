@@ -1,0 +1,66 @@
+Scope: 11 of 12 workspace projects
+packages/auth build$ tsc
+packages/contracts build$ tsc
+packages/db build$ tsc
+packages/printer build$ tsc
+packages/auth build: Done
+packages/ui build$ tsc
+packages/printer build: Done
+packages/contracts build: Done
+packages/ui build: Done
+packages/db build: Done
+apps/desktop build$ tsc && vite build
+apps/mobile build$ echo 'Mobile build via EAS'
+apps/web build$ next build
+services/api build$ nest build
+apps/mobile build: Mobile build via EAS
+apps/mobile build: Done
+services/sync build$ tsc
+services/sync build: Done
+services/worker build$ tsc
+apps/desktop build: vite v5.4.21 building for production...
+apps/web build:    ▲ Next.js 14.1.0
+apps/web build:    Linting and checking validity of types ...
+apps/desktop build: transforming...
+apps/web build:  ⚠ TypeScript project references are not fully supported. Attempting to build in incremental mode.
+apps/desktop build: [plugin:vite:resolve] [plugin vite:resolve] Module "fs" has been externalized for browser compatibility, imported by "/workspaces/chefcloud/node_modules/.pnpm/better-sqlite3@12.4.1/node_modules/better-sqlite3/lib/database.js". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+apps/desktop build: [plugin:vite:resolve] [plugin vite:resolve] Module "path" has been externalized for browser compatibility, imported by "/workspaces/chefcloud/node_modules/.pnpm/better-sqlite3@12.4.1/node_modules/better-sqlite3/lib/database.js". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+apps/desktop build: [plugin:vite:resolve] [plugin vite:resolve] Module "fs" has been externalized for browser compatibility, imported by "/workspaces/chefcloud/node_modules/.pnpm/better-sqlite3@12.4.1/node_modules/better-sqlite3/lib/methods/backup.js". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+apps/desktop build: [plugin:vite:resolve] [plugin vite:resolve] Module "path" has been externalized for browser compatibility, imported by "/workspaces/chefcloud/node_modules/.pnpm/better-sqlite3@12.4.1/node_modules/better-sqlite3/lib/methods/backup.js". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+apps/desktop build: [plugin:vite:resolve] [plugin vite:resolve] Module "fs" has been externalized for browser compatibility, imported by "/workspaces/chefcloud/node_modules/.pnpm/bindings@1.5.0/node_modules/bindings/bindings.js". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+apps/desktop build: [plugin:vite:resolve] [plugin vite:resolve] Module "path" has been externalized for browser compatibility, imported by "/workspaces/chefcloud/node_modules/.pnpm/bindings@1.5.0/node_modules/bindings/bindings.js". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+apps/desktop build: [plugin:vite:resolve] [plugin vite:resolve] Module "path" has been externalized for browser compatibility, imported by "/workspaces/chefcloud/node_modules/.pnpm/file-uri-to-path@1.0.0/node_modules/file-uri-to-path/index.js". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+apps/desktop build: ✓ 133 modules transformed.
+apps/desktop build: rendering chunks...
+apps/desktop build: computing gzip size...
+apps/desktop build: dist/index.html                   0.46 kB │ gzip:  0.30 kB
+apps/desktop build: dist/assets/index-tRni5Z4m.css    1.88 kB │ gzip:  0.86 kB
+apps/desktop build: dist/assets/index-C_vERwsL.js   205.73 kB │ gzip: 66.95 kB
+apps/desktop build: ✓ built in 5.07s
+apps/desktop build: Done
+services/worker build: Done
+apps/web build:    Creating an optimized production build ...
+apps/web build:  ✓ Compiled successfully
+apps/web build:    Collecting page data ...
+apps/web build:    Generating static pages (0/4) ...
+apps/web build:    Generating static pages (1/4) 
+apps/web build:    Generating static pages (2/4) 
+apps/web build:    Generating static pages (3/4) 
+apps/web build:  ✓ Generating static pages (4/4) 
+apps/web build:    Finalizing page optimization ...
+apps/web build:    Collecting build traces ...
+services/api build: Done
+apps/web build: Route (pages)                             Size     First Load JS
+apps/web build: ┌ ○ /                                     472 B          78.5 kB
+apps/web build: ├   /_app                                 0 B              78 kB
+apps/web build: ├ ○ /404                                  180 B          78.2 kB
+apps/web build: ├ λ /api/health                           0 B              78 kB
+apps/web build: ├ λ /api/version                          0 B              78 kB
+apps/web build: └ ○ /security                             4.85 kB        82.9 kB
+apps/web build: + First Load JS shared by all             78.1 kB
+apps/web build:   ├ chunks/framework-065429c4fd4dac58.js  45.2 kB
+apps/web build:   ├ chunks/main-0dc674210e1ee161.js       31.8 kB
+apps/web build:   └ other shared chunks (total)           1.18 kB
+apps/web build: ○  (Static)   prerendered as static content
+apps/web build: λ  (Dynamic)  server-rendered on demand using Node.js
+apps/web build: Done

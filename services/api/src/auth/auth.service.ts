@@ -12,6 +12,8 @@ import { AuthHelpers } from './auth.helpers';
 import { LoginDto, PinLoginDto, MsrSwipeDto, AuthResponse } from './dto/auth.dto';
 import { JwtPayload } from './jwt.strategy';
 import { WorkforceService } from '../workforce/workforce.service';
+import { SessionInvalidationService } from './session-invalidation.service';
+import { randomBytes } from 'crypto';
 
 /**
  * Detect PAN-like track data (payment card).
@@ -42,6 +44,7 @@ export class AuthService {
     private jwtService: JwtService,
     @Inject(forwardRef(() => WorkforceService))
     private workforceService: WorkforceService,
+    private sessionInvalidation: SessionInvalidationService,
   ) {}
 
   async login(loginDto: LoginDto): Promise<AuthResponse> {
@@ -178,7 +181,8 @@ export class AuthService {
     // E43-s1: Auto-clock-in if enabled
     await this.autoClockIn(user.id, user.orgId, user.branchId, 'MSR');
 
-    return this.generateAuthResponse(user);
+    // E25: Pass badgeId to include in JWT payload
+    return this.generateAuthResponse(user, badgeCode);
   }
 
   async enrollBadge(
@@ -237,7 +241,7 @@ export class AuthService {
     return { success: true };
   }
 
-  private generateAuthResponse(user: {
+  private async generateAuthResponse(user: {
     id: string;
     email: string;
     firstName: string;
@@ -245,12 +249,22 @@ export class AuthService {
     roleLevel: string;
     orgId: string;
     branchId: string | null;
-  }): AuthResponse {
+    sessionVersion?: number;
+  }, badgeId?: string): Promise<AuthResponse> {
+    // E25: Get current session version
+    const sessionVersion = user.sessionVersion ?? await this.sessionInvalidation.getSessionVersion(user.id);
+    
+    // E25: Generate unique JWT ID for deny list tracking
+    const jti = randomBytes(16).toString('hex');
+    
     const payload: JwtPayload = {
       sub: user.id,
       email: user.email,
       orgId: user.orgId,
       roleLevel: user.roleLevel,
+      sv: sessionVersion, // E25: Session version
+      jti,                // E25: JWT ID
+      ...(badgeId && { badgeId }), // E25: Include badge ID if authenticated via badge
     };
 
     return {

@@ -710,6 +710,256 @@ Badge operations are logged to `audit_events`:
 
 ---
 
+## Badge Revocation & Session Invalidation (E25)
+
+ChefCloud implements immediate session invalidation when badges are revoked, lost, or returned. This security feature ensures that compromised or lost badges cannot be used for authentication, even if the physical badge is later recovered.
+
+### Badge Lifecycle States
+
+| State | Description | Authentication | Session Impact |
+|-------|-------------|----------------|----------------|
+| **ACTIVE** | Badge is assigned and operational | ✅ Allowed | No change |
+| **REVOKED** | Badge permanently disabled (security) | ❌ Denied | All sessions invalidated |
+| **LOST** | Badge reported missing | ❌ Denied | All sessions invalidated |
+| **RETURNED** | Badge handed back to org | ❌ Denied | Old sessions remain invalid |
+
+### Session Versioning
+
+Every user has a `sessionVersion` counter (starts at 0). When a badge is revoked or lost:
+
+1. **Version Increment**: User's `sessionVersion` is bumped (0 → 1)
+2. **Token Invalidation**: All JWTs with old version (sv=0) are rejected
+3. **Deny List**: Tokens are added to Redis deny list for immediate rejection (< 2s)
+4. **New Login**: New logins issue JWTs with updated version (sv=1)
+
+**Important**: RETURNED state does NOT decrement version - old tokens remain invalid.
+
+### API Endpoints
+
+#### Revoke Badge
+
+Permanently disable a badge (requires L4+ role):
+
+```bash
+curl -X POST http://localhost:3001/badges/TESTBADGE001/revoke \
+  -H "Authorization: Bearer YOUR_ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "reason": "Security breach"
+  }'
+
+# Response (200 OK):
+{
+  "id": "badge-123",
+  "code": "TESTBADGE001",
+  "state": "REVOKED",
+  "assignedUserId": null
+}
+```
+
+**Effect**:
+- Badge state → REVOKED
+- All active sessions for this badge invalidated
+- User's `sessionVersion` incremented
+- Tokens added to Redis deny list
+
+#### Report Lost Badge
+
+Mark badge as lost:
+
+```bash
+curl -X POST http://localhost:3001/badges/TESTBADGE001/lost \
+  -H "Authorization: Bearer YOUR_ADMIN_TOKEN"
+
+# Response (200 OK):
+{
+  "id": "badge-123",
+  "code": "TESTBADGE001",
+  "state": "LOST"
+}
+```
+
+**Effect**: Same as REVOKED - immediate session invalidation
+
+#### Mark Badge as Returned
+
+Update state when employee returns badge:
+
+```bash
+curl -X POST http://localhost:3001/badges/TESTBADGE001/returned \
+  -H "Authorization: Bearer YOUR_ADMIN_TOKEN"
+
+# Response (200 OK):
+{
+  "id": "badge-123",
+  "code": "TESTBADGE001",
+  "state": "RETURNED",
+  "custody": [...]
+}
+```
+
+**Note**: Does NOT re-enable old sessions. New login required after re-activation.
+
+### Session Invalidation Flow
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ 1. User swipes badge → Receives JWT (sv=0, jti=abc123)     │
+└──────────────────────┬──────────────────────────────────────┘
+                       │
+                       ▼
+┌─────────────────────────────────────────────────────────────┐
+│ 2. User accesses protected endpoints → 200 OK              │
+└──────────────────────┬──────────────────────────────────────┘
+                       │
+                       ▼
+┌─────────────────────────────────────────────────────────────┐
+│ 3. Admin revokes badge via POST /badges/{code}/revoke      │
+│    - sessionVersion: 0 → 1                                  │
+│    - deny:abc123 set in Redis (TTL 24h)                    │
+│    - Event published to session:invalidation channel        │
+└──────────────────────┬──────────────────────────────────────┘
+                       │
+                       ▼ (< 2 seconds)
+┌─────────────────────────────────────────────────────────────┐
+│ 4. User tries to access endpoint with old token            │
+│    - JWT guard checks: sv=0 != current=1 → 401             │
+│    - OR deny list check: deny:abc123 exists → 401          │
+└──────────────────────┬──────────────────────────────────────┘
+                       │
+                       ▼
+┌─────────────────────────────────────────────────────────────┐
+│ 5. User swipes badge again → New JWT (sv=1, jti=def456)    │
+│    - New session works with current version                │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### JWT Claims (E25)
+
+Tokens issued after E25 include versioning:
+
+```json
+{
+  "sub": "user-123",
+  "email": "alice@chef.com",
+  "orgId": "org-456",
+  "roleLevel": "L3",
+  "sv": 0,                    // E25: Session version
+  "badgeId": "TESTBADGE001",  // E25: Badge code (if MSR login)
+  "jti": "abc123...",         // E25: JWT ID for deny list
+  "iat": 1699401234,
+  "exp": 1699487634
+}
+```
+
+### Propagation Guarantee
+
+**Requirement**: Session invalidation must complete within **2 seconds** across all nodes.
+
+**Implementation**:
+- Redis deny list: Immediate (< 50ms)
+- Version check: Database query on each request (< 100ms)
+- Pub/sub notification: Optional for multi-node deployments
+
+**Testing**:
+```bash
+# E2E test validates < 2s timing
+pnpm test:e2e badge-revocation
+```
+
+### Security Features
+
+1. **Dual Invalidation**:
+   - Version mismatch: Blocks all old JWTs
+   - Deny list: Immediate rejection for known tokens
+
+2. **Fail-Open Redis**:
+   - If Redis is down, version check still works
+   - High availability prioritized
+
+3. **Non-Reversible**:
+   - RETURNED state doesn't restore old sessions
+   - Forces re-authentication
+
+4. **Audit Trail**:
+   - All badge state changes logged
+   - Session invalidation events published
+
+### Environment Variables
+
+```bash
+REDIS_HOST=localhost  # For deny list and pub/sub
+REDIS_PORT=6379
+JWT_SECRET=your-secret-key
+```
+
+### Testing Scenarios
+
+#### Test 1: Badge Revocation Invalidates Active Sessions
+
+```bash
+# 1. Login via badge
+TOKEN=$(curl -s -X POST http://localhost:3001/auth/msr-swipe \
+  -H "Content-Type: application/json" \
+  -d '{"trackData":"CLOUDBADGE:TEST001"}' \
+  | jq -r '.access_token')
+
+# 2. Verify token works
+curl -H "Authorization: Bearer $TOKEN" \
+  http://localhost:3001/workforce/me
+# → 200 OK
+
+# 3. Revoke badge
+curl -X POST http://localhost:3001/badges/TEST001/revoke \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -d '{"reason":"Test"}'
+
+# 4. Try using old token (< 2s after revocation)
+curl -H "Authorization: Bearer $TOKEN" \
+  http://localhost:3001/workforce/me
+# → 401 Unauthorized
+# → "Session has been invalidated due to security event"
+```
+
+#### Test 2: New Login After Revocation
+
+```bash
+# 1. Revoke badge first
+curl -X POST http://localhost:3001/badges/TEST001/revoke \
+  -H "Authorization: Bearer $ADMIN_TOKEN"
+
+# 2. Try to login with revoked badge
+curl -X POST http://localhost:3001/auth/msr-swipe \
+  -d '{"trackData":"CLOUDBADGE:TEST001"}'
+# → 401 Unauthorized
+# → "Badge has been revoked"
+
+# 3. Mark badge as ACTIVE again (admin action)
+# 4. New login succeeds with sv=1 (incremented version)
+```
+
+### Troubleshooting
+
+**"Session has been invalidated due to security event"**
+- Badge was revoked or reported lost
+- Solution: Contact admin to verify badge status
+
+**"Badge has been revoked"**
+- Attempting to authenticate with REVOKED badge
+- Solution: Badge must be reset to ACTIVE state
+
+**Old token still works after revocation**
+- Check Redis connectivity
+- Verify sessionVersion was incremented
+- Check JWT sv claim matches database
+
+**Invalidation takes > 2 seconds**
+- Database or Redis slow
+- Check network latency
+- Review SessionInvalidationService logs
+
+---
+
 ## Mobile Money Payments (A9)
 
 ChefCloud integrates with MTN and Airtel mobile money providers for seamless mobile payments. The system includes a sandbox mode for development and testing.
@@ -783,7 +1033,84 @@ curl -X POST http://localhost:3001/payments/intents/intent-abc123/cancel \
 
 ### Webhooks
 
-Payment providers send webhook notifications to confirm payment status.
+Payment providers and external services send webhook notifications to ChefCloud.
+All webhooks are secured with HMAC signature verification and replay protection (E24).
+
+#### Webhook Security (E24)
+
+All incoming webhooks MUST include these headers:
+
+- `X-Sig`: HMAC-SHA256 signature (hex format)
+- `X-Ts`: Timestamp in milliseconds
+- `X-Id`: Unique request ID for replay protection
+
+**Signature Computation:**
+
+```javascript
+const crypto = require('crypto');
+const secret = process.env.WH_SECRET; // Your webhook secret
+const timestamp = Date.now().toString();
+const body = JSON.stringify(payload);
+const payload = `${timestamp}.${body}`;
+const signature = crypto.createHmac('sha256', secret).update(payload).digest('hex');
+```
+
+**Security Features:**
+
+- **HMAC Verification**: Constant-time comparison prevents timing attacks
+- **Timestamp Validation**: Requests must be within ±5 minutes (clock skew tolerance)
+- **Replay Protection**: Each X-Id is stored for 24 hours; duplicates return 409
+- **Raw Body Integrity**: HMAC computed over exact bytes received
+
+**Environment Variables:**
+
+```bash
+WH_SECRET=your-webhook-secret-key  # Required for webhook verification
+REDIS_HOST=localhost               # For replay protection (falls back to in-memory)
+REDIS_PORT=6379
+```
+
+**Response Codes:**
+
+- `201`: Webhook accepted and verified
+- `400`: Missing required headers (X-Sig, X-Ts, or X-Id)
+- `401`: Invalid signature or stale timestamp
+- `409`: Replay attack detected (duplicate X-Id)
+- `500`: Server misconfiguration (WH_SECRET not set)
+
+#### Generic Billing Webhook
+
+```bash
+# Generate signature
+TS=$(date +%s000)
+BODY='{"event":"invoice.paid","id":"evt_123"}'
+SECRET="your-webhook-secret"
+SIG=$(node -e "const c=require('crypto');const s='$SECRET';const ts='$TS';const b='$BODY';const p=ts+'.'+b;console.log(c.createHmac('sha256',s).update(p).digest('hex'))")
+
+# Send webhook
+curl -X POST http://localhost:3001/webhooks/billing \
+  -H "Content-Type: application/json" \
+  -H "X-Sig: $SIG" \
+  -H "X-Ts: $TS" \
+  -H "X-Id: evt_123" \
+  -d "$BODY"
+
+# Response (201 Created):
+{
+  "received": true,
+  "event": "invoice.paid",
+  "id": "evt_123",
+  "timestamp": "2024-11-07T10:30:00.000Z"
+}
+
+# Replay attempt (same X-Id) returns 409:
+{
+  "statusCode": 409,
+  "message": "Replay attack detected: request ID already processed",
+  "error": "Conflict",
+  "requestId": "evt_123"
+}
+```
 
 #### MTN Webhook
 
@@ -825,6 +1152,83 @@ curl -X POST http://localhost:3001/webhooks/airtel \
   "intentId": "intent-abc123",
   "status": "SUCCEEDED"
 }
+```
+
+#### Plan-Aware Rate Limiting (E24)
+
+Subscription and plan mutation endpoints are rate limited based on the organization's subscription tier to prevent abuse and ensure fair usage.
+
+**Rate Limits by Plan:**
+
+| Plan       | Requests/Minute | Use Case                                |
+|------------|----------------|-----------------------------------------|
+| Free       | 10             | Individual users, light usage           |
+| Pro        | 60             | Small teams, moderate API usage         |
+| Enterprise | 240            | Large organizations, heavy automation   |
+
+**Per-IP Limit:** 120 requests/minute (applies regardless of plan tier)
+
+**Protected Endpoints:**
+
+- `POST /billing/plan/change` - Change subscription plan
+- `POST /billing/cancel` - Cancel subscription
+- `POST /dev/orgs` - Create organization (dev portal)
+- `POST /dev/plans` - Create subscription plan (dev portal)
+
+**Response on Rate Limit:**
+
+When a rate limit is exceeded, the API returns `429 Too Many Requests` with retry information:
+
+```json
+{
+  "statusCode": 429,
+  "message": "Rate limit exceeded",
+  "error": "Too Many Requests",
+  "plan": "free",
+  "limit": 10,
+  "window": 60,
+  "retryAfter": 60
+}
+```
+
+**Response Headers:**
+
+```
+HTTP/1.1 429 Too Many Requests
+Retry-After: 60
+X-RateLimit-Limit: 10
+X-RateLimit-Window: 60
+X-RateLimit-Plan: free
+```
+
+**Implementation Details:**
+
+- **Sliding Window**: 60-second rolling window (not fixed intervals)
+- **Tracking**: Separate counters per user per route + per IP per route
+- **Storage**: Redis with automatic in-memory fallback
+- **Authentication**: Requires valid JWT; unauthenticated requests return 401
+- **Fail-Open**: If rate limiter encounters errors, request is allowed (high availability)
+- **Metrics**: Emits `rate_limit_hits{route,plan}` counter for monitoring
+
+**Environment Variables:**
+
+```bash
+REDIS_HOST=localhost  # Optional, falls back to in-memory
+REDIS_PORT=6379
+```
+
+**Testing Rate Limits:**
+
+```bash
+# As free tier user, exhaust 10/min limit
+for i in {1..15}; do
+  curl -X POST http://localhost:3001/billing/plan/change \
+    -H "Authorization: Bearer $FREE_USER_TOKEN" \
+    -H "Content-Type: application/json" \
+    -d '{"planCode":"pro"}' && echo " - Request $i"
+done
+
+# Expected: First 10 succeed, requests 11-15 return 429
 ```
 
 ### Reports Integration
@@ -1664,6 +2068,27 @@ ChefCloud provides real-time Key Performance Indicator (KPI) streaming for Manag
 | anomaliesToday | Count of detected anomalies today          | Count of AnomalyEvent (occurredAt today)                 |
 
 ### SSE Endpoint (L4+)
+
+**Security (Updated E26-fix):**
+- **Authentication**: Requires valid JWT Bearer token (401 if missing/invalid)
+- **Authorization**: Requires L4 (Manager) or L5 (Owner) role (403 if unauthorized)
+- **Org-Scope**: Automatically scoped to authenticated user's organization
+- **Rate Limiting**: 
+  - 60 requests/minute per user
+  - 60 requests/minute per IP
+  - Maximum 2 concurrent SSE connections per user
+  - Returns `429 Too Many Requests` with `Retry-After` header when exceeded
+- **CORS**: Enforced via `CORS_ALLOWLIST` environment variable
+
+**Environment Variables:**
+```bash
+# CORS Configuration
+CORS_ALLOWLIST=http://localhost:3000,http://localhost:5173,https://app.chefcloud.com
+
+# SSE Rate Limiting (optional, defaults shown)
+SSE_RATE_PER_MIN=60                  # Requests per minute per user/IP
+SSE_MAX_CONNS_PER_USER=2             # Max concurrent connections per user
+```
 
 **Connect to KPI stream:**
 
@@ -8757,3 +9182,317 @@ pnpm dev  # All chaos disabled by default
 
 ---
 
+
+---
+
+## E2E Umbrella (E55-s1)
+
+### Overview
+
+The E2E umbrella provides comprehensive end-to-end test coverage across all ChefCloud domains using **hermetic seed data** and **parallelizable test suites**. Each domain runs in isolation with its own test org and data, enabling fast, reliable, and conflict-free testing.
+
+### Architecture
+
+```
+test/
+├── e2e/
+│   ├── factory.ts          # Seed data factory (org, users, menu, inventory, etc.)
+│   ├── auth.e2e-spec.ts    # Auth domain tests
+│   ├── pos.e2e-spec.ts     # POS domain tests
+│   ├── inventory.e2e-spec.ts
+│   ├── bookings.e2e-spec.ts
+│   ├── workforce.e2e-spec.ts
+│   ├── accounting.e2e-spec.ts
+│   └── reports.e2e-spec.ts
+└── jest-e2e.config.ts      # Jest projects config (enables parallelization)
+```
+
+### Factory Pattern
+
+The `factory.ts` module provides idempotent seed functions:
+
+```typescript
+// Create org with users (L1-L5)
+const factory = await createOrgWithUsers('test-org-pos');
+// Returns:
+// {
+//   orgId, branchId,
+//   users: { owner, manager, supervisor, waiter, chef }
+// }
+
+// Create menu items
+const menu = await createMenu(orgId, branchId);
+// Returns: { burger, fries, cola }
+
+// Create floor plan
+const floor = await createFloor(orgId, branchId);
+// Returns: { floorPlan, table1, table2 }
+
+// Create inventory
+const inventory = await createInventory(orgId, branchId);
+// Returns: { beef, potatoes }
+
+// Create event
+const event = await createEvent(orgId, branchId, managerId);
+
+// Create chart of accounts
+await createChartOfAccounts(orgId);
+
+// Cleanup
+await disconnect();
+```
+
+### Running Tests
+
+#### Run All E2E Tests (Parallel)
+
+```bash
+cd services/api
+pnpm test:e2e:umbrella
+```
+
+This runs all 7 domain projects in parallel with `--maxWorkers=50%`.
+
+#### Run Specific Domain
+
+```bash
+# Auth only
+pnpm test:e2e:umbrella --testNamePattern=auth
+
+# POS only
+pnpm test:e2e:umbrella --testNamePattern=pos
+
+# Accounting only
+pnpm test:e2e:umbrella --testNamePattern=accounting
+```
+
+#### Run with Verbose Output
+
+```bash
+pnpm test:e2e:umbrella --verbose
+```
+
+### Test Coverage by Domain
+
+| Domain | Tests | Coverage |
+|--------|-------|----------|
+| **Auth** | 2 | Login roundtrip, invalid password |
+| **POS** | 1 | Create→send→close order |
+| **Inventory** | 1 | PO receive → on-hand increases |
+| **Bookings** | 1 | HOLD→pay→confirm booking |
+| **Workforce** | 1 | Clock in/out |
+| **Accounting** | 1 | Create period → lock |
+| **Reports** | 2 | X report, owner overview |
+
+### Prerequisites
+
+1. **Database**: Ensure `DATABASE_URL` is set in `.env.e2e`:
+
+```bash
+# services/api/.env.e2e
+NODE_ENV=test
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/chefcloud_test"
+RP_ID=localhost
+ORIGIN=http://localhost:5173
+```
+
+2. **Test Database**: Create the test database:
+
+```bash
+createdb chefcloud_test
+# Or via psql:
+psql -U postgres -c "CREATE DATABASE chefcloud_test;"
+```
+
+3. **Run Migrations**:
+
+```bash
+cd packages/db
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/chefcloud_test" pnpm run db:migrate
+```
+
+### Writing New E2E Tests
+
+#### 1. Create Test File
+
+Create `test/e2e/<domain>.e2e-spec.ts`:
+
+```typescript
+import { Test, TestingModule } from '@nestjs/testing';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
+import request from 'supertest';
+import { AppModule } from '../../src/app.module';
+import { createOrgWithUsers, disconnect } from './factory';
+
+describe('MyDomain E2E', () => {
+  let app: INestApplication;
+  let authToken: string;
+
+  beforeAll(async () => {
+    // Seed data
+    const factory = await createOrgWithUsers('e2e-mydomain');
+
+    // Initialize app
+    const moduleFixture: TestingModule = await Test.createTestingModule({
+      imports: [AppModule],
+    }).compile();
+
+    app = moduleFixture.createNestApplication();
+    app.useGlobalPipes(
+      new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+      }),
+    );
+
+    await app.init();
+
+    // Login
+    const loginResponse = await request(app.getHttpServer())
+      .post('/auth/login')
+      .send({
+        email: factory.users.waiter.email,
+        password: 'Test#123',
+      });
+
+    authToken = loginResponse.body.access_token;
+  });
+
+  afterAll(async () => {
+    await app.close();
+    await disconnect();
+  });
+
+  it('should do something', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/my-endpoint')
+      .set('Authorization', `Bearer ${authToken}`)
+      .expect(200);
+
+    expect(response.body).toBeDefined();
+  });
+});
+```
+
+#### 2. Add to Jest Config
+
+Edit `jest-e2e.config.ts`:
+
+```typescript
+{
+  displayName: 'mydomain',
+  testMatch: ['<rootDir>/test/e2e/mydomain.e2e-spec.ts'],
+  // ... (copy config from existing project)
+}
+```
+
+#### 3. Run Tests
+
+```bash
+pnpm test:e2e:umbrella --testNamePattern=mydomain
+```
+
+### Troubleshooting
+
+#### Error: "DATABASE_URL not set"
+
+**Solution**: Create `services/api/.env.e2e`:
+
+```bash
+cd services/api
+echo 'DATABASE_URL="postgresql://postgres:postgres@localhost:5432/chefcloud_test"' > .env.e2e
+```
+
+#### Error: "database does not exist"
+
+**Solution**: Create test database:
+
+```bash
+createdb chefcloud_test
+cd packages/db
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/chefcloud_test" pnpm run db:migrate
+```
+
+#### Error: "Unique constraint violated"
+
+**Cause**: Test data collision (non-unique org slugs).
+
+**Solution**: Each test suite uses a unique slug prefix (e.g., `e2e-auth`, `e2e-pos`). Ensure your test uses a unique slug:
+
+```typescript
+const factory = await createOrgWithUsers('e2e-unique-name');
+```
+
+#### Tests Running Serially
+
+**Check**: Ensure `--runInBand=false` in `test:e2e:umbrella` script:
+
+```json
+"test:e2e:umbrella": "jest --config ./jest-e2e.config.ts --runInBand=false --maxWorkers=50%"
+```
+
+#### Tests Timing Out
+
+**Solution**: Increase Jest timeout:
+
+```typescript
+jest.setTimeout(30000); // 30 seconds
+```
+
+Or add to test file:
+
+```typescript
+beforeAll(async () => {
+  jest.setTimeout(30000);
+  // ... rest of setup
+});
+```
+
+#### Parallel Tests Failing
+
+**Cause**: Shared test data or database locks.
+
+**Solution**: Ensure each test suite uses unique org slugs and does not modify shared data.
+
+### Best Practices
+
+1. **Unique Org Slugs**: Always use unique slugs per test suite (e.g., `e2e-pos`, `e2e-inventory`).
+2. **Idempotent Seeds**: Factory functions use `upsert` to allow reruns without conflicts.
+3. **Cleanup**: Always call `disconnect()` in `afterAll` to close Prisma connections.
+4. **Minimal Tests**: Keep E2E tests focused on critical happy paths (1-2 cases per domain).
+5. **Avoid Flakiness**: Use deterministic data; avoid time-sensitive assertions.
+6. **Parallel Isolation**: Never modify global state or shared data.
+
+### Performance
+
+- **Parallel Execution**: 7 domain suites run in parallel (50% max workers).
+- **Hermetic Data**: Each suite seeds its own org, preventing conflicts.
+- **Fast Feedback**: Total runtime ~10-15 seconds (vs. 60+ seconds serial).
+
+### CI Integration
+
+Add to GitHub Actions workflow:
+
+```yaml
+- name: Run E2E Umbrella Tests
+  run: |
+    cd services/api
+    pnpm test:e2e:umbrella
+  env:
+    DATABASE_URL: postgresql://postgres:postgres@localhost:5432/chefcloud_test
+```
+
+### Future Enhancements
+
+- [ ] Add KDS domain tests (ticket lifecycle)
+- [ ] Add Payments domain tests (MoMo webhook)
+- [ ] Add EFRIS integration tests (fiscal device flow)
+- [ ] Add multi-branch scenarios
+- [ ] Add performance benchmarks
+
+---
+
+**Status**: ✅ E55-s1 Complete  
+**Test Suites**: 7 domains, 9 total tests  
+**Coverage**: Auth, POS, Inventory, Bookings, Workforce, Accounting, Reports

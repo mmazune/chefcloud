@@ -288,18 +288,19 @@ model Branch {
 // ===== Users & Authentication =====
 
 model User {
-  id           String    @id @default(cuid())
-  orgId        String
-  branchId     String?
-  email        String    @unique
-  passwordHash String?
-  pinHash      String?
-  firstName    String
-  lastName     String
-  roleLevel    RoleLevel @default(L1)
-  isActive     Boolean   @default(true)
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  id             String    @id @default(cuid())
+  orgId          String
+  branchId       String?
+  email          String    @unique
+  passwordHash   String?
+  pinHash        String?
+  firstName      String
+  lastName       String
+  roleLevel      RoleLevel @default(L1)
+  isActive       Boolean   @default(true)
+  sessionVersion Int       @default(0) // E25: Incremented on badge revocation to invalidate old JWTs
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
   org                 Org                  @relation(fields: [orgId], references: [id], onDelete: Cascade)
   branch              Branch?              @relation(fields: [branchId], references: [id], onDelete: SetNull)
@@ -401,6 +402,7 @@ model Session {
   id        String   @id @default(cuid())
   userId    String
   deviceId  String?
+  badgeId   String?  // E25: Track badge for badge-based session invalidation
   token     String   @unique
   expiresAt DateTime
   createdAt DateTime @default(now())
@@ -409,6 +411,7 @@ model Session {
   device Device? @relation(fields: [deviceId], references: [id], onDelete: SetNull)
 
   @@index([userId])
+  @@index([badgeId]) // E25: Index for efficient badge-based invalidation
   @@index([expiresAt])
   @@map("sessions")
 }
@@ -1942,6 +1945,18 @@ enum FlagAction {
   KILL
 }
 
+enum FiscalPeriodStatus {
+  OPEN
+  LOCKED
+}
+
+enum ReconcileSource {
+  PAYMENT
+  REFUND
+  CASH_SAFE_DROP
+  CASH_PICKUP
+}
+
 model PayRun {
   id          String       @id @default(cuid())
   orgId       String
@@ -2049,4 +2064,89 @@ model FlagAudit {
   @@index([flagKey, createdAt])
   @@index([userId])
   @@map("flag_audits")
+}
+
+// ===== E40-s2: Period Locks + Bank Reconciliation =====
+
+model FiscalPeriod {
+  id          String             @id @default(cuid())
+  orgId       String
+  name        String
+  startsAt    DateTime
+  endsAt      DateTime
+  status      FiscalPeriodStatus @default(OPEN)
+  lockedById  String?
+  lockedAt    DateTime?
+  createdAt   DateTime           @default(now())
+
+  @@index([orgId, status])
+  @@index([orgId, startsAt, endsAt])
+  @@map("fiscal_periods")
+}
+
+model BankAccount {
+  id           String   @id @default(cuid())
+  orgId        String
+  name         String
+  currencyCode String   @default("UGX")
+  lastFour     String?
+  createdAt    DateTime @default(now())
+
+  statements BankStatement[]
+  transactions BankTxn[]
+
+  @@index([orgId])
+  @@map("bank_accounts")
+}
+
+model BankStatement {
+  id            String    @id @default(cuid())
+  bankAccountId String
+  periodStart   DateTime
+  periodEnd     DateTime
+  opening       Decimal   @db.Decimal(12, 2)
+  closing       Decimal   @db.Decimal(12, 2)
+  source        String?
+  createdAt     DateTime  @default(now())
+
+  bankAccount BankAccount @relation(fields: [bankAccountId], references: [id], onDelete: Cascade)
+  transactions BankTxn[]
+
+  @@index([bankAccountId, periodStart])
+  @@map("bank_statements")
+}
+
+model BankTxn {
+  id            String    @id @default(cuid())
+  bankAccountId String
+  postedAt      DateTime
+  amount        Decimal   @db.Decimal(12, 2)
+  description   String?
+  ref           String?
+  statementId   String?
+  reconciled    Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+
+  bankAccount BankAccount     @relation(fields: [bankAccountId], references: [id], onDelete: Cascade)
+  statement   BankStatement?  @relation(fields: [statementId], references: [id], onDelete: SetNull)
+  matches     ReconcileMatch[]
+
+  @@index([bankAccountId, postedAt])
+  @@index([reconciled])
+  @@map("bank_txns")
+}
+
+model ReconcileMatch {
+  id         String           @id @default(cuid())
+  bankTxnId  String
+  source     ReconcileSource
+  sourceId   String
+  matchedAt  DateTime         @default(now())
+  matchedById String?
+
+  bankTxn BankTxn @relation(fields: [bankTxnId], references: [id], onDelete: Cascade)
+
+  @@unique([bankTxnId])
+  @@index([source, sourceId])
+  @@map("reconcile_matches")
 }

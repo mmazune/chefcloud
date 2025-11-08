@@ -1,0 +1,10 @@
+bfa20a6 feat: E49-s1 change control + E54-s2 perf CI gate
+27b7faf feat: E45-s1 - Stock count gate at shift close
+2050556 feat: E38-s1 Advanced Cash Management (phase 1)
+0d07055 feat(B3): Multi-tenant org isolation with OrgScopeGuard and audit
+5300c82 feat(owner-digest): charts+CSVs+shift-close email; SSE streams; anti-theft dashboards
+69cfe7c feat(A8-s1): implement reservations & floorplan with availability
+c685786 feat(M2): implement A5 - Inventory & Recipes with FIFO consumption
+43ccfdd feat: complete monorepo scaffold setup
+28801ca chore: emergency checkpoint before recreating Codespace
+0db4d48 Add files via upload

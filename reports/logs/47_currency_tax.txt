@@ -1,0 +1,242 @@
+./services/api/src/accounting/accounting.controller.ts:64:      tax?: number;
+./services/api/src/accounting/bank-rec.service.ts:10:  async upsertBankAccount(orgId: string, name: string, currencyCode = 'UGX', lastFour?: string) {
+./services/api/src/accounting/bank-rec.service.ts:13:      const updated = await this.prisma.client.bankAccount.update({ where: { id: existing.id }, data: { currencyCode, lastFour } });
+./services/api/src/accounting/bank-rec.service.ts:17:    const account = await this.prisma.client.bankAccount.create({ data: { orgId, name, currencyCode, lastFour } });
+./services/api/src/accounting/bank-rec.service.ts:89:      include: { bankAccount: { select: { name: true, currencyCode: true } } },
+./services/api/src/accounting/bank-rec.controller.ts:14:  async upsertAccount(@User() user: any, @Body() body: { name: string; currencyCode?: string; lastFour?: string }) {
+./services/api/src/accounting/bank-rec.controller.ts:15:    const account = await this.bankRecService.upsertBankAccount(user.orgId, body.name, body.currencyCode, body.lastFour);
+./services/api/src/accounting/accounting.service.ts:60:      tax?: number;
+./services/api/src/settings/settings.controller.ts:4: * Admin APIs (L5) for managing currency, tax matrix, and rounding settings.
+./services/api/src/settings/settings.controller.ts:32:   * GET /settings/currency - Get base currency
+./services/api/src/settings/settings.controller.ts:34:  @Get('currency')
+./services/api/src/settings/settings.controller.ts:39:      select: { baseCurrencyCode: true, currency: true },
+./services/api/src/settings/settings.controller.ts:43:      baseCurrencyCode: settings?.baseCurrencyCode || settings?.currency || 'UGX',
+./services/api/src/settings/settings.controller.ts:48:   * PUT /settings/currency - Set base currency
+./services/api/src/settings/settings.controller.ts:50:  @Put('currency')
+./services/api/src/settings/settings.controller.ts:67:   * GET /settings/tax-matrix - Get tax matrix
+./services/api/src/settings/settings.controller.ts:69:  @Get('tax-matrix')
+./services/api/src/settings/settings.controller.ts:74:      select: { taxMatrix: true },
+./services/api/src/settings/settings.controller.ts:77:    return settings?.taxMatrix || { defaultTax: { code: 'VAT_STD', rate: 0.18, inclusive: true } };
+./services/api/src/settings/settings.controller.ts:81:   * PUT /settings/tax-matrix - Update tax matrix
+./services/api/src/settings/settings.controller.ts:83:  @Put('tax-matrix')
+./services/api/src/settings/settings.controller.ts:88:      throw new Error('taxMatrix must have defaultTax with rate');
+./services/api/src/settings/settings.controller.ts:93:      data: { taxMatrix: body },
+./services/api/src/settings/settings.controller.ts:96:    return updated.taxMatrix;
+./services/api/src/settings/settings.controller.ts:110:    return settings?.rounding || { cashRounding: 'NEAREST_50', taxRounding: 'HALF_UP' };
+./services/api/src/settings/settings.controller.ts:128:   * POST /settings/exchange-rate - Manually set exchange rate (L5 only)
+./services/api/src/settings/settings.controller.ts:130:  @Post('exchange-rate')
+./services/api/src/settings/settings.controller.ts:136:    const baseCurr = await this.prisma.client.currency.findUnique({
+./services/api/src/settings/settings.controller.ts:139:    const quoteCurr = await this.prisma.client.currency.findUnique({
+./services/api/src/settings/settings.controller.ts:144:      throw new Error('Invalid currency code');
+./services/api/src/settings/settings.controller.ts:148:    const rate = await this.prisma.client.exchangeRate.create({
+./services/api/src/pos/pos.service.ts:66:    // Fetch menu items with tax info
+./services/api/src/pos/pos.service.ts:70:      include: { taxCategory: true },
+./services/api/src/pos/pos.service.ts:75:    // Calculate subtotal and tax
+./services/api/src/pos/pos.service.ts:77:    let tax = 0;
+./services/api/src/pos/pos.service.ts:87:      const itemTax = menuItem.taxCategory
+./services/api/src/pos/pos.service.ts:88:        ? (itemSubtotal * Number(menuItem.taxCategory.rate)) / 100
+./services/api/src/pos/pos.service.ts:90:      tax += itemTax;
+./services/api/src/pos/pos.service.ts:101:    const total = subtotal + tax;
+./services/api/src/pos/pos.service.ts:144:        tax,
+./services/api/src/pos/pos.service.ts:233:      include: { taxCategory: true },
+./services/api/src/pos/pos.service.ts:249:      const itemTax = menuItem.taxCategory
+./services/api/src/pos/pos.service.ts:250:        ? (itemSubtotal * Number(menuItem.taxCategory.rate)) / 100
+./services/api/src/pos/pos.service.ts:267:        tax: { increment: additionalTax },
+./services/api/src/access/access.service.spec.ts:43:        currency: 'UGX',
+./services/api/src/access/access.service.spec.ts:70:        currency: 'UGX',
+./services/api/src/access/access.service.spec.ts:99:        currency: 'UGX',
+./services/api/src/access/access.service.spec.ts:196:        currency: 'UGX',
+./services/api/src/payments/interfaces/payment-adapter.interface.ts:21:    currency: string;
+./services/api/src/payments/adapters/mtn-sandbox.adapter.ts:22:    currency: string;
+./services/api/src/payments/adapters/mtn-sandbox.adapter.ts:26:      `[MTN Sandbox] Creating intent ${params.intentId} for ${params.amount} ${params.currency}`,
+./services/api/src/payments/adapters/airtel-sandbox.adapter.ts:22:    currency: string;
+./services/api/src/payments/adapters/airtel-sandbox.adapter.ts:26:      `[Airtel Sandbox] Creating intent ${params.intentId} for ${params.amount} ${params.currency}`,
+./services/api/src/payments/payments.service.ts:83:        currency: 'UGX',
+./services/api/src/payments/payments.service.ts:95:        currency: 'UGX',
+./services/api/src/payments/payments.service.spec.ts:89:        currency: 'UGX',
+./services/api/src/prisma.service.ts:47:  get taxCategory(): typeof prisma.taxCategory {
+./services/api/src/prisma.service.ts:48:    return prisma.taxCategory;
+./services/api/src/workforce/payroll.service.ts:84:      const { tax, deductions } = await this.calculateDeductions(orgId, userId, gross);
+./services/api/src/workforce/payroll.service.ts:85:      const net = gross - tax - deductions;
+./services/api/src/workforce/payroll.service.ts:94:          tax,
+./services/api/src/workforce/payroll.service.ts:156:   * Calculate tax and deductions
+./services/api/src/workforce/payroll.service.ts:158:  private async calculateDeductions(orgId: string, _userId: string, gross: number): Promise<{ tax: number; deductions: number }> {
+./services/api/src/workforce/payroll.service.ts:159:    // Get tax rate from org settings
+./services/api/src/workforce/payroll.service.ts:166:    const taxPct = metadata.payrollTaxPct || 0;
+./services/api/src/workforce/payroll.service.ts:168:    const tax = Math.round((gross * taxPct) / 100 * 100) / 100;
+./services/api/src/workforce/payroll.service.ts:185:    return { tax: Math.round(tax * 100) / 100, deductions: Math.round(deductions * 100) / 100 };
+./services/api/src/workforce/payroll.service.ts:249:      totalTax += Number(slip.tax);
+./services/api/src/workforce/payroll.service.ts:339:    taxable?: boolean;
+./services/api/src/workforce/payroll.service.ts:350:          taxable: data.taxable ?? true,
+./services/api/src/workforce/payroll.service.ts:363:        taxable: data.taxable ?? true,
+./services/api/src/workforce/payroll.controller.ts:86:      taxable?: boolean;
+./services/api/src/workforce/payroll.service.spec.ts:81:        taxable: true,
+./services/api/src/workforce/payroll.service.spec.ts:105:        taxable: true,
+./services/api/src/workforce/payroll.service.spec.ts:122:        taxable: true,
+./services/api/src/workforce/payroll.service.spec.ts:145:      const { tax, deductions } = await service['calculateDeductions']('org-1', 'user-1', gross);
+./services/api/src/workforce/payroll.service.spec.ts:147:      expect(tax).toBe(360); // 3000 * 0.12
+./services/api/src/workforce/payroll.service.spec.ts:165:      const { tax, deductions } = await service['calculateDeductions']('org-1', 'user-1', gross);
+./services/api/src/workforce/payroll.service.spec.ts:167:      expect(tax).toBe(0);
+./services/api/src/workforce/payroll.service.spec.ts:173:    it('should calculate tax from payrollTaxPct setting', async () => {
+./services/api/src/workforce/payroll.service.spec.ts:178:      const { tax } = await service['calculateDeductions']('org-1', 'user-1', gross);
+./services/api/src/workforce/payroll.service.spec.ts:180:      expect(tax).toBe(750); // 5000 * 0.15
+./services/api/src/workforce/payroll.service.spec.ts:183:    it('should default to 0% tax if payrollTaxPct not set', async () => {
+./services/api/src/workforce/payroll.service.spec.ts:188:      const { tax } = await service['calculateDeductions']('org-1', 'user-1', gross);
+./services/api/src/workforce/payroll.service.spec.ts:190:      expect(tax).toBe(0);
+./services/api/src/workforce/payroll.service.spec.ts:207:            tax: 300,
+./services/api/src/workforce/payroll.service.spec.ts:215:            tax: 250,
+./services/api/src/workforce/payroll.service.spec.ts:273:      // Verify balance: DR = CR (Note: In real accounting, gross should equal net + tax + deductions)
+./services/api/src/workforce/payroll.service.spec.ts:275:      // The tax/deductions difference would be handled separately in a full system
+./services/api/src/workforce/payroll.service.spec.ts:287:        slips: [{ gross: 1000, tax: 100, deductions: 50, net: 850 }],
+./services/api/src/workforce/payroll.service.spec.ts:314:        taxable: true,
+./services/api/src/efris/efris.service.spec.ts:22:          taxCategory: {
+./services/api/src/efris/efris.service.spec.ts:33:          taxCategory: {
+./services/api/src/efris/efris.service.spec.ts:82:    it('should map burger+fries order with 18% tax', async () => {
+./services/api/src/efris/efris.service.spec.ts:96:            taxCode: 'FOOD',
+./services/api/src/efris/efris.service.spec.ts:97:            taxRate: 18,
+./services/api/src/efris/efris.service.spec.ts:103:            taxCode: 'STD', // fallback
+./services/api/src/efris/efris.service.spec.ts:104:            taxRate: 18,
+./services/api/src/efris/efris.service.ts:13:    taxCode: string;
+./services/api/src/efris/efris.service.ts:14:    taxRate: number;
+./services/api/src/efris/efris.service.ts:34:                taxCategory: true,
+./services/api/src/efris/efris.service.ts:53:      const taxCode = item.menuItem?.taxCategory?.efirsTaxCode || 'STD';
+./services/api/src/efris/efris.service.ts:54:      const taxRate = item.menuItem?.taxCategory?.rate
+./services/api/src/efris/efris.service.ts:55:        ? Number(item.menuItem.taxCategory.rate)
+./services/api/src/efris/efris.service.ts:62:        taxCode,
+./services/api/src/efris/efris.service.ts:63:        taxRate,
+./services/api/src/currency/currency.service.spec.ts:7:import { CurrencyService } from './currency.service';
+./services/api/src/currency/currency.service.spec.ts:28:              exchangeRate: {
+./services/api/src/currency/currency.service.spec.ts:31:              currency: {
+./services/api/src/currency/currency.service.spec.ts:52:        currency: 'UGX',
+./services/api/src/currency/currency.service.spec.ts:59:    it('should fallback to currency field', async () => {
+./services/api/src/currency/currency.service.spec.ts:62:        currency: 'UGX',
+./services/api/src/currency/currency.service.spec.ts:78:    it('should return branch currencyCode when set', async () => {
+./services/api/src/currency/currency.service.spec.ts:81:        currencyCode: 'EUR',
+./services/api/src/currency/currency.service.spec.ts:89:    it('should fallback to org currency', async () => {
+./services/api/src/currency/currency.service.spec.ts:92:        currencyCode: null,
+./services/api/src/currency/currency.service.spec.ts:98:        currency: 'UGX',
+./services/api/src/currency/currency.service.spec.ts:113:    it('should return same amount for same currency', async () => {
+./services/api/src/currency/currency.service.spec.ts:119:      jest.spyOn(prisma.client.exchangeRate, 'findFirst').mockResolvedValue({
+./services/api/src/currency/currency.service.spec.ts:132:        .spyOn(prisma.client.exchangeRate, 'findFirst')
+./services/api/src/currency/currency.service.spec.ts:146:      jest.spyOn(prisma.client.exchangeRate, 'findFirst').mockResolvedValue(null);
+./services/api/src/currency/currency.service.spec.ts:153:    it('should return currency metadata', async () => {
+./services/api/src/currency/currency.service.spec.ts:154:      jest.spyOn(prisma.client.currency, 'findUnique').mockResolvedValue({
+./services/api/src/currency/currency.service.spec.ts:167:    it('should throw if currency not found', async () => {
+./services/api/src/currency/currency.service.spec.ts:168:      jest.spyOn(prisma.client.currency, 'findUnique').mockResolvedValue(null);
+./services/api/src/currency/currency.module.ts:6:import { CurrencyService } from './currency.service';
+./services/api/src/currency/currency.service.ts:4: * Handles currency lookups and conversion using exchange rates.
+./services/api/src/currency/currency.service.ts:15:   * Get organization's base currency (or default to "UGX")
+./services/api/src/currency/currency.service.ts:20:      select: { baseCurrencyCode: true, currency: true },
+./services/api/src/currency/currency.service.ts:23:    return settings?.baseCurrencyCode || settings?.currency || 'UGX';
+./services/api/src/currency/currency.service.ts:27:   * Get branch currency (falls back to org base currency)
+./services/api/src/currency/currency.service.ts:32:      select: { currencyCode: true, orgId: true },
+./services/api/src/currency/currency.service.ts:39:    if (branch.currencyCode) {
+./services/api/src/currency/currency.service.ts:40:      return branch.currencyCode;
+./services/api/src/currency/currency.service.ts:47:   * Convert amount from one currency to another using latest exchange rate
+./services/api/src/currency/currency.service.ts:56:    const rate = await this.prisma.client.exchangeRate.findFirst({
+./services/api/src/currency/currency.service.ts:67:      const inverseRate = await this.prisma.client.exchangeRate.findFirst({
+./services/api/src/currency/currency.service.ts:81:      throw new NotFoundException(`No exchange rate found for ${fromCode}/${toCode}`);
+./services/api/src/currency/currency.service.ts:89:   * Get currency metadata (symbol, decimals)
+./services/api/src/currency/currency.service.ts:92:    const currency = await this.prisma.client.currency.findUnique({
+./services/api/src/currency/currency.service.ts:96:    if (!currency) {
+./services/api/src/currency/currency.service.ts:100:    return currency;
+./services/api/src/tax/tax.module.ts:6:import { TaxService } from './tax.service';
+./services/api/src/tax/tax.service.ts:4: * Handles tax calculation based on org tax matrix (inclusive/exclusive),
+./services/api/src/tax/tax.service.ts:5: * service charge, and rounding rules.
+./services/api/src/tax/tax.service.ts:20:  taxAmount: number;
+./services/api/src/tax/tax.service.ts:21:  net: number; // Pre-tax amount
+./services/api/src/tax/tax.service.ts:22:  gross: number; // Total including tax
+./services/api/src/tax/tax.service.ts:30:   * Get tax matrix from org settings
+./services/api/src/tax/tax.service.ts:35:      select: { taxMatrix: true },
+./services/api/src/tax/tax.service.ts:38:    return settings?.taxMatrix || { defaultTax: { code: 'VAT_STD', rate: 0.18, inclusive: true } };
+./services/api/src/tax/tax.service.ts:42:   * Resolve tax rule for an order item
+./services/api/src/tax/tax.service.ts:43:   * Looks up taxCode from MenuItem metadata, then finds rule in taxMatrix
+./services/api/src/tax/tax.service.ts:46:    const taxMatrix = await this.getTaxMatrix(orgId);
+./services/api/src/tax/tax.service.ts:48:    // Try to get tax code from menu item metadata
+./services/api/src/tax/tax.service.ts:54:    let taxCode = 'defaultTax';
+./services/api/src/tax/tax.service.ts:56:    // Check item metadata for tax code
+./services/api/src/tax/tax.service.ts:59:      if (meta.taxCode) {
+./services/api/src/tax/tax.service.ts:60:        taxCode = meta.taxCode;
+./services/api/src/tax/tax.service.ts:64:    // Lookup rule in tax matrix
+./services/api/src/tax/tax.service.ts:65:    const rule = taxMatrix[taxCode] || taxMatrix.defaultTax;
+./services/api/src/tax/tax.service.ts:68:      code: rule.code || taxCode,
+./services/api/src/tax/tax.service.ts:75:   * Calculate tax for a line item
+./services/api/src/tax/tax.service.ts:76:   * Returns {taxAmount, net, gross}
+./services/api/src/tax/tax.service.ts:84:      const taxAmount = grossOrNet - net;
+./services/api/src/tax/tax.service.ts:86:        taxAmount: Math.round(taxAmount * 100) / 100,
+./services/api/src/tax/tax.service.ts:94:      const taxAmount = net * rule.rate;
+./services/api/src/tax/tax.service.ts:95:      const gross = net + taxAmount;
+./services/api/src/tax/tax.service.ts:97:        taxAmount: Math.round(taxAmount * 100) / 100,
+./services/api/src/tax/tax.service.ts:105:   * Calculate service charge
+./services/api/src/tax/tax.service.ts:111:    const taxMatrix = await this.getTaxMatrix(orgId);
+./services/api/src/tax/tax.service.ts:113:    if (!taxMatrix.serviceCharge) {
+./services/api/src/tax/tax.service.ts:117:    const scRule = taxMatrix.serviceCharge;
+./services/api/src/tax/tax.service.ts:132:  async applyRounding(orgId: string, amount: number, currencyCode: string): Promise<number> {
+./services/api/src/tax/tax.service.ts:146:    if (currencyCode === 'UGX' && cashRounding === 'NEAREST_50') {
+./services/api/src/tax/tax.service.spec.ts:6:import { TaxService } from './tax.service';
+./services/api/src/tax/tax.service.spec.ts:42:    it('should calculate tax when tax is inclusive', () => {
+./services/api/src/tax/tax.service.spec.ts:43:      const rule = { code: 'VAT_STD', rate: 0.18, inclusive: true };
+./services/api/src/tax/tax.service.spec.ts:48:      expect(result.taxAmount).toBe(180);
+./services/api/src/tax/tax.service.spec.ts:51:    it('should handle 15% alcohol tax inclusive', () => {
+./services/api/src/tax/tax.service.spec.ts:57:      expect(result.taxAmount).toBe(1500);
+./services/api/src/tax/tax.service.spec.ts:62:    it('should calculate tax when tax is exclusive', () => {
+./services/api/src/tax/tax.service.spec.ts:63:      const rule = { code: 'VAT_STD', rate: 0.18, inclusive: false };
+./services/api/src/tax/tax.service.spec.ts:67:      expect(result.taxAmount).toBe(180);
+./services/api/src/tax/tax.service.spec.ts:71:    it('should handle 10% service charge exclusive', () => {
+./services/api/src/tax/tax.service.spec.ts:76:      expect(result.taxAmount).toBe(500);
+./services/api/src/tax/tax.service.spec.ts:82:    it('should calculate service charge when enabled', async () => {
+./services/api/src/tax/tax.service.spec.ts:84:        taxMatrix: {
+./services/api/src/tax/tax.service.spec.ts:95:    it('should return zero when service charge not configured', async () => {
+./services/api/src/tax/tax.service.spec.ts:97:        taxMatrix: {
+./services/api/src/tax/tax.service.spec.ts:98:          defaultTax: { code: 'VAT', rate: 0.18, inclusive: true },
+./services/api/src/menu/menu.service.ts:20:        taxCategoryId: dto.taxCategoryId,
+./services/api/src/menu/menu.service.ts:31:        taxCategory: true,
+./services/api/src/menu/menu.service.ts:81:          taxCategory: true,
+./services/api/src/menu/menu.dto.ts:31:  taxCategoryId?: string;
+./services/api/src/app.module.ts:42:import { CurrencyModule } from './currency/currency.module';
+./services/api/src/app.module.ts:43:import { TaxModule } from './tax/tax.module';
+./services/api/prisma/seed.ts:33:      currency: 'UGX',
+./services/api/prisma/seed.ts:240:  const taxCategory = await prisma.taxCategory.upsert({
+./services/api/prisma/seed.ts:241:    where: { id: 'tax-18' },
+./services/api/prisma/seed.ts:244:      id: 'tax-18',
+./services/api/prisma/seed.ts:246:      name: 'VAT 18%',
+./services/api/prisma/seed.ts:250:  console.log(`\n✅ Created tax category: ${taxCategory.name}`);
+./services/api/prisma/seed.ts:260:      taxCategoryId: taxCategory.id,
+./services/api/prisma/seed.ts:272:      taxCategoryId: taxCategory.id,
+./services/api/prisma/seed.ts:284:      taxCategoryId: taxCategory.id,
+./services/api/prisma/seed.ts:702:  // ===== E39-s1: Multi-currency - Base Currencies =====
+./services/api/prisma/seed.ts:713:    await prisma.currency.upsert({
+./services/api/prisma/seed.ts:721:  // Create initial exchange rates (example only, real rates should be updated via API)
+./services/api/prisma/seed.ts:729:    await prisma.exchangeRate.upsert({
+./services/api/dist/src/accounting/bank-rec.service.d.ts:6:    upsertBankAccount(orgId: string, name: string, currencyCode?: string, lastFour?: string): Promise<{
+./services/api/dist/src/accounting/bank-rec.service.d.ts:11:        currencyCode: string;
+./services/api/dist/src/accounting/bank-rec.service.d.ts:35:        currencyCode: string;
+./services/api/dist/src/accounting/bank-rec.controller.d.ts:7:        currencyCode?: string;
+./services/api/dist/src/accounting/bank-rec.controller.d.ts:16:            currencyCode: string;
+./services/api/dist/src/accounting/bank-rec.controller.d.ts:27:            currencyCode: string;
+./services/api/dist/src/accounting/accounting.controller.d.ts:29:        tax?: number;
+./services/api/dist/src/accounting/accounting.service.d.ts:20:        tax?: number;
+./services/api/dist/src/prisma.service.d.ts:13:    get taxCategory(): typeof prisma.taxCategory;
+./services/api/dist/src/auth/jwt.strategy.d.ts:36:            currencyCode: string | null;
+./services/api/dist/src/payments/interfaces/payment-adapter.interface.d.ts:19:        currency: string;
+./services/api/dist/src/payments/adapters/mtn-sandbox.adapter.d.ts:11:        currency: string;
+./services/api/dist/src/payments/adapters/airtel-sandbox.adapter.d.ts:11:        currency: string;
+./services/api/dist/src/workforce/payroll.service.d.ts:20:        taxable?: boolean;
+./services/api/dist/src/workforce/payroll.controller.d.ts:20:        taxable?: boolean;
+./services/api/dist/src/efris/efris.service.d.ts:11:        taxCode: string;
+./services/api/dist/src/efris/efris.service.d.ts:12:        taxRate: number;
+./services/api/dist/src/currency/currency.module.d.ts:3://# sourceMappingURL=currency.module.d.ts.map
+./services/api/dist/src/currency/currency.service.d.ts:10://# sourceMappingURL=currency.service.d.ts.map
+./services/api/dist/src/currency/currency.service.spec.d.ts:2://# sourceMappingURL=currency.service.spec.d.ts.map
+./services/api/dist/src/tax/tax.service.spec.d.ts:2://# sourceMappingURL=tax.service.spec.d.ts.map
+./services/api/dist/src/tax/tax.service.d.ts:8:    taxAmount: number;
+./services/api/dist/src/tax/tax.service.d.ts:22:    applyRounding(orgId: string, amount: number, currencyCode: string): Promise<number>;
+./services/api/dist/src/tax/tax.service.d.ts:25://# sourceMappingURL=tax.service.d.ts.map
+./services/api/dist/src/tax/tax.module.d.ts:3://# sourceMappingURL=tax.module.d.ts.map
+./services/api/dist/src/menu/menu.dto.d.ts:7:    taxCategoryId?: string;
+./services/api/test/e2e/factory.ts:82:      currency: 'UGX',
+./services/api/test/e22-franchise.e2e-spec.ts:29:        currency: 'UGX',
+./services/api/test/e26-kpis.e2e-spec.ts:29:        currency: 'UGX',
+./packages/printer/src/index.ts:23:  tax: number;
+./packages/printer/src/index.ts:164:    .text(`Tax:      ${data.tax.toFixed(2)}`)
+./packages/printer/dist/index.d.ts:19:    tax: number;

@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
+import { SessionInvalidationService } from '../auth/session-invalidation.service';
 
 const BadgeState = {
   ACTIVE: 'ACTIVE',
@@ -11,7 +12,10 @@ const BadgeState = {
 
 @Injectable()
 export class BadgesService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private sessionInvalidation: SessionInvalidationService,
+  ) {}
 
   async register(orgId: string, code: string): Promise<any> {
     const existing = await this.prisma.client.badgeAsset.findUnique({
@@ -53,6 +57,11 @@ export class BadgesService {
     const badge = await this.prisma.client.badgeAsset.findUnique({ where: { code } });
     if (!badge) throw new NotFoundException(`Badge ${code} not found`);
 
+    // E25: Invalidate all sessions associated with this badge
+    if (badge.id) {
+      await this.sessionInvalidation.invalidateByBadge(badge.id, 'REVOKED');
+    }
+
     return this.prisma.client.badgeAsset.update({
       where: { code },
       data: { state: BadgeState.REVOKED, assignedUserId: null },
@@ -62,6 +71,11 @@ export class BadgesService {
   async reportLost(code: string): Promise<any> {
     const badge = await this.prisma.client.badgeAsset.findUnique({ where: { code } });
     if (!badge) throw new NotFoundException(`Badge ${code} not found`);
+
+    // E25: Invalidate all sessions associated with this badge
+    if (badge.id) {
+      await this.sessionInvalidation.invalidateByBadge(badge.id, 'LOST');
+    }
 
     return this.prisma.client.badgeAsset.update({
       where: { code },

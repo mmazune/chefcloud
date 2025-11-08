@@ -1,13 +1,13 @@
 import { Module } from '@nestjs/common';
 import { StreamController } from './stream.controller';
-import { EventBusService } from '../events/event-bus.service';
+import { EventsModule } from '../events/events.module';
 import { PrismaService } from '../prisma.service';
 import { AuthModule } from '../auth/auth.module';
 
 @Module({
-  imports: [AuthModule],
+  imports: [AuthModule, EventsModule],
   controllers: [StreamController],
-  providers: [EventBusService, PrismaService],
-  exports: [EventBusService],
+  providers: [PrismaService],
+  exports: [],
 })
 export class StreamModule {}

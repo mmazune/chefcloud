@@ -1,0 +1,85 @@
+./services/worker/src/index.ts:1499:        const metrics: Array<{
+./services/worker/src/index.ts:1508:          // Calculate metrics
+./services/worker/src/index.ts:1531:          metrics.push({
+./services/worker/src/index.ts:1541:        const maxRevenue = Math.max(...metrics.map((m) => m.revenue));
+./services/worker/src/index.ts:1542:        const maxMargin = Math.max(...metrics.map((m) => m.margin));
+./services/worker/src/index.ts:1558:        const scored = metrics.map((m) => {
+./services/worker/src/logger.ts:1:import pino from 'pino';
+./services/worker/src/logger.ts:3:export const logger = pino({
+./services/worker/src/logger.ts:8:          target: 'pino-pretty',
+./services/worker/src/telemetry.ts:7:import * as Sentry from '@sentry/node';
+./services/worker/src/telemetry.ts:10:  // Initialize Sentry
+./services/worker/src/telemetry.ts:12:    Sentry.init({
+./services/worker/src/telemetry.ts:14:      tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.2 : 1.0,
+./services/worker/src/telemetry.ts:19:  // Initialize OpenTelemetry
+./services/worker/package.json:30:    "pino": "^10.1.0",
+./services/worker/package.json:31:    "pino-pretty": "^13.1.2"
+./services/worker/dist/logger.d.ts:1:import pino from 'pino';
+./services/worker/dist/logger.d.ts:2:export declare const logger: pino.Logger<never, boolean>;
+./services/api/src/main.ts:13:    logger: false, // Disable default logger, use our pino logger
+./services/api/src/franchise/franchise.service.ts:18:  metrics: {
+./services/api/src/franchise/franchise.service.ts:84:      // Simplified metrics (in production would calculate actual COGS and SLA)
+./services/api/src/franchise/franchise.service.ts:116:        metrics: r.meta as {
+./services/api/src/franchise/franchise.service.ts:160:        metrics: {
+./services/api/src/logger.ts:1:import pino from 'pino';
+./services/api/src/logger.ts:4:export const logger = pino({
+./services/api/src/logger.ts:9:          target: 'pino-pretty',
+./services/api/src/telemetry.ts:7:import * as Sentry from '@sentry/node';
+./services/api/src/telemetry.ts:11:  // Initialize Sentry
+./services/api/src/telemetry.ts:13:    Sentry.init({
+./services/api/src/telemetry.ts:16:      tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.2 : 1.0,
+./services/api/src/telemetry.ts:21:  // Initialize OpenTelemetry
+./services/api/src/logger.middleware.ts:4:import { metricsStore } from './ops/ops.service';
+./services/api/src/logger.middleware.ts:29:      // Track metrics
+./services/api/src/logger.middleware.ts:30:      metricsStore.increment('requests_total');
+./services/api/src/logger.middleware.ts:32:        metricsStore.increment('errors_total');
+./services/api/src/ops/ops.controller.ts:34:  @Get('metrics')
+./services/api/src/ops/ops.controller.ts:36:    const metricsText = this.opsService.getMetrics();
+./services/api/src/ops/ops.controller.ts:37:    return metricsText;
+./services/api/src/ops/ops.service.spec.ts:1:import { metricsStore } from './ops.service';
+./services/api/src/ops/ops.service.spec.ts:5:    // Reset metrics before each test
+./services/api/src/ops/ops.service.spec.ts:6:    const allMetrics = metricsStore.getAll();
+./services/api/src/ops/ops.service.spec.ts:8:      metricsStore.increment(key, -metricsStore.get(key));
+./services/api/src/ops/ops.service.spec.ts:13:    metricsStore.increment('test_counter', 5);
+./services/api/src/ops/ops.service.spec.ts:14:    expect(metricsStore.get('test_counter')).toBe(5);
+./services/api/src/ops/ops.service.spec.ts:16:    metricsStore.increment('test_counter', 3);
+./services/api/src/ops/ops.service.spec.ts:17:    expect(metricsStore.get('test_counter')).toBe(8);
+./services/api/src/ops/ops.service.spec.ts:21:    expect(metricsStore.get('non_existent')).toBe(0);
+./services/api/src/ops/ops.service.spec.ts:24:  it('should track multiple metrics', () => {
+./services/api/src/ops/ops.service.spec.ts:25:    metricsStore.increment('requests_total', 10);
+./services/api/src/ops/ops.service.spec.ts:26:    metricsStore.increment('errors_total', 2);
+./services/api/src/ops/ops.service.spec.ts:27:    metricsStore.increment('queue_jobs_total', 5);
+./services/api/src/ops/ops.service.spec.ts:29:    expect(metricsStore.get('requests_total')).toBe(10);
+./services/api/src/ops/ops.service.spec.ts:30:    expect(metricsStore.get('errors_total')).toBe(2);
+./services/api/src/ops/ops.service.spec.ts:31:    expect(metricsStore.get('queue_jobs_total')).toBe(5);
+./services/api/src/ops/ops.service.ts:8:// Simple metrics store
+./services/api/src/ops/ops.service.ts:10:  private metrics: Map<string, number> = new Map();
+./services/api/src/ops/ops.service.ts:13:    this.metrics.set(key, (this.metrics.get(key) || 0) + value);
+./services/api/src/ops/ops.service.ts:17:    return this.metrics.get(key) || 0;
+./services/api/src/ops/ops.service.ts:21:    return new Map(this.metrics);
+./services/api/src/ops/ops.service.ts:25:export const metricsStore = new MetricsStore();
+./services/api/src/ops/ops.service.ts:162:    const metrics = metricsStore.getAll();
+./services/api/src/ops/ops.service.ts:168:    lines.push(`chefcloud_requests_total ${metrics.get('requests_total') || 0}`);
+./services/api/src/ops/ops.service.ts:172:    lines.push(`chefcloud_errors_total ${metrics.get('errors_total') || 0}`);
+./services/api/src/ops/ops.service.ts:176:    lines.push(`chefcloud_queue_jobs_total ${metrics.get('queue_jobs_total') || 0}`);
+./services/api/src/ops/ops.service.ts:181:    lines.push(`chefcloud_perf_budget_violation_total ${metrics.get('perf_budget_violations') || 0}`);
+./services/api/src/ops/ops.service.ts:186:    lines.push(`chefcloud_sse_clients_current ${metrics.get('sse_clients_current') || 0}`);
+./services/api/src/ops/ops.service.ts:199:      metrics: Object.fromEntries(metricsStore.getAll()),
+./services/api/src/ops/ops.service.ts:203:        hasSentry: !!process.env.SENTRY_DSN,
+./services/api/package.json:50:    "pino": "^10.1.0",
+./services/api/package.json:51:    "pino-http": "^11.0.0",
+./services/api/package.json:52:    "pino-pretty": "^13.1.2",
+./services/api/dist/src/franchise/franchise.service.d.ts:15:    metrics: {
+./services/api/dist/src/logger.d.ts:1:import pino from 'pino';
+./services/api/dist/src/logger.d.ts:3:export declare const logger: pino.Logger<never, boolean>;
+./services/api/dist/src/ops/ops.service.d.ts:3:    private metrics;
+./services/api/dist/src/ops/ops.service.d.ts:8:export declare const metricsStore: MetricsStore;
+./services/api/dist/src/ops/ops.service.d.ts:41:        metrics: {
+./services/api/dist/src/ops/ops.service.d.ts:47:            hasSentry: boolean;
+./services/api/dist/src/ops/ops.controller.d.ts:28:        metrics: {
+./services/api/dist/src/ops/ops.controller.d.ts:34:            hasSentry: boolean;
+./services/api/test/e22-franchise.e2e-spec.ts:233:      // Verify metrics are included
+./services/api/test/e22-franchise.e2e-spec.ts:234:      expect(res.body[0].metrics).toHaveProperty('revenue');
+./services/api/test/e22-franchise.e2e-spec.ts:235:      expect(res.body[0].metrics).toHaveProperty('margin');
+./services/api/test/e22-franchise.e2e-spec.ts:236:      expect(res.body[0].metrics).toHaveProperty('waste');
+./services/api/test/e22-franchise.e2e-spec.ts:237:      expect(res.body[0].metrics).toHaveProperty('sla');
