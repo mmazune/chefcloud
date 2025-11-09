@@ -8,13 +8,7 @@ import { FeatureFlagGuard } from './feature-flag.guard';
 
 @Module({
   controllers: [OpsController],
-  providers: [
-    OpsService,
-    PrismaService,
-    FeatureFlagsService,
-    MaintenanceService,
-    FeatureFlagGuard,
-  ],
+  providers: [OpsService, PrismaService, FeatureFlagsService, MaintenanceService, FeatureFlagGuard],
   exports: [OpsService, FeatureFlagsService, MaintenanceService, FeatureFlagGuard],
 })
 export class OpsModule {}

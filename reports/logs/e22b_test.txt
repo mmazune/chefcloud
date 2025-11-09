@@ -1,0 +1,34 @@
+
+> @chefcloud/api@0.1.0 test /workspaces/chefcloud/services/api
+> jest --passWithNoTests "--testPathPattern=cache.service.spec"
+
+PASS src/common/cache.service.spec.ts
+  CacheService - E22.A
+    ✓ should be defined (12 ms)
+    normalizeParams
+      ✓ should sort keys deterministically (4 ms)
+      ✓ should handle empty params (2 ms)
+      ✓ should handle arrays in params (3 ms)
+    makeKey
+      ✓ should generate stable keys for same inputs (2 ms)
+      ✓ should generate different keys for different params (2 ms)
+      ✓ should include prefix and orgId in key (2 ms)
+    readThroughWithFlag
+      ✓ should return cached=false on first call (cache miss) (3 ms)
+      ✓ should return cached=true on second call (cache hit) (2 ms)
+      ✓ should store fetched data with TTL (2 ms)
+    makeIndexKey
+      ✓ should generate index key with prefix and orgId (1 ms)
+    bustPrefix
+      ✓ should delete all cached keys for a prefix (2 ms)
+    getStats
+      ✓ should return cache statistics (2 ms)
+    E22.B - Rankings Cache Keys
+      ✓ rankings makeKey should be stable regardless of param order (2 ms)
+      ✓ readThroughWithFlag should return cached=true on second read for rankings (2 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       15 passed, 15 total
+Snapshots:   0 total
+Time:        0.791 s, estimated 1 s
+Ran all test suites matching /cache.service.spec/i.

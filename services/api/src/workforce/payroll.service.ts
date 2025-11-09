@@ -1,6 +1,6 @@
 /**
  * E43-s2: Payroll Service
- * 
+ *
  * Computes payroll from time entries + policies; generates payslips; posts summary to GL.
  */
 
@@ -16,15 +16,18 @@ const ACCOUNT_PAYROLL_PAYABLE = '2000'; // Payroll Payable (CR on payment)
 export class PayrollService {
   private readonly logger = new Logger(PayrollService.name);
 
-  constructor(
-    private readonly prisma: PrismaService,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   /**
    * E43-s2: Build draft payrun from time entries
    * Aggregates time entries → regular/overtime by user
    */
-  async buildDraftRun(orgId: string, periodStart: Date, periodEnd: Date, _userId: string): Promise<any> {
+  async buildDraftRun(
+    orgId: string,
+    periodStart: Date,
+    periodEnd: Date,
+    _userId: string,
+  ): Promise<any> {
     // Get org settings for overtime rate
     const settings = await this.prisma.client.orgSettings.findUnique({
       where: { orgId },
@@ -62,7 +65,12 @@ export class PayrollService {
         });
       }
       const userData = userMap.get(entry.userId)!;
-      const totalMinutes = entry.overtimeMinutes + (entry.clockOutAt ? Math.floor((entry.clockOutAt.getTime() - entry.clockInAt.getTime()) / 60000) - entry.overtimeMinutes : 0);
+      const totalMinutes =
+        entry.overtimeMinutes +
+        (entry.clockOutAt
+          ? Math.floor((entry.clockOutAt.getTime() - entry.clockInAt.getTime()) / 60000) -
+            entry.overtimeMinutes
+          : 0);
       userData.regularMinutes += totalMinutes - entry.overtimeMinutes;
       userData.overtimeMinutes += entry.overtimeMinutes;
     }
@@ -80,7 +88,13 @@ export class PayrollService {
     // Create payslips for each user
     const slips = [];
     for (const [userId, userData] of userMap) {
-      const gross = await this.calculateGross(orgId, userId, userData.regularMinutes, userData.overtimeMinutes, overtimeRate);
+      const gross = await this.calculateGross(
+        orgId,
+        userId,
+        userData.regularMinutes,
+        userData.overtimeMinutes,
+        overtimeRate,
+      );
       const { tax, deductions } = await this.calculateDeductions(orgId, userId, gross);
       const net = gross - tax - deductions;
 
@@ -107,7 +121,13 @@ export class PayrollService {
   /**
    * Calculate gross pay: apply pay components (EARNING types)
    */
-  private async calculateGross(orgId: string, userId: string, regularMinutes: number, overtimeMinutes: number, overtimeRate: number): Promise<number> {
+  private async calculateGross(
+    orgId: string,
+    userId: string,
+    regularMinutes: number,
+    overtimeMinutes: number,
+    overtimeRate: number,
+  ): Promise<number> {
     // Get hourly rate from employee profile metadata
     const profile = await this.prisma.client.employeeProfile.findUnique({
       where: { userId },
@@ -118,7 +138,8 @@ export class PayrollService {
     const hourlyRate = metadata.hourlyRate || 0;
 
     // Base pay = (regularMinutes / 60) * hourlyRate + (overtimeMinutes / 60) * hourlyRate * overtimeRate
-    let gross = (regularMinutes / 60) * hourlyRate + (overtimeMinutes / 60) * hourlyRate * overtimeRate;
+    let gross =
+      (regularMinutes / 60) * hourlyRate + (overtimeMinutes / 60) * hourlyRate * overtimeRate;
 
     // Apply pay components (EARNING type)
     const components = await this.prisma.client.payComponent.findMany({
@@ -135,7 +156,12 @@ export class PayrollService {
   /**
    * Apply a single pay component
    */
-  private async applyComponent(component: any, _userId: string, gross: number, hourlyRate: number): Promise<number> {
+  private async applyComponent(
+    component: any,
+    _userId: string,
+    gross: number,
+    hourlyRate: number,
+  ): Promise<number> {
     const value = Number(component.value);
 
     switch (component.calc) {
@@ -155,7 +181,11 @@ export class PayrollService {
   /**
    * Calculate tax and deductions
    */
-  private async calculateDeductions(orgId: string, _userId: string, gross: number): Promise<{ tax: number; deductions: number }> {
+  private async calculateDeductions(
+    orgId: string,
+    _userId: string,
+    gross: number,
+  ): Promise<{ tax: number; deductions: number }> {
     // Get tax rate from org settings
     const settings = await this.prisma.client.orgSettings.findUnique({
       where: { orgId },
@@ -165,7 +195,7 @@ export class PayrollService {
     const metadata = (settings?.metadata as any) || {};
     const taxPct = metadata.payrollTaxPct || 0;
 
-    const tax = Math.round((gross * taxPct) / 100 * 100) / 100;
+    const tax = Math.round(((gross * taxPct) / 100) * 100) / 100;
 
     // Apply deduction components
     const components = await this.prisma.client.payComponent.findMany({
@@ -300,7 +330,9 @@ export class PayrollService {
       data: { status: 'POSTED' },
     });
 
-    this.logger.log(`Posted pay run ${payRunId} to GL → JE ${entry.id} (Gross: ${totalGross}, Net: ${totalNet})`);
+    this.logger.log(
+      `Posted pay run ${payRunId} to GL → JE ${entry.id} (Gross: ${totalGross}, Net: ${totalNet})`,
+    );
 
     return { entry, totalGross, totalTax, totalDeductions, totalNet };
   }

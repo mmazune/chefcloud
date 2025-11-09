@@ -323,7 +323,7 @@ describe('Plan-Aware Rate Limiting E2E', () => {
   describe('POST /billing/cancel', () => {
     it('should apply rate limiting to cancel endpoint', async () => {
       const endpoint = '/billing/cancel';
-      let successCount = 0;
+      let _successCount = 0;
       let rateLimitCount = 0;
 
       // Use free tier token
@@ -333,7 +333,7 @@ describe('Plan-Aware Rate Limiting E2E', () => {
           .set('Authorization', `Bearer ${freeUserToken}`);
 
         if (response.status === 200 || response.status === 201) {
-          successCount++;
+          _successCount++;
         } else if (response.status === 429) {
           rateLimitCount++;
         }

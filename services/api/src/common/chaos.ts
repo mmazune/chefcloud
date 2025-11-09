@@ -1,7 +1,7 @@
 /**
  * Chaos engineering utilities for fault injection testing.
  * All chaos features are OPT-IN only and disabled by default.
- * 
+ *
  * Environment variables:
  * - CHAOS_LATENCY_MS: Add artificial delay (0 = disabled)
  * - CHAOS_DB_TIMEOUT_PCT: Random Prisma timeout percentage (0-30)

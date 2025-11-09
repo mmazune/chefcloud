@@ -1,0 +1,9 @@
+
+> @chefcloud/api@0.1.0 perf:build /workspaces/chefcloud/services/api
+> tsc -p ../../reports/perf/tsconfig.runner.json
+
+../../reports/perf/run_explains.ts(3,25): error TS2307: Cannot find module 'dotenv' or its corresponding type declarations.
+../../reports/perf/run_explains.ts(32,41): error TS2307: Cannot find module '@prisma/client' or its corresponding type declarations.
+../../reports/perf/run_explains.ts(152,34): error TS2347: Untyped function calls may not accept type arguments.
+../../reports/perf/run_explains.ts(168,29): error TS2347: Untyped function calls may not accept type arguments.
+ ELIFECYCLE  Command failed with exit code 2.

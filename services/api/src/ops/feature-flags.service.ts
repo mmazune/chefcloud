@@ -27,11 +27,11 @@ export class FeatureFlagsService {
     // Check scopes (if defined)
     if (flag.scopes) {
       const scopes = flag.scopes as { roles?: string[]; branches?: string[] };
-      
+
       if (scopes.roles && context.role) {
         if (!scopes.roles.includes(context.role)) return false;
       }
-      
+
       if (scopes.branches && context.branchId) {
         if (!scopes.branches.includes(context.branchId)) return false;
       }
@@ -43,7 +43,7 @@ export class FeatureFlagsService {
       const hash = createHash('sha256').update(contextKey).digest('hex');
       const hashNum = parseInt(hash.substring(0, 8), 16);
       const bucket = hashNum % 100;
-      
+
       if (bucket >= flag.rolloutPct) return false;
     }
 

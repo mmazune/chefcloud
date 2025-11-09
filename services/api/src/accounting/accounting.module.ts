@@ -1,6 +1,6 @@
 /**
  * E40-s1: Accounting Core Module
- * 
+ *
  * Provides:
  * - Vendor management (AP)
  * - Customer account management (AR)

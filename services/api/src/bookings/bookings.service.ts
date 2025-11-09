@@ -1,6 +1,6 @@
 /**
  * E42-s1: Bookings Service
- * 
+ *
  * Handles events, event bookings, and prepaid credit management for public bookings portal.
  */
 
@@ -151,7 +151,7 @@ export class BookingsService {
    */
   private maskName(name: string): string {
     const parts = name.split(' ');
-    return parts.map(p => p.charAt(0).toUpperCase() + '.').join(' ');
+    return parts.map((p) => p.charAt(0).toUpperCase() + '.').join(' ');
   }
 
   /**
@@ -416,10 +416,12 @@ export class BookingsService {
 
     // Event details
     doc.fontSize(14).text(booking.event.title, { align: 'center' });
-    doc.fontSize(10).text(
-      `${booking.event.startsAt.toISOString().split('T')[0]} • ${booking.event.startsAt.toTimeString().slice(0, 5)} - ${booking.event.endsAt.toTimeString().slice(0, 5)}`,
-      { align: 'center' },
-    );
+    doc
+      .fontSize(10)
+      .text(
+        `${booking.event.startsAt.toISOString().split('T')[0]} • ${booking.event.startsAt.toTimeString().slice(0, 5)} - ${booking.event.endsAt.toTimeString().slice(0, 5)}`,
+        { align: 'center' },
+      );
     doc.moveDown();
 
     // Table and guest info

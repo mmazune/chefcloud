@@ -31,12 +31,10 @@ describe('Bookings E2E', () => {
     await app.init();
 
     // Login as manager
-    const loginResponse = await request(app.getHttpServer())
-      .post('/auth/login')
-      .send({
-        email: factory.users.manager.email,
-        password: 'Test#123',
-      });
+    const loginResponse = await request(app.getHttpServer()).post('/auth/login').send({
+      email: factory.users.manager.email,
+      password: 'Test#123',
+    });
 
     authToken = loginResponse.body.access_token;
   });

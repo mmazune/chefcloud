@@ -1,6 +1,6 @@
 /**
  * E42-s2: Check-in Controller
- * 
+ *
  * REST endpoints for QR code check-in and ticket PDF download.
  */
 
@@ -43,10 +43,7 @@ export class CheckinController {
   @Get('booking/:id/ticket')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('L2', 'L3', 'L4', 'L5')
-  async downloadTicket(
-    @Param('id') bookingId: string,
-    @Res() res: Response,
-  ) {
+  async downloadTicket(@Param('id') bookingId: string, @Res() res: Response) {
     // Verify booking exists
     await this.checkinService.getBookingForTicket(bookingId);
 

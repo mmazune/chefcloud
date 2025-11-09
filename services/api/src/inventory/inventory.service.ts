@@ -1,12 +1,16 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Injectable, Optional, Inject } from '@nestjs/common';
+import { Injectable, Optional, Inject, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { CreateInventoryItemDto } from './inventory.dto';
+import { CacheInvalidationService } from '../common/cache-invalidation.service';
 
 @Injectable()
 export class InventoryService {
+  private readonly logger = new Logger(InventoryService.name);
+
   constructor(
     private prisma: PrismaService,
+    private cacheInvalidation: CacheInvalidationService,
     @Optional() @Inject('KpisService') private kpisService?: any,
   ) {}
 
@@ -218,6 +222,14 @@ export class InventoryService {
 
     // Invalidate KPI cache after adjustment
     this.markKpisDirty(orgId, branchId);
+
+    // E22.D.2: Invalidate franchise caches (non-blocking, best-effort)
+    try {
+      await this.cacheInvalidation.onInventoryAdjusted(orgId);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.warn(`Cache invalidation failed for inventory adjustment: ${message}`);
+    }
 
     return result;
   }

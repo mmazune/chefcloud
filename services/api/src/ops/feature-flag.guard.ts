@@ -12,7 +12,7 @@ export class FeatureFlagGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const flagKey = this.reflector.get<string>(FLAG_KEY, context.getHandler());
-    
+
     if (!flagKey) {
       return true; // No flag required
     }

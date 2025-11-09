@@ -1,0 +1,438 @@
+
+> @chefcloud/api@0.1.0 lint /workspaces/chefcloud/services/api
+> eslint "{src,apps,libs,test}/**/*.ts"
+
+
+/workspaces/chefcloud/services/api/src/access/access.service.spec.ts
+   50:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   77:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  106:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  126:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  136:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  146:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  156:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  166:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  176:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  203:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  221:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  227:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  250:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  264:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  270:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/workspaces/chefcloud/services/api/src/accounting/bank-rec.controller.ts
+  14:37   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  21:36   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  28:98   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  35:40   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  49:130  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/workspaces/chefcloud/services/api/src/accounting/bank-rec.service.ts
+  22:98  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  86:86  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/workspaces/chefcloud/services/api/src/accounting/periods.controller.ts
+  14:36  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  20:34  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  26:35  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/workspaces/chefcloud/services/api/src/alerts/alerts.controller.ts
+  15:35  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  21:36  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  27:28  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/workspaces/chefcloud/services/api/src/auth/jwt.strategy.ts
+  31:28  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/workspaces/chefcloud/services/api/src/auth/org-scope.guard.spec.ts
+  16:36  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/workspaces/chefcloud/services/api/src/auth/session-invalidation.service.spec.ts
+  24:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/workspaces/chefcloud/services/api/src/auth/session-invalidation.service.ts
+  208:20  error  Require statement not part of import statement  @typescript-eslint/no-var-requires
+
+/workspaces/chefcloud/services/api/src/billing/billing.controller.ts
+  27:37  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  38:32  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  49:28  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/workspaces/chefcloud/services/api/src/bookings/bookings-ticket.spec.ts
+  12:15  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/workspaces/chefcloud/services/api/src/bookings/checkin.service.spec.ts
+  12:15  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/workspaces/chefcloud/services/api/src/cash/cash.controller.ts
+   44:14  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   61:14  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   82:14  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  101:14  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  112:14  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/workspaces/chefcloud/services/api/src/cash/cash.service.spec.ts
+   77:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   93:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  120:91  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  124:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  131:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  132:78  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  150:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  167:95  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  172:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  173:78  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  191:95  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  196:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  197:78  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  214:95  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  231:95  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  248:95  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  253:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  254:78  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  274:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/workspaces/chefcloud/services/api/src/common/base.service.ts
+  34:5  error  Unnecessary try/catch wrapper  no-useless-catch
+
+/workspaces/chefcloud/services/api/src/common/cache.service.ts
+   22:59  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   43:42  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   44:34  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   59:65  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  180:41  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/workspaces/chefcloud/services/api/src/common/chaos.spec.ts
+   82:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  100:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/workspaces/chefcloud/services/api/src/common/plan-rate-limiter.guard.spec.ts
+  26:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  51:36  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/workspaces/chefcloud/services/api/src/common/plan-rate-limiter.guard.ts
+  261:30  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  272:32  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/workspaces/chefcloud/services/api/src/common/query-guard.ts
+  16:13  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/workspaces/chefcloud/services/api/src/common/raw-body.middleware.ts
+  36:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  51:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  51:30  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/workspaces/chefcloud/services/api/src/common/slow-query.spec.ts
+  5:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  6:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  7:23  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/workspaces/chefcloud/services/api/src/common/sse-rate-limiter.guard.spec.ts
+   21:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   28:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   78:26  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  126:26  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  179:26  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  251:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  274:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/workspaces/chefcloud/services/api/src/common/sse-rate-limiter.guard.ts
+  46:70  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/workspaces/chefcloud/services/api/src/common/webhook-verification.guard.spec.ts
+  39:48  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  39:59  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/workspaces/chefcloud/services/api/src/common/webhook-verification.guard.ts
+  124:35  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  221:30  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/workspaces/chefcloud/services/api/src/currency/currency.service.spec.ts
+   53:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   63:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   83:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   94:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   99:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  124:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  139:14  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  159:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/workspaces/chefcloud/services/api/src/currency/currency.service.ts
+  91:48  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/workspaces/chefcloud/services/api/src/dev-portal/dev-portal.controller.ts
+  60:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/workspaces/chefcloud/services/api/src/dev-portal/dev-portal.service.spec.ts
+  210:56  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  214:56  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/workspaces/chefcloud/services/api/src/efris/efris.service.ts
+  115:31  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  121:31  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/workspaces/chefcloud/services/api/src/events/event-bus.service.spec.ts
+  37:22  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  58:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/workspaces/chefcloud/services/api/src/events/event-bus.service.ts
+   9:9   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  41:36  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/workspaces/chefcloud/services/api/src/logger.middleware.ts
+  14:13  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  21:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  22:27  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  23:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/workspaces/chefcloud/services/api/src/logger.ts
+  30:86  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  37:50  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  69:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  69:49  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  72:44  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  75:42  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  78:22  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  78:50  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  81:45  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  84:43  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  87:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  87:49  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  90:44  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  93:42  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/workspaces/chefcloud/services/api/src/main.ts
+  22:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/workspaces/chefcloud/services/api/src/ops/change-control.spec.ts
+  10:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/workspaces/chefcloud/services/api/src/ops/feature-flags.service.ts
+  100:14  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  138:55  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  171:42  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  181:39  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  196:40  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/workspaces/chefcloud/services/api/src/ops/maintenance.service.ts
+  43:15  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  59:44  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  74:42  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/workspaces/chefcloud/services/api/src/ops/ops.service.ts
+   32:13  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   39:38  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   74:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  112:18  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  236:78  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  265:45  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  285:58  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/workspaces/chefcloud/services/api/src/ops/write-block.middleware.ts
+  18:26  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/workspaces/chefcloud/services/api/src/payments/adapters/airtel-sandbox.adapter.ts
+  23:16  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  46:32  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/workspaces/chefcloud/services/api/src/payments/adapters/mtn-sandbox.adapter.ts
+  23:16  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  46:32  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/workspaces/chefcloud/services/api/src/payments/interfaces/payment-adapter.interface.ts
+   7:14  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  14:14  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  22:16  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  25:26  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/workspaces/chefcloud/services/api/src/payments/payments.controller.ts
+  10:64  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/workspaces/chefcloud/services/api/src/payments/payments.service.spec.ts
+   95:77  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   96:82  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  100:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  133:86  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  137:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  154:86  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  182:87  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  186:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  187:86  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  191:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  192:68  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  215:89  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  219:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/workspaces/chefcloud/services/api/src/payments/payments.service.ts
+  104:40  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  117:84  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  146:50  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  157:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  213:18  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  299:82  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/workspaces/chefcloud/services/api/src/promotions/promotions.controller.ts
+  24:62  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  24:76  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  35:14  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  37:20  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  52:84  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  64:14  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/workspaces/chefcloud/services/api/src/promotions/promotions.service.ts
+   33:65  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   51:30  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   61:85  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   76:78  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  104:78  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  126:16  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/workspaces/chefcloud/services/api/src/support/support.service.spec.ts
+   46:84  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   68:91  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   86:92  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  104:89  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/workspaces/chefcloud/services/api/src/support/support.service.ts
+   9:9   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  85:61  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/workspaces/chefcloud/services/api/src/tax/tax.service.spec.ts
+   87:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  100:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  113:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  125:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  137:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/workspaces/chefcloud/services/api/src/webauthn/webauthn.service.spec.ts
+   61:77  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  102:45  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  104:77  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  126:92  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/workspaces/chefcloud/services/api/src/webhooks.controller.ts
+  26:43  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  38:22  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  51:47  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/workspaces/chefcloud/services/api/src/workforce/payroll.service.spec.ts
+  12:15  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/workspaces/chefcloud/services/api/src/workforce/workforce.service.spec.ts
+   68:87  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   86:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   97:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  102:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  115:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  131:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  136:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  154:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  156:77  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  160:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  177:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  194:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  214:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  218:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  224:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  227:75  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  242:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  244:83  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  250:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  252:75  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  285:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/workspaces/chefcloud/services/api/src/workforce/workforce.service.ts
+  435:17  error  '_userId' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/workspaces/chefcloud/services/api/test/a3-pos.e2e-spec.ts
+   42:50  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   43:49  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   92:53  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  107:58  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/workspaces/chefcloud/services/api/test/b2-apikey.e2e-spec.ts
+  212:43  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/workspaces/chefcloud/services/api/test/b3-multi-tenant.e2e-spec.ts
+   12:13  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   13:16  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   14:14  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   15:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   16:18  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   19:13  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   20:16  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   21:14  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   22:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   23:18  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  223:53  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  227:53  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  241:53  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  245:53  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/workspaces/chefcloud/services/api/test/e26-kpis.e2e-spec.ts
+   14:7   error  'userId' is assigned a value but never used                            @typescript-eslint/no-unused-vars
+  101:13  error  'res' is assigned a value but never used                               @typescript-eslint/no-unused-vars
+  138:20  error  'res' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+
+/workspaces/chefcloud/services/api/test/e27-costing.e2e-spec.ts
+  284:54  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  299:55  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/workspaces/chefcloud/services/api/test/e2e/_injector-patch.ts
+   6:27  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   8:14  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   9:13  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  11:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/workspaces/chefcloud/services/api/test/e2e/accounting.e2e-spec.ts
+  10:7  error  'orgId' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/workspaces/chefcloud/services/api/test/e2e/app-bisect.e2e-spec.ts
+   5:10  error    'Module' is defined but never used        @typescript-eslint/no-unused-vars
+   8:40  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  14:36  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/workspaces/chefcloud/services/api/test/e2e/auth.e2e-spec.ts
+  9:7  error  'orgId' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/workspaces/chefcloud/services/api/test/e2e/badge-revocation.e2e-spec.ts
+   13:16  warning  Unexpected any. Specify a different type              @typescript-eslint/no-explicit-any
+   14:19  warning  Unexpected any. Specify a different type              @typescript-eslint/no-explicit-any
+   15:17  warning  Unexpected any. Specify a different type              @typescript-eslint/no-explicit-any
+   16:18  warning  Unexpected any. Specify a different type              @typescript-eslint/no-explicit-any
+   81:11  error    'employeeProfile' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  155:72  warning  Unexpected any. Specify a different type              @typescript-eslint/no-explicit-any
+  278:53  warning  Unexpected any. Specify a different type              @typescript-eslint/no-explicit-any
+  310:53  warning  Unexpected any. Specify a different type              @typescript-eslint/no-explicit-any
+
+/workspaces/chefcloud/services/api/test/e2e/franchise-rankings-cache.e2e-spec.ts
+   91:17  error  Require statement not part of import statement  @typescript-eslint/no-var-requires
+  104:11  error  'period' is assigned a value but never used     @typescript-eslint/no-unused-vars
+
+/workspaces/chefcloud/services/api/test/e2e/harness.ts
+  36:23  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/workspaces/chefcloud/services/api/test/e2e/inventory.e2e-spec.ts
+  11:7  error  'orgId' is assigned a value but never used     @typescript-eslint/no-unused-vars
+  12:7  error  'branchId' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/workspaces/chefcloud/services/api/test/e2e/workforce.e2e-spec.ts
+  10:7   error  'managerToken' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  11:7   error  'waiterId' is assigned a value but never used      @typescript-eslint/no-unused-vars
+  63:11  error  'attendanceId' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/workspaces/chefcloud/services/api/test/e37-promotions.e2e-spec.ts
+  217:58  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  268:58  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/workspaces/chefcloud/services/api/test/plan-rate-limit.e2e-spec.ts
+   30:23  warning  Unexpected any. Specify a different type           @typescript-eslint/no-explicit-any
+  336:11  error    'successCount' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/workspaces/chefcloud/services/api/test/webhook-security.e2e-spec.ts
+  27:23  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  55:14  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+✖ 282 problems (18 errors, 264 warnings)
+
+ ELIFECYCLE  Command failed with exit code 1.

@@ -8,7 +8,7 @@ jobs:
   perf-gate:
     if: contains(github.event.pull_request.labels.*.name, 'perf')
     runs-on: ubuntu-latest
-    
+
     services:
       postgres:
         image: postgres:15
@@ -22,7 +22,7 @@ jobs:
           --health-retries 5
         ports:
           - 5432:5432
-      
+
       redis:
         image: redis:7
         options: >-
@@ -35,36 +35,36 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      
+
       - uses: pnpm/action-setup@v2
         with:
           version: 8
-      
+
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'pnpm'
-      
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-      
+
       - name: Build packages
         run: pnpm -w build
-      
+
       - name: Run migrations
         run: |
           cd packages/db
           pnpm run db:migrate
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/chefcloud
-      
+
       - name: Seed test data
         run: |
           cd services/api/prisma
           npx ts-node seed.ts
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/chefcloud
-      
+
       - name: Start API server
         run: |
           cd services/api
@@ -75,7 +75,7 @@ jobs:
           REDIS_HOST: localhost
           REDIS_PORT: 6379
           NODE_ENV: production
-      
+
       - name: Install k6
         run: |
           sudo gpg -k
@@ -83,46 +83,46 @@ jobs:
           echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
           sudo apt-get update
           sudo apt-get install k6
-      
+
       - name: Run perf test - owner-overview (1m warmup + 3m test)
         run: |
           chmod +x perf/run.sh
           ./perf/run.sh owner-overview 3m
         env:
           API_URL: http://localhost:3001
-      
+
       - name: Run perf test - pos-happy (ramp to 50 RPS, 3m)
         run: ./perf/run.sh pos-happy 3m
         env:
           API_URL: http://localhost:3001
-      
+
       - name: Assert performance thresholds
         run: |
           node perf/smoke-assert.js perf/results/owner-overview.json
           node perf/smoke-assert.js perf/results/pos-happy.json
-      
+
       - name: Generate performance summary
         if: always()
         run: |
           mkdir -p perf/reports
           cat > perf/reports/summary.md << 'EOF'
           # 📊 Performance Test Results
-          
+
           ## owner-overview
           \`\`\`
           $(node perf/smoke-assert.js perf/results/owner-overview.json 2>&1 || echo "Failed")
           \`\`\`
-          
+
           ## pos-happy
           \`\`\`
           $(node perf/smoke-assert.js perf/results/pos-happy.json 2>&1 || echo "Failed")
           \`\`\`
-          
+
           ### Thresholds
           - p(95) < 350ms ✅
           - error_rate < 5% ✅
           EOF
-      
+
       - name: Upload k6 results
         if: always()
         uses: actions/upload-artifact@v4
@@ -131,7 +131,7 @@ jobs:
           path: |
             perf/results/*.json
             perf/reports/summary.md
-      
+
       - name: Comment PR with results
         if: always()
         uses: actions/github-script@v7
@@ -139,7 +139,7 @@ jobs:
           script: |
             const fs = require('fs');
             const summary = fs.readFileSync('perf/reports/summary.md', 'utf8');
-            
+
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,

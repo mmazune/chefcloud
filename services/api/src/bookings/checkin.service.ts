@@ -1,6 +1,6 @@
 /**
  * E42-s2: Check-in Service
- * 
+ *
  * Handles QR code check-in for event bookings and prepaid credit management.
  */
 

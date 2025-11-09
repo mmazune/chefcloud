@@ -8,10 +8,10 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
 
   async onModuleInit() {
     await prisma.$connect();
-    
+
     // E54-s1: Register slow query middleware
     prisma.$use(slowQueryMiddleware(this.logger));
-    
+
     this.logger.log('Prisma connected with slow-query middleware');
   }
 

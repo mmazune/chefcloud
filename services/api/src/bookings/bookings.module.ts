@@ -1,6 +1,6 @@
 /**
  * E42-s1: Bookings Module
- * 
+ *
  * Provides public event booking portal and admin event management.
  */
 

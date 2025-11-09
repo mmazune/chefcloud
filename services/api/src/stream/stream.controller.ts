@@ -1,4 +1,14 @@
-import { Controller, Get, Query, Req, Res, UseGuards, HttpException, HttpStatus, Logger } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Query,
+  Req,
+  Res,
+  UseGuards,
+  HttpException,
+  HttpStatus,
+  Logger,
+} from '@nestjs/common';
 import { Request, Response } from 'express';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from '../auth/roles.guard';
@@ -36,7 +46,9 @@ export class StreamController {
     res.flushHeaders();
 
     this.eventBus.incrementClientCount();
-    this.logger.log(`SSE spout client connected (${this.eventBus.getClientCount()}/${MAX_CLIENTS})`);
+    this.logger.log(
+      `SSE spout client connected (${this.eventBus.getClientCount()}/${MAX_CLIENTS})`,
+    );
 
     // Keepalive ping
     const keepaliveTimer = setInterval(() => {

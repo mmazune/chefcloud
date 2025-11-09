@@ -129,9 +129,99 @@ export class RedisService {
   }
 
   /**
+   * Set with expiration (SETEX)
+   *
+   * @param key - Key name
+   * @param ttlSeconds - Time to live in seconds
+   * @param value - Value to store
+   */
+  async setEx(key: string, ttlSeconds: number, value: string): Promise<void> {
+    if (this.redis) {
+      try {
+        await this.redis.setex(key, ttlSeconds, value);
+        return;
+      } catch (error) {
+        this.logger.warn(`Redis SETEX error: ${(error as Error).message}, using in-memory`);
+      }
+    }
+
+    // In-memory fallback
+    const expiresAt = Date.now() + ttlSeconds * 1000;
+    this.inMemoryStore.set(key, { value, expiresAt });
+  }
+
+  /**
+   * Add member to set (SADD)
+   * Used for cache index tracking
+   *
+   * @param key - Set key
+   * @param member - Member to add
+   */
+  async sAdd(key: string, member: string): Promise<void> {
+    if (this.redis) {
+      try {
+        await this.redis.sadd(key, member);
+        return;
+      } catch (error) {
+        this.logger.warn(`Redis SADD error: ${(error as Error).message}`);
+      }
+    }
+
+    // In-memory: store as JSON array
+    const existing = this.inMemoryStore.get(key);
+    let members: string[] = [];
+
+    if (existing) {
+      try {
+        members = JSON.parse(existing.value);
+      } catch {
+        members = [];
+      }
+    }
+
+    if (!members.includes(member)) {
+      members.push(member);
+    }
+
+    this.inMemoryStore.set(key, {
+      value: JSON.stringify(members),
+      expiresAt: Date.now() + 86400000, // 24h default for index sets
+    });
+  }
+
+  /**
+   * Get all members from set (SMEMBERS)
+   * Used for cache invalidation
+   *
+   * @param key - Set key
+   * @returns Array of members
+   */
+  async sMembers(key: string): Promise<string[]> {
+    if (this.redis) {
+      try {
+        return await this.redis.smembers(key);
+      } catch (error) {
+        this.logger.warn(`Redis SMEMBERS error: ${(error as Error).message}`);
+      }
+    }
+
+    // In-memory fallback
+    const entry = this.inMemoryStore.get(key);
+    if (entry && entry.expiresAt > Date.now()) {
+      try {
+        return JSON.parse(entry.value);
+      } catch {
+        return [];
+      }
+    }
+
+    return [];
+  }
+
+  /**
    * Publish a message to a Redis channel (pub/sub)
    * Used for distributing session invalidation events across nodes
-   * 
+   *
    * @param channel - Channel name
    * @param message - Message to publish
    */

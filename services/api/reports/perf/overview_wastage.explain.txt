@@ -1,0 +1,23 @@
+ERROR: 
+Invalid `prisma.$queryRawUnsafe()` invocation:
+
+
+Raw query failed. Code: `42P01`. Message: `relation "Wastage" does not exist`
+
+SQL:
+
+        SELECT w.id, w."branchId", w.qty, w."createdAt"
+        FROM "Wastage" w
+        JOIN "Branch" b ON b.id = w."branchId"
+        WHERE b."orgId" = $1
+          AND w."createdAt" >= $2
+          AND w."createdAt" <= $3
+        ORDER BY w."createdAt" DESC
+      
+
+Params:
+[
+  "ORG_TEST",
+  "2024-11-01T00:00:00.000Z",
+  "2024-11-30T23:59:59.000Z"
+]

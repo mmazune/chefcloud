@@ -1,0 +1,5 @@
+
+> @chefcloud/api@0.1.0 test /workspaces/chefcloud/services/api
+> jest --passWithNoTests "--testPathPattern=purchasing.service.spec"
+
+No tests found, exiting with code 0

@@ -78,7 +78,7 @@ describe('Badge Revocation & Session Invalidation (E25) - E2E', () => {
 
     // Create employee profile with badge
     const badgeCode = 'TESTBADGE001';
-    const employeeProfile = await prisma.client.employeeProfile.create({
+    const _employeeProfile = await prisma.client.employeeProfile.create({
       data: {
         userId: testUser.id,
         employeeCode: 'EMP-TEST-001',

@@ -1,0 +1,11 @@
+
+> @chefcloud/api@0.1.0 lint /workspaces/chefcloud/services/api
+> eslint "{src,apps,libs,test}/**/*.ts"
+
+
+/workspaces/chefcloud/services/api/src/observability/readiness.service.ts
+  10:33  error  Require statement not part of import statement  @typescript-eslint/no-var-requires
+
+✖ 1 problem (1 error, 0 warnings)
+
+ ELIFECYCLE  Command failed with exit code 1.

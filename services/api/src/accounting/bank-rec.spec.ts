@@ -36,10 +36,7 @@ describe('Bank Reconciliation', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        BankRecService,
-        { provide: PrismaService, useValue: mockPrisma },
-      ],
+      providers: [BankRecService, { provide: PrismaService, useValue: mockPrisma }],
     }).compile();
 
     service = module.get<BankRecService>(BankRecService);
@@ -52,7 +49,11 @@ describe('Bank Reconciliation', () => {
   describe('upsertBankAccount', () => {
     it('should create new account if not exists', async () => {
       mockPrisma.client.bankAccount.findFirst.mockResolvedValue(null);
-      mockPrisma.client.bankAccount.create.mockResolvedValue({ id: '1', name: 'Stanbic', orgId: 'org1' });
+      mockPrisma.client.bankAccount.create.mockResolvedValue({
+        id: '1',
+        name: 'Stanbic',
+        orgId: 'org1',
+      });
 
       const result = await service.upsertBankAccount('org1', 'Stanbic', 'UGX', '1234');
       expect(result.id).toBe('1');
@@ -61,7 +62,11 @@ describe('Bank Reconciliation', () => {
 
     it('should update existing account', async () => {
       mockPrisma.client.bankAccount.findFirst.mockResolvedValue({ id: '1', name: 'Stanbic' });
-      mockPrisma.client.bankAccount.update.mockResolvedValue({ id: '1', name: 'Stanbic', lastFour: '5678' });
+      mockPrisma.client.bankAccount.update.mockResolvedValue({
+        id: '1',
+        name: 'Stanbic',
+        lastFour: '5678',
+      });
 
       await service.upsertBankAccount('org1', 'Stanbic', 'UGX', '5678');
       expect(mockPrisma.client.bankAccount.update).toHaveBeenCalled();
@@ -84,23 +89,27 @@ describe('Bank Reconciliation', () => {
     it('should throw NotFoundException if account not found', async () => {
       mockPrisma.client.bankAccount.findUnique.mockResolvedValue(null);
 
-      await expect(service.importCSV('acc1', 'Date,Amount\n2025-01-15,50000'))
-        .rejects.toThrow(NotFoundException);
+      await expect(service.importCSV('acc1', 'Date,Amount\n2025-01-15,50000')).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should throw BadRequestException if CSV is empty', async () => {
       mockPrisma.client.bankAccount.findUnique.mockResolvedValue({ id: 'acc1' });
       (parseBankCSV as jest.Mock).mockReturnValue([]);
 
-      await expect(service.importCSV('acc1', 'Date,Amount'))
-        .rejects.toThrow(BadRequestException);
+      await expect(service.importCSV('acc1', 'Date,Amount')).rejects.toThrow(BadRequestException);
     });
   });
 
   describe('matchTransaction', () => {
     it('should match bank transaction to payment', async () => {
       mockPrisma.client.bankTxn.findUnique.mockResolvedValue({ id: 'txn1', reconciled: false });
-      mockPrisma.client.reconcileMatch.create.mockResolvedValue({ id: 'match1', bankTxnId: 'txn1', source: 'PAYMENT' });
+      mockPrisma.client.reconcileMatch.create.mockResolvedValue({
+        id: 'match1',
+        bankTxnId: 'txn1',
+        source: 'PAYMENT',
+      });
 
       const result = await service.matchTransaction('txn1', 'PAYMENT', 'pay1', 'user1');
       expect(result.source).toBe('PAYMENT');
@@ -113,8 +122,9 @@ describe('Bank Reconciliation', () => {
     it('should throw if already reconciled', async () => {
       mockPrisma.client.bankTxn.findUnique.mockResolvedValue({ id: 'txn1', reconciled: true });
 
-      await expect(service.matchTransaction('txn1', 'PAYMENT', 'pay1', 'user1'))
-        .rejects.toThrow(BadRequestException);
+      await expect(service.matchTransaction('txn1', 'PAYMENT', 'pay1', 'user1')).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 

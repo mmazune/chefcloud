@@ -7,13 +7,13 @@ import { createOrgWithUsers, createChartOfAccounts, disconnect } from './factory
 describe('Accounting E2E', () => {
   let app: INestApplication;
   let authToken: string;
-  let orgId: string;
+  let _orgId: string;
 
   beforeAll(async () => {
     const factory = await createOrgWithUsers('e2e-accounting');
     await createChartOfAccounts(factory.orgId);
 
-    orgId = factory.orgId;
+    _orgId = factory.orgId;
 
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
@@ -31,12 +31,10 @@ describe('Accounting E2E', () => {
     await app.init();
 
     // Login as owner
-    const loginResponse = await request(app.getHttpServer())
-      .post('/auth/login')
-      .send({
-        email: factory.users.owner.email,
-        password: 'Test#123',
-      });
+    const loginResponse = await request(app.getHttpServer()).post('/auth/login').send({
+      email: factory.users.owner.email,
+      password: 'Test#123',
+    });
 
     authToken = loginResponse.body.access_token;
   });

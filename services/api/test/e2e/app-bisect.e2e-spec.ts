@@ -2,7 +2,7 @@ import './_injector-patch';
 import 'reflect-metadata';
 import { Test } from '@nestjs/testing';
 import { AppModule } from '../../src/app.module';
-import { Module } from '@nestjs/common';
+import { Module as _Module } from '@nestjs/common';
 
 // Pull out AppModule.imports at runtime
 const appModuleImports = (AppModule as any).__imports;

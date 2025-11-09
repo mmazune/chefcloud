@@ -14,9 +14,9 @@ const skipRate = new Rate('skip_rate');
 export const options = {
   stages: [
     { duration: '40s', target: 20 }, // API up
-    { duration: '20s', target: 0 },  // API down (simulated)
+    { duration: '20s', target: 0 }, // API down (simulated)
     { duration: '40s', target: 20 }, // API up
-    { duration: '20s', target: 0 },  // API down
+    { duration: '20s', target: 0 }, // API down
     { duration: '40s', target: 20 }, // API up
   ],
   thresholds: {
@@ -40,16 +40,12 @@ export default function () {
     ],
   };
 
-  const res = http.post(
-    `${API_URL}/sync/batch`,
-    JSON.stringify(syncPayload),
-    {
-      headers: {
-        'Content-Type': 'application/json',
-        'x-org-id': ORG_ID,
-      },
-    }
-  );
+  const res = http.post(`${API_URL}/sync/batch`, JSON.stringify(syncPayload), {
+    headers: {
+      'Content-Type': 'application/json',
+      'x-org-id': ORG_ID,
+    },
+  });
 
   const success = check(res, {
     'status 200 or 409': (r) => r.status === 200 || r.status === 409,

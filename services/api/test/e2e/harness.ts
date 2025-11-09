@@ -7,13 +7,13 @@ import request from 'supertest';
 
 /**
  * E2E Test Harness
- * 
+ *
  * Builds focused TestingModule instances (no full AppModule) with:
  * - Only the modules needed for the specific E2E test
  * - ConfigModule + JwtModule for auth
  * - PrismaService for database access
  * - Global ValidationPipe (whitelist + transform)
- * 
+ *
  * Usage:
  * ```ts
  * const { app, moduleRef, prisma } = await buildTestApp([AuthModule, WorkforceModule]);
@@ -32,9 +32,7 @@ interface TestAppContext {
  * @param imports Array of NestJS modules to import (e.g., [AuthModule, PosModule])
  * @returns app, moduleRef, and prisma service
  */
-export async function buildTestApp(
-  imports: Array<Type<any>>,
-): Promise<TestAppContext> {
+export async function buildTestApp(imports: Array<Type<any>>): Promise<TestAppContext> {
   const moduleFixture: TestingModule = await Test.createTestingModule({
     imports: [
       // Core modules for E2E
@@ -90,9 +88,7 @@ export async function loginAs(
     .expect(200);
 
   if (!response.body.access_token) {
-    throw new Error(
-      `Login failed for ${email}: ${JSON.stringify(response.body)}`,
-    );
+    throw new Error(`Login failed for ${email}: ${JSON.stringify(response.body)}`);
   }
 
   return response.body.access_token;

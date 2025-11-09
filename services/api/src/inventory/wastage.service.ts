@@ -1,11 +1,17 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { CreateWastageDto } from './wastage.dto';
+import { CacheInvalidationService } from '../common/cache-invalidation.service';
 
 @Injectable()
 export class WastageService {
-  constructor(private prisma: PrismaService) {}
+  private readonly logger = new Logger(WastageService.name);
+
+  constructor(
+    private prisma: PrismaService,
+    private cacheInvalidation: CacheInvalidationService,
+  ) {}
 
   async recordWastage(
     orgId: string,
@@ -13,7 +19,7 @@ export class WastageService {
     userId: string,
     dto: CreateWastageDto,
   ): Promise<any> {
-    return this.prisma.client.wastage.create({
+    const result = await this.prisma.client.wastage.create({
       data: {
         orgId,
         branchId,
@@ -23,5 +29,15 @@ export class WastageService {
         reportedBy: userId,
       },
     });
+
+    // E22.D.2: Invalidate franchise caches (non-blocking, best-effort)
+    try {
+      await this.cacheInvalidation.onInventoryAdjusted(orgId);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.warn(`Cache invalidation failed for wastage: ${message}`);
+    }
+
+    return result;
   }
 }

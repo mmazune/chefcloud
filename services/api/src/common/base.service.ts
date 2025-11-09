@@ -23,22 +23,16 @@ export abstract class BaseService {
    *   );
    * }
    */
-  protected async withOrg<T>(
-    orgId: string,
+  async executeInOrgContext<T>(
+    orgId: string | null,
     queryBuilder: () => Promise<T>,
   ): Promise<T> {
     if (!orgId) {
       throw new ForbiddenException('Organization ID is required');
     }
 
-    try {
-      return await queryBuilder();
-    } catch (error) {
-      // Re-throw with context
-      throw error;
-    }
+    return await queryBuilder();
   }
-
   /**
    * Validates that a resource belongs to the specified org
    * Throws 404 if resource is null or undefined

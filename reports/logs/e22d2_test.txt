@@ -1,0 +1,100 @@
+
+> @chefcloud/api@0.1.0 test /workspaces/chefcloud/services/api
+> jest --passWithNoTests "--testPathPattern=inventory.service.spec|wastage.service.spec"
+
+FAIL src/inventory/wastage.service.spec.ts
+  WastageService - E22.D.2
+    ✓ should be defined (17 ms)
+    recordWastage - E22.D.2 Cache Invalidation
+      ✕ should trigger cache invalidation after recording wastage (4 ms)
+      ✕ should not throw if cache invalidation fails (3 ms)
+
+  ● WastageService - E22.D.2 › recordWastage - E22.D.2 Cache Invalidation › should trigger cache invalidation after recording wastage
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    Expected: "ORG-123"
+
+    Number of calls: 0
+
+      78 |
+      79 |       // Verify cache invalidation was called with correct orgId
+    > 80 |       expect(mockCacheInvalidation.onInventoryAdjusted).toHaveBeenCalledWith(orgId);
+         |                                                         ^
+      81 |       expect(mockCacheInvalidation.onInventoryAdjusted).toHaveBeenCalledTimes(1);
+      82 |     });
+      83 |
+
+      at Object.<anonymous> (inventory/wastage.service.spec.ts:80:57)
+
+  ● WastageService - E22.D.2 › recordWastage - E22.D.2 Cache Invalidation › should not throw if cache invalidation fails
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    Expected: "ORG-123"
+
+    Number of calls: 0
+
+      114 |
+      115 |       // Cache invalidation was attempted
+    > 116 |       expect(mockCacheInvalidation.onInventoryAdjusted).toHaveBeenCalledWith(orgId);
+          |                                                         ^
+      117 |     });
+      118 |   });
+      119 | });
+
+      at Object.<anonymous> (inventory/wastage.service.spec.ts:116:57)
+
+FAIL src/inventory/inventory.service.spec.ts
+  InventoryService - Adjustments
+    ✓ should be defined (17 ms)
+    createAdjustment
+      ✓ should create positive adjustment and update newest batch (4 ms)
+      ✓ should create negative adjustment and use FIFO consumption (2 ms)
+    E22.D.2 - Cache Invalidation Integration
+      ✕ should trigger cache invalidation after successful adjustment (7 ms)
+      ✕ should not throw if cache invalidation fails (12 ms)
+
+  ● InventoryService - Adjustments › E22.D.2 - Cache Invalidation Integration › should trigger cache invalidation after successful adjustment
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    Expected: "ORG-123"
+
+    Number of calls: 0
+
+      226 |       await service.createAdjustment(orgId, branchId, itemId, deltaQty, reason, adjustedBy);
+      227 |
+    > 228 |       expect(cacheInvalidation.onInventoryAdjusted).toHaveBeenCalledWith(orgId);
+          |                                                     ^
+      229 |       expect(cacheInvalidation.onInventoryAdjusted).toHaveBeenCalledTimes(1);
+      230 |     });
+      231 |
+
+      at Object.<anonymous> (inventory/inventory.service.spec.ts:228:53)
+
+  ● InventoryService - Adjustments › E22.D.2 - Cache Invalidation Integration › should not throw if cache invalidation fails
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    Expected: "ORG-123"
+
+    Number of calls: 0
+
+      258 |       ).resolves.toBeDefined();
+      259 |
+    > 260 |       expect(cacheInvalidation.onInventoryAdjusted).toHaveBeenCalledWith(orgId);
+          |                                                     ^
+      261 |     });
+      262 |   });
+      263 | });
+
+      at Object.<anonymous> (inventory/inventory.service.spec.ts:260:53)
+
+A worker process has failed to exit gracefully and has been force exited. This is likely caused by tests leaking due to improper teardown. Try running with --detectOpenHandles to find leaks. Active timers can also cause this, ensure that .unref() was called on them.
+Test Suites: 2 failed, 2 total
+Tests:       4 failed, 4 passed, 8 total
+Snapshots:   0 total
+Time:        3.391 s
+Ran all test suites matching /inventory.service.spec|wastage.service.spec/i.
+ ELIFECYCLE  Test failed. See above for more details.

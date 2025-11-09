@@ -121,7 +121,7 @@ export class OpsService {
       await this.prisma.client.$queryRaw`SELECT 1`;
       const duration = Date.now() - start;
       ready.checks.database = { status: 'ready', responseMs: duration };
-      
+
       if (duration > 1000) {
         ready.checks.database.status = 'slow';
         ready.status = 'degraded';
@@ -145,7 +145,7 @@ export class OpsService {
       const queueKey = 'bull:orders:waiting';
       const waitingCount = await this.redis.llen(queueKey);
       ready.checks.queue = { status: 'ready', waiting: waitingCount };
-      
+
       // If more than 100 jobs waiting, mark as degraded
       if (waitingCount > 100) {
         ready.checks.queue.status = 'backlogged';
@@ -178,7 +178,9 @@ export class OpsService {
     // E54-s2: Performance budget violations
     lines.push('# HELP chefcloud_perf_budget_violation_total Performance budget violations');
     lines.push('# TYPE chefcloud_perf_budget_violation_total counter');
-    lines.push(`chefcloud_perf_budget_violation_total ${metrics.get('perf_budget_violations') || 0}`);
+    lines.push(
+      `chefcloud_perf_budget_violation_total ${metrics.get('perf_budget_violations') || 0}`,
+    );
 
     // E54-s2: SSE clients
     lines.push('# HELP chefcloud_sse_clients_current Current number of SSE clients');
@@ -236,7 +238,7 @@ export class OpsService {
   async createApiKey(orgId: string, name: string, scopes: string[]): Promise<any> {
     // Generate a random API key (64 bytes = 128 hex chars)
     const plainKey = crypto.randomBytes(64).toString('hex');
-    
+
     // Hash with argon2
     const keyHash = await argon2.hash(plainKey);
 

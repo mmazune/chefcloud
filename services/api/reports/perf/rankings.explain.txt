@@ -1,0 +1,12 @@
+⚠️  SKIPPED: Table "FranchiseRank" does not exist in database
+
+SQL:
+
+        SELECT fr.id, fr."orgId", fr."branchId", fr.period, fr.rank, fr.score, fr.meta,
+               b.name as branch_name
+        FROM "FranchiseRank" fr
+        JOIN "Branch" b ON b.id = fr."branchId"
+        WHERE fr."orgId" = $1
+          AND fr.period = $2
+        ORDER BY fr.rank ASC
+      

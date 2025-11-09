@@ -18,7 +18,7 @@ export const options = {
   ],
   thresholds: {
     http_req_duration: ['p(99)<1200'], // p99 must be under 1200ms
-    http_req_failed: ['rate<0.05'],    // < 5% errors
+    http_req_failed: ['rate<0.05'], // < 5% errors
     errors: ['rate<0.05'],
   },
 };
@@ -36,7 +36,7 @@ const endpoints = [
 export default function () {
   // Pick random endpoint
   const endpoint = endpoints[Math.floor(Math.random() * endpoints.length)];
-  
+
   const res = http.get(`${API_URL}${endpoint.url}`, {
     headers: {
       'x-org-id': ORG_ID,

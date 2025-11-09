@@ -1,0 +1,11 @@
+⚠️  SKIPPED: Table "InventoryItem" does not exist in database
+
+SQL:
+
+        SELECT ii.id, ii.name, ii."reorderLevel", ii."reorderQty",
+               sb.id as batch_id, sb."branchId", sb."remainingQty"
+        FROM "InventoryItem" ii
+        LEFT JOIN "StockBatch" sb ON sb."itemId" = ii.id
+        WHERE ii."orgId" = $1
+          AND ii."isActive" = $2
+      

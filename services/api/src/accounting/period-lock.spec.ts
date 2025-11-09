@@ -20,10 +20,7 @@ describe('Period Locks', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        PeriodsService,
-        { provide: PrismaService, useValue: mockPrisma },
-      ],
+      providers: [PeriodsService, { provide: PrismaService, useValue: mockPrisma }],
     }).compile();
 
     periodsService = module.get<PeriodsService>(PeriodsService);
@@ -49,7 +46,12 @@ describe('Period Locks', () => {
         updatedAt: new Date(),
       });
 
-      const result = await periodsService.createPeriod('org1', 'Jan 2025', new Date('2025-01-01'), new Date('2025-01-31'));
+      const result = await periodsService.createPeriod(
+        'org1',
+        'Jan 2025',
+        new Date('2025-01-01'),
+        new Date('2025-01-31'),
+      );
       expect(result.status).toBe('OPEN');
       expect(result.name).toBe('Jan 2025');
       expect(mockPrisma.client.fiscalPeriod.create).toHaveBeenCalled();
@@ -64,11 +66,21 @@ describe('Period Locks', () => {
       });
 
       await expect(
-        periodsService.createPeriod('org1', 'Feb 2025', new Date('2025-01-15'), new Date('2025-02-15'))
+        periodsService.createPeriod(
+          'org1',
+          'Feb 2025',
+          new Date('2025-01-15'),
+          new Date('2025-02-15'),
+        ),
       ).rejects.toThrow(BadRequestException);
-      
+
       await expect(
-        periodsService.createPeriod('org1', 'Feb 2025', new Date('2025-01-15'), new Date('2025-02-15'))
+        periodsService.createPeriod(
+          'org1',
+          'Feb 2025',
+          new Date('2025-01-15'),
+          new Date('2025-02-15'),
+        ),
       ).rejects.toMatchObject({
         message: expect.stringContaining('overlaps'),
       });
@@ -102,7 +114,7 @@ describe('Period Locks', () => {
             lockedById: 'user1',
             lockedAt: expect.any(Date),
           }),
-        })
+        }),
       );
     });
   });

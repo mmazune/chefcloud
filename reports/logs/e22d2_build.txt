@@ -1,0 +1,20 @@
+
+> @chefcloud/api@0.1.0 build /workspaces/chefcloud/services/api
+> nest build
+
+[96msrc/inventory/inventory.service.spec.ts[0m:[93m169[0m:[93m9[0m - [91merror[0m[90m TS2554: [0mExpected 1-2 arguments, but got 3.
+
+[7m169[0m         cacheInvalidation,
+[7m   [0m [91m        ~~~~~~~~~~~~~~~~~[0m
+[96msrc/inventory/wastage.service.spec.ts[0m:[93m8[0m:[93m7[0m - [91merror[0m[90m TS6133: [0m'prismaService' is declared but its value is never read.
+
+[7m8[0m   let prismaService: PrismaService;
+[7m [0m [91m      ~~~~~~~~~~~~~[0m
+[96msrc/inventory/wastage.service.spec.ts[0m:[93m9[0m:[93m7[0m - [91merror[0m[90m TS6133: [0m'cacheInvalidation' is declared but its value is never read.
+
+[7m9[0m   let cacheInvalidation: CacheInvalidationService;
+[7m [0m [91m      ~~~~~~~~~~~~~~~~~[0m
+
+Found 3 error(s).
+
+ ELIFECYCLE  Command failed with exit code 1.

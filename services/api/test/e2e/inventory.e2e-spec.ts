@@ -8,15 +8,15 @@ describe('Inventory E2E', () => {
   let app: INestApplication;
   let authToken: string;
   let beefId: string;
-  let orgId: string;
-  let branchId: string;
+  let _orgId: string;
+  let _branchId: string;
 
   beforeAll(async () => {
     const factory = await createOrgWithUsers('e2e-inventory');
     const inventory = await createInventory(factory.orgId);
 
-    orgId = factory.orgId;
-    branchId = factory.branchId;
+    _orgId = factory.orgId;
+    _branchId = factory.branchId;
     beefId = inventory.beef.id;
 
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -35,12 +35,10 @@ describe('Inventory E2E', () => {
     await app.init();
 
     // Login as manager
-    const loginResponse = await request(app.getHttpServer())
-      .post('/auth/login')
-      .send({
-        email: factory.users.manager.email,
-        password: 'Test#123',
-      });
+    const loginResponse = await request(app.getHttpServer()).post('/auth/login').send({
+      email: factory.users.manager.email,
+      password: 'Test#123',
+    });
 
     authToken = loginResponse.body.access_token;
   });

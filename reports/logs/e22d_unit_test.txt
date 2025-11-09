@@ -1,0 +1,52 @@
+
+> @chefcloud/api@0.1.0 test /workspaces/chefcloud/services/api
+> jest --passWithNoTests "--testPathPattern=cache.invalidation.spec"
+
+FAIL src/common/cache.invalidation.spec.ts
+  CacheInvalidation - E22.D
+    Event to Prefix Mapping
+      ✓ should map po.received to overview and rankings (11 ms)
+      ✓ should map transfer.changed to overview, rankings, and forecast (3 ms)
+      ✓ should map budget.updated to budgets only (1 ms)
+      ✓ should map inventory.adjusted to overview, rankings, and forecast (1 ms)
+      ✓ should return empty array for unknown event type (2 ms)
+    bustPrefix
+      ✓ should remove cached keys and index using Redis index set (3 ms)
+      ✓ should return 0 when no cached keys exist (2 ms)
+      ✓ should return 0 when sMembers returns null (1 ms)
+      ✓ should handle Redis errors gracefully and return 0 (1 ms)
+      ✓ should not crash when Redis is unavailable (fallback scenario) (1 ms)
+    handle
+      ✓ should bust overview and rankings for po.received event (2 ms)
+      ✓ should bust only budgets for budget.updated event (2 ms)
+      ✓ should bust overview, rankings, and forecast for inventory.adjusted (2 ms)
+      ✓ should handle empty caches gracefully (1 ms)
+      ✓ should continue busting even if one prefix fails (1 ms)
+      ✓ should return 0 for unknown event types (2 ms)
+    Observability
+      ✕ should log bust summary with org, prefixes, and count (2 ms)
+
+  ● CacheInvalidation - E22.D › Observability › should log bust summary with org, prefixes, and count
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    Expected: StringContaining "cache_bust"
+
+    Number of calls: 0
+
+      203 |       await service.handle(event);
+      204 |
+    > 205 |       expect(consoleLogSpy).toHaveBeenCalledWith(
+          |                             ^
+      206 |         expect.stringContaining('cache_bust'),
+      207 |       );
+      208 |       expect(consoleLogSpy).toHaveBeenCalledWith(
+
+      at Object.<anonymous> (common/cache.invalidation.spec.ts:205:29)
+
+Test Suites: 1 failed, 1 total
+Tests:       1 failed, 16 passed, 17 total
+Snapshots:   0 total
+Time:        0.923 s
+Ran all test suites matching /cache.invalidation.spec/i.
+ ELIFECYCLE  Test failed. See above for more details.

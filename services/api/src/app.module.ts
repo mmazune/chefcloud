@@ -44,6 +44,7 @@ import { TaxModule } from './tax/tax.module';
 import { SettingsModule } from './settings/settings.module';
 import { BookingsModule } from './bookings/bookings.module';
 import { WorkforceModule } from './workforce/workforce.module';
+import { ObservabilityModule } from './observability/observability.module';
 import { LoggerMiddleware } from './logger.middleware';
 import { WriteBlockMiddleware } from './ops/write-block.middleware';
 import { RedisService } from './common/redis.service';
@@ -96,6 +97,7 @@ import { WebhookVerificationGuard } from './common/webhook-verification.guard';
     SettingsModule,
     BookingsModule,
     WorkforceModule,
+    ObservabilityModule,
   ],
   controllers: [HealthController, WebhooksController],
   providers: [

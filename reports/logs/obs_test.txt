@@ -1,0 +1,19 @@
+
+> @chefcloud/api@0.1.0 test /workspaces/chefcloud/services/api
+> jest --passWithNoTests "--testPathPattern=observability" "--no-coverage"
+
+PASS src/observability/metrics.service.spec.ts
+  MetricsService
+    ✓ registers and renders metrics (16 ms)
+    ✓ returns disabled message when METRICS_ENABLED is not set (1 ms)
+
+PASS src/observability/readiness.controller.spec.ts
+  Readiness
+    ✓ /healthz ok (20 ms)
+    ✓ /readiness returns JSON (107 ms)
+
+Test Suites: 2 passed, 2 total
+Tests:       4 passed, 4 total
+Snapshots:   0 total
+Time:        1.95 s
+Ran all test suites matching /observability/i.

@@ -1,0 +1,128 @@
+
+> @chefcloud/api@0.1.0 perf:run /workspaces/chefcloud/services/api
+> node ../../reports/perf/dist/run_explains.js
+
+🔍 E22.E: Running EXPLAIN ANALYZE for franchise endpoints...
+
+📊 Database: ...
+📁 Output format: text
+
+🎯 Test parameters:
+   - orgId: ORG_TEST
+   - period: 2024-11
+   - startDate: 2024-11-01T00:00:00.000Z
+   - endDate: 2024-11-30T23:59:59.000Z
+
+
+🔎 Running: Franchise Overview - Orders Query...
+prisma:error 
+Invalid `prisma.$queryRawUnsafe()` invocation:
+
+
+Raw query failed. Code: `N/A`. Message: `Failed to deserialize column of type 'regclass'. If you're using $queryRaw and this column is explicitly marked as `Unsupported` in your Prisma schema, try casting this column to any supported Prisma type such as `String`.`
+   ❌ ERROR: 
+Invalid `prisma.$queryRawUnsafe()` invocation:
+
+
+Raw query failed. Code: `N/A`. Message: `Failed to deserialize column of type 'regclass'. If you're using $queryRaw and this column is explicitly marked as `Unsupported` in your Prisma schema, try casting this column to any supported Prisma type such as `String`.`
+
+🔎 Running: Franchise Overview - Wastage Query...
+prisma:error 
+Invalid `prisma.$queryRawUnsafe()` invocation:
+
+
+Raw query failed. Code: `N/A`. Message: `Failed to deserialize column of type 'regclass'. If you're using $queryRaw and this column is explicitly marked as `Unsupported` in your Prisma schema, try casting this column to any supported Prisma type such as `String`.`
+   ❌ ERROR: 
+Invalid `prisma.$queryRawUnsafe()` invocation:
+
+
+Raw query failed. Code: `N/A`. Message: `Failed to deserialize column of type 'regclass'. If you're using $queryRaw and this column is explicitly marked as `Unsupported` in your Prisma schema, try casting this column to any supported Prisma type such as `String`.`
+
+🔎 Running: Franchise Rankings - Existing Ranks Query...
+prisma:error 
+Invalid `prisma.$queryRawUnsafe()` invocation:
+
+
+Raw query failed. Code: `N/A`. Message: `Failed to deserialize column of type 'regclass'. If you're using $queryRaw and this column is explicitly marked as `Unsupported` in your Prisma schema, try casting this column to any supported Prisma type such as `String`.`
+   ❌ ERROR: 
+Invalid `prisma.$queryRawUnsafe()` invocation:
+
+
+Raw query failed. Code: `N/A`. Message: `Failed to deserialize column of type 'regclass'. If you're using $queryRaw and this column is explicitly marked as `Unsupported` in your Prisma schema, try casting this column to any supported Prisma type such as `String`.`
+
+🔎 Running: Franchise Budgets Query...
+prisma:error 
+Invalid `prisma.$queryRawUnsafe()` invocation:
+
+
+Raw query failed. Code: `N/A`. Message: `Failed to deserialize column of type 'regclass'. If you're using $queryRaw and this column is explicitly marked as `Unsupported` in your Prisma schema, try casting this column to any supported Prisma type such as `String`.`
+   ❌ ERROR: 
+Invalid `prisma.$queryRawUnsafe()` invocation:
+
+
+Raw query failed. Code: `N/A`. Message: `Failed to deserialize column of type 'regclass'. If you're using $queryRaw and this column is explicitly marked as `Unsupported` in your Prisma schema, try casting this column to any supported Prisma type such as `String`.`
+
+🔎 Running: Franchise Forecast - Items Query...
+prisma:error 
+Invalid `prisma.$queryRawUnsafe()` invocation:
+
+
+Raw query failed. Code: `N/A`. Message: `Failed to deserialize column of type 'regclass'. If you're using $queryRaw and this column is explicitly marked as `Unsupported` in your Prisma schema, try casting this column to any supported Prisma type such as `String`.`
+   ❌ ERROR: 
+Invalid `prisma.$queryRawUnsafe()` invocation:
+
+
+Raw query failed. Code: `N/A`. Message: `Failed to deserialize column of type 'regclass'. If you're using $queryRaw and this column is explicitly marked as `Unsupported` in your Prisma schema, try casting this column to any supported Prisma type such as `String`.`
+
+🔎 Running: Procurement Suggestions - Inventory Query...
+prisma:error 
+Invalid `prisma.$queryRawUnsafe()` invocation:
+
+
+Raw query failed. Code: `N/A`. Message: `Failed to deserialize column of type 'regclass'. If you're using $queryRaw and this column is explicitly marked as `Unsupported` in your Prisma schema, try casting this column to any supported Prisma type such as `String`.`
+   ❌ ERROR: 
+Invalid `prisma.$queryRawUnsafe()` invocation:
+
+
+Raw query failed. Code: `N/A`. Message: `Failed to deserialize column of type 'regclass'. If you're using $queryRaw and this column is explicitly marked as `Unsupported` in your Prisma schema, try casting this column to any supported Prisma type such as `String`.`
+
+
+📝 Generating performance notes...
+   ✅ Saved to E22-PERF-NOTES.md
+
+
+✅ EXPLAIN ANALYZE complete!
+
+📊 Summary:
+   - ERROR: overview.explain.txt (
+Invalid `prisma.$queryRawUnsafe()` invocation:
+
+
+...)
+   - ERROR: overview_wastage.explain.txt (
+Invalid `prisma.$queryRawUnsafe()` invocation:
+
+
+...)
+   - ERROR: rankings.explain.txt (
+Invalid `prisma.$queryRawUnsafe()` invocation:
+
+
+...)
+   - ERROR: budgets.explain.txt (
+Invalid `prisma.$queryRawUnsafe()` invocation:
+
+
+...)
+   - ERROR: forecast.explain.txt (
+Invalid `prisma.$queryRawUnsafe()` invocation:
+
+
+...)
+   - ERROR: procurement.explain.txt (
+Invalid `prisma.$queryRawUnsafe()` invocation:
+
+
+...)
+
+📁 All outputs saved to: reports/perf/

@@ -6,12 +6,12 @@ import { createOrgWithUsers, disconnect } from './factory';
 
 describe('Auth E2E', () => {
   let app: INestApplication;
-  let orgId: string;
+  let _orgId: string;
   let waiterEmail: string;
 
   beforeAll(async () => {
     const factory = await createOrgWithUsers('e2e-auth');
-    orgId = factory.orgId;
+    _orgId = factory.orgId;
     waiterEmail = factory.users.waiter.email;
 
     const moduleFixture: TestingModule = await Test.createTestingModule({

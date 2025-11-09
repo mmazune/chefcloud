@@ -12,7 +12,7 @@ export const options = {
   },
   thresholds: {
     'http_req_duration{name:owner_overview}': ['p(95)<350', 'p(99)<800'],
-    'http_req_failed': ['rate<0.05'], // <5% errors
+    http_req_failed: ['rate<0.05'], // <5% errors
   },
 };
 

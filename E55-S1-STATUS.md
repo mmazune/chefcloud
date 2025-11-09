@@ -11,6 +11,7 @@ Successfully implemented E2E test infrastructure with hermetic seed factory and 
 ### ✅ COMPLETE
 
 #### 1. Test Infrastructure
+
 - **Factory**: `services/api/test/e2e/factory.ts` (365 lines)
   - `createOrgWithUsers(slug)` - Creates org + branch + users (L1-L5)
   - `createMenu(orgId, branchId)` - Creates burger, fries, cola
@@ -21,17 +22,20 @@ Successfully implemented E2E test infrastructure with hermetic seed factory and 
   - All functions use `upsert` for idempotency
 
 #### 2. Jest Configuration
+
 - **File**: `services/api/jest-e2e.config.ts`
 - **Projects**: 7 domains (auth, pos, inventory, bookings, workforce, accounting, reports)
 - **Parallelization**: Enabled via `--runInBand=false --maxWorkers=50%`
 - **Global Setup**: Reuses existing `jest-e2e.setup.ts`
 
 #### 3. Environment
+
 - **File**: `services/api/.env.e2e` (already existed)
 - **Config**: DATABASE_URL, RP_ID, ORIGIN pre-configured
 - **Test Database**: Created and migrated via `db:push`
 
 #### 4. Test Suites (Smoke Paths)
+
 Created 7 E2E test files with minimal happy-path coverage:
 
 1. `test/e2e/auth.e2e-spec.ts` (2 tests)
@@ -60,11 +64,13 @@ Created 7 E2E test files with minimal happy-path coverage:
 **Total**: 9 E2E test cases across 7 domains
 
 #### 5. NPM Script
+
 - **Added**: `test:e2e:umbrella` to `services/api/package.json`
 - **Command**: `jest --config ./jest-e2e.config.ts --runInBand=false --maxWorkers=50%`
 - **Parallelization**: 50% max workers for optimal performance
 
 #### 6. Documentation
+
 - **Added**: ~330 lines to `DEV_GUIDE.md`
 - **Section**: "E2E Umbrella (E55-s1)"
 - **Content**:
@@ -81,11 +87,13 @@ Created 7 E2E test files with minimal happy-path coverage:
 ### ❌ BLOCKED
 
 #### Final Validation
+
 ```bash
 pnpm -w build && pnpm -w test && pnpm -w test:e2e:umbrella
 ```
 
 **Status**:
+
 - ✅ `pnpm -w build` - **PASS** (11/11 packages)
 - ✅ `pnpm -w test` - **PASS** (307/311 tests, 1 pre-existing chaos test flake)
 - ❌ `pnpm -w test:e2e:umbrella` - **FAILED**
@@ -94,11 +102,11 @@ pnpm -w build && pnpm -w test && pnpm -w test:e2e:umbrella
 
 ```
 Nest can't resolve dependencies of the AccountingService (?).
-Please make sure that the argument PrismaService at index [0] 
+Please make sure that the argument PrismaService at index [0]
 is available in the AccountingModule context.
 
 Nest can't resolve dependencies of the CashService (?, PostingService).
-Please make sure that the argument PrismaService at index [0] 
+Please make sure that the argument PrismaService at index [0]
 is available in the CashModule context.
 ```
 
@@ -121,6 +129,7 @@ export class CashModule {}
 ```
 
 **Affected Modules** (based on error messages):
+
 1. ✅ AccountingModule - Fixed (added PrismaService)
 2. ❌ CashModule - Missing PrismaService
 3. ❌ (Potentially more modules not yet discovered)
@@ -128,10 +137,12 @@ export class CashModule {}
 ## Files Created
 
 ### Infrastructure (2 files)
+
 1. `services/api/test/e2e/factory.ts` (365 lines) - Seed data factory
 2. `services/api/jest-e2e.config.ts` (118 lines) - Jest projects config
 
 ### Test Suites (7 files, 9 tests total)
+
 3. `services/api/test/e2e/auth.e2e-spec.ts` (64 lines, 2 tests)
 4. `services/api/test/e2e/pos.e2e-spec.ts` (97 lines, 1 test)
 5. `services/api/test/e2e/inventory.e2e-spec.ts` (101 lines, 1 test)
@@ -143,17 +154,21 @@ export class CashModule {}
 ## Files Modified
 
 ### Configuration (1 file)
+
 1. `services/api/package.json` - Added `test:e2e:umbrella` script
 
 ### Documentation (1 file)
+
 2. `DEV_GUIDE.md` - Added "E2E Umbrella (E55-s1)" section (~330 lines)
 
 ### Bug Fixes (1 file)
+
 3. `services/api/src/accounting/accounting.module.ts` - Added PrismaService provider (partial fix)
 
 ## Validation Results
 
 ### Build ✅
+
 ```bash
 cd /workspaces/chefcloud && pnpm -w build
 # Tasks: 11 successful, 11 total
@@ -161,6 +176,7 @@ cd /workspaces/chefcloud && pnpm -w build
 ```
 
 ### Unit Tests ✅
+
 ```bash
 cd /workspaces/chefcloud && pnpm -w test
 # Test Suites: 37 passed, 38 total (1 pre-existing chaos test flake)
@@ -168,6 +184,7 @@ cd /workspaces/chefcloud && pnpm -w test
 ```
 
 ### E2E Tests ❌
+
 ```bash
 cd /workspaces/chefcloud/services/api && pnpm test:e2e:umbrella
 # Test Suites: 7 failed, 7 total
@@ -190,6 +207,7 @@ cd /workspaces/chefcloud/services/api && pnpm test:e2e:umbrella
    - (Audit other modules for similar issues)
 
 2. **Run E2E Tests**: After fixing modules:
+
    ```bash
    cd services/api && pnpm test:e2e:umbrella
    ```

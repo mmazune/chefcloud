@@ -9,8 +9,8 @@ export const options = {
       startVUs: 0,
       stages: [
         { duration: '30s', target: 20 }, // Ramp up
-        { duration: '3m', target: 50 },  // Sustain 50 RPS mix
-        { duration: '30s', target: 0 },  // Ramp down
+        { duration: '3m', target: 50 }, // Sustain 50 RPS mix
+        { duration: '30s', target: 0 }, // Ramp down
       ],
     },
   },
@@ -18,7 +18,7 @@ export const options = {
     'http_req_duration{name:create_order}': ['p(95)<350', 'p(99)<800'],
     'http_req_duration{name:send_order}': ['p(95)<350', 'p(99)<800'],
     'http_req_duration{name:close_order}': ['p(95)<350', 'p(99)<800'],
-    'http_req_failed': ['rate<0.05'], // <5% errors
+    http_req_failed: ['rate<0.05'], // <5% errors
   },
 };
 
@@ -32,7 +32,7 @@ const headers = {
 
 export default function () {
   const serviceType = Math.random() < 0.7 ? 'DINE_IN' : 'TAKEAWAY';
-  
+
   // 1. Create order
   const createPayload = JSON.stringify({
     tableId: serviceType === 'DINE_IN' ? 'table-1' : undefined,
@@ -59,14 +59,10 @@ export default function () {
   sleep(0.5);
 
   // 2. Send to kitchen
-  const sendRes = http.patch(
-    `${BASE_URL}/pos/orders/${orderId}/send`,
-    null,
-    {
-      headers,
-      tags: { name: 'send_order' },
-    }
-  );
+  const sendRes = http.patch(`${BASE_URL}/pos/orders/${orderId}/send`, null, {
+    headers,
+    tags: { name: 'send_order' },
+  });
 
   check(sendRes, {
     'order sent': (r) => r.status === 200,
@@ -79,14 +75,10 @@ export default function () {
     payments: [{ method: 'CASH', amount: 25000 }],
   });
 
-  const closeRes = http.patch(
-    `${BASE_URL}/pos/orders/${orderId}/close`,
-    closePayload,
-    {
-      headers,
-      tags: { name: 'close_order' },
-    }
-  );
+  const closeRes = http.patch(`${BASE_URL}/pos/orders/${orderId}/close`, closePayload, {
+    headers,
+    tags: { name: 'close_order' },
+  });
 
   check(closeRes, {
     'order closed': (r) => r.status === 200,

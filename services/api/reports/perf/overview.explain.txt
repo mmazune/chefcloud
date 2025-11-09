@@ -1,0 +1,13 @@
+⚠️  SKIPPED: Table "Order" does not exist in database
+
+SQL:
+
+        SELECT o.id, o."branchId", o.total, o."updatedAt"
+        FROM "Order" o
+        JOIN "Branch" b ON b.id = o."branchId"
+        WHERE b."orgId" = $1
+          AND o.status = $2
+          AND o."updatedAt" >= $3
+          AND o."updatedAt" <= $4
+        ORDER BY o."updatedAt" DESC
+      

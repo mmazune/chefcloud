@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { RedisService } from '../common/redis.service';
+import * as crypto from 'crypto';
 
 /**
  * SessionInvalidationService
@@ -205,7 +206,6 @@ export class SessionInvalidationService {
    */
   private hashToken(token: string): string {
     // Simple hash for demo - in production, decode JWT and use actual 'jti' claim
-    const crypto = require('crypto');
     return crypto.createHash('sha256').update(token).digest('hex');
   }
 

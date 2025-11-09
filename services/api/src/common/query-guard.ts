@@ -71,7 +71,7 @@ export class QueryGuard {
     hasPrev: boolean;
   } {
     const totalPages = Math.ceil(totalCount / pageSize);
-    
+
     return {
       page,
       pageSize,

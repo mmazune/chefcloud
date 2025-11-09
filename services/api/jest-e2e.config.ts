@@ -26,10 +26,9 @@ export default {
   testPathIgnorePatterns: ['/dist/', '/node_modules/', '\\.spec\\.ts$'],
   // Map TS path aliases to repo sources (never dist)
   moduleNameMapper: {
-    ...pathsToModuleNameMapper(
-      (baseTs as any).compilerOptions?.paths || {},
-      { prefix: '<rootDir>/../../' }
-    ),
+    ...pathsToModuleNameMapper((baseTs as any).compilerOptions?.paths || {}, {
+      prefix: '<rootDir>/../../',
+    }),
     // Hard guard: anything ending with /dist/* → /src/*
     '^(.*)/dist/(.*)$': '$1/src/$2',
   },

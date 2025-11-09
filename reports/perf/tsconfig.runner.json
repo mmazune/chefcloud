@@ -1,0 +1,20 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "CommonJS",
+    "esModuleInterop": true,
+    "moduleResolution": "Node",
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "outDir": "./dist",
+    "rootDir": ".",
+    "strict": false,
+    "baseUrl": "../..",
+    "paths": {
+      "@chefcloud/*": ["packages/*/src"]
+    }
+  },
+  "include": ["./run_explains.ts"],
+  "exclude": ["node_modules", "dist"]
+}

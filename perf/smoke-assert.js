@@ -3,7 +3,7 @@
  * perf/smoke-assert.js
  * Parses k6 JSON output and asserts performance thresholds.
  * Used by CI perf-gate job.
- * 
+ *
  * Usage: node perf/smoke-assert.js <k6-json-file>
  */
 
@@ -60,8 +60,8 @@ function errorRate(metrics) {
 
 // Performance budgets
 const budgets = {
-  'http_req_duration_p95': 350,  // p95 < 350ms
-  'error_rate': 5,                // < 5%
+  http_req_duration_p95: 350, // p95 < 350ms
+  error_rate: 5, // < 5%
 };
 
 const durations = metrics.http_req_duration || [];
@@ -76,10 +76,14 @@ console.log(`  Error rate: ${errRate.toFixed(2)}%`);
 let violations = 0;
 
 if (p95 > budgets.http_req_duration_p95) {
-  console.error(`❌ p(95) duration exceeds budget: ${p95.toFixed(2)}ms > ${budgets.http_req_duration_p95}ms`);
+  console.error(
+    `❌ p(95) duration exceeds budget: ${p95.toFixed(2)}ms > ${budgets.http_req_duration_p95}ms`,
+  );
   violations++;
 } else {
-  console.log(`✅ p(95) duration within budget: ${p95.toFixed(2)}ms <= ${budgets.http_req_duration_p95}ms`);
+  console.log(
+    `✅ p(95) duration within budget: ${p95.toFixed(2)}ms <= ${budgets.http_req_duration_p95}ms`,
+  );
 }
 
 if (errRate > budgets.error_rate) {

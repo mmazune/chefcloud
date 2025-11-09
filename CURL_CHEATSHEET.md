@@ -647,6 +647,7 @@ curl -X POST $API_URL/webhooks/airtel \
 ### Live KPI Stream (Managers & Owners)
 
 **Requirements:**
+
 - **Auth**: L4 (Manager) or L5 (Owner) role
 - **Rate Limit**: 60 requests/min, max 2 concurrent connections per user
 
@@ -665,6 +666,7 @@ curl -N -H "Authorization: Bearer $TOKEN" \
 ```
 
 **Response Format:**
+
 ```
 event: message
 data: {"salesToday":12450.50,"salesMTD":45230.75,"openOrders":3,"tablesOccupied":8,...}
@@ -674,12 +676,165 @@ data: {"salesToday":12650.50,"salesMTD":45430.75,"openOrders":4,"tablesOccupied"
 ```
 
 **Error Responses:**
+
 - `401 Unauthorized`: Missing or invalid JWT token
 - `403 Forbidden`: Requires L4 or L5 role
 - `429 Too Many Requests`: Rate limit exceeded (check `Retry-After` header)
 
 ---
 
+## Franchise Management (E22)
+
+### Get Branch Overview (L5) - Cached
+
+```bash
+# Get franchise overview for current month
+PERIOD=$(date +%Y-%m)
+curl "$API_URL/franchise/overview?period=$PERIOD" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+**Response:**
+
+```json
+{
+  "cached": false,
+  "data": [
+    {
+      "branchId": "branch-001",
+      "branchName": "Downtown Location",
+      "sales": 1250000,
+      "grossMargin": 812500,
+      "wastePercent": 3.2,
+      "sla": 95.5
+    }
+  ]
+}
+```
+
+**Cache Behavior:**
+
+- First call returns `cached: false` (database query)
+- Second call within 15s returns `cached: true` (served from Redis cache)
+- TTL configurable via `E22_OVERVIEW_TTL` environment variable
+
+**Testing Cache:**
+
+```bash
+# First call (cache MISS - slower)
+time curl "$API_URL/franchise/overview?period=$PERIOD" \
+  -H "Authorization: Bearer $TOKEN" | jq '.cached'
+# Output: false
+
+# Second call within 15s (cache HIT - faster)
+time curl "$API_URL/franchise/overview?period=$PERIOD" \
+  -H "Authorization: Bearer $TOKEN" | jq '.cached'
+# Output: true
+```
+
+### Get Branch Rankings (L5) - Cached
+
+```bash
+# Get franchise rankings for current month
+PERIOD=$(date +%Y-%m)
+curl "$API_URL/franchise/rankings?period=$PERIOD" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+**Response:**
+
+```json
+{
+  "cached": false,
+  "data": [
+    {
+      "branchId": "branch-001",
+      "branchName": "Downtown Location",
+      "score": 87.5,
+      "rank": 1,
+      "metrics": {
+        "revenue": 1250000,
+        "margin": 812500,
+        "waste": 3.2,
+        "sla": 95.5
+      }
+    }
+  ]
+}
+```
+
+**Cache Behavior:**
+
+- First call returns `cached: false` (database query)
+- Second call within 30s returns `cached: true` (served from Redis cache)
+- TTL configurable via `E22_RANKINGS_TTL` environment variable
+
+**Testing Cache:**
+
+```bash
+# First call (cache MISS - slower)
+time curl "$API_URL/franchise/rankings?period=$PERIOD" \
+  -H "Authorization: Bearer $TOKEN" | jq '.cached'
+# Output: false
+
+# Second call within 30s (cache HIT - faster)
+time curl "$API_URL/franchise/rankings?period=$PERIOD" \
+  -H "Authorization: Bearer $TOKEN" | jq '.cached'
+# Output: true
+```
+
+---
+
+### Get Branch Budgets (L5) - Cached
+
+```bash
+# Get franchise budgets for current month
+PERIOD=$(date +%Y-%m)
+curl "$API_URL/franchise/budgets?period=$PERIOD" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+**Response:**
+
+```json
+{
+  "cached": false,
+  "data": [
+    {
+      "branchId": "branch-001",
+      "branchName": "Downtown Location",
+      "period": "2025-11",
+      "revenueTarget": 50000,
+      "cogsTarget": 15000,
+      "expenseTarget": 20000,
+      "netTarget": 15000,
+      "notes": "Q4 targets adjusted"
+    }
+  ]
+}
+```
+
+**Cache Behavior:**
+
+- First call returns `cached: false` (database query)
+- Second call within 60s returns `cached: true` (served from Redis cache)
+- TTL configurable via `E22_BUDGETS_TTL` environment variable
+
+**Testing Cache:**
+
+```bash
+# First call (cache MISS - slower)
+time curl "$API_URL/franchise/budgets?period=$PERIOD" \
+  -H "Authorization: Bearer $TOKEN" | jq '.cached'
+# Output: false
+
+# Second call within 60s (cache HIT - faster)
+time curl "$API_URL/franchise/budgets?period=$PERIOD" \
+  -H "Authorization: Bearer $TOKEN" | jq '.cached'
+# Output: true
+```
+
+---
+
 **License:** MIT  
 **Version:** 0.1.0
-

@@ -71,7 +71,7 @@ export class MenuService extends BaseService {
   }
 
   async getMenuItem(id: string, orgId: string): Promise<unknown> {
-    return this.withOrg(orgId, async () => {
+    return this.executeInOrgContext(orgId, async () => {
       const item = await this.prisma.client.menuItem.findFirst({
         where: { 
           id,

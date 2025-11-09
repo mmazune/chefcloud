@@ -1,0 +1,12 @@
+⚠️  SKIPPED: Table "BranchBudget" does not exist in database
+
+SQL:
+
+        SELECT bb.id, bb."orgId", bb."branchId", bb.period,
+               bb."revenueTarget", bb."cogsTarget", bb."expenseTarget", bb.notes,
+               b.name as branch_name
+        FROM "BranchBudget" bb
+        JOIN "Branch" b ON b.id = bb."branchId"
+        WHERE bb."orgId" = $1
+          AND bb.period = $2
+      

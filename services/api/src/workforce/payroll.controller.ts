@@ -1,6 +1,6 @@
 /**
  * E43-s2: Payroll Controller
- * 
+ *
  * REST endpoints for payroll runs, payslips, and pay components (L4+ only).
  */
 

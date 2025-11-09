@@ -97,9 +97,7 @@ describe('CheckinService', () => {
     it('should throw NotFoundException for invalid ticket code', async () => {
       prisma.eventBooking.findUnique.mockResolvedValue(null);
 
-      await expect(service.checkin('INVALID_CODE', 'user-1')).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.checkin('INVALID_CODE', 'user-1')).rejects.toThrow(NotFoundException);
     });
 
     it('should throw BadRequestException if booking not CONFIRMED', async () => {
@@ -115,9 +113,7 @@ describe('CheckinService', () => {
 
       prisma.eventBooking.findUnique.mockResolvedValue(mockBooking);
 
-      await expect(service.checkin('TEST_CODE', 'user-1')).rejects.toThrow(
-        BadRequestException,
-      );
+      await expect(service.checkin('TEST_CODE', 'user-1')).rejects.toThrow(BadRequestException);
     });
 
     it('should throw BadRequestException if already checked in', async () => {
@@ -133,9 +129,7 @@ describe('CheckinService', () => {
 
       prisma.eventBooking.findUnique.mockResolvedValue(mockBooking);
 
-      await expect(service.checkin('TEST_CODE', 'user-1')).rejects.toThrow(
-        BadRequestException,
-      );
+      await expect(service.checkin('TEST_CODE', 'user-1')).rejects.toThrow(BadRequestException);
     });
 
     it('should throw BadRequestException if event not started', async () => {
@@ -157,9 +151,7 @@ describe('CheckinService', () => {
 
       prisma.eventBooking.findUnique.mockResolvedValue(mockBooking);
 
-      await expect(service.checkin('TEST_CODE', 'user-1')).rejects.toThrow(
-        BadRequestException,
-      );
+      await expect(service.checkin('TEST_CODE', 'user-1')).rejects.toThrow(BadRequestException);
     });
 
     it('should throw BadRequestException if event already ended', async () => {
@@ -181,9 +173,7 @@ describe('CheckinService', () => {
 
       prisma.eventBooking.findUnique.mockResolvedValue(mockBooking);
 
-      await expect(service.checkin('TEST_CODE', 'user-1')).rejects.toThrow(
-        BadRequestException,
-      );
+      await expect(service.checkin('TEST_CODE', 'user-1')).rejects.toThrow(BadRequestException);
     });
 
     it('should create PrepaidCredit if missing (idempotent)', async () => {
@@ -261,9 +251,7 @@ describe('CheckinService', () => {
     it('should throw NotFoundException for invalid booking ID', async () => {
       prisma.eventBooking.findUnique.mockResolvedValue(null);
 
-      await expect(service.getBookingForTicket('invalid-id')).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.getBookingForTicket('invalid-id')).rejects.toThrow(NotFoundException);
     });
   });
 });

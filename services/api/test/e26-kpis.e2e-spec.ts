@@ -11,7 +11,7 @@ describe('E26-s1: Live KPI Streaming (SSE)', () => {
   let managerToken: string;
   let orgId: string;
   let branchId: string;
-  let userId: string;
+  let _userId: string;
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -52,7 +52,7 @@ describe('E26-s1: Live KPI Streaming (SSE)', () => {
         passwordHash: 'dummy-hash',
       },
     });
-    userId = user.id;
+    _userId = user.id;
 
     // Login to get token
     const loginRes = await request(app.getHttpServer()).post('/auth/login').send({
@@ -98,7 +98,7 @@ describe('E26-s1: Live KPI Streaming (SSE)', () => {
       });
 
       // Mock token for L3 user
-      const res = await request(app.getHttpServer())
+      await request(app.getHttpServer())
         .get('/stream/kpis?scope=org')
         .set('Authorization', `Bearer mock-l3-token`)
         .expect(403);
@@ -135,7 +135,7 @@ describe('E26-s1: Live KPI Streaming (SSE)', () => {
         .set('Authorization', `Bearer ${managerToken}`)
         .expect('Content-Type', /text\/event-stream/)
         .expect(200)
-        .end((err, res) => {
+        .end((err, _res) => {
           if (err) return done(err);
           // Would need to parse SSE chunks here
           done();

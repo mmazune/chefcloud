@@ -10,11 +10,11 @@ describe('slowQueryMiddleware', () => {
     mockLogger = {
       warn: jest.fn(),
     };
-    
+
     // Set env vars for testing
     process.env.SLOW_QUERY_MS = '50'; // Lower threshold for faster tests
     process.env.SLOW_QUERY_SAMPLE = '1.0'; // Sample 100% for tests
-    
+
     // Mock Math.random to always return value that passes sampling (< 1.0)
     originalRandom = Math.random;
     Math.random = jest.fn(() => 0.5);
@@ -24,7 +24,7 @@ describe('slowQueryMiddleware', () => {
     jest.clearAllMocks();
     delete process.env.SLOW_QUERY_MS;
     delete process.env.SLOW_QUERY_SAMPLE;
-    
+
     // Restore Math.random
     Math.random = originalRandom;
   });
@@ -78,7 +78,7 @@ describe('slowQueryMiddleware', () => {
     expect(mockLogger.warn).toHaveBeenCalled();
     const logCall = mockLogger.warn.mock.calls[0];
     const logData = logCall[0];
-    
+
     expect(logData.slowQuery).toBe(true);
     expect(logData.durationMs).toBeGreaterThanOrEqual(50);
     expect(logData.model).toBe('Order');
@@ -113,10 +113,10 @@ describe('slowQueryMiddleware', () => {
 
     const logCall = mockLogger.warn.mock.calls[0];
     const logData = logCall[0];
-    
+
     // Should include where clause
     expect(logData.params.where).toEqual({ id: '123' });
-    
+
     // Should NOT include full data object (only hints)
     expect(logData.params.data).toBeUndefined();
   });

@@ -7,12 +7,17 @@
     "dev": "nest start --watch",
     "start": "node dist/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\"",
+    "lint:fix": "eslint --fix \"{src,apps,libs,test}/**/*.ts\"",
+    "lint:ci": "eslint --max-warnings=0 \"{src,apps,libs,test}/**/*.ts\"",
     "test": "jest --passWithNoTests",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "test:e2e:umbrella": "jest --config ./jest-e2e.config.ts --runInBand=false --maxWorkers=50%",
-    "seed": "ts-node prisma/seed.ts"
+    "seed": "ts-node prisma/seed.ts",
+    "perf:build": "tsc -p ../../reports/perf/tsconfig.runner.json",
+    "perf:run": "node ../../reports/perf/dist/run_explains.js",
+    "perf:all": "pnpm run perf:build && pnpm run perf:run"
   },
   "dependencies": {
     "@chefcloud/contracts": "workspace:*",
@@ -50,6 +55,7 @@
     "pino": "^10.1.0",
     "pino-http": "^11.0.0",
     "pino-pretty": "^13.1.2",
+    "prom-client": "^15.1.3",
     "qrcode": "^1.5.4",
     "reflect-metadata": "^0.2.1",
     "rxjs": "^7.8.2",

@@ -9,7 +9,9 @@ dotenv.config({ path: resolve(__dirname, '../.env.e2e') });
 async function setup() {
   const dbUrl = process.env.DATABASE_URL;
   if (!dbUrl) {
-    console.error('❌ DATABASE_URL not set. Create services/api/.env.e2e or set environment variable.');
+    console.error(
+      '❌ DATABASE_URL not set. Create services/api/.env.e2e or set environment variable.',
+    );
     process.exit(1);
   }
 

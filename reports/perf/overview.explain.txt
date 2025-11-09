@@ -1,0 +1,60 @@
+================================================================================
+EXPLAIN ANALYZE: Franchise Overview - Orders Query (SAMPLE)
+Period: 2024-11
+Generated: 2024-11-08T22:40:00.000Z
+================================================================================
+
+SQL:
+SELECT o.id, o."branchId", o.total, o."updatedAt"
+FROM "Order" o
+JOIN "Branch" b ON b.id = o."branchId"
+WHERE b."orgId" = $1
+  AND o.status = $2
+  AND o."updatedAt" >= $3
+  AND o."updatedAt" <= $4
+ORDER BY o."updatedAt" DESC
+
+Parameters:
+[
+  "ORG_TEST",
+  "CLOSED",
+  "2024-11-01T00:00:00.000Z",
+  "2024-11-30T23:59:59.000Z"
+]
+
+================================================================================
+QUERY PLAN (SAMPLE - Tables not present in dev DB):
+================================================================================
+
+Sort  (cost=15234.56..15289.12 rows=21823 width=48) (actual time=245.123..247.456 rows=18934 loops=1)
+  Output: o.id, o."branchId", o.total, o."updatedAt"
+  Sort Key: o."updatedAt" DESC
+  Sort Method: quicksort  Memory: 2891kB
+  Buffers: shared hit=1234 read=456
+  ->  Hash Join  (cost=1234.00..13456.78 rows=21823 width=48) (actual time=12.345..198.234 rows=18934 loops=1)
+        Output: o.id, o."branchId", o.total, o."updatedAt"
+        Hash Cond: (o."branchId" = b.id)
+        Buffers: shared hit=1234 read=456
+        ->  Seq Scan on "Order" o  (cost=0.00..11234.56 rows=25678 width=48) (actual time=0.123..156.789 rows=23456 loops=1)
+              Output: o.id, o."branchId", o.status, o.total, o."updatedAt"
+              Filter: ((o.status = 'CLOSED'::text) AND (o."updatedAt" >= '2024-11-01 00:00:00'::timestamp) AND (o."updatedAt" <= '2024-11-30 23:59:59'::timestamp))
+              Rows Removed by Filter: 5234
+              Buffers: shared hit=987 read=432
+        ->  Hash  (cost=1123.00..1123.00 rows=45 width=16) (actual time=5.678..5.678 rows=12 loops=1)
+              Output: b.id
+              Buckets: 1024  Batches: 1  Memory Usage: 9kB
+              Buffers: shared hit=23
+              ->  Seq Scan on "Branch" b  (cost=0.00..1123.00 rows=45 width=16) (actual time=0.234..5.456 rows=12 loops=1)
+                    Output: b.id
+                    Filter: (b."orgId" = 'ORG_TEST'::text)
+                    Rows Removed by Filter: 123
+                    Buffers: shared hit=23
+
+Planning Time: 2.345 ms
+Execution Time: 248.123 ms
+
+RECOMMENDATIONS:
+- Sequential scan on "Order" table scanning 28,690 rows (5,234 filtered out)
+- Consider: CREATE INDEX CONCURRENTLY idx_order_branch_status_updated 
+  ON "Order" ("branchId", status, "updatedAt" DESC) WHERE status = 'CLOSED';
+- This would enable index-only scan and eliminate sort operation

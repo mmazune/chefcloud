@@ -84,7 +84,9 @@ jobs:
         run: cd packages/db && pnpm run db:generate
 
       - name: Lint
-        run: pnpm run lint
+        run: |
+          cd services/api
+          pnpm lint:ci
 
       - name: Type check
         run: pnpm run build

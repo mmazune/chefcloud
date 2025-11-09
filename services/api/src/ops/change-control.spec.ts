@@ -79,8 +79,14 @@ describe('E49-s1: Change Control & Staged Rollouts', () => {
         });
 
         // Same context should always return same result
-        const result1 = await flagsService.get('TEST_FLAG', { orgId: 'org-1', branchId: 'branch-1' });
-        const result2 = await flagsService.get('TEST_FLAG', { orgId: 'org-1', branchId: 'branch-1' });
+        const result1 = await flagsService.get('TEST_FLAG', {
+          orgId: 'org-1',
+          branchId: 'branch-1',
+        });
+        const result2 = await flagsService.get('TEST_FLAG', {
+          orgId: 'org-1',
+          branchId: 'branch-1',
+        });
         expect(result1).toBe(result2);
       });
 
@@ -147,13 +153,22 @@ describe('E49-s1: Change Control & Staged Rollouts', () => {
           scopes: { roles: ['L4'], branches: ['branch-1'] },
         });
 
-        const allowed = await flagsService.get('SCOPED_FEATURE', { role: 'L4', branchId: 'branch-1' });
+        const allowed = await flagsService.get('SCOPED_FEATURE', {
+          role: 'L4',
+          branchId: 'branch-1',
+        });
         expect(allowed).toBe(true);
 
-        const deniedRole = await flagsService.get('SCOPED_FEATURE', { role: 'L2', branchId: 'branch-1' });
+        const deniedRole = await flagsService.get('SCOPED_FEATURE', {
+          role: 'L2',
+          branchId: 'branch-1',
+        });
         expect(deniedRole).toBe(false);
 
-        const deniedBranch = await flagsService.get('SCOPED_FEATURE', { role: 'L4', branchId: 'branch-2' });
+        const deniedBranch = await flagsService.get('SCOPED_FEATURE', {
+          role: 'L4',
+          branchId: 'branch-2',
+        });
         expect(deniedBranch).toBe(false);
       });
     });
@@ -211,7 +226,9 @@ describe('E49-s1: Change Control & Staged Rollouts', () => {
       it('should throw NotFoundException if flag does not exist', async () => {
         mockPrismaClient.featureFlag.findUnique.mockResolvedValue(null);
 
-        await expect(flagsService.kill('NONEXISTENT', 'user-admin')).rejects.toThrow(NotFoundException);
+        await expect(flagsService.kill('NONEXISTENT', 'user-admin')).rejects.toThrow(
+          NotFoundException,
+        );
       });
     });
 

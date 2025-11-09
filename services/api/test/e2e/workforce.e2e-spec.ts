@@ -7,12 +7,12 @@ import { createOrgWithUsers, disconnect } from './factory';
 describe('Workforce E2E', () => {
   let app: INestApplication;
   let waiterToken: string;
-  let managerToken: string;
-  let waiterId: string;
+  let _managerToken: string;
+  let _waiterId: string;
 
   beforeAll(async () => {
     const factory = await createOrgWithUsers('e2e-workforce');
-    waiterId = factory.users.waiter.id;
+    _waiterId = factory.users.waiter.id;
 
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
@@ -30,22 +30,18 @@ describe('Workforce E2E', () => {
     await app.init();
 
     // Login as waiter
-    const waiterLogin = await request(app.getHttpServer())
-      .post('/auth/login')
-      .send({
-        email: factory.users.waiter.email,
-        password: 'Test#123',
-      });
+    const waiterLogin = await request(app.getHttpServer()).post('/auth/login').send({
+      email: factory.users.waiter.email,
+      password: 'Test#123',
+    });
     waiterToken = waiterLogin.body.access_token;
 
     // Login as manager
-    const managerLogin = await request(app.getHttpServer())
-      .post('/auth/login')
-      .send({
-        email: factory.users.manager.email,
-        password: 'Test#123',
-      });
-    managerToken = managerLogin.body.access_token;
+    const managerLogin = await request(app.getHttpServer()).post('/auth/login').send({
+      email: factory.users.manager.email,
+      password: 'Test#123',
+    });
+    _managerToken = managerLogin.body.access_token;
   });
 
   afterAll(async () => {
@@ -60,7 +56,7 @@ describe('Workforce E2E', () => {
       .set('Authorization', `Bearer ${waiterToken}`)
       .expect(201);
 
-    const attendanceId = clockInResponse.body.id;
+    const _attendanceId = clockInResponse.body.id;
     expect(clockInResponse.body.clockIn).toBeDefined();
     expect(clockInResponse.body.clockOut).toBeNull();
 

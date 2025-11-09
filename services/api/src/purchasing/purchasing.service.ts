@@ -1,11 +1,17 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { CreatePODto, ReceivePODto } from './purchasing.dto';
+import { CacheInvalidationService } from '../common/cache-invalidation.service';
 
 @Injectable()
 export class PurchasingService {
-  constructor(private prisma: PrismaService) {}
+  private readonly logger = new Logger(PurchasingService.name);
+
+  constructor(
+    private prisma: PrismaService,
+    private cacheInvalidation: CacheInvalidationService,
+  ) {}
 
   async createPO(orgId: string, branchId: string, dto: CreatePODto): Promise<any> {
     // Generate PO number
@@ -106,6 +112,14 @@ export class PurchasingService {
       where: { id: poId },
       data: { status: 'received' },
     });
+
+    // E22.D.2: Invalidate franchise caches (non-blocking, best-effort)
+    try {
+      await this.cacheInvalidation.onPoReceived(orgId);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.warn(`Cache invalidation failed for PO received: ${message}`);
+    }
 
     return gr;
   }

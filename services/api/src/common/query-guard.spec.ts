@@ -26,7 +26,7 @@ describe('QueryGuard', () => {
   describe('toPrismaParams', () => {
     it('should convert pagination params with defaults', () => {
       const result = QueryGuard.toPrismaParams({});
-      
+
       expect(result.take).toBe(20); // default page size
       expect(result.skip).toBe(0); // page 1
       expect(result.orderBy).toEqual({ updatedAt: 'desc' }); // default sort
@@ -54,7 +54,7 @@ describe('QueryGuard', () => {
 
     it('should cap page size in params', () => {
       const result = QueryGuard.toPrismaParams({ pageSize: 500 });
-      
+
       expect(result.take).toBe(100); // capped to max
     });
   });

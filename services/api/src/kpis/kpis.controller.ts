@@ -15,18 +15,18 @@ export class KpisController {
 
   /**
    * SSE endpoint for live KPI streaming
-   * 
+   *
    * Security:
    * - Requires JWT authentication (401 if missing/invalid)
    * - Requires L4 (Manager) or L5 (Owner) role (403 if unauthorized)
    * - Org-scoped: only streams data for authenticated user's org
    * - Rate limited: 60 req/min per user/IP, max 2 concurrent connections per user
-   * 
+   *
    * Headers set:
    * - Content-Type: text/event-stream
-   * - Cache-Control: no-cache  
+   * - Cache-Control: no-cache
    * - Connection: keep-alive
-   * 
+   *
    * @param req - Request with authenticated user
    * @param scope - 'org' (default) or 'branch'
    * @param branchId - Optional branch filter

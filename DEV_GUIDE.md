@@ -716,12 +716,12 @@ ChefCloud implements immediate session invalidation when badges are revoked, los
 
 ### Badge Lifecycle States
 
-| State | Description | Authentication | Session Impact |
-|-------|-------------|----------------|----------------|
-| **ACTIVE** | Badge is assigned and operational | ✅ Allowed | No change |
-| **REVOKED** | Badge permanently disabled (security) | ❌ Denied | All sessions invalidated |
-| **LOST** | Badge reported missing | ❌ Denied | All sessions invalidated |
-| **RETURNED** | Badge handed back to org | ❌ Denied | Old sessions remain invalid |
+| State        | Description                           | Authentication | Session Impact              |
+| ------------ | ------------------------------------- | -------------- | --------------------------- |
+| **ACTIVE**   | Badge is assigned and operational     | ✅ Allowed     | No change                   |
+| **REVOKED**  | Badge permanently disabled (security) | ❌ Denied      | All sessions invalidated    |
+| **LOST**     | Badge reported missing                | ❌ Denied      | All sessions invalidated    |
+| **RETURNED** | Badge handed back to org              | ❌ Denied      | Old sessions remain invalid |
 
 ### Session Versioning
 
@@ -758,6 +758,7 @@ curl -X POST http://localhost:3001/badges/TESTBADGE001/revoke \
 ```
 
 **Effect**:
+
 - Badge state → REVOKED
 - All active sessions for this badge invalidated
 - User's `sessionVersion` incremented
@@ -844,9 +845,9 @@ Tokens issued after E25 include versioning:
   "email": "alice@chef.com",
   "orgId": "org-456",
   "roleLevel": "L3",
-  "sv": 0,                    // E25: Session version
-  "badgeId": "TESTBADGE001",  // E25: Badge code (if MSR login)
-  "jti": "abc123...",         // E25: JWT ID for deny list
+  "sv": 0, // E25: Session version
+  "badgeId": "TESTBADGE001", // E25: Badge code (if MSR login)
+  "jti": "abc123...", // E25: JWT ID for deny list
   "iat": 1699401234,
   "exp": 1699487634
 }
@@ -857,11 +858,13 @@ Tokens issued after E25 include versioning:
 **Requirement**: Session invalidation must complete within **2 seconds** across all nodes.
 
 **Implementation**:
+
 - Redis deny list: Immediate (< 50ms)
 - Version check: Database query on each request (< 100ms)
 - Pub/sub notification: Optional for multi-node deployments
 
 **Testing**:
+
 ```bash
 # E2E test validates < 2s timing
 pnpm test:e2e badge-revocation
@@ -941,19 +944,23 @@ curl -X POST http://localhost:3001/auth/msr-swipe \
 ### Troubleshooting
 
 **"Session has been invalidated due to security event"**
+
 - Badge was revoked or reported lost
 - Solution: Contact admin to verify badge status
 
 **"Badge has been revoked"**
+
 - Attempting to authenticate with REVOKED badge
 - Solution: Badge must be reset to ACTIVE state
 
 **Old token still works after revocation**
+
 - Check Redis connectivity
 - Verify sessionVersion was incremented
 - Check JWT sv claim matches database
 
 **Invalidation takes > 2 seconds**
+
 - Database or Redis slow
 - Check network latency
 - Review SessionInvalidationService logs
@@ -1160,11 +1167,11 @@ Subscription and plan mutation endpoints are rate limited based on the organizat
 
 **Rate Limits by Plan:**
 
-| Plan       | Requests/Minute | Use Case                                |
-|------------|----------------|-----------------------------------------|
-| Free       | 10             | Individual users, light usage           |
-| Pro        | 60             | Small teams, moderate API usage         |
-| Enterprise | 240            | Large organizations, heavy automation   |
+| Plan       | Requests/Minute | Use Case                              |
+| ---------- | --------------- | ------------------------------------- |
+| Free       | 10              | Individual users, light usage         |
+| Pro        | 60              | Small teams, moderate API usage       |
+| Enterprise | 240             | Large organizations, heavy automation |
 
 **Per-IP Limit:** 120 requests/minute (applies regardless of plan tier)
 
@@ -2070,10 +2077,11 @@ ChefCloud provides real-time Key Performance Indicator (KPI) streaming for Manag
 ### SSE Endpoint (L4+)
 
 **Security (Updated E26-fix):**
+
 - **Authentication**: Requires valid JWT Bearer token (401 if missing/invalid)
 - **Authorization**: Requires L4 (Manager) or L5 (Owner) role (403 if unauthorized)
 - **Org-Scope**: Automatically scoped to authenticated user's organization
-- **Rate Limiting**: 
+- **Rate Limiting**:
   - 60 requests/minute per user
   - 60 requests/minute per IP
   - Maximum 2 concurrent SSE connections per user
@@ -2081,6 +2089,7 @@ ChefCloud provides real-time Key Performance Indicator (KPI) streaming for Manag
 - **CORS**: Enforced via `CORS_ALLOWLIST` environment variable
 
 **Environment Variables:**
+
 ```bash
 # CORS Configuration
 CORS_ALLOWLIST=http://localhost:3000,http://localhost:5173,https://app.chefcloud.com
@@ -2222,6 +2231,177 @@ ChefCloud provides comprehensive franchise management capabilities including dem
 - **Ranking Workers**: Monthly jobs (1st @ 01:00) calculate branch scores and persist rankings
 - **Custom Weights**: Org-level configuration for ranking formula (revenue, margin, waste, SLA)
 - **RBAC**: L5 (Owner) for budgets/rankings, L4+ (Manager/Owner) for forecasts/procurement
+- **E22.A Caching**: Read-through Redis cache for `/franchise/overview` with 15s TTL (configurable)
+
+### E22.A: Franchise Overview Caching
+
+The `/franchise/overview` endpoint now includes read-through caching to reduce database load during frequent polling.
+
+**Environment Configuration:**
+
+```bash
+# Cache TTL for franchise overview (seconds)
+E22_OVERVIEW_TTL=15  # Default: 15 seconds
+```
+
+**Cache Behavior:**
+
+- **First Call**: Queries database, returns `cached: false`, stores result in Redis for 15 seconds
+- **Subsequent Calls**: Serves from cache, returns `cached: true` (within TTL window)
+- **Key Format**: `cache:fr:overview:<orgId>:<base64url(params)>`
+- **Storage**: Redis (primary) with automatic in-memory fallback if Redis unavailable
+- **Metrics**: Console logs for `cache_hits`, `cache_misses`, and `db_query_ms`
+
+**Testing Cache:**
+
+```bash
+# Get current period
+PERIOD=$(date +%Y-%m)
+
+# First call (cache MISS)
+curl -H "Authorization: Bearer {token}" \
+  "http://localhost:3001/franchise/overview?period=$PERIOD"
+# Response: {"data": [...], "cached": false}
+
+# Second call within 15s (cache HIT)
+curl -H "Authorization: Bearer {token}" \
+  "http://localhost:3001/franchise/overview?period=$PERIOD"
+# Response: {"data": [...], "cached": true}
+```
+
+**Cache Invalidation:**
+
+Currently, the cache uses time-based expiration only (no event-driven invalidation). Future enhancements will add automatic invalidation when branch data changes.
+
+### E22.B: Franchise Rankings Caching
+
+The `/franchise/rankings` endpoint now includes read-through caching with a 30-second TTL.
+
+**Environment Configuration:**
+
+```bash
+# Cache TTL for franchise rankings (seconds)
+E22_RANKINGS_TTL=30  # Default: 30 seconds
+```
+
+**Cache Behavior:**
+
+- **First Call**: Queries database, returns `cached: false`, stores result in Redis for 30 seconds
+- **Subsequent Calls**: Serves from cache, returns `cached: true` (within TTL window)
+- **Key Format**: `cache:fr:rankings:<orgId>:<base64url(params)>`
+- **Storage**: Redis (primary) with automatic in-memory fallback
+- **TTL**: 30 seconds (2x longer than overview due to less frequent updates)
+
+**Testing Cache:**
+
+```bash
+# Get current period
+PERIOD=$(date +%Y-%m)
+
+# First call (cache MISS)
+curl -H "Authorization: Bearer {token}" \
+  "http://localhost:3001/franchise/rankings?period=$PERIOD"
+# Response: {"data": [...], "cached": false}
+
+# Second call within 30s (cache HIT)
+curl -H "Authorization: Bearer {token}" \
+  "http://localhost:3001/franchise/rankings?period=$PERIOD"
+# Response: {"data": [...], "cached": true}
+```
+
+### E22.C: Franchise Budgets Caching
+
+The `/franchise/budgets` endpoint now includes read-through caching with a 60-second TTL.
+
+**Environment Configuration:**
+
+```bash
+# Cache TTL for franchise budgets (seconds)
+E22_BUDGETS_TTL=60  # Default: 60 seconds
+```
+
+**Cache Behavior:**
+
+- **First Call**: Queries database, returns `cached: false`, stores result in Redis for 60 seconds
+- **Subsequent Calls**: Serves from cache, returns `cached: true` (within TTL window)
+- **Key Format**: `cache:fr:budgets:<orgId>:<base64url(params)>`
+- **Storage**: Redis (primary) with automatic in-memory fallback
+- **TTL**: 60 seconds (4x longer than overview, 2x longer than rankings - budget data changes infrequently)
+
+**Testing Cache:**
+
+```bash
+# Get current period
+PERIOD=$(date +%Y-%m)
+
+# First call (cache MISS)
+curl -H "Authorization: Bearer {token}" \
+  "http://localhost:3001/franchise/budgets?period=$PERIOD"
+# Response: {"data": [...], "cached": false}
+
+# Second call within 60s (cache HIT)
+curl -H "Authorization: Bearer {token}" \
+  "http://localhost:3001/franchise/budgets?period=$PERIOD"
+# Response: {"data": [...], "cached": true}
+```
+
+### E22.D: Event-Driven Cache Invalidation
+
+The franchise caching system includes automatic cache invalidation based on business events. When certain mutations occur, related cache entries are immediately invalidated to ensure data freshness.
+
+**Implemented Events:**
+
+| Event                | Triggered By                | Invalidated Prefixes         | Status                                   |
+| -------------------- | --------------------------- | ---------------------------- | ---------------------------------------- |
+| `po.received`        | Purchase order receipt      | overview, rankings           | ✅ Implemented                           |
+| `inventory.adjusted` | Manual inventory adjustment | overview, rankings, forecast | ✅ Implemented                           |
+| `inventory.adjusted` | Wastage recording           | overview, rankings, forecast | ✅ Implemented                           |
+| `budget.updated`     | Budget create/update        | budgets                      | ✅ Implemented                           |
+| `transfer.changed`   | Transfer create/approve     | overview, rankings, forecast | ❌ Not implemented (no transfer service) |
+
+**Implementation Pattern:**
+
+All mutations follow a non-blocking, post-commit invalidation pattern:
+
+```typescript
+// After successful database transaction
+try {
+  await this.cacheInvalidation.onSomeEvent(orgId);
+} catch (error) {
+  this.logger.warn(`Cache invalidation failed: ${error.message}`);
+}
+```
+
+**Key Features:**
+
+- **Non-blocking**: Cache invalidation failures don't affect business operations
+- **Post-commit**: Only invalidates after successful database mutations
+- **Org-scoped**: Each organization's cache is invalidated independently
+- **Logged**: Failures are logged for monitoring
+
+**Example Log Output:**
+
+Successful invalidation:
+
+```
+[CacheInvalidationService] PO received for org ORG-123 - invalidating overview, rankings
+```
+
+Failed invalidation (non-blocking):
+
+```
+[PurchasingService] WARN: Cache invalidation failed for PO received: Redis connection refused
+```
+
+**Monitoring:**
+
+Watch for cache invalidation warnings in logs. High failure rates may indicate:
+
+- Redis connectivity issues
+- Network problems
+- Service configuration errors
+
+Caches will still expire naturally via TTL even if invalidation fails.
 
 ### Franchise Endpoints
 
@@ -2239,10 +2419,12 @@ curl -H "Authorization: Bearer {token}" \
 **Response:**
 
 ```json
-[
-  {
-    "branchId": "branch-123",
-    "branchName": "Downtown",
+{
+  "cached": false,
+  "data": [
+    {
+      "branchId": "branch-123",
+      "branchName": "Downtown",
     "sales": 1250000,
     "grossMargin": 812500,
     "wastePercent": 3.2,
@@ -7504,16 +7686,19 @@ ChefCloud is designed for high availability and performance under load. This sec
 ### Performance Budgets
 
 **API Response Times**:
+
 - p95 < 350ms for normal REST APIs
 - p99 < 800ms for all APIs
 - SSE connect < 500ms
 - Error rate < 5% under 50 RPS sustained load
 
 **Concurrency**:
+
 - Max 200 concurrent SSE connections (configurable via `STREAM_MAX_CLIENTS`)
 - Memory usage should remain steady under sustained load
 
 **Database**:
+
 - Query timeout: 5s (configurable)
 - Slow query logging: >200ms (sample 10%)
 - Connection pool: 10 connections (default)
@@ -7549,11 +7734,13 @@ docker run --rm -i --network host \
 ```
 
 **Scenarios**:
+
 1. **kpis-sse.js**: Simulates 200 SSE clients connecting to `/stream/kpis` for 2 minutes
 2. **pos-happy.js**: Simulates POS workflow (70% DINE_IN, 30% TAKEAWAY) with ramp-up to 50 RPS
 3. **owner-overview.js**: Simulates 25 clients polling `/owner/overview` every 2s for 5 minutes
 
 **Thresholds**:
+
 - HTTP request duration p(95) < 350ms, p(99) < 800ms
 - HTTP request failure rate < 5%
 - SSE connection establishment < 500ms
@@ -7583,6 +7770,7 @@ SLOW_QUERY_SAMPLE=0.1    // Sample 10% of slow queries
 ```
 
 **Tuning**:
+
 - Increase `SLOW_QUERY_MS` to reduce noise (e.g., 500ms)
 - Lower `SLOW_QUERY_SAMPLE` to reduce log volume (e.g., 0.01 = 1%)
 - Set to `SLOW_QUERY_SAMPLE=0` to disable in production
@@ -7597,7 +7785,7 @@ import { QueryGuard } from './common/query-guard';
 // Cap page size to max 100 items, default 20
 const params = QueryGuard.toPrismaParams({
   page: 2,
-  pageSize: 500,  // Will be capped to 100
+  pageSize: 500, // Will be capped to 100
   sortBy: 'createdAt',
   sortOrder: 'desc',
 });
@@ -7610,6 +7798,7 @@ const meta = QueryGuard.getPaginationMeta(2, 100, 500);
 ```
 
 **Benefits**:
+
 - Prevents resource exhaustion from large page sizes
 - Consistent sorting behavior (default: `updatedAt desc`)
 - Standard pagination metadata for frontend
@@ -7637,7 +7826,7 @@ SSE endpoints enforce a hard cap on concurrent connections:
 
 ```typescript
 // Environment
-STREAM_MAX_CLIENTS=200  // Default: 200
+STREAM_MAX_CLIENTS = 200; // Default: 200
 
 // Behavior
 // - Connection count tracked in EventBusService
@@ -7646,6 +7835,7 @@ STREAM_MAX_CLIENTS=200  // Default: 200
 ```
 
 **Monitoring**:
+
 ```bash
 # Check current SSE client count via metrics
 curl http://localhost:3001/ops/metrics | grep sse_clients
@@ -7658,68 +7848,72 @@ curl http://localhost:3001/ops/ready
 ### Health & Readiness Probes
 
 **Liveness Probe** (`/ops/health`):
+
 - Checks: Database, Redis, Queue existence
 - Returns: 200 OK if all checks pass
 - Use for: K8s livenessProbe, Docker HEALTHCHECK
 
 **Readiness Probe** (`/ops/ready`):
+
 - Checks: Database response time (<1s), Redis, Queue backlog (<100 jobs)
 - Returns: 200 with status `ready|degraded|not_ready`
 - Use for: K8s readinessProbe, load balancer health checks
 
 **Example Kubernetes Config**:
+
 ```yaml
 apiVersion: v1
 kind: Pod
 spec:
   containers:
-  - name: chefcloud-api
-    image: ghcr.io/mmazune/chefcloud-api:latest
-    ports:
-    - containerPort: 3001
-    livenessProbe:
-      httpGet:
-        path: /ops/health
-        port: 3001
-      initialDelaySeconds: 30
-      periodSeconds: 10
-      timeoutSeconds: 5
-    readinessProbe:
-      httpGet:
-        path: /ops/ready
-        port: 3001
-      initialDelaySeconds: 10
-      periodSeconds: 5
-      timeoutSeconds: 3
-    env:
-    - name: DATABASE_URL
-      valueFrom:
-        secretKeyRef:
-          name: chefcloud-secrets
-          key: database-url
-    - name: REDIS_HOST
-      value: "redis-service"
-    - name: SLOW_QUERY_MS
-      value: "500"
-    - name: STREAM_MAX_CLIENTS
-      value: "200"
+    - name: chefcloud-api
+      image: ghcr.io/mmazune/chefcloud-api:latest
+      ports:
+        - containerPort: 3001
+      livenessProbe:
+        httpGet:
+          path: /ops/health
+          port: 3001
+        initialDelaySeconds: 30
+        periodSeconds: 10
+        timeoutSeconds: 5
+      readinessProbe:
+        httpGet:
+          path: /ops/ready
+          port: 3001
+        initialDelaySeconds: 10
+        periodSeconds: 5
+        timeoutSeconds: 3
+      env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: chefcloud-secrets
+              key: database-url
+        - name: REDIS_HOST
+          value: 'redis-service'
+        - name: SLOW_QUERY_MS
+          value: '500'
+        - name: STREAM_MAX_CLIENTS
+          value: '200'
 ```
 
 **Example Docker Compose**:
+
 ```yaml
 version: '3.8'
 services:
   api:
     image: ghcr.io/mmazune/chefcloud-api:latest
     ports:
-      - "3001:3001"
+      - '3001:3001'
     environment:
       DATABASE_URL: postgresql://postgres:postgres@db:5432/chefcloud
       REDIS_HOST: redis
       SLOW_QUERY_MS: 500
       STREAM_MAX_CLIENTS: 200
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3001/ops/health"]
+      test: ['CMD', 'curl', '-f', 'http://localhost:3001/ops/health']
       interval: 30s
       timeout: 5s
       retries: 3
@@ -7733,7 +7927,7 @@ services:
   db:
     image: postgres:15-alpine
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -7745,28 +7939,33 @@ services:
 ### Production Recommendations
 
 **Database**:
+
 - Use connection pooling (default: 10 connections)
 - Enable statement timeout: `SET statement_timeout = '5s'`
 - Monitor slow query logs and add indexes as needed
 - Use read replicas for analytics queries
 
 **Caching**:
+
 - Redis for session storage and job queues
 - Set TTL on cached data (e.g., KPI cache: 60s)
 - Monitor cache hit rates
 
 **Load Balancing**:
+
 - Use readiness probe for load balancer health checks
 - Session affinity not required (stateless API)
 - SSE connections should use sticky sessions if using multiple instances
 
 **Monitoring**:
+
 - Prometheus metrics: `/ops/metrics`
 - Structured logging with Pino (JSON format)
 - Slow query logs → analyze with query analysis tools
 - APM (optional): New Relic, Datadog, or OpenTelemetry
 
 **Scaling**:
+
 - Horizontal scaling: Run multiple API instances behind load balancer
 - Worker scaling: Separate worker service instances (BullMQ)
 - Database: Vertical scaling first, then read replicas
@@ -7775,18 +7974,21 @@ services:
 ### Troubleshooting
 
 **High Response Times**:
+
 1. Check slow query logs (`grep slowQuery logs/*.log`)
 2. Verify database indexes are being used (`EXPLAIN ANALYZE`)
 3. Check Redis connectivity and latency
 4. Review queue backlog (`/ops/ready` → `checks.queue.waiting`)
 
 **SSE Connection Issues**:
+
 1. Check client count: `curl /ops/ready | jq '.sseClients'`
 2. If at limit (200), increase `STREAM_MAX_CLIENTS`
 3. Verify keepalive (15s) is working (no client disconnects)
 4. Check for proxy timeout settings (nginx/ALB: >30s recommended)
 
 **Memory Leaks**:
+
 1. Monitor process memory with `ps aux | grep node`
 2. Check for unclosed SSE connections
 3. Review queue job completion (failed jobs accumulating?)
@@ -7871,6 +8073,7 @@ curl -X POST http://localhost:3001/events/checkin \
 ```
 
 **Validations**:
+
 - Event must be active (current time between `startsAt` and `endsAt`)
 - Booking must be `CONFIRMED` status
 - Cannot check in twice
@@ -7898,6 +8101,7 @@ curl -X POST http://localhost:3001/pos/orders \
 ```
 
 **Logic**:
+
 - Checks if `tableId` has active event (within time window)
 - Finds CONFIRMED booking with `checkedInAt` not null
 - Finds unconsumed PrepaidCredit linked to booking
@@ -7915,6 +8119,7 @@ Generated using **pdfkit** + **qrcode**:
 - **Footer**: "Present this ticket at the door for check-in."
 
 **Sample PDF Structure**:
+
 ```
 ┌─────────────────────────────────┐
 │   ChefCloud Event Ticket        │
@@ -8028,6 +8233,7 @@ E43-s2 adds payroll calculation from time entries, pay component management, and
 ### Database Schema
 
 **PayRun**:
+
 ```prisma
 model PayRun {
   id          String       @id
@@ -8040,6 +8246,7 @@ model PayRun {
 ```
 
 **PaySlip**:
+
 ```prisma
 model PaySlip {
   id              String
@@ -8057,6 +8264,7 @@ model PaySlip {
 ```
 
 **PayComponent**:
+
 ```prisma
 model PayComponent {
   id      String           @id
@@ -8073,11 +8281,13 @@ model PayComponent {
 ### Pay Component Calculation
 
 **EARNING Types**:
+
 - **FIXED**: Add flat amount (e.g., $500 monthly bonus)
 - **RATE**: Multiply value by hourly rate (e.g., 10 bonus hours × $25/hr = $250)
 - **PERCENT**: Apply percentage to gross (e.g., 15% performance bonus)
 
 **DEDUCTION Types**:
+
 - **FIXED**: Subtract flat amount (e.g., $50 union dues)
 - **PERCENT**: Subtract percentage of gross (e.g., 5% health insurance)
 
@@ -8124,6 +8334,7 @@ curl -X POST http://localhost:3001/payroll/runs \
 ```
 
 **Logic**:
+
 - Fetches approved `TimeEntry` records in period
 - Groups by user
 - Calculates: `gross = (regularMinutes / 60) × hourlyRate + (overtimeMinutes / 60) × hourlyRate × overtimeRate`
@@ -8182,6 +8393,7 @@ curl -X POST http://localhost:3001/payroll/runs/run-456/post \
 ```
 
 **GL Accounts**:
+
 - **6000**: Payroll Expense (DR on payment)
 - **2000**: Payroll Payable (CR on payment)
 
@@ -8308,6 +8520,7 @@ curl -X PATCH http://localhost:3001/orgs/org-123/settings \
 ### Example Calculation
 
 **Scenario**:
+
 - Employee: John Doe
 - Hourly Rate: $25/hr
 - Regular Hours: 160 hours (9,600 minutes)
@@ -8319,6 +8532,7 @@ curl -X PATCH http://localhost:3001/orgs/org-123/settings \
 - Payroll Tax: 10%
 
 **Calculation**:
+
 ```
 Base Pay = (160 × $25) + (5 × $25 × 1.5)
          = $4,000 + $187.50
@@ -8338,6 +8552,7 @@ Net = $4,606.25 - $460.63 - $200.00 = $3,945.62
 ### GL Posting Example
 
 **Journal Entry**:
+
 ```
 Date: 2025-10-31
 Memo: Payroll 2025-10-01 to 2025-10-31
@@ -8358,6 +8573,7 @@ DR  Payroll Expense (6000)     $4,606.25
 ### Testing
 
 **Unit Tests** (`payroll.service.spec.ts`):
+
 - ✅ FIXED component adds value
 - ✅ RATE component multiplies by hourly rate
 - ✅ PERCENT component applies on gross
@@ -8435,12 +8651,14 @@ model FlagAudit {
 #### 1. Feature Flags
 
 **Evaluation Logic:**
+
 - Flag must be `active: true`
 - Check scopes (roles, branches) if defined
 - Apply percentage rollout via deterministic hash
 - Deterministic: same context always returns same result
 
 **Rollout Percentage:**
+
 ```typescript
 // Deterministic hash based on context
 const contextKey = `${key}:${orgId}:${branchId}`;
@@ -8450,10 +8668,11 @@ if (bucket >= rolloutPct) return false; // Not in rollout
 ```
 
 **Scopes:**
+
 ```json
 {
-  "roles": ["L4", "L5"],      // Only L4+ can use
-  "branches": ["branch-1"]     // Only specific branch
+  "roles": ["L4", "L5"], // Only L4+ can use
+  "branches": ["branch-1"] // Only specific branch
 }
 ```
 
@@ -8467,6 +8686,7 @@ if (bucket >= rolloutPct) return false; // Not in rollout
 #### 3. Kill Switch
 
 Instant disable of a feature:
+
 - Sets `active = false` and `rolloutPct = 0`
 - Creates audit trail
 - Takes effect immediately across all instances
@@ -8476,6 +8696,7 @@ Instant disable of a feature:
 #### Feature Flags
 
 **Create/Update Flag**
+
 ```bash
 curl -X POST http://localhost:3001/ops/flags \
   -H "Authorization: Bearer $TOKEN" \
@@ -8492,6 +8713,7 @@ curl -X POST http://localhost:3001/ops/flags \
 ```
 
 **List All Flags**
+
 ```bash
 curl http://localhost:3001/ops/flags \
   -H "Authorization: Bearer $TOKEN" \
@@ -8499,18 +8721,21 @@ curl http://localhost:3001/ops/flags \
 ```
 
 **Get Single Flag**
+
 ```bash
 curl http://localhost:3001/ops/flags/PROMOTIONS_ENGINE \
   -H "Authorization: Bearer $TOKEN"
 ```
 
 **Toggle Flag (Active ↔ Inactive)**
+
 ```bash
 curl -X PATCH http://localhost:3001/ops/flags/PROMOTIONS_ENGINE/toggle \
   -H "Authorization: Bearer $TOKEN"
 ```
 
 **Kill Switch (Emergency Disable)**
+
 ```bash
 curl -X POST http://localhost:3001/ops/flags/PROMOTIONS_ENGINE/kill \
   -H "Authorization: Bearer $TOKEN"
@@ -8522,6 +8747,7 @@ curl -X POST http://localhost:3001/ops/flags/PROMOTIONS_ENGINE/kill \
 ```
 
 **Get Audit Trail**
+
 ```bash
 curl http://localhost:3001/ops/flags/PROMOTIONS_ENGINE/audit \
   -H "Authorization: Bearer $TOKEN"
@@ -8547,6 +8773,7 @@ curl http://localhost:3001/ops/flags/PROMOTIONS_ENGINE/audit \
 #### Maintenance Windows
 
 **Create Maintenance Window**
+
 ```bash
 curl -X POST http://localhost:3001/ops/maintenance \
   -H "Authorization: Bearer $TOKEN" \
@@ -8560,6 +8787,7 @@ curl -X POST http://localhost:3001/ops/maintenance \
 ```
 
 **Get Active Windows**
+
 ```bash
 curl http://localhost:3001/ops/maintenance/active \
   -H "Authorization: Bearer $TOKEN" \
@@ -8567,6 +8795,7 @@ curl http://localhost:3001/ops/maintenance/active \
 ```
 
 **List All Windows**
+
 ```bash
 curl http://localhost:3001/ops/maintenance \
   -H "Authorization: Bearer $TOKEN" \
@@ -8603,11 +8832,11 @@ async someMethod(orgId: string, role: string) {
     orgId,
     role,
   });
-  
+
   if (!enabled) {
     return { message: 'Feature not available' };
   }
-  
+
   // Feature-specific logic
 }
 ```
@@ -8615,6 +8844,7 @@ async someMethod(orgId: string, role: string) {
 ### Staged Rollout Example
 
 **Day 1: Enable for internal testing (1 org)**
+
 ```bash
 curl -X POST http://localhost:3001/ops/flags \
   -H "Authorization: Bearer $TOKEN" \
@@ -8629,6 +8859,7 @@ curl -X POST http://localhost:3001/ops/flags \
 ```
 
 **Day 2: Expand to 10% of all orgs**
+
 ```bash
 curl -X POST http://localhost:3001/ops/flags \
   -H "Authorization: Bearer $TOKEN" \
@@ -8641,6 +8872,7 @@ curl -X POST http://localhost:3001/ops/flags \
 ```
 
 **Day 3: Increase to 50%**
+
 ```bash
 curl -X POST http://localhost:3001/ops/flags \
   -H "Authorization: Bearer $TOKEN" \
@@ -8648,6 +8880,7 @@ curl -X POST http://localhost:3001/ops/flags \
 ```
 
 **Day 4: Full rollout**
+
 ```bash
 curl -X POST http://localhost:3001/ops/flags \
   -H "Authorization: Bearer $TOKEN" \
@@ -8655,6 +8888,7 @@ curl -X POST http://localhost:3001/ops/flags \
 ```
 
 **Emergency: Kill switch**
+
 ```bash
 curl -X POST http://localhost:3001/ops/flags/NEW_FEATURE/kill \
   -H "Authorization: Bearer $TOKEN"
@@ -8663,6 +8897,7 @@ curl -X POST http://localhost:3001/ops/flags/NEW_FEATURE/kill \
 ### Maintenance Window Workflow
 
 **1. Schedule Maintenance**
+
 ```bash
 curl -X POST http://localhost:3001/ops/maintenance \
   -H "Authorization: Bearer $TOKEN" \
@@ -8675,11 +8910,13 @@ curl -X POST http://localhost:3001/ops/maintenance \
 ```
 
 **2. During Maintenance Window**
+
 - All POST/PATCH/DELETE requests → `503 Service Unavailable`
 - Response body: `{code: "MAINTENANCE", message: "Scheduled database migration"}`
 - GET requests still work
 
 **3. L5 Bypass (For Admin Tasks)**
+
 ```bash
 curl -X POST http://localhost:3001/pos/orders \
   -H "Authorization: Bearer $L5_TOKEN" \
@@ -8688,6 +8925,7 @@ curl -X POST http://localhost:3001/pos/orders \
 ```
 
 **4. Check Active Maintenance**
+
 ```bash
 curl http://localhost:3001/ops/maintenance/active \
   -H "Authorization: Bearer $TOKEN"
@@ -8696,6 +8934,7 @@ curl http://localhost:3001/ops/maintenance/active \
 ### Testing Change Control
 
 **Rollout Determinism:**
+
 ```typescript
 // Same context = same result
 const result1 = await flagsService.get('TEST_FLAG', { orgId: 'org-1' });
@@ -8704,6 +8943,7 @@ expect(result1).toBe(result2); // ✅ Always true
 ```
 
 **Scope Matching:**
+
 ```typescript
 // Role scope
 await flagsService.get('ADMIN_FEATURE', { role: 'L5' }); // ✅ true
@@ -8711,6 +8951,7 @@ await flagsService.get('ADMIN_FEATURE', { role: 'L2' }); // ❌ false
 ```
 
 **Kill Switch:**
+
 ```typescript
 await flagsService.kill('DANGEROUS_FLAG', 'user-admin');
 const flag = await flagsService.findOne('DANGEROUS_FLAG');
@@ -8719,6 +8960,7 @@ expect(flag.rolloutPct).toBe(0);
 ```
 
 **Maintenance Write Block:**
+
 ```typescript
 const now = new Date('2025-10-29T12:00:00Z'); // During window
 const result = await maintenanceService.isBlockedWrite(now);
@@ -8729,9 +8971,11 @@ expect(result.message).toBe('Scheduled maintenance');
 ### Configuration
 
 **Environment Variables:**
+
 - None required - uses existing DATABASE_URL
 
 **Default Flags (Recommended):**
+
 ```sql
 -- Keep critical features ON by default to avoid breaking changes
 INSERT INTO feature_flags (key, active, rollout_pct, description)
@@ -8744,8 +8988,9 @@ VALUES
 ### Monitoring
 
 **Audit Trail Query:**
+
 ```sql
-SELECT 
+SELECT
   fa.action,
   fa.flag_key,
   fa.created_at,
@@ -8759,6 +9004,7 @@ ORDER BY fa.created_at DESC;
 ```
 
 **Active Flags:**
+
 ```sql
 SELECT key, active, rollout_pct, scopes, updated_at
 FROM feature_flags
@@ -8767,6 +9013,7 @@ ORDER BY updated_at DESC;
 ```
 
 **Upcoming Maintenance:**
+
 ```sql
 SELECT starts_at, ends_at, message, block_writes
 FROM maintenance_windows
@@ -8924,6 +9171,7 @@ Simulates API flapping (40s up / 20s down cycles) to test sync queue resilience:
 ```
 
 **Test Pattern:**
+
 - 40s: API up (20 concurrent users)
 - 20s: API down (0 users - simulates outage)
 - 40s: API up (20 users)
@@ -8931,6 +9179,7 @@ Simulates API flapping (40s up / 20s down cycles) to test sync queue resilience:
 - 40s: API up
 
 **Expected Behavior:**
+
 - Server returns 409 SKIP for duplicate operation IDs
 - < 1% duplicate operations processed
 - Queue resilience validated
@@ -8973,9 +9222,9 @@ Tests the owner dashboard overview endpoint with realistic load:
 ```javascript
 export const options = {
   stages: [
-    { duration: '1m', target: 10 },  // Warmup
-    { duration: '3m', target: 30 },  // Sustained load
-    { duration: '30s', target: 0 },  // Cool down
+    { duration: '1m', target: 10 }, // Warmup
+    { duration: '3m', target: 30 }, // Sustained load
+    { duration: '30s', target: 0 }, // Cool down
   ],
   thresholds: {
     http_req_duration: ['p(95)<350'],
@@ -9010,14 +9259,14 @@ Tests sync resilience during API flaps:
 export const options = {
   stages: [
     { duration: '40s', target: 20 }, // Up
-    { duration: '20s', target: 0 },  // Down
+    { duration: '20s', target: 0 }, // Down
     { duration: '40s', target: 20 }, // Up
-    { duration: '20s', target: 0 },  // Down
+    { duration: '20s', target: 0 }, // Down
     { duration: '40s', target: 20 }, // Up
   ],
   thresholds: {
-    skip_rate: ['rate<0.01'],          // < 1% duplicates
-    http_req_failed: ['rate<0.10'],    // Allow 10% failures
+    skip_rate: ['rate<0.01'], // < 1% duplicates
+    http_req_failed: ['rate<0.10'], // Allow 10% failures
   },
 };
 ```
@@ -9047,10 +9296,12 @@ export const options = {
 Located at `.github/workflows/perf-gate.yml`:
 
 **Trigger:**
+
 - Manual: Add `perf` label to PR
 - Automatic: On PR synchronize if `perf` label exists
 
 **Steps:**
+
 1. Start PostgreSQL + Redis services
 2. Build and migrate database
 3. Seed test data
@@ -9064,6 +9315,7 @@ Located at `.github/workflows/perf-gate.yml`:
 11. Comment PR with results
 
 **Artifacts:**
+
 - `perf/results/owner-overview.json`
 - `perf/results/pos-happy.json`
 - `perf/reports/summary.md`
@@ -9076,14 +9328,17 @@ When tests complete, a comment is added to the PR:
 # 📊 Performance Test Results
 
 ## owner-overview
+
 ✅ p(95) duration within budget: 287.45ms <= 350ms
 ✅ Error rate within budget: 1.23% <= 5%
 
 ## pos-happy
+
 ✅ p(95) duration within budget: 312.89ms <= 350ms
 ✅ Error rate within budget: 2.45% <= 5%
 
 ### Thresholds
+
 - p(95) < 350ms ✅
 - error_rate < 5% ✅
 ```
@@ -9120,9 +9375,9 @@ All chaos features default to 0 (disabled):
 
 ```typescript
 // Safe defaults
-CHAOS_LATENCY_MS=0
-CHAOS_DB_TIMEOUT_PCT=0
-CHAOS_REDIS_DROP_PCT=0
+CHAOS_LATENCY_MS = 0;
+CHAOS_DB_TIMEOUT_PCT = 0;
+CHAOS_REDIS_DROP_PCT = 0;
 ```
 
 ### Best Practices
@@ -9182,6 +9437,288 @@ pnpm dev  # All chaos disabled by default
 
 ---
 
+## E22.E EXPLAIN Baselines + Index Suggestions
+
+### Overview
+
+Performance analysis tool to capture PostgreSQL EXPLAIN ANALYZE output for franchise read endpoints and generate database index recommendations. This helps identify query bottlenecks and optimize database performance.
+
+**⚠️ WARNING:** Only run against development/test databases. Never against production!
+
+### Endpoints Analyzed
+
+The tool analyzes the following franchise endpoints:
+
+- `GET /franchise/overview` - Branch performance metrics
+- `GET /franchise/rankings` - Branch rankings by composite score
+- `GET /franchise/budgets` - Budget targets per branch/period
+- `GET /franchise/forecast/items` - Demand forecasting data
+- `GET /franchise/procurement/suggest` - Inventory reorder suggestions
+
+### Quick Start
+
+```bash
+# 1. Copy environment template
+cp reports/perf/perf.env.sample reports/perf/.perf.env
+
+# 2. Edit .perf.env with your dev database
+# DATABASE_URL=postgresql://postgres:postgres@localhost:5432/chefcloud_dev
+# ORG_ID=ORG_TEST
+# PERF_PERIOD=2024-11
+
+# 3. Run performance analysis
+cd services/api
+pnpm run perf:all
+
+# Output:
+# - reports/perf/*.explain.txt (EXPLAIN ANALYZE results)
+# - reports/perf/E22-PERF-NOTES.md (Analysis + index recommendations)
+```
+
+### Output Files
+
+After running `pnpm run perf:all`, you'll find:
+
+```
+reports/perf/
+├── overview.explain.txt           # Orders query EXPLAIN
+├── overview_wastage.explain.txt   # Wastage query EXPLAIN
+├── rankings.explain.txt           # Rankings query EXPLAIN
+├── budgets.explain.txt            # Budgets query EXPLAIN
+├── forecast.explain.txt           # Forecast query EXPLAIN
+├── procurement.explain.txt        # Procurement query EXPLAIN
+└── E22-PERF-NOTES.md             # Summary + DDL suggestions
+```
+
+### Sample Index Recommendations
+
+The generated `E22-PERF-NOTES.md` includes:
+
+```sql
+-- Priority 1: High-traffic read endpoints
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_order_org_status_updated
+ON "Order" ("branchId", status, "updatedAt" DESC)
+WHERE status = 'CLOSED';
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_forecast_point_org_item_date
+ON "ForecastPoint" ("orgId", "itemId", date);
+
+-- Priority 2: Supporting queries
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_wastage_branch_created
+ON "Wastage" ("branchId", "createdAt" DESC);
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_franchise_rank_org_period_rank
+ON "FranchiseRank" ("orgId", period, rank);
+
+-- Priority 3: Inventory lookups
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_inventory_item_org_active
+ON "InventoryItem" ("orgId")
+WHERE "isActive" = true;
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_stock_batch_item_branch
+ON "StockBatch" ("itemId", "branchId")
+INCLUDE ("remainingQty");
+```
+
+### How It Works
+
+1. **TypeScript Runner** (`reports/perf/run_explains.ts`)
+   - Connects to dev database via Prisma
+   - Defines SQL queries mirroring franchise service methods
+   - Runs `EXPLAIN (ANALYZE, BUFFERS, VERBOSE)` for each query
+   - Saves output to `.explain.txt` files
+
+2. **Safety Checks**
+   - Validates DATABASE_URL doesn't contain "prod" or "production"
+   - Checks table existence before running EXPLAIN
+   - Gracefully skips missing tables with warnings
+
+3. **Analysis Report**
+   - Identifies sequential scans vs index usage
+   - Highlights row estimate inaccuracies
+   - Suggests composite indexes with rationale
+   - Estimates write amplification risks
+   - Provides rollout advice (CONCURRENTLY, off-peak)
+
+### Environment Variables
+
+Edit `reports/perf/.perf.env`:
+
+```bash
+# Database connection (MUST be dev/test, NOT production)
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/chefcloud_dev
+
+# Enable query logging (optional)
+PRISMA_LOG_QUERIES=true
+
+# EXPLAIN output format: text or json
+EXPLAIN_FORMAT=text
+
+# Test organization ID (must exist in DB)
+ORG_ID=ORG_TEST
+
+# Test branch ID (optional, for branch-specific queries)
+BRANCH_ID=BRANCH_TEST
+
+# Period for time-based queries (YYYY-MM format)
+PERF_PERIOD=2024-11
+```
+
+### Commands
+
+```bash
+# Build TypeScript runner
+cd services/api
+pnpm run perf:build
+
+# Run EXPLAIN analysis
+pnpm run perf:run
+
+# Build + run (recommended)
+pnpm run perf:all
+```
+
+### Interpreting Results
+
+#### Good Signs ✅
+
+- "Index Scan using idx\_..."
+- "actual time" close to "estimated time"
+- Low "rows removed by filter" (high selectivity)
+- "Buffers: shared hit" > "shared read" (cache hit)
+
+#### Warning Signs ⚠️
+
+- "Seq Scan on large_table"
+- "Sort" with "external merge" (disk spill)
+- "actual rows" >> "estimated rows" (bad statistics)
+- "Buffers: shared read" >> "shared hit" (cache miss)
+
+#### Red Flags 🚨
+
+- "Seq Scan on Order" (millions of rows)
+- "Sort Method: external merge Disk: 12345kB"
+- "actual time=5000..5000" (5 second query!)
+- "rows removed by filter=999999" (99% filtered)
+
+### Deployment Workflow
+
+1. **Analyze** - Run `pnpm run perf:all` on dev DB
+2. **Review** - Read `E22-PERF-NOTES.md` recommendations
+3. **Test Staging** - Create indexes on staging with production-like data
+4. **Monitor** - Check `pg_stat_user_indexes` for usage
+5. **Deploy Production** - Use `CREATE INDEX CONCURRENTLY` during off-peak
+6. **Validate** - Re-run EXPLAIN to confirm index usage
+
+### Safety Guidelines
+
+✅ **DO:**
+
+- Run against dev/test databases only
+- Use `CREATE INDEX CONCURRENTLY` in production
+- Deploy indexes during off-peak hours
+- Monitor `pg_stat_progress_create_index`
+- Test on staging with production-like volume
+
+❌ **DON'T:**
+
+- Run EXPLAIN ANALYZE on production (it executes queries!)
+- Create indexes without CONCURRENTLY (locks table)
+- Deploy during peak traffic
+- Skip monitoring index usage post-deployment
+- Create duplicate indexes (check existing first)
+
+### Rollback
+
+If an index causes issues:
+
+```sql
+-- Drop individual index (CONCURRENTLY prevents locks)
+DROP INDEX CONCURRENTLY IF EXISTS idx_order_org_status_updated;
+
+-- Check for invalid indexes (failed CONCURRENTLY builds)
+SELECT indexname
+FROM pg_indexes
+WHERE schemaname = 'public'
+  AND indexdef LIKE '%INVALID%';
+
+-- Drop invalid indexes
+DROP INDEX CONCURRENTLY invalid_index_name;
+```
+
+### Monitoring
+
+After deploying indexes, monitor usage:
+
+```sql
+-- Check index scans (wait 24-48 hours)
+SELECT schemaname, tablename, indexname,
+       idx_scan as scans,
+       idx_tup_read as tuples_read,
+       idx_tup_fetch as tuples_fetched
+FROM pg_stat_user_indexes
+WHERE indexrelname LIKE 'idx_%'
+ORDER BY idx_scan DESC;
+
+-- Identify unused indexes
+SELECT schemaname, tablename, indexname, idx_scan
+FROM pg_stat_user_indexes
+WHERE idx_scan = 0
+  AND indexrelname LIKE 'idx_%'
+  AND indexrelname NOT LIKE '%_pkey';
+```
+
+### Advanced: JSON Format
+
+For programmatic analysis, use JSON format:
+
+```bash
+# Edit .perf.env
+EXPLAIN_FORMAT=json
+
+# Run analysis
+pnpm run perf:all
+
+# Parse with jq
+cat reports/perf/overview.explain.json | jq '.[] | .Plan'
+```
+
+### Troubleshooting
+
+**Error: "Table does not exist"**
+
+```bash
+# Ensure dev DB is migrated and seeded
+cd packages/db
+pnpm run db:migrate
+pnpm run db:seed
+```
+
+**Error: "DATABASE_URL appears to point at production"**
+
+```bash
+# Fix .perf.env - never use production DATABASE_URL!
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/chefcloud_dev
+```
+
+**Error: "ORG_ID does not exist"**
+
+```bash
+# Create test org in dev DB or update .perf.env
+ORG_ID=<existing-org-id>
+```
+
+### Summary
+
+- ✅ Automated EXPLAIN ANALYZE for franchise endpoints
+- ✅ Safety checks prevent production queries
+- ✅ Generates DDL with CONCURRENTLY for zero-downtime deployment
+- ✅ Estimates write amplification and rollout risks
+- ✅ Identifies seq scans, sorts, and join inefficiencies
+- ✅ Includes rollback plan and monitoring queries
+- ✅ Outputs: 6 `.explain.txt` files + comprehensive analysis doc
+
+---
 
 ---
 
@@ -9274,15 +9811,15 @@ pnpm test:e2e:umbrella --verbose
 
 ### Test Coverage by Domain
 
-| Domain | Tests | Coverage |
-|--------|-------|----------|
-| **Auth** | 2 | Login roundtrip, invalid password |
-| **POS** | 1 | Create→send→close order |
-| **Inventory** | 1 | PO receive → on-hand increases |
-| **Bookings** | 1 | HOLD→pay→confirm booking |
-| **Workforce** | 1 | Clock in/out |
-| **Accounting** | 1 | Create period → lock |
-| **Reports** | 2 | X report, owner overview |
+| Domain         | Tests | Coverage                          |
+| -------------- | ----- | --------------------------------- |
+| **Auth**       | 2     | Login roundtrip, invalid password |
+| **POS**        | 1     | Create→send→close order           |
+| **Inventory**  | 1     | PO receive → on-hand increases    |
+| **Bookings**   | 1     | HOLD→pay→confirm booking          |
+| **Workforce**  | 1     | Clock in/out                      |
+| **Accounting** | 1     | Create period → lock              |
+| **Reports**    | 2     | X report, owner overview          |
 
 ### Prerequisites
 
@@ -9349,12 +9886,10 @@ describe('MyDomain E2E', () => {
     await app.init();
 
     // Login
-    const loginResponse = await request(app.getHttpServer())
-      .post('/auth/login')
-      .send({
-        email: factory.users.waiter.email,
-        password: 'Test#123',
-      });
+    const loginResponse = await request(app.getHttpServer()).post('/auth/login').send({
+      email: factory.users.waiter.email,
+      password: 'Test#123',
+    });
 
     authToken = loginResponse.body.access_token;
   });
@@ -9496,3 +10031,170 @@ Add to GitHub Actions workflow:
 **Status**: ✅ E55-s1 Complete  
 **Test Suites**: 7 domains, 9 total tests  
 **Coverage**: Auth, POS, Inventory, Bookings, Workforce, Accounting, Reports
+
+---
+
+## Observability Pack v1
+
+ChefCloud provides first-class observability with Prometheus metrics and robust health/readiness checks.
+
+### Enabling Metrics
+
+Set the environment variable to enable Prometheus metrics:
+
+```bash
+export METRICS_ENABLED=1
+```
+
+### Endpoints
+
+#### `/metrics` - Prometheus Exposition
+
+Returns metrics in Prometheus text exposition format (text/plain).
+
+**Example:**
+
+```bash
+curl -s http://localhost:3001/metrics | head -20
+```
+
+**Available Metrics:**
+
+- `cache_hits_total{endpoint}` - Counter of cache hits by endpoint
+- `cache_misses_total{endpoint}` - Counter of cache misses by endpoint
+- `cache_invalidations_total{prefix}` - Counter of cache invalidations by prefix
+- `rate_limit_hits_total{route,kind}` - Counter of rate limit blocks (kind: "sse", "plan", etc.)
+- `webhook_verification_total{result}` - Counter of webhook verifications (result: "ok", "bad_sig", "stale", "replay")
+- `db_query_ms_seconds_bucket/count/sum{endpoint,cached}` - Histogram of database query durations in seconds
+- `sse_clients_gauge` - Gauge of current SSE client connections
+- `chefcloud_*` - Node.js default metrics (CPU, memory, event loop, etc.)
+
+#### `/healthz` - Liveness Probe
+
+Always returns 200 OK with `{"status":"ok"}`. Used by Kubernetes liveness probes.
+
+**Example:**
+
+```bash
+curl -s http://localhost:3001/healthz | jq .
+```
+
+**Response:**
+
+```json
+{
+  "status": "ok"
+}
+```
+
+#### `/readiness` - Readiness Probe
+
+Returns 200 OK if all checks pass, 503 Service Unavailable otherwise.
+
+**Checks:**
+
+- **Database**: Prisma `SELECT 1` ping
+- **Redis**: setEx/get roundtrip test
+- **Environment**: Required env vars (WH_SECRET if webhooks enabled, REDIS_HOST if caching enabled)
+
+**Example:**
+
+```bash
+curl -s http://localhost:3001/readiness | jq .
+```
+
+**Success Response (200 OK):**
+
+```json
+{
+  "status": "ok",
+  "ok": true,
+  "details": {
+    "db": "ok",
+    "redis": "ok",
+    "env": "ok"
+  }
+}
+```
+
+**Failure Response (503 Service Unavailable):**
+
+```json
+{
+  "status": "degraded",
+  "ok": false,
+  "details": {
+    "db": "error:Connection refused",
+    "redis": "ok",
+    "env": "missing:WH_SECRET"
+  }
+}
+```
+
+### Integration with Monitoring
+
+#### Prometheus Scrape Config
+
+```yaml
+scrape_configs:
+  - job_name: 'chefcloud-api'
+    scrape_interval: 15s
+    static_configs:
+      - targets: ['localhost:3001']
+    metrics_path: /metrics
+```
+
+#### Kubernetes Probes
+
+```yaml
+livenessProbe:
+  httpGet:
+    path: /healthz
+    port: 3001
+  initialDelaySeconds: 10
+  periodSeconds: 30
+
+readinessProbe:
+  httpGet:
+    path: /readiness
+    port: 3001
+  initialDelaySeconds: 5
+  periodSeconds: 10
+  failureThreshold: 3
+```
+
+### Implementation Details
+
+- **Metrics Library**: `prom-client` v15.x
+- **Default Metrics**: Includes Node.js runtime metrics with `chefcloud_` prefix
+- **Metric Types**:
+  - **Counter**: Monotonically increasing (cache hits, rate limits, etc.)
+  - **Histogram**: Distributions with buckets (DB query times)
+  - **Gauge**: Current value (SSE client count)
+- **Labels**: All metrics support labels for filtering (endpoint, route, result, etc.)
+
+### Testing
+
+```bash
+# Unit tests
+cd services/api
+pnpm test -- metrics.service.spec
+
+# E2E tests
+pnpm test -- metrics.controller.e2e-spec
+pnpm test -- readiness.controller.spec
+```
+
+### Future Enhancements
+
+- [ ] Add custom business metrics (orders_total, revenue_total, etc.)
+- [ ] Add distributed tracing with OpenTelemetry
+- [ ] Add structured logging with correlation IDs
+- [ ] Add Grafana dashboards for common queries
+- [ ] Add alerting rules for SLOs
+
+---
+
+**Status**: ✅ Observability Pack v1 Complete
+**Metrics**: 7 custom + Node.js defaults
+**Health Checks**: Liveness + Readiness (DB, Redis, Env)

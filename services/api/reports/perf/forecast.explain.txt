@@ -1,0 +1,13 @@
+⚠️  SKIPPED: Table "ForecastPoint" does not exist in database
+
+SQL:
+
+        SELECT fp.id, fp."orgId", fp."itemId", fp.date, fp."predictedQty",
+               i.name as item_name
+        FROM "ForecastPoint" fp
+        JOIN "InventoryItem" i ON i.id = fp."itemId"
+        WHERE fp."orgId" = $1
+          AND fp.date >= $2
+          AND fp.date <= $3
+        ORDER BY fp."itemId" ASC, fp.date ASC
+      

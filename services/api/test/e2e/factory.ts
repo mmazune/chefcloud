@@ -5,7 +5,7 @@ import * as argon2 from 'argon2';
  * E2E Test Data Factory
  * Hermetic seed data for parallel E2E test execution.
  * Each factory function is idempotent (upsert) and returns IDs for test use.
- * 
+ *
  * IMPORTANT: All functions accept PrismaClient from DI (TestingModule).
  * Do NOT create new PrismaClient() instances.
  */
@@ -58,10 +58,7 @@ export function getSeedIds(slug: string) {
  * @param prisma PrismaClient from DI (TestingModule)
  * @param slug Unique org slug (e.g., 'test-org-pos')
  */
-export async function createOrgWithUsers(
-  prisma: PrismaClient,
-  slug: string,
-): Promise<FactoryOrg> {
+export async function createOrgWithUsers(prisma: PrismaClient, slug: string): Promise<FactoryOrg> {
   // Create org
   const org = await prisma.org.upsert({
     where: { slug },
@@ -191,11 +188,7 @@ export async function createOrgWithUsers(
 /**
  * Create menu items (burger, fries, cola)
  */
-export async function createMenu(
-  prisma: PrismaClient,
-  orgId: string,
-  branchId: string,
-) {
+export async function createMenu(prisma: PrismaClient, orgId: string, branchId: string) {
   const burger = await prisma.menuItem.upsert({
     where: { id: `burger-${orgId}` },
     update: {},
@@ -241,11 +234,7 @@ export async function createMenu(
 /**
  * Create floor plan with 2 tables
  */
-export async function createFloor(
-  prisma: PrismaClient,
-  orgId: string,
-  branchId: string,
-) {
+export async function createFloor(prisma: PrismaClient, orgId: string, branchId: string) {
   const floorPlan = await prisma.floorPlan.upsert({
     where: { id: `floor-e2e-${orgId}` },
     update: {},
@@ -336,11 +325,7 @@ export async function createInventory(prisma: PrismaClient, orgId: string) {
 /**
  * Create event (concert, sports match)
  */
-export async function createEvent(
-  prisma: PrismaClient,
-  orgId: string,
-  branchId: string,
-) {
+export async function createEvent(prisma: PrismaClient, orgId: string, branchId: string) {
   const event = await prisma.event.upsert({
     where: { id: `event-${orgId}` },
     update: {},
@@ -363,10 +348,7 @@ export async function createEvent(
 /**
  * Create chart of accounts for accounting tests
  */
-export async function createChartOfAccounts(
-  prisma: PrismaClient,
-  orgId: string,
-) {
+export async function createChartOfAccounts(prisma: PrismaClient, orgId: string) {
   const accounts = [
     { code: '1100', name: 'Cash', type: 'ASSET' },
     { code: '1200', name: 'Accounts Receivable', type: 'ASSET' },

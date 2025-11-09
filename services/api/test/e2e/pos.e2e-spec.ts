@@ -36,12 +36,10 @@ describe('POS E2E', () => {
     await app.init();
 
     // Login as waiter
-    const loginResponse = await request(app.getHttpServer())
-      .post('/auth/login')
-      .send({
-        email: factory.users.waiter.email,
-        password: 'Test#123',
-      });
+    const loginResponse = await request(app.getHttpServer()).post('/auth/login').send({
+      email: factory.users.waiter.email,
+      password: 'Test#123',
+    });
 
     authToken = loginResponse.body.access_token;
   });

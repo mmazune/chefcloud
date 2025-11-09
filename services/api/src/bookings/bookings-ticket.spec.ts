@@ -72,9 +72,7 @@ describe('BookingsService - E42-s2 PDF Generation', () => {
     it('should throw NotFoundException if booking not found', async () => {
       prisma.eventBooking.findUnique.mockResolvedValue(null);
 
-      await expect(service.generateTicketPdf('invalid-id')).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.generateTicketPdf('invalid-id')).rejects.toThrow(NotFoundException);
     });
 
     it('should throw BadRequestException if booking has no ticket code', async () => {
@@ -88,9 +86,7 @@ describe('BookingsService - E42-s2 PDF Generation', () => {
 
       prisma.eventBooking.findUnique.mockResolvedValue(mockBooking);
 
-      await expect(service.generateTicketPdf('booking-1')).rejects.toThrow(
-        BadRequestException,
-      );
+      await expect(service.generateTicketPdf('booking-1')).rejects.toThrow(BadRequestException);
     });
   });
 

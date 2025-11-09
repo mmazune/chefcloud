@@ -32,12 +32,12 @@ export function slowQueryMiddleware(logger: any): any {
       // Sanitize params (avoid logging sensitive data)
       if (params.args && typeof params.args === 'object') {
         const sanitized: any = {};
-        
+
         // Include WHERE clause for debugging
         if (params.args.where) {
           sanitized.where = params.args.where;
         }
-        
+
         // Include select/include hints
         if (params.args.select) {
           sanitized.select = Object.keys(params.args.select || {});
@@ -45,7 +45,7 @@ export function slowQueryMiddleware(logger: any): any {
         if (params.args.include) {
           sanitized.include = Object.keys(params.args.include || {});
         }
-        
+
         // Include pagination
         if (params.args.take !== undefined) {
           sanitized.take = params.args.take;

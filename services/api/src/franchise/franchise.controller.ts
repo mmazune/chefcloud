@@ -2,6 +2,7 @@ import { Controller, Get, Post, Body, Query, UseGuards, Request } from '@nestjs/
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
+import { CacheService } from '../common/cache.service';
 import {
   FranchiseService,
   BranchOverview,
@@ -21,19 +22,58 @@ interface RequestWithUser {
 @Controller('franchise')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 export class FranchiseController {
-  constructor(private franchiseService: FranchiseService) {}
+  // E22.A: Read-through cache TTL for /franchise/overview (default 15s, env-configurable)
+  private readonly overviewTTL = Number(process.env.E22_OVERVIEW_TTL ?? 15);
+
+  // E22.B: Read-through cache TTL for /franchise/rankings (default 30s, env-configurable)
+  private readonly rankingsTTL = Number(process.env.E22_RANKINGS_TTL ?? 30);
+
+  // E22.C: Read-through cache TTL for /franchise/budgets (default 60s, env-configurable)
+  private readonly budgetsTTL = Number(process.env.E22_BUDGETS_TTL ?? 60);
+
+  constructor(
+    private franchiseService: FranchiseService,
+    private cacheService: CacheService,
+  ) {}
 
   @Get('overview')
   @Roles('L5')
   async getOverview(
     @Request() req: RequestWithUser,
     @Query('period') period: string,
-  ): Promise<BranchOverview[] | { error: string }> {
+  ): Promise<{ data: BranchOverview[]; cached: boolean } | { error: string }> {
     if (!period || !/^\d{4}-\d{2}$/.test(period)) {
       return { error: 'Invalid period format. Use YYYY-MM' };
     }
-    // E22: Cached with 15s TTL
-    return this.franchiseService.getOverview(req.user.orgId, period);
+
+    // E22.A: Read-through caching with deterministic key
+    const startTime = Date.now();
+    const cacheKey = this.cacheService.makeKey('fr:overview', req.user.orgId, { period });
+    const indexKey = this.cacheService.makeIndexKey('overview', req.user.orgId);
+
+    const result = await this.cacheService.readThroughWithFlag<BranchOverview[]>(
+      cacheKey,
+      this.overviewTTL,
+      async () => {
+        return this.franchiseService.getOverview(req.user.orgId, period);
+      },
+      indexKey,
+      'franchise_overview',
+    );
+
+    const elapsed = Date.now() - startTime;
+
+    // E22.A: Emit metrics (structured console logs)
+    const metricType = result.cached ? 'cache_hits' : 'cache_misses';
+    console.log(
+      `[METRIC] ${metricType} endpoint=franchise_overview count=1 orgId=${req.user.orgId} period=${period}`,
+    );
+    console.log(
+      `[METRIC] db_query_ms endpoint=franchise_overview value=${elapsed} cached=${result.cached} orgId=${req.user.orgId}`,
+    );
+
+    // Return data with cached flag
+    return result;
   }
 
   @Get('rankings')
@@ -41,12 +81,39 @@ export class FranchiseController {
   async getRankings(
     @Request() req: RequestWithUser,
     @Query('period') period: string,
-  ): Promise<BranchRanking[] | { error: string }> {
+  ): Promise<{ data: BranchRanking[]; cached: boolean } | { error: string }> {
     if (!period || !/^\d{4}-\d{2}$/.test(period)) {
       return { error: 'Invalid period format. Use YYYY-MM' };
     }
-    // E22: Cached with 30s TTL
-    return this.franchiseService.getRankings(req.user.orgId, period);
+
+    // E22.B: Read-through caching with deterministic key
+    const startTime = Date.now();
+    const cacheKey = this.cacheService.makeKey('fr:rankings', req.user.orgId, { period });
+    const indexKey = this.cacheService.makeIndexKey('rankings', req.user.orgId);
+
+    const result = await this.cacheService.readThroughWithFlag<BranchRanking[]>(
+      cacheKey,
+      this.rankingsTTL,
+      async () => {
+        return this.franchiseService.getRankings(req.user.orgId, period);
+      },
+      indexKey,
+      'franchise_rankings',
+    );
+
+    const elapsed = Date.now() - startTime;
+
+    // E22.B: Emit metrics (structured console logs)
+    const metricType = result.cached ? 'cache_hits' : 'cache_misses';
+    console.log(
+      `[METRIC] ${metricType} endpoint=franchise_rankings count=1 orgId=${req.user.orgId} period=${period}`,
+    );
+    console.log(
+      `[METRIC] db_query_ms endpoint=franchise_rankings value=${elapsed} cached=${result.cached} orgId=${req.user.orgId}`,
+    );
+
+    // Return data with cached flag
+    return result;
   }
 
   @Post('budgets')
@@ -77,8 +144,35 @@ export class FranchiseController {
     if (!period || !/^\d{4}-\d{2}$/.test(period)) {
       return { error: 'Invalid period format. Use YYYY-MM' };
     }
-    // E22: Cached with 60s TTL
-    return this.franchiseService.getBudgets(req.user.orgId, period);
+
+    // E22.C: Read-through caching with deterministic key
+    const startTime = Date.now();
+    const cacheKey = this.cacheService.makeKey('fr:budgets', req.user.orgId, { period });
+    const indexKey = this.cacheService.makeIndexKey('budgets', req.user.orgId);
+
+    const result = await this.cacheService.readThroughWithFlag(
+      cacheKey,
+      this.budgetsTTL,
+      async () => {
+        return this.franchiseService.getBudgets(req.user.orgId, period);
+      },
+      indexKey,
+      'franchise_budgets',
+    );
+
+    const elapsed = Date.now() - startTime;
+
+    // E22.C: Emit metrics (structured console logs)
+    const metricType = result.cached ? 'cache_hits' : 'cache_misses';
+    console.log(
+      `[METRIC] ${metricType} endpoint=franchise_budgets count=1 orgId=${req.user.orgId} period=${period}`,
+    );
+    console.log(
+      `[METRIC] db_query_ms endpoint=franchise_budgets value=${elapsed} cached=${result.cached} orgId=${req.user.orgId}`,
+    );
+
+    // Return data with cached flag
+    return result;
   }
 
   @Get('forecast/items')

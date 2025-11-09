@@ -8,34 +8,35 @@ import {
 } from '@nestjs/common';
 import { createHmac, timingSafeEqual } from 'crypto';
 import { RedisService } from './redis.service';
+import { MetricsService } from '../observability/metrics.service';
 
 /**
  * Webhook Signature Verification Guard (E24)
- * 
+ *
  * Ensures all incoming webhooks are authenticated with HMAC signature,
  * protected against replay attacks, and within acceptable time window.
- * 
+ *
  * Headers Required:
  * - X-Sig: HMAC-SHA256 signature (hex format)
  * - X-Ts: Timestamp in milliseconds
  * - X-Id: Unique request ID for replay protection
- * 
+ *
  * Environment Variables:
  * - WH_SECRET: Webhook secret for HMAC verification (required)
- * 
+ *
  * Security Features:
  * - HMAC signature computed as: hex(HMAC_SHA256(secret, timestamp + "." + rawBody))
  * - Constant-time comparison (timingSafeEqual) to prevent timing attacks
  * - Timestamp validation: ±5 minutes clock skew tolerance
  * - Replay protection: X-Id stored in Redis for 24 hours
  * - Raw body verification: Prevents parser manipulation attacks
- * 
+ *
  * Response Codes:
  * - 400: Missing required headers or raw body not available
  * - 401: Invalid signature or stale timestamp
  * - 409: Replay attack detected (duplicate X-Id)
  * - 500: Server misconfiguration (missing WH_SECRET)
- * 
+ *
  * @example
  * ```typescript
  * @Controller('webhooks')
@@ -54,7 +55,10 @@ export class WebhookVerificationGuard implements CanActivate {
   private readonly SKEW_MS = 5 * 60 * 1000; // 5 minutes
   private readonly REPLAY_TTL = 24 * 3600; // 24 hours in seconds
 
-  constructor(private readonly redis: RedisService) {}
+  constructor(
+    private readonly redis: RedisService,
+    private readonly metrics: MetricsService,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
@@ -68,6 +72,9 @@ export class WebhookVerificationGuard implements CanActivate {
       // Validate required headers
       if (!sig || !ts || !id) {
         this.logger.warn('Webhook missing required headers');
+        if (this.metrics?.enabled) {
+          this.metrics.webhookVerifications.inc({ result: 'bad_sig' });
+        }
         throw new HttpException(
           {
             statusCode: 400,
@@ -82,6 +89,9 @@ export class WebhookVerificationGuard implements CanActivate {
       const tsMs = Number(ts);
       if (!Number.isFinite(tsMs)) {
         this.logger.warn(`Invalid timestamp format: ${ts}`);
+        if (this.metrics?.enabled) {
+          this.metrics.webhookVerifications.inc({ result: 'bad_sig' });
+        }
         throw new HttpException(
           {
             statusCode: 401,
@@ -96,6 +106,9 @@ export class WebhookVerificationGuard implements CanActivate {
       if (timeDiff > this.SKEW_MS) {
         const skewMinutes = Math.floor(timeDiff / 60000);
         this.logger.warn(`Stale timestamp: ${skewMinutes} minutes old`);
+        if (this.metrics?.enabled) {
+          this.metrics.webhookVerifications.inc({ result: 'stale' });
+        }
         throw new HttpException(
           {
             statusCode: 401,
@@ -137,9 +150,7 @@ export class WebhookVerificationGuard implements CanActivate {
       // Compute expected HMAC signature
       // Format: HMAC-SHA256(secret, timestamp + "." + rawBody)
       const payload = `${ts}.${rawBody}`;
-      const expectedSig = createHmac('sha256', secret)
-        .update(payload)
-        .digest('hex');
+      const expectedSig = createHmac('sha256', secret).update(payload).digest('hex');
 
       // Constant-time comparison to prevent timing attacks
       let signaturesMatch = false;
@@ -157,6 +168,9 @@ export class WebhookVerificationGuard implements CanActivate {
 
       if (!signaturesMatch) {
         this.logger.warn(`Invalid signature for request ID: ${id}`);
+        if (this.metrics?.enabled) {
+          this.metrics.webhookVerifications.inc({ result: 'bad_sig' });
+        }
         throw new HttpException(
           {
             statusCode: 401,
@@ -170,9 +184,12 @@ export class WebhookVerificationGuard implements CanActivate {
       // Check for replay attack
       const replayKey = `wh:replay:${id}`;
       const exists = await this.redis.exists(replayKey);
-      
+
       if (exists) {
         this.logger.warn(`Replay attack detected: ${id}`);
+        if (this.metrics?.enabled) {
+          this.metrics.webhookVerifications.inc({ result: 'replay' });
+        }
         throw new HttpException(
           {
             statusCode: 409,
@@ -193,8 +210,10 @@ export class WebhookVerificationGuard implements CanActivate {
       });
 
       this.logger.log(`Webhook verified successfully: ${id}`);
+      if (this.metrics?.enabled) {
+        this.metrics.webhookVerifications.inc({ result: 'ok' });
+      }
       return true;
-
     } catch (error) {
       // Re-throw HttpExceptions as-is
       if (error instanceof HttpException) {
@@ -220,21 +239,21 @@ export class WebhookVerificationGuard implements CanActivate {
    */
   private getHeader(request: any, name: string): string | undefined {
     if (!request.headers) return undefined;
-    
+
     // Try exact match
     if (request.headers[name]) return request.headers[name];
-    
+
     // Try lowercase
     const lowerName = name.toLowerCase();
     if (request.headers[lowerName]) return request.headers[lowerName];
-    
+
     // Search case-insensitively through all headers
     for (const key in request.headers) {
       if (key.toLowerCase() === lowerName) {
         return request.headers[key];
       }
     }
-    
+
     return undefined;
   }
 }

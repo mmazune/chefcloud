@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { RedisService } from './redis.service';
+import { MetricsService } from '../observability/metrics.service';
 
 /**
  * Cache Service for E22 Franchise Performance
@@ -25,10 +26,16 @@ export class CacheService {
   // Metrics
   private cacheHits = 0;
   private cacheMisses = 0;
+  
+  // Cleanup interval reference
+  private cleanupInterval: NodeJS.Timeout | null = null;
 
-  constructor(private readonly redis: RedisService) {
+  constructor(
+    private readonly redis: RedisService,
+    private readonly metrics: MetricsService,
+  ) {
     // Cleanup expired entries every 5 minutes
-    setInterval(() => this.cleanupMemory(), 5 * 60 * 1000);
+    this.cleanupInterval = setInterval(() => this.cleanupMemory(), 5 * 60 * 1000);
     
     this.logger.log('CacheService initialized with Redis fallback to memory');
   }
@@ -104,6 +111,73 @@ export class CacheService {
     }
     
     return data;
+  }
+
+  /**
+   * E22.A: Read-through with cached flag
+   * Returns both data and whether it was cached
+   * 
+   * @param key - Cache key
+   * @param ttlSeconds - Time to live in seconds
+   * @param fetchFn - Function to fetch data on cache miss
+   * @param indexKey - Optional index key for bust-by-prefix
+   * @param endpointLabel - Optional endpoint label for metrics
+   * @returns Object with data and cached boolean
+   */
+  async readThroughWithFlag<T>(
+    key: string,
+    ttlSeconds: number,
+    fetchFn: () => Promise<T>,
+    indexKey?: string,
+    endpointLabel?: string,
+  ): Promise<{ data: T; cached: boolean }> {
+    const started = Date.now();
+    
+    // Try to get from cache
+    const cached = await this.get<T>(key);
+    
+    if (cached !== null) {
+      this.cacheHits++;
+      this.logger.debug(`Cache HIT: ${key}`);
+      
+      const elapsed = Date.now() - started;
+      if (this.metrics?.enabled) {
+        const endpoint = endpointLabel || 'unknown';
+        this.metrics.cacheHits.inc({ endpoint });
+        this.metrics.dbQueryMs.observe(
+          { endpoint, cached: 'true' },
+          elapsed / 1000,
+        );
+      }
+      
+      return { data: cached, cached: true };
+    }
+
+    // Cache miss - fetch fresh data
+    this.cacheMisses++;
+    this.logger.debug(`Cache MISS: ${key}`);
+    
+    const data = await fetchFn();
+    
+    // Store in cache
+    await this.set(key, data, ttlSeconds);
+    
+    // Add to index for prefix-based invalidation
+    if (indexKey) {
+      await this.addToIndex(indexKey, key);
+    }
+    
+    const elapsed = Date.now() - started;
+    if (this.metrics?.enabled) {
+      const endpoint = endpointLabel || 'unknown';
+      this.metrics.cacheMisses.inc({ endpoint });
+      this.metrics.dbQueryMs.observe(
+        { endpoint, cached: 'false' },
+        elapsed / 1000,
+      );
+    }
+    
+    return { data, cached: false };
   }
 
   /**
@@ -207,6 +281,12 @@ export class CacheService {
     }
 
     this.logger.log(`Busted cache prefix '${prefix}' for org ${orgId}: ${deletedCount} keys deleted`);
+    
+    // Emit metrics
+    if (this.metrics?.enabled && deletedCount > 0) {
+      this.metrics.invalidations.inc({ prefix });
+    }
+    
     return deletedCount;
   }
 
@@ -244,5 +324,16 @@ export class CacheService {
     if (cleaned > 0) {
       this.logger.debug(`Memory cleanup: removed ${cleaned} expired entries`);
     }
+  }
+
+  /**
+   * Cleanup on module destroy
+   */
+  onModuleDestroy(): void {
+    if (this.cleanupInterval) {
+      clearInterval(this.cleanupInterval);
+      this.cleanupInterval = null;
+    }
+    this.logger.log('CacheService destroyed, cleanup interval cleared');
   }
 }

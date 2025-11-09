@@ -27,12 +27,10 @@ describe('Reports E2E', () => {
     await app.init();
 
     // Login as owner
-    const loginResponse = await request(app.getHttpServer())
-      .post('/auth/login')
-      .send({
-        email: factory.users.owner.email,
-        password: 'Test#123',
-      });
+    const loginResponse = await request(app.getHttpServer()).post('/auth/login').send({
+      email: factory.users.owner.email,
+      password: 'Test#123',
+    });
 
     authToken = loginResponse.body.access_token;
   });

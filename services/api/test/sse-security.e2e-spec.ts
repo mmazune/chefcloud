@@ -28,7 +28,7 @@ describe('SSE /stream/kpis Security (E26)', () => {
         transform: true,
       }),
     );
-    
+
     await app.init();
 
     prisma = app.get<PrismaService>(PrismaService);
@@ -77,9 +77,7 @@ describe('SSE /stream/kpis Security (E26)', () => {
 
   describe('Authentication', () => {
     it('should return 401 when no token provided', async () => {
-      const response = await request(app.getHttpServer())
-        .get('/stream/kpis')
-        .expect(401);
+      const response = await request(app.getHttpServer()).get('/stream/kpis').expect(401);
 
       expect(response.body).toHaveProperty('message');
     });
@@ -151,7 +149,8 @@ describe('SSE /stream/kpis Security (E26)', () => {
         .get('/stream/kpis')
         .set('Authorization', `Bearer ${ownerToken}`);
 
-      req.expect('Content-Type', /text\/event-stream/)
+      req
+        .expect('Content-Type', /text\/event-stream/)
         .expect('Cache-Control', 'no-cache')
         .expect('Connection', 'keep-alive')
         .expect(200);
@@ -175,7 +174,7 @@ describe('SSE /stream/kpis Security (E26)', () => {
         const data = chunk.toString();
         if (data.includes('data:') && data.includes('{')) {
           eventCount++;
-          
+
           // Verify event structure
           const jsonMatch = data.match(/data:\s*({.*})/);
           if (jsonMatch) {
@@ -196,7 +195,7 @@ describe('SSE /stream/kpis Security (E26)', () => {
   });
 
   describe('Org-Scope Isolation', () => {
-    it('should only stream data for authenticated user\'s org', (done) => {
+    it("should only stream data for authenticated user's org", (done) => {
       // This test verifies that the endpoint uses req.user.orgId
       // and doesn't leak data from other orgs
       const req = request(app.getHttpServer())
@@ -248,12 +247,12 @@ describe('SSE /stream/kpis Security (E26)', () => {
         requests.push(
           request(app.getHttpServer())
             .get('/stream/kpis')
-            .set('Authorization', `Bearer ${testToken}`)
+            .set('Authorization', `Bearer ${testToken}`),
         );
       }
 
       const responses = await Promise.all(requests);
-      
+
       // At least one should be 429
       const tooManyRequests = responses.filter((r) => r.status === 429);
       expect(tooManyRequests.length).toBeGreaterThan(0);
@@ -322,7 +321,7 @@ describe('SSE /stream/kpis Security (E26)', () => {
 
       setTimeout(() => {
         req.abort();
-        
+
         // Give time for cleanup handlers to run
         setTimeout(() => {
           // In a real test, we'd verify that:

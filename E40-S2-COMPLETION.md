@@ -9,33 +9,39 @@ Successfully implemented fiscal period locking and bank reconciliation features 
 ## Deliverables
 
 ### 1. Database Schema ✅
+
 - **Models**: FiscalPeriod, BankAccount, BankStatement, BankTxn, ReconcileMatch
 - **Enums**: FiscalPeriodStatus (OPEN, LOCKED), ReconcileSource (PAYMENT, REFUND, CASH_SAFE_DROP, CASH_PICKUP)
 - **Migration**: `20251030065600_period_lock_bankrec` applied successfully
 - **Location**: `packages/db/prisma/schema.prisma`
 
 ### 2. Posting Enforcement ✅
+
 - **File**: `services/api/src/accounting/posting.service.ts`
 - **Changes**: Added `checkPeriodLock()` private method
 - **Enforcement**: Checks period locks before `postSale`, `postCOGS`, `postRefund`, `postCashMovement`
 - **Error**: Returns 409 Conflict with `{code: "PERIOD_LOCKED", period, lockedAt}`
 
 ### 3. Fiscal Periods API (L5) ✅
+
 **Service**: `services/api/src/accounting/periods.service.ts`
 **Controller**: `services/api/src/accounting/periods.controller.ts`
 
 Endpoints:
+
 - `POST /accounting/periods` - Create period (validates no overlap)
 - `PATCH /accounting/periods/:id/lock` - Lock period (sets status=LOCKED + audit fields)
 - `GET /accounting/periods` - List periods (optional status filter)
 - `GET /accounting/periods/:id` - Get period by ID
 
 ### 4. Bank Reconciliation API (L4+) ✅
+
 **Service**: `services/api/src/accounting/bank-rec.service.ts`
 **Controller**: `services/api/src/accounting/bank-rec.controller.ts`
 **CSV Parser**: `services/api/src/accounting/csv-parser.ts`
 
 Endpoints:
+
 - `POST /accounting/bank/accounts` - Upsert bank account
 - `POST /accounting/bank/import-csv` - Import CSV transactions
 - `POST /accounting/bank/match` - Manual match transaction
@@ -43,18 +49,23 @@ Endpoints:
 - `GET /accounting/bank/unreconciled` - Unreconciled transactions report
 
 CSV Features:
+
 - Header autodetection (case-insensitive)
 - Date formats: ISO 8601, DD/MM/YYYY, DD-MM-YYYY
 - Amount formats: UGX with commas, parentheses for negatives
 - Timezone-naive parsing
 
 ### 5. Module Registration ✅
+
 **File**: `services/api/src/accounting/accounting.module.ts`
+
 - Added `PeriodsController`, `BankRecController` to controllers
 - Added `PeriodsService`, `BankRecService` to providers
 
 ### 6. Unit Tests ✅
+
 **Period Locks**: `services/api/src/accounting/period-lock.spec.ts` (5 tests)
+
 - ✅ Create period when no overlap
 - ✅ Throw error on overlap
 - ✅ Lock period and set audit fields
@@ -62,6 +73,7 @@ CSV Features:
 - ✅ Filter periods by status
 
 **Bank Reconciliation**: `services/api/src/accounting/bank-rec.spec.ts` (9 tests)
+
 - ✅ Create/update bank account
 - ✅ Import CSV transactions
 - ✅ Throw on missing account or empty CSV
@@ -73,7 +85,9 @@ CSV Features:
 **Results**: 14/14 tests passing
 
 ### 7. Documentation ✅
+
 **File**: `DEV_GUIDE.md` (~500 lines added)
+
 - Architecture overview (period lifecycle, bank rec workflow)
 - Model schemas with field descriptions
 - 8 curl examples (create period, lock, list, import CSV, match, auto-match, etc.)
@@ -83,6 +97,7 @@ CSV Features:
 ## Validation
 
 ### Build ✅
+
 ```bash
 pnpm -w build
 # Tasks: 11 successful, 11 total
@@ -90,6 +105,7 @@ pnpm -w build
 ```
 
 ### Tests ✅
+
 ```bash
 pnpm -w test
 # Test Suites: 37 passed, 38 total (1 pre-existing chaos test flake)
@@ -97,6 +113,7 @@ pnpm -w test
 ```
 
 ### E40-S2 Tests ✅
+
 ```bash
 cd services/api && pnpm test -- --testPathPattern="period-lock|bank-rec"
 # Test Suites: 2 passed, 2 total
@@ -107,19 +124,20 @@ cd services/api && pnpm test -- --testPathPattern="period-lock|bank-rec"
 
 1. **Period Locking**: Finance managers can create monthly/quarterly periods and lock them after reconciliation. Once locked, no journal entries can be posted to that period (returns 409 PERIOD_LOCKED error).
 
-2. **Bank Reconciliation**: 
+2. **Bank Reconciliation**:
    - Import bank statements via CSV (auto-detects formats)
    - Manual matching: Link bank transactions to payments/refunds
    - Auto-matching: Finds payments within ±3 days by exact amount
    - Unreconciled report: Shows all unmatched transactions
 
-3. **Audit Trail**: 
+3. **Audit Trail**:
    - Period locks track `lockedById` and `lockedAt`
    - Bank matches track `matchedById` and `source` (PAYMENT, REFUND, etc.)
 
 ## API Examples
 
 ### Create Period
+
 ```bash
 curl -X POST http://localhost:3000/accounting/periods \
   -H "Authorization: Bearer $TOKEN" \
@@ -128,12 +146,14 @@ curl -X POST http://localhost:3000/accounting/periods \
 ```
 
 ### Lock Period
+
 ```bash
 curl -X PATCH http://localhost:3000/accounting/periods/{periodId}/lock \
   -H "Authorization: Bearer $TOKEN"
 ```
 
 ### Import CSV
+
 ```bash
 curl -X POST http://localhost:3000/accounting/bank/import-csv \
   -H "Authorization: Bearer $TOKEN" \
@@ -142,6 +162,7 @@ curl -X POST http://localhost:3000/accounting/bank/import-csv \
 ```
 
 ### Auto-Match
+
 ```bash
 curl -X POST http://localhost:3000/accounting/bank/auto-match \
   -H "Authorization: Bearer $TOKEN" \
@@ -152,6 +173,7 @@ curl -X POST http://localhost:3000/accounting/bank/auto-match \
 ## Files Created/Modified
 
 ### Created (6 files)
+
 1. `packages/db/prisma/migrations/20251030065600_period_lock_bankrec/migration.sql`
 2. `services/api/src/accounting/periods.service.ts` (2233 bytes)
 3. `services/api/src/accounting/periods.controller.ts` (1361 bytes)
@@ -162,6 +184,7 @@ curl -X POST http://localhost:3000/accounting/bank/auto-match \
 8. `services/api/src/accounting/bank-rec.spec.ts` (3956 bytes)
 
 ### Modified (4 files)
+
 1. `packages/db/prisma/schema.prisma` - Added 2 enums + 5 models
 2. `services/api/src/accounting/posting.service.ts` - Added checkPeriodLock() + enforcement
 3. `services/api/src/accounting/accounting.module.ts` - Registered new controllers/services

@@ -12,7 +12,7 @@ export const options = {
   },
   thresholds: {
     'http_req_duration{name:sse_connect}': ['p(95)<500'], // SSE connect < 500ms
-    'http_req_failed': ['rate<0.05'], // <5% errors
+    http_req_failed: ['rate<0.05'], // <5% errors
   },
 };
 

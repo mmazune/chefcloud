@@ -1,0 +1,4 @@
+
+> @chefcloud/api@0.1.0 build /workspaces/chefcloud/services/api
+> nest build
+
