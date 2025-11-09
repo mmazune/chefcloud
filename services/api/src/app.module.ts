@@ -45,6 +45,7 @@ import { SettingsModule } from './settings/settings.module';
 import { BookingsModule } from './bookings/bookings.module';
 import { WorkforceModule } from './workforce/workforce.module';
 import { ObservabilityModule } from './observability/observability.module';
+import { MetaModule } from './meta/meta.module';
 import { LoggerMiddleware } from './logger.middleware';
 import { WriteBlockMiddleware } from './ops/write-block.middleware';
 import { RedisService } from './common/redis.service';
@@ -98,6 +99,7 @@ import { WebhookVerificationGuard } from './common/webhook-verification.guard';
     BookingsModule,
     WorkforceModule,
     ObservabilityModule,
+    MetaModule,
   ],
   controllers: [HealthController, WebhooksController],
   providers: [

@@ -9,6 +9,7 @@ import {
   HttpStatus,
   Logger,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { Request, Response } from 'express';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from '../auth/roles.guard';
@@ -18,6 +19,8 @@ import { EventBusService } from '../events/event-bus.service';
 const KEEPALIVE_INTERVAL = parseInt(process.env.STREAM_KEEPALIVE_SEC || '15', 10) * 1000;
 const MAX_CLIENTS = parseInt(process.env.STREAM_MAX_CLIENTS || '200', 10);
 
+@ApiTags('SSE')
+@ApiBearerAuth('bearer')
 @Controller('stream')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 export class StreamController {
@@ -31,6 +34,10 @@ export class StreamController {
    * Sends keepalive ping every 15s.
    * Throttles events to 1 per second per device.
    */
+  @ApiOperation({
+    summary: 'Stream spout events (SSE)',
+    description: 'Server-sent events stream of spout/pour updates for live monitoring.',
+  })
   @Get('spout')
   @Roles('L3', 'L4', 'L5')
   streamSpout(@Query('deviceId') deviceId: string, @Res() res: Response, @Req() req: Request) {

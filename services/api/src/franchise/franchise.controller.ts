@@ -1,4 +1,5 @@
 import { Controller, Get, Post, Body, Query, UseGuards, Request } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
@@ -19,6 +20,8 @@ interface RequestWithUser {
   };
 }
 
+@ApiTags('Franchise')
+@ApiBearerAuth('bearer')
 @Controller('franchise')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 export class FranchiseController {
@@ -36,6 +39,11 @@ export class FranchiseController {
     private cacheService: CacheService,
   ) {}
 
+  @ApiOperation({
+    summary: 'Franchise overview',
+    description: 'KPIs and aggregates for a given org/period',
+  })
+  @ApiQuery({ name: 'period', required: true, type: String })
   @Get('overview')
   @Roles('L5')
   async getOverview(
@@ -76,6 +84,11 @@ export class FranchiseController {
     return result;
   }
 
+  @ApiOperation({
+    summary: 'Branch/item rankings',
+    description: 'Rank performance by configured dimensions',
+  })
+  @ApiQuery({ name: 'period', required: true, type: String })
   @Get('rankings')
   @Roles('L5')
   async getRankings(
@@ -138,6 +151,11 @@ export class FranchiseController {
     });
   }
 
+  @ApiOperation({
+    summary: 'Budget vs actuals',
+    description: 'Budget tracking and variance reporting',
+  })
+  @ApiQuery({ name: 'period', required: true, type: String })
   @Get('budgets')
   @Roles('L5')
   async getBudgets(@Request() req: RequestWithUser, @Query('period') period: string) {

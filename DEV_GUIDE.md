@@ -10198,3 +10198,381 @@ pnpm test -- readiness.controller.spec
 **Status**: ✅ Observability Pack v1 Complete
 **Metrics**: 7 custom + Node.js defaults
 **Health Checks**: Liveness + Readiness (DB, Redis, Env)
+
+## Security Hardening v1 (Helmet + CORS)
+
+### Environment Variables
+
+```bash
+# CORS Configuration
+CORS_ORIGINS="https://app.chefcloud.io,https://staging.chefcloud.io"  # Comma-separated allowed origins
+
+# Production Environment
+NODE_ENV="production"  # Enables HSTS header
+```
+
+### Behavior
+
+ChefCloud implements multiple layers of security hardening:
+
+**Helmet Security Headers:**
+- HSTS only enabled when `NODE_ENV=production` (15552000s max-age, includeSubDomains)
+- DNS prefetch control disabled
+- X-Frame-Options: SAMEORIGIN (prevent clickjacking)
+- X-Content-Type-Options: nosniff (prevent MIME sniffing)
+- Referrer-Policy: no-referrer (privacy protection)
+- X-Powered-By header hidden
+- Cross-Origin-Opener-Policy: same-origin
+- Cross-Origin-Resource-Policy: same-site
+
+**CORS Protection:**
+- Env-driven allowlist via `CORS_ORIGINS`
+- Disallowed origins receive response without `Access-Control-Allow-Origin` header (browser blocks)
+- Server-to-server requests (no Origin header) are allowed for webhooks
+- Credentials disabled by default for security
+- Custom headers allowed: `X-Sig`, `X-Ts`, `X-Id` (webhook verification)
+- Exposed headers: `Retry-After` (rate limiting)
+
+**SSE Compatibility:**
+- SSE endpoints (`/stream/kpis`) respect CORS allowlist
+- Preflight OPTIONS requests properly handled
+- Event stream headers preserved
+
+**Webhook Compatibility:**
+- Webhooks are server-to-server (no Origin header required)
+- OPTIONS requests return 204 without requiring CORS
+- HMAC signature verification (E24) remains intact
+
+### Configuration
+
+Update `.env`:
+
+```bash
+# Development (multiple local origins)
+CORS_ORIGINS="http://localhost:3000,http://localhost:5173,http://localhost:1420"
+
+# Production (specific domains only)
+CORS_ORIGINS="https://app.chefcloud.io,https://staging.chefcloud.io"
+
+# No CORS_ORIGINS = CORS disabled (all origins blocked except server-to-server)
+```
+
+### Testing CORS
+
+#### Preflight Request (Allowed Origin)
+
+```bash
+BASE="http://localhost:3001"
+
+# Test allowed origin
+curl -i -X OPTIONS "$BASE/franchise/overview" \
+  -H "Origin: https://app.chefcloud.io" \
+  -H "Access-Control-Request-Method: GET"
+
+# Expected Response:
+# HTTP/1.1 204 No Content
+# Access-Control-Allow-Origin: https://app.chefcloud.io
+# Access-Control-Allow-Methods: GET,POST,PUT,PATCH,DELETE,OPTIONS
+# Access-Control-Allow-Headers: Authorization,Content-Type,...
+```
+
+#### Preflight Request (Blocked Origin)
+
+```bash
+# Test disallowed origin
+curl -i -X OPTIONS "$BASE/franchise/overview" \
+  -H "Origin: https://evil.example.com" \
+  -H "Access-Control-Request-Method: GET"
+
+# Expected Response:
+# HTTP/1.1 204 No Content
+# (No Access-Control-Allow-Origin header - browser will block)
+```
+
+#### Server-to-Server (No Origin)
+
+```bash
+# Webhook or direct API call (no Origin header)
+curl -i -X POST "$BASE/webhooks/billing" \
+  -H "Content-Type: application/json" \
+  -H "X-Sig: <signature>" \
+  -H "X-Ts: <timestamp>" \
+  -H "X-Id: <unique-id>" \
+  -d '{"event":"test"}'
+
+# Expected: 201 Created (CORS not enforced for server-to-server)
+```
+
+### Helmet Headers Verification
+
+```bash
+# Check security headers on any endpoint
+curl -i http://localhost:3001/healthz
+
+# Expected Headers:
+# X-DNS-Prefetch-Control: off
+# X-Frame-Options: SAMEORIGIN
+# X-Content-Type-Options: nosniff
+# Referrer-Policy: no-referrer
+# Cross-Origin-Opener-Policy: same-origin
+# Cross-Origin-Resource-Policy: same-site
+
+# In production (NODE_ENV=production):
+# Strict-Transport-Security: max-age=15552000; includeSubDomains
+```
+
+### SSE CORS Testing
+
+```bash
+# Preflight for SSE endpoint (allowed origin)
+curl -i -X OPTIONS "http://localhost:3001/stream/kpis" \
+  -H "Origin: https://app.chefcloud.io" \
+  -H "Access-Control-Request-Method: GET"
+
+# Expected:
+# HTTP/1.1 204 No Content
+# Access-Control-Allow-Origin: https://app.chefcloud.io
+
+# Preflight for SSE endpoint (blocked origin)
+curl -i -X OPTIONS "http://localhost:3001/stream/kpis" \
+  -H "Origin: https://malicious.example.com" \
+  -H "Access-Control-Request-Method: GET"
+
+# Expected:
+# HTTP/1.1 204 No Content
+# (No Access-Control-Allow-Origin header)
+```
+
+### Security Test Suite
+
+Run automated security tests:
+
+```bash
+cd services/api
+
+# Run all security tests
+pnpm test -- security
+
+# Run specific test suites
+pnpm test -- security.cors.spec
+pnpm test -- security.sse.cors.spec
+pnpm test -- security.helmet.spec
+```
+
+**Test Coverage:**
+- ✅ CORS: Allowed origin preflight
+- ✅ CORS: Blocked origin preflight
+- ✅ CORS: Server-to-server (no Origin header)
+- ✅ SSE CORS: Allowed origin for event streams
+- ✅ SSE CORS: Blocked origin for event streams
+- ✅ Helmet: Security headers present
+- ✅ Helmet: X-Powered-By hidden
+- ✅ Helmet: HSTS in production only
+- ✅ Helmet: No HSTS in development
+
+### Troubleshooting
+
+**"CORS policy: No 'Access-Control-Allow-Origin' header"**
+- Origin not in `CORS_ORIGINS` allowlist
+- Solution: Add origin to `.env` and restart server
+
+**"CORS policy: The value of the 'Access-Control-Allow-Credentials' header in the response is '' which must be 'true'"**
+- Credentials are disabled by default for security
+- Solution: Only enable if truly needed (requires code change)
+
+**SSE connection fails with CORS error**
+- Ensure origin is in `CORS_ORIGINS`
+- Verify preflight OPTIONS request succeeds first
+- Check browser console for specific CORS error
+
+**Webhook fails with CORS error**
+- Webhooks should NOT send Origin header (server-to-server)
+- If Origin is present, ensure webhook sender is configured correctly
+- Verify `X-Sig`, `X-Ts`, `X-Id` headers are included (E24 verification)
+
+**HSTS not appearing in headers (development)**
+- Expected behavior: HSTS disabled when `NODE_ENV !== 'production'`
+- Solution: Set `NODE_ENV=production` to enable HSTS
+
+**Security headers missing**
+- Ensure Helmet middleware is applied in `main.ts`
+- Check middleware order (Helmet should be early)
+- Restart server after configuration changes
+
+### Production Deployment Checklist
+
+- [ ] Set `CORS_ORIGINS` to production domains only
+- [ ] Set `NODE_ENV=production` to enable HSTS
+- [ ] Verify HTTPS is enabled (required for HSTS)
+- [ ] Test CORS preflight from production frontend domain
+- [ ] Verify SSE connections work from production domain
+- [ ] Confirm webhooks work (server-to-server, no CORS)
+- [ ] Monitor logs for CORS-related errors
+- [ ] Review security headers via browser DevTools
+
+### Related Features
+
+- **E24 Webhook Verification**: HMAC signature validation (see Webhook Security section)
+- **E26 SSE Rate Limiting**: Rate limits for event stream endpoints
+- **A7 WebAuthn**: Passkey authentication requires HTTPS in production
+
+---
+
+## Meta & Tracing v1
+
+Expose build info and propagate a per-request correlation ID for logs/metrics.
+
+### Endpoints
+
+**GET /version** - Returns build and environment information
+
+```bash
+curl http://localhost:3001/version
+
+# Response:
+{
+  "version": "0.1.0",
+  "commit": "unknown",
+  "builtAt": "unknown",
+  "node": "v20.x.x",
+  "env": "development"
+}
+```
+
+### Request ID Propagation
+
+The API automatically handles request correlation IDs via the `X-Request-Id` header:
+
+- **Inbound header present**: Server echoes back the same `X-Request-Id` value
+- **No inbound header**: Server generates a new UUID and sets `X-Request-Id` on response
+- **Use case**: Trace requests across distributed systems, correlate logs and metrics
+
+### Environment Variables (CI/CD)
+
+Configure these in your build pipeline to populate version info:
+
+```bash
+BUILD_VERSION="1.2.3"          # Semver tag or build number
+BUILD_SHA="abc123def"          # Short git commit SHA
+BUILD_DATE="2025-11-09T10:00:00Z"  # ISO timestamp of build
+```
+
+If not set, defaults are used:
+- `version`: Read from `package.json`
+- `commit`: "unknown"
+- `builtAt`: "unknown"
+
+### Curl Examples
+
+```bash
+BASE="http://localhost:3001"
+
+# Get version info
+curl -i "$BASE/version"
+
+# Test Request-ID echo (provide your own)
+curl -i -H "X-Request-Id: TEST-123" "$BASE/health"
+# Response will have: X-Request-Id: TEST-123
+
+# Test Request-ID generation (server generates UUID)
+curl -i "$BASE/health"
+# Response will have: X-Request-Id: <generated-uuid>
+
+# Request-ID works with all endpoints (SSE, webhooks, etc.)
+curl -i -H "X-Request-Id: TRACE-456" "$BASE/stream/kpis"
+```
+
+### Benefits
+
+- **Traceability**: Follow requests through logs using correlation ID
+- **Debugging**: Identify exact build version when investigating issues
+- **Monitoring**: Group metrics by request ID for performance analysis
+- **Compliance**: Audit trail for webhook and payment processing
+
+---
+
+## Structured HTTP Logging v1
+We emit JSON logs via pino/pino-http, correlated with Request-ID.
+
+**Env**
+- `LOG_LEVEL` (default `info`)
+- `PRETTY_LOGS=1` to enable human-readable logs in dev
+- `LOG_SILENCE_HEALTH=1` to omit `/healthz`
+- `LOG_SILENCE_METRICS=1` to omit `/metrics`
+
+**Redaction**
+- Sensitive headers: `Authorization`, `cookie`, `Set-Cookie`, `X-Sig`, `X-Ts`, `X-Id`
+- Sensitive body fields: `password`, `token`, `secret`, `key`
+- Webhook payloads: body omitted from logs
+
+**Examples**
+```bash
+# Dev pretty logs
+PRETTY_LOGS=1 pnpm start:dev
+
+# Curl with explicit trace id
+curl -i -H "X-Request-Id: TRACE-42" "$BASE/healthz"
+```
+
+## Global Error Responses v1
+All errors now return a consistent JSON shape:
+
+```json
+{
+  "status": "error",
+  "code": "BAD_REQUEST",
+  "message": "Invalid payload",
+  "requestId": "RID-123",
+  "details": {
+    "validation": [
+      { "property": "name", "constraints": { "isNotEmpty": "name should not be empty" } }
+    ]
+  }
+}
+```
+
+Codes are derived from HTTP status (400→BAD_REQUEST, 404→NOT_FOUND, 500→INTERNAL_SERVER_ERROR, etc.).
+
+`X-Request-Id` is always echoed and included in the body.
+
+In production, stack traces are suppressed by default. Enable in dev with `ERROR_INCLUDE_STACKS=1`.
+
+**Curl**
+```bash
+curl -i -H "X-Request-Id: RID-42" "$BASE/does-not-exist"
+```
+
+## API Documentation v1 (OpenAPI/Swagger)
+Enable interactive docs in dev and export the OpenAPI spec for clients.
+
+**Env**
+- `DOCS_ENABLED=1` to serve:
+  - UI: `GET /docs`
+  - JSON: `GET /openapi.json`
+
+**Security**
+- HTTP Bearer JWT (`Authorization: Bearer <token>`) applied to protected routes.
+
+**Export**
+```bash
+pnpm build
+pnpm openapi:export
+# Output: reports/openapi/openapi.json
+```
+
+**Testing**
+```bash
+# Start API with docs enabled
+DOCS_ENABLED=1 pnpm start:dev
+
+# Visit http://localhost:3001/docs
+
+# Get JSON spec
+curl http://localhost:3001/openapi.json | jq .
+```
+
+**Tagged Endpoints**
+- `Franchise`: /franchise/overview, /franchise/rankings, /franchise/budgets
+- `SSE`: /stream/spout, /stream/kds  
+- `Webhooks`: /webhooks/billing, /webhooks/mtn, /webhooks/airtel
+- `Billing`: /billing/plan/change, /billing/cancel

@@ -3,17 +3,17 @@ import { Request, Response, NextFunction } from 'express';
 
 /**
  * Raw Body Middleware for Webhook Verification
- * 
+ *
  * Captures the raw request body before JSON parsing to enable
  * HMAC signature verification. The raw body is stored on req.rawBody
  * and is preserved alongside the parsed JSON body.
- * 
+ *
  * This middleware should be applied BEFORE body parsers.
- * 
+ *
  * @example
  * In main.ts:
  * ```typescript
- * app.use(json({ 
+ * app.use(json({
  *   verify: (req: any, res, buf) => {
  *     req.rawBody = buf.toString('utf8');
  *   }
@@ -27,7 +27,7 @@ export class RawBodyMiddleware implements NestMiddleware {
   use(req: Request & { rawBody?: string }, _res: Response, next: NextFunction) {
     if (req.headers['content-type']?.includes('application/json')) {
       let data = '';
-      
+
       req.on('data', (chunk: Buffer) => {
         data += chunk.toString('utf8');
       });
@@ -37,7 +37,7 @@ export class RawBodyMiddleware implements NestMiddleware {
         this.logger.debug(`Raw body captured: ${data.length} bytes`);
       });
     }
-    
+
     next();
   }
 }

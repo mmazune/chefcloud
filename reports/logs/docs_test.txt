@@ -1,0 +1,16 @@
+
+> @chefcloud/api@0.1.0 test:e2e /workspaces/chefcloud/services/api
+> jest --config ./test/jest-e2e.json "--" "e2e/docs.e2e-spec.ts"
+
+✓ E2E environment loaded
+  DATABASE_URL: postgresql://postgres:***@localhost:5432/chefcloud_test
+PASS test/e2e/docs.e2e-spec.ts
+  Docs (env-gated)
+    ✓ returns 404 when DOCS_ENABLED!=1 (128 ms)
+    ✓ serves OpenAPI JSON when DOCS_ENABLED=1 (14 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       2 passed, 2 total
+Snapshots:   0 total
+Time:        0.853 s, estimated 4 s
+Ran all test suites matching /e2e\/docs.e2e-spec.ts/i.

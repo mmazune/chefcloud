@@ -1,0 +1,4 @@
+
+> @chefcloud/api@0.1.0 lint /workspaces/chefcloud/services/api
+> eslint "{src,apps,libs,test}/**/*.ts" --fix
+

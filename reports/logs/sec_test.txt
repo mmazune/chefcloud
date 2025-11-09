@@ -1,0 +1,28 @@
+
+> @chefcloud/api@0.1.0 test /workspaces/chefcloud/services/api
+> jest --passWithNoTests "security"
+
+PASS src/security/security.sse.cors.spec.ts
+  Security/SSE CORS
+    ✓ preflight allows SSE GET from allowed origin (21 ms)
+    ✓ blocks SSE preflight from disallowed origin (6 ms)
+
+PASS src/security/security.cors.spec.ts
+  Security/CORS allowlist
+    ✓ allows allowed origin (23 ms)
+    ✓ blocks disallowed origin (6 ms)
+    ✓ allows server-to-server (no Origin header) (3 ms)
+
+PASS src/security/security.helmet.spec.ts
+  Security/Helmet headers
+    ✓ emits basic security headers (4 ms)
+    ✓ hides X-Powered-By header (4 ms)
+    ✓ does not set HSTS in development (4 ms)
+  Security/Helmet headers (production)
+    ✓ sets HSTS header in production (3 ms)
+
+Test Suites: 3 passed, 3 total
+Tests:       9 passed, 9 total
+Snapshots:   0 total
+Time:        1.696 s, estimated 2 s
+Ran all test suites matching /security/i.

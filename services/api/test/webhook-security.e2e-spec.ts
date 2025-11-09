@@ -19,7 +19,7 @@ describe('Webhook Security E2E (E24)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
-    
+
     // Configure body parser with raw body capture (same as main.ts)
     app.use(
       json({
@@ -51,10 +51,7 @@ describe('Webhook Security E2E (E24)', () => {
     return createHmac('sha256', WH_SECRET).update(payload).digest('hex');
   };
 
-  const sendWebhook = (
-    payload: any,
-    headers: { sig?: string; ts?: string; id?: string } = {},
-  ) => {
+  const sendWebhook = (payload: any, headers: { sig?: string; ts?: string; id?: string } = {}) => {
     const bodyStr = JSON.stringify(payload);
     const timestamp = headers.ts || Date.now().toString();
     const signature = headers.sig || generateSignature(timestamp, bodyStr);
@@ -217,7 +214,7 @@ describe('Webhook Security E2E (E24)', () => {
     it('should reject webhook with tampered body', async () => {
       const originalPayload = { event: 'payment', amount: 100 };
       const tamperedPayload = { event: 'payment', amount: 1000 };
-      
+
       const timestamp = Date.now().toString();
       const signature = generateSignature(timestamp, JSON.stringify(originalPayload));
 
@@ -313,10 +310,7 @@ describe('Webhook Security E2E (E24)', () => {
   describe('Performance and load', () => {
     it('should handle multiple concurrent valid webhooks', async () => {
       const requests = Array.from({ length: 10 }, (_, i) =>
-        sendWebhook(
-          { event: 'test', index: i },
-          { id: `concurrent-${Date.now()}-${i}` },
-        ),
+        sendWebhook({ event: 'test', index: i }, { id: `concurrent-${Date.now()}-${i}` }),
       );
 
       const responses = await Promise.all(requests);

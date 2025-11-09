@@ -1,0 +1,12 @@
+PASS src/errors/global-exception.filter.spec.ts
+  GlobalExceptionFilter
+    ✓ maps 404 to NOT_FOUND with standard body (unknown route) (21 ms)
+    ✓ maps BadRequest to BAD_REQUEST with message (4 ms)
+    ✓ maps generic error to INTERNAL_SERVER_ERROR without stack by default (3 ms)
+    ✓ normalizes validation errors into details.validation (13 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       4 passed, 4 total
+Snapshots:   0 total
+Time:        1.073 s
+Ran all test suites matching /global-exception/i.

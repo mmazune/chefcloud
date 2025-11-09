@@ -1,0 +1,6 @@
+
+> @chefcloud/api@0.1.0 openapi:export /workspaces/chefcloud/services/api
+> node scripts/export-openapi.js
+
+Loading application...
+ ELIFECYCLE  Command failed with exit code 1.

@@ -1,16 +1,18 @@
 import { Controller, Post, Body, Headers, Logger, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { PaymentsService } from './payments/payments.service';
 import { WebhookVerificationGuard } from './common/webhook-verification.guard';
 
 /**
  * Webhooks Controller
- * 
+ *
  * Handles incoming webhooks from payment providers and other external services.
  * All webhook endpoints are protected by WebhookVerificationGuard (E24) which:
  * - Validates HMAC signatures (X-Sig header)
  * - Checks timestamp freshness (X-Ts header, ±5 minutes)
  * - Prevents replay attacks (X-Id header, 24h deduplication)
  */
+@ApiTags('Webhooks')
 @Controller('webhooks')
 export class WebhooksController {
   private readonly logger = new Logger(WebhooksController.name);
@@ -46,6 +48,10 @@ export class WebhooksController {
    * Generic billing webhook endpoint for developer integrations
    * Protected by HMAC signature verification and replay protection
    */
+  @ApiOperation({
+    summary: 'Billing webhook',
+    description: 'Receives billing provider events (HMAC-verified).',
+  })
   @Post('billing')
   @UseGuards(WebhookVerificationGuard)
   async handleBillingWebhook(@Body() payload: any) {

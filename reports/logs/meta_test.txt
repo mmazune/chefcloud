@@ -1,0 +1,18 @@
+
+> @chefcloud/api@0.1.0 test /workspaces/chefcloud/services/api
+> jest --passWithNoTests "--testPathPattern=meta"
+
+PASS src/meta/version.controller.spec.ts
+  /version endpoint
+    ✓ returns version/build info JSON (25 ms)
+
+PASS src/meta/request-id.middleware.spec.ts
+  Request-ID middleware
+    ✓ echoes inbound X-Request-Id unchanged (24 ms)
+    ✓ generates a new X-Request-Id when missing (4 ms)
+
+Test Suites: 2 passed, 2 total
+Tests:       3 passed, 3 total
+Snapshots:   0 total
+Time:        1.583 s, estimated 7 s
+Ran all test suites matching /meta/i.

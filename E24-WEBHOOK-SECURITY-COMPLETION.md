@@ -11,6 +11,7 @@
 Successfully implemented comprehensive webhook security for all incoming webhooks with HMAC signature verification, timestamp validation, replay attack protection, and extensive test coverage. All acceptance criteria met.
 
 ### Security Posture
+
 - **Before:** Webhooks accepted without signature verification
 - **After:** Multi-layered security with HMAC-SHA256, timestamp validation, and 24h replay protection
 
@@ -86,19 +87,19 @@ Successfully implemented comprehensive webhook security for all incoming webhook
 
 ## Acceptance Criteria Validation
 
-| # | Requirement | Status | Implementation |
-|---|-------------|--------|----------------|
-| 1 | HMAC signature header (X-Sig) | ✅ | `createHmac('sha256', secret).update(ts + '.' + rawBody).digest('hex')` |
-| 2 | Timestamp header (X-Ts) within ±5 min | ✅ | `Math.abs(Date.now() - tsMs) <= 5 * 60 * 1000` |
-| 3 | Unique request ID (X-Id) | ✅ | `wh:replay:${id}` stored for 24h |
-| 4 | Constant-time comparison | ✅ | `crypto.timingSafeEqual()` |
-| 5 | Redis persistence with in-memory fallback | ✅ | `RedisService` with automatic failover |
-| 6 | Raw body preservation | ✅ | `verify` function in `json()` parser |
-| 7 | Unit tests (all scenarios) | ✅ | 16 tests, 100% pass rate |
-| 8 | Integration test | ✅ | E2E tests with live server |
-| 9 | DEV_GUIDE.md documentation | ✅ | Full section with examples |
-| 10 | CURL_CHEATSHEET.md examples | ✅ | Working curl commands |
-| 11 | CI green (build, lint, typecheck, tests) | ✅ | All checks passing |
+| #   | Requirement                               | Status | Implementation                                                          |
+| --- | ----------------------------------------- | ------ | ----------------------------------------------------------------------- |
+| 1   | HMAC signature header (X-Sig)             | ✅     | `createHmac('sha256', secret).update(ts + '.' + rawBody).digest('hex')` |
+| 2   | Timestamp header (X-Ts) within ±5 min     | ✅     | `Math.abs(Date.now() - tsMs) <= 5 * 60 * 1000`                          |
+| 3   | Unique request ID (X-Id)                  | ✅     | `wh:replay:${id}` stored for 24h                                        |
+| 4   | Constant-time comparison                  | ✅     | `crypto.timingSafeEqual()`                                              |
+| 5   | Redis persistence with in-memory fallback | ✅     | `RedisService` with automatic failover                                  |
+| 6   | Raw body preservation                     | ✅     | `verify` function in `json()` parser                                    |
+| 7   | Unit tests (all scenarios)                | ✅     | 16 tests, 100% pass rate                                                |
+| 8   | Integration test                          | ✅     | E2E tests with live server                                              |
+| 9   | DEV_GUIDE.md documentation                | ✅     | Full section with examples                                              |
+| 10  | CURL_CHEATSHEET.md examples               | ✅     | Working curl commands                                                   |
+| 11  | CI green (build, lint, typecheck, tests)  | ✅     | All checks passing                                                      |
 
 **Result:** ✅ **11/11 ACCEPTANCE CRITERIA MET**
 
@@ -119,6 +120,7 @@ const ok = timingSafeEqual(Buffer.from(expectedSig), Buffer.from(sig));
 ```
 
 **Protection Against:**
+
 - ✅ Timing attacks (constant-time comparison)
 - ✅ Signature forgery (cryptographic HMAC)
 - ✅ Body tampering (signature includes entire body)
@@ -130,6 +132,7 @@ const ok = timingSafeEqual(Buffer.from(expectedSig), Buffer.from(sig));
 **Validation:** `Math.abs(Date.now() - timestamp) <= SKEW_MS`
 
 **Protection Against:**
+
 - ✅ Replay attacks with old requests
 - ✅ Requests from the future
 - ✅ Clock skew tolerance for legitimate requests
@@ -141,11 +144,13 @@ const ok = timingSafeEqual(Buffer.from(expectedSig), Buffer.from(sig));
 **TTL:** 24 hours (86400 seconds)
 
 **Flow:**
+
 1. Check if `X-Id` exists in Redis
 2. If exists → 409 Conflict (replay detected)
 3. If not exists → Store with 24h TTL, proceed
 
 **Protection Against:**
+
 - ✅ Duplicate webhook processing
 - ✅ Replay attacks within 24h window
 - ✅ Memory leaks (automatic TTL expiration)
@@ -157,15 +162,18 @@ const ok = timingSafeEqual(Buffer.from(expectedSig), Buffer.from(sig));
 **Purpose:** Ensures HMAC is computed over exact bytes received
 
 ```typescript
-app.use(json({
-  limit: '256kb',
-  verify: (req: any, _res, buf: Buffer) => {
-    req.rawBody = buf.toString('utf8');
-  },
-}));
+app.use(
+  json({
+    limit: '256kb',
+    verify: (req: any, _res, buf: Buffer) => {
+      req.rawBody = buf.toString('utf8');
+    },
+  }),
+);
 ```
 
 **Protection Against:**
+
 - ✅ Parser manipulation attacks
 - ✅ Encoding attacks
 - ✅ Whitespace/formatting changes
@@ -179,36 +187,44 @@ app.use(json({
 **File:** `src/common/webhook-verification.guard.spec.ts`
 
 ✅ **Valid webhook requests (2 tests)**
+
 - Valid signature with correct timestamp
 - Timestamp at edge of 5-minute window
 
 ✅ **Invalid signatures (2 tests)**
+
 - Invalid signature hex string
 - Tampered body (signature mismatch)
 
 ✅ **Stale timestamps (3 tests)**
+
 - Timestamp older than 5 minutes
 - Future timestamp beyond 5 minutes
 - Invalid timestamp format (non-numeric)
 
 ✅ **Replay protection (2 tests)**
+
 - Duplicate request ID returns 409
 - Request ID stored with 24h TTL
 
 ✅ **Missing headers (3 tests)**
+
 - Missing X-Sig header
 - Missing X-Ts header
 - Missing X-Id header
 
 ✅ **Server configuration (2 tests)**
+
 - Missing WH_SECRET returns 500
 - Missing rawBody returns 500
 
 ✅ **Edge cases (2 tests)**
+
 - Empty request body
 - Case-insensitive header names
 
 **Test Execution:**
+
 ```bash
 cd services/api
 pnpm test src/common/webhook-verification.guard.spec.ts
@@ -223,6 +239,7 @@ pnpm test src/common/webhook-verification.guard.spec.ts
 **File:** `test/webhook-security.e2e-spec.ts`
 
 ✅ **Authentication (5 tests)**
+
 - Missing signature header (400)
 - Missing timestamp header (400)
 - Missing request ID header (400)
@@ -230,32 +247,39 @@ pnpm test src/common/webhook-verification.guard.spec.ts
 - Valid signature (201)
 
 ✅ **Timestamp validation (4 tests)**
+
 - Stale timestamp >5 minutes (401)
 - Future timestamp >5 minutes (401)
 - Timestamp at edge of window (201)
 - Invalid timestamp format (401)
 
 ✅ **Replay protection (2 tests)**
+
 - Duplicate request ID (409 on second)
 - Same payload with different IDs (both 201)
 
 ✅ **Body integrity (3 tests)**
+
 - Tampered body (401)
 - Empty body (201)
 - Complex nested JSON (201)
 
 ✅ **Multiple endpoints (2 tests)**
+
 - MTN webhook protection
 - Airtel webhook protection
 
 ✅ **Response format (2 tests)**
+
 - Success response structure
 - Error response structure
 
 ✅ **Performance (1 test)**
+
 - 10 concurrent valid webhooks
 
 **Test Execution:**
+
 ```bash
 cd services/api
 pnpm test:e2e webhook-security.e2e-spec
@@ -268,6 +292,7 @@ pnpm test:e2e webhook-security.e2e-spec
 **File:** `reports/artifacts/webhook-security-test.sh`
 
 Automated bash script with 6 scenarios:
+
 1. ✅ Valid webhook with correct signature
 2. ❌ Missing signature header (400)
 3. ❌ Invalid signature (401)
@@ -276,6 +301,7 @@ Automated bash script with 6 scenarios:
 6. ❌ Tampered body (401)
 
 **Usage:**
+
 ```bash
 export WH_SECRET="your-webhook-secret"
 ./reports/artifacts/webhook-security-test.sh http://localhost:3001
@@ -290,6 +316,7 @@ export WH_SECRET="your-webhook-secret"
 ### Required
 
 **`WH_SECRET`** (string)
+
 - Webhook HMAC secret key
 - **Required** for production
 - Example: `WH_SECRET="prod-webhook-secret-key-change-me"`
@@ -298,10 +325,12 @@ export WH_SECRET="your-webhook-secret"
 ### Optional (Redis)
 
 **`REDIS_HOST`** (string, default: `localhost`)
+
 - Redis server host for replay protection
 - Falls back to in-memory storage if unavailable
 
 **`REDIS_PORT`** (number, default: `6379`)
+
 - Redis server port
 
 ### Example `.env`
@@ -328,6 +357,7 @@ All endpoints require headers: `X-Sig`, `X-Ts`, `X-Id`
 Generic billing webhook for developer integrations.
 
 **Headers:**
+
 ```
 Content-Type: application/json
 X-Sig: <hmac-sha256-hex>
@@ -336,6 +366,7 @@ X-Id: <unique-request-id>
 ```
 
 **Request:**
+
 ```json
 {
   "event": "invoice.paid",
@@ -345,6 +376,7 @@ X-Id: <unique-request-id>
 ```
 
 **Success Response (201):**
+
 ```json
 {
   "received": true,
@@ -365,6 +397,7 @@ Airtel Money webhook (also protected by E24).
 ### Error Responses
 
 **400 Bad Request** - Missing required headers
+
 ```json
 {
   "statusCode": 400,
@@ -374,6 +407,7 @@ Airtel Money webhook (also protected by E24).
 ```
 
 **401 Unauthorized** - Invalid signature
+
 ```json
 {
   "statusCode": 401,
@@ -383,6 +417,7 @@ Airtel Money webhook (also protected by E24).
 ```
 
 **401 Unauthorized** - Stale timestamp
+
 ```json
 {
   "statusCode": 401,
@@ -392,6 +427,7 @@ Airtel Money webhook (also protected by E24).
 ```
 
 **409 Conflict** - Replay attack
+
 ```json
 {
   "statusCode": 409,
@@ -402,6 +438,7 @@ Airtel Money webhook (also protected by E24).
 ```
 
 **500 Internal Server Error** - Server misconfiguration
+
 ```json
 {
   "statusCode": 500,
@@ -423,10 +460,7 @@ const secret = process.env.WH_SECRET;
 const timestamp = Date.now().toString();
 const body = JSON.stringify(payload);
 const signaturePayload = `${timestamp}.${body}`;
-const signature = crypto
-  .createHmac('sha256', secret)
-  .update(signaturePayload)
-  .digest('hex');
+const signature = crypto.createHmac('sha256', secret).update(signaturePayload).digest('hex');
 
 // Send webhook
 fetch('http://localhost:3001/webhooks/billing', {
@@ -590,6 +624,7 @@ $ cd services/api && pnpm test:e2e webhook-security.e2e-spec
 ### Monitoring Metrics
 
 **Suggested Prometheus metrics:**
+
 - `webhook_requests_total{status}` - Total webhook requests by status code
 - `webhook_signature_errors_total` - Invalid signature attempts
 - `webhook_replay_attempts_total` - Replay attack detections
@@ -634,6 +669,7 @@ $ cd services/api && pnpm test:e2e webhook-security.e2e-spec
 ✅ **Webhook Security Implementation (E24) - COMPLETE**
 
 **Deliverables:**
+
 - 6 new files (guard, service, middleware, 2 test files, script)
 - 5 modified files (main, controller, module, 2 docs)
 - 100% acceptance criteria met (11/11)
@@ -642,6 +678,7 @@ $ cd services/api && pnpm test:e2e webhook-security.e2e-spec
 - Build, lint, typecheck all green
 
 **Security Posture:**
+
 - HMAC-SHA256 signature verification
 - Constant-time comparison (timing attack resistant)
 - ±5 minute timestamp validation
@@ -649,6 +686,7 @@ $ cd services/api && pnpm test:e2e webhook-security.e2e-spec
 - Raw body integrity preservation
 
 **Production Ready:**
+
 - Redis-backed replay protection
 - In-memory fallback for development
 - Comprehensive error handling

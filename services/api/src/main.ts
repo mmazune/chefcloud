@@ -5,6 +5,9 @@ import { initTelemetry } from './telemetry';
 import { logger } from './logger';
 import helmet from 'helmet';
 import { json } from 'express';
+import { RequestIdMiddleware } from './meta/request-id.middleware';
+import { HttpLoggerMiddleware } from './logging/http-logger.middleware';
+import { GlobalExceptionFilter } from './errors/global-exception.filter';
 
 // Initialize telemetry before anything else
 initTelemetry();
@@ -48,6 +51,16 @@ async function bootstrap() {
   );
 
   const port = process.env.PORT || 3001;
+
+  // Meta: Request-ID middleware (after security, before routes)
+  app.use(new RequestIdMiddleware().use);
+
+  // Logging: Pino HTTP logger (after Request-ID)
+  app.use(new HttpLoggerMiddleware().use);
+
+  // Errors: Global standardized error responses
+  app.useGlobalFilters(new GlobalExceptionFilter());
+
   await app.listen(port);
   logger.info(`🚀 ChefCloud API running on http://localhost:${port}`);
   logger.info(`CORS allowlist: ${corsAllowlist.join(', ')}`);

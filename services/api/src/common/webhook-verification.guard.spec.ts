@@ -16,7 +16,7 @@ describe('WebhookVerificationGuard (E24)', () => {
 
   beforeEach(async () => {
     process.env.WH_SECRET = WH_SECRET;
-    
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         WebhookVerificationGuard,
@@ -36,7 +36,11 @@ describe('WebhookVerificationGuard (E24)', () => {
     delete process.env.WH_SECRET;
   });
 
-  const createMockExecutionContext = (headers: any, body: any, rawBody?: string): ExecutionContext => {
+  const createMockExecutionContext = (
+    headers: any,
+    body: any,
+    rawBody?: string,
+  ): ExecutionContext => {
     const request = {
       headers: headers || {},
       body: body || {},
@@ -84,11 +88,7 @@ describe('WebhookVerificationGuard (E24)', () => {
 
       expect(result).toBe(true);
       expect(mockRedisService.exists).toHaveBeenCalledWith(`wh:replay:${requestId}`);
-      expect(mockRedisService.set).toHaveBeenCalledWith(
-        `wh:replay:${requestId}`,
-        '1',
-        24 * 3600,
-      );
+      expect(mockRedisService.set).toHaveBeenCalledWith(`wh:replay:${requestId}`, '1', 24 * 3600);
     });
 
     it('should allow webhook with timestamp at the edge of 5-minute window', async () => {
@@ -371,7 +371,7 @@ describe('WebhookVerificationGuard (E24)', () => {
     it('should reject webhook when raw body is not available', async () => {
       const timestamp = Date.now().toString();
       const body = { event: 'test' };
-      
+
       // Create context where rawBody is explicitly undefined (not just empty string)
       const request = {
         headers: {
@@ -437,7 +437,7 @@ describe('WebhookVerificationGuard (E24)', () => {
       const request = {
         headers: {
           'X-Sig': signature, // Uppercase X
-          'x-ts': timestamp,  // Lowercase x
+          'x-ts': timestamp, // Lowercase x
           'X-Id': 'test-case-insensitive', // Uppercase X
         },
         body: body,
