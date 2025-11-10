@@ -121,6 +121,101 @@ export class PrismaStub implements OnModuleInit, OnModuleDestroy {
     }),
   };
 
+  // Inventory-related models
+  inventoryItem = {
+    findMany: jest.fn().mockResolvedValue([
+      { id: 'item_001', orgId: 'org_1', sku: 'TOMATO-KG', name: 'Tomatoes', uom: 'kg', category: 'PRODUCE', status: 'ACTIVE' },
+      { id: 'item_002', orgId: 'org_1', sku: 'CHEESE-KG', name: 'Cheese', uom: 'kg', category: 'DAIRY', status: 'ACTIVE' },
+      { id: 'item_003', orgId: 'org_1', sku: 'FLOUR-KG', name: 'Flour', uom: 'kg', category: 'DRY_GOODS', status: 'ACTIVE' },
+    ]),
+    findUnique: jest.fn((args) => {
+      const items: Record<string, any> = {
+        item_001: { id: 'item_001', orgId: 'org_1', sku: 'TOMATO-KG', name: 'Tomatoes', uom: 'kg', category: 'PRODUCE', status: 'ACTIVE' },
+        item_002: { id: 'item_002', orgId: 'org_1', sku: 'CHEESE-KG', name: 'Cheese', uom: 'kg', category: 'DAIRY', status: 'ACTIVE' },
+      };
+      return Promise.resolve(items[args.where?.id] || null);
+    }),
+    create: jest.fn((args) =>
+      Promise.resolve({
+        id: 'item_new',
+        orgId: args.data.orgId || 'org_1',
+        sku: args.data.sku || 'NEW-SKU',
+        name: args.data.name || 'New Item',
+        uom: args.data.uom || 'ea',
+        category: args.data.category || 'OTHER',
+        status: 'ACTIVE',
+      })
+    ),
+    update: jest.fn((args) =>
+      Promise.resolve({
+        id: args.where.id,
+        orgId: 'org_1',
+        sku: 'UPDATED-SKU',
+        name: 'Updated Item',
+        uom: 'kg',
+        category: 'OTHER',
+        status: args.data.status || 'ACTIVE',
+      })
+    ),
+  };
+
+  stockBatch = {
+    findMany: jest.fn().mockResolvedValue([
+      { id: 'batch_001', itemId: 'item_001', branchId: 'branch_1', onHand: 25.0, unitCost: 2.5 },
+      { id: 'batch_002', itemId: 'item_002', branchId: 'branch_1', onHand: 12.0, unitCost: 8.0 },
+    ]),
+    create: jest.fn((args) =>
+      Promise.resolve({
+        id: 'batch_new',
+        itemId: args.data.itemId,
+        branchId: args.data.branchId,
+        onHand: args.data.onHand || 0,
+        unitCost: args.data.unitCost || 0,
+      })
+    ),
+    update: jest.fn((args) =>
+      Promise.resolve({
+        id: args.where.id,
+        itemId: 'item_001',
+        branchId: 'branch_1',
+        onHand: args.data.onHand !== undefined ? args.data.onHand : 0,
+        unitCost: 2.5,
+      })
+    ),
+  };
+
+  wastage = {
+    findMany: jest.fn().mockResolvedValue([
+      { id: 'wst_001', itemId: 'item_002', branchId: 'branch_1', quantity: 1.0, reason: 'Spoiled', recordedAt: new Date('2024-01-20') },
+      { id: 'wst_002', itemId: 'item_001', branchId: 'branch_1', quantity: 0.5, reason: 'Trim waste', recordedAt: new Date('2024-01-21') },
+    ]),
+    create: jest.fn((args) =>
+      Promise.resolve({
+        id: 'wst_new',
+        itemId: args.data.itemId,
+        branchId: args.data.branchId || 'branch_1',
+        quantity: args.data.quantity || 0,
+        reason: args.data.reason || 'Unknown',
+        recordedAt: new Date(),
+      })
+    ),
+  };
+
+  stockCount = {
+    findMany: jest.fn().mockResolvedValue([
+      { id: 'cnt_001', branchId: 'branch_1', status: 'IN_PROGRESS', startedAt: new Date('2024-01-22') },
+      { id: 'cnt_002', branchId: 'branch_1', status: 'COMPLETED', startedAt: new Date('2024-01-15'), completedAt: new Date('2024-01-15') },
+    ]),
+    create: jest.fn((args) =>
+      Promise.resolve({
+        id: 'cnt_new',
+        branchId: args.data.branchId || 'branch_1',
+        status: 'IN_PROGRESS',
+        startedAt: new Date(),
+      })
+    ),
+  };
+
   // Generic fallback if service references prisma.<model> directly
   [key: string]: any;
 }
