@@ -1,0 +1,45 @@
+{
+  "preset": "ts-jest",
+  "testEnvironment": "node",
+  "rootDir": "../../",
+  "testMatch": ["<rootDir>/services/api/test/e2e/**/*.slice.e2e-spec.ts"],
+  "transform": { 
+    "^.+\\.(t|j)s$": ["ts-jest", {
+      "tsconfig": {
+        "emitDecoratorMetadata": true,
+        "experimentalDecorators": true,
+        "target": "ES2021",
+        "module": "commonjs"
+      }
+    }]
+  },
+  "setupFiles": ["<rootDir>/services/api/test/e2e/jest-setup-e2e.ts"],
+  "moduleFileExtensions": ["ts", "js", "json"],
+  "collectCoverage": true,
+  "collectCoverageFrom": [
+    "<rootDir>/services/api/src/**/*.(t|j)s",
+    "!<rootDir>/services/api/src/main.(t|j)s",
+    "!<rootDir>/services/api/src/**/__mocks__/**"
+  ],
+  "coverageDirectory": "<rootDir>/reports/coverage/e2e-slice",
+  "coverageReporters": ["text-summary", "lcov"],
+  "reporters": [
+    "default",
+    [
+      "jest-junit",
+      {
+        "outputDirectory": "<rootDir>/reports/junit",
+        "outputName": "e2e-slice-junit.xml",
+        "ancestorSeparator": " › "
+      }
+    ]
+  ],
+  "coverageThreshold": {
+    "global": {
+      "branches": 5,
+      "functions": 2,
+      "lines": 3,
+      "statements": 4
+    }
+  }
+}
