@@ -325,6 +325,95 @@ export class PrismaStub implements OnModuleInit, OnModuleDestroy {
     ]),
   };
 
+  // --- Payments ---
+  payment = {
+    findMany: jest.fn().mockResolvedValue([
+      { id: 'pay_001', orderId: 'ord_001', amount: 5400, method: 'MOBILE_MONEY', status: 'completed', transactionId: 'txn_001', createdAt: new Date('2024-01-25T12:00:00Z') },
+      { id: 'pay_002', orderId: 'ord_002', amount: 1200, method: 'CASH', status: 'pending', transactionId: null, createdAt: new Date('2024-01-25T12:15:00Z') },
+    ]),
+    findUnique: jest.fn((args) => {
+      const payments: Record<string, any> = {
+        pay_001: { id: 'pay_001', orderId: 'ord_001', amount: 5400, method: 'MOBILE_MONEY', status: 'completed', transactionId: 'txn_001', createdAt: new Date('2024-01-25T12:00:00Z') },
+        pay_002: { id: 'pay_002', orderId: 'ord_002', amount: 1200, method: 'CASH', status: 'pending', transactionId: null, createdAt: new Date('2024-01-25T12:15:00Z') },
+      };
+      return Promise.resolve(payments[args.where?.id] || null);
+    }),
+    create: jest.fn((args) =>
+      Promise.resolve({
+        id: 'pay_new',
+        orderId: args.data.orderId || 'ord_001',
+        amount: args.data.amount || 0,
+        method: args.data.method || 'CASH',
+        status: 'pending',
+        transactionId: null,
+        createdAt: new Date(),
+      })
+    ),
+    update: jest.fn((args) =>
+      Promise.resolve({
+        id: args.where.id || 'pay_001',
+        orderId: 'ord_001',
+        amount: 5400,
+        method: 'MOBILE_MONEY',
+        status: args.data.status || 'completed',
+        transactionId: args.data.transactionId || 'txn_001',
+        createdAt: new Date('2024-01-25T12:00:00Z'),
+      })
+    ),
+  };
+
+  refund = {
+    create: jest.fn((args) =>
+      Promise.resolve({
+        id: 'ref_new',
+        paymentId: args.data.paymentId || 'pay_001',
+        amount: args.data.amount || 100,
+        status: 'completed',
+        createdAt: new Date(),
+      })
+    ),
+    findMany: jest.fn().mockResolvedValue([
+      { id: 'ref_001', paymentId: 'pay_001', amount: 100, status: 'completed', createdAt: new Date('2024-01-25T13:00:00Z') },
+    ]),
+    findUnique: jest.fn((args) => {
+      const refunds: Record<string, any> = {
+        ref_001: { id: 'ref_001', paymentId: 'pay_001', amount: 100, status: 'completed', createdAt: new Date('2024-01-25T13:00:00Z') },
+      };
+      return Promise.resolve(refunds[args.where?.id] || null);
+    }),
+  };
+
+  paymentIntent = {
+    create: jest.fn((args) =>
+      Promise.resolve({
+        id: 'pi_new',
+        orgId: args.data.orgId || 'org_1',
+        branchId: args.data.branchId || 'branch_1',
+        amount: args.data.amount || 0,
+        currency: args.data.currency || 'UGX',
+        status: 'requires_capture',
+        createdAt: new Date(),
+      })
+    ),
+    findUnique: jest.fn((args) => {
+      const intents: Record<string, any> = {
+        pi_001: { id: 'pi_001', orgId: 'org_1', branchId: 'branch_1', amount: 2000, currency: 'UGX', status: 'requires_capture', createdAt: new Date('2024-01-25T11:00:00Z') },
+      };
+      return Promise.resolve(intents[args.where?.id] || null);
+    }),
+    update: jest.fn((args) =>
+      Promise.resolve({
+        id: args.where.id || 'pi_001',
+        orgId: 'org_1',
+        branchId: 'branch_1',
+        amount: 2000,
+        currency: 'UGX',
+        status: args.data.status || 'cancelled',
+        createdAt: new Date('2024-01-25T11:00:00Z'),
+      })
+    ),
+  };
+
   // Generic fallback if service references prisma.<model> directly
   [key: string]: any;
 }
