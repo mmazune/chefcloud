@@ -216,6 +216,115 @@ export class PrismaStub implements OnModuleInit, OnModuleDestroy {
     ),
   };
 
+  // --- Orders (POS) ---
+  order = {
+    findMany: jest.fn().mockResolvedValue([
+      { id: 'ord_001', branchId: 'branch_1', tableId: 'table_1', userId: 'user_1', orderNumber: 'ORD-001', status: 'NEW', serviceType: 'DINE_IN', subtotal: 1200, tax: 0, discount: 0, total: 1200, createdAt: new Date('2024-01-25T10:30:00Z') },
+      { id: 'ord_002', branchId: 'branch_1', tableId: 'table_2', userId: 'user_1', orderNumber: 'ORD-002', status: 'SUBMITTED', serviceType: 'DINE_IN', subtotal: 5400, tax: 0, discount: 200, total: 5200, createdAt: new Date('2024-01-25T11:00:00Z') },
+    ]),
+    findUnique: jest.fn((args) => {
+      const orders: Record<string, any> = {
+        ord_001: { id: 'ord_001', branchId: 'branch_1', tableId: 'table_1', userId: 'user_1', orderNumber: 'ORD-001', status: 'NEW', serviceType: 'DINE_IN', subtotal: 1200, tax: 0, discount: 0, total: 1200, createdAt: new Date('2024-01-25T10:30:00Z'), orderItems: [] },
+        ord_002: { id: 'ord_002', branchId: 'branch_1', tableId: 'table_2', userId: 'user_1', orderNumber: 'ORD-002', status: 'SUBMITTED', serviceType: 'DINE_IN', subtotal: 5400, tax: 0, discount: 200, total: 5200, createdAt: new Date('2024-01-25T11:00:00Z'), orderItems: [] },
+      };
+      return Promise.resolve(orders[args.where?.id] || null);
+    }),
+    create: jest.fn((args) =>
+      Promise.resolve({
+        id: 'ord_new',
+        branchId: args.data.branchId || 'branch_1',
+        tableId: args.data.tableId || null,
+        userId: args.data.userId || 'user_1',
+        orderNumber: args.data.orderNumber || 'ORD-NEW',
+        status: 'NEW',
+        serviceType: args.data.serviceType || 'DINE_IN',
+        subtotal: 0,
+        tax: 0,
+        discount: 0,
+        total: 0,
+        createdAt: new Date(),
+        orderItems: [],
+      })
+    ),
+    update: jest.fn((args) =>
+      Promise.resolve({
+        id: args.where.id,
+        branchId: 'branch_1',
+        tableId: 'table_1',
+        userId: 'user_1',
+        orderNumber: 'ORD-001',
+        status: args.data.status || 'NEW',
+        serviceType: 'DINE_IN',
+        subtotal: typeof args.data.subtotal === 'number' ? args.data.subtotal : 1200,
+        tax: typeof args.data.tax === 'number' ? args.data.tax : 0,
+        discount: typeof args.data.discount === 'number' ? args.data.discount : 0,
+        total: typeof args.data.total === 'number' ? args.data.total : 1200,
+        createdAt: new Date('2024-01-25T10:30:00Z'),
+        orderItems: [],
+      })
+    ),
+  };
+
+  orderItem = {
+    findMany: jest.fn().mockResolvedValue([
+      { id: 'oi_001', orderId: 'ord_001', menuItemId: 'menu_001', quantity: 2, price: 600, subtotal: 1200, notes: '', createdAt: new Date('2024-01-25T10:35:00Z') },
+    ]),
+    create: jest.fn((args) =>
+      Promise.resolve({
+        id: 'oi_new',
+        orderId: args.data.orderId || 'ord_001',
+        menuItemId: args.data.menuItemId || 'menu_001',
+        quantity: args.data.quantity || 1,
+        price: args.data.price || 0,
+        subtotal: args.data.subtotal || 0,
+        notes: args.data.notes || '',
+        createdAt: new Date(),
+      })
+    ),
+    update: jest.fn((args) =>
+      Promise.resolve({
+        id: args.where.id || 'oi_001',
+        orderId: 'ord_001',
+        menuItemId: 'menu_001',
+        quantity: args.data.quantity !== undefined ? args.data.quantity : 1,
+        price: args.data.price !== undefined ? args.data.price : 600,
+        subtotal: args.data.subtotal !== undefined ? args.data.subtotal : 600,
+        notes: args.data.notes !== undefined ? args.data.notes : '',
+        createdAt: new Date('2024-01-25T10:35:00Z'),
+      })
+    ),
+    delete: jest.fn().mockResolvedValue({ id: 'oi_deleted', orderId: 'ord_001' }),
+  };
+
+  table = {
+    findMany: jest.fn().mockResolvedValue([
+      { id: 'table_1', branchId: 'branch_1', label: 'Table 1', capacity: 4, status: 'OCCUPIED' },
+      { id: 'table_2', branchId: 'branch_1', label: 'Table 2', capacity: 2, status: 'AVAILABLE' },
+    ]),
+    findUnique: jest.fn((args) => {
+      const tables: Record<string, any> = {
+        table_1: { id: 'table_1', branchId: 'branch_1', label: 'Table 1', capacity: 4, status: 'OCCUPIED' },
+        table_2: { id: 'table_2', branchId: 'branch_1', label: 'Table 2', capacity: 2, status: 'AVAILABLE' },
+      };
+      return Promise.resolve(tables[args.where?.id] || null);
+    }),
+  };
+
+  kdsTicket = {
+    create: jest.fn((args) =>
+      Promise.resolve({
+        id: 'tkt_new',
+        orderId: args.data.orderId || 'ord_001',
+        station: args.data.station || 'KITCHEN',
+        status: 'QUEUED',
+        createdAt: new Date(),
+      })
+    ),
+    findMany: jest.fn().mockResolvedValue([
+      { id: 'tkt_001', orderId: 'ord_001', station: 'KITCHEN', status: 'QUEUED', createdAt: new Date('2024-01-25T10:40:00Z') },
+    ]),
+  };
+
   // Generic fallback if service references prisma.<model> directly
   [key: string]: any;
 }
