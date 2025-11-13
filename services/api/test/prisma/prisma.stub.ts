@@ -321,8 +321,29 @@ export class PrismaStub implements OnModuleInit, OnModuleDestroy {
       })
     ),
     findMany: jest.fn().mockResolvedValue([
-      { id: 'tkt_001', orderId: 'ord_001', station: 'KITCHEN', status: 'QUEUED', createdAt: new Date('2024-01-25T10:40:00Z') },
+      { id: 'tkt-001', orderId: 'ord-001', station: 'GRILL', items: [{ name: 'Burger', qty: 2 }], status: 'NEW' },
+      { id: 'tkt-002', orderId: 'ord-002', station: 'FRY', items: [{ name: 'Fries', qty: 1 }], status: 'NEW' },
     ]),
+    findUnique: jest.fn().mockImplementation(async ({ where }: any) => {
+      if (where?.id === 'tkt-001') return { id: 'tkt-001', orderId: 'ord-001', station: 'GRILL', items: [{ name: 'Burger', qty: 2 }], status: 'NEW' };
+      if (where?.id === 'tkt-002') return { id: 'tkt-002', orderId: 'ord-002', station: 'FRY', items: [{ name: 'Fries', qty: 1 }], status: 'NEW' };
+      return null;
+    }),
+    update: jest.fn().mockImplementation(async ({ where, data }: any) => ({
+      id: where?.id ?? 'tkt-unknown',
+      orderId: 'ord-001',
+      station: 'GRILL',
+      items: [{ name: 'Burger', qty: 2 }],
+      status: data?.status ?? 'NEW',
+    })),
+  };
+
+  kdsScreen = {
+    upsert: jest.fn().mockImplementation(async ({ where, create, update }: any) => ({
+      id: where?.id ?? 'scr-001',
+      station: create?.station ?? update?.station ?? 'GRILL',
+      lastSeenAt: new Date().toISOString(),
+    })),
   };
 
   // --- Payments ---
