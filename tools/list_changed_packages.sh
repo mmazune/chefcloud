@@ -9,21 +9,31 @@ if [[ -z "${BASE_SHA}" ]]; then
 fi
 
 if [[ -z "${BASE_SHA}" ]]; then
-  echo "BASE_SHA not found; defaulting to all packages" >&2
-  pnpm -w -r exec node -e "console.log(JSON.stringify(require('./package.json').workspaces || []))" >/dev/null 2>&1 || true
+  echo "BASE_SHA not found; defaulting to empty" >&2
+  exit 0
 fi
 
 # Get changed files
 CHANGED_FILES=$(git diff --name-only "${BASE_SHA}" HEAD || true)
 
-# Map changed files to workspace packages using pnpm filter
-# Print unique package names, one per line
-if [[ -n "${CHANGED_FILES}" ]]; then
-  pnpm -w list --depth -1 --json | jq -r '.[].path' | while read -r pkg; do
-    if echo "${CHANGED_FILES}" | grep -q "^$(echo "$pkg" | sed 's#\./##')/"; then
-      echo "$pkg"
-    fi
-  done | sort -u
-else
-  echo ""
+if [[ -z "${CHANGED_FILES}" ]]; then
+  exit 0
 fi
+
+# Find all package.json files in workspace
+# Check if any changed files are within those package directories
+find . -name "package.json" -not -path "*/node_modules/*" -not -path "*/.next/*" | while read -r pkg_json; do
+  pkg_dir=$(dirname "$pkg_json")
+  rel_dir=$(echo "$pkg_dir" | sed 's#^\./##')
+  
+  # Skip root package.json
+  if [[ "$pkg_dir" == "." ]]; then
+    continue
+  fi
+  
+  # Check if any changed files are in this package directory
+  if echo "${CHANGED_FILES}" | grep -q "^${rel_dir}/"; then
+    # Extract package name
+    jq -r '.name // empty' "$pkg_json"
+  fi
+done | sort -u
