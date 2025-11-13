@@ -19,3 +19,8 @@ process.env.PLAN_RATE_LIMIT = '5';
 
 // Webhook secret for HMAC tests
 process.env.WH_SECRET = 'whsec_test_123';
+
+// Plan-aware throttling knobs used by Dev-Portal test module
+process.env.PLAN_LIMIT_FREE = '5';   // requests per 30s window
+process.env.PLAN_LIMIT_PRO  = '50';  // requests per 30s window
+process.env.PLAN_WINDOW_SEC = '30';

@@ -476,6 +476,38 @@ export class PrismaStub implements OnModuleInit, OnModuleDestroy {
     }),
   };
 
+  // --- Dev-Portal / API Keys ---
+  developerApiKey = {
+    findMany: jest.fn().mockResolvedValue([
+      { id: 'key_1', orgId: 'org_1', label: 'build bot', last4: 'ABCD', active: true, plan: 'free', createdAt: new Date() },
+      { id: 'key_2', orgId: 'org_1', label: 'kitchen svc', last4: 'EFGH', active: true, plan: 'pro', createdAt: new Date() },
+    ]),
+    create: jest.fn().mockImplementation(async ({ data }: any) => ({
+      id: 'key_new',
+      orgId: data?.orgId ?? 'org_1',
+      label: data?.label ?? 'new key',
+      last4: 'WXYZ',
+      active: true,
+      plan: data?.plan ?? 'free',
+      createdAt: new Date(),
+    })),
+    update: jest.fn().mockImplementation(async ({ where, data }: any) => ({
+      id: where?.id ?? 'key_unknown',
+      orgId: 'org_1',
+      label: data?.label ?? 'updated',
+      last4: 'WXYZ',
+      active: data?.active ?? false,
+      plan: data?.plan ?? 'free',
+      updatedAt: new Date(),
+    })),
+    delete: jest.fn().mockResolvedValue({ id: 'key_deleted' }),
+    findUnique: jest.fn().mockImplementation(async ({ where }: any) => {
+      if (where?.id === 'key_1') return { id: 'key_1', orgId: 'org_1', label: 'build bot', last4: 'ABCD', active: true, plan: 'free', createdAt: new Date() };
+      if (where?.id === 'key_2') return { id: 'key_2', orgId: 'org_1', label: 'kitchen svc', last4: 'EFGH', active: true, plan: 'pro', createdAt: new Date() };
+      return null;
+    }),
+  };
+
   // Generic fallback if service references prisma.<model> directly
   [key: string]: any;
 }
