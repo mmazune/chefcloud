@@ -414,6 +414,68 @@ export class PrismaStub implements OnModuleInit, OnModuleDestroy {
     ),
   };
 
+  // --- Reservations ---
+  reservation = {
+    findMany: jest.fn().mockResolvedValue([
+      { id: 'res-001', orgId: 'org_1', branchId: 'branch_1', tableId: 'T1', name: 'Alice', phone: '0700-000001', partySize: 2, reservationTime: '2025-11-13T18:00:00Z', status: 'PENDING', createdAt: new Date() },
+      { id: 'res-002', orgId: 'org_1', branchId: 'branch_1', tableId: 'T2', name: 'Bob', phone: '0700-000002', partySize: 4, reservationTime: '2025-11-13T19:00:00Z', status: 'CONFIRMED', createdAt: new Date() },
+    ]),
+    findUnique: jest.fn().mockImplementation(async ({ where }: any) => {
+      if (where?.id === 'res-001') return { id: 'res-001', orgId: 'org_1', branchId: 'branch_1', tableId: 'T1', name: 'Alice', phone: '0700-000001', partySize: 2, reservationTime: '2025-11-13T18:00:00Z', status: 'PENDING', createdAt: new Date() };
+      if (where?.id === 'res-002') return { id: 'res-002', orgId: 'org_1', branchId: 'branch_1', tableId: 'T2', name: 'Bob', phone: '0700-000002', partySize: 4, reservationTime: '2025-11-13T19:00:00Z', status: 'CONFIRMED', createdAt: new Date() };
+      return null;
+    }),
+    create: jest.fn().mockImplementation(async ({ data }: any) => ({
+      id: 'res-new',
+      orgId: data?.orgId ?? 'org_1',
+      branchId: data?.branchId ?? 'branch_1',
+      tableId: data?.tableId ?? 'T1',
+      name: data?.name ?? 'Guest',
+      phone: data?.phone ?? '0700-000000',
+      partySize: data?.partySize ?? 2,
+      reservationTime: data?.reservationTime ?? '2025-11-13T18:00:00Z',
+      status: 'PENDING',
+      createdAt: new Date(),
+    })),
+    update: jest.fn().mockImplementation(async ({ where, data }: any) => ({
+      id: where?.id ?? 'res-unknown',
+      orgId: 'org_1',
+      branchId: 'branch_1',
+      tableId: data?.tableId ?? 'T1',
+      name: data?.name ?? 'Guest',
+      phone: data?.phone ?? '0700-000000',
+      partySize: data?.partySize ?? 2,
+      reservationTime: data?.reservationTime ?? '2025-11-13T18:00:00Z',
+      status: data?.status ?? 'CONFIRMED',
+      createdAt: new Date(),
+    })),
+    count: jest.fn().mockResolvedValue(2),
+  };
+
+  reservationDeposit = {
+    create: jest.fn().mockImplementation(async ({ data }: any) => ({
+      id: 'dep-new',
+      reservationId: data?.reservationId ?? 'res-001',
+      amount: data?.amount ?? 5000,
+      status: 'HELD',
+      createdAt: new Date(),
+    })),
+    update: jest.fn().mockImplementation(async ({ where, data }: any) => ({
+      id: where?.id ?? 'dep-unknown',
+      reservationId: data?.reservationId ?? 'res-001',
+      amount: data?.amount ?? 5000,
+      status: data?.status ?? 'REFUNDED',
+      updatedAt: new Date(),
+    })),
+    findMany: jest.fn().mockResolvedValue([
+      { id: 'dep-1', reservationId: 'res-001', amount: 5000, status: 'HELD', createdAt: new Date() },
+    ]),
+    findUnique: jest.fn().mockImplementation(async ({ where }: any) => {
+      if (where?.id === 'dep-1') return { id: 'dep-1', reservationId: 'res-001', amount: 5000, status: 'HELD', createdAt: new Date() };
+      return null;
+    }),
+  };
+
   // Generic fallback if service references prisma.<model> directly
   [key: string]: any;
 }
