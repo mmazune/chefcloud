@@ -3,6 +3,7 @@
 **Enterprise-grade, offline-first POS for restaurants and bars in Uganda**
 
 [![CI](https://github.com/mmazune/chefcloud/actions/workflows/ci.yml/badge.svg)](https://github.com/mmazune/chefcloud/actions/workflows/ci.yml)
+[![E2E Slice Coverage](https://codecov.io/gh/mmazune/chefcloud/branch/main/graph/badge.svg?flag=e2e-slice)](https://codecov.io/gh/mmazune/chefcloud)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ChefCloud is a modern Point-of-Sale system designed specifically for Ugandan restaurants and bars, featuring:
