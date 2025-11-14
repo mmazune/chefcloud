@@ -15,6 +15,10 @@ async function setup() {
     process.exit(1);
   }
 
+  // Enable DevPortal auth bypass for E2E tests
+  process.env.E2E_AUTH_BYPASS = '1';
+  process.env.E2E_ADMIN_BYPASS = '1';
+
   console.log('✓ E2E environment loaded');
   console.log('  DATABASE_URL:', dbUrl.replace(/:[^:@]+@/, ':***@'));
 }
