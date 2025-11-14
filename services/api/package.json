@@ -1,7 +1,7 @@
 {
   "name": "@chefcloud/api",
-  "version": "0.1.0",
-  "private": true,
+  "version": "1.0.0-rc.1",
+  "private": false,
   "scripts": {
     "build": "nest build",
     "build:e2e": "tsc -p tsconfig.build.e2e.json",
