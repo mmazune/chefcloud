@@ -39,6 +39,8 @@ Include:
 
 1. **No secrets in code**: Use environment variables
 2. **Input validation**: Validate all user inputs
+3. **E2E test bypasses**: Only set `E2E_AUTH_BYPASS` and `E2E_ADMIN_BYPASS` in test setup files (`test/jest-e2e.setup.ts`), never in production config or CI global environment variables
+3. **E2E test bypasses**: Only set `E2E_AUTH_BYPASS` and `E2E_ADMIN_BYPASS` in test setup files, never in production config or CI global env
 3. **SQL injection**: Use Prisma parameterized queries
 4. **XSS prevention**: Sanitize outputs
 5. **Authentication**: Enforce MFA for sensitive operations

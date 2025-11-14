@@ -132,6 +132,51 @@ pnpm test:e2e
 pnpm test:e2e -- e23-roles-access.e2e-spec.ts
 ```
 
+#### Dev-Portal E2E Auth Strategy (Env-Gated Bypass)
+
+Dev-Portal endpoints use **environment-gated test bypasses** to avoid database dependencies in E2E tests.
+
+**How It Works:**
+
+1. **Production Guards** (DevAdminGuard, SuperDevGuard, PlanRateLimiterGuard):
+   - Check `process.env.E2E_ADMIN_BYPASS === '1'` at start of `canActivate()`
+   - If true: Return true for requests with `Authorization: Bearer TEST_TOKEN`
+   - If false: Execute normal authentication logic (Prisma lookups, JWT validation)
+
+2. **Test Setup** (`test/jest-e2e.setup.ts`):
+   ```typescript
+   process.env.E2E_AUTH_BYPASS = '1';   // JWT bypass
+   process.env.E2E_ADMIN_BYPASS = '1';  // Admin guard bypass
+   ```
+
+3. **Test Requests**:
+   ```typescript
+   const AUTH = { Authorization: 'Bearer TEST_TOKEN' };
+   await request(app).post('/dev/keys').set(AUTH).send({...});
+   ```
+
+**Safety Guarantees:**
+- Production: Env variables never set → guards run normal logic
+- E2E Tests: Env variables set in test setup → guards bypass database
+- Zero Production Impact: Bypass code is dead code in production
+
+**Pattern:**
+```typescript
+async canActivate(context: ExecutionContext): Promise<boolean> {
+  // ---- E2E test bypass (OFF by default in prod) ----
+  if (process.env.E2E_ADMIN_BYPASS === '1') {
+    const request = context.switchToHttp().getRequest();
+    const auth = (request?.headers?.['authorization'] ?? '').toString().trim();
+    return auth === 'Bearer TEST_TOKEN';
+  }
+  
+  // ---- NORMAL PRODUCTION PATH (unchanged) ----
+  // ... original guard logic
+}
+```
+
+See `reports/E2E-ADMIN-BYPASS-SOLUTION.md` for implementation details.
+
 **E2E Configuration:**
 
 - Test DB: `chefcloud_test` (auto-created)
