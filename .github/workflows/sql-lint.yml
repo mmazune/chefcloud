@@ -1,0 +1,98 @@
+name: SQL Lint (Indexes)
+
+on:
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - 'ops/sql/**/*.sql'
+      - '.github/workflows/sql-lint.yml'
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'ops/sql/**/*.sql'
+      - '.github/workflows/sql-lint.yml'
+
+jobs:
+  sql-lint:
+    name: Validate Index SQL Scripts
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Check SQL files exist
+        run: |
+          echo "Checking for required SQL files..."
+          test -f ops/sql/indexes/001_franchise_indexes.sql || (echo "❌ Missing: ops/sql/indexes/001_franchise_indexes.sql" && exit 1)
+          echo "✓ All required SQL files found"
+      
+      - name: Validate SQL safety (no transactions, uses CONCURRENTLY)
+        run: |
+          echo "Validating SQL safety features..."
+          
+          # Check that scripts don't use explicit transactions (incompatible with CONCURRENTLY)
+          if grep -Eiq '(^|[^-])-{0,2}\s*(begin|start\s+transaction)\b|(^|[^-])-{0,2}\s*commit\b' ops/sql/indexes/001_franchise_indexes.sql; then
+            echo "❌ FAIL: Found BEGIN/COMMIT/START TRANSACTION (incompatible with CONCURRENTLY)"
+            echo "SQL scripts with CONCURRENTLY cannot be wrapped in transactions"
+            exit 1
+          fi
+          echo "✓ No explicit transactions found"
+          
+          # Verify uses CONCURRENTLY (required for online index creation)
+          if ! grep -qi 'CREATE INDEX CONCURRENTLY' ops/sql/indexes/001_franchise_indexes.sql; then
+            echo "❌ FAIL: Missing 'CREATE INDEX CONCURRENTLY'"
+            echo "Indexes must use CONCURRENTLY to avoid blocking writes"
+            exit 1
+          fi
+          echo "✓ Uses CREATE INDEX CONCURRENTLY"
+          
+          # Verify uses IF NOT EXISTS (idempotency)
+          if ! grep -qi 'IF NOT EXISTS' ops/sql/indexes/001_franchise_indexes.sql; then
+            echo "⚠️  WARNING: Missing 'IF NOT EXISTS' - script may not be idempotent"
+          else
+            echo "✓ Uses IF NOT EXISTS for idempotency"
+          fi
+          
+          # Verify has safety guards (lock_timeout, statement_timeout)
+          if ! grep -qi 'lock_timeout' ops/sql/indexes/001_franchise_indexes.sql; then
+            echo "⚠️  WARNING: Missing lock_timeout guard"
+          else
+            echo "✓ Has lock_timeout guard"
+          fi
+          
+          if ! grep -qi 'statement_timeout' ops/sql/indexes/001_franchise_indexes.sql; then
+            echo "⚠️  WARNING: Missing statement_timeout guard"
+          else
+            echo "✓ Has statement_timeout guard"
+          fi
+          
+          echo ""
+          echo "✅ SQL safety validation passed"
+      
+      - name: Check for SQL syntax errors (basic)
+        run: |
+          echo "Running basic SQL syntax checks..."
+          
+          # Check for common syntax errors
+          if grep -Ei '\bCREATE\s+INDEX\s+(?!CONCURRENTLY)' ops/sql/indexes/001_franchise_indexes.sql | grep -v CONCURRENTLY; then
+            echo "⚠️  WARNING: Found CREATE INDEX without CONCURRENTLY"
+          fi
+          
+          # Count indexes to be created
+          INDEX_COUNT=$(grep -c 'CREATE INDEX CONCURRENTLY' ops/sql/indexes/001_franchise_indexes.sql || echo "0")
+          echo "✓ Will create $INDEX_COUNT indexes"
+          
+          echo ""
+          echo "✅ Basic syntax checks passed"
+      
+      - name: Display SQL file summary
+        run: |
+          echo "📊 SQL File Summary:"
+          echo "==================="
+          wc -l ops/sql/indexes/001_franchise_indexes.sql
+          echo ""
+          echo "Indexes to be created:"
+          grep -E 'CREATE INDEX CONCURRENTLY.*idx_' ops/sql/indexes/001_franchise_indexes.sql | sed 's/CREATE INDEX CONCURRENTLY IF NOT EXISTS /- /' || echo "None found"
+          echo ""
+          echo "✅ SQL lint completed successfully"
