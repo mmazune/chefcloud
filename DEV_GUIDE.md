@@ -10576,3 +10576,792 @@ curl http://localhost:3001/openapi.json | jq .
 - `SSE`: /stream/spout, /stream/kds  
 - `Webhooks`: /webhooks/billing, /webhooks/mtn, /webhooks/airtel
 - `Billing`: /billing/plan/change, /billing/cancel
+
+---
+
+## Frontend Integration
+
+ChefCloud provides three frontend applications that integrate with the backend API: a Next.js web app, a Tauri desktop app, and an Expo mobile app. This section covers how to configure and integrate these frontends with the API service.
+
+### Frontend Applications Overview
+
+| Application | Framework | Port | Primary Use Case |
+|------------|-----------|------|------------------|
+| **Web App** | Next.js (React) | 3000 | Browser-based POS, management dashboard |
+| **Desktop App** | Tauri + React + Vite | 1420 | Offline-first POS with printer and MSR support |
+| **Mobile App** | Expo React Native | - | Waiter orders, stock management, alerts |
+
+### API Client Configuration
+
+All frontend applications connect to the backend API service running on port 3001 by default. The API base URL is configured via environment variables.
+
+#### Web App Configuration
+
+Create `apps/web/.env.local`:
+
+```bash
+# API Configuration
+NEXT_PUBLIC_API_BASE_URL=http://localhost:3001
+
+# WebAuthn Configuration (must match API service)
+NEXT_PUBLIC_RP_ID=localhost
+NEXT_PUBLIC_ORIGIN=http://localhost:3000
+```
+
+**Usage in code:**
+
+```typescript
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001';
+
+// Example: Login request
+const response = await fetch(`${API_BASE_URL}/auth/login`, {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({ email, password }),
+});
+
+const data = await response.json();
+localStorage.setItem('authToken', data.access_token);
+```
+
+#### Desktop App Configuration
+
+Create `apps/desktop/.env`:
+
+```bash
+# API Configuration
+VITE_API_BASE_URL=http://localhost:3001
+VITE_ORG_ID=demo
+
+# Feature Flags
+VITE_OFFLINE_MODE=true
+VITE_MSR_ENABLED=true
+VITE_PRINTER_ENABLED=true
+
+# WebAuthn Configuration
+VITE_RP_ID=localhost
+VITE_ORIGIN=http://localhost:1420
+```
+
+**Usage in code:**
+
+```typescript
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+const ORG_ID = import.meta.env.VITE_ORG_ID || 'demo';
+
+// Example: API call with offline queue fallback
+import { sendOrQueue, offlineQueue } from './lib/api-wrapper';
+
+const op: QueuedOp = {
+  clientOpId: newId(),
+  clientOrderId: orderId,
+  type: 'order.create',
+  payload: { tableNumber, items },
+};
+
+const result = await sendOrQueue(op, offlineQueue);
+if (result.queued) {
+  console.log('Operation queued for later sync');
+} else {
+  console.log('Operation completed:', result.result);
+}
+```
+
+#### Mobile App Configuration
+
+Create `apps/mobile/.env`:
+
+```bash
+# API Configuration
+EXPO_PUBLIC_API_BASE_URL=http://10.0.2.2:4000  # Android emulator
+# EXPO_PUBLIC_API_BASE_URL=http://localhost:4000  # iOS simulator
+# EXPO_PUBLIC_API_BASE_URL=https://api.chefcloud.io  # Production
+
+# App Configuration
+EXPO_PUBLIC_ORG_ID=demo
+EXPO_PUBLIC_BRANCH_ID=main
+```
+
+**Usage in code:**
+
+```typescript
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || 'http://localhost:4000';
+
+// Example: Login with AsyncStorage
+const response = await fetch(`${API_BASE_URL}/auth/login`, {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ username, password }),
+});
+
+const data = await response.json();
+await AsyncStorage.setItem('authToken', data.access_token);
+await AsyncStorage.setItem('userId', data.userId);
+await AsyncStorage.setItem('orgId', data.orgId);
+```
+
+### Authentication Integration
+
+#### JWT Token Management
+
+All frontends use JWT tokens for authentication. The typical flow is:
+
+1. **Login** - POST `/auth/login` with email/password
+2. **Store Token** - Save JWT token in localStorage (web/desktop) or AsyncStorage (mobile)
+3. **Authenticated Requests** - Include token in Authorization header
+4. **Token Refresh** - Handle 401 responses and redirect to login
+
+**Example authenticated request:**
+
+```typescript
+const token = localStorage.getItem('authToken'); // or AsyncStorage.getItem()
+
+const response = await fetch(`${API_BASE_URL}/orders`, {
+  method: 'GET',
+  headers: {
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json',
+  },
+});
+
+if (response.status === 401) {
+  // Token expired or invalid - redirect to login
+  localStorage.removeItem('authToken');
+  window.location.href = '/login';
+}
+```
+
+#### WebAuthn Passkey Integration (Web/Desktop)
+
+The web and desktop apps support WebAuthn for passwordless authentication using biometrics or security keys.
+
+**Prerequisites:**
+
+```bash
+# Install dependencies (already in package.json)
+npm install @simplewebauthn/browser @simplewebauthn/types
+```
+
+**Registration Flow:**
+
+```typescript
+import { startRegistration } from '@simplewebauthn/browser';
+
+async function registerPasskey() {
+  const token = getAuthToken(); // Must be logged in first
+  
+  // 1. Get registration options from server
+  const optionsRes = await fetch(`${API_BASE_URL}/webauthn/registration/options`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  
+  const options = await optionsRes.json();
+  
+  // 2. Start registration (browser prompts for biometric/PIN)
+  const attResp = await startRegistration({ optionsJSON: options });
+  
+  // 3. Verify registration
+  const verifyRes = await fetch(`${API_BASE_URL}/webauthn/registration/verify`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify({ response: attResp }),
+  });
+  
+  if (verifyRes.ok) {
+    console.log('Passkey registered successfully');
+  }
+}
+```
+
+**Authentication Flow:**
+
+```typescript
+import { startAuthentication } from '@simplewebauthn/browser';
+
+async function loginWithPasskey(email: string) {
+  // 1. Get authentication options
+  const optionsRes = await fetch(`${API_BASE_URL}/webauthn/authentication/options`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email }),
+  });
+  
+  const options = await optionsRes.json();
+  
+  // 2. Start authentication (browser prompts for biometric/PIN)
+  const authResp = await startAuthentication({ optionsJSON: options });
+  
+  // 3. Verify authentication (returns JWT)
+  const verifyRes = await fetch(`${API_BASE_URL}/webauthn/authentication/verify`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ response: authResp }),
+  });
+  
+  const data = await verifyRes.json();
+  localStorage.setItem('authToken', data.token);
+}
+```
+
+**Configuration Requirements:**
+
+- `RP_ID` must match the domain (e.g., `localhost` for local dev)
+- `ORIGIN` must include full URL with protocol
+- HTTPS required in production (localhost OK for dev)
+
+#### MSR Badge Authentication (Desktop Only)
+
+The desktop app supports magnetic stripe reader (MSR) badge authentication using a keyboard wedge.
+
+**Setup:**
+
+```typescript
+import { startMsrListener, stopMsrListener } from './lib/msr';
+import { parseMsrSwipe } from './lib/msr-parse';
+
+function enableMSR() {
+  startMsrListener(async (rawData) => {
+    const parsed = parseMsrSwipe(rawData);
+    
+    if (parsed.type === 'rejected') {
+      alert(`Badge rejected: ${parsed.reason}`);
+      return;
+    }
+    
+    // Login with badge
+    const response = await fetch(`${API_BASE_URL}/auth/msr-swipe`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ trackData: `CLOUDBADGE:${parsed.code}` }),
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      localStorage.setItem('authToken', data.token);
+      console.log('Badge login successful');
+    }
+  });
+}
+```
+
+**Badge Format:**
+
+Valid badges must use the format: `CLOUDBADGE:<CODE>` (e.g., `CLOUDBADGE:W001`)
+
+**Security:**
+
+- Payment card data (PAN) is automatically rejected by both client and server
+- Detection uses Track 1 (`%B\d{12,19}\^`) and Track 2 (`;\d{12,19}=`) patterns
+
+### Offline-First Pattern (Desktop App)
+
+The desktop app implements an offline-first architecture with automatic sync queue for resilient operations.
+
+#### Offline Queue Architecture
+
+```typescript
+import { offlineQueue, QueuedOp } from './lib/offline-queue';
+import { sendOrQueue, flushAll } from './lib/api-wrapper';
+
+// Create operation
+const op: QueuedOp = {
+  clientOpId: newId(),           // Unique idempotency key
+  clientOrderId: orderId,         // Local order ID
+  type: 'order.create',
+  payload: {
+    tableNumber: 5,
+    items: [{ menuItemId: 'burger', quantity: 2 }],
+  },
+};
+
+// Send or queue if offline
+const result = await sendOrQueue(op, offlineQueue);
+
+if (result.queued) {
+  console.log('Queued for sync:', result.error);
+  // Operation will be retried automatically
+} else if (result.result?.status === 'OK') {
+  console.log('Completed:', result.result.serverId);
+} else if (result.result?.status === 'SKIP') {
+  console.log('Already processed (idempotent)');
+}
+```
+
+#### Manual Sync
+
+```typescript
+// Flush all queued operations
+const { flushed, failed } = await flushAll();
+console.log(`Synced ${flushed} operations, ${failed} failed`);
+```
+
+#### Idempotency
+
+All operations include an `Idempotency-Key` header (same as `clientOpId`) to prevent duplicate processing:
+
+```typescript
+headers: {
+  'Idempotency-Key': op.clientOpId,
+  'x-org-id': ORG_ID,
+}
+```
+
+Server returns `409 SKIP` if operation was already processed.
+
+### Common API Integration Patterns
+
+#### Creating an Order (POS)
+
+```typescript
+// 1. Create order
+const createResponse = await fetch(`${API_BASE_URL}/orders`, {
+  method: 'POST',
+  headers: {
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    tableNumber: 5,
+    items: [
+      { menuItemId: 'item-123', quantity: 2, modifiers: ['extra-cheese'] },
+    ],
+  }),
+});
+
+const order = await createResponse.json();
+
+// 2. Send to KDS (optional)
+await fetch(`${API_BASE_URL}/orders/${order.id}/send`, {
+  method: 'POST',
+  headers: { 'Authorization': `Bearer ${token}` },
+});
+
+// 3. Close order with payment
+await fetch(`${API_BASE_URL}/orders/${order.id}/close`, {
+  method: 'POST',
+  headers: {
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    paymentMethod: 'CASH',
+    amountPaid: 50000,
+  }),
+});
+```
+
+#### Fetching Inventory Levels
+
+```typescript
+const response = await fetch(`${API_BASE_URL}/inventory/levels`, {
+  method: 'GET',
+  headers: { 'Authorization': `Bearer ${token}` },
+});
+
+const levels = await response.json();
+// Returns: [{ itemId, sku, name, onHand, unit }]
+```
+
+#### Server-Sent Events (SSE) for Real-Time Updates
+
+```typescript
+// Subscribe to KDS updates
+const eventSource = new EventSource(
+  `${API_BASE_URL}/stream/kds?token=${token}`
+);
+
+eventSource.addEventListener('order.ready', (event) => {
+  const order = JSON.parse(event.data);
+  console.log('Order ready:', order.id);
+  // Update UI
+});
+
+eventSource.addEventListener('order.sent', (event) => {
+  const order = JSON.parse(event.data);
+  console.log('New order:', order.id);
+  // Add to KDS display
+});
+
+// Cleanup
+eventSource.close();
+```
+
+### Error Handling Patterns
+
+#### Standard Error Response
+
+All API errors follow this format:
+
+```typescript
+{
+  "status": "error",
+  "code": "BAD_REQUEST",
+  "message": "Invalid payload",
+  "requestId": "RID-123",
+  "details": {
+    "validation": [
+      { "property": "name", "constraints": { "isNotEmpty": "name should not be empty" } }
+    ]
+  }
+}
+```
+
+#### Handling Errors
+
+```typescript
+async function apiRequest(url: string, options: RequestInit) {
+  try {
+    const response = await fetch(url, options);
+    
+    if (!response.ok) {
+      const error = await response.json();
+      
+      // Handle specific error codes
+      switch (error.code) {
+        case 'UNAUTHORIZED':
+          // Clear token and redirect to login
+          localStorage.removeItem('authToken');
+          window.location.href = '/login';
+          break;
+          
+        case 'FORBIDDEN':
+          alert('You do not have permission to perform this action');
+          break;
+          
+        case 'NOT_FOUND':
+          alert('Resource not found');
+          break;
+          
+        case 'VALIDATION_ERROR':
+          // Display validation errors
+          const validationErrors = error.details?.validation || [];
+          console.error('Validation failed:', validationErrors);
+          break;
+          
+        case 'RATE_LIMIT_EXCEEDED':
+          const retryAfter = response.headers.get('Retry-After');
+          alert(`Rate limit exceeded. Retry in ${retryAfter} seconds`);
+          break;
+          
+        default:
+          alert(`Error: ${error.message}`);
+      }
+      
+      throw new Error(error.message);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    if (error instanceof TypeError) {
+      // Network error (offline, CORS, etc.)
+      console.error('Network error:', error);
+      alert('Failed to connect to server. Please check your connection.');
+    }
+    throw error;
+  }
+}
+```
+
+#### Request ID Tracing
+
+Always log the request ID for debugging:
+
+```typescript
+const response = await fetch(url, options);
+const requestId = response.headers.get('X-Request-Id');
+console.log('Request ID:', requestId);
+
+// Include in error reports
+if (!response.ok) {
+  console.error('Request failed:', { requestId, status: response.status });
+}
+```
+
+### State Management
+
+#### Web App (Next.js)
+
+The web app uses React hooks and localStorage for state:
+
+```typescript
+// Custom hook for auth
+function useAuth() {
+  const [token, setToken] = useState<string | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  
+  useEffect(() => {
+    const savedToken = localStorage.getItem('authToken');
+    if (savedToken) {
+      setToken(savedToken);
+      // Fetch user profile
+      fetchUserProfile(savedToken).then(setUser);
+    }
+  }, []);
+  
+  const login = async (email: string, password: string) => {
+    const response = await fetch(`${API_BASE_URL}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+    
+    const data = await response.json();
+    localStorage.setItem('authToken', data.access_token);
+    setToken(data.access_token);
+    setUser(data.user);
+  };
+  
+  const logout = () => {
+    localStorage.removeItem('authToken');
+    setToken(null);
+    setUser(null);
+  };
+  
+  return { token, user, login, logout };
+}
+```
+
+#### Desktop App (Tauri + React)
+
+Desktop app uses React hooks with Tauri-specific storage:
+
+```typescript
+// Use better-sqlite3 for offline storage
+import Database from 'better-sqlite3';
+
+const db = new Database('chefcloud.db');
+
+// Initialize tables
+db.exec(`
+  CREATE TABLE IF NOT EXISTS queue (
+    clientOpId TEXT PRIMARY KEY,
+    payload TEXT NOT NULL,
+    createdAt INTEGER NOT NULL
+  )
+`);
+
+// Queue operations
+function enqueue(op: QueuedOp) {
+  db.prepare('INSERT INTO queue VALUES (?, ?, ?)').run(
+    op.clientOpId,
+    JSON.stringify(op),
+    Date.now()
+  );
+}
+```
+
+#### Mobile App (Expo)
+
+Mobile app uses React hooks with AsyncStorage:
+
+```typescript
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useEffect, useState } from 'react';
+
+function useAsyncStorage<T>(key: string, initialValue: T) {
+  const [value, setValue] = useState<T>(initialValue);
+  const [loading, setLoading] = useState(true);
+  
+  useEffect(() => {
+    AsyncStorage.getItem(key)
+      .then((stored) => {
+        if (stored !== null) {
+          setValue(JSON.parse(stored));
+        }
+      })
+      .finally(() => setLoading(false));
+  }, [key]);
+  
+  const updateValue = async (newValue: T) => {
+    setValue(newValue);
+    await AsyncStorage.setItem(key, JSON.stringify(newValue));
+  };
+  
+  return { value, updateValue, loading };
+}
+
+// Usage
+const { value: authToken, updateValue: setAuthToken } = 
+  useAsyncStorage<string | null>('authToken', null);
+```
+
+### Development Workflow
+
+#### Running All Frontends + API
+
+```bash
+# Terminal 1: Start infrastructure
+docker compose -f infra/docker/docker-compose.yml up -d
+
+# Terminal 2: Start API
+cd services/api
+export DATABASE_URL="postgresql://postgres:postgres@localhost:5432/chefcloud"
+pnpm dev
+
+# Terminal 3: Start web app
+cd apps/web
+pnpm dev
+# → http://localhost:3000
+
+# Terminal 4: Start desktop app
+cd apps/desktop
+pnpm dev
+# → http://localhost:1420
+
+# Terminal 5: Start mobile app
+cd apps/mobile
+pnpm start
+# → Expo DevTools
+```
+
+#### Hot Reload
+
+All frontends support hot reload for rapid development:
+
+- **Web**: Next.js Fast Refresh
+- **Desktop**: Vite HMR
+- **Mobile**: Expo Fast Refresh
+
+Changes to shared packages (e.g., `@chefcloud/contracts`, `@chefcloud/ui`) require rebuilding:
+
+```bash
+# Rebuild shared packages
+pnpm build
+
+# Or use turbo watch mode
+pnpm turbo watch build
+```
+
+### CORS Configuration
+
+Ensure the API service allows requests from frontend origins:
+
+```bash
+# In services/api/.env
+CORS_ORIGINS="http://localhost:3000,http://localhost:1420,http://localhost:5173"
+```
+
+For production:
+
+```bash
+CORS_ORIGINS="https://app.chefcloud.io,https://staging.chefcloud.io"
+```
+
+### Troubleshooting
+
+#### "CORS policy: No 'Access-Control-Allow-Origin' header"
+
+- **Cause**: Frontend origin not in API's `CORS_ORIGINS`
+- **Solution**: Add origin to `.env` and restart API service
+
+#### "Failed to fetch" or Network Error
+
+- **Cause**: API service not running or wrong URL
+- **Solution**: 
+  - Check API is running: `curl http://localhost:3001/health`
+  - Verify `API_BASE_URL` in frontend `.env`
+  - Check firewall/network settings
+
+#### WebAuthn "NotAllowedError"
+
+- **Cause**: User cancelled or HTTPS required
+- **Solution**: 
+  - Use localhost for dev (HTTPS not required)
+  - Enable HTTPS in production
+  - Check `RP_ID` matches domain
+
+#### MSR Not Capturing Swipes
+
+- **Cause**: MSR listener not enabled or USB not detected
+- **Solution**:
+  - Click "Enable MSR" button in desktop app
+  - Ensure MSR is in keyboard wedge mode
+  - Check USB permissions in Tauri config
+
+#### Offline Queue Not Syncing
+
+- **Cause**: Network offline or API unreachable
+- **Solution**:
+  - Check network connectivity
+  - Verify API is running
+  - Manually trigger sync with "Flush Queue" button
+  - Check browser console for sync errors
+
+#### Mobile App Can't Connect to API
+
+- **Cause**: Wrong localhost URL for emulator
+- **Solution**:
+  - Android emulator: Use `10.0.2.2` instead of `localhost`
+  - iOS simulator: Use `localhost` or your machine's IP
+  - Physical device: Use your machine's IP on same network
+
+### Production Deployment
+
+#### Environment Variables
+
+Set production values before building:
+
+```bash
+# Web App
+NEXT_PUBLIC_API_BASE_URL=https://api.chefcloud.io
+NEXT_PUBLIC_RP_ID=app.chefcloud.io
+NEXT_PUBLIC_ORIGIN=https://app.chefcloud.io
+
+# Desktop App
+VITE_API_BASE_URL=https://api.chefcloud.io
+VITE_ORG_ID=<org-id>
+VITE_RP_ID=app.chefcloud.io
+
+# Mobile App
+EXPO_PUBLIC_API_BASE_URL=https://api.chefcloud.io
+EXPO_PUBLIC_ORG_ID=<org-id>
+```
+
+#### Build Commands
+
+```bash
+# Web App
+cd apps/web
+pnpm build
+pnpm start  # Production server
+
+# Desktop App
+cd apps/desktop
+pnpm tauri build  # Creates installer/DMG/AppImage
+
+# Mobile App
+cd apps/mobile
+eas build --platform android
+eas build --platform ios
+```
+
+#### Security Checklist
+
+- [ ] Use HTTPS for all API requests in production
+- [ ] Set secure `CORS_ORIGINS` (no wildcards)
+- [ ] Enable HSTS on API (`NODE_ENV=production`)
+- [ ] Validate WebAuthn `RP_ID` matches production domain
+- [ ] Use environment-specific API keys (no hardcoded secrets)
+- [ ] Enable code signing for desktop builds
+- [ ] Use Expo EAS for mobile builds (code signing)
+
+### Next Steps
+
+- Review the [API Documentation](http://localhost:3001/docs) (when `DOCS_ENABLED=1`)
+- Explore shared contracts: `packages/contracts/src/`
+- Check shared UI components: `packages/ui/src/`
+- See authentication flows: [WebAuthn](#webauthn-passkey-authentication-a7) and [MSR Badge](#msr-badge-authentication-a7)
+- Learn about [SSE real-time updates](#server-sent-events-sse-for-real-time-updates)
+
+---
