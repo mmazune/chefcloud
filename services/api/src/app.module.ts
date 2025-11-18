@@ -13,6 +13,9 @@ import { FloorModule } from './floor/floor.module';
 import { PosModule } from './pos/pos.module';
 import { KdsModule } from './kds/kds.module';
 import { ShiftsModule } from './shifts/shifts.module';
+import { ShiftTemplatesModule } from './shift-templates/shift-templates.module';
+import { ShiftSchedulesModule } from './shift-schedules/shift-schedules.module';
+import { ShiftAssignmentsModule } from './shift-assignments/shift-assignments.module';
 import { ReportsModule } from './reports/reports.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { InventoryModule } from './inventory/inventory.module';
@@ -68,6 +71,9 @@ import { WebhookVerificationGuard } from './common/webhook-verification.guard';
     PosModule,
     KdsModule,
     ShiftsModule,
+    ShiftTemplatesModule,
+    ShiftSchedulesModule,
+    ShiftAssignmentsModule,
     ReportsModule,
     AnalyticsModule,
     InventoryModule,

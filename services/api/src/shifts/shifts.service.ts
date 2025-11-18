@@ -3,6 +3,7 @@ import {
   Injectable,
   BadRequestException,
   NotFoundException,
+  ForbiddenException,
   Optional,
   Inject,
 } from '@nestjs/common';
@@ -74,6 +75,7 @@ export class ShiftsService {
 
     // E45-s1: Validate stock count before closing shift
     let reconciliation: any = null;
+    let stockCountOutOfTolerance = false;
     if (this.countsService) {
       try {
         reconciliation = await this.countsService.validateShiftStockCount(shiftId);
@@ -90,12 +92,50 @@ export class ShiftsService {
           },
         });
       } catch (error: any) {
-        // If ConflictException, re-throw to block shift close
-        if (error.status === 409 || error.response?.code) {
+        // M2-SHIFTS: Handle out-of-tolerance stock counts with manager override
+        if (error.status === 409 && error.response?.code === 'COUNT_OUT_OF_TOLERANCE') {
+          stockCountOutOfTolerance = true;
+          
+          // If override not provided, block shift close
+          if (!dto.override) {
+            throw error;
+          }
+
+          // Verify user has permission to override (L4 or L5 only)
+          const user = await this.prisma.client.user.findUnique({
+            where: { id: userId },
+            select: { roleLevel: true },
+          });
+
+          if (!user || (user.roleLevel !== 'L4' && user.roleLevel !== 'L5')) {
+            throw new ForbiddenException(
+              'Only managers (L4) or owners (L5) can override out-of-tolerance stock counts',
+            );
+          }
+
+          // Log override to audit
+          await this.prisma.client.auditEvent.create({
+            data: {
+              branchId: shift.branchId,
+              userId,
+              action: 'shift.stock_count_override',
+              resource: 'shifts',
+              resourceId: shiftId,
+              metadata: {
+                reason: dto.override.reason,
+                originalError: error.response,
+                overrideBy: userId,
+                overrideAt: new Date(),
+              },
+            },
+          });
+        } else if (error.status === 409 || error.response?.code) {
+          // Other conflict errors, re-throw
           throw error;
+        } else {
+          // Other errors (e.g., service unavailable), log and continue
+          console.warn('Stock count validation failed:', error.message);
         }
-        // Other errors (e.g., service unavailable), log and continue
-        console.warn('Stock count validation failed:', error.message);
       }
     }
 
@@ -111,15 +151,24 @@ export class ShiftsService {
         declaredCash: dto.declaredCash,
         overShort,
         notes: dto.notes || shift.notes,
+        // M2-SHIFTS: Record override if stock count was out of tolerance
+        ...(stockCountOutOfTolerance && dto.override
+          ? {
+              overrideUserId: userId,
+              overrideReason: dto.override.reason,
+              overrideAt: new Date(),
+            }
+          : {}),
       },
       include: {
         openedBy: { select: { id: true, firstName: true, lastName: true } },
         closedBy: { select: { id: true, firstName: true, lastName: true } },
+        overrideBy: { select: { id: true, firstName: true, lastName: true } },
         branch: { select: { id: true, name: true } },
       },
     });
 
-    // Enqueue shift-close digest jobs
+    // Enqueue shift-close digest jobs (legacy and new subscription-based)
     const { Queue } = await import('bullmq');
     const connection = {
       host: process.env.REDIS_HOST || 'localhost',
@@ -127,8 +176,17 @@ export class ShiftsService {
     };
     const digestQueue = new Queue('digest', { connection });
 
+    // Legacy: Enqueue for old OwnerDigest system (sendOnShiftClose flag)
     await digestQueue.add('owner-digest-shift-close', {
       type: 'owner-digest-shift-close',
+      orgId: shift.orgId,
+      branchId: shift.branchId,
+      shiftId: shift.id,
+    });
+
+    // M4: Enqueue for new subscription-based shift-end reports
+    await digestQueue.add('shift-end-report', {
+      type: 'shift-end-report',
       orgId: shift.orgId,
       branchId: shift.branchId,
       shiftId: shift.id,

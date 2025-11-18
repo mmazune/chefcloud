@@ -6948,6 +6948,174 @@ curl -X POST http://localhost:3001/hardware/spout/ingest \
 - No events being published
 - Solution: Trigger spout ingest or KDS status change
 
+---
+
+## M1 - KDS Enterprise Features
+
+The KDS (Kitchen Display System) has been enhanced to enterprise standards with:
+
+- **Waiter names** on every ticket
+- **SLA colour coding** (GREEN/ORANGE/RED) based on elapsed time
+- **Proper ordering** by sentAt timestamp (oldest first)
+- **Incremental sync** support with "since" parameter
+- **Configurable SLA thresholds** per org and station
+
+### KDS Queue Endpoint
+
+**GET /kds/queue**
+
+Returns active tickets for a station with full context.
+
+**Query Parameters**:
+
+- `station` (required): `GRILL`, `FRYER`, `BAR`, `OTHER`
+- `since` (optional): ISO timestamp - only return tickets updated after this time
+
+**Response Fields**:
+
+```json
+[
+  {
+    "id": "ticket_xyz123",
+    "orderId": "order_abc456",
+    "orderNumber": "T1-042",
+    "tableNumber": "T1",
+    "station": "GRILL",
+    "status": "QUEUED",
+    "sentAt": "2025-11-18T10:00:00.000Z",
+    "readyAt": null,
+    "waiterName": "John Doe",
+    "slaState": "GREEN",
+    "elapsedSeconds": 45,
+    "items": [
+      {
+        "id": "item_123",
+        "name": "Burger",
+        "quantity": 2,
+        "modifiers": ["No pickles", "Extra cheese"],
+        "notes": "Well done"
+      }
+    ],
+    "createdAt": "2025-11-18T10:00:00.000Z",
+    "updatedAt": "2025-11-18T10:00:00.000Z"
+  }
+]
+```
+
+**SLA States**:
+
+- `GREEN`: Within target time (default < 5 minutes)
+- `ORANGE`: Approaching SLA breach (default 5-10 minutes)
+- `RED`: SLA breached (default > 10 minutes)
+
+**Example - Fetch queue**:
+
+```bash
+curl http://localhost:3001/kds/queue?station=GRILL \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+**Example - Incremental sync (polling)**:
+
+```bash
+# First fetch
+LAST_SYNC=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+# Later, fetch only updates since last sync
+curl "http://localhost:3001/kds/queue?station=GRILL&since=${LAST_SYNC}" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+### SLA Configuration
+
+**GET /kds/sla-config/:station**
+
+Get SLA thresholds for a station (Manager/Owner only).
+
+```bash
+curl http://localhost:3001/kds/sla-config/GRILL \
+  -H "Authorization: Bearer $MANAGER_TOKEN"
+
+# Response:
+{
+  "id": "config_xyz",
+  "orgId": "org_abc",
+  "station": "GRILL",
+  "greenThresholdSec": 300,
+  "orangeThresholdSec": 600,
+  "createdAt": "2025-11-18T10:00:00.000Z",
+  "updatedAt": "2025-11-18T10:00:00.000Z"
+}
+```
+
+**PATCH /kds/sla-config/:station**
+
+Update SLA thresholds (Manager/Owner only).
+
+```bash
+curl -X PATCH http://localhost:3001/kds/sla-config/GRILL \
+  -H "Authorization: Bearer $MANAGER_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "greenThresholdSec": 180,
+    "orangeThresholdSec": 360
+  }'
+```
+
+### Testing KDS Enterprise Features
+
+**E2E Tests** (`services/api/test/m1-kds-enterprise.e2e-spec.ts`):
+
+- Waiter names in ticket responses
+- SLA state calculation (GREEN/ORANGE/RED)
+- Proper ordering by sentAt
+- Station filtering
+- "since" parameter for incremental sync
+- SLA configuration CRUD
+- Resilience and reconnection
+
+**Run tests**:
+
+```bash
+cd services/api
+pnpm test m1-kds-enterprise.e2e-spec
+```
+
+**Load Tests** (`perf/scenarios/kds-load.js`):
+
+- 50 concurrent polling clients
+- 20 concurrent SSE clients
+- Validates response times (queue < 300ms, SSE < 500ms)
+
+**Run load test**:
+
+```bash
+cd perf
+export API_URL="http://localhost:3001"
+export AUTH_TOKEN="your-test-token"
+k6 run scenarios/kds-load.js
+```
+
+### KDS Performance & Limits
+
+- **Max concurrent SSE clients**: 200 (configurable via `STREAM_MAX_CLIENTS`)
+- **Polling recommended interval**: 1-2 seconds
+- **Queue fetch P95 latency**: < 300ms under load
+- **SSE connect P95 latency**: < 500ms
+
+**Offline-ready design**:
+
+- Use `since` parameter for incremental sync
+- Client-side state reconstruction from queue snapshots
+- No reliance on in-memory state for critical data
+
+---
+
+**"No events received"**
+
+- No events being published
+- Solution: Trigger spout ingest or KDS status change
+
 **"Events stop after a while"**
 
 - Keepalive timeout (server or proxy)
@@ -6962,6 +7130,413 @@ curl -X POST http://localhost:3001/hardware/spout/ingest \
 
 - More than 200 concurrent connections
 - Solution: Increase `STREAM_MAX_CLIENTS` or audit active connections
+
+---
+
+## M2 - Shifts, Scheduling & Stock-Count Gate
+
+ChefCloud provides enterprise-grade shift management with template-based scheduling, staff assignments, manager-on-duty tracking, and automatic stock count validation with manager override.
+
+### Features
+
+**Shift Templates**: Reusable shift patterns (e.g., "Lunch 11:00-16:00", "Dinner 17:00-23:00")
+**Shift Schedules**: Per-day shift instances created from templates or manually
+**Shift Assignments**: Staff assigned to schedules with roles (WAITER, COOK, MANAGER) and manager-on-duty designation
+**Current Shift API**: Real-time "who is on shift now" endpoint with role breakdown
+**Stock Count Gate**: Automatic validation of stock counts when closing shifts with configurable tolerance
+**Manager Override**: L4/L5 managers can override out-of-tolerance counts with reason, full audit trail
+
+### Database Models
+
+**ShiftTemplate**: Org-level reusable templates
+
+```prisma
+model ShiftTemplate {
+  id          String   @id @default(cuid())
+  orgId       String
+  name        String   // e.g., "Lunch Shift"
+  startTime   String   // HH:MM format
+  endTime     String
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+```
+
+**ShiftSchedule**: Branch-level shift instance for a specific date
+
+```prisma
+model ShiftSchedule {
+  id         String    @id @default(cuid())
+  orgId      String
+  branchId   String
+  date       DateTime  @db.Date
+  templateId String?   // Optional link to template
+  startTime  DateTime
+  endTime    DateTime
+  notes      String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+}
+```
+
+**ShiftAssignment**: User assigned to a schedule with role
+
+```prisma
+model ShiftAssignment {
+  id              String   @id @default(cuid())
+  scheduleId      String
+  userId          String
+  role            String   // e.g., "WAITER", "COOK", "MANAGER"
+  isManagerOnDuty Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+```
+
+**Shift**: Enhanced with override fields
+
+```prisma
+model Shift {
+  // ... existing fields ...
+  overrideUserId String?   // Manager who approved override
+  overrideReason String?   // Reason for override
+  overrideAt     DateTime? // When override was applied
+}
+```
+
+### API Endpoints
+
+#### Shift Templates (L4/L5 for create/update/delete, L3+ for view)
+
+**POST /shift-templates**
+
+Create a new shift template.
+
+```bash
+curl -X POST http://localhost:3001/shift-templates \
+  -H "Authorization: Bearer $MANAGER_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Lunch Shift",
+    "startTime": "11:00",
+    "endTime": "16:00",
+    "description": "Standard lunch service"
+  }'
+```
+
+**GET /shift-templates**
+
+List all active templates.
+
+```bash
+curl http://localhost:3001/shift-templates \
+  -H "Authorization: Bearer $AUTH_TOKEN"
+```
+
+**GET /shift-templates/:id**
+
+Get template details with upcoming schedules.
+
+```bash
+curl http://localhost:3001/shift-templates/cuid123 \
+  -H "Authorization: Bearer $AUTH_TOKEN"
+```
+
+**PATCH /shift-templates/:id**
+
+Update a template (manager only).
+
+```bash
+curl -X PATCH http://localhost:3001/shift-templates/cuid123 \
+  -H "Authorization: Bearer $MANAGER_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"description": "Updated lunch service"}'
+```
+
+**DELETE /shift-templates/:id**
+
+Soft delete a template (sets isActive = false).
+
+```bash
+curl -X DELETE http://localhost:3001/shift-templates/cuid123 \
+  -H "Authorization: Bearer $MANAGER_TOKEN"
+```
+
+#### Shift Schedules (L4/L5 for create/delete, L3+ for view, L1+ for current)
+
+**POST /shift-schedules**
+
+Create a shift schedule for a specific date.
+
+```bash
+curl -X POST http://localhost:3001/shift-schedules \
+  -H "Authorization: Bearer $MANAGER_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "branchId": "branch-cuid",
+    "date": "2024-03-15",
+    "templateId": "template-cuid",
+    "startTime": "2024-03-15T11:00:00Z",
+    "endTime": "2024-03-15T16:00:00Z"
+  }'
+```
+
+**GET /shift-schedules/by-branch/:branchId**
+
+List schedules for a branch within a date range.
+
+```bash
+curl "http://localhost:3001/shift-schedules/by-branch/branch-cuid?startDate=2024-03-15&endDate=2024-03-22" \
+  -H "Authorization: Bearer $AUTH_TOKEN"
+```
+
+**GET /shift-schedules/current/:branchId**
+
+Get currently active shift schedules with staff assignments (who is on shift now).
+
+```bash
+curl http://localhost:3001/shift-schedules/current/branch-cuid \
+  -H "Authorization: Bearer $AUTH_TOKEN"
+```
+
+Response includes manager on duty and all assigned staff:
+
+```json
+[
+  {
+    "id": "schedule-cuid",
+    "date": "2024-03-15",
+    "startTime": "2024-03-15T11:00:00Z",
+    "endTime": "2024-03-15T16:00:00Z",
+    "assignments": [
+      {
+        "id": "assignment-cuid",
+        "role": "MANAGER",
+        "isManagerOnDuty": true,
+        "user": {
+          "id": "user-cuid",
+          "firstName": "Jane",
+          "lastName": "Manager",
+          "roleLevel": "L4"
+        }
+      },
+      {
+        "id": "assignment-cuid2",
+        "role": "WAITER",
+        "isManagerOnDuty": false,
+        "user": {
+          "id": "user-cuid2",
+          "firstName": "John",
+          "lastName": "Waiter",
+          "roleLevel": "L2"
+        }
+      }
+    ]
+  }
+]
+```
+
+**GET /shift-schedules/:id**
+
+Get schedule details.
+
+```bash
+curl http://localhost:3001/shift-schedules/schedule-cuid \
+  -H "Authorization: Bearer $AUTH_TOKEN"
+```
+
+**DELETE /shift-schedules/:id**
+
+Delete a schedule (only if no assignments exist).
+
+```bash
+curl -X DELETE http://localhost:3001/shift-schedules/schedule-cuid \
+  -H "Authorization: Bearer $MANAGER_TOKEN"
+```
+
+#### Shift Assignments (L4/L5 for create/delete, L3+ for view)
+
+**POST /shift-assignments**
+
+Assign a user to a shift schedule.
+
+```bash
+curl -X POST http://localhost:3001/shift-assignments \
+  -H "Authorization: Bearer $MANAGER_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "scheduleId": "schedule-cuid",
+    "userId": "user-cuid",
+    "role": "WAITER",
+    "isManagerOnDuty": false
+  }'
+```
+
+**GET /shift-assignments/by-schedule/:scheduleId**
+
+List all assignments for a schedule (ordered by manager on duty first).
+
+```bash
+curl http://localhost:3001/shift-assignments/by-schedule/schedule-cuid \
+  -H "Authorization: Bearer $AUTH_TOKEN"
+```
+
+**GET /shift-assignments/by-user/:userId**
+
+List all assignments for a user within a date range.
+
+```bash
+curl "http://localhost:3001/shift-assignments/by-user/user-cuid?startDate=2024-03-15&endDate=2024-03-22" \
+  -H "Authorization: Bearer $AUTH_TOKEN"
+```
+
+**DELETE /shift-assignments/:id**
+
+Remove an assignment.
+
+```bash
+curl -X DELETE http://localhost:3001/shift-assignments/assignment-cuid \
+  -H "Authorization: Bearer $MANAGER_TOKEN"
+```
+
+#### Stock Count Gate & Manager Override
+
+**PATCH /shifts/:id/close**
+
+Close a shift with automatic stock count validation.
+
+```bash
+# Standard close (no out-of-tolerance counts)
+curl -X PATCH http://localhost:3001/shifts/shift-cuid/close \
+  -H "Authorization: Bearer $AUTH_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "declaredCash": 1500.0
+  }'
+
+# Close with manager override (when stock count out of tolerance)
+curl -X PATCH http://localhost:3001/shifts/shift-cuid/close \
+  -H "Authorization: Bearer $MANAGER_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "declaredCash": 1500.0,
+    "override": {
+      "reason": "Physical count verified by manager after theft incident"
+    }
+  }'
+```
+
+**Stock Count Validation**:
+
+- Automatic when closing shift if `CountsService` available
+- Checks all stock counts for the shift against org tolerance settings (`stockCountTolerancePct`, `stockCountToleranceAbsolute`)
+- If any count exceeds tolerance, throws `ConflictException` with code `COUNT_OUT_OF_TOLERANCE`
+- L3 staff cannot close shift when out of tolerance
+- L4/L5 managers can provide override with reason
+
+**Override Response**:
+
+```json
+{
+  "id": "shift-cuid",
+  "closedAt": "2024-03-15T16:00:00Z",
+  "closedBy": {
+    "id": "manager-cuid",
+    "firstName": "Jane",
+    "lastName": "Manager"
+  },
+  "overrideUserId": "manager-cuid",
+  "overrideReason": "Physical count verified by manager after theft incident",
+  "overrideAt": "2024-03-15T16:00:00Z",
+  "overrideBy": {
+    "id": "manager-cuid",
+    "firstName": "Jane",
+    "lastName": "Manager"
+  }
+}
+```
+
+### Testing M2 Shifts & Scheduling
+
+**E2E Tests** (`services/api/test/m2-shifts-scheduling.e2e-spec.ts`):
+
+- Shift template CRUD with validation
+- Shift schedule creation from templates
+- Overlapping schedule prevention
+- Staff assignment with role tracking
+- Manager-on-duty designation (only one per schedule)
+- Current shift API with assignments
+- Stock count gate blocking shift close
+- Manager override with L4/L5 permission check
+- Audit trail verification
+
+**Run tests**:
+
+```bash
+cd services/api
+pnpm test m2-shifts-scheduling.e2e-spec
+```
+
+### M2 Configuration
+
+**Stock Count Tolerance** (per organization in `OrgSettings`):
+
+- `stockCountTolerancePct`: Percentage tolerance (e.g., 10.0 = 10%)
+- `stockCountToleranceAbsolute`: Absolute unit tolerance (e.g., 5.0 units)
+- Applied as OR condition (out of tolerance if exceeds either)
+
+**Example**:
+
+```sql
+UPDATE org_settings 
+SET stock_count_tolerance_pct = 10.0, 
+    stock_count_tolerance_absolute = 5.0
+WHERE org_id = 'your-org-id';
+```
+
+### M2 Use Cases
+
+**Weekly Schedule Planning**:
+
+1. Create shift templates for common patterns (Lunch, Dinner, Weekend Brunch)
+2. Create schedules from templates for next week
+3. Assign staff to schedules with roles
+4. Designate manager on duty for each shift
+5. Staff can view their assignments via `GET /shift-assignments/by-user/:userId`
+
+**Current Shift Visibility**:
+
+1. POS/KDS displays "who is on shift now" via `GET /shift-schedules/current/:branchId`
+2. Shows manager on duty prominently for escalations
+3. Shows all staff by role for task assignment
+
+**Shift Close with Stock Reconciliation**:
+
+1. Manager counts stock at end of shift
+2. Enters counts into system (creates `StockCount` records)
+3. Attempts to close shift via `PATCH /shifts/:id/close`
+4. System validates all counts against tolerance
+5. If out of tolerance:
+   - L3 staff: blocked from closing
+   - L4/L5 manager: can override with reason
+6. Override recorded with full audit trail (who, when, why)
+7. Anomaly events generated for out-of-tolerance variances
+
+### M2 Best Practices
+
+**Templates**: Create templates for recurring shift patterns, update times centrally
+
+**Schedules**: Create schedules 1-2 weeks in advance for staff visibility
+
+**Assignments**: Assign manager on duty first, then staff by role
+
+**Current Shift**: Display current shift info on POS/KDS for operational awareness
+
+**Stock Counts**: Perform counts at shift close, require manager override for large variances
+
+**Audit Trail**: Review `shift.stock_count_override` audit events regularly for patterns
 
 ---
 
@@ -10576,3 +11151,793 @@ curl http://localhost:3001/openapi.json | jq .
 - `SSE`: /stream/spout, /stream/kds  
 - `Webhooks`: /webhooks/billing, /webhooks/mtn, /webhooks/airtel
 - `Billing`: /billing/plan/change, /billing/cancel
+
+---
+
+## M3: Enterprise Inventory Management
+
+### Overview
+M3 brings inventory, recipes, wastage, and low-stock alerts to enterprise-grade standards with:
+- **Ingredient-level accuracy**: Every sale decrements ingredients via FIFO
+- **Comprehensive reconciliation**: opening + purchases = usage + wastage + closing
+- **Audit trails**: All wastage linked to shift and user
+- **Proactive alerts**: Configurable low-stock thresholds
+- **Quick setup**: Template packs and CSV import
+
+### Stock Movements
+
+All inventory changes create `StockMovement` records for traceability:
+
+**Movement Types:**
+- `SALE`: Created when order closes (ingredient consumption)
+- `WASTAGE`: Created when wastage recorded
+- `ADJUSTMENT`: Manual inventory adjustments
+- `PURCHASE`: From goods receipts
+- `COUNT_ADJUSTMENT`: From stock count reconciliation
+
+**Key Fields:**
+- `qty`: Quantity (positive = add, negative = deduct)
+- `cost`: COGS impact for accurate profit tracking
+- `batchId`: Links to FIFO batch for cost accuracy
+- `orderId`, `shiftId`: Context for reporting
+
+**Automatic Creation:**
+When orders close, the POS service:
+1. Iterates through each order item
+2. Looks up recipe ingredients
+3. Consumes from FIFO batches
+4. Creates `SALE` movements with batch costs
+5. Tracks shift and order metadata
+
+### Reconciliation
+
+**Purpose:** Verify stock equation holds and identify theft/loss
+
+**Equation:**
+```
+opening + purchases = theoretical usage + wastage + closing (+/- variance)
+```
+
+**API Endpoint:**
+```bash
+GET /inventory/reconciliation?branchId=<id>&shiftId=<id>
+# OR
+GET /inventory/reconciliation?branchId=<id>&startDate=2025-01-01&endDate=2025-01-31
+
+Authorization: Bearer <token>
+Roles: OWNER, MANAGER, ACCOUNTANT, FRANCHISE
+```
+
+**Response:**
+```json
+{
+  "summary": {
+    "totalItems": 45,
+    "itemsWithVariance": 3,
+    "itemsOutOfTolerance": 1,
+    "totalVarianceCost": 127.50,
+    "totalWastageCost": 89.25
+  },
+  "items": [
+    {
+      "itemId": "item_123",
+      "itemName": "Tomatoes",
+      "itemSku": "TOMA-001",
+      "unit": "kg",
+      "openingQty": 20.0,
+      "purchasesQty": 15.0,
+      "wastageQty": 2.5,
+      "theoreticalUsageQty": 28.0,
+      "closingQty": 4.0,
+      "varianceQty": 0.5,
+      "varianceCost": 1.75,
+      "withinTolerance": true,
+      "openingCost": 70.00,
+      "purchasesCost": 52.50,
+      "wastageCost": 8.75,
+      "theoreticalUsageCost": 98.00,
+      "closingCost": 14.00
+    }
+  ]
+}
+```
+
+**Tolerance:** Uses `stockCountTolerance` from org settings (default 5%)
+
+**Use Cases:**
+- Shift-end reconciliation
+- Daily/weekly variance reports  
+- Anti-theft dashboards
+- Accountant audits
+
+### Wastage Tracking
+
+**Enhanced M3 Features:**
+- Links to shift and user (who reported it)
+- Automatically creates `WASTAGE` stock movement
+- Calculates wastage cost using WAC
+- Audit logged for traceability
+
+**API Endpoint:**
+```bash
+POST /inventory/wastage
+Authorization: Bearer <token>
+
+{
+  "itemId": "item_123",
+  "qty": 2.5,
+  "reason": "SPOILED"
+}
+```
+
+**Wastage Reasons:**
+- `SPOILED`: Went bad/expired
+- `DAMAGED`: Dropped/broken
+- `LOST`: Theft or unexplained loss
+- `EXPIRED`: Past expiry date
+
+**Wastage Summary:**
+```bash
+GET /inventory/wastage/summary?branchId=<id>&startDate=2025-01-01&endDate=2025-01-31
+```
+
+Returns totals by reason and by user for accountability.
+
+### Low-Stock Alerts
+
+**Configuration:**
+```bash
+# Get current config
+GET /inventory/low-stock/config?branchId=<id>
+
+# Update config (per-item or per-category)
+PATCH /inventory/low-stock/config?branchId=<id>
+{
+  "itemId": "item_123",          // OR "category": "Produce"
+  "minQuantity": 5.0,            // Alert when below this qty
+  "minDaysOfCover": 3,           // OR alert when < 3 days remaining
+  "alertLevel": "LOW",           // LOW or CRITICAL
+  "enabled": true
+}
+```
+
+**Get Alerts:**
+```bash
+GET /inventory/low-stock/alerts?branchId=<id>
+
+Authorization: Bearer <token>
+Roles: OWNER, MANAGER, PROCUREMENT, INVENTORY
+```
+
+**Response:**
+```json
+[
+  {
+    "itemId": "item_123",
+    "itemName": "Tomatoes",
+    "itemSku": "TOMA-001",
+    "category": "Produce",
+    "unit": "kg",
+    "currentQty": 2.5,
+    "minQuantity": 5.0,
+    "minDaysOfCover": 3,
+    "estimatedDaysRemaining": 1.2,
+    "alertLevel": "CRITICAL",
+    "reorderLevel": 5.0,
+    "reorderQty": 20.0
+  }
+]
+```
+
+**Detection Logic:**
+1. For each item, check if:
+   - `currentQty <= minQuantity` (if configured)
+   - OR `estimatedDaysRemaining <= minDaysOfCover` (using 7-day avg usage)
+2. Set `CRITICAL` if below 50% of threshold
+3. Sort CRITICAL first, then by lowest qty
+
+**Scheduled Detection:**
+Run detection job hourly or daily to feed notifications/digests.
+
+### Template Packs
+
+**Purpose:** Quick-start inventory for new venues
+
+**Available Packs:**
+- `tapas-bar-essentials`: Spanish tapas bar items
+- `cocktail-bar-basics`: Spirits, mixers, garnishes
+- `cafe-essentials`: Coffee, milk, pastries
+
+**List Packs:**
+```bash
+GET /inventory/templates
+Authorization: Bearer <token>
+Roles: OWNER, MANAGER, PROCUREMENT
+```
+
+**Get Pack Details:**
+```bash
+GET /inventory/templates/tapas-bar-essentials
+```
+
+**Apply Pack (Idempotent):**
+```bash
+POST /inventory/templates/apply
+Authorization: Bearer <token>
+
+{
+  "packId": "tapas-bar-essentials",
+  "branchId": "branch_123"
+}
+```
+
+**Response:**
+```json
+{
+  "created": 8,
+  "updated": 2,
+  "errors": []
+}
+```
+
+Re-applying updates existing items without duplication.
+
+### CSV Import
+
+**Purpose:** Bulk import inventory and recipes from spreadsheets
+
+**CSV Format:**
+| Column | Required | Description |
+|--------|----------|-------------|
+| `item_name` | Yes | Item name |
+| `unit` | Yes | Unit (kg, ltr, pcs, etc.) |
+| `item_sku` | No | Auto-generated if omitted |
+| `category` | No | Category (Produce, Dairy, etc.) |
+| `base_cost` | No | Base unit cost |
+| `reorder_level` | No | Low-stock threshold |
+| `reorder_qty` | No | Reorder quantity |
+| `recipe_parent_sku` | No | Menu item SKU for recipe |
+| `recipe_qty` | No | Quantity per unit |
+| `waste_pct` | No | Wastage % (e.g. 2) |
+
+**Get Template:**
+```bash
+GET /inventory/import/template
+```
+
+**Import CSV:**
+```bash
+POST /inventory/import?branchId=<id>
+Authorization: Bearer <token>
+Roles: OWNER, MANAGER, PROCUREMENT
+
+{
+  "rows": [
+    {
+      "category": "Produce",
+      "item_name": "Tomatoes",
+      "item_sku": "TOMA-001",
+      "unit": "kg",
+      "base_cost": 3.5,
+      "reorder_level": 5,
+      "reorder_qty": 20
+    },
+    {
+      "category": "Dairy",
+      "item_name": "Mozzarella",
+      "item_sku": "MOZZ-001",
+      "unit": "kg",
+      "base_cost": 8.0,
+      "reorder_level": 3,
+      "reorder_qty": 10,
+      "recipe_parent_sku": "PIZZA-MARG",
+      "recipe_qty": 0.15,
+      "waste_pct": 2
+    }
+  ]
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "itemsCreated": 1,
+  "itemsUpdated": 1,
+  "recipesCreated": 1,
+  "errors": []
+}
+```
+
+**Notes:**
+- Import is idempotent (updates existing SKUs)
+- Recipes require menu items to exist first
+- Errors are non-blocking (partial import succeeds)
+
+### Performance Considerations
+
+**Indexes:**
+Stock movements table has indexes on:
+- `(orgId, branchId, createdAt)` for reconciliation queries
+- `itemId` for item-level reports
+- `shiftId`, `orderId` for contextual lookups
+
+**Query Limits:**
+- Reconciliation: Limit to 1 shift or ~30 days max
+- Low-stock detection: Runs per-branch, caches results
+- Movement queries: Use date ranges to avoid full scans
+
+**Scaling:**
+- For high-volume venues (>500 orders/day):
+  - Consider partitioning stock_movements by month
+  - Archive movements older than 1 year
+  - Use materialized views for reconciliation summaries
+
+---
+
+## M4: Owner Digests & Shift-End Reports
+
+### Overview
+
+M4 delivers enterprise-grade automated reporting with:
+- **Shift-end reports**: Comprehensive summaries generated on shift close
+- **Scheduled digests**: Daily/weekly/monthly reports delivered automatically  
+- **Flexible subscriptions**: User or role-based recipients with PDF/CSV attachments
+- **Real-time metrics**: All reports pull from canonical APIs for consistency
+- **Email delivery**: Professional formatted reports via SMTP
+
+### Report Types
+
+#### SHIFT_END
+**Triggered:** Automatically when shift closes  
+**Scope:** Single shift performance  
+**Contents:**
+- **Sales Summary**: Total sales, order count, avg order value, breakdown by category/item/payment method
+- **Service Metrics**: Per-waiter performance (sales, orders, voids, discounts)
+- **Stock Management**: Usage, wastage (by reason/user), out-of-tolerance items, low stock alerts
+- **KDS Performance**: Ticket counts, SLA distribution (green <5min, orange 5-10min, red >10min)
+- **Staff Rankings**: Top 5 performers by total sales
+- **Anomalies**: High-severity events with user context
+
+**Use Cases:**
+- Manager shift review
+- Owner daily operations oversight
+- Accounting reconciliation
+
+#### DAILY_SUMMARY
+**Schedule:** 06:00 daily  
+**Period:** Previous day (00:00 - 23:59)  
+**Contents:**
+- Aggregated sales, order count, avg order value
+- Total anomalies detected
+- Total wastage quantity and estimated cost
+
+**Use Cases:**
+- Owner morning briefing
+- Franchise HQ daily rollup
+
+#### WEEKLY_SUMMARY
+**Schedule:** 07:00 every Monday  
+**Period:** Previous week (Monday 00:00 - Sunday 23:59)  
+**Contents:**
+- Week-over-week sales trends
+- Weekly wastage and anomaly summaries
+- Key operational metrics
+
+**Use Cases:**
+- Weekly performance reviews
+- Multi-location comparisons
+
+#### MONTHLY_SUMMARY
+**Schedule:** 08:00 on 1st of each month  
+**Period:** Previous calendar month  
+**Contents:**
+- Month-over-month sales trends
+- Monthly wastage, variance, and anomaly reports
+- High-level operational KPIs
+
+**Use Cases:**
+- Board reporting
+- Franchise performance rankings
+- Accounting period close
+
+### Report Subscriptions
+
+#### Model: ReportSubscription
+
+```typescript
+{
+  id: string
+  orgId: string
+  branchId?: string        // null = org-level
+  reportType: 'SHIFT_END' | 'DAILY_SUMMARY' | 'WEEKLY_SUMMARY' | 'MONTHLY_SUMMARY'
+  deliveryChannel: 'EMAIL' // Future: SLACK, WEBHOOK
+  recipientType: 'USER' | 'ROLE'
+  recipientId?: string     // userId if USER, null if ROLE
+  enabled: boolean         // Allow pause without delete
+  includePDF: boolean
+  includeCSVs: boolean
+  lastRunAt?: Date         // Tracks scheduler state
+  createdAt: Date
+  updatedAt: Date
+}
+```
+
+#### RBAC
+
+**Who can manage subscriptions:**
+- **L4+ (OWNER, MANAGER)**: Full CRUD on subscriptions
+- **L3 (ACCOUNTANT)**: Read-only access
+- **L1-L2**: No access
+
+#### API Endpoints
+
+##### List Subscriptions
+```bash
+GET /reports/subscriptions?branchId=<id>
+Authorization: Bearer <token>
+Roles: L4+
+```
+
+**Response:**
+```json
+{
+  "subscriptions": [
+    {
+      "id": "sub_abc123",
+      "orgId": "org_xyz",
+      "branchId": "branch_001",
+      "reportType": "SHIFT_END",
+      "recipientType": "ROLE",
+      "enabled": true,
+      "includePDF": true,
+      "includeCSVs": true,
+      "createdAt": "2025-11-01T00:00:00Z"
+    }
+  ]
+}
+```
+
+##### Create Subscription
+```bash
+POST /reports/subscriptions
+Authorization: Bearer <token>
+Roles: L4+
+Content-Type: application/json
+
+{
+  "branchId": "branch_001",
+  "reportType": "SHIFT_END",
+  "recipientType": "ROLE",
+  "includePDF": true,
+  "includeCSVs": true
+}
+```
+
+**Example: Daily digest for specific user**
+```bash
+curl -X POST http://localhost:3001/reports/subscriptions \
+  -H "Authorization: Bearer ${TOKEN}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "branchId": "branch_001",
+    "reportType": "DAILY_SUMMARY",
+    "recipientType": "USER",
+    "recipientId": "user_owner_123",
+    "includePDF": true,
+    "includeCSVs": false
+  }'
+```
+
+**Example: Shift-end reports for all managers**
+```bash
+curl -X POST http://localhost:3001/reports/subscriptions \
+  -H "Authorization: Bearer ${TOKEN}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "branchId": "branch_001",
+    "reportType": "SHIFT_END",
+    "recipientType": "ROLE",
+    "includePDF": true,
+    "includeCSVs": true
+  }'
+```
+
+##### Update Subscription
+```bash
+PATCH /reports/subscriptions/:id
+Authorization: Bearer <token>
+Roles: L4+
+Content-Type: application/json
+
+{
+  "enabled": false,
+  "includePDF": true,
+  "includeCSVs": false
+}
+```
+
+##### Delete Subscription
+```bash
+DELETE /reports/subscriptions/:id
+Authorization: Bearer <token>
+Roles: L4+
+```
+
+### Shift-End Reports
+
+#### Trigger Mechanism
+
+Shift-end reports are **automatically generated** when `ShiftsService.closeShift()` is called:
+
+```typescript
+// In ShiftsService.closeShift()
+await this.reportsQueue.add('shift-end-report', {
+  type: 'shift-end-report',
+  orgId: shift.orgId,
+  branchId: shift.branchId,
+  shiftId: shift.id,
+});
+```
+
+The worker processes the job:
+1. Fetches all enabled `SHIFT_END` subscriptions for the branch
+2. Generates `ShiftEndReport` with real data from canonical APIs
+3. Creates PDF (professional multi-page layout)
+4. Creates CSV (machine-readable tabular format)
+5. Resolves recipients (USER or ROLE-based)
+6. Sends email with attachments via nodemailer
+
+#### Report Contents
+
+**PDF Layout:**
+- **Header**: Branch name, shift ID, open/close times, opened/closed by
+- **Sales Summary**: Total sales, order count, avg order value, payment method breakdown
+- **Category Performance**: Sales by category with charts
+- **Top Items**: Best-selling menu items
+- **Service Metrics**: Per-waiter performance table
+- **Stock Management**: Wastage summary, low stock alerts, variance report
+- **KDS Performance**: SLA metrics with color-coded percentages
+- **Staff Rankings**: Top 5 performers
+- **Anomalies**: High-severity events
+- **Footer**: Report ID, generation timestamp
+
+**CSV Structure:**
+Primary CSV contains:
+```
+Section,Metric,Value
+Sales,Total Sales,245000
+Sales,Total Orders,42
+Sales,Avg Order Value,5833.33
+Service,Waiter 1 Sales,85000
+Service,Waiter 1 Orders,15
+...
+```
+
+Separate CSVs for detail tables (if requested):
+- `wastage-detail.csv`: Item, quantity, reason, user, timestamp
+- `top-items.csv`: Item, category, quantity sold, revenue
+
+#### Email Behavior
+
+**Subject Pattern:**
+```
+Shift-End Report - {BranchName} - {Date}
+```
+
+**Body (HTML):**
+- Summary metrics in formatted HTML
+- Links to dashboard (if applicable)
+- Attachment list
+
+**Attachments:**
+- `shift-end-report-{shiftId}.pdf` (if `includePDF = true`)
+- `shift-end-report-{shiftId}.csv` (if `includeCSVs = true`)
+
+**Error Handling:**
+- Email failures are logged but don't block other recipients
+- Worker retries with exponential backoff (BullMQ default)
+- Dead letter queue for persistent failures
+
+### Scheduled Digests
+
+#### Scheduler Architecture
+
+**Cron Job:** Runs every minute in worker  
+**Logic:**
+1. Query all enabled subscriptions for `DAILY_SUMMARY`, `WEEKLY_SUMMARY`, `MONTHLY_SUMMARY`
+2. Check `shouldRunScheduledDigest()` for each:
+   - **DAILY**: Run if current hour = 06:00 and not run in last hour
+   - **WEEKLY**: Run if current day = Monday, hour = 07:00, not run in last hour
+   - **MONTHLY**: Run if current date = 1st, hour = 08:00, not run in last hour
+3. Calculate date range using `calculateDateRange()`
+4. Enqueue `period-digest` job
+5. Update `subscription.lastRunAt` to prevent duplicates
+
+**Duplicate Protection:**
+- `lastRunAt` field prevents re-triggering within same hour
+- Idempotent job keys in BullMQ
+- Atomic updates with Prisma transactions
+
+#### Date Range Calculation
+
+**DAILY_SUMMARY:**
+```typescript
+startDate = yesterday 00:00:00
+endDate = yesterday 23:59:59
+```
+
+**WEEKLY_SUMMARY:**
+```typescript
+startDate = last Monday 00:00:00
+endDate = last Sunday 23:59:59
+```
+
+**MONTHLY_SUMMARY:**
+```typescript
+startDate = first day of previous month 00:00:00
+endDate = last day of previous month 23:59:59
+```
+
+**Note:** Currently uses UTC-based calculations. For production, implement proper timezone conversion using `date-fns-tz` and org settings.
+
+#### Period Digest Contents
+
+**Metrics Aggregated:**
+- **Sales**: Total sales, order count, avg order value
+- **Operational**: Anomaly count, wastage quantity/cost
+- **Trends**: Day-over-day, week-over-week, month-over-month comparisons (future)
+
+**Email Subject Pattern:**
+```
+{ReportType} - {OrgName} - {StartDate}
+```
+
+**Attachments:**
+- `{reportType}-{date}.pdf` (if `includePDF = true`)
+- `{reportType}-{date}.csv` (if `includeCSVs = true`)
+
+### SMTP Configuration
+
+**Environment Variables:**
+```bash
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_SECURE=false               # true for port 465
+SMTP_USER=reports@chefcloud.com
+SMTP_PASS=app-specific-password
+DIGEST_FROM_EMAIL=noreply@chefcloud.com
+```
+
+**Nodemailer Transporter:**
+```typescript
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST,
+  port: parseInt(process.env.SMTP_PORT),
+  secure: process.env.SMTP_SECURE === 'true',
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+  },
+});
+```
+
+**Testing with Mailhog (Development):**
+```bash
+docker run -d -p 1025:1025 -p 8025:8025 mailhog/mailhog
+
+export SMTP_HOST=localhost
+export SMTP_PORT=1025
+export SMTP_SECURE=false
+export SMTP_USER=
+export SMTP_PASS=
+
+# View emails at http://localhost:8025
+```
+
+### Data Consistency
+
+**Guarantee:** All report metrics match canonical APIs
+
+**Test Suite:** `digest-consistency.spec.ts`
+
+**Verification:**
+- Shift-end report sales ≈ Sales API `getSalesMetrics()`
+- Shift-end report wastage ≈ Reconciliation API `getShiftReconciliation()`
+- Shift-end report waiter metrics ≈ Anti-theft API `getWaiterPerformance()`
+- Shift-end report KDS metrics ≈ KDS API `getShiftSlaMetrics()`
+- Period digest totals ≈ Analytics APIs for date range
+
+**Why Consistency Matters:**
+- Owner trust in automated reports
+- Accounting compliance
+- Avoids "which number is correct?" confusion
+- Single source of truth for all stakeholders
+
+### Troubleshooting
+
+#### Digests Not Sending
+
+**Check:**
+1. Subscription enabled: `subscription.enabled = true`
+2. Recipients configured: `recipientType = USER` requires `recipientId`, `ROLE` requires L4+ users
+3. SMTP configured: Verify `SMTP_*` env vars
+4. Worker running: `pnpm dev` in `services/worker`
+5. Redis connection: Worker needs Redis for BullMQ
+6. Check logs: `logger.error()` in worker for failures
+
+**Debug Commands:**
+```bash
+# Check worker logs
+cd services/worker
+pnpm dev | grep -i digest
+
+# Check Redis queue
+redis-cli
+> LLEN bull:digest:waiting
+> LLEN bull:digest:failed
+
+# Manually trigger (dev only)
+curl -X POST http://localhost:3001/reports/debug/trigger-digest \
+  -H "Authorization: Bearer ${TOKEN}" \
+  -d '{"subscriptionId": "sub_123"}'
+```
+
+#### Email Not Arriving
+
+**Check:**
+1. Spam folder
+2. SMTP credentials valid
+3. Recipient email addresses correct
+4. SMTP logs in worker output
+5. Email service rate limits (Gmail: 500/day for free accounts)
+
+**Test SMTP Connection:**
+```bash
+# Using netcat
+nc -zv ${SMTP_HOST} ${SMTP_PORT}
+
+# Using telnet
+telnet ${SMTP_HOST} ${SMTP_PORT}
+```
+
+#### Reports Show Zero Data
+
+**Check:**
+1. Shift actually has orders: `SELECT COUNT(*) FROM orders WHERE shift_id = '...'`
+2. Date range correct: Period digests use previous period, not current
+3. Branch ID matches: Subscriptions are branch-scoped
+4. Data migrations ran: Ensure schema up-to-date
+
+### Performance Considerations
+
+**Report Generation:**
+- Shift-end reports: ~2-5 seconds for typical shift (50-200 orders)
+- Period digests: ~5-15 seconds for 30-day period with 1000+ orders
+- PDF generation: ~1-2 seconds (pdfkit is fast)
+- CSV generation: <1 second (simple string concatenation)
+
+**Optimization:**
+- All queries use indexes on `(orgId, branchId, createdAt)`
+- Prisma aggregations use database-level SUM/COUNT
+- Parallel fetching for report sections (Promise.all)
+- PDF streaming (no in-memory buffer for large reports)
+
+**Scaling:**
+- For 100+ branches: Consider dedicated report worker pool
+- For hourly digests: Use BullMQ rate limiting
+- For large franchises: Implement report caching (Redis)
+
+### Future Enhancements
+
+**Planned:**
+- Slack delivery channel
+- Webhook delivery for custom integrations
+- Franchise-level digests (multi-branch aggregation)
+- Custom report templates (user-configurable sections)
+- Report history/archive API
+- Real-time SSE for report generation progress
+- Anomaly-triggered alerts (email/SMS when high-severity event occurs)
+
+---
+

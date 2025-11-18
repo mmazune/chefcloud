@@ -23,6 +23,7 @@ import { CostingService } from '../inventory/costing.service';
 import { PostingService } from '../accounting/posting.service';
 import { PromotionsService } from '../promotions/promotions.service';
 import { KpisService } from '../kpis/kpis.service';
+import { StockMovementsService, StockMovementType } from '../inventory/stock-movements.service';
 
 @Injectable()
 export class PosService {
@@ -33,6 +34,7 @@ export class PosService {
     private eventBus: EventBusService,
     private costingService: CostingService,
     private postingService: PostingService,
+    private stockMovementsService: StockMovementsService,
     @Optional() private promotionsService?: PromotionsService,
     @Optional() private kpisService?: KpisService,
   ) {}
@@ -388,6 +390,16 @@ export class PosService {
 
     // FIFO consumption: for each order item, consume ingredients
     const anomalyFlags: string[] = [];
+    const stockMovements: any[] = []; // M3: Collect movements for batch creation
+
+    // Get current shift if available (for movement tracking)
+    const currentShift = await this.prisma.client.shift.findFirst({
+      where: {
+        branchId,
+        closedAt: null,
+      },
+      select: { id: true, orgId: true },
+    });
 
     for (const orderItem of order.orderItems) {
       const menuItem = orderItem.menuItem;
@@ -420,15 +432,39 @@ export class PosService {
         });
 
         let remaining = qtyNeeded;
+        let totalCost = 0;
+
         for (const batch of batches) {
           if (remaining <= 0) break;
 
           const consumeQty = Math.min(remaining, Number(batch.remainingQty));
+          const costForThisBatch = consumeQty * Number(batch.unitCost);
+
           await this.prisma.client.stockBatch.update({
             where: { id: batch.id },
             data: { remainingQty: { decrement: consumeQty } },
           });
 
+          // M3: Track stock movement for this consumption
+          stockMovements.push({
+            orgId: currentShift?.orgId || '',
+            branchId,
+            itemId: recipeIngredient.itemId,
+            type: StockMovementType.SALE,
+            qty: consumeQty,
+            cost: costForThisBatch,
+            orderId,
+            shiftId: currentShift?.id,
+            batchId: batch.id,
+            metadata: {
+              menuItemId: menuItem.id,
+              menuItemName: menuItem.name,
+              orderItemId: orderItem.id,
+              orderNumber: order.orderNumber,
+            },
+          });
+
+          totalCost += costForThisBatch;
           remaining -= consumeQty;
         }
 
@@ -641,6 +677,16 @@ export class PosService {
         metadata: { paymentAmount: dto.amount },
       },
     });
+
+    // M3: Create stock movements for ingredient consumption
+    if (stockMovements.length > 0) {
+      try {
+        await this.stockMovementsService.createMovements(stockMovements);
+      } catch (err) {
+        console.error('Failed to create stock movements:', err);
+        // Best-effort: continue even if movement creation fails
+      }
+    }
 
     // Fire-and-forget EFRIS push
     this.efrisService.push(orderId).catch(() => {

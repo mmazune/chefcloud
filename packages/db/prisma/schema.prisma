@@ -193,28 +193,31 @@ model Org {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  branches         Branch[]
-  users            User[]
-  settings         OrgSettings?
-  devices          Device[]
-  floorPlans       FloorPlan[]
-  taxCategories    TaxCategory[]
-  modifierGroups   ModifierGroup[]
-  anomalyEvents    AnomalyEvent[]
-  alertChannels    AlertChannel[]
-  scheduledAlerts  ScheduledAlert[]
-  reservations     Reservation[]
-  supportSessions  SupportSession[]
-  spoutDevices     SpoutDevice[]
-  spoutEvents      SpoutEvent[]
-  ownerDigests     OwnerDigest[]
-  apiKeys          ApiKey[]
-  subscription     OrgSubscription?
-  branchBudgets    BranchBudget[]
-  forecastProfiles ForecastProfile[]
-  forecastPoints   ForecastPoint[]
-  franchiseRanks   FranchiseRank[]
-  badgeAssets      BadgeAsset[]
+  branches            Branch[]
+  users               User[]
+  settings            OrgSettings?
+  devices             Device[]
+  floorPlans          FloorPlan[]
+  taxCategories       TaxCategory[]
+  modifierGroups      ModifierGroup[]
+  anomalyEvents       AnomalyEvent[]
+  alertChannels       AlertChannel[]
+  scheduledAlerts     ScheduledAlert[]
+  reservations        Reservation[]
+  supportSessions     SupportSession[]
+  spoutDevices        SpoutDevice[]
+  spoutEvents         SpoutEvent[]
+  ownerDigests        OwnerDigest[]
+  apiKeys             ApiKey[]
+  subscription        OrgSubscription?
+  branchBudgets       BranchBudget[]
+  forecastProfiles    ForecastProfile[]
+  forecastPoints      ForecastPoint[]
+  franchiseRanks      FranchiseRank[]
+  badgeAssets         BadgeAsset[]
+  kdsSlaConfigs       KdsSlaConfig[] // M1-KDS: SLA configuration per station
+  shiftTemplates      ShiftTemplate[] // M2-SHIFTS: Shift templates
+  reportSubscriptions ReportSubscription[] // M4: Report subscriptions
 
   @@map("orgs")
 }
@@ -228,17 +231,17 @@ model OrgSettings {
   reservationHoldMinutes    Int      @default(30)
   receiptFooter             String?
   metadata                  Json?
-  anomalyThresholds         Json?    // { lateVoidMin: 5, heavyDiscountUGX: 5000, noDrinksWarnRate: 0.25 }
-  platformAccess            Json?    // { "ROLE_NAME": { "desktop": bool, "web": bool, "mobile": bool }, ... }
-  franchiseWeights          Json?    // { revenue: 0.4, margin: 0.3, waste: -0.2, sla: 0.1 }
+  anomalyThresholds         Json? // { lateVoidMin: 5, heavyDiscountUGX: 5000, noDrinksWarnRate: 0.25 }
+  platformAccess            Json? // { "ROLE_NAME": { "desktop": bool, "web": bool, "mobile": bool }, ... }
+  franchiseWeights          Json? // { revenue: 0.4, margin: 0.3, waste: -0.2, sla: 0.1 }
   showCostToChef            Boolean  @default(false)
-  defaults                  Json?    // Accounting defaults: { coaVersion: "v1", lockBackdate: false }
-  baseCurrencyCode          String?  // E39-s1: Base currency for accounting (falls back to currency field)
-  taxMatrix                 Json?    // E39-s1: { defaultTax: {code:"VAT_STD", rate:0.18, inclusive:true}, alcohol: {rate:0.15}, serviceCharge: {rate:0.1, inclusive:false} }
-  rounding                  Json?    // E39-s1: { cashRounding:"NEAREST_50", taxRounding:"HALF_UP" }
-  bookingPolicies           Json?    // E42-s1: { holdMinutes:30, allowPartial:true, creditExpiryHours:12 }
-  attendance                Json?    // E43-s1: { autoClockInOnMsr:true, overtimeAfterMinutes:480, hardCapAbsences:3 }
-  inventoryTolerance        Json?    // E45-s1: { pct: 0.05, absolute: 0 } - variance tolerance for stock counts
+  defaults                  Json? // Accounting defaults: { coaVersion: "v1", lockBackdate: false }
+  baseCurrencyCode          String? // E39-s1: Base currency for accounting (falls back to currency field)
+  taxMatrix                 Json? // E39-s1: { defaultTax: {code:"VAT_STD", rate:0.18, inclusive:true}, alcohol: {rate:0.15}, serviceCharge: {rate:0.1, inclusive:false} }
+  rounding                  Json? // E39-s1: { cashRounding:"NEAREST_50", taxRounding:"HALF_UP" }
+  bookingPolicies           Json? // E42-s1: { holdMinutes:30, allowPartial:true, creditExpiryHours:12 }
+  attendance                Json? // E43-s1: { autoClockInOnMsr:true, overtimeAfterMinutes:480, hardCapAbsences:3 }
+  inventoryTolerance        Json? // E45-s1: { pct: 0.05, absolute: 0 } - variance tolerance for stock counts
   createdAt                 DateTime @default(now())
   updatedAt                 DateTime @updatedAt
 
@@ -253,33 +256,36 @@ model Branch {
   name         String
   address      String?
   timezone     String   @default("Africa/Kampala")
-  currencyCode String?  // E39-s1: Branch-specific currency (falls back to org base)
+  currencyCode String? // E39-s1: Branch-specific currency (falls back to org base)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  org            Org             @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  tables         Table[]
-  orders         Order[]
-  auditEvents    AuditEvent[]
-  menuItems      MenuItem[]
-  categories     Category[]
-  users          User[]
-  devices        Device[]
-  shifts         Shift[]
-  tillSessions   TillSession[]
-  stockBatches   StockBatch[]
-  purchaseOrders PurchaseOrder[]
-  goodsReceipts  GoodsReceipt[]
-  wastageRecords Wastage[]
-  anomalyEvents  AnomalyEvent[]
-  reservations   Reservation[]
-  spoutDevices   SpoutDevice[]
-  spoutEvents    SpoutEvent[]
-  adjustments    Adjustment[]
-  branchBudgets  BranchBudget[]
-  forecastProfiles ForecastProfile[]
-  forecastPoints ForecastPoint[]
-  franchiseRanks FranchiseRank[]
+  org                 Org                    @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  tables              Table[]
+  orders              Order[]
+  auditEvents         AuditEvent[]
+  menuItems           MenuItem[]
+  categories          Category[]
+  users               User[]
+  devices             Device[]
+  shifts              Shift[]
+  tillSessions        TillSession[]
+  stockBatches        StockBatch[]
+  purchaseOrders      PurchaseOrder[]
+  goodsReceipts       GoodsReceipt[]
+  wastageRecords      Wastage[]
+  anomalyEvents       AnomalyEvent[]
+  reservations        Reservation[]
+  spoutDevices        SpoutDevice[]
+  spoutEvents         SpoutEvent[]
+  adjustments         Adjustment[]
+  branchBudgets       BranchBudget[]
+  forecastProfiles    ForecastProfile[]
+  forecastPoints      ForecastPoint[]
+  franchiseRanks      FranchiseRank[]
+  shiftSchedules      ShiftSchedule[] // M2-SHIFTS: Shift schedules
+  stockMovements      StockMovement[] // M3: All stock movements at this branch
+  reportSubscriptions ReportSubscription[] // M4: Report subscriptions
 
   @@index([orgId, id])
   @@map("branches")
@@ -302,44 +308,48 @@ model User {
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
-  org                 Org                  @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  branch              Branch?              @relation(fields: [branchId], references: [id], onDelete: SetNull)
-  roles               Role[]
-  orders              Order[]
-  auditEvents         AuditEvent[]
-  employeeProfile     EmployeeProfile?
-  sessions            Session[]
-  openedShifts        Shift[]              @relation("ShiftOpenedBy")
-  closedShifts        Shift[]              @relation("ShiftClosedBy")
-  openedTillSessions  TillSession[]        @relation("TillSessionOpenedBy")
-  closedTillSessions  TillSession[]        @relation("TillSessionClosedBy")
-  cashMovements       CashMovement[]       @relation("CashMovementCreatedBy")
-  discounts           Discount[]           @relation("DiscountCreatedBy")
-  approvedDiscounts   Discount[]           @relation("DiscountApprovedBy")
-  createdRefunds      Refund[]             @relation("CreatedRefunds")
-  approvedRefunds     Refund[]             @relation("ApprovedRefunds")
-  webAuthnCredentials WebAuthnCredential[]
-  anomalyEvents       AnomalyEvent[]
-  supportSessions     SupportSession[]
-  assignedBadges      BadgeAsset[]
-  procurementJobs     ProcurementJob[]
-  approvedPromotions  Promotion[]          @relation("PromotionApprovals")
-  leaveRequests       LeaveRequest[]
-  approvedLeaves      LeaveRequest[]       @relation("ApprovedLeave")
-  dutyShifts          DutyShift[]
-  assignedDutyShifts  DutyShift[]          @relation("AssignedShifts")
-  swapsFrom           ShiftSwap[]          @relation("SwapFrom")
-  swapsTo             ShiftSwap[]          @relation("SwapTo")
-  approvedSwaps       ShiftSwap[]          @relation("ApprovedSwaps")
-  timeEntries         TimeEntry[]
-  approvedTimeEntries TimeEntry[]          @relation("ApprovedTimeEntries")
-  stockCounts         StockCount[]         // E45-s1: Stock counts performed by user
-  paySlips            PaySlip[]            // E43-s2: Payslips for user
-  approvedPaySlips    PaySlip[]            @relation("ApprovedPaySlips") // E43-s2: Payslips approved by user
-  createdFlags        FeatureFlag[]        @relation("CreatedFlags") // E49-s1: Feature flags created by user
-  updatedFlags        FeatureFlag[]        @relation("UpdatedFlags") // E49-s1: Feature flags updated by user
-  createdMaintenanceWindows MaintenanceWindow[] @relation("CreatedMaintenanceWindows") // E49-s1: Maintenance windows created by user
-  flagAudits          FlagAudit[]          // E49-s1: Flag audit trail
+  org                       Org                  @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  branch                    Branch?              @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  roles                     Role[]
+  orders                    Order[]
+  auditEvents               AuditEvent[]
+  employeeProfile           EmployeeProfile?
+  sessions                  Session[]
+  openedShifts              Shift[]              @relation("ShiftOpenedBy")
+  closedShifts              Shift[]              @relation("ShiftClosedBy")
+  openedTillSessions        TillSession[]        @relation("TillSessionOpenedBy")
+  closedTillSessions        TillSession[]        @relation("TillSessionClosedBy")
+  cashMovements             CashMovement[]       @relation("CashMovementCreatedBy")
+  discounts                 Discount[]           @relation("DiscountCreatedBy")
+  approvedDiscounts         Discount[]           @relation("DiscountApprovedBy")
+  createdRefunds            Refund[]             @relation("CreatedRefunds")
+  approvedRefunds           Refund[]             @relation("ApprovedRefunds")
+  webAuthnCredentials       WebAuthnCredential[]
+  anomalyEvents             AnomalyEvent[]
+  supportSessions           SupportSession[]
+  assignedBadges            BadgeAsset[]
+  procurementJobs           ProcurementJob[]
+  approvedPromotions        Promotion[]          @relation("PromotionApprovals")
+  leaveRequests             LeaveRequest[]
+  approvedLeaves            LeaveRequest[]       @relation("ApprovedLeave")
+  dutyShifts                DutyShift[]
+  assignedDutyShifts        DutyShift[]          @relation("AssignedShifts")
+  swapsFrom                 ShiftSwap[]          @relation("SwapFrom")
+  swapsTo                   ShiftSwap[]          @relation("SwapTo")
+  approvedSwaps             ShiftSwap[]          @relation("ApprovedSwaps")
+  timeEntries               TimeEntry[]
+  approvedTimeEntries       TimeEntry[]          @relation("ApprovedTimeEntries")
+  stockCounts               StockCount[] // E45-s1: Stock counts performed by user
+  paySlips                  PaySlip[] // E43-s2: Payslips for user
+  approvedPaySlips          PaySlip[]            @relation("ApprovedPaySlips") // E43-s2: Payslips approved by user
+  createdFlags              FeatureFlag[]        @relation("CreatedFlags") // E49-s1: Feature flags created by user
+  updatedFlags              FeatureFlag[]        @relation("UpdatedFlags") // E49-s1: Feature flags updated by user
+  createdMaintenanceWindows MaintenanceWindow[]  @relation("CreatedMaintenanceWindows") // E49-s1: Maintenance windows created by user
+  flagAudits                FlagAudit[] // E49-s1: Flag audit trail
+  shiftAssignments          ShiftAssignment[] // M2-SHIFTS: Shift assignments
+  overriddenShifts          Shift[]              @relation("ShiftOverrideBy") // M2-SHIFTS: Shifts overridden by manager
+  reportedWastage           Wastage[]            @relation("WastageReportedBy") // M3: Wastage reported by this user
+  reportSubscriptions       ReportSubscription[] // M4: User-specific report subscriptions
 
   @@index([orgId, id])
   @@map("users")
@@ -350,7 +360,7 @@ model EmployeeProfile {
   userId       String   @unique
   employeeCode String   @unique
   badgeId      String?  @unique
-  badgeCode    String?  // Optional reference to BadgeAsset.code (soft link for legacy)
+  badgeCode    String? // Optional reference to BadgeAsset.code (soft link for legacy)
   metadata     Json?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -367,7 +377,7 @@ model BadgeAsset {
   state          BadgeState @default(ACTIVE)
   assignedUserId String?
   lastUsedAt     DateTime?
-  custody        Json?      // Audit trail: [{ assignedTo, assignedAt, returnedAt }]
+  custody        Json? // Audit trail: [{ assignedTo, assignedAt, returnedAt }]
   createdAt      DateTime   @default(now())
   updatedAt      DateTime   @updatedAt
 
@@ -402,7 +412,7 @@ model Session {
   id        String   @id @default(cuid())
   userId    String
   deviceId  String?
-  badgeId   String?  // E25: Track badge for badge-based session invalidation
+  badgeId   String? // E25: Track badge for badge-based session invalidation
   token     String   @unique
   expiresAt DateTime
   createdAt DateTime @default(now())
@@ -505,31 +515,31 @@ model Table {
 }
 
 model Reservation {
-  id               String            @id @default(cuid())
-  orgId            String
-  branchId         String
-  floorPlanId      String?
-  tableId          String?
-  name             String
-  phone            String?
-  partySize        Int
-  startAt          DateTime
-  endAt            DateTime
-  status           ReservationStatus @default(HELD)
-  deposit          Decimal           @default(0) @db.Decimal(10, 2)
-  depositStatus    String            @default("NONE") // "NONE" | "HELD" | "CAPTURED" | "REFUNDED"
-  paymentIntentId  String?
-  reminderSentAt   DateTime?
-  autoCancelAt     DateTime?
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
+  id              String            @id @default(cuid())
+  orgId           String
+  branchId        String
+  floorPlanId     String?
+  tableId         String?
+  name            String
+  phone           String?
+  partySize       Int
+  startAt         DateTime
+  endAt           DateTime
+  status          ReservationStatus @default(HELD)
+  deposit         Decimal           @default(0) @db.Decimal(10, 2)
+  depositStatus   String            @default("NONE") // "NONE" | "HELD" | "CAPTURED" | "REFUNDED"
+  paymentIntentId String?
+  reminderSentAt  DateTime?
+  autoCancelAt    DateTime?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
 
-  org            Org                     @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  branch         Branch                  @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  floorPlan      FloorPlan?              @relation(fields: [floorPlanId], references: [id], onDelete: SetNull)
-  table          Table?                  @relation(fields: [tableId], references: [id], onDelete: SetNull)
-  paymentIntent  PaymentIntent?          @relation(fields: [paymentIntentId], references: [id], onDelete: SetNull)
-  reminders      ReservationReminder[]
+  org           Org                   @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  branch        Branch                @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  floorPlan     FloorPlan?            @relation(fields: [floorPlanId], references: [id], onDelete: SetNull)
+  table         Table?                @relation(fields: [tableId], references: [id], onDelete: SetNull)
+  paymentIntent PaymentIntent?        @relation(fields: [paymentIntentId], references: [id], onDelete: SetNull)
+  reminders     ReservationReminder[]
 
   @@index([orgId])
   @@index([branchId])
@@ -598,13 +608,13 @@ model MenuItem {
 }
 
 model TaxCategory {
-  id            String   @id @default(cuid())
-  orgId         String
-  name          String
-  rate          Decimal  @db.Decimal(5, 2)
-  efirsTaxCode  String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id           String   @id @default(cuid())
+  orgId        String
+  name         String
+  rate         Decimal  @db.Decimal(5, 2)
+  efirsTaxCode String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   org       Org        @relation(fields: [orgId], references: [id], onDelete: Cascade)
   menuItems MenuItem[]
@@ -674,14 +684,15 @@ model Order {
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
 
-  branch     Branch      @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  table      Table?      @relation(fields: [tableId], references: [id], onDelete: SetNull)
-  user       User        @relation(fields: [userId], references: [id], onDelete: Restrict)
-  orderItems OrderItem[]
-  payments   Payment[]
-  refunds    Refund[]
-  kdsTickets KdsTicket[]
-  discounts  Discount[]
+  branch         Branch          @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  table          Table?          @relation(fields: [tableId], references: [id], onDelete: SetNull)
+  user           User            @relation(fields: [userId], references: [id], onDelete: Restrict)
+  orderItems     OrderItem[]
+  payments       Payment[]
+  refunds        Refund[]
+  kdsTickets     KdsTicket[]
+  discounts      Discount[]
+  stockMovements StockMovement[] // M3: Stock movements from this order
 
   @@unique([branchId, orderNumber])
   @@index([branchId])
@@ -696,32 +707,118 @@ model KdsTicket {
   station   StationTag
   status    String     @default("QUEUED")
   createdAt DateTime   @default(now())
+  sentAt    DateTime   @default(now()) // M1-KDS: When order was sent to kitchen/bar
   readyAt   DateTime?
+  updatedAt DateTime   @updatedAt // M1-KDS: For polling/sync with "since" parameter
 
   order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
+  @@index([station, status, sentAt]) // M1-KDS: Efficient filtering and ordering
   @@map("kds_tickets")
 }
 
-model Shift {
-  id           String    @id @default(cuid())
-  orgId        String
-  branchId     String
-  openedById   String
-  closedById   String?
-  openedAt     DateTime  @default(now())
-  closedAt     DateTime?
-  openingFloat Decimal   @default(0) @db.Decimal(10, 2)
-  declaredCash Decimal?  @db.Decimal(10, 2)
-  overShort    Decimal?  @db.Decimal(10, 2)
-  notes        String?
-  metadata     Json?
+// M1-KDS: SLA configuration for KDS colour coding
+model KdsSlaConfig {
+  id                 String     @id @default(cuid())
+  orgId              String
+  station            StationTag
+  greenThresholdSec  Int        @default(300) // 5 minutes - green if under
+  orangeThresholdSec Int        @default(600) // 10 minutes - orange if under, red if over
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @updatedAt
 
-  branch       Branch        @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  openedBy     User          @relation("ShiftOpenedBy", fields: [openedById], references: [id], onDelete: Restrict)
-  closedBy     User?         @relation("ShiftClosedBy", fields: [closedById], references: [id], onDelete: Restrict)
-  tillSessions TillSession[]
-  stockCounts  StockCount[]  // E45-s1: Stock counts for this shift
+  org Org @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@unique([orgId, station])
+  @@map("kds_sla_configs")
+}
+
+// M2-SHIFTS: Shift template for recurring shift patterns
+model ShiftTemplate {
+  id          String   @id @default(cuid())
+  orgId       String
+  name        String // e.g. "Lunch Service", "Dinner Service"
+  startTime   String // Time of day, e.g. "11:00"
+  endTime     String // Time of day, e.g. "16:00"
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  org       Org             @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  schedules ShiftSchedule[]
+
+  @@index([orgId])
+  @@map("shift_templates")
+}
+
+// M2-SHIFTS: Daily shift schedule based on template
+model ShiftSchedule {
+  id         String   @id @default(cuid())
+  orgId      String
+  branchId   String
+  date       DateTime @db.Date // Specific date for this schedule
+  templateId String? // Optional link to template
+  startTime  DateTime // Actual start time (can override template)
+  endTime    DateTime // Actual end time (can override template)
+  notes      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  branch      Branch            @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  template    ShiftTemplate?    @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  assignments ShiftAssignment[]
+
+  @@unique([branchId, date, startTime]) // Prevent duplicate schedules
+  @@index([branchId, date])
+  @@map("shift_schedules")
+}
+
+// M2-SHIFTS: Staff assignment to specific scheduled shift
+model ShiftAssignment {
+  id              String   @id @default(cuid())
+  scheduleId      String
+  userId          String
+  role            String // e.g. "WAITER", "MANAGER", "CHEF", "BARTENDER"
+  isManagerOnDuty Boolean  @default(false) // Flag for primary manager
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  schedule ShiftSchedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+  user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([scheduleId, userId]) // One assignment per user per schedule
+  @@index([scheduleId])
+  @@index([userId])
+  @@map("shift_assignments")
+}
+
+model Shift {
+  id             String    @id @default(cuid())
+  orgId          String
+  branchId       String
+  openedById     String
+  closedById     String?
+  openedAt       DateTime  @default(now())
+  closedAt       DateTime?
+  openingFloat   Decimal   @default(0) @db.Decimal(10, 2)
+  declaredCash   Decimal?  @db.Decimal(10, 2)
+  overShort      Decimal?  @db.Decimal(10, 2)
+  notes          String?
+  metadata       Json?
+  // M2-SHIFTS: Manager override for out-of-tolerance stock counts
+  overrideUserId String? // Manager who approved override
+  overrideReason String? // Reason for override
+  overrideAt     DateTime? // When override was applied
+
+  branch         Branch          @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  openedBy       User            @relation("ShiftOpenedBy", fields: [openedById], references: [id], onDelete: Restrict)
+  closedBy       User?           @relation("ShiftClosedBy", fields: [closedById], references: [id], onDelete: Restrict)
+  overrideBy     User?           @relation("ShiftOverrideBy", fields: [overrideUserId], references: [id], onDelete: Restrict)
+  tillSessions   TillSession[]
+  stockCounts    StockCount[] // E45-s1: Stock counts for this shift
+  wastage        Wastage[] // M3: Wastage recorded during this shift
+  stockMovements StockMovement[] // M3: All stock movements during shift
 
   @@index([branchId, openedAt])
   @@map("shifts")
@@ -736,7 +833,7 @@ model StockCount {
   countedAt   DateTime @default(now())
   countedById String
   notes       String?
-  lines       Json     // [{ itemId, countedQty }]
+  lines       Json // [{ itemId, countedQty }]
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -749,19 +846,19 @@ model StockCount {
 }
 
 model TillSession {
-  id            String    @id @default(cuid())
-  orgId         String
-  branchId      String
-  drawerId      String // Identifier for cash drawer (e.g., "DRAWER-1", "REGISTER-A")
-  openedById    String
-  closedById    String?
-  openingFloat  Decimal   @db.Decimal(10, 2)
-  closingCount  Decimal?  @db.Decimal(10, 2) // Total cash counted at close
-  variance      Decimal?  @db.Decimal(10, 2) // Difference between expected and counted
-  openedAt      DateTime  @default(now())
-  closedAt      DateTime?
-  shiftId       String? // Optional link to shift
-  metadata      Json?
+  id           String    @id @default(cuid())
+  orgId        String
+  branchId     String
+  drawerId     String // Identifier for cash drawer (e.g., "DRAWER-1", "REGISTER-A")
+  openedById   String
+  closedById   String?
+  openingFloat Decimal   @db.Decimal(10, 2)
+  closingCount Decimal?  @db.Decimal(10, 2) // Total cash counted at close
+  variance     Decimal?  @db.Decimal(10, 2) // Difference between expected and counted
+  openedAt     DateTime  @default(now())
+  closedAt     DateTime?
+  shiftId      String? // Optional link to shift
+  metadata     Json?
 
   branch        Branch         @relation(fields: [branchId], references: [id], onDelete: Cascade)
   openedBy      User           @relation("TillSessionOpenedBy", fields: [openedById], references: [id], onDelete: Restrict)
@@ -848,7 +945,7 @@ model Payment {
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
-  order   Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  order   Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
   refunds Refund[]
 
   @@index([orderId]) // E54-s1: For payment lookup by order
@@ -857,42 +954,41 @@ model Payment {
 }
 
 model Refund {
-  id          String   @id @default(cuid())
-  orderId     String
-  paymentId   String
-  provider    String // "MOMO" | "CASH" | "CARD" | "MANUAL"
-  amount      Decimal  @db.Decimal(10, 2)
-  reason      String
-  status      String   @default("PENDING") // "PENDING" | "COMPLETED" | "FAILED"
-  createdById String
+  id           String   @id @default(cuid())
+  orderId      String
+  paymentId    String
+  provider     String // "MOMO" | "CASH" | "CARD" | "MANUAL"
+  amount       Decimal  @db.Decimal(10, 2)
+  reason       String
+  status       String   @default("PENDING") // "PENDING" | "COMPLETED" | "FAILED"
+  createdById  String
   approvedById String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  order      Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  order      Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
   payment    Payment @relation(fields: [paymentId], references: [id])
-  createdBy  User  @relation("CreatedRefunds", fields: [createdById], references: [id])
-  approvedBy User? @relation("ApprovedRefunds", fields: [approvedById], references: [id])
+  createdBy  User    @relation("CreatedRefunds", fields: [createdById], references: [id])
+  approvedBy User?   @relation("ApprovedRefunds", fields: [approvedById], references: [id])
 
   @@index([orderId])
   @@index([status, createdAt])
   @@map("refunds")
 }
 
-
 model PaymentIntent {
-  id           String        @id @default(cuid())
-  orgId        String
-  branchId     String
-  orderId      String
-  provider     String // "MTN" | "AIRTEL" | "MOMO"
-  amount       Decimal       @db.Decimal(12, 2)
-  currency     String        @default("UGX")
-  status       String        @default("PENDING") // "PENDING" | "REQUIRES_ACTION" | "SUCCEEDED" | "FAILED" | "CANCELLED"
-  providerRef  String?
-  metadata     Json?
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  id          String   @id @default(cuid())
+  orgId       String
+  branchId    String
+  orderId     String
+  provider    String // "MTN" | "AIRTEL" | "MOMO"
+  amount      Decimal  @db.Decimal(12, 2)
+  currency    String   @default("UGX")
+  status      String   @default("PENDING") // "PENDING" | "REQUIRES_ACTION" | "SUCCEEDED" | "FAILED" | "CANCELLED"
+  providerRef String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   reservations Reservation[]
 
@@ -902,11 +998,11 @@ model PaymentIntent {
 }
 
 model WebhookEvent {
-  id        String   @id @default(cuid())
-  provider  String // "MTN" | "AIRTEL"
-  eventType String
-  raw       Json
-  verified  Boolean  @default(false)
+  id         String   @id @default(cuid())
+  provider   String // "MTN" | "AIRTEL"
+  eventType  String
+  raw        Json
+  verified   Boolean  @default(false)
   receivedAt DateTime @default(now())
 
   @@index([provider, receivedAt])
@@ -1051,10 +1147,10 @@ model SpoutDevice {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  org           Org                @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  branch        Branch             @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  calibrations  SpoutCalibration[]
-  events        SpoutEvent[]
+  org          Org                @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  branch       Branch             @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  calibrations SpoutCalibration[]
+  events       SpoutEvent[]
 
   @@index([orgId])
   @@index([branchId])
@@ -1099,20 +1195,48 @@ model SpoutEvent {
 }
 
 model OwnerDigest {
-  id                 String    @id @default(cuid())
-  orgId              String
-  name               String
-  cron               String // e.g., "0 8 * * *" for daily at 8am
-  lastRunAt          DateTime?
-  recipients         String[] // Array of email addresses
-  sendOnShiftClose   Boolean   @default(false)
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
+  id               String    @id @default(cuid())
+  orgId            String
+  name             String
+  cron             String // e.g., "0 8 * * *" for daily at 8am
+  lastRunAt        DateTime?
+  recipients       String[] // Array of email addresses
+  sendOnShiftClose Boolean   @default(false)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
   org Org @relation(fields: [orgId], references: [id], onDelete: Cascade)
 
   @@index([orgId])
   @@map("owner_digests")
+}
+
+// M4: Enhanced Report Subscriptions
+model ReportSubscription {
+  id              String   @id @default(cuid())
+  orgId           String
+  branchId        String? // Optional: null = org-level
+  reportType      String // SHIFT_END, DAILY_SUMMARY, WEEKLY_SUMMARY, MONTHLY_SUMMARY, FRANCHISE_WEEKLY
+  deliveryChannel String   @default("EMAIL") // EMAIL, SLACK
+  recipientType   String // USER, ROLE
+  recipientId     String? // userId if recipientType=USER, role code if ROLE
+  recipientEmail  String? // Override email if needed
+  enabled         Boolean  @default(true)
+  includeCSVs     Boolean  @default(true)
+  includePDF      Boolean  @default(true)
+  metadata        Json? // Additional config (e.g., sections to include)
+  lastRunAt       DateTime? // M4: Track when digest last ran
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  org    Org     @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  branch Branch? @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  user   User?   @relation(fields: [recipientId], references: [id], onDelete: Cascade) // M4: User recipient
+
+  @@index([orgId])
+  @@index([branchId])
+  @@index([reportType])
+  @@map("report_subscriptions")
 }
 
 // ===== Inventory & Purchasing =====
@@ -1161,6 +1285,8 @@ model InventoryItem {
   spoutCalibrations SpoutCalibration[]
   forecastProfiles  ForecastProfile[]
   forecastPoints    ForecastPoint[]
+  stockMovements    StockMovement[] // M3: Track all inventory movements
+  lowStockConfigs   LowStockConfig[] // M3: Low-stock alert configuration
 
   @@unique([orgId, sku])
   @@index([orgId])
@@ -1181,9 +1307,10 @@ model StockBatch {
   goodsReceiptId String?
   metadata       Json?
 
-  branch       Branch        @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  item         InventoryItem @relation(fields: [itemId], references: [id], onDelete: Restrict)
-  goodsReceipt GoodsReceipt? @relation(fields: [goodsReceiptId], references: [id], onDelete: SetNull)
+  branch         Branch          @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  item           InventoryItem   @relation(fields: [itemId], references: [id], onDelete: Restrict)
+  goodsReceipt   GoodsReceipt?   @relation(fields: [goodsReceiptId], references: [id], onDelete: SetNull)
+  stockMovements StockMovement[] // M3: Movements from this batch
 
   @@index([orgId, itemId])
   @@index([branchId, receivedAt])
@@ -1229,15 +1356,15 @@ model PurchaseOrderItem {
 }
 
 model ProcurementJob {
-  id           String                 @id @default(cuid())
+  id           String               @id @default(cuid())
   orgId        String
   createdById  String
-  period       String?                @db.VarChar(7) // YYYY-MM
+  period       String?              @db.VarChar(7) // YYYY-MM
   strategy     ProcurementStrategy
-  draftPoCount Int                    @default(0)
-  status       ProcurementJobStatus   @default(DRAFT)
-  createdAt    DateTime               @default(now())
-  updatedAt    DateTime               @updatedAt
+  draftPoCount Int                  @default(0)
+  status       ProcurementJobStatus @default(DRAFT)
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
 
   createdBy User @relation(fields: [createdById], references: [id], onDelete: Restrict)
 
@@ -1250,12 +1377,12 @@ model Promotion {
   id               String    @id @default(cuid())
   orgId            String
   name             String
-  code             String?   // Optional coupon code
+  code             String? // Optional coupon code
   active           Boolean   @default(false)
   startsAt         DateTime?
   endsAt           DateTime?
-  scope            Json?     // {branches: [...], categories: [...], items: [...]}
-  daypart          Json?     // {days: [1..7], start: "HH:mm", end: "HH:mm"}
+  scope            Json? // {branches: [...], categories: [...], items: [...]}
+  daypart          Json? // {days: [1..7], start: "HH:mm", end: "HH:mm"}
   priority         Int       @default(100)
   exclusive        Boolean   @default(false)
   requiresApproval Boolean   @default(true)
@@ -1278,7 +1405,7 @@ model PromotionEffect {
   promotionId String
   type        PromotionEffectType
   value       Decimal?            @db.Decimal(10, 2) // Percentage or fixed amount
-  meta        Json?               // Additional config (bundle items, etc.)
+  meta        Json? // Additional config (bundle items, etc.)
   createdAt   DateTime            @default(now())
 
   promotion Promotion @relation(fields: [promotionId], references: [id], onDelete: Cascade)
@@ -1347,17 +1474,22 @@ model Wastage {
   orgId      String
   branchId   String
   itemId     String
+  shiftId    String? // M3: Link wastage to shift
+  userId     String? // M3: User who reported wastage
   qty        Decimal  @db.Decimal(10, 3)
   reason     String?
-  reportedBy String?
+  reportedBy String? // Deprecated: use userId
   metadata   Json?
   createdAt  DateTime @default(now())
 
   branch Branch        @relation(fields: [branchId], references: [id], onDelete: Cascade)
   item   InventoryItem @relation(fields: [itemId], references: [id], onDelete: Restrict)
+  shift  Shift?        @relation(fields: [shiftId], references: [id], onDelete: SetNull)
+  user   User?         @relation("WastageReportedBy", fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([orgId, branchId])
   @@index([itemId])
+  @@index([shiftId])
   @@map("wastage")
 }
 
@@ -1378,6 +1510,58 @@ model Adjustment {
   @@index([orgId, branchId])
   @@index([itemId])
   @@map("adjustments")
+}
+
+// M3: Stock movements for ingredient-level accuracy and reconciliation
+model StockMovement {
+  id        String   @id @default(cuid())
+  orgId     String
+  branchId  String
+  itemId    String
+  shiftId   String? // Link to shift when movement occurred
+  orderId   String? // Link to order if from sale
+  batchId   String? // Link to batch affected (for FIFO tracking)
+  type      String // SALE, WASTAGE, ADJUSTMENT, PURCHASE, COUNT_ADJUSTMENT
+  qty       Decimal  @db.Decimal(10, 3) // Positive = add, Negative = deduct
+  cost      Decimal  @db.Decimal(10, 2) // Cost impact (for COGS tracking)
+  reason    String? // For wastage/adjustments
+  metadata  Json? // Additional context
+  createdAt DateTime @default(now())
+
+  branch Branch        @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  item   InventoryItem @relation(fields: [itemId], references: [id], onDelete: Restrict)
+  shift  Shift?        @relation(fields: [shiftId], references: [id], onDelete: SetNull)
+  order  Order?        @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  batch  StockBatch?   @relation(fields: [batchId], references: [id], onDelete: SetNull)
+
+  @@index([orgId, branchId, createdAt])
+  @@index([itemId])
+  @@index([shiftId])
+  @@index([orderId])
+  @@map("stock_movements")
+}
+
+// M3: Low-stock alert configuration
+model LowStockConfig {
+  id             String   @id @default(cuid())
+  orgId          String
+  branchId       String? // null = org-level default
+  itemId         String? // null = category-level config
+  category       String? // Applies to all items in category if itemId is null
+  minQuantity    Decimal? @db.Decimal(10, 3) // Alert when stock falls below this
+  minDaysOfCover Int? // Alert when estimated days of stock remaining < this
+  alertLevel     String   @default("LOW") // LOW, CRITICAL
+  enabled        Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  item InventoryItem? @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@unique([orgId, branchId, itemId, category])
+  @@index([orgId])
+  @@index([branchId])
+  @@index([itemId])
+  @@map("low_stock_configs")
 }
 
 // ===== E24: Subscriptions & Dev Portal =====
@@ -1423,11 +1607,11 @@ model OrgSubscription {
 }
 
 model SubscriptionEvent {
-  id    String                  @id @default(cuid())
+  id    String                @id @default(cuid())
   orgId String
   type  SubscriptionEventType
   meta  Json
-  at    DateTime                @default(now())
+  at    DateTime              @default(now())
 
   @@index([orgId, at])
   @@map("subscription_events")
@@ -1467,8 +1651,8 @@ model ForecastProfile {
   branchId          String?
   itemId            String?
   method            ForecastMethod @default(MA14)
-  weekendUpliftPct  Decimal        @db.Decimal(5, 2) @default(0)
-  monthEndUpliftPct Decimal        @db.Decimal(5, 2) @default(0)
+  weekendUpliftPct  Decimal        @default(0) @db.Decimal(5, 2)
+  monthEndUpliftPct Decimal        @default(0) @db.Decimal(5, 2)
   createdAt         DateTime       @default(now())
   updatedAt         DateTime       @updatedAt
 
@@ -1500,13 +1684,13 @@ model ForecastPoint {
 }
 
 model FranchiseRank {
-  id       String   @id @default(cuid())
-  orgId    String
-  period   String   @db.VarChar(7) // YYYY-MM
-  branchId String
-  score    Decimal  @db.Decimal(10, 2)
-  rank     Int
-  meta     Json
+  id        String   @id @default(cuid())
+  orgId     String
+  period    String   @db.VarChar(7) // YYYY-MM
+  branchId  String
+  score     Decimal  @db.Decimal(10, 2)
+  rank      Int
+  meta      Json
   createdAt DateTime @default(now())
 
   org    Org    @relation(fields: [orgId], references: [id], onDelete: Cascade)
@@ -1522,11 +1706,11 @@ model FranchiseRank {
 model Account {
   id        String      @id @default(cuid())
   orgId     String
-  code      String      // Unique within org (e.g., "1000", "4000")
-  name      String      // e.g., "Cash", "Sales Revenue"
+  code      String // Unique within org (e.g., "1000", "4000")
+  name      String // e.g., "Cash", "Sales Revenue"
   type      AccountType
   isActive  Boolean     @default(true)
-  parentId  String?     // For account hierarchy
+  parentId  String? // For account hierarchy
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
 
@@ -1544,8 +1728,8 @@ model JournalEntry {
   orgId      String
   date       DateTime @default(now())
   memo       String?
-  source     String?  // e.g., "POS_SALE", "REFUND", "CASH_MOVEMENT", "VENDOR_PAYMENT"
-  sourceId   String?  // Reference to source entity ID
+  source     String? // e.g., "POS_SALE", "REFUND", "CASH_MOVEMENT", "VENDOR_PAYMENT"
+  sourceId   String? // Reference to source entity ID
   postedById String?
   createdAt  DateTime @default(now())
 
@@ -1563,7 +1747,7 @@ model JournalLine {
   branchId  String?
   debit     Decimal  @default(0) @db.Decimal(12, 2)
   credit    Decimal  @default(0) @db.Decimal(12, 2)
-  meta      Json?    // Additional context
+  meta      Json? // Additional context
   createdAt DateTime @default(now())
 
   entry   JournalEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
@@ -1575,15 +1759,15 @@ model JournalLine {
 }
 
 model Vendor {
-  id            String        @id @default(cuid())
-  orgId         String
-  name          String
-  email         String?
-  phone         String?
-  defaultTerms  PaymentTerms? // Default payment terms
-  metadata      Json?
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  id           String        @id @default(cuid())
+  orgId        String
+  name         String
+  email        String?
+  phone        String?
+  defaultTerms PaymentTerms? // Default payment terms
+  metadata     Json?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
 
   bills    VendorBill[]
   payments VendorPayment[]
@@ -1596,7 +1780,7 @@ model VendorBill {
   id        String     @id @default(cuid())
   orgId     String
   vendorId  String
-  number    String?    // Vendor's bill number
+  number    String? // Vendor's bill number
   billDate  DateTime   @default(now())
   dueDate   DateTime
   subtotal  Decimal    @db.Decimal(12, 2)
@@ -1620,11 +1804,11 @@ model VendorPayment {
   id        String   @id @default(cuid())
   orgId     String
   vendorId  String
-  billId    String?  // Optional link to specific bill
+  billId    String? // Optional link to specific bill
   amount    Decimal  @db.Decimal(12, 2)
   paidAt    DateTime @default(now())
-  method    String   // CASH, CARD, MOMO, BANK
-  ref       String?  // Payment reference number
+  method    String // CASH, CARD, MOMO, BANK
+  ref       String? // Payment reference number
   metadata  Json?
   createdAt DateTime @default(now())
 
@@ -1658,7 +1842,7 @@ model CustomerInvoice {
   id          String        @id @default(cuid())
   orgId       String
   customerId  String
-  number      String?       // Invoice number
+  number      String? // Invoice number
   invoiceDate DateTime      @default(now())
   dueDate     DateTime
   subtotal    Decimal       @db.Decimal(12, 2)
@@ -1681,9 +1865,9 @@ model ReminderSchedule {
   id        String          @id @default(cuid())
   orgId     String
   type      ReminderType
-  targetId  String?         // Vendor ID for VENDOR_BILL, null for UTILITY
+  targetId  String? // Vendor ID for VENDOR_BILL, null for UTILITY
   channel   ReminderChannel
-  whenDays  Int             // Days before due date
+  whenDays  Int // Days before due date
   isActive  Boolean         @default(true)
   createdAt DateTime        @default(now())
   updatedAt DateTime        @updatedAt
@@ -1726,18 +1910,18 @@ model ExchangeRate {
 // ===== E42-s1: Public Bookings Portal =====
 
 model Event {
-  id                 String   @id @default(cuid())
-  orgId              String
-  branchId           String
-  slug               String   @unique
-  title              String
-  description        String?
-  startsAt           DateTime
-  endsAt             DateTime
-  isPublished        Boolean  @default(false)
-  floorPlanSnapshot  Json? // Snapshot of floor plan for historical reference
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  id                String   @id @default(cuid())
+  orgId             String
+  branchId          String
+  slug              String   @unique
+  title             String
+  description       String?
+  startsAt          DateTime
+  endsAt            DateTime
+  isPublished       Boolean  @default(false)
+  floorPlanSnapshot Json? // Snapshot of floor plan for historical reference
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
   tables   EventTable[]
   bookings EventBooking[]
@@ -1768,26 +1952,26 @@ model EventTable {
 }
 
 model EventBooking {
-  id               String             @id @default(cuid())
-  eventId          String
-  eventTableId     String
-  name             String
-  phone            String
-  email            String?
-  status           EventBookingStatus @default(HELD)
-  depositIntentId  String? // PaymentIntent ID for deposit
-  depositCaptured  Boolean            @default(false)
-  creditTotal      Decimal            @default(0) @db.Decimal(12, 2) // Total credit eligible after deposit
-  ticketCode       String?            @unique // E42-s2: ULID for QR check-in
-  checkedInAt      DateTime? // E42-s2: When guest checked in
-  checkedInById    String? // E42-s2: User who performed check-in
-  createdAt        DateTime           @default(now())
-  updatedAt        DateTime           @updatedAt
-  metadata         Json? // Additional booking details
+  id              String             @id @default(cuid())
+  eventId         String
+  eventTableId    String
+  name            String
+  phone           String
+  email           String?
+  status          EventBookingStatus @default(HELD)
+  depositIntentId String? // PaymentIntent ID for deposit
+  depositCaptured Boolean            @default(false)
+  creditTotal     Decimal            @default(0) @db.Decimal(12, 2) // Total credit eligible after deposit
+  ticketCode      String?            @unique // E42-s2: ULID for QR check-in
+  checkedInAt     DateTime? // E42-s2: When guest checked in
+  checkedInById   String? // E42-s2: User who performed check-in
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  metadata        Json? // Additional booking details
 
-  event       Event           @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  eventTable  EventTable      @relation(fields: [eventTableId], references: [id], onDelete: Cascade)
-  credits     PrepaidCredit[]
+  event      Event           @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventTable EventTable      @relation(fields: [eventTableId], references: [id], onDelete: Cascade)
+  credits    PrepaidCredit[]
 
   @@index([eventId, status])
   @@index([eventTableId])
@@ -1796,16 +1980,16 @@ model EventBooking {
 }
 
 model PrepaidCredit {
-  id               String    @id @default(cuid())
-  orgId            String
-  branchId         String
-  eventBookingId   String? // Link to event booking if applicable
-  tableId          String? // Link to actual table when applied
-  amount           Decimal   @db.Decimal(12, 2) // Total credit amount
-  consumed         Decimal   @default(0) @db.Decimal(12, 2) // Amount already used
-  expiresAt        DateTime
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
+  id             String   @id @default(cuid())
+  orgId          String
+  branchId       String
+  eventBookingId String? // Link to event booking if applicable
+  tableId        String? // Link to actual table when applied
+  amount         Decimal  @db.Decimal(12, 2) // Total credit amount
+  consumed       Decimal  @default(0) @db.Decimal(12, 2) // Amount already used
+  expiresAt      DateTime
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   eventBooking EventBooking? @relation(fields: [eventBookingId], references: [id], onDelete: SetNull)
 
@@ -1818,14 +2002,14 @@ model PrepaidCredit {
 // ===== E43-s1: Workforce Management =====
 
 model LeavePolicy {
-  id                     String   @id @default(cuid())
-  orgId                  String
-  name                   String
-  accrualHoursPerMonth   Decimal  @default(0) @db.Decimal(10, 2)
-  maxCarryOverHours      Decimal  @default(0) @db.Decimal(10, 2)
-  maxUninformedAbsences  Int      @default(0)
-  createdAt              DateTime @default(now())
-  updatedAt              DateTime @updatedAt
+  id                    String   @id @default(cuid())
+  orgId                 String
+  name                  String
+  accrualHoursPerMonth  Decimal  @default(0) @db.Decimal(10, 2)
+  maxCarryOverHours     Decimal  @default(0) @db.Decimal(10, 2)
+  maxUninformedAbsences Int      @default(0)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 
   @@index([orgId])
   @@map("leave_policies")
@@ -1887,10 +2071,10 @@ model ShiftSwap {
   createdAt    DateTime        @default(now())
   updatedAt    DateTime        @updatedAt
 
-  fromUser   User       @relation("SwapFrom", fields: [fromUserId], references: [id], onDelete: Cascade)
-  toUser     User       @relation("SwapTo", fields: [toUserId], references: [id], onDelete: Cascade)
-  dutyShift  DutyShift  @relation(fields: [dutyShiftId], references: [id], onDelete: Cascade)
-  approvedBy User?      @relation("ApprovedSwaps", fields: [approvedById], references: [id], onDelete: SetNull)
+  fromUser   User      @relation("SwapFrom", fields: [fromUserId], references: [id], onDelete: Cascade)
+  toUser     User      @relation("SwapTo", fields: [toUserId], references: [id], onDelete: Cascade)
+  dutyShift  DutyShift @relation(fields: [dutyShiftId], references: [id], onDelete: Cascade)
+  approvedBy User?     @relation("ApprovedSwaps", fields: [approvedById], references: [id], onDelete: SetNull)
 
   @@index([orgId, status])
   @@index([dutyShiftId])
@@ -1898,18 +2082,18 @@ model ShiftSwap {
 }
 
 model TimeEntry {
-  id               String          @id @default(cuid())
-  orgId            String
-  branchId         String
-  userId           String
-  clockInAt        DateTime
-  clockOutAt       DateTime?
-  method           TimeClockMethod
-  approved         Boolean         @default(false)
-  approvedById     String?
-  overtimeMinutes  Int             @default(0)
-  createdAt        DateTime        @default(now())
-  updatedAt        DateTime        @updatedAt
+  id              String          @id @default(cuid())
+  orgId           String
+  branchId        String
+  userId          String
+  clockInAt       DateTime
+  clockOutAt      DateTime?
+  method          TimeClockMethod
+  approved        Boolean         @default(false)
+  approvedById    String?
+  overtimeMinutes Int             @default(0)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
 
   user       User  @relation(fields: [userId], references: [id], onDelete: Cascade)
   approvedBy User? @relation("ApprovedTimeEntries", fields: [approvedById], references: [id], onDelete: SetNull)
@@ -1973,19 +2157,19 @@ model PayRun {
 }
 
 model PaySlip {
-  id               String    @id @default(cuid())
-  payRunId         String
-  userId           String
-  regularMinutes   Int       @default(0)
-  overtimeMinutes  Int       @default(0)
-  gross            Decimal   @default(0) @db.Decimal(12, 2)
-  tax              Decimal   @default(0) @db.Decimal(12, 2)
-  deductions       Decimal   @default(0) @db.Decimal(12, 2)
-  net              Decimal   @default(0) @db.Decimal(12, 2)
-  approvedById     String?
-  approvedAt       DateTime?
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
+  id              String    @id @default(cuid())
+  payRunId        String
+  userId          String
+  regularMinutes  Int       @default(0)
+  overtimeMinutes Int       @default(0)
+  gross           Decimal   @default(0) @db.Decimal(12, 2)
+  tax             Decimal   @default(0) @db.Decimal(12, 2)
+  deductions      Decimal   @default(0) @db.Decimal(12, 2)
+  net             Decimal   @default(0) @db.Decimal(12, 2)
+  approvedById    String?
+  approvedAt      DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
   payRun     PayRun @relation(fields: [payRunId], references: [id], onDelete: Cascade)
   user       User   @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -1996,16 +2180,16 @@ model PaySlip {
 }
 
 model PayComponent {
-  id      String            @id @default(cuid())
-  orgId   String
-  name    String
-  type    PayComponentType
-  calc    PayComponentCalc
-  value   Decimal           @db.Decimal(12, 2)
-  taxable Boolean           @default(true)
-  active  Boolean           @default(true)
-  createdAt DateTime        @default(now())
-  updatedAt DateTime        @updatedAt
+  id        String           @id @default(cuid())
+  orgId     String
+  name      String
+  type      PayComponentType
+  calc      PayComponentCalc
+  value     Decimal          @db.Decimal(12, 2)
+  taxable   Boolean          @default(true)
+  active    Boolean          @default(true)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
 
   @@index([orgId, active])
   @@map("pay_components")
@@ -2069,15 +2253,15 @@ model FlagAudit {
 // ===== E40-s2: Period Locks + Bank Reconciliation =====
 
 model FiscalPeriod {
-  id          String             @id @default(cuid())
-  orgId       String
-  name        String
-  startsAt    DateTime
-  endsAt      DateTime
-  status      FiscalPeriodStatus @default(OPEN)
-  lockedById  String?
-  lockedAt    DateTime?
-  createdAt   DateTime           @default(now())
+  id         String             @id @default(cuid())
+  orgId      String
+  name       String
+  startsAt   DateTime
+  endsAt     DateTime
+  status     FiscalPeriodStatus @default(OPEN)
+  lockedById String?
+  lockedAt   DateTime?
+  createdAt  DateTime           @default(now())
 
   @@index([orgId, status])
   @@index([orgId, startsAt, endsAt])
@@ -2092,7 +2276,7 @@ model BankAccount {
   lastFour     String?
   createdAt    DateTime @default(now())
 
-  statements BankStatement[]
+  statements   BankStatement[]
   transactions BankTxn[]
 
   @@index([orgId])
@@ -2100,16 +2284,16 @@ model BankAccount {
 }
 
 model BankStatement {
-  id            String    @id @default(cuid())
+  id            String   @id @default(cuid())
   bankAccountId String
   periodStart   DateTime
   periodEnd     DateTime
-  opening       Decimal   @db.Decimal(12, 2)
-  closing       Decimal   @db.Decimal(12, 2)
+  opening       Decimal  @db.Decimal(12, 2)
+  closing       Decimal  @db.Decimal(12, 2)
   source        String?
-  createdAt     DateTime  @default(now())
+  createdAt     DateTime @default(now())
 
-  bankAccount BankAccount @relation(fields: [bankAccountId], references: [id], onDelete: Cascade)
+  bankAccount  BankAccount @relation(fields: [bankAccountId], references: [id], onDelete: Cascade)
   transactions BankTxn[]
 
   @@index([bankAccountId, periodStart])
@@ -2117,18 +2301,18 @@ model BankStatement {
 }
 
 model BankTxn {
-  id            String    @id @default(cuid())
+  id            String   @id @default(cuid())
   bankAccountId String
   postedAt      DateTime
-  amount        Decimal   @db.Decimal(12, 2)
+  amount        Decimal  @db.Decimal(12, 2)
   description   String?
   ref           String?
   statementId   String?
-  reconciled    Boolean   @default(false)
-  createdAt     DateTime  @default(now())
+  reconciled    Boolean  @default(false)
+  createdAt     DateTime @default(now())
 
-  bankAccount BankAccount     @relation(fields: [bankAccountId], references: [id], onDelete: Cascade)
-  statement   BankStatement?  @relation(fields: [statementId], references: [id], onDelete: SetNull)
+  bankAccount BankAccount      @relation(fields: [bankAccountId], references: [id], onDelete: Cascade)
+  statement   BankStatement?   @relation(fields: [statementId], references: [id], onDelete: SetNull)
   matches     ReconcileMatch[]
 
   @@index([bankAccountId, postedAt])
@@ -2137,11 +2321,11 @@ model BankTxn {
 }
 
 model ReconcileMatch {
-  id         String           @id @default(cuid())
-  bankTxnId  String
-  source     ReconcileSource
-  sourceId   String
-  matchedAt  DateTime         @default(now())
+  id          String          @id @default(cuid())
+  bankTxnId   String
+  source      ReconcileSource
+  sourceId    String
+  matchedAt   DateTime        @default(now())
   matchedById String?
 
   bankTxn BankTxn @relation(fields: [bankTxnId], references: [id], onDelete: Cascade)

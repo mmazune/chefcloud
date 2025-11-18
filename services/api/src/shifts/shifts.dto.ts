@@ -1,4 +1,5 @@
-import { IsOptional, IsString, IsNumber, Min } from 'class-validator';
+import { IsOptional, IsString, IsNumber, Min, ValidateNested, IsNotEmpty } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class OpenShiftDto {
   @IsNumber()
@@ -10,6 +11,15 @@ export class OpenShiftDto {
   notes?: string;
 }
 
+/**
+ * M2-SHIFTS: Manager override for out-of-tolerance stock counts
+ */
+export class ShiftOverrideDto {
+  @IsString()
+  @IsNotEmpty()
+  reason!: string; // Required explanation for override
+}
+
 export class CloseShiftDto {
   @IsNumber()
   @Min(0)
@@ -18,4 +28,9 @@ export class CloseShiftDto {
   @IsOptional()
   @IsString()
   notes?: string;
+
+  @ValidateNested()
+  @Type(() => ShiftOverrideDto)
+  @IsOptional()
+  override?: ShiftOverrideDto; // M2-SHIFTS: If stock count is out of tolerance, manager can override
 }

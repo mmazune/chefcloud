@@ -169,4 +169,17 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
   get menuItem(): typeof prisma.menuItem {
     return prisma.menuItem;
   }
+
+  // M2-SHIFTS: New shift scheduling models
+  get shiftTemplate(): typeof prisma.shiftTemplate {
+    return prisma.shiftTemplate;
+  }
+
+  get shiftSchedule(): typeof prisma.shiftSchedule {
+    return prisma.shiftSchedule;
+  }
+
+  get shiftAssignment(): typeof prisma.shiftAssignment {
+    return prisma.shiftAssignment;
+  }
 }

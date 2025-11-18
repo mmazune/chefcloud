@@ -10,6 +10,9 @@ import {
 } from './anomaly-rules';
 import { initTelemetry } from './telemetry';
 import { logger } from './logger';
+import { generateShiftEndReport } from './report-helpers';
+import { generateShiftEndCSV } from './csv-helpers';
+import { generateShiftEndPDF } from './pdf-helpers';
 
 // Initialize telemetry before anything else
 initTelemetry();
@@ -63,11 +66,19 @@ interface SpoutConsumeJob {
 }
 
 interface OwnerDigestRunJob {
-  type: 'owner-digest-run' | 'owner-digest-shift-close';
+  type:
+    | 'owner-digest-run'
+    | 'owner-digest-shift-close'
+    | 'shift-end-report'
+    | 'period-digest';
   digestId?: string;
   orgId?: string;
   branchId?: string;
   shiftId?: string;
+  reportType?: 'DAILY_SUMMARY' | 'WEEKLY_SUMMARY' | 'MONTHLY_SUMMARY';
+  startDate?: string;
+  endDate?: string;
+  subscriptionId?: string;
 }
 
 interface SubscriptionRenewalJob {
@@ -822,6 +833,471 @@ const digestWorker = new Worker<OwnerDigestRunJob>(
       }
 
       return { success: true, sentCount: digests.length };
+    }
+
+    // M4: Handle new subscription-based shift-end reports
+    if (job.data.type === 'shift-end-report') {
+      const { orgId, branchId, shiftId } = job.data;
+      if (!orgId || !branchId || !shiftId) {
+        logger.error('orgId, branchId, and shiftId required for shift-end report');
+        return { success: false, error: 'orgId, branchId, and shiftId required' };
+      }
+
+      // Find active SHIFT_END subscriptions for this branch
+      const subscriptions = await prisma.reportSubscription.findMany({
+        where: {
+          orgId,
+          branchId,
+          reportType: 'SHIFT_END',
+          enabled: true,
+        },
+      });
+
+      if (subscriptions.length === 0) {
+        logger.info({ orgId, branchId }, 'No active shift-end report subscriptions for branch');
+        return { success: true, sentCount: 0 };
+      }
+
+      // Generate the comprehensive shift-end report using dedicated helpers
+      logger.info({ shiftId }, 'Generating shift-end report');
+      const reportData = await generateShiftEndReport(prisma, shiftId);
+
+      // Generate PDF and CSV
+      const now = new Date();
+      const pdfPath = `/tmp/shift-end-report-${shiftId}-${Date.now()}.pdf`;
+      const csvPath = `/tmp/shift-end-report-${shiftId}-${Date.now()}.csv`;
+
+      await generateShiftEndPDF(reportData, pdfPath);
+      logger.info({ pdfPath }, 'Shift-end report PDF generated');
+
+      const fs = await import('fs');
+      const csvContent = generateShiftEndCSV(reportData);
+      await fs.promises.writeFile(csvPath, csvContent, 'utf8');
+      logger.info({ csvPath }, 'Shift-end report CSV generated');
+
+      // Resolve recipients and send emails for each subscription
+      let sentCount = 0;
+      for (const subscription of subscriptions) {
+        // Resolve recipients based on recipientType
+        let recipients: string[] = [];
+
+        if (subscription.recipientType === 'USER' && subscription.recipientId) {
+          const user = await prisma.user.findUnique({
+            where: { id: subscription.recipientId },
+            select: { email: true },
+          });
+          if (user?.email) {
+            recipients.push(user.email);
+          }
+        } else if (subscription.recipientType === 'ROLE') {
+          // Query users by role level (L4+ = OWNER/MANAGER)
+          const roleUsers = await prisma.user.findMany({
+            where: {
+              orgId,
+              branchId: subscription.branchId || branchId,
+              roleLevel: { in: ['L4', 'L5'] }, // L4+ managers and owners
+            },
+            select: { email: true },
+          });
+          recipients = roleUsers.map((u) => u.email).filter(Boolean) as string[];
+        }
+
+        if (recipients.length === 0) {
+          logger.warn({ subscriptionId: subscription.id }, 'No recipients resolved for subscription');
+          continue;
+        }
+
+        // Build email attachments based on subscription preferences
+        const attachments: Array<{ filename: string; path: string }> = [];
+        if (subscription.includePDF) {
+          attachments.push({ filename: `shift-end-report-${shiftId}.pdf`, path: pdfPath });
+        }
+        if (subscription.includeCSVs) {
+          attachments.push({ filename: `shift-end-report-${shiftId}.csv`, path: csvPath });
+        }
+
+        // Send email with nodemailer
+        const nodemailer = await import('nodemailer');
+        const emailFrom = process.env.DIGEST_FROM_EMAIL || 'noreply@chefcloud.local';
+        const smtpHost = process.env.SMTP_HOST || 'localhost';
+        const smtpPort = parseInt(process.env.SMTP_PORT || '1025', 10);
+        const smtpUser = process.env.SMTP_USER || '';
+        const smtpPass = process.env.SMTP_PASS || '';
+        const smtpSecure = process.env.SMTP_SECURE === 'true';
+
+        const transporter = nodemailer.createTransport({
+          host: smtpHost,
+          port: smtpPort,
+          secure: smtpSecure,
+          auth: smtpUser
+            ? {
+                user: smtpUser,
+                pass: smtpPass,
+              }
+            : undefined,
+        });
+
+        const subject = `Shift-End Report - ${reportData.branchName} - ${now.toLocaleDateString()}`;
+        const textBody = `
+Shift-End Report for ${reportData.branchName}
+
+Shift ID: ${shiftId}
+Opened: ${reportData.openedAt.toLocaleString()} by ${reportData.openedBy}
+Closed: ${reportData.closedAt.toLocaleString()} by ${reportData.closedBy || 'N/A'}
+
+Summary:
+- Total Sales: ${reportData.sales.totalSales.toFixed(2)} UGX (${reportData.sales.totalOrders} orders)
+- Average Order Value: ${reportData.sales.avgOrderValue.toFixed(2)} UGX
+- KDS Tickets: ${reportData.kdsMetrics.totalTickets} (${reportData.kdsMetrics.slaMetrics.greenPct.toFixed(1)}% on-time)
+- Stock Variance: ${reportData.stock.totalVarianceValue.toFixed(2)} UGX
+- Wastage: ${reportData.stock.totalWastageValue.toFixed(2)} UGX
+
+See attached reports for detailed breakdowns.
+        `.trim();
+
+        const htmlBody = `
+          <h2>Shift-End Report - ${reportData.branchName}</h2>
+          <p><strong>Shift ID:</strong> ${shiftId}</p>
+          <p><strong>Opened:</strong> ${reportData.openedAt.toLocaleString()} by ${reportData.openedBy}</p>
+          <p><strong>Closed:</strong> ${reportData.closedAt.toLocaleString()} by ${reportData.closedBy || 'N/A'}</p>
+          
+          <h3>Sales Summary</h3>
+          <ul>
+            <li>Total Sales: ${reportData.sales.totalSales.toFixed(2)} UGX</li>
+            <li>Total Orders: ${reportData.sales.totalOrders}</li>
+            <li>Average Order Value: ${reportData.sales.avgOrderValue.toFixed(2)} UGX</li>
+          </ul>
+          
+          <h3>Kitchen/Bar Performance</h3>
+          <ul>
+            <li>Total Tickets: ${reportData.kdsMetrics.totalTickets}</li>
+            <li>On-Time (Green): ${reportData.kdsMetrics.slaMetrics.greenPct.toFixed(1)}%</li>
+            <li>Warning (Orange): ${reportData.kdsMetrics.slaMetrics.orangePct.toFixed(1)}%</li>
+            <li>Late (Red): ${reportData.kdsMetrics.slaMetrics.redPct.toFixed(1)}%</li>
+          </ul>
+          
+          <h3>Stock Management</h3>
+          <ul>
+            <li>Usage Value: ${reportData.stock.totalUsageValue.toFixed(2)} UGX</li>
+            <li>Variance: ${reportData.stock.totalVarianceValue.toFixed(2)} UGX</li>
+            <li>Wastage: ${reportData.stock.totalWastageValue.toFixed(2)} UGX</li>
+          </ul>
+          
+          <p>Please see attached reports for detailed breakdowns.</p>
+        `;
+
+        // Read attachments as buffers
+        const emailAttachments: Array<{ filename: string; content: Buffer; contentType: string }> = [];
+        if (subscription.includePDF) {
+          const pdfBuffer = await fs.promises.readFile(pdfPath);
+          emailAttachments.push({
+            filename: `shift-end-report-${shiftId}.pdf`,
+            content: pdfBuffer,
+            contentType: 'application/pdf',
+          });
+        }
+        if (subscription.includeCSVs) {
+          const csvBuffer = await fs.promises.readFile(csvPath);
+          emailAttachments.push({
+            filename: `shift-end-report-${shiftId}.csv`,
+            content: csvBuffer,
+            contentType: 'text/csv',
+          });
+        }
+
+        try {
+          await transporter.sendMail({
+            from: emailFrom,
+            to: recipients.join(', '),
+            subject,
+            text: textBody,
+            html: htmlBody,
+            attachments: emailAttachments,
+          });
+
+          logger.info(
+            { subscriptionId: subscription.id, recipients, attachments: attachments.map((a) => a.filename) },
+            'Shift-end report email sent'
+          );
+          sentCount++;
+        } catch (error) {
+          logger.error(
+            { subscriptionId: subscription.id, recipients, error },
+            'Failed to send shift-end report email'
+          );
+        }
+      }
+
+      return { success: true, sentCount };
+    }
+
+    // M4: Handle period digests (DAILY/WEEKLY/MONTHLY summaries)
+    if (job.data.type === 'period-digest') {
+      const { subscriptionId, orgId, branchId, reportType, startDate, endDate } = job.data;
+      if (!subscriptionId || !orgId || !reportType || !startDate || !endDate) {
+        logger.error('subscriptionId, orgId, reportType, startDate, and endDate required for period-digest');
+        return { success: false, error: 'Missing required fields for period-digest' };
+      }
+
+      const subscription = await prisma.reportSubscription.findUnique({
+        where: { id: subscriptionId },
+        include: {
+          org: true,
+          branch: true,
+          user: true,
+        },
+      });
+
+      if (!subscription) {
+        logger.error({ subscriptionId }, 'Report subscription not found');
+        return { success: false, error: 'Subscription not found' };
+      }
+
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      const now = new Date();
+
+      logger.info(
+        { subscriptionId, reportType, orgId, branchId, startDate, endDate },
+        'Generating period digest report',
+      );
+
+      // Query aggregated data for the period
+      const branches = branchId
+        ? [{ id: branchId }]
+        : await prisma.branch.findMany({
+            where: { orgId },
+            select: { id: true },
+          });
+      const branchIds = branches.map((b) => b.id);
+
+      // Sales for period
+      const salesResult = await prisma.payment.aggregate({
+        where: {
+          order: { branchId: { in: branchIds } },
+          createdAt: { gte: start, lte: end },
+        },
+        _sum: { amount: true },
+      });
+
+      const ordersCount = await prisma.order.count({
+        where: {
+          branchId: { in: branchIds },
+          createdAt: { gte: start, lte: end },
+        },
+      });
+
+      // Anomalies for period
+      const anomaliesCount = await prisma.anomalyEvent.count({
+        where: {
+          branchId: branchId ? { equals: branchId } : { in: branchIds },
+          occurredAt: { gte: start, lte: end },
+        },
+      });
+
+      // Wastage for period
+      const wastageRecords = await prisma.wastage.findMany({
+        where: {
+          branchId: branchId ? { equals: branchId } : { in: branchIds },
+          createdAt: { gte: start, lte: end },
+        },
+        select: {
+          qty: true,
+        },
+      });
+      const totalWastageQty = wastageRecords.reduce((sum: number, w) => sum + Number(w.qty), 0);
+      const estimatedWastageCost = totalWastageQty * 5000; // 5000 UGX/unit estimate
+
+      // Generate PDF
+      const PDFDocument = (await import('pdfkit')).default;
+      const fs = await import('fs');
+      const path = await import('path');
+
+      const pdfDir = '/tmp';
+      const pdfFilename = `period-digest-${reportType}-${subscriptionId}-${Date.now()}.pdf`;
+      const pdfPath = path.join(pdfDir, pdfFilename);
+      const doc = new PDFDocument();
+      const writeStream = fs.createWriteStream(pdfPath);
+
+      doc.pipe(writeStream);
+
+      doc.fontSize(20).text(`${reportType.replace('_', ' ')} Report`, { align: 'center' });
+      doc.moveDown();
+      doc.fontSize(12).text(`Organization: ${subscription.org.name}`);
+      if (subscription.branch) {
+        doc.text(`Branch: ${subscription.branch.name}`);
+      }
+      doc.text(`Period: ${start.toLocaleDateString()} - ${end.toLocaleDateString()}`);
+      doc.text(`Generated: ${now.toISOString()}`);
+      doc.moveDown();
+
+      doc.fontSize(14).text('Sales Summary', { underline: true });
+      doc.fontSize(12).text(`Total Sales: ${salesResult._sum?.amount?.toString() || '0'} UGX`);
+      doc.text(`Total Orders: ${ordersCount}`);
+      if (ordersCount > 0) {
+        const avgOrder = Number(salesResult._sum?.amount || 0) / ordersCount;
+        doc.text(`Average Order Value: ${avgOrder.toFixed(2)} UGX`);
+      }
+      doc.moveDown();
+
+      doc.fontSize(14).text('Operational Metrics', { underline: true });
+      doc.fontSize(12).text(`Anomalies Detected: ${anomaliesCount}`);
+      doc.text(`Wastage Quantity: ${totalWastageQty.toFixed(2)} units`);
+      doc.text(`Estimated Wastage Cost: ${estimatedWastageCost.toFixed(2)} UGX`);
+      doc.moveDown();
+
+      doc.fontSize(10).text(`Report ID: ${job.id}`, { align: 'right' });
+
+      doc.end();
+
+      await new Promise<void>((resolve, reject) => {
+        writeStream.on('finish', resolve);
+        writeStream.on('error', reject);
+      });
+
+      logger.info({ pdfPath, subscriptionId }, 'Period digest PDF generated');
+
+      // Generate CSV if requested
+      let csvPath: string | null = null;
+      if (subscription.includeCSVs) {
+        const csvFilename = `period-digest-${reportType}-${subscriptionId}-${Date.now()}.csv`;
+        csvPath = path.join(pdfDir, csvFilename);
+
+        const csvContent = [
+          'Metric,Value',
+          `Report Type,${reportType}`,
+          `Organization,${subscription.org.name}`,
+          `Branch,${subscription.branch?.name || 'All Branches'}`,
+          `Start Date,${start.toISOString()}`,
+          `End Date,${end.toISOString()}`,
+          `Total Sales,${salesResult._sum?.amount || 0}`,
+          `Total Orders,${ordersCount}`,
+          `Average Order Value,${ordersCount > 0 ? (Number(salesResult._sum?.amount || 0) / ordersCount).toFixed(2) : 0}`,
+          `Anomalies,${anomaliesCount}`,
+          `Wastage Quantity,${totalWastageQty.toFixed(2)}`,
+          `Wastage Cost,${estimatedWastageCost.toFixed(2)}`,
+        ].join('\n');
+
+        await fs.promises.writeFile(csvPath, csvContent, 'utf8');
+        logger.info({ csvPath, subscriptionId }, 'Period digest CSV generated');
+      }
+
+      // Resolve recipients
+      const recipients: string[] = [];
+      if (subscription.recipientType === 'USER' && subscription.user?.email) {
+        recipients.push(subscription.user.email);
+      } else if (subscription.recipientType === 'ROLE') {
+        const roleUsers = await prisma.user.findMany({
+          where: {
+            orgId: subscription.orgId,
+            roleLevel: { in: ['L4', 'L5'] }, // L4+ = OWNER/MANAGER
+          },
+          select: { email: true },
+        });
+        recipients.push(...roleUsers.map((u) => u.email).filter(Boolean));
+      }
+
+      if (recipients.length === 0) {
+        logger.warn({ subscriptionId }, 'No recipients found for period digest');
+        return { success: true, sentCount: 0 };
+      }
+
+      // Send email
+      const nodemailer = await import('nodemailer');
+      const emailFrom = process.env.DIGEST_FROM_EMAIL || 'noreply@chefcloud.local';
+      const smtpHost = process.env.SMTP_HOST || 'localhost';
+      const smtpPort = parseInt(process.env.SMTP_PORT || '1025', 10);
+      const smtpUser = process.env.SMTP_USER || '';
+      const smtpPass = process.env.SMTP_PASS || '';
+      const smtpSecure = process.env.SMTP_SECURE === 'true';
+
+      const transporter = nodemailer.createTransport({
+        host: smtpHost,
+        port: smtpPort,
+        secure: smtpSecure,
+        auth: smtpUser
+          ? {
+              user: smtpUser,
+              pass: smtpPass,
+            }
+          : undefined,
+      });
+
+      const subject = `${reportType.replace('_', ' ')} - ${subscription.org.name} - ${start.toLocaleDateString()}`;
+      const textBody = `
+${reportType.replace('_', ' ')} for ${subscription.org.name}
+
+Period: ${start.toLocaleDateString()} - ${end.toLocaleDateString()}
+
+Summary:
+- Total Sales: ${salesResult._sum?.amount?.toFixed(2) || '0'} UGX (${ordersCount} orders)
+- Anomalies: ${anomaliesCount}
+- Wastage: ${totalWastageQty.toFixed(2)} units (${estimatedWastageCost.toFixed(2)} UGX)
+
+See attached reports for detailed breakdowns.
+      `.trim();
+
+      const htmlBody = `
+        <h2>${reportType.replace('_', ' ')} - ${subscription.org.name}</h2>
+        <p><strong>Period:</strong> ${start.toLocaleDateString()} - ${end.toLocaleDateString()}</p>
+        
+        <h3>Sales Summary</h3>
+        <ul>
+          <li>Total Sales: ${Number(salesResult._sum?.amount || 0).toFixed(2)} UGX</li>
+          <li>Total Orders: ${ordersCount}</li>
+          <li>Average Order Value: ${ordersCount > 0 ? (Number(salesResult._sum?.amount || 0) / ordersCount).toFixed(2) : '0'} UGX</li>
+        </ul>
+        
+        <h3>Operational Metrics</h3>
+        <ul>
+          <li>Anomalies: ${anomaliesCount}</li>
+          <li>Wastage Quantity: ${totalWastageQty.toFixed(2)} units</li>
+          <li>Wastage Cost: ${estimatedWastageCost.toFixed(2)} UGX</li>
+        </ul>
+        
+        <p>Please see attached reports for detailed breakdowns.</p>
+      `;
+
+      const emailAttachments: Array<{ filename: string; content: Buffer; contentType: string }> = [];
+      if (subscription.includePDF) {
+        const pdfBuffer = await fs.promises.readFile(pdfPath);
+        emailAttachments.push({
+          filename: `${reportType.toLowerCase()}-${start.toISOString().split('T')[0]}.pdf`,
+          content: pdfBuffer,
+          contentType: 'application/pdf',
+        });
+      }
+      if (subscription.includeCSVs && csvPath) {
+        const csvBuffer = await fs.promises.readFile(csvPath);
+        emailAttachments.push({
+          filename: `${reportType.toLowerCase()}-${start.toISOString().split('T')[0]}.csv`,
+          content: csvBuffer,
+          contentType: 'text/csv',
+        });
+      }
+
+      try {
+        await transporter.sendMail({
+          from: emailFrom,
+          to: recipients.join(', '),
+          subject,
+          text: textBody,
+          html: htmlBody,
+          attachments: emailAttachments,
+        });
+
+        logger.info(
+          { subscriptionId, recipients, reportType },
+          'Period digest email sent',
+        );
+      } catch (error) {
+        logger.error(
+          { subscriptionId, recipients, reportType, error },
+          'Failed to send period digest email',
+        );
+      }
+
+      return { success: true, sentCount: 1 };
     }
 
     // Regular digest (scheduled)
@@ -1977,6 +2453,116 @@ scheduleReservationAutoCancel().catch(console.error);
 scheduleReservationReminders().catch(console.error);
 scheduleSpoutConsume().catch(console.error);
 
+// ===========================================================================
+// M4: SCHEDULED DIGEST HELPERS
+// ===========================================================================
+
+/**
+ * Calculate date range for a period digest based on report type and timezone
+ */
+function calculateDateRange(
+  reportType: 'DAILY_SUMMARY' | 'WEEKLY_SUMMARY' | 'MONTHLY_SUMMARY',
+  _timezone: string = 'Africa/Kampala', // eslint-disable-line @typescript-eslint/no-unused-vars
+): { startDate: Date; endDate: Date } {
+  const now = new Date();
+
+  // For simplicity, use UTC-based calculations
+  // In production, use a library like date-fns-tz for proper timezone handling
+  // TODO: Implement proper timezone conversion using date-fns-tz
+
+  if (reportType === 'DAILY_SUMMARY') {
+    // Previous day: 00:00:00 to 23:59:59
+    const startDate = new Date(now);
+    startDate.setDate(startDate.getDate() - 1);
+    startDate.setHours(0, 0, 0, 0);
+
+    const endDate = new Date(startDate);
+    endDate.setHours(23, 59, 59, 999);
+
+    return { startDate, endDate };
+  }
+
+  if (reportType === 'WEEKLY_SUMMARY') {
+    // Previous week: Monday 00:00:00 to Sunday 23:59:59
+    const startDate = new Date(now);
+    const dayOfWeek = startDate.getDay();
+    const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Sunday = 0
+    startDate.setDate(startDate.getDate() - daysToMonday - 7); // Go back to last Monday
+    startDate.setHours(0, 0, 0, 0);
+
+    const endDate = new Date(startDate);
+    endDate.setDate(endDate.getDate() + 6); // Sunday
+    endDate.setHours(23, 59, 59, 999);
+
+    return { startDate, endDate };
+  }
+
+  if (reportType === 'MONTHLY_SUMMARY') {
+    // Previous month: 1st 00:00:00 to last day 23:59:59
+    const startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1, 0, 0, 0, 0);
+    const endDate = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+
+    return { startDate, endDate };
+  }
+
+  throw new Error(`Unsupported report type: ${reportType}`);
+}
+
+/**
+ * Check if a scheduled digest should run now based on report type
+ */
+function shouldRunScheduledDigest(
+  reportType: 'DAILY_SUMMARY' | 'WEEKLY_SUMMARY' | 'MONTHLY_SUMMARY',
+  lastRunAt: Date | null,
+): boolean {
+  const now = new Date();
+
+  if (reportType === 'DAILY_SUMMARY') {
+    // Run daily at 06:00 (6 AM)
+    const targetHour = 6;
+    if (now.getHours() !== targetHour) return false;
+
+    // Check if already ran in the last hour
+    if (lastRunAt && now.getTime() - lastRunAt.getTime() < 60 * 60 * 1000) {
+      return false;
+    }
+
+    return true;
+  }
+
+  if (reportType === 'WEEKLY_SUMMARY') {
+    // Run every Monday at 07:00 (7 AM)
+    const targetDay = 1; // Monday
+    const targetHour = 7;
+
+    if (now.getDay() !== targetDay || now.getHours() !== targetHour) return false;
+
+    // Check if already ran in the last hour
+    if (lastRunAt && now.getTime() - lastRunAt.getTime() < 60 * 60 * 1000) {
+      return false;
+    }
+
+    return true;
+  }
+
+  if (reportType === 'MONTHLY_SUMMARY') {
+    // Run on 1st of each month at 08:00 (8 AM)
+    const targetDate = 1;
+    const targetHour = 8;
+
+    if (now.getDate() !== targetDate || now.getHours() !== targetHour) return false;
+
+    // Check if already ran in the last hour
+    if (lastRunAt && now.getTime() - lastRunAt.getTime() < 60 * 60 * 1000) {
+      return false;
+    }
+
+    return true;
+  }
+
+  return false;
+}
+
 // E40: Schedule accounting reminders daily at 08:00
 async function scheduleAccountingReminders() {
   await accountingRemindersQueue.add(
@@ -2052,6 +2638,91 @@ async function scheduleOwnerDigestCron() {
 }
 
 scheduleOwnerDigestCron().catch(console.error);
+
+// M4: Schedule periodic digest cron job - runs every minute to check subscriptions
+async function schedulePeriodicDigestCron() {
+  setInterval(async () => {
+    try {
+      const now = new Date();
+
+      // Get all enabled periodic report subscriptions
+      const subscriptions = await prisma.reportSubscription.findMany({
+        where: {
+          enabled: true,
+          reportType: {
+            in: ['DAILY_SUMMARY', 'WEEKLY_SUMMARY', 'MONTHLY_SUMMARY'],
+          },
+        },
+        include: {
+          org: true,
+        },
+      });
+
+      for (const subscription of subscriptions) {
+        try {
+          const reportType = subscription.reportType as
+            | 'DAILY_SUMMARY'
+            | 'WEEKLY_SUMMARY'
+            | 'MONTHLY_SUMMARY';
+
+          // Check if this digest should run now
+          if (!shouldRunScheduledDigest(reportType, subscription.lastRunAt)) {
+            continue;
+          }
+
+          // Calculate date range for the period
+          const { startDate, endDate } = calculateDateRange(
+            reportType,
+            'Africa/Kampala', // Default timezone
+          );
+
+          // Enqueue period-digest job
+          await digestQueue.add('period-digest', {
+            type: 'period-digest',
+            subscriptionId: subscription.id,
+            orgId: subscription.orgId,
+            branchId: subscription.branchId || undefined,
+            reportType,
+            startDate: startDate.toISOString(),
+            endDate: endDate.toISOString(),
+          });
+
+          // Update lastRunAt to prevent duplicate runs
+          await prisma.reportSubscription.update({
+            where: { id: subscription.id },
+            data: { lastRunAt: now },
+          });
+
+          logger.info(
+            {
+              subscriptionId: subscription.id,
+              reportType,
+              orgId: subscription.orgId,
+              branchId: subscription.branchId,
+              dateRange: { startDate, endDate },
+            },
+            'Enqueued periodic digest',
+          );
+        } catch (err) {
+          logger.error(
+            {
+              subscriptionId: subscription.id,
+              reportType: subscription.reportType,
+              error: err,
+            },
+            'Failed to process periodic digest',
+          );
+        }
+      }
+    } catch (err) {
+      logger.error({ error: err }, 'Error in periodic digest cron scheduler');
+    }
+  }, 60000); // Run every minute
+
+  console.log('Scheduled periodic digest cron checker (every minute)');
+}
+
+schedulePeriodicDigestCron().catch(console.error);
 
 console.log(
   '🚀 ChefCloud Worker started - listening for jobs on "reports", "payments", "efris", "anomalies", "alerts", "reservations", "reservation-reminders", "spout-consume", "digest", "subscription-renewals", "subscription-reminders-billing", "forecast-build", and "rank-branches" queues',
