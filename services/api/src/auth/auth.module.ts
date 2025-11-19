@@ -7,6 +7,8 @@ import { JwtStrategy } from './jwt.strategy';
 import { PrismaService } from '../prisma.service';
 import { WorkforceModule } from '../workforce/workforce.module';
 import { SessionInvalidationService } from './session-invalidation.service';
+import { SessionsService } from './sessions.service'; // M10
+import { MsrCardService } from './msr-card.service'; // M10
 import { RedisService } from '../common/redis.service';
 
 @Module({
@@ -19,7 +21,15 @@ import { RedisService } from '../common/redis.service';
     forwardRef(() => WorkforceModule),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, PrismaService, SessionInvalidationService, RedisService],
-  exports: [AuthService, JwtStrategy, SessionInvalidationService],
+  providers: [
+    AuthService,
+    JwtStrategy,
+    PrismaService,
+    SessionInvalidationService,
+    SessionsService, // M10
+    MsrCardService, // M10
+    RedisService,
+  ],
+  exports: [AuthService, JwtStrategy, SessionInvalidationService, SessionsService, MsrCardService], // M10
 })
 export class AuthModule {}

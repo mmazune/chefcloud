@@ -9,10 +9,13 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma.service';
 import { AuthHelpers } from './auth.helpers';
-import { LoginDto, PinLoginDto, MsrSwipeDto, AuthResponse } from './dto/auth.dto';
+import { LoginDto, PinLoginDto, MsrSwipeDto, AuthResponse, SessionPlatform } from './dto/auth.dto';
 import { JwtPayload } from './jwt.strategy';
 import { WorkforceService } from '../workforce/workforce.service';
 import { SessionInvalidationService } from './session-invalidation.service';
+import { SessionsService } from './sessions.service';
+import { MsrCardService } from './msr-card.service';
+import { SessionSource } from './session-policies';
 import { randomBytes } from 'crypto';
 
 /**
@@ -45,12 +48,14 @@ export class AuthService {
     @Inject(forwardRef(() => WorkforceService))
     private workforceService: WorkforceService,
     private sessionInvalidation: SessionInvalidationService,
+    private sessionsService: SessionsService, // M10: Session lifecycle management
+    private msrCardService: MsrCardService, // M10: MSR card management
   ) {}
 
   async login(loginDto: LoginDto): Promise<AuthResponse> {
     const user = await this.prisma.client.user.findUnique({
       where: { email: loginDto.email },
-      include: { org: true, branch: true },
+      include: { org: true, branch: true, employee: true },
     });
 
     if (!user || !user.passwordHash) {
@@ -70,7 +75,15 @@ export class AuthService {
     // Log auth event
     await this.createAuditEvent(user.id, user.orgId, user.branchId, 'auth.login');
 
-    return this.generateAuthResponse(user);
+    // M10: Default platform for password login is WEB_BACKOFFICE
+    const platform = loginDto.platform || SessionPlatform.WEB_BACKOFFICE;
+    const employeeId = user.employee?.id;
+
+    return this.generateAuthResponse(user, {
+      platform,
+      source: SessionSource.PASSWORD,
+      employeeId,
+    });
   }
 
   async pinLogin(pinLoginDto: PinLoginDto): Promise<AuthResponse> {
@@ -78,7 +91,7 @@ export class AuthService {
       where: { employeeCode: pinLoginDto.employeeCode },
       include: {
         user: {
-          include: { org: true, branch: true },
+          include: { org: true, branch: true, employee: true },
         },
       },
     });
@@ -111,7 +124,15 @@ export class AuthService {
     // Log auth event
     await this.createAuditEvent(user.id, user.orgId, user.branchId, 'auth.pin_login');
 
-    return this.generateAuthResponse(user);
+    // M10: Default platform for PIN login is POS_DESKTOP
+    const platform = pinLoginDto.platform || SessionPlatform.POS_DESKTOP;
+    const employeeId = user.employee?.id;
+
+    return this.generateAuthResponse(user, {
+      platform,
+      source: SessionSource.PIN,
+      employeeId,
+    });
   }
 
   async msrSwipe(msrSwipeDto: MsrSwipeDto): Promise<AuthResponse> {
@@ -122,57 +143,63 @@ export class AuthService {
       throw new BadRequestException('Payment card data rejected');
     }
 
-    // Parse CLOUDBADGE format
-    const badgeCode = parseBadgeCode(rawData);
-    if (!badgeCode) {
-      throw new BadRequestException('Invalid badge format. Expected: CLOUDBADGE:<CODE>');
-    }
-
-    // Check BadgeAsset state enforcement
-    const badgeAsset = await this.prisma.client.badgeAsset.findUnique({
-      where: { code: badgeCode },
-    });
-
-    if (badgeAsset) {
-      // Deny if badge is REVOKED or LOST
-      if (badgeAsset.state === 'REVOKED') {
-        throw new UnauthorizedException('Badge has been revoked');
+    // M10: Try new MsrCard model first, fall back to legacy EmployeeProfile.badgeId
+    let authResult;
+    try {
+      authResult = await this.msrCardService.authenticateByCard(rawData);
+    } catch (legacyError) {
+      // Fall back to legacy badge lookup for backward compatibility
+      const badgeCode = parseBadgeCode(rawData);
+      if (!badgeCode) {
+        throw new BadRequestException('Invalid badge format. Expected: CLOUDBADGE:<CODE>');
       }
-      if (badgeAsset.state === 'LOST') {
-        throw new UnauthorizedException('Badge reported as lost');
-      }
-    }
 
-    const employeeProfile = await this.prisma.client.employeeProfile.findUnique({
-      where: { badgeId: badgeCode },
-      include: {
-        user: {
-          include: { org: true, branch: true },
+      // Check BadgeAsset state enforcement (legacy)
+      const badgeAsset = await this.prisma.client.badgeAsset.findUnique({
+        where: { code: badgeCode },
+      });
+
+      if (badgeAsset) {
+        if (badgeAsset.state === 'REVOKED') {
+          throw new UnauthorizedException('Badge has been revoked');
+        }
+        if (badgeAsset.state === 'LOST') {
+          throw new UnauthorizedException('Badge reported as lost');
+        }
+
+        // Update last used
+        await this.prisma.client.badgeAsset.update({
+          where: { code: badgeCode },
+          data: { lastUsedAt: new Date() },
+        });
+      }
+
+      // Lookup via EmployeeProfile (legacy)
+      const employeeProfile = await this.prisma.client.employeeProfile.findUnique({
+        where: { badgeId: badgeCode },
+        include: {
+          user: {
+            include: { org: true, branch: true, employee: true },
+          },
         },
-      },
-    });
+      });
 
-    if (!employeeProfile) {
-      throw new NotFoundException('Badge ID not found');
+      if (!employeeProfile) {
+        throw legacyError; // Throw original MsrCard error
+      }
+
+      authResult = {
+        card: null,
+        employee: employeeProfile.user.employee || null,
+        user: employeeProfile.user,
+      };
     }
 
-    const user = employeeProfile.user;
-
-    if (!user.isActive) {
-      throw new UnauthorizedException('User account is disabled');
-    }
+    const { user, employee } = authResult;
 
     // Optionally verify branch if provided
     if (msrSwipeDto.branchId && user.branchId !== msrSwipeDto.branchId) {
       throw new UnauthorizedException('Employee not assigned to this branch');
-    }
-
-    // Update BadgeAsset lastUsedAt on successful login
-    if (badgeAsset) {
-      await this.prisma.client.badgeAsset.update({
-        where: { code: badgeCode },
-        data: { lastUsedAt: new Date() },
-      });
     }
 
     // Log auth event
@@ -181,8 +208,15 @@ export class AuthService {
     // E43-s1: Auto-clock-in if enabled
     await this.autoClockIn(user.id, user.orgId, user.branchId, 'MSR');
 
-    // E25: Pass badgeId to include in JWT payload
-    return this.generateAuthResponse(user, badgeCode);
+    // M10: Default platform for MSR login is POS_DESKTOP
+    const platform = msrSwipeDto.platform || SessionPlatform.POS_DESKTOP;
+
+    return this.generateAuthResponse(user, {
+      platform,
+      source: SessionSource.MSR_CARD,
+      employeeId: employee?.id,
+      badgeId: rawData, // Store raw badge identifier (will be hashed in session if needed)
+    });
   }
 
   async enrollBadge(
@@ -252,7 +286,15 @@ export class AuthService {
       branchId: string | null;
       sessionVersion?: number;
     },
-    badgeId?: string,
+    sessionContext?: {
+      platform: SessionPlatform;
+      source: SessionSource;
+      employeeId?: string;
+      badgeId?: string;
+      deviceId?: string;
+      ipAddress?: string;
+      userAgent?: string;
+    },
   ): Promise<AuthResponse> {
     // E25: Get current session version
     const sessionVersion =
@@ -261,6 +303,24 @@ export class AuthService {
     // E25: Generate unique JWT ID for deny list tracking
     const jti = randomBytes(16).toString('hex');
 
+    // M10: Create session if context provided
+    let session;
+    if (sessionContext) {
+      session = await this.sessionsService.createSession({
+        userId: user.id,
+        orgId: user.orgId,
+        branchId: user.branchId ?? undefined,
+        employeeId: sessionContext.employeeId,
+        platform: sessionContext.platform,
+        source: sessionContext.source,
+        deviceId: sessionContext.deviceId,
+        badgeId: sessionContext.badgeId,
+        ipAddress: sessionContext.ipAddress,
+        userAgent: sessionContext.userAgent,
+        jti,
+      });
+    }
+
     const payload: JwtPayload = {
       sub: user.id,
       email: user.email,
@@ -268,7 +328,9 @@ export class AuthService {
       roleLevel: user.roleLevel,
       sv: sessionVersion, // E25: Session version
       jti, // E25: JWT ID
-      ...(badgeId && { badgeId }), // E25: Include badge ID if authenticated via badge
+      ...(sessionContext?.badgeId && { badgeId: sessionContext.badgeId }), // E25: Include badge ID if authenticated via badge
+      ...(session && { sessionId: session.id }), // M10: Session ID for lifecycle tracking
+      ...(sessionContext && { platform: sessionContext.platform }), // M10: Platform for enforcement
     };
 
     return {
@@ -282,6 +344,13 @@ export class AuthService {
         orgId: user.orgId,
         branchId: user.branchId ?? undefined,
       },
+      ...(session && {
+        session: {
+          id: session.id,
+          platform: session.platform,
+          expiresAt: session.expiresAt.toISOString(),
+        },
+      }),
     };
   }
 

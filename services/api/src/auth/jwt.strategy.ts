@@ -3,6 +3,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PrismaService } from '../prisma.service';
 import { SessionInvalidationService } from './session-invalidation.service';
+import { SessionsService } from './sessions.service';
 
 export interface JwtPayload {
   sub: string;
@@ -12,6 +13,8 @@ export interface JwtPayload {
   sv?: number;      // E25: Session version for revocation
   badgeId?: string; // E25: Badge ID if authenticated via badge swipe
   jti?: string;     // E25: JWT ID for deny list lookup
+  sessionId?: string; // M10: Session ID for lifecycle tracking
+  platform?: string; // M10: Platform (WEB_BACKOFFICE, POS_DESKTOP, etc.)
 }
 
 @Injectable()
@@ -19,6 +22,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
     private prisma: PrismaService,
     private sessionInvalidation: SessionInvalidationService,
+    private sessionsService: SessionsService, // M10
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -34,6 +38,23 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       const isDenied = await this.sessionInvalidation.isDenied(payload.jti);
       if (isDenied) {
         throw new UnauthorizedException('Session has been revoked');
+      }
+    }
+
+    // M10: Validate session if sessionId present
+    if (payload.sessionId) {
+      const validation = await this.sessionsService.validateSession(payload.sessionId);
+      if (!validation.valid) {
+        throw new UnauthorizedException(validation.reason || 'Session invalid');
+      }
+
+      // Touch session if throttle period elapsed (updates lastActivityAt)
+      if (validation.shouldTouch) {
+        // Fire and forget - don't await to avoid slowing down request
+        this.sessionsService.touchSession(payload.sessionId).catch(err => {
+          // Log error but don't fail the request
+          console.error('Failed to touch session:', err);
+        });
       }
     }
 
@@ -62,6 +83,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       roleLevel: user.roleLevel,
       org: user.org,
       branch: user.branch,
+      sessionId: payload.sessionId, // M10: Pass sessionId to request context
+      platform: payload.platform, // M10: Pass platform to request context
     };
   }
 }
