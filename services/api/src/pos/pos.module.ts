@@ -9,6 +9,7 @@ import { InventoryModule } from '../inventory/inventory.module';
 import { KpisModule } from '../kpis/kpis.module';
 import { PromotionsModule } from '../promotions/promotions.module';
 import { AccountingModule } from '../accounting/accounting.module';
+import { CommonModule } from '../common/common.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { AccountingModule } from '../accounting/accounting.module';
     KpisModule,
     PromotionsModule,
     AccountingModule,
+    CommonModule,
   ],
   controllers: [PosController],
   providers: [PosService, PrismaService],

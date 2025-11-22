@@ -182,4 +182,32 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
   get shiftAssignment(): typeof prisma.shiftAssignment {
     return prisma.shiftAssignment;
   }
+
+  // M9: HR models
+  get employee(): typeof prisma.employee {
+    return prisma.employee;
+  }
+
+  get attendanceRecord(): typeof prisma.attendanceRecord {
+    return prisma.attendanceRecord;
+  }
+
+  get dutyShift(): typeof prisma.dutyShift {
+    return prisma.dutyShift;
+  }
+
+  // M19: Staff insights
+  get staffAward(): typeof prisma.staffAward {
+    return prisma.staffAward;
+  }
+
+  // M20: Customer feedback
+  get feedback(): typeof prisma.feedback {
+    return prisma.feedback;
+  }
+
+  // M21: Idempotency keys
+  get idempotencyKey(): typeof prisma.idempotencyKey {
+    return prisma.idempotencyKey;
+  }
 }

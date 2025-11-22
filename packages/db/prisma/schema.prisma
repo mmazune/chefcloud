@@ -81,6 +81,23 @@ enum PaymentMethod {
   MOMO
 }
 
+enum DocumentCategory {
+  INVOICE
+  STOCK_RECEIPT
+  CONTRACT
+  HR_DOC
+  BANK_STATEMENT
+  PAYSLIP
+  RESERVATION_DOC
+  OTHER
+}
+
+enum StorageProvider {
+  LOCAL
+  S3
+  GCS
+}
+
 enum BadgeState {
   ACTIVE
   REVOKED
@@ -184,6 +201,22 @@ enum TimeClockMethod {
   PASSWORD
 }
 
+enum FeedbackChannel {
+  POS // In-person tablet at POS terminal
+  PORTAL // Customer web portal
+  EMAIL // Email survey link
+  QR // QR code on printed receipt
+  SMS // SMS survey link
+  KIOSK // Self-service kiosk
+  OTHER // Default/unknown channel
+}
+
+enum NpsCategory {
+  DETRACTOR // 0-6: Unhappy customers likely to churn
+  PASSIVE // 7-8: Satisfied but not enthusiastic
+  PROMOTER // 9-10: Loyal enthusiasts who will recommend
+}
+
 // ===== Organization & Multi-tenancy =====
 
 model Org {
@@ -223,6 +256,10 @@ model Org {
   opsBudgets          OpsBudget[] // M7: Operations budgets
   costInsights        CostInsight[] // M7: Cost-cutting insights
   sessions            Session[] // M10: Auth sessions
+  documents            Document[]            // M18: Document storage
+  staffAwards          StaffAward[]          // M19: Staff awards
+  Feedback             Feedback[]
+  promotionSuggestions PromotionSuggestion[] // M22: Promotion suggestions
 
   @@map("orgs")
 }
@@ -297,6 +334,10 @@ model Branch {
   opsBudgets          OpsBudget[] // M7: Operations budgets
   costInsights        CostInsight[] // M7: Cost-cutting insights
   sessions            Session[] // M10: Auth sessions
+  documents            Document[]            // M18: Document storage
+  staffAwards          StaffAward[]          // M19: Staff awards
+  Feedback             Feedback[]
+  promotionSuggestions PromotionSuggestion[] // M22: Promotion suggestions
 
   @@index([orgId, id])
   @@map("branches")
@@ -366,6 +407,11 @@ model User {
   revokedSessions           Session[]                @relation("SessionRevokedBy") // M10: Sessions revoked by this user
   assignedMsrCards          MsrCard[]                @relation("MsrCardAssignedBy") // M10: MSR cards assigned by this user
   revokedMsrCards           MsrCard[]                @relation("MsrCardRevokedBy") // M10: MSR cards revoked by this user
+  uploadedDocuments         Document[]               @relation("DocumentUploader") // M18: Documents uploaded by this user
+  createdAwards             StaffAward[]             @relation("CreatedAwards") // M19: Staff awards created by this user
+  feedbackSubmitted         Feedback[]               @relation("UserFeedback") // M20: Feedback submitted by this user
+  suggestionsCreated        PromotionSuggestion[]    @relation("SuggestionCreators") // M22: Promotion suggestions created by this user
+  suggestionsDecided        PromotionSuggestion[]    @relation("SuggestionDecisions") // M22: Promotion suggestions decided by this user
 
   @@index([orgId, id])
   @@map("users")
@@ -629,6 +675,8 @@ model Reservation {
   table         Table?                @relation(fields: [tableId], references: [id], onDelete: SetNull)
   paymentIntent PaymentIntent?        @relation(fields: [paymentIntentId], references: [id], onDelete: SetNull)
   reminders     ReservationReminder[]
+  documents     Document[]
+  feedback      Feedback? // M20: Customer feedback for this reservation
 
   @@index([orgId])
   @@index([branchId])
@@ -782,6 +830,7 @@ model Order {
   kdsTickets     KdsTicket[]
   discounts      Discount[]
   stockMovements StockMovement[] // M3: Stock movements from this order
+  Feedback       Feedback?
 
   @@unique([branchId, orderNumber])
   @@index([branchId])
@@ -1099,18 +1148,19 @@ model WebhookEvent {
 }
 
 model FiscalInvoice {
-  id          String    @id @default(cuid())
+  id          String     @id @default(cuid())
   orgId       String
   branchId    String
-  orderId     String    @unique
-  status      String    @default("PENDING") // PENDING | SENT | FAILED
+  orderId     String     @unique
+  status      String     @default("PENDING") // PENDING | SENT | FAILED
   efirsTin    String?
   deviceCode  String?
   response    Json?
-  attempts    Int       @default(0)
+  attempts    Int        @default(0)
   lastTriedAt DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  documents   Document[]
 
   @@index([orgId, status])
   @@index([status, lastTriedAt])
@@ -1221,6 +1271,71 @@ model ApiKey {
 
   @@index([orgId])
   @@map("api_keys")
+}
+
+// M18: Document & Receipt Management
+
+model Document {
+  id              String           @id @default(cuid())
+  orgId           String
+  branchId        String?
+  category        DocumentCategory
+  fileName        String
+  mimeType        String
+  sizeBytes       Int
+  storageProvider StorageProvider  @default(LOCAL)
+  storageKey      String           @unique
+  checksum        String?
+  uploadedById    String
+  uploadedAt      DateTime         @default(now())
+  tags            String[]         @default([])
+  notes           String?
+  deletedAt       DateTime?
+
+  serviceProviderId String?
+  purchaseOrderId   String?
+  goodsReceiptId    String?
+  stockBatchId      String?
+  payRunId          String?
+  paySlipId         String?
+  reservationId     String?
+  eventBookingId    String?
+  bankStatementId   String?
+  employeeId        String?
+  fiscalInvoiceId   String?
+
+  org             Org              @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  branch          Branch?          @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  uploader        User             @relation("DocumentUploader", fields: [uploadedById], references: [id], onDelete: Restrict)
+  serviceProvider ServiceProvider? @relation(fields: [serviceProviderId], references: [id], onDelete: SetNull)
+  purchaseOrder   PurchaseOrder?   @relation(fields: [purchaseOrderId], references: [id], onDelete: SetNull)
+  goodsReceipt    GoodsReceipt?    @relation(fields: [goodsReceiptId], references: [id], onDelete: SetNull)
+  stockBatch      StockBatch?      @relation(fields: [stockBatchId], references: [id], onDelete: SetNull)
+  payRun          PayRun?          @relation(fields: [payRunId], references: [id], onDelete: SetNull)
+  paySlip         PaySlip?         @relation(fields: [paySlipId], references: [id], onDelete: SetNull)
+  reservation     Reservation?     @relation(fields: [reservationId], references: [id], onDelete: SetNull)
+  eventBooking    EventBooking?    @relation(fields: [eventBookingId], references: [id], onDelete: SetNull)
+  bankStatement   BankStatement?   @relation(fields: [bankStatementId], references: [id], onDelete: SetNull)
+  employee        Employee?        @relation(fields: [employeeId], references: [id], onDelete: SetNull)
+  fiscalInvoice   FiscalInvoice?   @relation(fields: [fiscalInvoiceId], references: [id], onDelete: SetNull)
+
+  @@index([orgId])
+  @@index([orgId, category])
+  @@index([orgId, uploadedAt])
+  @@index([branchId])
+  @@index([serviceProviderId])
+  @@index([purchaseOrderId])
+  @@index([goodsReceiptId])
+  @@index([stockBatchId])
+  @@index([payRunId])
+  @@index([paySlipId])
+  @@index([reservationId])
+  @@index([eventBookingId])
+  @@index([bankStatementId])
+  @@index([employeeId])
+  @@index([fiscalInvoiceId])
+  @@index([deletedAt])
+  @@map("documents")
 }
 
 // ===== Hardware Integrations =====
@@ -1400,6 +1515,7 @@ model StockBatch {
   item           InventoryItem   @relation(fields: [itemId], references: [id], onDelete: Restrict)
   goodsReceipt   GoodsReceipt?   @relation(fields: [goodsReceiptId], references: [id], onDelete: SetNull)
   stockMovements StockMovement[] // M3: Movements from this batch
+  documents      Document[]
 
   @@index([orgId, itemId])
   @@index([branchId, receivedAt])
@@ -1423,6 +1539,7 @@ model PurchaseOrder {
   supplier      Supplier            @relation(fields: [supplierId], references: [id], onDelete: Restrict)
   items         PurchaseOrderItem[]
   goodsReceipts GoodsReceipt[]
+  documents     Document[]
 
   @@unique([orgId, poNumber])
   @@index([orgId, branchId])
@@ -1517,6 +1634,7 @@ model GoodsReceipt {
   po           PurchaseOrder?     @relation(fields: [poId], references: [id], onDelete: SetNull)
   lines        GoodsReceiptLine[]
   stockBatches StockBatch[]
+  documents    Document[]
 
   @@unique([orgId, grNumber])
   @@index([orgId, branchId])
@@ -2063,6 +2181,8 @@ model EventBooking {
   event      Event           @relation(fields: [eventId], references: [id], onDelete: Cascade)
   eventTable EventTable      @relation(fields: [eventTableId], references: [id], onDelete: Cascade)
   credits    PrepaidCredit[]
+  documents  Document[]
+  feedback   Feedback? // M20: Customer feedback for this event booking
 
   @@index([eventId, status])
   @@index([eventTableId])
@@ -2232,6 +2352,36 @@ enum AttendanceSource {
   IMPORT
 }
 
+enum AwardPeriodType {
+  WEEK
+  MONTH
+  QUARTER
+  YEAR
+}
+
+enum AwardCategory {
+  TOP_PERFORMER
+  HIGHEST_SALES
+  BEST_SERVICE
+  MOST_RELIABLE
+  MOST_IMPROVED
+}
+
+// M22: Promotion Suggestions
+enum SuggestionCategory {
+  PROMOTION
+  ROLE_CHANGE
+  TRAINING
+  PERFORMANCE_REVIEW
+}
+
+enum SuggestionStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  IGNORED
+}
+
 model Employee {
   id             String           @id @default(cuid())
   orgId          String
@@ -2249,12 +2399,15 @@ model Employee {
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
 
-  user              User?                @relation(fields: [userId], references: [id], onDelete: SetNull)
-  contracts         EmploymentContract[]
-  attendanceRecords AttendanceRecord[]
-  coveredAttendance AttendanceRecord[]   @relation("CoveredAttendance") // M9: Attendance records where this employee covered for someone
-  sessions          Session[] // M10: Auth sessions for this employee
-  msrCard           MsrCard? // M10: MSR card assignment for this employee
+  user                 User?                  @relation(fields: [userId], references: [id], onDelete: SetNull)
+  contracts            EmploymentContract[]
+  attendanceRecords    AttendanceRecord[]
+  coveredAttendance    AttendanceRecord[]     @relation("CoveredAttendance") // M9: Attendance records where this employee covered for someone
+  sessions             Session[]              // M10: Auth sessions for this employee
+  msrCard              MsrCard?               // M10: MSR card assignment for this employee
+  documents            Document[]
+  awards               StaffAward[]           // M19: Awards received by this employee
+  promotionSuggestions PromotionSuggestion[]  @relation("PromotionSuggestions") // M22: Promotion suggestions for this employee
 
   @@index([orgId, status])
   @@index([branchId, status])
@@ -2315,6 +2468,128 @@ model AttendanceRecord {
   @@map("attendance_records")
 }
 
+// M19: Staff Awards & Recognition
+model StaffAward {
+  id            String          @id @default(cuid())
+  orgId         String
+  branchId      String?
+  employeeId    String
+  periodType    AwardPeriodType
+  periodStart   DateTime
+  periodEnd     DateTime
+  category      AwardCategory   @default(TOP_PERFORMER)
+  rank          Int             @default(1) // 1st, 2nd, 3rd place
+  score         Decimal         @db.Decimal(10, 4)
+  reason        String?
+  scoreSnapshot Json? // Full metrics at award time
+  createdAt     DateTime        @default(now())
+  createdById   String
+
+  employee  Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  org       Org      @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  branch    Branch?  @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  createdBy User     @relation("CreatedAwards", fields: [createdById], references: [id], onDelete: Restrict)
+
+  @@unique([orgId, employeeId, periodType, periodStart, rank])
+  @@index([orgId, periodType, periodStart])
+  @@index([employeeId])
+  @@index([branchId, periodType, periodStart])
+  @@map("staff_awards")
+}
+
+// M22: Promotion Suggestions
+model PromotionSuggestion {
+  id                String              @id @default(cuid())
+  orgId             String
+  branchId          String? // NULL for org-level suggestions
+  employeeId        String
+  periodType        AwardPeriodType // Reuse M19 enum
+  periodStart       DateTime
+  periodEnd         DateTime
+  category          SuggestionCategory
+  scoreAtSuggestion Decimal             @db.Decimal(10, 4) // Composite score 0-1
+  insightsSnapshot  Json? // Full M19 metrics at suggestion time
+  reason            String // Why suggested (auto-generated or manual)
+  status            SuggestionStatus    @default(PENDING)
+  statusUpdatedAt   DateTime?
+  statusUpdatedById String?
+  decisionNotes     String? // Why accepted/rejected (freetext)
+  createdAt         DateTime            @default(now())
+  createdById       String? // User who generated (NULL if auto-generated)
+
+  org             Org       @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  branch          Branch?   @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  employee        Employee  @relation("PromotionSuggestions", fields: [employeeId], references: [id], onDelete: Cascade)
+  statusUpdatedBy User?     @relation("SuggestionDecisions", fields: [statusUpdatedById], references: [id])
+  createdBy       User?     @relation("SuggestionCreators", fields: [createdById], references: [id])
+
+  @@unique([orgId, employeeId, periodType, periodStart, category])
+  @@index([orgId, branchId, periodStart])
+  @@index([employeeId, periodStart])
+  @@index([status])
+  @@map("promotion_suggestions")
+}
+
+// ===== M20: Customer Feedback & NPS =====
+
+model Feedback {
+  id       String  @id @default(cuid())
+  orgId    String
+  branchId String?
+
+  // Entity linkage (at most one should be set)
+  orderId        String? @unique
+  reservationId  String? @unique
+  eventBookingId String? @unique
+
+  // Feedback content
+  channel       FeedbackChannel @default(OTHER)
+  score         Int // 0-10 (NPS scale)
+  npsCategory   NpsCategory // Derived from score
+  comment       String?         @db.Text
+  tags          String[]        @default([])
+  sentimentHint String? // "positive", "negative", "neutral" (for future ML)
+
+  // Attribution
+  createdById String? // Nullable for anonymous feedback
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  org          Org           @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  branch       Branch?       @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  order        Order?        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  reservation  Reservation?  @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  eventBooking EventBooking? @relation(fields: [eventBookingId], references: [id], onDelete: Cascade)
+  createdBy    User?         @relation("UserFeedback", fields: [createdById], references: [id], onDelete: SetNull)
+
+  // Indexes
+  @@index([orgId, createdAt])
+  @@index([branchId, createdAt])
+  @@index([orderId])
+  @@index([reservationId])
+  @@index([eventBookingId])
+  @@index([npsCategory, createdAt])
+  @@index([score])
+  @@map("feedback")
+}
+
+// ===== M21: Idempotency Infrastructure =====
+
+model IdempotencyKey {
+  id           String   @id @default(cuid())
+  key          String   @unique // Idempotency-Key header value (ULID recommended)
+  endpoint     String // e.g., "POST /pos/orders"
+  requestHash  String // SHA256 of normalized request body
+  responseBody Json // Cached response (for replay)
+  statusCode   Int // HTTP status code (200, 201, 422, etc.)
+  expiresAt    DateTime // TTL: 24 hours from creation
+  createdAt    DateTime @default(now())
+
+  @@index([expiresAt]) // For cleanup queries (daily cron)
+  @@map("idempotency_keys")
+}
+
 // ===== E43-s2: Payroll =====
 
 enum PayRunStatus {
@@ -2363,7 +2638,8 @@ model PayRun {
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 
-  slips PaySlip[]
+  slips     PaySlip[]
+  documents Document[]
 
   @@index([orgId, periodStart, periodEnd])
   @@map("pay_runs")
@@ -2389,9 +2665,10 @@ model PaySlip {
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
-  payRun     PayRun @relation(fields: [payRunId], references: [id], onDelete: Cascade)
-  user       User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  approvedBy User?  @relation("ApprovedPaySlips", fields: [approvedById], references: [id], onDelete: SetNull)
+  payRun     PayRun     @relation(fields: [payRunId], references: [id], onDelete: Cascade)
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  approvedBy User?      @relation("ApprovedPaySlips", fields: [approvedById], references: [id], onDelete: SetNull)
+  documents  Document[]
 
   @@index([payRunId, userId])
   @@index([employeeId])
@@ -2516,6 +2793,7 @@ model BankStatement {
 
   bankAccount  BankAccount @relation(fields: [bankAccountId], references: [id], onDelete: Cascade)
   transactions BankTxn[]
+  documents    Document[]
 
   @@index([bankAccountId, periodStart])
   @@map("bank_statements")
@@ -2632,6 +2910,7 @@ model ServiceProvider {
   org       Org               @relation(fields: [orgId], references: [id], onDelete: Cascade)
   branch    Branch?           @relation(fields: [branchId], references: [id], onDelete: Cascade)
   contracts ServiceContract[]
+  documents Document[]
 
   @@index([orgId, isActive])
   @@index([branchId])

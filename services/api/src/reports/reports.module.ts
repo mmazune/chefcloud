@@ -8,12 +8,16 @@ import { PrismaService } from '../prisma.service';
 import { DashboardsModule } from '../dashboards/dashboards.module';
 import { InventoryModule } from '../inventory/inventory.module';
 import { FranchiseModule } from '../franchise/franchise.module';
+import { StaffModule } from '../staff/staff.module';
+import { FeedbackModule } from '../feedback/feedback.module';
 
 @Module({
   imports: [
     forwardRef(() => DashboardsModule),
     forwardRef(() => InventoryModule),
     forwardRef(() => FranchiseModule),
+    forwardRef(() => StaffModule),
+    FeedbackModule,
   ],
   controllers: [ReportsController],
   providers: [

@@ -669,7 +669,57 @@ export class ReportGeneratorService {
     _periodType: 'DAILY' | 'WEEKLY' | 'MONTHLY',
   ): Promise<PeriodDigest> {
     throw new Error('PeriodDigest generation not yet fully implemented');
+    // TODO: When implementing, add staff insights:
+    // import { StaffInsightsService } from '../staff/staff-insights.service';
+    // const staffInsights = await this.generateStaffInsightsSection(orgId, branchId, periodType, startDate);
   }
+
+  /**
+   * M19: Generate staff insights section for period digest
+   * This method can be called when PeriodDigest is fully implemented
+   */
+  /* async generateStaffInsightsSection(
+    orgId: string,
+    branchId: string | null,
+    periodType: 'DAILY' | 'WEEKLY' | 'MONTHLY',
+    startDate: Date,
+  ) {
+    // Import StaffInsightsService when needed
+    // const awardPeriodType = periodType === 'WEEKLY' ? AwardPeriodType.WEEK : AwardPeriodType.MONTH;
+    // const period = this.staffInsights.resolvePeriod(awardPeriodType, startDate);
+    // const insights = await this.staffInsights.getStaffInsights({ orgId, branchId, from: period.start, to: period.end, periodType: awardPeriodType });
+    // const awardRecommendation = await this.staffInsights.getAwardRecommendation(orgId, branchId, period, AwardCategory.TOP_PERFORMER);
+    // const perfectAttendance = insights.rankings.filter(r => r.reliabilityMetrics.attendanceRate === 1.0).slice(0, 3);
+    // const mostCoverShifts = insights.rankings.filter(r => r.reliabilityMetrics.coverShiftsCount > 0).sort((a, b) => b.reliabilityMetrics.coverShiftsCount - a.reliabilityMetrics.coverShiftsCount).slice(0, 3);
+    // return { periodLabel: period.label, awardWinner: awardRecommendation, topPerformers: insights.rankings.slice(0, 5), reliabilityHighlights: { perfectAttendance, mostCoverShifts } };
+  } */
+
+  /**
+   * M22: Generate staff promotions section for period digest
+   * This method can be called when PeriodDigest is fully implemented
+   */
+  /* async generateStaffPromotionsSection(
+    orgId: string,
+    branchId: string | null,
+    periodType: 'DAILY' | 'WEEKLY' | 'MONTHLY',
+    startDate: Date,
+    endDate: Date,
+  ) {
+    // Import PromotionInsightsService when needed
+    // import { PromotionInsightsService } from '../staff/promotion-insights.service';
+    // const awardPeriodType = periodType === 'WEEKLY' ? AwardPeriodType.WEEK : AwardPeriodType.MONTH;
+    // const summary = await this.promotionInsights.getSuggestionSummary({ orgId, branchId, periodType: awardPeriodType, periodStart: startDate, periodEnd: endDate });
+    // const topSuggestions = await this.promotionInsights.listSuggestions({ orgId, branchId, periodType: awardPeriodType, fromDate: startDate, toDate: endDate, limit: 3 });
+    // return {
+    //   periodLabel: format(startDate, 'MMMM yyyy'),
+    //   suggestedCount: summary.totalSuggestions,
+    //   acceptedCount: summary.byStatus.ACCEPTED,
+    //   rejectedCount: summary.byStatus.REJECTED,
+    //   pendingCount: summary.byStatus.PENDING,
+    //   byCategory: { promotions: summary.byCategory.PROMOTION, training: summary.byCategory.TRAINING, reviews: summary.byCategory.PERFORMANCE_REVIEW, roleChanges: summary.byCategory.ROLE_CHANGE },
+    //   topSuggestions: topSuggestions.suggestions.map(s => ({ displayName: `${s.employee.firstName} ${s.employee.lastName}`, branchName: s.branch?.name || 'Org-level', category: s.category, reason: s.reason, score: Number(s.scoreAtSuggestion), status: s.status })),
+    // };
+  } */
 
   /**
    * Generate franchise digest

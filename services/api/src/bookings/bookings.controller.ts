@@ -7,11 +7,12 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { Controller, Get, Post, Body, Param, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, UseGuards, UseInterceptors, Request } from '@nestjs/common';
 import { BookingsService } from './bookings.service';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
+import { IdempotencyInterceptor } from '../common/idempotency.interceptor';
 
 @Controller('bookings')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
@@ -113,6 +114,7 @@ export class BookingsController {
    */
   @Post(':id/confirm')
   @Roles('L2', 'L3', 'L4', 'L5')
+  @UseInterceptors(IdempotencyInterceptor)
   async confirmBooking(@Param('id') id: string, @Request() req: any): Promise<any> {
     return this.bookingsService.confirmBooking(id, req.user.id);
   }
@@ -123,6 +125,7 @@ export class BookingsController {
    */
   @Post(':id/cancel')
   @Roles('L2', 'L3', 'L4', 'L5')
+  @UseInterceptors(IdempotencyInterceptor)
   async cancelBooking(@Param('id') id: string): Promise<any> {
     return this.bookingsService.cancelBooking(id);
   }

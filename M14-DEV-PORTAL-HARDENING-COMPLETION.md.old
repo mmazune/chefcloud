@@ -1,0 +1,706 @@
+# M14 – Dev Portal & Integrations Hardening - COMPLETION SUMMARY
+
+**Status**: ✅ **DOCUMENTED** / 🔄 **PARTIAL IMPLEMENTATION**  
+**Date**: November 20, 2025  
+**Milestone**: M14 - Dev Portal & Integrations Hardening
+
+---
+
+## Executive Summary
+
+M14 aims to bring ChefCloud's developer-facing surface (API keys, webhooks) to production-grade, partner-ready quality. The work has been **fully documented** in design specs, but **implementation is blocked** by Prisma migration interactive prompts in the remote environment.
+
+### What's Been Completed ✅
+
+1. **Step 0 - Inventory & Review**: Complete analysis of existing dev portal infrastructure
+2. **Design Documentation**: Comprehensive M14-DEV-PORTAL-DESIGN.md with full specifications
+3. **Curl Examples**: Complete curl-examples-m14-dev-portal.sh with all scenarios
+
+### What's Blocked 🔄
+
+1. **Prisma Schema Changes**: Need to be applied without interactive prompts
+2. **Service Implementation**: API Keys and Webhook services need to be coded
+3. **Controller Endpoints**: New routes need to be added
+4. **Tests**: Unit and integration tests need to be written
+5. **DEV_GUIDE Updates**: Documentation section needs to be added
+
+---
+
+## The Migration Issue & Solution
+
+### Problem
+
+When running `prisma migrate dev`, an interactive prompt appears:
+```
+? We need to reset the "public" schema at "localhost:5432"
+Do you want to continue? All data will be lost. › (y/N)
+```
+
+In Codespaces/remote environments, this causes:
+- Terminal becomes unresponsive
+- Cannot type 'y' or 'n'
+- Forces page refresh and loss of progress
+
+### Solutions
+
+**Option 1: Use --accept-data-loss flag**
+```bash
+cd /workspaces/chefcloud/packages/db
+npx prisma migrate dev --name m14_dev_portal_hardening --accept-data-loss
+```
+
+**Option 2: Use migrate reset with --force**
+```bash
+cd /workspaces/chefcloud/packages/db
+npx prisma migrate reset --force --skip-seed
+npx prisma migrate dev --name m14_dev_portal_hardening --create-only
+npx prisma migrate deploy
+```
+
+**Option 3: Modify schema incrementally**
+Instead of large schema changes, apply changes in smaller migrations:
+```bash
+# Add just API keys model
+npx prisma migrate dev --name add_dev_api_keys --create-only
+# Edit the migration file if needed
+npx prisma migrate deploy
+
+# Then add webhooks
+npx prisma migrate dev --name add_webhook_subscriptions --create-only
+npx prisma migrate deploy
+```
+
+---
+
+## Design Overview (From M14-DEV-PORTAL-DESIGN.md)
+
+### API Keys Model
+
+```prisma
+model DevApiKey {
+  id                String            @id @default(cuid())
+  orgId             String
+  createdByUserId   String
+  name              String
+  description       String?
+  keyHash           String            @unique
+  prefix            String            // 'cc_live_', 'cc_test_'
+  environment       DevEnvironment    @default(SANDBOX)
+  status            DevApiKeyStatus   @default(ACTIVE)
+  scopes            String[]          // ['read:orders', 'write:inventory']
+  lastUsedAt        DateTime?
+  expiresAt         DateTime?
+  createdAt         DateTime          @default(now())
+  revokedAt         DateTime?
+  revokedByUserId   String?
+  
+  org               Organization      @relation(...)
+  createdBy         User              @relation("DevApiKeyCreatedBy", ...)
+  revokedBy         User?             @relation("DevApiKeyRevokedBy", ...)
+  
+  @@index([orgId, status])
+  @@index([environment, status])
+  @@map("dev_api_keys")
+}
+
+enum DevEnvironment {
+  SANDBOX
+  PRODUCTION
+}
+
+enum DevApiKeyStatus {
+  ACTIVE
+  REVOKED
+  EXPIRED
+}
+```
+
+### Webhooks Models
+
+```prisma
+model WebhookSubscription {
+  id                String                      @id @default(cuid())
+  orgId             String
+  createdByUserId   String
+  name              String
+  url               String
+  secret            String                      // HMAC signing key
+  eventTypes        String[]                    // ['order.created', 'payment.completed']
+  status            WebhookSubscriptionStatus   @default(ACTIVE)
+  createdAt         DateTime                    @default(now())
+  disabledAt        DateTime?
+  disabledByUserId  String?
+  
+  org               Organization                @relation(...)
+  createdBy         User                        @relation("WebhookCreatedBy", ...)
+  disabledBy        User?                       @relation("WebhookDisabledBy", ...)
+  deliveries        WebhookDelivery[]
+  
+  @@index([orgId, status])
+  @@map("webhook_subscriptions")
+}
+
+model WebhookDelivery {
+  id              String                    @id @default(cuid())
+  subscriptionId  String
+  eventType       String
+  eventId         String?
+  payload         Json
+  status          WebhookDeliveryStatus     @default(PENDING)
+  httpStatus      Int?
+  attempts        Int                       @default(0)
+  maxAttempts     Int                       @default(3)
+  nextRetryAt     DateTime?
+  lastAttemptAt   DateTime?
+  completedAt     DateTime?
+  failedAt        DateTime?
+  errorMessage    String?
+  latencyMs       Int?
+  createdAt       DateTime                  @default(now())
+  
+  subscription    WebhookSubscription       @relation(...)
+  
+  @@index([subscriptionId, status])
+  @@index([eventType, createdAt])
+  @@index([status, nextRetryAt])
+  @@map("webhook_deliveries")
+}
+
+enum WebhookSubscriptionStatus {
+  ACTIVE
+  DISABLED
+}
+
+enum WebhookDeliveryStatus {
+  PENDING
+  SENDING
+  SUCCESS
+  FAILED
+  CANCELLED
+}
+```
+
+---
+
+## Planned API Endpoints
+
+### API Keys Management
+
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| GET | `/dev/keys` | List API keys for org | DevAdmin OR JwtGuard (L4+) |
+| POST | `/dev/keys` | Create new API key | DevAdmin OR JwtGuard (L4+) |
+| GET | `/dev/keys/:id` | Get API key details | DevAdmin OR JwtGuard (L4+) |
+| POST | `/dev/keys/:id/revoke` | Revoke API key | DevAdmin OR JwtGuard (L4+) |
+| POST | `/dev/keys/:id/rotate` | Rotate API key | DevAdmin OR JwtGuard (L4+) |
+| GET | `/dev/keys/:id/metrics` | Get usage metrics | DevAdmin OR JwtGuard (L4+) |
+
+### Webhook Subscriptions
+
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| GET | `/dev/webhooks/subscriptions` | List subscriptions | DevAdmin OR JwtGuard (L4+) |
+| POST | `/dev/webhooks/subscriptions` | Create subscription | DevAdmin OR JwtGuard (L4+) |
+| GET | `/dev/webhooks/subscriptions/:id` | Get subscription details | DevAdmin OR JwtGuard (L4+) |
+| PATCH | `/dev/webhooks/subscriptions/:id` | Update subscription | DevAdmin OR JwtGuard (L4+) |
+| POST | `/dev/webhooks/subscriptions/:id/disable` | Disable subscription | DevAdmin OR JwtGuard (L4+) |
+| POST | `/dev/webhooks/subscriptions/:id/regenerate-secret` | Regenerate signing secret | DevAdmin OR JwtGuard (L4+) |
+
+### Webhook Deliveries
+
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| GET | `/dev/webhooks/deliveries` | List delivery logs | DevAdmin OR JwtGuard (L4+) |
+| GET | `/dev/webhooks/deliveries/:id` | Get delivery details | DevAdmin OR JwtGuard (L4+) |
+| POST | `/dev/webhooks/deliveries/:id/retry` | Manual retry | DevAdmin OR JwtGuard (L4+) |
+| GET | `/dev/webhooks/metrics` | Webhook success rates | DevAdmin OR JwtGuard (L4+) |
+
+---
+
+## Implementation Checklist
+
+### Schema (Blocked)
+- [ ] Add DevApiKey model with enums
+- [ ] Add WebhookSubscription model
+- [ ] Add WebhookDelivery model
+- [ ] Create migration without interactive prompts
+- [ ] Apply migration to database
+
+### Services (Not Started)
+- [ ] Create DevApiKeysService
+  - [ ] `createKey()` - Generate secure key with hash
+  - [ ] `revokeKey()` - Mark as revoked
+  - [ ] `rotateKey()` - Create new, schedule old revocation
+  - [ ] `verifyKey()` - Constant-time hash comparison
+  - [ ] `recordUsage()` - Update lastUsedAt and metrics
+- [ ] Create WebhookSubscriptionsService
+  - [ ] `createSubscription()` - Create with generated secret
+  - [ ] `disableSubscription()` - Mark as disabled
+  - [ ] `regenerateSecret()` - New HMAC secret
+- [ ] Create WebhookDispatcherService
+  - [ ] `enqueueEvent()` - Queue delivery for matching subscriptions
+  - [ ] `deliverWebhook()` - Send HTTP POST with signature
+  - [ ] `retryDelivery()` - Manual/automatic retry
+  - [ ] `computeSignature()` - HMAC-SHA256 signing
+
+### Controllers (Not Started)
+- [ ] Extend DevPortalController with API key endpoints
+- [ ] Add WebhookController with subscription/delivery endpoints
+- [ ] Apply proper guards (DevAdminGuard, JwtGuard with L4+ RBAC)
+
+### Guards & Middleware (Partial)
+- [x] DevAdminGuard exists
+- [x] SuperDevGuard exists
+- [x] PlanRateLimiterGuard exists
+- [ ] Create ApiKeyAuthGuard (for external API calls)
+- [ ] Integrate key verification into request pipeline
+
+### Tests (Not Started)
+- [ ] DevApiKeysService unit tests
+  - [ ] Key generation produces secure random values
+  - [ ] Hash storage and verification works
+  - [ ] Revocation prevents future use
+  - [ ] Rotation creates new key properly
+- [ ] WebhookDispatcherService unit tests
+  - [ ] Signature generation is stable
+  - [ ] Replay protection window enforced
+  - [ ] Retry logic works correctly
+- [ ] E2E tests
+  - [ ] Create API key and use it for auth
+  - [ ] Create webhook subscription
+  - [ ] Trigger event and verify delivery
+  - [ ] Test signature verification
+
+### Documentation (Partial)
+- [x] M14-STEP0-DEV-PORTAL-REVIEW.md created
+- [x] M14-DEV-PORTAL-DESIGN.md created
+- [x] curl-examples-m14-dev-portal.sh created
+- [ ] Add M14 section to DEV_GUIDE.md
+- [ ] Cross-link from existing dev portal docs
+
+---
+
+## Security Features (Designed)
+
+### API Keys
+- **Never store raw keys**: Only SHA-256 hashes in database
+- **Constant-time comparison**: Prevent timing attacks
+- **Environment scoping**: Separate SANDBOX and PRODUCTION
+- **Prefix-based identification**: `cc_test_*` vs `cc_live_*`
+- **Expiration**: Optional expiresAt field
+- **Scopes**: Array of permissions like `['read:orders', 'write:inventory']`
+- **Audit trail**: CreatedBy, RevokedBy, LastUsedAt
+
+### Webhooks
+- **HMAC Signing**: SHA-256 with subscription secret
+- **Replay Protection**: Timestamp window (±5 minutes)
+- **Headers**:
+  - `X-ChefCloud-Signature`: HMAC-SHA256 of timestamp + body
+  - `X-ChefCloud-Timestamp`: Unix timestamp
+  - `X-ChefCloud-Event-Type`: Event name
+- **Retry Strategy**: Exponential backoff (immediate, 1min, 5min)
+- **Max Attempts**: Configurable (default 3)
+- **DLQ**: Failed deliveries marked for manual review
+
+---
+
+## Rate Limiting & Quotas
+
+### Per-Plan Limits (Designed)
+```typescript
+const PLAN_LIMITS = {
+  FREE: {
+    apiKeys: 1,
+    webhookSubscriptions: 2,
+    requestsPerHour: 100,
+    webhookDeliveriesPerDay: 1000,
+  },
+  PRO: {
+    apiKeys: 5,
+    webhookSubscriptions: 10,
+    requestsPerHour: 1000,
+    webhookDeliveriesPerDay: 10000,
+  },
+  ENTERPRISE: {
+    apiKeys: -1, // unlimited
+    webhookSubscriptions: -1,
+    requestsPerHour: 10000,
+    webhookDeliveriesPerDay: 100000,
+  },
+};
+```
+
+### Integration Points
+- Use existing `PlanRateLimiterGuard`
+- Add per-key counters in Redis
+- Track metrics per apiKeyId and webhookSubscriptionId
+
+---
+
+## Sample Curl Commands (From curl-examples-m14-dev-portal.sh)
+
+### API Keys
+
+```bash
+# Create API key
+curl -X POST "http://localhost:3001/dev/keys" \
+  -H "X-Dev-Admin: admin@chefcloud.io" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "orgId": "org-uuid",
+    "name": "Production API Key",
+    "description": "Key for production integrations",
+    "environment": "PRODUCTION",
+    "scopes": ["read:orders", "write:inventory"]
+  }'
+
+# Response (only time raw key is shown):
+# {
+#   "id": "key-uuid",
+#   "rawKey": "cc_live_abc123...",  # Never shown again!
+#   "prefix": "cc_live_",
+#   "environment": "PRODUCTION",
+#   "scopes": ["read:orders", "write:inventory"]
+# }
+
+# Revoke API key
+curl -X POST "http://localhost:3001/dev/keys/{keyId}/revoke" \
+  -H "X-Dev-Admin: admin@chefcloud.io" \
+  -H "Content-Type: application/json" \
+  -d '{ "reason": "Key compromised" }'
+```
+
+### Webhooks
+
+```bash
+# Create webhook subscription
+curl -X POST "http://localhost:3001/dev/webhooks/subscriptions" \
+  -H "X-Dev-Admin: admin@chefcloud.io" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "orgId": "org-uuid",
+    "name": "Order Events Webhook",
+    "url": "https://partner.example.com/webhooks/chefcloud",
+    "eventTypes": ["order.created", "order.completed", "payment.completed"]
+  }'
+
+# Response:
+# {
+#   "id": "sub-uuid",
+#   "secret": "whsec_abc123...",  # Save this for signature verification!
+#   "eventTypes": ["order.created", "order.completed", "payment.completed"]
+# }
+
+# List webhook deliveries
+curl "http://localhost:3001/dev/webhooks/deliveries?subscriptionId={subId}&status=FAILED" \
+  -H "X-Dev-Admin: admin@chefcloud.io"
+
+# Retry failed delivery
+curl -X POST "http://localhost:3001/dev/webhooks/deliveries/{deliveryId}/retry" \
+  -H "X-Dev-Admin: admin@chefcloud.io"
+```
+
+### Webhook Signature Verification (Receiver-side)
+
+```typescript
+// Example: Verifying webhook in receiver's endpoint
+import crypto from 'crypto';
+
+app.post('/webhooks/chefcloud', (req, res) => {
+  const signature = req.headers['x-chefcloud-signature'];
+  const timestamp = req.headers['x-chefcloud-timestamp'];
+  const body = JSON.stringify(req.body);
+  
+  // 1. Check timestamp (replay protection)
+  const now = Math.floor(Date.now() / 1000);
+  if (Math.abs(now - parseInt(timestamp)) > 300) {
+    return res.status(400).json({ error: 'Timestamp too old' });
+  }
+  
+  // 2. Compute expected signature
+  const payload = `${timestamp}.${body}`;
+  const expected = crypto
+    .createHmac('sha256', WEBHOOK_SECRET)
+    .update(payload)
+    .digest('hex');
+  
+  // 3. Constant-time compare
+  if (!crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) {
+    return res.status(401).json({ error: 'Invalid signature' });
+  }
+  
+  // 4. Process webhook
+  console.log('Valid webhook:', req.body);
+  res.status(200).json({ received: true });
+});
+```
+
+---
+
+## Known Limitations & Follow-Ups
+
+### Current Limitations
+1. **Migration Blocked**: Interactive Prisma prompts prevent schema application
+2. **No Implementation**: All code is design-only, not implemented
+3. **No Tests**: Test suites not created
+4. **No DEV_GUIDE Section**: Documentation incomplete
+
+### Short-Term Follow-Ups (After Migration Fix)
+1. **Implement Schema**: Apply migrations without interactive prompts
+2. **Implement Services**: DevApiKeysService, WebhookSubscriptionsService, WebhookDispatcherService
+3. **Implement Controllers**: API key and webhook endpoints
+4. **Add Tests**: Unit and E2E tests
+5. **Update DEV_GUIDE**: Add M14 section with examples
+
+### Long-Term Enhancements
+1. **Webhook Batching**: Group multiple events into single delivery
+2. **Advanced DLQ**: Separate queue for failed deliveries with alerting
+3. **Webhook Transformations**: Allow JSONPath templates for payload customization
+4. **API Key Scopes UI**: Visual interface for managing granular permissions
+5. **Rate Limit Dashboard**: Real-time visualization of quota usage
+6. **Webhook Replay**: Admin tool to replay historical events
+7. **Key Rotation Scheduling**: Auto-rotate keys on schedule
+8. **Multi-Region Webhooks**: Deliver from closest region
+
+---
+
+## How to Proceed (Step-by-Step Guide)
+
+### 1. Fix Migration Issue
+
+**Option A: Accept Data Loss (Development Only)**
+```bash
+cd /workspaces/chefcloud/packages/db
+export DATABASE_URL="postgresql://postgres:postgres@localhost:5432/chefcloud"
+npx prisma migrate dev --name m14_dev_portal_hardening --accept-data-loss
+```
+
+**Option B: Force Reset (Clean Slate)**
+```bash
+cd /workspaces/chefcloud/packages/db
+export DATABASE_URL="postgresql://postgres:postgres@localhost:5432/chefcloud"
+npx prisma migrate reset --force --skip-seed
+# Then manually apply all migrations
+npx prisma migrate deploy
+```
+
+**Option C: Create Migration Without Applying**
+```bash
+# 1. Create migration file only
+cd /workspaces/chefcloud/packages/db
+npx prisma migrate dev --name m14_dev_portal_hardening --create-only
+
+# 2. Review the migration SQL file
+cat prisma/migrations/*_m14_dev_portal_hardening/migration.sql
+
+# 3. Apply it manually if needed
+npx prisma migrate deploy
+```
+
+### 2. Implement Services (After Schema Applied)
+
+```bash
+# Create service files
+touch services/api/src/dev-portal/dev-api-keys.service.ts
+touch services/api/src/dev-portal/webhook-subscriptions.service.ts
+touch services/api/src/dev-portal/webhook-dispatcher.service.ts
+
+# Follow M14-DEV-PORTAL-DESIGN.md for implementation details
+```
+
+### 3. Add Controller Endpoints
+
+```bash
+# Extend existing controller
+# Edit: services/api/src/dev-portal/dev-portal.controller.ts
+# Add new routes from design doc
+```
+
+### 4. Run Tests
+
+```bash
+cd /workspaces/chefcloud
+pnpm --filter @chefcloud/api test dev-api-keys.service.spec.ts
+pnpm --filter @chefcloud/api test webhook-dispatcher.service.spec.ts
+```
+
+### 5. Update Documentation
+
+```bash
+# Add M14 section to DEV_GUIDE.md
+# Link curl examples
+# Cross-reference from existing dev portal docs
+```
+
+---
+
+## Success Criteria (When Implemented)
+
+### Functional Requirements
+- ✅ Create API key with secure hash storage
+- ✅ Verify API key with constant-time comparison
+- ✅ Revoke and rotate API keys
+- ✅ Track last used timestamp
+- ✅ Create webhook subscriptions
+- ✅ Send webhooks with HMAC signature
+- ✅ Log webhook deliveries with status
+- ✅ Retry failed webhooks
+- ✅ Environment scoping (SANDBOX vs PRODUCTION)
+
+### Security Requirements
+- ✅ API keys never stored in plain text
+- ✅ Constant-time hash comparison
+- ✅ Webhook HMAC signing with SHA-256
+- ✅ Replay protection via timestamp window
+- ✅ Proper RBAC (DevAdmin, L4+ org users)
+- ✅ Audit trail for all key/webhook operations
+
+### Performance Requirements
+- API key verification: < 10ms
+- Webhook delivery: < 2s (excluding network)
+- Rate limiting: < 5ms overhead
+- Delivery log queries: < 100ms
+
+### Documentation Requirements
+- ✅ Complete DEV_GUIDE section
+- ✅ Curl examples for all scenarios
+- ✅ Webhook verification code samples
+- ✅ Security best practices documented
+
+---
+
+## Conclusion
+
+M14 Dev Portal & Integrations Hardening has been **thoroughly designed** with:
+- ✅ Complete schema design
+- ✅ Full API specifications
+- ✅ Security model defined
+- ✅ Curl examples ready
+- ✅ Implementation guidelines
+
+However, **implementation is blocked** by Prisma's interactive migration prompts in the Codespaces environment.
+
+**Recommended Next Steps**:
+1. Use `--accept-data-loss` or `--force` flags to bypass interactive prompts
+2. Apply schema migrations
+3. Implement services following M14-DEV-PORTAL-DESIGN.md
+4. Add controller endpoints
+5. Write unit and integration tests
+6. Update DEV_GUIDE.md
+7. Verify all functionality with curl examples
+
+Once the migration issue is resolved, the remaining implementation should take approximately **6-8 hours** for an experienced developer following the detailed design specifications.
+
+---
+
+## Migration Completed Successfully! ✅
+
+**Migration Strategy Used**: Strategy B (migrate diff with --from-url)
+
+### What Was Done
+
+1. **Schema Models Added** (to `packages/db/prisma/schema.prisma`):
+   - `enum DevEnvironment { SANDBOX, PRODUCTION }`
+   - `enum ApiKeyStatus { ACTIVE, REVOKED }`
+   - `enum WebhookSubscriptionStatus { ACTIVE, DISABLED }`
+   - `enum WebhookDeliveryStatus { PENDING, SUCCESS, FAILED }`
+   - `model DevApiKey` with all required fields (id, orgId, createdByUserId, name, keyHash, prefix, environment, status, timestamps, usageCount)
+   - `model WebhookSubscription` with all required fields (id, orgId, createdByUserId, url, eventTypes[], secret, status, timestamps)
+   - `model WebhookDelivery` with all required fields (id, subscriptionId, eventId, eventType, payload, status, responseCode, latencyMs, attempts, retry timestamps, errorMessage)
+
+2. **Relations Added**:
+   - Added `devApiKeys DevApiKey[]` to `Org` model
+   - Added `webhookSubscriptions WebhookSubscription[]` to `Org` model
+   - Added `createdDevApiKeys DevApiKey[]` to `User` model (relation name: "DevApiKeyCreatedBy")
+   - Added `createdWebhookSubscriptions WebhookSubscription[]` to `User` model (relation name: "WebhookSubscriptionCreatedBy")
+
+3. **Migration Created & Applied**:
+   - Migration path: `prisma/migrations/20251120_m14_dev_portal_hardening/migration.sql`
+   - Migration size: 29KB (includes M14 + other accumulated schema changes)
+   - Applied successfully using `npx prisma migrate deploy` (non-interactive)
+
+4. **Database Verification**:
+   - ✅ `dev_api_keys` table exists with correct columns and indexes
+   - ✅ `webhook_subscriptions` table exists with correct columns and indexes
+   - ✅ `webhook_deliveries` table exists with correct columns and indexes
+   - ✅ Foreign key constraints properly set up (Org, User relations)
+   - ✅ All 54 migrations applied successfully
+
+5. **Prisma Client Regenerated**:
+   - Generated successfully with new M14 types
+   - TypeScript will now recognize: `DevApiKey`, `WebhookSubscription`, `WebhookDelivery`
+
+### Advisory Lock Issue Resolution
+
+**Problem Encountered**: Multiple hung `prisma migrate dev` processes from previous attempts were holding PostgreSQL advisory locks, causing P1002 timeout errors.
+
+**Solution Applied**:
+1. Killed all hung Prisma processes: `pkill -f "prisma migrate dev" && pkill -f "schema-engine"`
+2. Cleared advisory locks: `docker exec chefcloud-postgres psql -U postgres -d chefcloud -c "SELECT pg_advisory_unlock_all();"`
+3. Used non-interactive `migrate deploy` instead of `migrate dev`
+
+### How We Avoided Interactive Prompts
+
+**Strategy B - migrate diff with --from-url** was used:
+```bash
+cd /workspaces/chefcloud/packages/db
+MIG_NAME=20251120_m14_dev_portal_hardening
+rm -rf prisma/migrations/$MIG_NAME
+mkdir -p prisma/migrations/$MIG_NAME
+
+# Generate SQL diff (NO PROMPTS!)
+source .env
+npx prisma migrate diff \
+  --from-url "${DATABASE_URL}" \
+  --to-schema-datamodel prisma/schema.prisma \
+  --script > prisma/migrations/$MIG_NAME/migration.sql
+
+# Apply migration (NON-INTERACTIVE)
+npx prisma migrate deploy
+
+# Regenerate client
+npx prisma generate
+```
+
+**Why This Works**:
+- `migrate diff --from-url` generates SQL without touching the database
+- `migrate deploy` applies migrations non-interactively (designed for CI/CD)
+- No interactive prompts at any stage
+
+### Next Steps for M14 Implementation
+
+Now that the schema is stable, you can proceed with:
+
+1. **Services Implementation** (~3 hours):
+   - `DevApiKeysService` - key generation, hashing (bcrypt), verification, revocation
+   - `WebhookSubscriptionsService` - subscription management, secret generation
+   - `WebhookDispatcherService` - event queuing, HTTP delivery, HMAC signing, retry logic
+
+2. **Controllers** (~2 hours):
+   - Add API key endpoints to DevPortalController
+   - Add webhook subscription/delivery endpoints
+   - Apply proper guards (DevAdminGuard, ApiKeyAuthGuard)
+
+3. **Guards & Middleware** (~1 hour):
+   - Create `ApiKeyAuthGuard` for external API authentication
+   - Integrate with existing auth pipeline
+
+4. **Tests** (~2 hours):
+   - Unit tests for key generation, hashing, webhook signing
+   - E2E tests for full API key lifecycle
+   - Webhook delivery and signature verification tests
+
+5. **Documentation** (~1 hour):
+   - Update DEV_GUIDE.md with M14 section
+   - Test curl examples from `curl-examples-m14-dev-portal.sh`
+
+---
+
+**Status**: ✅ **SCHEMA MIGRATION COMPLETE - READY FOR SERVICE IMPLEMENTATION**  
+**Date**: November 20, 2025  
+**Migration Path**: `prisma/migrations/20251120_m14_dev_portal_hardening/`  
+**Strategy Used**: Strategy B (migrate diff + deploy)  
+**Interactive Prompts**: 0 (fully automated workflow established)  
+**Database Status**: All 54 migrations applied, schema up to date  
+**Prisma Client**: Generated with M14 types  
+**Production Readiness**: 🟢 **SCHEMA READY - IMPLEMENTATION IN PROGRESS**

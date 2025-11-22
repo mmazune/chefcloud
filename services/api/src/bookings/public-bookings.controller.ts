@@ -7,9 +7,10 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { Controller, Get, Post, Body, Param } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, UseInterceptors } from '@nestjs/common';
 import { BookingsService } from './bookings.service';
 import { PaymentsService } from '../payments/payments.service';
+import { IdempotencyInterceptor } from '../common/idempotency.interceptor';
 
 @Controller('public/bookings')
 export class PublicBookingsController {
@@ -32,6 +33,7 @@ export class PublicBookingsController {
    * Create a booking in HELD status
    */
   @Post()
+  @UseInterceptors(IdempotencyInterceptor)
   async createBooking(
     @Body()
     body: {
@@ -76,6 +78,7 @@ export class PublicBookingsController {
    * Create or retrieve payment intent for deposit
    */
   @Post(':id/pay')
+  @UseInterceptors(IdempotencyInterceptor)
   async payBooking(@Param('id') id: string): Promise<any> {
     const booking = await this.bookingsService.prisma.client.eventBooking.findUnique({
       where: { id },

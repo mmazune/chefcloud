@@ -164,6 +164,27 @@ export interface ShiftEndReport {
       occurredAt: Date;
     }>;
   };
+
+  // M20: Customer feedback & NPS
+  customerFeedback?: {
+    nps: number | null; // NPS score (-100 to +100, null if no feedback)
+    totalResponses: number;
+    avgScore: number; // 0-10
+    promoterPct: number;
+    passivePct: number;
+    detractorPct: number;
+    responseRate: number; // % of orders with feedback
+    sampleComments: Array<{
+      score: number;
+      comment: string;
+      channel: string;
+      timestamp: Date;
+    }>;
+    breakdown: Array<{
+      score: number; // 0-10
+      count: number;
+    }>;
+  };
 }
 
 /**
@@ -200,6 +221,81 @@ export interface PeriodDigest {
   kds: ShiftEndReport['kds'];
   staffPerformance: ShiftEndReport['staffPerformance'];
   anomalies: ShiftEndReport['anomalies'];
+
+  // M19: Staff insights & awards
+  staffInsights?: {
+    periodLabel: string;
+    awardWinner: {
+      displayName: string;
+      category: string;
+      score: number;
+      reason: string;
+    } | null;
+    topPerformers: Array<{
+      displayName: string;
+      rank: number;
+      compositeScore: number;
+      totalSales: number;
+      attendanceRate: number;
+    }>;
+    reliabilityHighlights: {
+      perfectAttendance: Array<{ displayName: string }>;
+      mostCoverShifts: Array<{ displayName: string; coverShiftsCount: number }>;
+    };
+  };
+
+  // M20: Customer feedback & NPS
+  customerFeedback?: {
+    nps: number;
+    totalResponses: number;
+    responseRate: number; // % of orders with feedback
+    trend: number[]; // Daily NPS scores for sparkline
+    topComplaints: Array<{
+      tag: string;
+      count: number;
+      percentage: number;
+    }>;
+    topPraise: Array<{
+      tag: string;
+      count: number;
+      percentage: number;
+    }>;
+    channelBreakdown: Array<{
+      channel: string;
+      count: number;
+      avgScore: number;
+    }>;
+    criticalFeedback: Array<{
+      id: string;
+      score: number;
+      comment: string;
+      orderNumber: string;
+      timestamp: Date;
+    }>;
+  };
+
+  // M22: Promotion suggestions
+  staffPromotions?: {
+    periodLabel: string;
+    suggestedCount: number;
+    acceptedCount: number;
+    rejectedCount: number;
+    pendingCount: number;
+    byCategory: {
+      promotions: number;
+      training: number;
+      reviews: number;
+      roleChanges: number;
+    };
+    topSuggestions: Array<{
+      displayName: string;
+      branchName: string;
+      category: 'PROMOTION' | 'TRAINING' | 'PERFORMANCE_REVIEW';
+      reason: string;
+      score: number;
+      status: 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'IGNORED';
+    }>;
+  };
 
   // Trend data for sparklines
   trends: {
@@ -272,6 +368,65 @@ export interface FranchiseDigest {
       recommendedQty: number;
       estimatedCost: number;
       branches: string[];
+    }>;
+  };
+
+  // M19: Cross-branch staff insights
+  staffInsights?: {
+    periodLabel: string;
+    topPerformersAcrossOrg: Array<{
+      displayName: string;
+      branchName: string;
+      rank: number;
+      compositeScore: number;
+      totalSales: number;
+    }>;
+    byBranch: Record<string, {
+      topPerformer: { displayName: string; score: number };
+      averageScore: number;
+    }>;
+  };
+
+  // M20: Cross-branch customer feedback & NPS
+  customerFeedback?: {
+    franchiseNps: number; // Org-wide NPS
+    totalResponses: number;
+    byBranch: Array<{
+      branchId: string;
+      branchName: string;
+      nps: number;
+      responseCount: number;
+      ranking: number; // 1 = best NPS in franchise
+      change: number; // +5 or -3 (vs previous period)
+    }>;
+    npsTrend: number[]; // Weekly/monthly NPS over time
+    benchmarking: {
+      avgNps: number; // Average across all branches
+      topPerformer: string; // Branch ID with highest NPS
+      needsAttention: string[]; // Branch IDs with NPS < 0
+    };
+  };
+
+  // M22: Cross-branch promotion candidates
+  franchisePromotions?: {
+    periodLabel: string;
+    topCandidatesAcrossOrg: Array<{
+      displayName: string;
+      branchName: string;
+      currentPosition: string;
+      suggestedCategory: 'PROMOTION' | 'TRAINING';
+      compositeScore: number;
+      status: 'PENDING' | 'ACCEPTED';
+    }>;
+    byBranch: Record<string, {
+      branchName: string;
+      suggestedCount: number;
+      acceptedCount: number;
+      topCandidate: {
+        displayName: string;
+        category: string;
+        score: number;
+      } | null;
     }>;
   };
 }

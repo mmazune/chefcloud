@@ -4,13 +4,14 @@
  * REST endpoints for QR code check-in and ticket PDF download.
  */
 
-import { Controller, Post, Get, Body, Param, Res, UseGuards, Request } from '@nestjs/common';
+import { Controller, Post, Get, Body, Param, Res, UseGuards, UseInterceptors, Request } from '@nestjs/common';
 import { Response } from 'express';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 import { CheckinService } from './checkin.service';
 import { BookingsService } from './bookings.service';
+import { IdempotencyInterceptor } from '../common/idempotency.interceptor';
 
 @Controller('events')
 export class CheckinController {
@@ -27,6 +28,7 @@ export class CheckinController {
   @Post('checkin')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('L2', 'L3', 'L4', 'L5')
+  @UseInterceptors(IdempotencyInterceptor)
   async checkin(
     @Body() body: { ticketCode: string },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

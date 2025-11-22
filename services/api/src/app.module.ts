@@ -49,6 +49,8 @@ import { BookingsModule } from './bookings/bookings.module';
 import { WorkforceModule } from './workforce/workforce.module';
 import { ObservabilityModule } from './observability/observability.module';
 import { MetaModule } from './meta/meta.module';
+import { DocumentsModule } from './documents/documents.module'; // M18
+import { FeedbackModule } from './feedback/feedback.module'; // M20
 import { LoggerMiddleware } from './logger.middleware';
 import { WriteBlockMiddleware } from './ops/write-block.middleware';
 import { RedisService } from './common/redis.service';
@@ -106,6 +108,8 @@ import { WebhookVerificationGuard } from './common/webhook-verification.guard';
     WorkforceModule,
     ObservabilityModule,
     MetaModule,
+    DocumentsModule, // M18
+    FeedbackModule, // M20
   ],
   controllers: [HealthController, WebhooksController],
   providers: [

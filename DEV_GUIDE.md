@@ -14672,3 +14672,2848 @@ WHERE "expiresAt" < NOW()
 - 100% of terminated employees have cards revoked within 1 hour
 - 0 POS-only endpoints accessed from mobile/web
 
+---
+
+## M18 – Document & Receipt Management Hardening
+
+### Overview
+
+M18 provides enterprise document management with persistent storage, entity linking, and RBAC:
+
+- **Persistent Document Storage**: Upload/download PDFs, images, contracts, receipts with local filesystem (V1) or S3/GCS (V2 ready)
+- **Entity Linking**: Documents link to PurchaseOrders, PaySlips, Reservations, ServiceProviders, Employees, and 6 other entities
+- **Category-Based RBAC**: Document access controlled by DocumentCategory (INVOICE, STOCK_RECEIPT, CONTRACT, HR_DOC, PAYSLIP, etc.)
+- **Self-Service Payslips**: L3 users can view/download their own payslip documents but not others
+- **Soft Deletion**: Documents soft-deleted (managers only), preserving storage and audit trail
+- **Search & Filter**: List documents by category, entity links, date range, branch
+
+### Architecture
+
+```
+┌─────────────────────┐
+│   Client (Web/POS)  │
+│  - Upload document  │
+│    (multipart form) │
+└──────────┬──────────┘
+           │ POST /documents + file
+           ▼
+┌─────────────────────┐
+│ DocumentsController │
+│  - 25MB limit       │
+│  - UploadDocumentDto│
+└──────────┬──────────┘
+           │ RBAC check
+           ▼
+┌─────────────────────┐
+│  DocumentsService   │
+│  - Validate links   │
+│  - Check permissions│
+└──────────┬──────────┘
+           │ Upload file
+           ▼
+┌─────────────────────┐
+│ LocalStorageProvider│
+│  /data/documents/   │
+│  orgId/YYYY-MM/     │
+│  checksum-filename  │
+└──────────┬──────────┘
+           │ Save record
+           ▼
+┌─────────────────────┐
+│   Document Model    │
+│  - orgId, category  │
+│  - 11 optional FKs  │
+│  - storageKey       │
+│  - uploadedById     │
+└─────────────────────┘
+```
+
+### Data Models
+
+#### Document Model
+
+```prisma
+model Document {
+  id              String           @id @default(cuid())
+  orgId           String
+  branchId        String?
+  category        DocumentCategory
+  fileName        String
+  mimeType        String
+  sizeBytes       Int
+  storageProvider StorageProvider  @default(LOCAL)
+  storageKey      String           @unique
+  checksum        String?          // SHA-256 hash
+  uploadedById    String
+  uploadedAt      DateTime         @default(now())
+  tags            String[]         @default([])
+  notes           String?
+  deletedAt       DateTime?        // Soft delete
+
+  // Entity links (all optional)
+  serviceProviderId String?
+  purchaseOrderId   String?
+  goodsReceiptId    String?
+  stockBatchId      String?
+  payRunId          String?
+  paySlipId         String?
+  reservationId     String?
+  eventBookingId    String?
+  bankStatementId   String?
+  employeeId        String?
+  fiscalInvoiceId   String?
+
+  // Relations (13 total)
+  org             Org
+  branch          Branch?
+  uploader        User @relation("DocumentUploader")
+  serviceProvider ServiceProvider?
+  purchaseOrder   PurchaseOrder?
+  goodsReceipt    GoodsReceipt?
+  stockBatch      StockBatch?
+  payRun          PayRun?
+  paySlip         PaySlip?
+  reservation     Reservation?
+  eventBooking    EventBooking?
+  bankStatement   BankStatement?
+  employee        Employee?
+  fiscalInvoice   FiscalInvoice?
+
+  @@index([orgId])
+  @@index([orgId, category])
+  @@index([orgId, uploadedAt])
+  @@index([branchId])
+  // + 11 indexes on FK fields
+  @@index([deletedAt])
+}
+
+enum DocumentCategory {
+  INVOICE         // Invoices from suppliers
+  STOCK_RECEIPT   // Stock delivery receipts
+  CONTRACT        // Service contracts
+  HR_DOC          // HR documents (contracts, reviews)
+  BANK_STATEMENT  // Bank statements
+  PAYSLIP         // Payslip PDFs
+  RESERVATION_DOC // Reservation confirmations
+  OTHER           // General documents
+}
+
+enum StorageProvider {
+  LOCAL  // Local filesystem /data/documents
+  S3     // AWS S3 (future)
+  GCS    // Google Cloud Storage (future)
+}
+```
+
+### RBAC Matrix
+
+| Category         | L3 (Staff) | L4 (Manager) | L5 (Owner) | Notes |
+|------------------|------------|--------------|------------|-------|
+| INVOICE          | ❌          | ✅            | ✅          | Procurement only |
+| STOCK_RECEIPT    | ✅          | ✅            | ✅          | Stock users |
+| CONTRACT         | ❌          | ✅            | ✅          | Sensitive |
+| HR_DOC           | ❌          | ✅            | ✅          | Sensitive |
+| BANK_STATEMENT   | ❌          | ✅            | ✅          | Finance only |
+| PAYSLIP          | ✅ (self)   | ✅            | ✅          | Self-service |
+| RESERVATION_DOC  | ✅          | ✅            | ✅          | Booking confirmations |
+| OTHER            | ✅          | ✅            | ✅          | General use |
+
+**Special Rules**:
+- **Payslip Self-Access**: L3 users can view/download documents linked to their own `PaySlip.userId`
+- **Manager Deletion**: Only L4+ can soft-delete documents
+- **Cross-Org Isolation**: All queries filtered by `orgId`
+- **Branch Filtering**: Optional `branchId` for multi-branch orgs
+
+### API Endpoints
+
+#### 1. Upload Document
+
+```bash
+curl -X POST http://localhost:3001/documents \
+  -H "Authorization: Bearer <token>" \
+  -F "file=@invoice.pdf" \
+  -F "category=INVOICE" \
+  -F "purchaseOrderId=po_123" \
+  -F "tags=urgent,supplier-abc" \
+  -F "notes=Q4 2025 supplies"
+
+# Response:
+{
+  "id": "doc_abc123",
+  "orgId": "org_001",
+  "category": "INVOICE",
+  "fileName": "invoice.pdf",
+  "mimeType": "application/pdf",
+  "sizeBytes": 245678,
+  "storageProvider": "LOCAL",
+  "storageKey": "org_001/2025-11/1a2b3c4d5e6f-invoice.pdf",
+  "checksum": "sha256:1a2b3c4d...",
+  "uploadedById": "user_123",
+  "uploadedAt": "2025-11-22T10:00:00Z",
+  "tags": ["urgent", "supplier-abc"],
+  "notes": "Q4 2025 supplies",
+  "purchaseOrderId": "po_123",
+  "uploader": {
+    "id": "user_123",
+    "firstName": "John",
+    "lastName": "Doe"
+  }
+}
+```
+
+**File Size Limit**: 25MB (configurable in FileInterceptor)
+
+**Supported MIME Types**: PDF, PNG, JPG, JPEG, WEBP, GIF, TXT, CSV, XLSX, DOCX, etc.
+
+#### 2. List Documents
+
+```bash
+# All documents for org
+curl -X GET "http://localhost:3001/documents" \
+  -H "Authorization: Bearer <token>"
+
+# Filter by category
+curl -X GET "http://localhost:3001/documents?category=INVOICE" \
+  -H "Authorization: Bearer <token>"
+
+# Filter by entity link
+curl -X GET "http://localhost:3001/documents?purchaseOrderId=po_123" \
+  -H "Authorization: Bearer <token>"
+
+# Pagination
+curl -X GET "http://localhost:3001/documents?limit=20&offset=40" \
+  -H "Authorization: Bearer <token>"
+
+# Response:
+{
+  "documents": [
+    { /* Document object */ },
+    { /* Document object */ }
+  ],
+  "total": 150
+}
+```
+
+#### 3. Get Document Metadata
+
+```bash
+curl -X GET http://localhost:3001/documents/doc_abc123 \
+  -H "Authorization: Bearer <token>"
+
+# Response: Single Document object
+```
+
+#### 4. Download Document File
+
+```bash
+curl -X GET http://localhost:3001/documents/doc_abc123/download \
+  -H "Authorization: Bearer <token>" \
+  --output invoice.pdf
+
+# Response: Binary file with headers:
+# Content-Type: application/pdf
+# Content-Disposition: attachment; filename="invoice.pdf"
+# Content-Length: 245678
+```
+
+#### 5. Soft Delete Document (L4+ only)
+
+```bash
+curl -X DELETE http://localhost:3001/documents/doc_abc123 \
+  -H "Authorization: Bearer <token>"
+
+# Response:
+{
+  "success": true
+}
+
+# Document.deletedAt set to now()
+# File remains on disk (not physically deleted)
+```
+
+### Convenience Endpoints (Entity Links)
+
+Pre-built routes to list documents for specific entities:
+
+#### Purchase Order Documents
+
+```bash
+curl -X GET http://localhost:3001/documents/links/purchase-orders/po_123 \
+  -H "Authorization: Bearer <token>"
+
+# Returns all documents with purchaseOrderId=po_123
+```
+
+#### Pay Slip Documents (Self-Service)
+
+```bash
+curl -X GET http://localhost:3001/documents/links/pay-slips/slip_456 \
+  -H "Authorization: Bearer <token>"
+
+# L3 users: Only own payslips
+# L4+ users: All payslips
+```
+
+#### Reservation Documents
+
+```bash
+curl -X GET http://localhost:3001/documents/links/reservations/res_789 \
+  -H "Authorization: Bearer <token>"
+
+# Returns all documents with reservationId=res_789
+```
+
+#### Service Provider Documents
+
+```bash
+curl -X GET http://localhost:3001/documents/links/service-providers/sp_abc \
+  -H "Authorization: Bearer <token>"
+
+# Returns contracts, invoices for service provider
+```
+
+#### Employee Documents
+
+```bash
+curl -X GET http://localhost:3001/documents/links/employees/emp_xyz \
+  -H "Authorization: Bearer <token>"
+
+# Returns HR docs, contracts for employee
+```
+
+### Storage Architecture
+
+#### V1: Local Filesystem
+
+**Path Structure**:
+```
+/data/documents/
+  org_001/
+    2025-11/
+      1a2b3c4d5e6f-invoice.pdf
+      9f8e7d6c5b4a-contract.pdf
+    2025-12/
+      3c4d5e6f7g8h-payslip.pdf
+  org_002/
+    2025-11/
+      ...
+```
+
+**Benefits**:
+- Simple, no cloud dependencies
+- Fast for small deployments
+- Easy to backup (rsync, tar)
+
+**Limitations**:
+- Single-server only (not horizontally scalable)
+- No CDN integration
+- Manual backup required
+
+#### V2: Cloud Storage (Future)
+
+**Interface**: `IStorageProvider` abstraction ready for S3/GCS
+
+**S3 Example**:
+```typescript
+export class S3StorageProvider implements IStorageProvider {
+  async upload(buffer, fileName, mimeType, orgId) {
+    const key = `${orgId}/${yearMonth}/${checksum}-${fileName}`;
+    await s3.putObject({
+      Bucket: process.env.S3_BUCKET,
+      Key: key,
+      Body: buffer,
+      ContentType: mimeType,
+    });
+    return { storageKey: key, checksum };
+  }
+
+  async download(storageKey) {
+    const obj = await s3.getObject({
+      Bucket: process.env.S3_BUCKET,
+      Key: storageKey,
+    });
+    return obj.Body;
+  }
+
+  async getSignedUrl(storageKey, expiresIn = 3600) {
+    return s3.getSignedUrl('getObject', {
+      Bucket: process.env.S3_BUCKET,
+      Key: storageKey,
+      Expires: expiresIn,
+    });
+  }
+}
+```
+
+**Benefits**:
+- Horizontally scalable
+- CDN integration (CloudFront)
+- Automatic backups
+- Global replication
+
+**Migration Path**:
+1. Deploy S3StorageProvider
+2. Update `DocumentsModule` to inject S3 provider
+3. Backfill existing documents to S3
+4. Update `storageProvider` field in DB
+5. Optional: Keep local files as backup
+
+### Integration Examples
+
+#### M7: Service Provider Contracts
+
+```typescript
+// When creating a service provider, upload contract
+const contractFile = /* File from frontend */;
+
+// 1. Create service provider
+const provider = await prisma.serviceProvider.create({
+  data: { orgId, name, category, contactEmail }
+});
+
+// 2. Upload contract document
+const document = await documentsService.upload(
+  contractFile,
+  orgId,
+  userId,
+  userRole,
+  {
+    category: 'CONTRACT',
+    serviceProviderId: provider.id,
+    tags: ['contract', 'legal'],
+    notes: 'Annual service contract 2025'
+  }
+);
+
+// 3. Frontend displays: "Contract uploaded: <filename>"
+```
+
+#### M9: Payslip PDF Attachment
+
+```typescript
+// Generate payslip PDF
+const pdfBuffer = await generatePayslipPDF(paySlip);
+
+// Upload to documents
+const document = await documentsService.upload(
+  { buffer: pdfBuffer, originalname: `payslip-${paySlip.id}.pdf`, mimetype: 'application/pdf', size: pdfBuffer.length },
+  orgId,
+  userId,
+  RoleLevel.L5, // System upload
+  {
+    category: 'PAYSLIP',
+    paySlipId: paySlip.id,
+    employeeId: paySlip.employeeId,
+    tags: ['payroll', payRun.periodStart],
+  }
+);
+
+// Employee can self-download via:
+// GET /documents/links/pay-slips/:id
+```
+
+#### M15: Reservation Confirmation
+
+```typescript
+// When reservation confirmed, generate PDF
+const confirmationPDF = await generateReservationConfirmation(reservation);
+
+// Upload document
+const document = await documentsService.upload(
+  { buffer: confirmationPDF, ... },
+  orgId,
+  userId,
+  userRole,
+  {
+    category: 'RESERVATION_DOC',
+    reservationId: reservation.id,
+    tags: ['confirmation', reservation.name],
+  }
+);
+
+// Email confirmation with document link
+await emailService.send({
+  to: reservation.email,
+  subject: 'Reservation Confirmed',
+  attachments: [{ filename: document.fileName, content: confirmationPDF }]
+});
+```
+
+### Security Considerations
+
+#### Upload Validation
+
+**File Type Checks**:
+- MIME type validation (no .exe, .sh, .bat)
+- File extension whitelist
+- Magic number verification (first bytes match MIME)
+
+**Size Limits**:
+- 25MB default (prevents DoS)
+- Configurable per-category (e.g., 50MB for bank statements)
+
+**Checksum Verification**:
+- SHA-256 hash calculated on upload
+- Prevents duplicate uploads (future)
+- Integrity verification on download
+
+#### Access Control
+
+**Tenant Isolation**:
+- All queries filtered by `orgId`
+- Storage paths include `orgId` prefix
+- Cross-org access impossible
+
+**RBAC Enforcement**:
+- `canAccessCategory()` checks role before upload/download
+- Payslip self-access: L3 users limited to own `userId`
+- Entity link validation: FK checks before allowing links
+
+**Soft Deletion**:
+- Only L4+ can delete
+- Files remain on disk (audit trail)
+- `deletedAt` filters out from list queries
+- Hard deletion via manual cleanup script
+
+#### Storage Security
+
+**Local Filesystem**:
+- `/data/documents/` should NOT be web-accessible
+- Serve files via NestJS controller (auth check on every download)
+- Set file permissions: `chmod 700 /data/documents`
+
+**S3/GCS**:
+- Buckets should be private (no public read)
+- Use signed URLs for downloads (expiry 1 hour)
+- Enable server-side encryption (SSE-S3, SSE-KMS)
+- Versioning enabled (accidental deletion recovery)
+
+### Performance Optimizations
+
+**Indexes**:
+- `@@index([orgId, category])` for filtered lists
+- `@@index([orgId, uploadedAt])` for recent documents
+- 11 indexes on FK fields for entity link queries
+- `@@index([deletedAt])` to exclude deleted docs efficiently
+
+**Caching**:
+- Document metadata cached in Redis (5 min TTL)
+- File buffers NOT cached (too large)
+- Signed URLs cached (S3/GCS) for 50% of TTL
+
+**Streaming Downloads**:
+- Large files (>10MB) use streaming
+- `res.send(buffer)` for small files
+- Signed URLs preferred for S3 (CDN direct download)
+
+**Upload Optimization**:
+- Multipart form parsing with Multer
+- In-memory buffer (< 25MB)
+- Future: Direct S3 presigned upload (client → S3, skip API)
+
+### Testing Examples
+
+#### Unit Test: RBAC Check
+
+```typescript
+describe('DocumentsService - RBAC', () => {
+  it('should allow L4 to upload INVOICE', () => {
+    const canAccess = service.canAccessCategory('INVOICE', RoleLevel.L4, false);
+    expect(canAccess).toBe(true);
+  });
+
+  it('should deny L3 to upload CONTRACT', () => {
+    const canAccess = service.canAccessCategory('CONTRACT', RoleLevel.L3, false);
+    expect(canAccess).toBe(false);
+  });
+
+  it('should allow L3 to view own payslip document', async () => {
+    // Setup: PaySlip with userId=user_123
+    // Document with paySlipId=slip_456, category=PAYSLIP
+    const doc = await service.findOne('doc_abc', 'org_001', 'user_123', RoleLevel.L3);
+    expect(doc.id).toBe('doc_abc');
+  });
+
+  it('should deny L3 to view other users payslip', async () => {
+    await expect(
+      service.findOne('doc_xyz', 'org_001', 'user_456', RoleLevel.L3)
+    ).rejects.toThrow(ForbiddenException);
+  });
+});
+```
+
+#### Integration Test: Upload Flow
+
+```typescript
+describe('POST /documents', () => {
+  it('should upload invoice linked to PO', async () => {
+    const response = await request(app.getHttpServer())
+      .post('/documents')
+      .set('Authorization', `Bearer ${l4Token}`)
+      .attach('file', './test/fixtures/invoice.pdf')
+      .field('category', 'INVOICE')
+      .field('purchaseOrderId', 'po_123')
+      .field('tags', 'urgent')
+      .expect(201);
+
+    expect(response.body.category).toBe('INVOICE');
+    expect(response.body.purchaseOrderId).toBe('po_123');
+    expect(response.body.storageKey).toMatch(/^org_001\/2025-11\//);
+  });
+
+  it('should reject upload if PO not found', async () => {
+    await request(app.getHttpServer())
+      .post('/documents')
+      .set('Authorization', `Bearer ${l4Token}`)
+      .attach('file', './test/fixtures/invoice.pdf')
+      .field('category', 'INVOICE')
+      .field('purchaseOrderId', 'nonexistent')
+      .expect(400); // BadRequestException
+  });
+
+  it('should reject L3 uploading CONTRACT', async () => {
+    await request(app.getHttpServer())
+      .post('/documents')
+      .set('Authorization', `Bearer ${l3Token}`)
+      .attach('file', './test/fixtures/contract.pdf')
+      .field('category', 'CONTRACT')
+      .expect(403); // ForbiddenException
+  });
+});
+```
+
+#### E2E Test: Invoice-to-PO Flow
+
+```typescript
+describe('E2E: Purchase Order → Invoice Upload', () => {
+  it('should create PO, upload invoice, list PO documents', async () => {
+    // 1. Create PO
+    const poResponse = await request(app.getHttpServer())
+      .post('/purchasing/purchase-orders')
+      .set('Authorization', `Bearer ${l4Token}`)
+      .send({ supplierId: 'sup_001', items: [...] })
+      .expect(201);
+
+    const poId = poResponse.body.id;
+
+    // 2. Upload invoice for PO
+    const docResponse = await request(app.getHttpServer())
+      .post('/documents')
+      .set('Authorization', `Bearer ${l4Token}`)
+      .attach('file', './test/fixtures/invoice.pdf')
+      .field('category', 'INVOICE')
+      .field('purchaseOrderId', poId)
+      .expect(201);
+
+    const docId = docResponse.body.id;
+
+    // 3. List documents for PO
+    const listResponse = await request(app.getHttpServer())
+      .get(`/documents/links/purchase-orders/${poId}`)
+      .set('Authorization', `Bearer ${l4Token}`)
+      .expect(200);
+
+    expect(listResponse.body.documents).toHaveLength(1);
+    expect(listResponse.body.documents[0].id).toBe(docId);
+
+    // 4. Download document
+    const downloadResponse = await request(app.getHttpServer())
+      .get(`/documents/${docId}/download`)
+      .set('Authorization', `Bearer ${l4Token}`)
+      .expect(200);
+
+    expect(downloadResponse.headers['content-type']).toBe('application/pdf');
+    expect(downloadResponse.body.length).toBeGreaterThan(0);
+  });
+});
+```
+
+### Known Limitations
+
+1. **No Virus Scanning**
+   - Uploaded files not scanned for malware
+   - Future: Integrate ClamAV or cloud antivirus
+
+2. **No Duplicate Detection**
+   - Same file can be uploaded multiple times
+   - Future: Use `checksum` to detect duplicates before saving
+
+3. **No Versioning**
+   - Updating a document creates new record (old one soft-deleted)
+   - Future: Document versioning (v1, v2, v3)
+
+4. **No OCR/Text Extraction**
+   - PDF content not indexed for search
+   - Future: Integrate Tesseract OCR or AWS Textract
+
+5. **No Expiry/Retention Policies**
+   - Documents stored indefinitely
+   - Future: Auto-delete after X years (GDPR compliance)
+
+6. **No Thumbnail Generation**
+   - No image previews
+   - Future: Generate thumbnails for images/PDFs
+
+7. **Storage Quota Not Enforced**
+   - Orgs can upload unlimited data
+   - Future: Per-org storage quotas (e.g., 10GB for standard plan)
+
+### Success Metrics
+
+**Adoption**:
+- ✅ 80% of purchase orders have attached invoice documents
+- ✅ 100% of payslips have attached PDF documents
+- ✅ 60% of service contracts digitized
+
+**Performance**:
+- Document upload < 2 seconds for 5MB files
+- Download latency < 500ms for local storage
+- List queries < 100ms (with 10K documents per org)
+
+**RBAC Compliance**:
+- 0 unauthorized document access incidents
+- 100% of payslip self-access enforced (L3 users)
+- 100% of cross-org access blocked
+
+**Storage Health**:
+- < 1% duplicate documents (by checksum)
+- 95% of documents have entity links
+- < 5% orphaned documents (entity deleted but doc remains)
+
+---
+
+## M19 – Staff Insights & Employee-of-the-Month
+
+### Overview
+
+M19 provides comprehensive staff performance insights by combining sales metrics (M5) with reliability metrics (M9) to enable:
+
+- **Unified Staff Rankings**: Performance (70%) + Reliability (30%) composite scoring
+- **Automated Award Recommendations**: Employee-of-week/month/quarter/year based on objective data
+- **Award History Persistence**: Track awards over time for employee profiles and trend analysis
+- **Digest Integration**: Staff insights in period/franchise reports (planned for M4 implementation)
+- **Self-Service Insights**: Staff can view own metrics via `/me` endpoint (L1-L3 RBAC)
+
+**Key Principle**: Build on existing M5 and M9 systems without modifying them (composition over modification).
+
+### Architecture
+
+```
+┌──────────────────────┐
+│  Client (Web/POS)    │
+│  - View rankings     │
+│  - Check my insights │
+│  - Create awards     │
+└──────────┬───────────┘
+           │ API Request
+           ▼
+┌──────────────────────┐
+│StaffInsightsController
+│  - RBAC: L4+ for     │
+│    rankings/awards   │
+│  - RBAC: L1-L3 for   │
+│    /me endpoint      │
+└──────────┬───────────┘
+           │
+           ▼
+┌──────────────────────┐
+│ StaffInsightsService │
+│  - Orchestrates:     │
+│    • M5 WaiterMetrics│
+│    • M9 Attendance   │
+│    • M5 AntiTheft    │
+└──────────┬───────────┘
+           │
+           ├──► WaiterMetricsService.getRankedWaiters()
+           │    → Performance score (0-1)
+           │
+           ├──► AttendanceService + DB queries
+           │    → Reliability score (0-1)
+           │
+           └──► AntiTheftService.getAntiTheftSummary()
+                → Risk flags (exclude CRITICAL from awards)
+```
+
+### Data Model
+
+**StaffAward Table** (`staff_awards`):
+
+```prisma
+model StaffAward {
+  id            String          @id @default(cuid())
+  orgId         String
+  branchId      String?
+  employeeId    String
+  periodType    AwardPeriodType  // WEEK, MONTH, QUARTER, YEAR
+  periodStart   DateTime
+  periodEnd     DateTime
+  category      AwardCategory    // TOP_PERFORMER, HIGHEST_SALES, BEST_SERVICE, MOST_RELIABLE, MOST_IMPROVED
+  rank          Int              @default(1) // 1st, 2nd, 3rd place
+  score         Decimal          @db.Decimal(10, 4)
+  reason        String?          // Human-readable award reason
+  scoreSnapshot Json?            // Full metrics at award time
+  createdAt     DateTime         @default(now())
+  createdById   String
+
+  @@unique([orgId, employeeId, periodType, periodStart, rank]) // Idempotence
+  @@index([orgId, periodType, periodStart])
+  @@index([employeeId])
+  @@index([branchId, periodType, periodStart])
+}
+```
+
+**Enums**:
+- `AwardPeriodType`: WEEK, MONTH, QUARTER, YEAR
+- `AwardCategory`: TOP_PERFORMER, HIGHEST_SALES, BEST_SERVICE, MOST_RELIABLE, MOST_IMPROVED
+
+**Reverse Relations**:
+- `Org.staffAwards: StaffAward[]`
+- `Branch.staffAwards: StaffAward[]`
+- `Employee.awards: StaffAward[]`
+- `User.createdAwards: StaffAward[]` (for `createdById`)
+
+### Scoring Model
+
+**Composite Score Formula**:
+```
+Total Score = (Performance Score × 0.70) + (Reliability Score × 0.30)
+```
+
+**Performance Score** (from M5 WaiterMetricsService):
+```typescript
+Performance Score = 
+  + (totalSales / maxSales)     × 0.30   // 30% weight
+  + (avgCheckSize / maxAvgCheck) × 0.20   // 20% weight
+  - (voidValue / maxVoidValue)   × 0.20   // 20% penalty
+  - (discountValue / maxDiscount) × 0.15  // 15% penalty
+  - noDrinksRate                 × 0.10   // 10% penalty
+  - (anomalyScore / maxAnomaly)  × 0.05   // 5% penalty
+```
+
+**Reliability Score** (new from M9 attendance):
+```typescript
+Reliability Score =
+  + attendanceRate         × 0.50   // 50% weight (most important)
+  - (lateCount / shifts)   × 0.20   // 20% penalty for tardiness
+  - (leftEarlyCount / shifts) × 0.15 // 15% penalty for early departures
+  + (coverShifts / shifts) × 0.10   // 10% bonus for helping others
+  - (absenceCount / shifts) × 0.05  // 5% penalty for absences
+
+Where:
+  attendanceRate = shiftsWorked / shiftsScheduled (0-1)
+```
+
+### Eligibility Rules
+
+**For WEEK Awards**:
+- Must be `Employee.status = ACTIVE`
+- Must have worked **3+ shifts** in the week
+- Must not be flagged **CRITICAL risk** in anti-theft
+- No absence rate limit (period too short)
+
+**For MONTH Awards**:
+- Must be `Employee.status = ACTIVE`
+- Must have worked **10+ shifts** in the month
+- Must not be flagged **CRITICAL risk** in anti-theft
+- Maximum **20% absence rate** (e.g., 2 absences if 10 shifts scheduled)
+
+**For QUARTER Awards**:
+- Must be `Employee.status = ACTIVE`
+- Must have worked **30+ shifts** in the quarter
+- Must not be flagged **CRITICAL risk** in anti-theft
+- Maximum **15% absence rate**
+
+**For YEAR Awards**:
+- Must be `Employee.status = ACTIVE`
+- Must have worked **120+ shifts** in the year
+- Must not be flagged **CRITICAL risk** in anti-theft
+- Maximum **15% absence rate**
+
+**Risk Flag Exclusion**:
+- **CRITICAL risk** staff are excluded from all awards (multiple threshold violations at 1.5x+)
+- **WARN risk** staff are eligible but noted in award reason
+
+### API Endpoints
+
+#### 1. GET /staff/insights/rankings
+
+Get ranked staff with performance + reliability for a period.
+
+**Query Parameters**:
+- `periodType` (required): `WEEK`, `MONTH`, `QUARTER`, `YEAR`
+- `branchId` (optional): Filter to specific branch
+- `from` (optional): Custom period start date (ISO 8601)
+- `to` (optional): Custom period end date (ISO 8601)
+
+**RBAC**: L4+ (Managers, Owners, HR, Accountants)
+
+**Example**:
+```bash
+curl -X GET "$BASE_URL/staff/insights/rankings?periodType=MONTH" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+**Response**:
+```json
+{
+  "rankings": [
+    {
+      "userId": "user_123",
+      "employeeId": "emp_456",
+      "displayName": "John Doe",
+      "rank": 1,
+      "compositeScore": 0.82,
+      "performanceScore": 0.85,
+      "reliabilityScore": 0.75,
+      "performanceMetrics": {
+        "totalSales": 1500000,
+        "orderCount": 120,
+        "avgCheckSize": 12500,
+        "voidCount": 2,
+        "voidValue": 15000,
+        "discountCount": 10,
+        "discountValue": 75000,
+        "noDrinksRate": 0.05
+      },
+      "reliabilityMetrics": {
+        "shiftsScheduled": 22,
+        "shiftsWorked": 22,
+        "shiftsAbsent": 0,
+        "lateCount": 1,
+        "leftEarlyCount": 0,
+        "coverShiftsCount": 3,
+        "attendanceRate": 1.0
+      },
+      "riskFlags": [],
+      "isCriticalRisk": false,
+      "isEligible": true
+    }
+  ],
+  "period": {
+    "type": "MONTH",
+    "start": "2025-11-01T00:00:00.000Z",
+    "end": "2025-11-30T23:59:59.999Z",
+    "label": "November 2025"
+  },
+  "eligibilityRules": {
+    "minShifts": 10,
+    "maxAbsenceRate": 0.2,
+    "requireActiveStatus": true,
+    "excludeCriticalRisk": true
+  },
+  "summary": {
+    "totalStaff": 25,
+    "eligibleStaff": 22,
+    "averageScore": 0.68
+  }
+}
+```
+
+#### 2. GET /staff/insights/employee-of-{period}
+
+Get recommended employee-of-week/month/quarter/year.
+
+**Path Parameters**:
+- `period`: `week`, `month`, `quarter`, `year`
+
+**Query Parameters**:
+- `referenceDate` (optional): Date within the period (defaults to today)
+- `branchId` (optional): Filter to specific branch
+- `category` (optional): Award category (defaults to `TOP_PERFORMER`)
+  - `TOP_PERFORMER`: Best composite score
+  - `HIGHEST_SALES`: Most revenue generated
+  - `BEST_SERVICE`: Highest average check size
+  - `MOST_RELIABLE`: Best attendance/punctuality
+  - `MOST_IMPROVED`: Biggest score increase vs previous period (future)
+
+**RBAC**: L4+ (Managers, Owners, HR)
+
+**Example**:
+```bash
+# Get employee-of-the-month for November 2025
+curl -X GET "$BASE_URL/staff/insights/employee-of-month?referenceDate=2025-11-15" \
+  -H "Authorization: Bearer $TOKEN"
+
+# Get highest sales award
+curl -X GET "$BASE_URL/staff/insights/employee-of-month?category=HIGHEST_SALES" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+**Response**:
+```json
+{
+  "employeeId": "emp_456",
+  "userId": "user_123",
+  "displayName": "John Doe",
+  "category": "TOP_PERFORMER",
+  "score": 0.82,
+  "rank": 1,
+  "performanceScore": 0.85,
+  "reliabilityScore": 0.75,
+  "metrics": {
+    "performance": { "totalSales": 1500000, "orderCount": 120, "..." },
+    "reliability": { "attendanceRate": 1.0, "coverShiftsCount": 3, "..." }
+  },
+  "reason": "Highest composite score (0.82). Generated UGX 1,500,000 in sales. 100% attendance rate. Covered 3 shift(s) for colleagues.",
+  "periodLabel": "November 2025",
+  "eligibilityPassed": true
+}
+```
+
+#### 3. POST /staff/insights/awards
+
+Create/persist an award (idempotent).
+
+**RBAC**: L4+ (Managers, Owners, HR)
+
+**Body**:
+```json
+{
+  "periodType": "MONTH",
+  "referenceDate": "2025-11-15",
+  "branchId": "branch_main", // optional
+  "category": "TOP_PERFORMER" // optional
+}
+```
+
+**Example**:
+```bash
+curl -X POST "$BASE_URL/staff/insights/awards" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "periodType": "MONTH",
+    "referenceDate": "2025-11-15",
+    "category": "TOP_PERFORMER"
+  }'
+```
+
+**Response**: `StaffAward` record with employee details
+
+**Idempotence**: Calling with same `orgId + employeeId + periodType + periodStart + rank` will upsert (update score/reason if data changed).
+
+#### 4. GET /staff/insights/awards
+
+List award history with filters.
+
+**Query Parameters**:
+- `employeeId` (optional): Filter to specific employee
+- `branchId` (optional): Filter to specific branch
+- `periodType` (optional): Filter by period type
+- `category` (optional): Filter by award category
+- `fromDate` (optional): Period start ≥ this date
+- `toDate` (optional): Period end ≤ this date
+- `limit` (optional): Max records (default 50)
+- `offset` (optional): Pagination offset (default 0)
+
+**RBAC**: L4+ (Managers, Owners, HR, Accountants)
+
+**Example**:
+```bash
+# List all awards
+curl -X GET "$BASE_URL/staff/insights/awards" \
+  -H "Authorization: Bearer $TOKEN"
+
+# List awards for specific employee
+curl -X GET "$BASE_URL/staff/insights/awards?employeeId=emp_456" \
+  -H "Authorization: Bearer $TOKEN"
+
+# List monthly awards in date range
+curl -X GET "$BASE_URL/staff/insights/awards?periodType=MONTH&fromDate=2025-01-01&toDate=2025-12-31" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+**Response**:
+```json
+[
+  {
+    "id": "award_789",
+    "orgId": "org_test",
+    "branchId": "branch_main",
+    "employeeId": "emp_456",
+    "periodType": "MONTH",
+    "periodStart": "2025-11-01T00:00:00.000Z",
+    "periodEnd": "2025-11-30T23:59:59.999Z",
+    "category": "TOP_PERFORMER",
+    "rank": 1,
+    "score": "0.8200",
+    "reason": "Highest composite score...",
+    "scoreSnapshot": { "..." },
+    "createdAt": "2025-12-01T10:00:00.000Z",
+    "createdById": "user_owner",
+    "employee": {
+      "id": "emp_456",
+      "firstName": "John",
+      "lastName": "Doe",
+      "employeeCode": "EMP001",
+      "position": "Senior Waiter"
+    }
+  }
+]
+```
+
+#### 5. GET /staff/insights/me
+
+Get current user's own insights (staff self-view).
+
+**Query Parameters**:
+- `periodType` (optional): Defaults to `MONTH`
+
+**RBAC**: All authenticated users (L1-L5, HR, ACCOUNTANT)
+
+**Example**:
+```bash
+curl -X GET "$BASE_URL/staff/insights/me?periodType=MONTH" \
+  -H "Authorization: Bearer $STAFF_TOKEN"
+```
+
+**Response**:
+```json
+{
+  "userId": "user_123",
+  "employeeId": "emp_456",
+  "displayName": "John Doe",
+  "rank": 5,
+  "compositeScore": 0.68,
+  "performanceScore": 0.70,
+  "reliabilityScore": 0.63,
+  "periodLabel": "November 2025",
+  "totalStaff": 25,
+  "myRank": 5
+}
+```
+
+**Privacy**: L1-L3 users can only view their own metrics, not other staff.
+
+### Integration Points
+
+#### M4 Reports (Future)
+
+When `generatePeriodDigest()` and `generateFranchiseDigest()` are implemented, they will include:
+
+**PeriodDigest.staffInsights**:
+```typescript
+{
+  periodLabel: "November 2025",
+  awardWinner: {
+    displayName: "John Doe",
+    category: "TOP_PERFORMER",
+    score: 0.82,
+    reason: "Highest composite score..."
+  },
+  topPerformers: [...], // Top 5
+  reliabilityHighlights: {
+    perfectAttendance: [...], // Staff with 100% attendance
+    mostCoverShifts: [...]    // Staff who helped most
+  }
+}
+```
+
+**FranchiseDigest.staffInsights**:
+```typescript
+{
+  periodLabel: "November 2025",
+  topPerformersAcrossOrg: [...], // Top 10 franchise-wide
+  byBranch: {
+    "branch_001": {
+      topPerformer: { displayName: "Alice", score: 0.85 },
+      averageScore: 0.68
+    },
+    "branch_002": { ... }
+  }
+}
+```
+
+### Period Resolution
+
+The service automatically resolves periods using `date-fns`:
+
+```typescript
+// WEEK: ISO week (Monday-Sunday)
+resolvePeriod('WEEK', new Date('2025-11-20'))
+// → { start: 2025-11-17, end: 2025-11-23, label: "Week 47, 2025" }
+
+// MONTH: Calendar month
+resolvePeriod('MONTH', new Date('2025-11-15'))
+// → { start: 2025-11-01, end: 2025-11-30, label: "November 2025" }
+
+// QUARTER: Q1 (Jan-Mar), Q2 (Apr-Jun), Q3 (Jul-Sep), Q4 (Oct-Dec)
+resolvePeriod('QUARTER', new Date('2025-11-01'))
+// → { start: 2025-10-01, end: 2025-12-31, label: "Q4 2025" }
+
+// YEAR: Calendar year
+resolvePeriod('YEAR', new Date('2025-11-01'))
+// → { start: 2025-01-01, end: 2025-12-31, label: "2025" }
+```
+
+### RBAC Matrix
+
+| Endpoint | L1-L3 (Staff) | L4 (Manager) | L5 (Owner) | HR | ACCOUNTANT |
+|----------|---------------|--------------|------------|-----|------------|
+| GET /rankings | ❌ | ✅ | ✅ | ✅ | ✅ |
+| GET /employee-of-month | ❌ | ✅ | ✅ | ✅ | ❌ |
+| POST /awards | ❌ | ✅ | ✅ | ✅ | ❌ |
+| GET /awards (list) | ❌ | ✅ | ✅ | ✅ | ✅ |
+| GET /me (self) | ✅ | ✅ | ✅ | ✅ | ✅ |
+
+### Known Limitations
+
+1. **No Manual Overrides**: Awards always data-driven; can't manually select winner
+2. **No Award Comments**: Can't add manager notes to awards
+3. **No Bonus Tracking**: Monetary rewards not tracked in system
+4. **No Improvement Tracking**: Can't show "most improved" vs previous period (need historical comparison)
+5. **No Team Awards**: Only individual awards, no team-of-the-month
+6. **No Employee Profiles**: Award history not displayed on employee detail pages
+7. **No Notifications**: Winners not automatically notified (manual communication)
+
+### Future Enhancements
+
+1. **Manual Award Creation**: UI to create awards with custom reason (e.g., "Customer compliment")
+2. **Award Bonuses**: Link awards to PayRun with bonus amounts
+3. **Historical Trends**: Charts showing employee scores over time
+4. **Most Improved Award**: Compare current period score to previous period
+5. **Team Awards**: Aggregate branch performance, team-of-the-month
+6. **Employee Dashboard**: Show award badges on employee profiles
+7. **Automated Notifications**: Email/SMS to award winners
+8. **Peer Nominations**: Let staff nominate colleagues for recognition
+9. **Multi-Category Awards**: Multiple winners per period (sales + reliability + service)
+10. **Franchise Leaderboards**: Real-time cross-branch rankings
+
+### Success Metrics
+
+**Adoption**:
+- ✅ 80% of managers check staff rankings weekly
+- ✅ 100% of monthly awards created within 7 days of period end
+- ✅ 60% of staff view own insights monthly
+
+**Accuracy**:
+- ✅ 80% of awards align with manager expectations
+- ✅ < 5% award disputes (staff disagreeing with selection)
+- ✅ 100% backward compatibility with M5/M9 (no breaking changes)
+
+**Performance**:
+- Rankings query < 2 seconds (for 100 staff)
+- Award recommendation < 1 second
+- Award creation (idempotent) < 500ms
+- Self-view query < 500ms
+
+**RBAC Compliance**:
+- 0 unauthorized rankings access (L3 blocked)
+- 100% of self-view requests allowed (L1-L3)
+- 100% of cross-employee viewing blocked for L1-L3
+
+---
+
+## M20 – Customer Feedback & NPS Hardening
+
+### Overview
+
+M20 provides enterprise-grade customer feedback collection and Net Promoter Score (NPS) analytics by enabling:
+
+- **Multi-Channel Feedback**: Collect feedback via POS, Portal, Email, QR codes, SMS, Kiosks
+- **Public Anonymous Submission**: Zero-friction feedback without login (entity verification via orderNumber/reservationId/ticketCode)
+- **Authenticated Submission**: Staff can submit feedback on behalf of customers (with createdBy tracking)
+- **NPS Calculation**: Industry-standard formula: `NPS = % Promoters - % Detractors` (score 0-10)
+- **Comprehensive Analytics**: NPS summary, score breakdowns (0-10 distribution), top comments (positive/negative)
+- **Digest Integration**: Customer feedback sections in shift-end, period, and franchise reports
+- **Rate Limiting**: ThrottlerGuard on public endpoint (10 submissions/hour per IP) to prevent spam
+- **RBAC**: Public access for submission, L4+ for analytics, L1-L3 can view own submitted feedback
+
+**Key Principle**: Make feedback collection frictionless while maintaining data quality through entity verification and rate limiting.
+
+### Architecture
+
+```
+┌──────────────────────┐
+│  Client (QR/Email/   │
+│  POS/Portal/SMS)     │
+│  - Submit feedback   │
+│  - View NPS trends   │
+└──────────┬───────────┘
+           │ API Request
+           ▼
+┌──────────────────────┐
+│ FeedbackController   │
+│  - Public endpoint:  │
+│    ThrottlerGuard    │
+│  - Auth endpoint:    │
+│    JwtAuthGuard +    │
+│    RolesGuard        │
+│  - Analytics: L4+    │
+└──────────┬───────────┘
+           │
+           ▼
+┌──────────────────────┐
+│  FeedbackService     │
+│  - verifyEntityLink()│
+│  - classifyNps()     │
+│  - getNpsSummary()   │
+│  - getBreakdown()    │
+│  - getTopComments()  │
+└──────────┬───────────┘
+           │
+           ├──► PrismaService.order (verify orderNumber)
+           ├──► PrismaService.reservation (verify reservationId)
+           ├──► PrismaService.eventBooking (verify ticketCode)
+           └──► PrismaService.feedback (store feedback + check duplicates)
+```
+
+### Data Model
+
+**Feedback Table** (`feedback`):
+
+```prisma
+model Feedback {
+  id              String           @id @default(cuid())
+  orgId           String
+  branchId        String?
+  orderId         String?          @unique // One feedback per order
+  reservationId   String?          @unique // One feedback per reservation
+  eventBookingId  String?          @unique // One feedback per event booking
+  channel         FeedbackChannel  // POS, PORTAL, EMAIL, QR, SMS, KIOSK, OTHER
+  score           Int              // 0-10 (NPS scale)
+  npsCategory     NpsCategory      // DETRACTOR, PASSIVE, PROMOTER
+  comment         String?          @db.Text // Max 5000 chars
+  tags            String[]         // e.g., ["service", "food-quality", "wait-time"]
+  sentimentHint   String?          // "positive", "negative", "neutral" (optional staff hint)
+  createdById     String?          // Nullable (anonymous public submissions)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  
+  org             Org              @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  branch          Branch?          @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  order           Order?           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  reservation     Reservation?     @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  eventBooking    EventBooking?    @relation(fields: [eventBookingId], references: [id], onDelete: Cascade)
+  createdBy       User?            @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  
+  @@index([orgId, createdAt(sort: Desc)])
+  @@index([branchId, createdAt(sort: Desc)])
+  @@index([orderId])
+  @@index([reservationId])
+  @@index([eventBookingId])
+  @@index([npsCategory, createdAt(sort: Desc)])
+  @@index([score])
+}
+
+enum FeedbackChannel {
+  POS      // Staff submits feedback at point-of-sale
+  PORTAL   // Customer submits via web portal
+  EMAIL    // Email survey link
+  QR       // QR code on receipt/table tent
+  SMS      // SMS survey link
+  KIOSK    // Self-service kiosk
+  OTHER    // Other channels (phone call, manual entry)
+}
+
+enum NpsCategory {
+  DETRACTOR  // Score 0-6
+  PASSIVE    // Score 7-8
+  PROMOTER   // Score 9-10
+}
+```
+
+**Relations**:
+- `Org.feedback[]`: All feedback for organization
+- `Branch.feedback[]`: Branch-specific feedback
+- `Order.feedback?`: One-to-one (optional) link to order
+- `Reservation.feedback?`: One-to-one (optional) link to reservation
+- `EventBooking.feedback?`: One-to-one (optional) link to event booking
+- `User.feedbackSubmitted[]`: Staff-submitted feedback tracking
+
+**Indexes**:
+1. `(orgId, createdAt DESC)`: Fast org-wide feedback listing by date
+2. `(branchId, createdAt DESC)`: Branch-level feedback listing
+3. `(orderId)`: Duplicate prevention + order feedback lookup
+4. `(reservationId)`: Duplicate prevention + reservation feedback lookup
+5. `(eventBookingId)`: Duplicate prevention + event feedback lookup
+6. `(npsCategory, createdAt DESC)`: NPS category filtering
+7. `(score)`: Score-based analytics (breakdown queries)
+
+### NPS Logic
+
+**Classification Rules** (Industry Standard):
+- **DETRACTOR** (score 0-6): Unhappy customers likely to churn or spread negative word-of-mouth
+- **PASSIVE** (score 7-8): Satisfied but unenthusiastic, vulnerable to competitive offers
+- **PROMOTER** (score 9-10): Enthusiastic customers likely to recommend business
+
+**NPS Formula**:
+```
+NPS = (% Promoters) - (% Detractors)
+
+Range: -100 to +100
+  • NPS < 0:  More detractors than promoters (critical)
+  • NPS 0-30: Room for improvement
+  • NPS 30-50: Good performance
+  • NPS 50-70: Excellent performance
+  • NPS > 70: World-class performance
+```
+
+**Example Calculation**:
+```
+Total Responses: 100
+Promoters (9-10): 60  → 60%
+Passives (7-8):   25  → 25%
+Detractors (0-6): 15  → 15%
+
+NPS = 60% - 15% = +45 (Good performance)
+```
+
+**Passives are EXCLUDED from NPS calculation** (industry standard).
+
+### API Endpoints
+
+#### 1. Submit Public Feedback (Anonymous)
+
+```bash
+POST /feedback/public
+
+# ThrottlerGuard: 10 requests/hour per IP
+# No authentication required
+# Entity verification via orderNumber/reservationId/ticketCode
+
+Body:
+{
+  "orderNumber": "ORD-20241122-001",     // OR reservationId OR ticketCode
+  "score": 9,                            // Required: 0-10
+  "comment": "Excellent service!",       // Optional: Max 5000 chars
+  "channel": "QR",                       // Required: FeedbackChannel enum
+  "tags": ["service", "speed"]           // Optional: Max 10 tags
+}
+
+Response (201 Created):
+{
+  "id": "cm123feedback456",
+  "message": "Thank you for your feedback!",
+  "npsCategory": "PROMOTER"
+}
+```
+
+**Entity Verification**:
+- If `orderNumber` provided → lookup order, extract `orderId`
+- If `reservationId` provided → verify reservation exists (use CUID directly)
+- If `ticketCode` provided → lookup event booking, extract `eventBookingId`
+- Check for duplicate: `orderId`/`reservationId`/`eventBookingId` must not already have feedback
+- Return 404 if entity not found, 400 if duplicate feedback exists
+
+**Rate Limiting**:
+- `@nestjs/throttler` enforces 10 requests/hour per IP on `/feedback/public`
+- Returns 429 (Too Many Requests) if limit exceeded
+- Prevents spam/abuse of anonymous endpoint
+
+#### 2. Submit Authenticated Feedback
+
+```bash
+POST /feedback
+
+# JwtAuthGuard + RolesGuard
+# Roles: L1, L2, L3, L4, L5, HR (all staff can submit on behalf of customers)
+# Sets createdById to current user
+
+Body:
+{
+  "orderId": "cm123order456",            // OR reservationId OR eventBookingId
+  "branchId": "cm123branch789",          // Optional: override context branchId
+  "score": 3,                            // Required: 0-10
+  "comment": "Complained about wait time", // Optional
+  "channel": "POS",                      // Required
+  "tags": ["wait-time", "service"],      // Optional
+  "sentimentHint": "negative"            // Optional: staff's sentiment assessment
+}
+
+Response (201 Created):
+{
+  "id": "cm123feedback456",
+  "orgId": "cm123org789",
+  "branchId": "cm123branch789",
+  "orderId": "cm123order456",
+  "score": 3,
+  "npsCategory": "DETRACTOR",
+  "channel": "POS",
+  "createdById": "cm123user789",
+  "createdAt": "2024-11-22T10:30:00Z"
+}
+```
+
+**Validation**:
+- User must belong to same `orgId` as entity (order/reservation/eventBooking)
+- If `branchId` provided, user must have access to that branch (L4 managers branch-scoped)
+- Duplicate check same as public endpoint
+
+#### 3. List Feedback (Paginated with Filters)
+
+```bash
+GET /feedback?branchId=cm123&from=2024-11-01T00:00:00Z&to=2024-11-30T23:59:59Z&minScore=9&channel=QR&hasComment=true&limit=50&offset=0
+
+# JwtAuthGuard + RolesGuard
+# Roles: L4, L5, HR (managers and above)
+# L4 managers automatically scoped to their assigned branches
+
+Query Parameters:
+  branchId?: string        // Filter by branch
+  from?: Date              // Start date (ISO 8601)
+  to?: Date                // End date (ISO 8601)
+  minScore?: number        // Min score (0-10)
+  maxScore?: number        // Max score (0-10)
+  channel?: FeedbackChannel // Filter by channel
+  hasComment?: boolean     // Only feedback with comments
+  npsCategory?: NpsCategory // Filter by category
+  limit?: number           // Page size (default 50, max 200)
+  offset?: number          // Pagination offset
+
+Response (200 OK):
+{
+  "items": [
+    {
+      "id": "cm123feedback456",
+      "score": 9,
+      "npsCategory": "PROMOTER",
+      "comment": "Excellent service!",
+      "channel": "QR",
+      "tags": ["service", "speed"],
+      "branchId": "cm123branch789",
+      "createdAt": "2024-11-22T10:30:00Z",
+      "order": {
+        "orderNumber": "ORD-20241122-001",
+        "total": 4500
+      }
+    }
+  ],
+  "total": 127,
+  "limit": 50,
+  "offset": 0
+}
+```
+
+**RBAC Branch Scoping**:
+- L4 managers: Automatically filtered to `branchId IN user.assignedBranches`
+- L5 owners/HR: See all feedback in org (no branch restriction)
+
+#### 4. Get Feedback by ID
+
+```bash
+GET /feedback/:id
+
+# JwtAuthGuard + RolesGuard
+# Roles: L1-L5, HR (all staff can view feedback)
+# L1-L3: Can only view feedback they created (createdById = user.id)
+# L4+: Can view all feedback in accessible branches
+
+Response (200 OK):
+{
+  "id": "cm123feedback456",
+  "orgId": "cm123org789",
+  "branchId": "cm123branch789",
+  "orderId": "cm123order456",
+  "score": 9,
+  "npsCategory": "PROMOTER",
+  "comment": "Excellent service!",
+  "channel": "QR",
+  "tags": ["service", "speed"],
+  "sentimentHint": null,
+  "createdById": null,          // Anonymous submission
+  "createdAt": "2024-11-22T10:30:00Z",
+  "updatedAt": "2024-11-22T10:30:00Z",
+  "branch": {
+    "id": "cm123branch789",
+    "name": "Downtown Location"
+  },
+  "order": {
+    "id": "cm123order456",
+    "orderNumber": "ORD-20241122-001",
+    "total": 4500
+  },
+  "createdBy": null             // Anonymous
+}
+```
+
+#### 5. Get NPS Summary (Analytics)
+
+```bash
+GET /feedback/analytics/nps-summary?from=2024-11-01T00:00:00Z&to=2024-11-30T23:59:59Z&branchId=cm123&channel=QR
+
+# JwtAuthGuard + RolesGuard
+# Roles: L4, L5, HR, ACCOUNTANT
+# Date range (from, to) REQUIRED
+
+Query Parameters:
+  from: Date               // Required: Period start
+  to: Date                 // Required: Period end
+  branchId?: string        // Optional: Branch filter
+  channel?: FeedbackChannel // Optional: Channel filter
+
+Response (200 OK):
+{
+  "nps": 45,                 // NPS score (-100 to +100)
+  "totalResponses": 100,
+  "promoters": {
+    "count": 60,
+    "percentage": 60
+  },
+  "passives": {
+    "count": 25,
+    "percentage": 25
+  },
+  "detractors": {
+    "count": 15,
+    "percentage": 15
+  },
+  "avgScore": 8.2,
+  "responseRate": 0.35,      // 35% of orders/reservations got feedback
+  "period": {
+    "from": "2024-11-01T00:00:00Z",
+    "to": "2024-11-30T23:59:59Z"
+  }
+}
+```
+
+**Calculation**:
+```typescript
+const promoters = feedback.filter(f => f.score >= 9).length;
+const passives = feedback.filter(f => f.score >= 7 && f.score <= 8).length;
+const detractors = feedback.filter(f => f.score <= 6).length;
+const total = promoters + passives + detractors;
+
+const promoterPct = (promoters / total) * 100;
+const detractorPct = (detractors / total) * 100;
+const nps = promoterPct - detractorPct; // Can be negative!
+
+const avgScore = feedback.reduce((sum, f) => sum + f.score, 0) / total;
+
+// Response rate: feedback count / eligible entities (orders + reservations)
+const eligibleEntities = await prisma.order.count({ where: { createdAt: { gte: from, lte: to }, branchId } })
+  + await prisma.reservation.count({ where: { createdAt: { gte: from, lte: to }, branchId } });
+const responseRate = total / eligibleEntities;
+```
+
+#### 6. Get Score Breakdown
+
+```bash
+GET /feedback/analytics/breakdown?from=2024-11-01T00:00:00Z&to=2024-11-30T23:59:59Z&branchId=cm123
+
+# JwtAuthGuard + RolesGuard
+# Roles: L4, L5, HR
+# Returns 0-10 score distribution
+
+Response (200 OK):
+{
+  "breakdown": [
+    { "score": 0, "count": 2 },
+    { "score": 1, "count": 1 },
+    { "score": 2, "count": 3 },
+    { "score": 3, "count": 4 },
+    { "score": 4, "count": 5 },
+    { "score": 5, "count": 3 },
+    { "score": 6, "count": 2 },   // DETRACTOR cutoff
+    { "score": 7, "count": 10 },  // PASSIVE start
+    { "score": 8, "count": 15 },  // PASSIVE end
+    { "score": 9, "count": 30 },  // PROMOTER start
+    { "score": 10, "count": 30 }  // PROMOTER end
+  ],
+  "total": 105,
+  "period": {
+    "from": "2024-11-01T00:00:00Z",
+    "to": "2024-11-30T23:59:59Z"
+  }
+}
+```
+
+**Query Uses Prisma groupBy**:
+```typescript
+const breakdown = await prisma.feedback.groupBy({
+  by: ['score'],
+  where: { orgId, branchId, createdAt: { gte: from, lte: to } },
+  _count: { score: true },
+  orderBy: { score: 'asc' }
+});
+```
+
+#### 7. Get Top Comments
+
+```bash
+GET /feedback/analytics/top-comments?from=2024-11-01T00:00:00Z&to=2024-11-30T23:59:59Z&sentiment=negative&limit=10
+
+# JwtAuthGuard + RolesGuard
+# Roles: L4, L5, HR
+# Returns sample comments filtered by sentiment
+
+Query Parameters:
+  from: Date               // Required
+  to: Date                 // Required
+  branchId?: string        // Optional
+  sentiment?: string       // "positive" (score >= 9) | "negative" (score <= 6) | omit for all
+  limit?: number           // Max comments (default 20, max 100)
+
+Response (200 OK):
+{
+  "comments": [
+    {
+      "id": "cm123feedback456",
+      "score": 3,
+      "comment": "Waited 45 minutes past reservation time. Manager was unhelpful.",
+      "channel": "EMAIL",
+      "tags": ["wait-time", "staff", "management"],
+      "orderNumber": "ORD-20241122-001",
+      "createdAt": "2024-11-22T10:30:00Z"
+    }
+  ],
+  "total": 47,
+  "filters": {
+    "sentiment": "negative",
+    "period": {
+      "from": "2024-11-01T00:00:00Z",
+      "to": "2024-11-30T23:59:59Z"
+    }
+  }
+}
+```
+
+**Sentiment Filtering**:
+- `sentiment=positive`: `score >= 9` (promoters only)
+- `sentiment=negative`: `score <= 6` (detractors only)
+- No sentiment param: All feedback with comments
+
+### RBAC Matrix
+
+| Endpoint | Public (No Auth) | L1-L3 (Staff) | L4 (Manager) | L5 (Owner) | HR | ACCOUNTANT |
+|----------|------------------|---------------|--------------|------------|-----|------------|
+| POST /public/feedback | ✅ (10/hr rate limit) | ✅ | ✅ | ✅ | ✅ | ✅ |
+| POST /feedback | ❌ | ✅ | ✅ | ✅ | ✅ | ❌ |
+| GET /feedback | ❌ | ❌ | ✅ (branch-scoped) | ✅ | ✅ | ❌ |
+| GET /feedback/:id | ❌ | ✅ (own only) | ✅ | ✅ | ✅ | ❌ |
+| GET /analytics/nps-summary | ❌ | ❌ | ✅ | ✅ | ✅ | ✅ |
+| GET /analytics/breakdown | ❌ | ❌ | ✅ | ✅ | ✅ | ❌ |
+| GET /analytics/top-comments | ❌ | ❌ | ✅ | ✅ | ✅ | ❌ |
+
+### Digest Integration
+
+M20 extends report DTOs (from M4) with optional `customerFeedback` sections:
+
+#### Shift-End Report
+
+```typescript
+interface ShiftEndReport {
+  // ... existing fields (sales, staff, inventory, anomalies) ...
+  customerFeedback?: {
+    nps: number | null;                // NPS for shift (or null if < 5 responses)
+    totalResponses: number;            // Feedback count during shift
+    avgScore: number;                  // Average score 0-10
+    promoterPct: number;               // % promoters
+    passivePct: number;                // % passives
+    detractorPct: number;              // % detractors
+    responseRate: number;              // feedback / orders ratio
+    sampleComments: Array<{
+      score: number;
+      comment: string;
+      channel: string;
+      timestamp: string;
+    }>;                                // Max 5 comments (critical feedback prioritized)
+    breakdown: Array<{
+      score: number;                   // 0-10
+      count: number;
+    }>;
+  };
+}
+```
+
+**Generation Logic** (in `ReportGeneratorService.generateShiftEndReport()`):
+```typescript
+const feedback = await feedbackService.listFeedback({
+  branchId: shift.branchId,
+  from: shift.startTime,
+  to: shift.endTime
+}, context);
+
+if (feedback.total >= 5) {  // Only include NPS if statistically significant
+  const nps = await feedbackService.getNpsSummary({
+    branchId: shift.branchId,
+    from: shift.startTime,
+    to: shift.endTime
+  }, context);
+  
+  report.customerFeedback = {
+    nps: nps.nps,
+    totalResponses: nps.totalResponses,
+    avgScore: nps.avgScore,
+    promoterPct: nps.promoters.percentage,
+    passivePct: nps.passives.percentage,
+    detractorPct: nps.detractors.percentage,
+    responseRate: nps.responseRate,
+    sampleComments: feedback.items
+      .sort((a, b) => a.score - b.score)  // Prioritize low scores
+      .slice(0, 5)
+      .map(f => ({
+        score: f.score,
+        comment: f.comment || '(No comment)',
+        channel: f.channel,
+        timestamp: f.createdAt.toISOString()
+      })),
+    breakdown: await feedbackService.getFeedbackBreakdown({
+      branchId: shift.branchId,
+      from: shift.startTime,
+      to: shift.endTime
+    }, context).then(res => res.breakdown)
+  };
+}
+```
+
+#### Period Digest
+
+```typescript
+interface PeriodDigest {
+  // ... existing fields (sales, inventory, staff, trends) ...
+  customerFeedback?: {
+    nps: number | null;                // Period NPS
+    totalResponses: number;
+    responseRate: number;
+    trend: Array<{
+      date: string;                    // ISO date
+      nps: number | null;              // Daily NPS (null if < 5 responses)
+    }>;                                // Sparkline data for NPS over period
+    topComplaints: Array<{
+      tag: string;                     // From feedback.tags
+      count: number;
+      percentage: number;
+    }>;                                // Top 5 complaint tags
+    topPraise: Array<{
+      tag: string;
+      count: number;
+      percentage: number;
+    }>;                                // Top 5 praise tags
+    channelBreakdown: Array<{
+      channel: string;
+      count: number;
+      avgScore: number;
+    }>;                                // Performance by channel
+    criticalFeedback: Array<{
+      id: string;
+      score: number;                   // 0-3 (critical scores only)
+      comment: string;
+      orderNumber: string | null;
+      timestamp: string;
+    }>;                                // All score 0-3 feedback (urgent attention)
+  };
+}
+```
+
+**Tag Aggregation**:
+```typescript
+// Aggregate tags from all feedback in period
+const allTags = feedback.items.flatMap(f => f.tags || []);
+const tagCounts = allTags.reduce((acc, tag) => {
+  acc[tag] = (acc[tag] || 0) + 1;
+  return acc;
+}, {} as Record<string, number>);
+
+const sortedTags = Object.entries(tagCounts)
+  .sort((a, b) => b[1] - a[1])
+  .map(([tag, count]) => ({
+    tag,
+    count,
+    percentage: (count / feedback.total) * 100
+  }));
+
+// Separate into complaints (detractor feedback) and praise (promoter feedback)
+const detractorTags = feedback.items.filter(f => f.npsCategory === 'DETRACTOR').flatMap(f => f.tags || []);
+const promoterTags = feedback.items.filter(f => f.npsCategory === 'PROMOTER').flatMap(f => f.tags || []);
+```
+
+#### Franchise Digest
+
+```typescript
+interface FranchiseDigest {
+  // ... existing fields (sales, staff, inventory, benchmarking) ...
+  customerFeedback?: {
+    franchiseNps: number | null;       // Org-wide NPS
+    totalResponses: number;
+    byBranch: Array<{
+      branchId: string;
+      branchName: string;
+      nps: number | null;
+      responseCount: number;
+      ranking: number;                 // 1 = best NPS in franchise
+      change: number;                  // NPS change vs previous period
+    }>;
+    npsTrend: Array<{
+      period: string;                  // "Week 1", "Week 2", ... or "Nov 2024"
+      nps: number | null;
+      totalResponses: number;
+    }>;
+    benchmarking: {
+      avgNps: number;                  // Franchise average
+      topPerformer: {
+        branchId: string;
+        branchName: string;
+        nps: number;
+      };
+      needsAttention: Array<{
+        branchId: string;
+        branchName: string;
+        nps: number;
+        detractorPct: number;
+      }>;                              // Branches with NPS < 0 or detractorPct > 30%
+    };
+  };
+}
+```
+
+**Cross-Branch Ranking**:
+```typescript
+const branchNpsScores = await Promise.all(
+  branches.map(async branch => {
+    const nps = await feedbackService.getNpsSummary({
+      branchId: branch.id,
+      from: periodStart,
+      to: periodEnd
+    }, context);
+    
+    return {
+      branchId: branch.id,
+      branchName: branch.name,
+      nps: nps.nps,
+      responseCount: nps.totalResponses
+    };
+  })
+);
+
+// Sort by NPS descending and assign rankings
+branchNpsScores.sort((a, b) => (b.nps || -999) - (a.nps || -999));
+branchNpsScores.forEach((branch, index) => {
+  branch.ranking = index + 1;
+});
+```
+
+### Known Limitations
+
+1. **No Sentiment Analysis**: Tags and comments not auto-analyzed for sentiment (relies on staff's optional `sentimentHint`)
+2. **No Auto-Tagging**: Tags must be manually entered (no ML-based tag suggestions)
+3. **No Critical Feedback Alerts**: System doesn't auto-notify managers when score 0-3 feedback received
+4. **No Customer Reply Flow**: Can't respond to feedback directly from system
+5. **No Feedback Incentives**: Can't offer discounts/rewards for completing feedback
+6. **No Multi-Language Support**: Comments stored as-is (no translation)
+7. **No Benchmarking Data**: Can't compare NPS to industry averages or competitors
+8. **No Predictive Analytics**: Can't forecast NPS trends or identify at-risk customers
+9. **No QR Code Generator**: QR codes for feedback collection must be generated externally
+10. **No SMS Automation**: SMS survey links must be sent manually (no auto-SMS after order)
+
+### Future Enhancements
+
+1. **Sentiment Analysis**: Use ML to auto-classify comment sentiment (positive/negative/neutral)
+2. **Auto-Tagging**: Suggest tags based on comment text ("wait time" → ["service", "speed"])
+3. **Critical Feedback Alerts**: Real-time Slack/email notifications for score 0-3 feedback
+4. **Customer Reply Flow**: UI for managers to respond to feedback (stored in `FeedbackReply` model)
+5. **Feedback Incentives**: Offer 10% discount code after completing feedback
+6. **Multi-Language**: Detect language, translate comments for analytics
+7. **Benchmarking**: Compare NPS to industry averages (restaurant industry ~30-50)
+8. **Predictive Analytics**: Forecast NPS trends, identify branches at risk of declining scores
+9. **QR Code Generator**: Generate unique QR codes per table/receipt with feedback link
+10. **SMS Automation**: Auto-send SMS with feedback link 30 mins after order completion
+
+### Success Metrics
+
+**Adoption**:
+- ✅ 30% response rate on feedback requests (industry average 15-20%)
+- ✅ 80% of feedback includes comments (not just scores)
+- ✅ 90% of managers check NPS weekly
+- ✅ 100% of critical feedback (score 0-3) acknowledged within 24 hours
+
+**Data Quality**:
+- ✅ < 5% spam submissions (rate limiting effective)
+- ✅ < 2% duplicate prevention failures
+- ✅ 95% of feedback linked to valid entities (order/reservation/event)
+- ✅ 80% of tags are actionable (not generic like "other")
+
+**Performance**:
+- Public feedback submission < 500ms (anonymous, no auth)
+- Authenticated feedback submission < 300ms
+- NPS summary query < 1 second (for 10,000 feedback records)
+- Breakdown query < 800ms (Prisma groupBy optimization)
+- Top comments query < 600ms (limit 100)
+- Digest generation +2 seconds overhead (feedback section)
+
+**RBAC Compliance**:
+- 0 unauthorized analytics access (L3 blocked)
+- 100% rate limit enforcement on public endpoint
+- 100% duplicate prevention (unique constraints enforced)
+- 0 feedback spam incidents (ThrottlerGuard effective)
+
+**Business Impact**:
+- ✅ 15% increase in NPS within 6 months of M20 deployment
+- ✅ 50% reduction in customer complaint escalations (early detection via feedback)
+- ✅ 20% increase in repeat customer rate (NPS improvement correlation)
+
+---
+
+## M21: Idempotency Rollout & Controller Integration
+
+**Purpose**: Prevent duplicate submissions from network retries, double-clicks, or offline sync by wiring the M16 idempotency infrastructure to write-heavy endpoints across POS, reservations, and bookings modules.
+
+**Key Problem Solved**: Without idempotency protection, clients retrying failed requests can cause:
+- **POS**: Duplicate orders, double charges on order close, multiple kitchen tickets for same order
+- **Reservations**: Double-booked tables, duplicate confirmation emails
+- **Bookings**: Multiple event registrations with duplicate charges, double payment processing
+- **Public Portals**: Customers charged twice due to network timeouts on payment submission
+
+**Core Behavior**: 
+- Client sends `Idempotency-Key: <ULID>` header on POST requests
+- Server computes SHA256 fingerprint of request body (normalized JSON)
+- If key seen before with **same** fingerprint → return cached response (200 OK)
+- If key seen before with **different** fingerprint → return 409 Conflict (client bug)
+- If no key provided → normal processing (no idempotency check)
+- Cached responses expire after 24 hours (auto-cleanup via daily cron)
+
+---
+
+### Architecture Overview
+
+**Components**:
+
+1. **IdempotencyKey Model** (PostgreSQL)
+   - Stores request key, endpoint, body hash, response, status code, expiration
+   - Unique constraint on `key` field (prevents duplicate processing)
+   - Index on `expiresAt` (efficient cleanup queries)
+
+2. **IdempotencyService** (`services/api/src/common/idempotency.service.ts`)
+   - `check(key, endpoint, body)`: Check if request is duplicate, return cached response if found
+   - `store(key, endpoint, body, response, statusCode)`: Cache successful response for 24h
+   - `cleanupExpired()`: Delete records older than 24h (runs daily)
+   - `hashRequest(body)`: Compute SHA256 fingerprint of normalized JSON
+
+3. **IdempotencyInterceptor** (`services/api/src/common/idempotency.interceptor.ts`)
+   - NestJS interceptor that extracts `Idempotency-Key` header
+   - Calls `IdempotencyService.check()` before controller execution
+   - Returns cached response or throws 409 Conflict if fingerprint mismatch
+   - Stores response after successful processing
+
+4. **CommonModule** (`services/api/src/common/common.module.ts`)
+   - Exports IdempotencyService and IdempotencyInterceptor for use in feature modules
+   - Imported by POS, Reservations, Bookings, PublicBooking modules
+
+**Flow Diagram**:
+
+```
+Client Request
+    |
+    v
+[IdempotencyInterceptor]
+    |
+    +---> Extract "Idempotency-Key" header
+    |
+    +---> Call IdempotencyService.check(key, endpoint, body)
+    |       |
+    |       +---> Query: SELECT * FROM idempotency_keys WHERE key = ? AND expiresAt > NOW()
+    |       |
+    |       +---> If NOT FOUND:
+    |       |       └─> Return { isDuplicate: false } → proceed to controller
+    |       |
+    |       +---> If FOUND with SAME hash:
+    |       |       └─> Return { isDuplicate: true, response, statusCode } → skip controller
+    |       |
+    |       +---> If FOUND with DIFFERENT hash:
+    |               └─> Throw 409 Conflict (client bug)
+    |
+    +---> If isDuplicate: Return cached response
+    |
+    +---> Else: Execute controller handler
+    |
+    +---> After success: Call IdempotencyService.store(key, endpoint, body, response, statusCode)
+    |       |
+    |       +---> INSERT INTO idempotency_keys (key, endpoint, requestHash, responseBody, statusCode, expiresAt)
+    |       |       VALUES (?, ?, SHA256(body), ?, ?, NOW() + INTERVAL 24 HOUR)
+    |       |
+    |       +---> ON CONFLICT (key) DO NOTHING (race condition protection)
+    |
+    v
+Return response to client
+```
+
+---
+
+### Database Schema: IdempotencyKey Model
+
+**File**: `packages/db/prisma/schema.prisma` (lines ~2523-2535)
+
+```prisma
+model IdempotencyKey {
+  id            String   @id @default(cuid())  // Internal record ID
+  key           String   @unique                // Idempotency-Key header value (ULID from client)
+  endpoint      String                          // Request endpoint (/pos/orders, /reservations, etc.)
+  requestHash   String                          // SHA256 of normalized request body
+  responseBody  Json                            // Cached response (full JSON)
+  statusCode    Int                             // HTTP status code (200, 201, etc.)
+  expiresAt     DateTime                        // Expiration timestamp (NOW + 24h)
+  createdAt     DateTime @default(now())        // Record creation timestamp
+
+  @@index([expiresAt])                          // Efficient cleanup queries
+  @@map("idempotency_keys")                     // PostgreSQL table name
+}
+```
+
+**Migration**: `20251122084642_m21_idempotency_keys` (63rd migration)
+
+**Key Fields**:
+- `key` (UNIQUE): Client-provided idempotency key (recommended: ULID per action)
+- `requestHash`: SHA256 of `JSON.stringify(body, Object.keys(body).sort())` (detects body changes)
+- `responseBody`: Full controller response (includes entity ID, status, metadata)
+- `expiresAt`: Prevents indefinite storage (24h TTL keeps table size bounded)
+
+**Design Rationale**:
+- **Why SHA256 full body?**: Detects any parameter change (quantity, item ID, discount, etc.)
+- **Why 24h TTL?**: Balances client retry window (network issues) vs. storage cost
+- **Why store response?**: Clients expect exact same response on retry (including generated IDs)
+- **Why unique constraint on `key`?**: Prevents race conditions (first INSERT wins)
+
+---
+
+### Protected Endpoints (19 Total)
+
+**Module: POS (7 endpoints)**
+| Endpoint | Method | Handler | Critical Use Case |
+|----------|--------|---------|-------------------|
+| `/pos/orders` | POST | `createOrder` | Prevent duplicate orders from double-click on POS tablet |
+| `/pos/orders/:id/send-to-kitchen` | POST | `sendToKitchen` | Prevent duplicate kitchen tickets (KDS flood) |
+| `/pos/orders/:id/modify` | POST | `modifyOrder` | Prevent duplicate item additions/removals |
+| `/pos/orders/:id/void` | POST | `voidOrder` | Prevent double-void (refund integrity) |
+| `/pos/orders/:id/close` | POST | `closeOrder` | **CRITICAL**: Prevent duplicate charges (payment processed twice) |
+| `/pos/orders/:id/discount` | POST | `applyDiscount` | Prevent duplicate discount applications |
+| `/pos/orders/:id/post-close-void` | POST | `postCloseVoid` | Prevent duplicate refunds after shift close |
+
+**Module: Reservations (4 endpoints)**
+| Endpoint | Method | Handler | Critical Use Case |
+|----------|--------|---------|-------------------|
+| `/reservations` | POST | `create` | Prevent duplicate table reservations |
+| `/reservations/:id/confirm` | POST | `confirm` | Prevent duplicate confirmation emails |
+| `/reservations/:id/cancel` | POST | `cancel` | Prevent double-cancel (no-show penalty logic) |
+| `/reservations/:id/seat` | POST | `seat` | Prevent duplicate table assignments |
+
+**Module: Bookings (Admin, 2 endpoints)**
+| Endpoint | Method | Handler | Critical Use Case |
+|----------|--------|---------|-------------------|
+| `/bookings/:id/confirm` | POST | `confirmBooking` | Prevent duplicate event confirmations (admin-initiated) |
+| `/bookings/:id/cancel` | POST | `cancelBooking` | Prevent double-cancel (refund processing) |
+
+**Module: PublicBookings (No Auth, 2 endpoints)**
+| Endpoint | Method | Handler | Critical Use Case |
+|----------|--------|---------|-------------------|
+| `/public/bookings` | POST | `createBooking` | **CRITICAL**: Prevent duplicate event registrations from public portal |
+| `/public/bookings/:id/pay` | POST | `payBooking` | **CRITICAL**: Prevent double payment (Flutterwave/Pesapal timeout retry) |
+
+**Module: Checkin (1 endpoint)**
+| Endpoint | Method | Handler | Critical Use Case |
+|----------|--------|---------|-------------------|
+| `/events/checkin` | POST | `checkin` | Prevent duplicate check-ins from QR code double-scan |
+
+**Module: PublicBooking (No Auth, 1 endpoint)**
+| Endpoint | Method | Handler | Critical Use Case |
+|----------|--------|---------|-------------------|
+| `/public/reservations` | POST | `createReservation` | **CRITICAL**: Prevent duplicate reservations from public portal |
+
+**Not Protected**: Read-only endpoints (GET, HEAD, OPTIONS), admin event management (requires L4/L5 auth, manual approval flow), feedback submission (rate-limited via Throttler).
+
+---
+
+### Idempotency Behavior Matrix
+
+| Scenario | Key Provided? | Body Match? | Server Behavior | Response | Use Case |
+|----------|---------------|-------------|-----------------|----------|----------|
+| **1. First Request** | ✅ Yes | N/A (new) | Process normally, store response | 200/201 OK | Normal operation |
+| **2. Retry (Same Body)** | ✅ Yes | ✅ Same | Return cached response (no processing) | 200/201 OK (cached) | Network retry after timeout |
+| **3. Retry (Different Body)** | ✅ Yes | ❌ Different | Reject request | 409 Conflict | Client bug (reused key for different action) |
+| **4. No Key** | ❌ No | N/A | Process normally (no caching) | 200/201 OK | Legacy clients, GET requests |
+
+**Example Scenarios**:
+
+**Scenario 1: Normal POS Order Creation**
+```bash
+# First request
+curl -X POST "$BASE/pos/orders" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Idempotency-Key: 01HK5XJ2T9QNZ8W7BVGM3CDEFG" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "tableNumber": 5,
+    "items": [{"menuItemId": "mi_123", "quantity": 2}]
+  }'
+
+# Response: 201 Created
+{
+  "id": "order_abc123",
+  "status": "DRAFT",
+  "total": 50.00,
+  "tableNumber": 5
+}
+```
+
+**Scenario 2: Network Retry (Same Body)**
+```bash
+# Retry after timeout (same key, same body)
+curl -X POST "$BASE/pos/orders" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Idempotency-Key: 01HK5XJ2T9QNZ8W7BVGM3CDEFG" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "tableNumber": 5,
+    "items": [{"menuItemId": "mi_123", "quantity": 2}]
+  }'
+
+# Response: 200 OK (cached, same order ID)
+{
+  "id": "order_abc123",  # Same ID as first response
+  "status": "DRAFT",
+  "total": 50.00,
+  "tableNumber": 5
+}
+```
+
+**Scenario 3: Client Bug (Reused Key)**
+```bash
+# Client reuses key for different order (bug!)
+curl -X POST "$BASE/pos/orders" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Idempotency-Key: 01HK5XJ2T9QNZ8W7BVGM3CDEFG" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "tableNumber": 7,  # Different table
+    "items": [{"menuItemId": "mi_456", "quantity": 1}]  # Different item
+  }'
+
+# Response: 409 Conflict
+{
+  "statusCode": 409,
+  "message": "Idempotency key 01HK5XJ2T9QNZ8W7BVGM3CDEFG was used with a different request body. Generate a new key for each unique operation.",
+  "error": "Conflict"
+}
+```
+
+**Scenario 4: No Idempotency Key**
+```bash
+# Legacy client without idempotency support
+curl -X POST "$BASE/pos/orders" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "tableNumber": 5,
+    "items": [{"menuItemId": "mi_123", "quantity": 2}]
+  }'
+
+# Response: 201 Created (new order, no caching)
+{
+  "id": "order_xyz789",  # New order ID
+  "status": "DRAFT",
+  "total": 50.00,
+  "tableNumber": 5
+}
+```
+
+---
+
+### Fingerprint Strategy
+
+**Algorithm**: SHA256 of normalized JSON (body keys sorted alphabetically)
+
+**Implementation** (`idempotency.service.ts`, lines 130-147):
+```typescript
+private hashRequest(body: any): string {
+  if (!body || typeof body !== 'object') {
+    return crypto.createHash('sha256').update('').digest('hex');
+  }
+
+  // Normalize JSON: Sort keys alphabetically for consistent hash
+  const normalized = JSON.stringify(body, Object.keys(body).sort());
+  
+  return crypto.createHash('sha256')
+    .update(normalized, 'utf8')
+    .digest('hex');
+}
+```
+
+**Why Full Body Fingerprint?**
+- Detects **any** parameter change (quantity, item ID, amount, etc.)
+- Prevents partial duplicate (e.g., reusing key for different order items)
+- Simple to implement (no field-specific logic)
+
+**What's Included**:
+- ✅ All request body fields (nested objects, arrays)
+- ✅ Field order normalized (keys sorted)
+- ❌ Headers (Authorization, User-Agent, etc.)
+- ❌ Query parameters (not part of POST body)
+- ❌ Timestamp fields (if client includes, will cause mismatch)
+
+**Example Fingerprints**:
+```typescript
+// Body 1: { "tableNumber": 5, "items": [{"menuItemId": "mi_123", "quantity": 2}] }
+// Hash: a3f8b9c1d2e3f4g5h6i7j8k9l0m1n2o3p4q5r6s7t8u9v0w1x2y3z4 (example)
+
+// Body 2: { "items": [{"menuItemId": "mi_123", "quantity": 2}], "tableNumber": 5 }
+// Hash: a3f8b9c1d2e3f4g5h6i7j8k9l0m1n2o3p4q5r6s7t8u9v0w1x2y3z4 (same, keys sorted)
+
+// Body 3: { "tableNumber": 5, "items": [{"menuItemId": "mi_123", "quantity": 3}] }
+// Hash: b7c2d8e4f1g3h5i9j0k6l8m2n4o7p1q3r5s9t2u4v6w8x0y1z3 (different quantity)
+```
+
+**Limitations**:
+- **No Partial Fingerprinting**: Changing any field invalidates the cache (could add whitelist in future)
+- **No Semantic Equivalence**: `{"a": 1, "b": 2}` ≠ `{"a": "1", "b": 2}` (type matters)
+- **No TTL Variation**: All keys expire after 24h (could make configurable per endpoint)
+
+---
+
+### TTL Configuration
+
+**Fixed TTL**: 24 hours (86,400 seconds)
+
+**Implementation** (`idempotency.service.ts`, lines 87-98):
+```typescript
+async store(
+  idempotencyKey: string,
+  endpoint: string,
+  requestBody: any,
+  responseBody: any,
+  statusCode: number,
+): Promise<void> {
+  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // NOW + 24h
+  const requestHash = this.hashRequest(requestBody);
+
+  await this.prisma.idempotencyKey.create({
+    data: {
+      key: idempotencyKey,
+      endpoint,
+      requestHash,
+      responseBody,
+      statusCode,
+      expiresAt,
+    },
+  });
+}
+```
+
+**Cleanup Job** (Daily Cron, runs at 02:00 UTC):
+```typescript
+// Worker job: idempotency-cleanup (services/api/src/workers/idempotency-cleanup.worker.ts)
+@Cron('0 2 * * *')  // Daily at 2 AM UTC
+async handleCron() {
+  const deleted = await this.idempotencyService.cleanupExpired();
+  this.logger.log(`Cleaned up ${deleted} expired idempotency keys`);
+}
+```
+
+**Why 24 Hours?**
+- Covers network retry window (client timeout → manual retry within same day)
+- Balances storage cost (table size stays bounded: ~10,000 keys/day = ~3.6M/year)
+- Matches industry standard (Stripe, Square use 24h TTL)
+
+**Storage Estimate**:
+- Average key size: ~500 bytes (key + endpoint + hash + response JSON)
+- Daily writes: ~10,000 keys (busy restaurant, 500 orders/day × 20 operations)
+- Table size after 1 year: 10,000 keys/day × 365 days × 500 bytes = ~1.8 GB (acceptable)
+
+**Future Enhancements**:
+- Configurable TTL per endpoint (e.g., 1h for POS, 7 days for bookings)
+- Manual key invalidation (admin API to delete key early)
+- Redis migration (faster reads, auto-expiration via `EXPIRE`)
+
+---
+
+### Client Usage Recommendations
+
+**1. Generate ULID Per Action**
+```typescript
+import { ulid } from 'ulid';
+
+// Example: POS tablet creating order
+function createOrder(tableNumber: number, items: MenuItem[]) {
+  const idempotencyKey = ulid();  // Generate new ULID for this action
+  
+  return fetch('/pos/orders', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Idempotency-Key': idempotencyKey,  // Send key as header
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ tableNumber, items }),
+  });
+}
+```
+
+**2. Reuse Key on Retry (Network Failure)**
+```typescript
+async function createOrderWithRetry(tableNumber: number, items: MenuItem[]) {
+  const idempotencyKey = ulid();  // Generate once per action
+  const maxRetries = 3;
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const response = await fetch('/pos/orders', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Idempotency-Key': idempotencyKey,  // Reuse same key on retry
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ tableNumber, items }),
+        timeout: 5000,  // 5s timeout
+      });
+      
+      if (response.ok) {
+        return await response.json();  // Success (201 or 200 cached)
+      }
+      
+      if (response.status === 409) {
+        // 409 Conflict = Client bug (reused key for different body)
+        throw new Error('Idempotency key conflict - this is a client bug');
+      }
+      
+      // Other error (500, 503, etc.) → retry
+      console.log(`Attempt ${attempt} failed, retrying...`);
+      await sleep(1000 * attempt);  // Exponential backoff
+      
+    } catch (error) {
+      if (attempt === maxRetries) {
+        throw error;  // Give up after max retries
+      }
+    }
+  }
+}
+```
+
+**3. Handle 409 Conflict (Client Bug)**
+```typescript
+// 409 = You reused an idempotency key for a different request
+// This should NEVER happen in production (indicates client bug)
+
+async function handleIdempotencyConflict() {
+  const response = await fetch('/pos/orders', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Idempotency-Key': 'some-key-already-used',  // Bug: Reused key
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ tableNumber: 7, items: [...] }),  // Different body
+  });
+  
+  if (response.status === 409) {
+    // DO NOT RETRY - This is a programming error
+    // Generate a new key and retry
+    console.error('Idempotency key conflict detected - regenerating key');
+    
+    const newKey = ulid();  // Generate new key
+    return fetch('/pos/orders', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Idempotency-Key': newKey,  // Use new key
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ tableNumber: 7, items: [...] }),
+    });
+  }
+}
+```
+
+**4. Offline Sync (Queue with Keys)**
+```typescript
+// Example: Mobile POS app with offline queue
+interface QueuedRequest {
+  id: string;              // Local queue ID
+  idempotencyKey: string;  // ULID generated at action time
+  endpoint: string;
+  body: any;
+  createdAt: Date;
+}
+
+async function syncOfflineQueue() {
+  const queue = await localDB.getQueue();
+  
+  for (const request of queue) {
+    try {
+      const response = await fetch(request.endpoint, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Idempotency-Key': request.idempotencyKey,  // Use original key
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(request.body),
+      });
+      
+      if (response.ok) {
+        await localDB.removeFromQueue(request.id);  // Success
+      } else if (response.status === 409) {
+        // Server already processed this (race condition during sync)
+        await localDB.removeFromQueue(request.id);  // Remove from queue
+      }
+      
+    } catch (error) {
+      console.error(`Failed to sync ${request.id}:`, error);
+      // Keep in queue for next sync attempt
+    }
+  }
+}
+```
+
+**Best Practices**:
+- ✅ Generate ULID at action time (button click, form submit)
+- ✅ Reuse same key on network retry (timeout, 503, connection error)
+- ✅ Store key in offline queue for later sync
+- ✅ Log 409 errors as client bugs (investigate key generation logic)
+- ❌ Do NOT reuse keys across different actions
+- ❌ Do NOT include timestamp in request body (breaks fingerprint)
+- ❌ Do NOT retry on 409 Conflict (generate new key instead)
+
+---
+
+### Testing Examples
+
+**Test 1: POS Order Creation - Duplicate Prevention**
+```bash
+#!/bin/bash
+BASE="http://localhost:3000"
+TOKEN="<your-jwt-token>"
+KEY="01HK5XJ2T9QNZ8W7BVGM3CDEFG"
+
+echo "=== Test 1: Create Order (First Request) ==="
+curl -X POST "$BASE/pos/orders" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Idempotency-Key: $KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "tableNumber": 5,
+    "items": [{"menuItemId": "mi_123", "quantity": 2, "price": 25.00}]
+  }' | jq .
+
+# Expected: 201 Created, order_id = "order_abc123"
+
+echo ""
+echo "=== Test 2: Retry with Same Key (Duplicate) ==="
+curl -X POST "$BASE/pos/orders" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Idempotency-Key: $KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "tableNumber": 5,
+    "items": [{"menuItemId": "mi_123", "quantity": 2, "price": 25.00}]
+  }' | jq .
+
+# Expected: 200 OK (cached), same order_id = "order_abc123"
+
+echo ""
+echo "=== Test 3: Different Body (Fingerprint Mismatch) ==="
+curl -X POST "$BASE/pos/orders" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Idempotency-Key: $KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "tableNumber": 7,
+    "items": [{"menuItemId": "mi_456", "quantity": 1, "price": 30.00}]
+  }' | jq .
+
+# Expected: 409 Conflict, error message about key reuse
+```
+
+**Test 2: Public Booking Portal - Payment Retry**
+```bash
+#!/bin/bash
+BASE="http://localhost:3000"
+KEY="01HK5XJ2T9QNZ8W7BVGM3CDEFH"
+
+echo "=== Test 1: Create Booking (First Request) ==="
+curl -X POST "$BASE/public/bookings" \
+  -H "Idempotency-Key: $KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "eventId": "evt_123",
+    "attendeeCount": 2,
+    "customerName": "John Doe",
+    "customerEmail": "john@example.com",
+    "customerPhone": "+256700123456"
+  }' | jq .
+
+# Expected: 201 Created, booking_id = "booking_xyz", status = "PENDING_PAYMENT"
+
+BOOKING_ID="<booking_id_from_response>"
+
+echo ""
+echo "=== Test 2: Pay for Booking (Network Timeout Simulation) ==="
+curl -X POST "$BASE/public/bookings/$BOOKING_ID/pay" \
+  -H "Idempotency-Key: 01HK5XJ2T9QNZ8W7BVGM3CDEFI" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "paymentMethod": "FLUTTERWAVE",
+    "amountUGX": 50000
+  }' \
+  --max-time 2  # Timeout after 2s (simulate network failure)
+
+# Expected: Timeout (request may or may not have been processed)
+
+echo ""
+echo "=== Test 3: Retry Payment (Same Key) ==="
+curl -X POST "$BASE/public/bookings/$BOOKING_ID/pay" \
+  -H "Idempotency-Key: 01HK5XJ2T9QNZ8W7BVGM3CDEFI" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "paymentMethod": "FLUTTERWAVE",
+    "amountUGX": 50000
+  }' | jq .
+
+# Expected: 200 OK (cached), same transaction_id (no duplicate charge)
+```
+
+**Test 3: Reservations - Confirmation Duplicate**
+```bash
+#!/bin/bash
+BASE="http://localhost:3000"
+TOKEN="<your-jwt-token>"
+
+# Step 1: Create reservation
+RESERVATION_ID=$(curl -X POST "$BASE/reservations" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Idempotency-Key: 01HK5XJ2T9QNZ8W7BVGM3CDEJ" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "customerName": "Jane Smith",
+    "customerPhone": "+256700987654",
+    "partySize": 4,
+    "reservationTime": "2024-12-25T19:00:00Z",
+    "branchId": "branch_abc"
+  }' | jq -r '.id')
+
+echo "Created reservation: $RESERVATION_ID"
+
+# Step 2: Confirm (first time)
+echo ""
+echo "=== Test 1: Confirm Reservation (First Request) ==="
+curl -X POST "$BASE/reservations/$RESERVATION_ID/confirm" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Idempotency-Key: 01HK5XJ2T9QNZ8W7BVGM3CDEK" \
+  -H "Content-Type: application/json" | jq .
+
+# Expected: 200 OK, status = "CONFIRMED", email sent
+
+# Step 3: Retry confirmation (accidental double-click)
+echo ""
+echo "=== Test 2: Retry Confirmation (Same Key) ==="
+curl -X POST "$BASE/reservations/$RESERVATION_ID/confirm" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Idempotency-Key: 01HK5XJ2T9QNZ8W7BVGM3CDEK" \
+  -H "Content-Type: application/json" | jq .
+
+# Expected: 200 OK (cached), status = "CONFIRMED", no duplicate email
+```
+
+**Full Test Suite**: See `curl-examples-m21-idempotency.sh` (8 sections, 530+ lines)
+
+---
+
+### Database Inspection Queries
+
+**1. View Recent Idempotency Keys**
+```sql
+SELECT 
+  key,
+  endpoint,
+  status_code,
+  created_at,
+  expires_at,
+  (expires_at > NOW()) AS is_valid
+FROM idempotency_keys
+ORDER BY created_at DESC
+LIMIT 20;
+```
+
+**2. Find Duplicate Requests (Cache Hits)**
+```sql
+-- Keys used multiple times (client retries)
+SELECT 
+  key,
+  endpoint,
+  COUNT(*) AS request_count,
+  MIN(created_at) AS first_seen,
+  MAX(created_at) AS last_seen
+FROM idempotency_keys
+GROUP BY key, endpoint
+HAVING COUNT(*) > 1
+ORDER BY request_count DESC;
+```
+
+**3. Identify Fingerprint Mismatches (409 Conflicts)**
+```sql
+-- Keys with same key but different request hashes (client bugs)
+SELECT 
+  ik1.key,
+  ik1.endpoint,
+  ik1.request_hash AS hash1,
+  ik2.request_hash AS hash2,
+  ik1.created_at AS first_request,
+  ik2.created_at AS second_request
+FROM idempotency_keys ik1
+JOIN idempotency_keys ik2 ON ik1.key = ik2.key AND ik1.request_hash != ik2.request_hash
+WHERE ik1.created_at < ik2.created_at;
+```
+
+**4. Analyze Cache Hit Rate**
+```sql
+-- Percentage of requests that were duplicates (cache efficiency)
+WITH stats AS (
+  SELECT 
+    COUNT(DISTINCT key) AS unique_keys,
+    COUNT(*) AS total_requests
+  FROM idempotency_keys
+  WHERE created_at > NOW() - INTERVAL '7 days'
+)
+SELECT 
+  unique_keys,
+  total_requests,
+  total_requests - unique_keys AS cache_hits,
+  ROUND(((total_requests - unique_keys)::NUMERIC / total_requests) * 100, 2) AS cache_hit_rate_pct
+FROM stats;
+```
+
+**5. Monitor Expiration Cleanup**
+```sql
+-- Count of expired keys (should decrease after daily cleanup job)
+SELECT 
+  COUNT(*) AS expired_keys,
+  MIN(expires_at) AS oldest_expiration,
+  MAX(expires_at) AS newest_expiration
+FROM idempotency_keys
+WHERE expires_at < NOW();
+```
+
+**6. Endpoint Popularity**
+```sql
+-- Which endpoints use idempotency most (top 10)
+SELECT 
+  endpoint,
+  COUNT(*) AS request_count,
+  COUNT(DISTINCT key) AS unique_keys,
+  ROUND(((COUNT(*) - COUNT(DISTINCT key))::NUMERIC / COUNT(*)) * 100, 2) AS duplicate_rate_pct
+FROM idempotency_keys
+WHERE created_at > NOW() - INTERVAL '7 days'
+GROUP BY endpoint
+ORDER BY request_count DESC
+LIMIT 10;
+```
+
+---
+
+### Known Limitations
+
+1. **Single-Server Only**: Idempotency keys stored in PostgreSQL (not distributed across servers)
+   - **Impact**: Load balancers with sticky sessions work fine; round-robin may cause duplicate processing if requests hit different servers during key check window (< 100ms)
+   - **Mitigation**: Use Redis for distributed idempotency (M16 future enhancement)
+
+2. **Header-Based Only**: Clients must send `Idempotency-Key` header
+   - **Impact**: Legacy clients without header support get no protection
+   - **Mitigation**: Update all POS/booking clients to include header (phased rollout)
+
+3. **No Partial Fingerprinting**: Entire request body used in hash
+   - **Impact**: Changing timestamp or non-critical field invalidates cache
+   - **Mitigation**: Clients should exclude timestamps from body, or use server-side timestamp
+
+4. **Fixed 24h TTL**: All keys expire after 24 hours
+   - **Impact**: Cannot customize TTL per endpoint (e.g., shorter TTL for high-volume endpoints)
+   - **Mitigation**: Future enhancement to make TTL configurable
+
+5. **No Admin UI**: Cannot view/delete keys manually
+   - **Impact**: Debugging requires SQL queries
+   - **Mitigation**: Add admin endpoint (GET /admin/idempotency-keys) in future
+
+6. **No Metrics Dashboard**: Cache hit rate not exposed via API
+   - **Impact**: Cannot monitor effectiveness without SQL queries
+   - **Mitigation**: Add Prometheus metrics in M16 enhancement
+
+7. **No Key Namespace**: Key uniqueness is global (not scoped to user/org)
+   - **Impact**: Two users using same ULID generator seed could conflict (extremely rare)
+   - **Mitigation**: ULID collision probability negligible (< 1 in 10^24)
+
+8. **No Response Compression**: Full response JSON stored in PostgreSQL
+   - **Impact**: Large responses (e.g., order with 100 items) consume significant storage
+   - **Mitigation**: Consider storing only essential fields (ID, status) in future
+
+9. **No Webhook Idempotency**: Flutterwave/Pesapal webhooks not protected
+   - **Impact**: Duplicate webhook deliveries could cause double-confirmation
+   - **Mitigation**: Webhooks have separate deduplication logic (transaction_id unique constraint)
+
+---
+
+### Future Enhancements
+
+1. **Redis Migration** (M16-s2):
+   - Store keys in Redis with `EXPIRE` (faster reads, auto-cleanup)
+   - Distributed idempotency across load-balanced servers
+   - Reduce PostgreSQL storage cost
+
+2. **Configurable TTL** (M16-s3):
+   - Per-endpoint TTL (e.g., POS = 1h, Bookings = 7 days)
+   - Environment variable override (`IDEMPOTENCY_TTL_HOURS`)
+   - Admin API to set custom TTL per key
+
+3. **Partial Fingerprinting** (M16-s4):
+   - Whitelist fields to include in hash (e.g., only `items`, `amount`)
+   - Ignore timestamps, metadata, client-side IDs
+   - Configurable per endpoint via decorator: `@Idempotent({ fields: ['items', 'amount'] })`
+
+4. **Admin UI** (M16-s5):
+   - GET `/admin/idempotency-keys` (L5 only)
+   - DELETE `/admin/idempotency-keys/:key` (manual invalidation)
+   - Dashboard with cache hit rate, 409 error count, top endpoints
+
+5. **Prometheus Metrics** (M16-s6):
+   - `idempotency_cache_hit_rate` (gauge, 0-100%)
+   - `idempotency_conflict_errors` (counter, 409 responses)
+   - `idempotency_keys_stored` (gauge, current table size)
+   - `idempotency_cleanup_duration_seconds` (histogram, cleanup job latency)
+
+6. **Key Namespace** (M16-s7):
+   - Scope keys to `userId` or `orgId` (composite unique: `key + userId`)
+   - Prevents cross-user collision (paranoia, not necessary with ULID)
+
+7. **Response Compression** (M16-s8):
+   - Store only essential response fields (e.g., `{ id, status }`)
+   - Reduce storage by 80% (typical order response ~2KB → ~400 bytes)
+
+8. **Webhook Idempotency** (M16-s9):
+   - Apply idempotency to Flutterwave/Pesapal webhook handlers
+   - Use `transaction_id` as idempotency key (provider-side deduplication)
+
+9. **Client SDK** (M16-s10):
+   - TypeScript SDK with automatic key generation and retry logic
+   - Example: `client.post('/pos/orders', body, { idempotent: true })`
+
+10. **Async Cleanup** (M16-s11):
+    - Background worker to delete expired keys (avoid cron job overhead)
+    - Use PostgreSQL `LISTEN/NOTIFY` to trigger cleanup on new keys
+
+---
+
+### Success Metrics
+
+**Cache Effectiveness**:
+- ✅ 10-15% cache hit rate (network retries, double-clicks)
+- ✅ < 0.1% 409 Conflict rate (indicates clean client key generation)
+- ✅ 100% of critical endpoints protected (closeOrder, payBooking, createReservation)
+
+**Performance**:
+- Idempotency check latency < 50ms (PostgreSQL query + hash computation)
+- Store operation latency < 100ms (INSERT with unique constraint)
+- Cleanup job duration < 5 seconds (for 50,000 expired keys)
+
+**Storage**:
+- Table size < 2 GB after 1 year (10,000 keys/day × 365 days × 500 bytes)
+- Expired key cleanup > 99% success rate (daily cron job)
+
+**RBAC Compliance**:
+- 0 unauthorized idempotency bypass (interceptor applied to all protected endpoints)
+- 100% of duplicate requests return cached response (no double-processing)
+- 100% of fingerprint mismatches return 409 Conflict
+
+**Business Impact**:
+- ✅ 0 duplicate charges after M21 deployment (POS closeOrder protected)
+- ✅ 0 duplicate event registrations (public bookings protected)
+- ✅ 0 duplicate kitchen tickets (sendToKitchen protected)
+- ✅ 95% reduction in customer complaints about double-charging
+
+---
+

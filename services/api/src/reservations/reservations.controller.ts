@@ -1,10 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Controller, Post, Get, Body, Param, Query, UseGuards, Req } from '@nestjs/common';
+import { Controller, Post, Get, Body, Param, Query, UseGuards, UseInterceptors, Req } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ReservationsService } from './reservations.service';
 import { CreateReservationDto } from './reservations.dto';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
+import { IdempotencyInterceptor } from '../common/idempotency.interceptor';
 
 @Controller('reservations')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
@@ -13,6 +14,7 @@ export class ReservationsController {
 
   @Post()
   @Roles('L2') // Front desk / host
+  @UseInterceptors(IdempotencyInterceptor)
   create(@Req() req: any, @Body() dto: CreateReservationDto): Promise<any> {
     return this.reservationsService.create(req.user.orgId, dto);
   }
@@ -30,18 +32,21 @@ export class ReservationsController {
 
   @Post(':id/confirm')
   @Roles('L2')
+  @UseInterceptors(IdempotencyInterceptor)
   confirm(@Req() req: any, @Param('id') id: string): Promise<any> {
     return this.reservationsService.confirm(req.user.orgId, id);
   }
 
   @Post(':id/cancel')
   @Roles('L2')
+  @UseInterceptors(IdempotencyInterceptor)
   cancel(@Req() req: any, @Param('id') id: string): Promise<any> {
     return this.reservationsService.cancel(req.user.orgId, id);
   }
 
   @Post(':id/seat')
   @Roles('L2')
+  @UseInterceptors(IdempotencyInterceptor)
   seat(@Req() req: any, @Param('id') id: string, @Body('orderId') orderId?: string): Promise<any> {
     return this.reservationsService.seat(req.user.orgId, id, orderId);
   }

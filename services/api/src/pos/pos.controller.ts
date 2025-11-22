@@ -1,4 +1,4 @@
-import { Controller, Post, Param, Body, UseGuards } from '@nestjs/common';
+import { Controller, Post, Param, Body, UseGuards, UseInterceptors } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { PosService } from './pos.service';
 import {
@@ -11,6 +11,7 @@ import {
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
 import { User } from '../me/user.decorator';
+import { IdempotencyInterceptor } from '../common/idempotency.interceptor';
 
 @Controller('pos/orders')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
@@ -19,6 +20,7 @@ export class PosController {
 
   @Post()
   @Roles('L1')
+  @UseInterceptors(IdempotencyInterceptor)
   async createOrder(
     @Body() dto: CreateOrderDto,
     @User() user: { userId: string; branchId: string },
@@ -28,6 +30,7 @@ export class PosController {
 
   @Post(':id/send-to-kitchen')
   @Roles('L1')
+  @UseInterceptors(IdempotencyInterceptor)
   async sendToKitchen(
     @Param('id') orderId: string,
     @User() user: { branchId: string },
@@ -37,6 +40,7 @@ export class PosController {
 
   @Post(':id/modify')
   @Roles('L1')
+  @UseInterceptors(IdempotencyInterceptor)
   async modifyOrder(
     @Param('id') orderId: string,
     @Body() dto: ModifyOrderDto,
@@ -47,6 +51,7 @@ export class PosController {
 
   @Post(':id/void')
   @Roles('L2')
+  @UseInterceptors(IdempotencyInterceptor)
   async voidOrder(
     @Param('id') orderId: string,
     @Body() dto: VoidOrderDto,
@@ -57,6 +62,7 @@ export class PosController {
 
   @Post(':id/close')
   @Roles('L1')
+  @UseInterceptors(IdempotencyInterceptor)
   async closeOrder(
     @Param('id') orderId: string,
     @Body() dto: CloseOrderDto,
@@ -67,6 +73,7 @@ export class PosController {
 
   @Post(':id/discount')
   @Roles('L2')
+  @UseInterceptors(IdempotencyInterceptor)
   async applyDiscount(
     @Param('id') orderId: string,
     @Body() dto: ApplyDiscountDto,
@@ -77,6 +84,7 @@ export class PosController {
 
   @Post(':id/post-close-void')
   @Roles('L4') // Only L4+ can void closed orders
+  @UseInterceptors(IdempotencyInterceptor)
   async postCloseVoid(
     @Param('id') orderId: string,
     @Body() dto: { reason: string; managerPin?: string },

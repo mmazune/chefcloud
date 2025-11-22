@@ -12,9 +12,10 @@ import { CheckinService } from './checkin.service'; // E42-s2
 import { CheckinController } from './checkin.controller'; // E42-s2
 import { PrismaService } from '../prisma.service';
 import { PaymentsModule } from '../payments/payments.module';
+import { CommonModule } from '../common/common.module';
 
 @Module({
-  imports: [PaymentsModule],
+  imports: [PaymentsModule, CommonModule],
   controllers: [BookingsController, PublicBookingsController, CheckinController], // E42-s2
   providers: [BookingsService, CheckinService, PrismaService], // E42-s2
   exports: [BookingsService, CheckinService], // E42-s2
