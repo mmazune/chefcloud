@@ -18,6 +18,10 @@ export class OrderItemDto {
   @Type(() => OrderItemModifierDto)
   @IsOptional()
   modifiers?: OrderItemModifierDto[];
+
+  @IsString()
+  @IsOptional()
+  notes?: string;
 }
 
 export class CreateOrderDto {
@@ -39,11 +43,32 @@ export class CreateOrderDto {
   notes?: string;
 }
 
+// M26-S3 & M26-S4: Update existing order items (quantity changes, notes)
+export class UpdateOrderItemDto {
+  @IsString()
+  orderItemId!: string;
+
+  @IsNumber()
+  @IsOptional()
+  quantity?: number; // 0 means remove
+
+  @IsString()
+  @IsOptional()
+  notes?: string;
+}
+
 export class ModifyOrderDto {
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => OrderItemDto)
-  items!: OrderItemDto[];
+  @IsOptional()
+  items?: OrderItemDto[]; // M26-S2: Add new items
+
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => UpdateOrderItemDto)
+  @IsOptional()
+  updateItems?: UpdateOrderItemDto[]; // M26-S3/S4: Update existing items
 }
 
 export class VoidOrderDto {

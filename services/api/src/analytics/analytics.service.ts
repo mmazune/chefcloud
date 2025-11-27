@@ -305,4 +305,314 @@ export class AnalyticsService {
       createdAt: anomaly.occurredAt,
     }));
   }
+
+  /**
+   * Get daily metrics for analytics dashboard (sales, avg check, NPS)
+   * Returns time-series data for the specified date range
+   */
+  async getDailyMetrics(
+    orgId: string,
+    from: string,
+    to: string,
+    branchId?: string,
+  ): Promise<any[]> {
+    const startDate = new Date(from);
+    const endDate = new Date(to);
+
+    // Ensure dates are valid
+    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+      return [];
+    }
+
+    // Limit to 90 days max
+    const daysDiff = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+    if (daysDiff > 90) {
+      endDate.setTime(startDate.getTime() + 90 * 24 * 60 * 60 * 1000);
+    }
+
+    // Query orders for the period
+    const orders = await this.prisma.client.order.findMany({
+      where: {
+        orgId,
+        ...(branchId && { branchId }),
+        createdAt: { gte: startDate, lte: endDate },
+        status: { in: ['CLOSED', 'SERVED'] },
+      },
+      select: {
+        id: true,
+        total: true,
+        createdAt: true,
+      },
+    });
+
+    // Query feedback (NPS) for the period
+    const feedback = await this.prisma.client.feedback.findMany({
+      where: {
+        orgId,
+        ...(branchId && { branchId }),
+        createdAt: { gte: startDate, lte: endDate },
+        score: { not: null },
+      },
+      select: {
+        score: true,
+        createdAt: true,
+      },
+    });
+
+    // Group by date
+    const metricsByDate = new Map<
+      string,
+      { totalSales: number; ordersCount: number; npsScores: number[] }
+    >();
+
+    orders.forEach((order) => {
+      const dateKey = order.createdAt.toISOString().split('T')[0];
+      const existing = metricsByDate.get(dateKey) || {
+        totalSales: 0,
+        ordersCount: 0,
+        npsScores: [],
+      };
+      existing.totalSales += Number(order.total);
+      existing.ordersCount += 1;
+      metricsByDate.set(dateKey, existing);
+    });
+
+    feedback.forEach((fb) => {
+      const dateKey = fb.createdAt.toISOString().split('T')[0];
+      const existing = metricsByDate.get(dateKey) || {
+        totalSales: 0,
+        ordersCount: 0,
+        npsScores: [],
+      };
+      if (fb.score !== null) {
+        existing.npsScores.push(fb.score);
+      }
+      metricsByDate.set(dateKey, existing);
+    });
+
+    // Convert to array and calculate metrics
+    const result: any[] = [];
+    const currentDate = new Date(startDate);
+
+    while (currentDate <= endDate) {
+      const dateKey = currentDate.toISOString().split('T')[0];
+      const data = metricsByDate.get(dateKey) || {
+        totalSales: 0,
+        ordersCount: 0,
+        npsScores: [],
+      };
+
+      const avgCheck = data.ordersCount > 0 ? data.totalSales / data.ordersCount : 0;
+      const nps =
+        data.npsScores.length > 0
+          ? data.npsScores.reduce((sum, score) => sum + score, 0) / data.npsScores.length
+          : null;
+
+      result.push({
+        date: dateKey,
+        totalSales: Math.round(data.totalSales * 100) / 100,
+        ordersCount: data.ordersCount,
+        avgCheck: Math.round(avgCheck * 100) / 100,
+        nps: nps !== null ? Math.round(nps * 10) / 10 : null,
+      });
+
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    return result;
+  }
+
+  /**
+   * M25-S4: Get risk summary for analytics dashboard
+   */
+  async getRiskSummary(params: {
+    orgId: string;
+    branchId?: string | null;
+    from: Date;
+    to: Date;
+  }): Promise<any> {
+    const { orgId, branchId, from, to } = params;
+
+    const where: any = {
+      orgId,
+      occurredAt: { gte: from, lte: to },
+    };
+
+    if (branchId) {
+      where.branchId = branchId;
+    }
+
+    // Get all anomaly events for the period
+    const events = await this.prisma.client.anomalyEvent.findMany({
+      where,
+      include: {
+        branch: { select: { id: true, name: true } },
+        user: { select: { id: true, firstName: true, lastName: true } },
+      },
+    });
+
+    const totalEvents = events.length;
+
+    // Count by severity
+    const bySeverity = {
+      LOW: 0,
+      MEDIUM: 0,
+      HIGH: 0,
+      CRITICAL: 0,
+    };
+
+    events.forEach((e) => {
+      const severity = e.severity.toUpperCase();
+      if (severity in bySeverity) {
+        bySeverity[severity as keyof typeof bySeverity]++;
+      } else if (severity === 'INFO' || severity === 'WARN') {
+        // Map INFO/WARN to LOW/MEDIUM
+        bySeverity[severity === 'INFO' ? 'LOW' : 'MEDIUM']++;
+      }
+    });
+
+    // Count by type
+    const byTypeMap = new Map<string, number>();
+    events.forEach((e) => {
+      byTypeMap.set(e.type, (byTypeMap.get(e.type) || 0) + 1);
+    });
+    const byType = Array.from(byTypeMap.entries())
+      .map(([type, count]) => ({ type, count }))
+      .sort((a, b) => b.count - a.count);
+
+    // Count by branch
+    const byBranchMap = new Map<
+      string,
+      { branchId: string; branchName: string; count: number; criticalCount: number }
+    >();
+    events.forEach((e) => {
+      if (e.branchId && e.branch) {
+        const key = e.branchId;
+        if (!byBranchMap.has(key)) {
+          byBranchMap.set(key, {
+            branchId: e.branchId,
+            branchName: e.branch.name,
+            count: 0,
+            criticalCount: 0,
+          });
+        }
+        const entry = byBranchMap.get(key)!;
+        entry.count++;
+        if (e.severity === 'CRITICAL') {
+          entry.criticalCount++;
+        }
+      }
+    });
+    const byBranch = Array.from(byBranchMap.values()).sort(
+      (a, b) => b.criticalCount - a.criticalCount || b.count - a.count,
+    );
+
+    // Count by staff
+    const byStaffMap = new Map<
+      string,
+      {
+        employeeId: string;
+        name: string;
+        branchName: string;
+        count: number;
+        criticalCount: number;
+      }
+    >();
+    events.forEach((e) => {
+      if (e.userId && e.user) {
+        const key = e.userId;
+        if (!byStaffMap.has(key)) {
+          byStaffMap.set(key, {
+            employeeId: e.userId,
+            name: `${e.user.firstName} ${e.user.lastName}`,
+            branchName: e.branch?.name || 'Unknown',
+            count: 0,
+            criticalCount: 0,
+          });
+        }
+        const entry = byStaffMap.get(key)!;
+        entry.count++;
+        if (e.severity === 'CRITICAL') {
+          entry.criticalCount++;
+        }
+      }
+    });
+    const topStaff = Array.from(byStaffMap.values())
+      .sort((a, b) => b.criticalCount - a.criticalCount || b.count - a.count)
+      .slice(0, 10); // Top 10 staff with most risk events
+
+    return {
+      totalEvents,
+      bySeverity,
+      byType,
+      byBranch,
+      topStaff,
+    };
+  }
+
+  /**
+   * M25-S4: Get individual risk events for analytics dashboard
+   */
+  async getRiskEvents(params: {
+    orgId: string;
+    branchId?: string | null;
+    from: Date;
+    to: Date;
+    severity?: string | null;
+  }): Promise<any[]> {
+    const { orgId, branchId, from, to, severity } = params;
+
+    const where: any = {
+      orgId,
+      occurredAt: { gte: from, lte: to },
+    };
+
+    if (branchId) {
+      where.branchId = branchId;
+    }
+
+    if (severity) {
+      where.severity = severity;
+    }
+
+    const events = await this.prisma.client.anomalyEvent.findMany({
+      where,
+      include: {
+        branch: { select: { name: true } },
+        user: { select: { firstName: true, lastName: true } },
+      },
+      orderBy: { occurredAt: 'desc' },
+      take: 100, // Limit to most recent 100 events
+    });
+
+    return events.map((e) => ({
+      id: e.id,
+      occurredAt: e.occurredAt.toISOString(),
+      branchName: e.branch?.name || 'Unknown',
+      employeeName: e.user ? `${e.user.firstName} ${e.user.lastName}` : null,
+      type: e.type,
+      severity: e.severity,
+      description: this.formatAnomalyDescription(e.type, e.details),
+    }));
+  }
+
+  /**
+   * Format anomaly event description
+   */
+  private formatAnomalyDescription(type: string, details: any): string {
+    if (!details) return type.replace(/_/g, ' ').toLowerCase();
+
+    switch (type) {
+      case 'NO_DRINKS':
+        return 'Order with no drinks';
+      case 'LATE_VOID':
+        return `Void after ${details.minutesAfterClose || '?'} minutes`;
+      case 'HEAVY_DISCOUNT':
+        return `Discount ${details.percentage || '?'}%`;
+      case 'VOID_SPIKE':
+        return 'Unusual void activity';
+      default:
+        return type.replace(/_/g, ' ').toLowerCase();
+    }
+  }
 }

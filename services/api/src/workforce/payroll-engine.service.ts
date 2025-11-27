@@ -67,9 +67,7 @@ export class PayrollEngineService {
 
     const contract = employee.contracts[0];
     if (!contract) {
-      throw new BadRequestException(
-        `No active employment contract for employee ${employeeId}`,
-      );
+      throw new BadRequestException(`No active employment contract for employee ${employeeId}`);
     }
 
     // Get attendance summary
@@ -112,9 +110,8 @@ export class PayrollEngineService {
     const dailyRate = deductionRule?.dailyRate || baseSalary / workingDaysPerMonth;
 
     // Calculate working days in period
-    const daysInPeriod = Math.floor(
-      (periodEnd.getTime() - periodStart.getTime()) / (24 * 60 * 60 * 1000),
-    ) + 1;
+    const daysInPeriod =
+      Math.floor((periodEnd.getTime() - periodStart.getTime()) / (24 * 60 * 60 * 1000)) + 1;
 
     // Prorate for partial month
     const expectedDays = Math.min(daysInPeriod, workingDaysPerMonth);

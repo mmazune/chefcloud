@@ -12,7 +12,7 @@ import { ContractFrequency } from '@chefcloud/db';
 
 /**
  * M7: Service Providers & Contracts Management
- * 
+ *
  * Handles CRUD operations for service providers (landlords, utilities, DJs, etc.)
  * and their contracts with automated payment tracking.
  */
@@ -124,7 +124,7 @@ export class ServiceProvidersService {
     if (activeContractsCount > 0) {
       throw new BadRequestException(
         `Cannot delete provider with ${activeContractsCount} active contract(s). ` +
-        'Please cancel or complete all contracts first.'
+          'Please cancel or complete all contracts first.',
       );
     }
 
@@ -303,7 +303,7 @@ export class ServiceProvidersService {
     if (pendingRemindersCount > 0) {
       throw new BadRequestException(
         `Cannot delete contract with ${pendingRemindersCount} pending reminder(s). ` +
-        'Please resolve all reminders first.'
+          'Please resolve all reminders first.',
       );
     }
 
@@ -326,7 +326,7 @@ export class ServiceProvidersService {
     } else if (frequency === ContractFrequency.WEEKLY) {
       if (dueDay < 0 || dueDay > 6) {
         throw new BadRequestException(
-          'For WEEKLY frequency, dueDay must be between 0-6 (0=Sunday, 6=Saturday)'
+          'For WEEKLY frequency, dueDay must be between 0-6 (0=Sunday, 6=Saturday)',
         );
       }
     } else if (frequency === ContractFrequency.ONE_OFF) {

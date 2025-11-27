@@ -13,7 +13,7 @@ import {
   ValidateIf,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
-import { FeedbackChannel, NpsCategory } from '@prisma/client';
+import { FeedbackChannel, NpsCategory } from '@chefcloud/db';
 
 /**
  * M20: Customer Feedback DTOs

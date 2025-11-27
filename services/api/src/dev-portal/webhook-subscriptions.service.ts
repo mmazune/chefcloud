@@ -1,4 +1,9 @@
-import { Injectable, BadRequestException, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import * as crypto from 'crypto';
 
@@ -11,7 +16,7 @@ export interface CreateWebhookSubscriptionDto {
 
 /**
  * WebhookSubscriptionsService
- * 
+ *
  * Manages webhook subscription lifecycle:
  * - Create subscriptions with auto-generated HMAC secrets
  * - Enable/disable subscriptions
@@ -41,7 +46,9 @@ export class WebhookSubscriptionsService {
         throw new Error('URL must use HTTP or HTTPS protocol');
       }
     } catch (error) {
-      throw new BadRequestException(`Invalid webhook URL: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new BadRequestException(
+        `Invalid webhook URL: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -68,10 +75,7 @@ export class WebhookSubscriptionsService {
    * Create webhook subscription
    * Returns subscription with secret (shown once)
    */
-  async createSubscription(
-    dto: CreateWebhookSubscriptionDto,
-    createdByUserId: string,
-  ) {
+  async createSubscription(dto: CreateWebhookSubscriptionDto, createdByUserId: string) {
     // Validate inputs
     this.validateUrl(dto.url);
     this.validateEventTypes(dto.eventTypes);
@@ -239,7 +243,9 @@ export class WebhookSubscriptionsService {
     }
 
     if (subscription.orgId !== orgId) {
-      throw new UnauthorizedException('Cannot regenerate secret for subscription from different org');
+      throw new UnauthorizedException(
+        'Cannot regenerate secret for subscription from different org',
+      );
     }
 
     const newSecret = this.generateSecret();

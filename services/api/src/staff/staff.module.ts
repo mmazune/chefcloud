@@ -6,7 +6,7 @@ import { PromotionInsightsService } from './promotion-insights.service';
 import { StaffController } from './staff.controller';
 import { StaffInsightsController } from './staff-insights.controller';
 import { PromotionInsightsController } from './promotion-insights.controller';
-import { AttendanceService } from '../hr/attendance.service';
+// import { AttendanceService } from '../hr/attendance.service'; // Unused for now
 import { AntiTheftService } from '../anti-theft/anti-theft.service';
 
 @Module({
@@ -15,7 +15,7 @@ import { AntiTheftService } from '../anti-theft/anti-theft.service';
     WaiterMetricsService,
     StaffInsightsService,
     PromotionInsightsService,
-    AttendanceService,
+    // AttendanceService, // Unused for now
     AntiTheftService,
   ],
   controllers: [StaffController, StaffInsightsController, PromotionInsightsController],

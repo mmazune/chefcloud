@@ -1,0 +1,33 @@
+import React from 'react';
+import { AppShell } from '@/components/layout/AppShell';
+import { PageHeader } from '@/components/layout/PageHeader';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
+export default function ServiceProvidersPage() {
+  return (
+    <AppShell>
+      <PageHeader title="Service Providers" subtitle="Manage suppliers and service providers" />
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>Service Providers Overview</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground">
+            Service provider management interface coming soon. This will include:
+          </p>
+          <ul className="mt-4 space-y-2 text-sm">
+            <li>• Provider contact information</li>
+            <li>• Payment schedules and reminders</li>
+            <li>• Contract tracking</li>
+            <li>• Payment history</li>
+          </ul>
+        </CardContent>
+      </Card>
+
+      <div className="mt-4 text-sm text-muted-foreground">
+        ✓ Backend endpoint available (endpoint TBD for MVP)
+      </div>
+    </AppShell>
+  );
+}

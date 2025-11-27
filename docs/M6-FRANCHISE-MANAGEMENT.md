@@ -11,14 +11,17 @@ The Franchise Management system provides comprehensive multi-branch oversight fo
 ### Services
 
 #### 1. **FranchiseOverviewService** (NEW - M6)
+
 **Purpose**: Single source of truth for franchise-level aggregated metrics  
 **Location**: `services/api/src/franchise/franchise-overview.service.ts`
 
 **Key Methods**:
+
 - `getBranchMetrics(orgId, branchId, periodStart, periodEnd)`: Get comprehensive metrics for a single branch
 - `getFranchiseSummary(orgId, periodStart, periodEnd)`: Get franchise-wide summary with all branches aggregated
 
 **Data Sources**:
+
 - **Sales & Revenue**: Directly from `Order` table (CLOSED/SERVED orders)
 - **COGS**: `ReconciliationService.reconcile()` (M3) - uses theoretical usage cost with WAC
 - **Wastage Cost**: `WastageService.getWastageSummary()` (M3) - real costing with WAC
@@ -27,6 +30,7 @@ The Franchise Management system provides comprehensive multi-branch oversight fo
 - **Budget vs Actual**: `BranchBudget` table with period-based lookups
 
 **Integration Points**:
+
 ```typescript
 // ReconciliationService (M3)
 const reconciliation = await this.reconciliationService.reconcile({
@@ -57,16 +61,19 @@ const avgScore = rankedWaiters.reduce((sum, w) => sum + w.score, 0) / rankedWait
 ```
 
 #### 2. **FranchiseService** (REFACTORED - M6)
+
 **Purpose**: Backward-compatible API layer with rankings and budgets  
 **Location**: `services/api/src/franchise/franchise.service.ts`
 
 **Changes in M6**:
+
 - ❌ **Removed**: Hardcoded 65% margin assumption
-- ❌ **Removed**: Simplified wastage cost (qty * 5000 UGX)
+- ❌ **Removed**: Simplified wastage cost (qty \* 5000 UGX)
 - ❌ **Removed**: Placeholder SLA = 95
 - ✅ **Added**: Uses `FranchiseOverviewService` for real metrics
 
 **Key Methods**:
+
 - `getOverview(orgId, period)`: Returns branch metrics (now uses canonical service)
 - `getRankings(orgId, period)`: Returns configurable branch rankings
 - `upsertBudget()`, `getBudgets()`: Budget management
@@ -74,25 +81,30 @@ const avgScore = rankedWaiters.reduce((sum, w) => sum + w.score, 0) / rankedWait
 - `generateDraftPOs()`: Central procurement with pack sizes and minimum order quantities
 
 #### 3. **ReportGeneratorService** (ENHANCED - M6)
+
 **Purpose**: Generate franchise digests for scheduled reports  
 **Location**: `services/api/src/reports/report-generator.service.ts`
 
 **Changes in M6**:
+
 - ✅ **Implemented**: `generateFranchiseDigest()` (was stubbed/throwing error)
 - ✅ **Uses**: `FranchiseOverviewService` for consistency with API endpoints
 
 ## API Endpoints
 
 ### 1. GET `/api/franchise/overview`
+
 Get franchise-wide overview with per-branch metrics
 
 **RBAC**: L5 (OWNER) only  
 **Cache**: 15 seconds TTL
 
 **Query Parameters**:
+
 - `period` (required): Format `YYYY-MM` (e.g., `2024-01`)
 
 **Response**:
+
 ```json
 [
   {
@@ -115,12 +127,14 @@ Get franchise-wide overview with per-branch metrics
 ```
 
 **Metrics Explained**:
+
 - **sales**: Total revenue from CLOSED/SERVED orders
 - **grossMargin**: Sales - COGS (from ReconciliationService)
-- **wastePercent**: (Wastage cost / Sales) * 100
+- **wastePercent**: (Wastage cost / Sales) \* 100
 - **sla**: % of KDS tickets completed within GREEN or ORANGE thresholds
 
 **curl Example**:
+
 ```bash
 curl -X GET "https://api.chefcloud.app/api/franchise/overview?period=2024-01" \
   -H "Authorization: Bearer $TOKEN" \
@@ -128,15 +142,18 @@ curl -X GET "https://api.chefcloud.app/api/franchise/overview?period=2024-01" \
 ```
 
 ### 2. GET `/api/franchise/rankings`
+
 Get configurable branch rankings based on weighted KPIs
 
 **RBAC**: L5 (OWNER) only  
 **Cache**: 30 seconds TTL
 
 **Query Parameters**:
+
 - `period` (required): Format `YYYY-MM`
 
 **Response**:
+
 ```json
 [
   {
@@ -167,16 +184,18 @@ Get configurable branch rankings based on weighted KPIs
 ```
 
 **Scoring Formula**:
+
 ```typescript
-score = (
-  (revenueScore * revenueWeight) +
-  (marginScore * marginWeight) +
-  (wasteScore * wasteWeight) +     // Lower is better (inverted)
-  (slaScore * slaWeight)
-) / totalWeight
+score =
+  (revenueScore * revenueWeight +
+    marginScore * marginWeight +
+    wasteScore * wasteWeight + // Lower is better (inverted)
+    slaScore * slaWeight) /
+  totalWeight;
 ```
 
 **Configurable Weights** (stored in `OrgSettings.franchiseWeights`):
+
 ```json
 {
   "revenueWeight": 0.3,
@@ -187,6 +206,7 @@ score = (
 ```
 
 **curl Example**:
+
 ```bash
 curl -X GET "https://api.chefcloud.app/api/franchise/rankings?period=2024-01" \
   -H "Authorization: Bearer $TOKEN" \
@@ -194,12 +214,14 @@ curl -X GET "https://api.chefcloud.app/api/franchise/rankings?period=2024-01" \
 ```
 
 ### 3. POST `/api/franchise/budgets`
+
 Create or update branch budget targets
 
 **RBAC**: L5 (OWNER) only  
 **No Cache** (write operation)
 
 **Request Body**:
+
 ```json
 {
   "branchId": "branch-001",
@@ -212,6 +234,7 @@ Create or update branch budget targets
 ```
 
 **Response**:
+
 ```json
 {
   "id": "budget-abc123",
@@ -228,6 +251,7 @@ Create or update branch budget targets
 ```
 
 **curl Example**:
+
 ```bash
 curl -X POST "https://api.chefcloud.app/api/franchise/budgets" \
   -H "Authorization: Bearer $TOKEN" \
@@ -243,16 +267,19 @@ curl -X POST "https://api.chefcloud.app/api/franchise/budgets" \
 ```
 
 ### 4. GET `/api/franchise/budgets`
+
 Retrieve branch budgets for a period
 
 **RBAC**: L5 (OWNER) only  
 **Cache**: 60 seconds TTL
 
 **Query Parameters**:
+
 - `period` (required): Format `YYYY-MM`
 - `branchId` (optional): Filter by specific branch
 
 **Response**:
+
 ```json
 [
   {
@@ -269,6 +296,7 @@ Retrieve branch budgets for a period
 ```
 
 **curl Example**:
+
 ```bash
 # All branches
 curl -X GET "https://api.chefcloud.app/api/franchise/budgets?period=2024-02" \
@@ -282,15 +310,18 @@ curl -X GET "https://api.chefcloud.app/api/franchise/budgets?period=2024-02&bran
 ```
 
 ### 5. GET `/api/franchise/procurement/suggestions`
+
 Get procurement suggestions based on low stock across branches
 
 **RBAC**: L5 (OWNER) only  
 **Cache**: None (real-time inventory data)
 
 **Query Parameters**:
+
 - `minBranches` (optional): Minimum number of branches below safety stock (default: 2)
 
 **Response**:
+
 ```json
 [
   {
@@ -313,6 +344,7 @@ Get procurement suggestions based on low stock across branches
 ```
 
 **curl Example**:
+
 ```bash
 curl -X GET "https://api.chefcloud.app/api/franchise/procurement/suggestions?minBranches=2" \
   -H "Authorization: Bearer $TOKEN" \
@@ -320,12 +352,14 @@ curl -X GET "https://api.chefcloud.app/api/franchise/procurement/suggestions?min
 ```
 
 ### 6. GET `/api/franchise/forecasts`
+
 Get forecasted demand for items across branches (basic implementation)
 
 **RBAC**: L5 (OWNER) only  
 **Cache**: None
 
 **Response**:
+
 ```json
 [
   {
@@ -341,6 +375,7 @@ Get forecasted demand for items across branches (basic implementation)
 ```
 
 **Note**: Current implementation uses simple moving average. Future enhancements could include:
+
 - Seasonal adjustments
 - Day-of-week patterns
 - Event-based forecasting
@@ -349,6 +384,7 @@ Get forecasted demand for items across branches (basic implementation)
 ## Data Models
 
 ### BranchBudget
+
 ```prisma
 model BranchBudget {
   id            String   @id @default(cuid())
@@ -372,6 +408,7 @@ model BranchBudget {
 ```
 
 ### FranchiseRank
+
 ```prisma
 model FranchiseRank {
   id        String   @id @default(cuid())
@@ -400,6 +437,7 @@ The franchise digest is generated by `ReportGeneratorService.generateFranchiseDi
 **Schedule**: Weekly (Monday 8 AM) and Monthly (1st of month at 8 AM)
 
 **Structure**:
+
 ```typescript
 interface FranchiseDigest {
   reportId: string;
@@ -410,7 +448,7 @@ interface FranchiseDigest {
     endDate: Date;
   };
   generatedAt: Date;
-  
+
   // Franchise-wide summary
   summary: {
     branches: number;
@@ -418,7 +456,7 @@ interface FranchiseDigest {
     totalOrders: number;
     averageRevenuePerBranch: number;
   };
-  
+
   // Per-branch performance
   byBranch: Array<{
     branchId: string;
@@ -435,15 +473,15 @@ interface FranchiseDigest {
       variancePercentage: number;
     };
   }>;
-  
+
   // Rankings by different metrics
   rankings: {
-    byRevenue: string[];   // Branch IDs in order
+    byRevenue: string[]; // Branch IDs in order
     byMargin: string[];
     bySLA: string[];
-    byWaste: string[];     // Lowest waste first
+    byWaste: string[]; // Lowest waste first
   };
-  
+
   // Aggregated totals
   totals: {
     revenue: number;
@@ -456,6 +494,7 @@ interface FranchiseDigest {
 ```
 
 **Usage in Report Subscriptions**:
+
 ```typescript
 // Create franchise digest subscription
 POST /api/reports/subscriptions
@@ -476,6 +515,7 @@ POST /api/reports/subscriptions
 **Coverage**: 10 test cases
 
 Tests include:
+
 - ✅ Calculates metrics using canonical services (ReconciliationService, WastageService, WaiterMetricsService)
 - ✅ Handles missing reconciliation data gracefully (35% fallback)
 - ✅ Calculates KDS SLA correctly (GREEN/ORANGE/RED thresholds)
@@ -492,6 +532,7 @@ Tests include:
 **Coverage**: 6 test cases
 
 Tests include:
+
 - ✅ Generates digest using FranchiseOverviewService
 - ✅ Handles weekly vs monthly period correctly
 - ✅ Ranks branches correctly by different metrics (revenue, margin, SLA, waste)
@@ -500,6 +541,7 @@ Tests include:
 - ✅ Maintains consistency: digest totals = sum of branch metrics
 
 ### Run Tests
+
 ```bash
 cd /workspaces/chefcloud/services/api
 
@@ -516,6 +558,7 @@ pnpm test franchise
 ## Key Improvements (M6)
 
 ### Before M6 (Hardcoded Metrics)
+
 ```typescript
 // OLD: Hardcoded 65% margin
 const grossMargin = sales * 0.65;
@@ -528,6 +571,7 @@ const sla = 95;
 ```
 
 ### After M6 (Canonical Services)
+
 ```typescript
 // NEW: Real COGS from ReconciliationService (M3)
 const reconciliation = await this.reconciliationService.reconcile({
@@ -562,30 +606,36 @@ const kdsTickets = await this.prisma.client.kdsTicket.findMany({
 ## Integration with Other Modules
 
 ### M3 (Inventory Management)
+
 - **ReconciliationService**: Provides COGS via theoretical usage cost calculation
 - **WastageService**: Provides accurate wastage costs using WAC (Weighted Average Cost)
 - **CostingService**: Underlying cost calculations for both services
 
 ### M5 (Staff Performance)
+
 - **WaiterMetricsService**: Provides staff performance scores for branch metrics
 - **AntiTheftService**: Anomaly detection integrated into franchise digest
 
 ### M1 (KDS)
+
 - **KdsService**: Provides SLA metrics from kitchen ticket timing
 - **KdsSlaConfig**: Per-station configurable SLA thresholds
 
 ### M4 (Reports & Digests)
+
 - **ReportGeneratorService**: Uses FranchiseOverviewService for franchise digests
 - **SubscriptionService**: Schedules weekly/monthly franchise digest delivery
 
 ## Security & RBAC
 
 All franchise endpoints require **L5 (OWNER)** access level. This ensures:
+
 - Only organization owners can view multi-branch data
 - Managers cannot see other branches' performance
 - Staff cannot access franchise-level reports
 
 **RBAC Enforcement**:
+
 ```typescript
 @UseGuards(JwtAuthGuard, RBACGuard)
 @Roles('L5')
@@ -598,12 +648,14 @@ async getOverview(@Query('period') period: string) {
 ## Performance Considerations
 
 ### Caching Strategy
+
 - **Overview**: 15s TTL (frequently changing data)
 - **Rankings**: 30s TTL (calculated metrics)
 - **Budgets**: 60s TTL (relatively static)
 - **Procurement**: No cache (real-time inventory)
 
 ### Optimization Tips
+
 1. **Parallel Branch Queries**: Use `Promise.all()` for multi-branch aggregation
 2. **Index Usage**: Ensure indexes on `orgId`, `branchId`, `period`, `sentAt`, `updatedAt`
 3. **Budget Lookups**: Use composite unique index `(orgId, branchId, period)`
@@ -639,34 +691,43 @@ async getOverview(@Query('period') period: string) {
 ## Troubleshooting
 
 ### Symptom: COGS appears as 35% of sales (too consistent)
+
 **Cause**: ReconciliationService call failing, using fallback estimation  
-**Solution**: 
+**Solution**:
+
 1. Check reconciliation logs for errors
 2. Verify stock movement data exists
 3. Ensure CostingService has WAC data
 
 ### Symptom: Wastage cost is 0
+
 **Cause**: No wastage records or WastageService error  
 **Solution**:
+
 1. Verify wastage entries exist in database
 2. Check WastageService logs
 3. Ensure wastage reason categories are configured
 
 ### Symptom: KDS SLA always 100%
+
 **Cause**: No KDS tickets found for period  
 **Solution**:
+
 1. Verify KDS is configured and running
 2. Check KdsTicket table has data
 3. Ensure `readyAt` timestamps are populated
 
 ### Symptom: Staff score is 0
+
 **Cause**: No waiter metrics available  
 **Solution**:
+
 1. Verify shifts have waiter assignments
 2. Check WaiterMetricsService logs
 3. Ensure orders have waiter linkages
 
 ## Related Documentation
+
 - [M3: Inventory Management](./M3-INVENTORY-MANAGEMENT.md)
 - [M4: Reports & Digests](./M4-REPORTS-DIGESTS.md)
 - [M5: Staff Performance & Anti-Theft](./M5-STAFF-PERFORMANCE.md)
@@ -675,6 +736,7 @@ async getOverview(@Query('period') period: string) {
 ## Change Log
 
 ### M6 (2024-01-26)
+
 - ✅ Created `FranchiseOverviewService` as canonical source for franchise metrics
 - ✅ Refactored `FranchiseService.getOverview()` to use canonical service
 - ✅ Integrated ReconciliationService (M3) for real COGS
@@ -687,6 +749,7 @@ async getOverview(@Query('period') period: string) {
 - ✅ Updated module imports and dependencies
 
 ### Pre-M6 (Original Implementation)
+
 - Basic franchise overview with hardcoded metrics
 - Configurable branch rankings
 - Budget CRUD operations

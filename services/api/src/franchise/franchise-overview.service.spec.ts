@@ -7,7 +7,7 @@ import { WaiterMetricsService } from '../staff/waiter-metrics.service';
 
 /**
  * M6: Franchise Overview Consistency Tests
- * 
+ *
  * Ensures franchise-level aggregations match sum of individual branches
  * and use canonical services (M3, M5, M1) for consistent metrics.
  */
@@ -86,11 +86,9 @@ describe('FranchiseOverviewService - M6 Consistency Tests', () => {
       } as any);
 
       // Mock orders (sales)
-      jest.spyOn(prismaService.client.order, 'findMany').mockResolvedValue([
-        { total: 100000 },
-        { total: 150000 },
-        { total: 200000 },
-      ] as any);
+      jest
+        .spyOn(prismaService.client.order, 'findMany')
+        .mockResolvedValue([{ total: 100000 }, { total: 150000 }, { total: 200000 }] as any);
 
       // Mock reconciliation (COGS)
       jest.spyOn(reconciliationService, 'reconcile').mockResolvedValue([
@@ -172,9 +170,9 @@ describe('FranchiseOverviewService - M6 Consistency Tests', () => {
         name: 'Branch Alpha',
       } as any);
 
-      jest.spyOn(prismaService.client.order, 'findMany').mockResolvedValue([
-        { total: 100000 },
-      ] as any);
+      jest
+        .spyOn(prismaService.client.order, 'findMany')
+        .mockResolvedValue([{ total: 100000 }] as any);
 
       // Reconciliation fails
       jest.spyOn(reconciliationService, 'reconcile').mockRejectedValue(new Error('No data'));
@@ -243,7 +241,8 @@ describe('FranchiseOverviewService - M6 Consistency Tests', () => {
       ] as any);
 
       // Mock getBranchMetrics for each branch
-      jest.spyOn(service, 'getBranchMetrics')
+      jest
+        .spyOn(service, 'getBranchMetrics')
         .mockResolvedValueOnce({
           branchId: mockBranch1Id,
           branchName: 'Branch Alpha',
@@ -298,9 +297,9 @@ describe('FranchiseOverviewService - M6 Consistency Tests', () => {
     });
 
     it('should handle single branch correctly', async () => {
-      jest.spyOn(prismaService.client.branch, 'findMany').mockResolvedValue([
-        { id: mockBranch1Id, name: 'Branch Alpha' },
-      ] as any);
+      jest
+        .spyOn(prismaService.client.branch, 'findMany')
+        .mockResolvedValue([{ id: mockBranch1Id, name: 'Branch Alpha' }] as any);
 
       jest.spyOn(service, 'getBranchMetrics').mockResolvedValueOnce({
         branchId: mockBranch1Id,
@@ -329,9 +328,9 @@ describe('FranchiseOverviewService - M6 Consistency Tests', () => {
     it('should throw error if no branches found', async () => {
       jest.spyOn(prismaService.client.branch, 'findMany').mockResolvedValue([]);
 
-      await expect(
-        service.getFranchiseSummary(mockOrgId, periodStart, periodEnd),
-      ).rejects.toThrow('No branches found');
+      await expect(service.getFranchiseSummary(mockOrgId, periodStart, periodEnd)).rejects.toThrow(
+        'No branches found',
+      );
     });
 
     it('should aggregate budget data when available', async () => {
@@ -340,7 +339,8 @@ describe('FranchiseOverviewService - M6 Consistency Tests', () => {
         { id: mockBranch2Id, name: 'Branch Beta' },
       ] as any);
 
-      jest.spyOn(service, 'getBranchMetrics')
+      jest
+        .spyOn(service, 'getBranchMetrics')
         .mockResolvedValueOnce({
           branchId: mockBranch1Id,
           branchName: 'Branch Alpha',
@@ -396,13 +396,13 @@ describe('FranchiseOverviewService - M6 Consistency Tests', () => {
         name: 'Branch Alpha',
       } as any);
 
-      jest.spyOn(prismaService.client.order, 'findMany').mockResolvedValue([
-        { total: 100000 },
-      ] as any);
+      jest
+        .spyOn(prismaService.client.order, 'findMany')
+        .mockResolvedValue([{ total: 100000 }] as any);
 
-      const reconcileSpy = jest.spyOn(reconciliationService, 'reconcile').mockResolvedValue([
-        { theoreticalUsageCost: 35000 },
-      ] as any);
+      const reconcileSpy = jest
+        .spyOn(reconciliationService, 'reconcile')
+        .mockResolvedValue([{ theoreticalUsageCost: 35000 }] as any);
 
       jest.spyOn(wastageService, 'getWastageSummary').mockResolvedValue({ totalCost: 0 } as any);
       jest.spyOn(prismaService.client.kdsTicket, 'findMany').mockResolvedValue([]);

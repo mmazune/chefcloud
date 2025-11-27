@@ -184,9 +184,7 @@ describe('DevApiKeysService', () => {
 
       mockPrisma.devApiKey.findUnique.mockResolvedValue(mockKey);
 
-      await expect(service.revokeKey('key-123', 'org-123')).rejects.toThrow(
-        UnauthorizedException,
-      );
+      await expect(service.revokeKey('key-123', 'org-123')).rejects.toThrow(UnauthorizedException);
     });
 
     it('should throw BadRequestException if key already revoked', async () => {
@@ -198,9 +196,7 @@ describe('DevApiKeysService', () => {
 
       mockPrisma.devApiKey.findUnique.mockResolvedValue(mockKey);
 
-      await expect(service.revokeKey('key-123', 'org-123')).rejects.toThrow(
-        BadRequestException,
-      );
+      await expect(service.revokeKey('key-123', 'org-123')).rejects.toThrow(BadRequestException);
     });
   });
 

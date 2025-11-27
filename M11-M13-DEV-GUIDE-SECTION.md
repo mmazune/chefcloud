@@ -1,5 +1,3 @@
-
-
 ---
 
 ## M11-M13 – POS Order Lifecycle, Payments & Voids Enterprise Hardening
@@ -795,4 +793,3 @@ curl -X POST "$BASE_URL/kds/tickets/$TICKET_ID/recall" \
 - `/M13-VOID-DESIGN.md`: Comprehensive void design document
 
 ---
-

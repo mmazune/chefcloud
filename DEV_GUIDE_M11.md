@@ -541,6 +541,7 @@ pnpm --filter @chefcloud/api test pos/pos.service.spec.ts
 ---
 
 **Related Documentation**:
+
 - [M1: KDS System](./M1-KDS-SYSTEM.md)
 - [M3: Inventory Management](./M3-INVENTORY-MANAGEMENT.md)
 - [M5: Staff Performance & Anti-Theft](./M5-STAFF-PERFORMANCE.md)

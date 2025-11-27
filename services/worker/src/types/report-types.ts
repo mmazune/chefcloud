@@ -1,6 +1,6 @@
 /**
  * M4: Report Types for Worker
- * 
+ *
  * These types match the DTOs from the API service to ensure consistency.
  */
 

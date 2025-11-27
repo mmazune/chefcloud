@@ -8,7 +8,7 @@ import { WaiterMetrics, RankedWaiter } from './dto/waiter-metrics.dto';
 
 /**
  * M5: Staff Performance & Metrics API
- * 
+ *
  * Endpoints for waiter metrics, rankings, and anti-theft analysis.
  * RBAC: L4+ (OWNER, MANAGER, ASSISTANT_MANAGER, ACCOUNTANT, FRANCHISE)
  */
@@ -19,12 +19,12 @@ export class StaffController {
 
   /**
    * Get raw waiter metrics for a period
-   * 
+   *
    * @param branchId - Required: Branch to query
    * @param shiftId - Optional: Specific shift
    * @param from - Optional: Start date (ISO string)
    * @param to - Optional: End date (ISO string)
-   * 
+   *
    * Must provide either shiftId OR (from + to)
    */
   @Get('waiters/metrics')
@@ -55,12 +55,12 @@ export class StaffController {
 
   /**
    * Get ranked waiters with scores
-   * 
+   *
    * @param branchId - Required: Branch to query
    * @param shiftId - Optional: Specific shift
    * @param from - Optional: Start date (ISO string)
    * @param to - Optional: End date (ISO string)
-   * 
+   *
    * Returns waiters sorted by score (best to worst)
    */
   @Get('waiters/rankings')

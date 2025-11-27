@@ -161,4 +161,56 @@ export class AttendanceController {
       new Date(dateTo),
     );
   }
+
+  /**
+   * Get today's attendance summary - for dashboard (L3+)
+   */
+  @Get('today-summary')
+  @Roles('L3', 'L4', 'L5')
+  async getTodaySummary(
+    @Query('orgId') orgId: string,
+    @Query('branchId') branchId?: string,
+  ) {
+    if (!orgId) {
+      throw new BadRequestException('orgId is required');
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    // Get all employees for the org/branch
+    const employeeWhere: any = { orgId };
+    if (branchId) {
+      employeeWhere.branchId = branchId;
+    }
+    const totalEmployees = await this.attendanceService['prisma'].client.employee.count({
+      where: employeeWhere,
+    });
+
+    // Get today's attendance records
+    const attendanceWhere: any = {
+      orgId,
+      date: { gte: today, lt: tomorrow },
+    };
+    if (branchId) {
+      attendanceWhere.branchId = branchId;
+    }
+
+    const records = await this.attendanceService['prisma'].client.attendance.findMany({
+      where: attendanceWhere,
+    });
+
+    const presentToday = records.filter((r) => r.status === AttendanceStatus.PRESENT).length;
+    const absentToday = records.filter((r) => r.status === AttendanceStatus.ABSENT).length;
+    const lateToday = records.filter((r) => r.status === AttendanceStatus.LATE).length;
+
+    return {
+      totalEmployees,
+      presentToday,
+      absentToday,
+      lateToday,
+    };
+  }
 }

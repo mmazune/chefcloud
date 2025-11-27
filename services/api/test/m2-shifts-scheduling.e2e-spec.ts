@@ -72,12 +72,20 @@ describe('M2 - Shifts, Scheduling & Stock-Count Gate (E2E)', () => {
 
     // Create tokens
     const managerSession = await prisma.client.session.create({
-      data: { userId: managerId, token: `m2-manager-token-${Date.now()}`, expiresAt: new Date(Date.now() + 86400000) },
+      data: {
+        userId: managerId,
+        token: `m2-manager-token-${Date.now()}`,
+        expiresAt: new Date(Date.now() + 86400000),
+      },
     });
     managerToken = managerSession.token;
 
     const userSession = await prisma.client.session.create({
-      data: { userId, token: `m2-staff-token-${Date.now()}`, expiresAt: new Date(Date.now() + 86400000) },
+      data: {
+        userId,
+        token: `m2-staff-token-${Date.now()}`,
+        expiresAt: new Date(Date.now() + 86400000),
+      },
     });
     authToken = userSession.token;
   });
@@ -519,7 +527,9 @@ describe('M2 - Shifts, Scheduling & Stock-Count Gate (E2E)', () => {
 
       expect(res.body.closedAt).toBeDefined();
       expect(res.body.overrideUserId).toBe(managerId);
-      expect(res.body.overrideReason).toBe('Physical count verified by manager after theft incident');
+      expect(res.body.overrideReason).toBe(
+        'Physical count verified by manager after theft incident',
+      );
       expect(res.body.overrideAt).toBeDefined();
       expect(res.body.overrideBy).toMatchObject({
         firstName: 'Manager',

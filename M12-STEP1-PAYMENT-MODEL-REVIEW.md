@@ -79,15 +79,16 @@ model Order {
 
 ### Order Monetary Fields Analysis
 
-| Field | Current Use | M12 Use |
-|-------|------------|---------|
-| `subtotal` | Sum of order items (price × qty) | ✅ Correct - sum(orderItems) |
-| `discount` | Discount amount | ✅ Correct - sum(discounts) |
-| `tax` | Tax amount | ⚠️ Currently 0, reserved for future |
-| `total` | Final amount due | ✅ Correct - subtotal - discount + tax |
-| `payments` | Related payments | ✅ Used to calculate totalPaid |
+| Field      | Current Use                      | M12 Use                                |
+| ---------- | -------------------------------- | -------------------------------------- |
+| `subtotal` | Sum of order items (price × qty) | ✅ Correct - sum(orderItems)           |
+| `discount` | Discount amount                  | ✅ Correct - sum(discounts)            |
+| `tax`      | Tax amount                       | ⚠️ Currently 0, reserved for future    |
+| `total`    | Final amount due                 | ✅ Correct - subtotal - discount + tax |
+| `payments` | Related payments                 | ✅ Used to calculate totalPaid         |
 
 **Missing**:
+
 - No `totalPaid` field (must calculate: `sum(payments.amount where status=completed)`)
 - No `balanceDue` field (must calculate: `total - totalPaid`)
 - No `tipTotal` field (must calculate: `sum(payments.tipAmount)`)
@@ -137,12 +138,14 @@ tipTotal = sum(payments.tipAmount)  # NEW FIELD NEEDED
 ### 2. Split Bills Support ❌ (Needs implementation)
 
 **Requirements**:
+
 - Allow multiple payments per order
 - Validate sum(payments.amount) >= order.total before closing
 - Support different payment methods per split (cash + card)
 - Track split metadata (who paid, how much, which items if split by seat)
 
 **Example Use Case**:
+
 ```
 Order total: 100,000
 - Payment 1: CASH, 60,000 (Customer A)
@@ -153,11 +156,13 @@ Order total: 100,000
 ### 3. Partial Payments ❌ (Needs implementation)
 
 **Requirements**:
+
 - Allow order to remain OPEN with partial payment
 - Track balanceDue after each payment
 - Only allow CLOSED status when balanceDue <= 0 (or within tolerance)
 
 **Example Use Case**:
+
 ```
 Order total: 100,000
 - Payment 1: CASH, 50,000 → balanceDue = 50,000 (order stays OPEN)
@@ -167,12 +172,14 @@ Order total: 100,000
 ### 4. Tip Handling ❌ (Needs schema change)
 
 **Requirements**:
+
 - Add `Payment.tipAmount` field (Decimal, nullable)
 - Store tip separately from payment amount
 - totalDue excludes tips (tip is additional, not part of bill)
 - Track tipTotal for GL posting (Tips Payable liability, not revenue)
 
 **Schema Change Needed**:
+
 ```prisma
 model Payment {
   // ... existing fields
@@ -183,6 +190,7 @@ model Payment {
 ```
 
 **Example**:
+
 ```
 Order total: 100,000
 Payment: CASH, amount=100,000, tipAmount=10,000
@@ -194,6 +202,7 @@ Total cash received: 110,000
 ### 5. Accounting Integration ✅ (PostingService ready)
 
 **GL Treatment**:
+
 - Revenue: Order.subtotal - Order.discount
 - COGS: Sum of recipe costs (already implemented in M3)
 - Tips: Payment.tipAmount → Tips Payable (liability account 2300)
@@ -201,6 +210,7 @@ Total cash received: 110,000
   - Paid out to employees later
 
 **Posting Flow** (already in PostingService):
+
 1. On order close → `postRevenue(orderId, userId)`
 2. PostingService reads order + items + payments
 3. Posts:
@@ -216,19 +226,19 @@ Total cash received: 110,000
 
 ### Schema Changes Required
 
-| Change | Priority | Effort |
-|--------|----------|--------|
-| Add `Payment.tipAmount` field | HIGH | 15 min (migration) |
+| Change                        | Priority | Effort             |
+| ----------------------------- | -------- | ------------------ |
+| Add `Payment.tipAmount` field | HIGH     | 15 min (migration) |
 
 ### Service Logic Changes Required
 
-| Change | Priority | Effort |
-|--------|----------|--------|
-| Implement `calculateOrderTotals()` helper | HIGH | 1 hour |
-| Implement `applySplitPayments()` method | HIGH | 2 hours |
-| Update `closeOrder()` to validate balance | HIGH | 30 min |
-| Add payment method to DTO/controller | HIGH | 30 min |
-| Create split-payments endpoint | MEDIUM | 1 hour |
+| Change                                    | Priority | Effort  |
+| ----------------------------------------- | -------- | ------- |
+| Implement `calculateOrderTotals()` helper | HIGH     | 1 hour  |
+| Implement `applySplitPayments()` method   | HIGH     | 2 hours |
+| Update `closeOrder()` to validate balance | HIGH     | 30 min  |
+| Add payment method to DTO/controller      | HIGH     | 30 min  |
+| Create split-payments endpoint            | MEDIUM   | 1 hour  |
 
 ### No Breaking Changes Needed
 
@@ -244,10 +254,10 @@ Total cash received: 110,000
 2. **Create OrderTotalsCalculator utility**:
    ```typescript
    class OrderTotalsCalculator {
-     static calculateTotalDue(order: Order): number
-     static calculateTotalPaid(payments: Payment[]): number
-     static calculateBalanceDue(order: Order, payments: Payment[]): number
-     static calculateTipTotal(payments: Payment[]): number
+     static calculateTotalDue(order: Order): number;
+     static calculateTotalPaid(payments: Payment[]): number;
+     static calculateBalanceDue(order: Order, payments: Payment[]): number;
+     static calculateTipTotal(payments: Payment[]): number;
    }
    ```
 3. **Update PosService.closeOrder()**:
@@ -267,21 +277,25 @@ Total cash received: 110,000
 ## Test Scenarios for M12
 
 ### Split Bills
+
 - [ ] Order with 2 payments (cash + card) totaling exactly order.total
 - [ ] Order with 3 payments totaling more than order.total (overpayment)
 - [ ] Reject order close if sum(payments) < order.total
 
 ### Partial Payments
+
 - [ ] Payment 1: 50% of total → order stays OPEN
 - [ ] Payment 2: remaining 50% → order can close
 - [ ] Check balanceDue updates correctly after each payment
 
 ### Tips
+
 - [ ] Payment with tip: amount=100k, tipAmount=10k → totalPaid=100k, tipTotal=10k
 - [ ] GL posting: Tips go to liability, not revenue
 - [ ] Order without tips: tipTotal=0
 
 ### Edge Cases
+
 - [ ] Payment with amount=0 (rejected)
 - [ ] Overpayment by 5k (allowed, balanceDue=-5k)
 - [ ] Mixed methods: CASH + MOMO + CARD on same order

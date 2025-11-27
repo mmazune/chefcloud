@@ -30,6 +30,7 @@ M14 has been successfully completed, bringing the Developer Portal to production
 ### Services Implemented (3 files, 831 lines)
 
 #### 1. DevApiKeysService (318 lines)
+
 - Secure key generation: `cc_live_` (PRODUCTION) or `cc_test_` (SANDBOX) + 32 random chars
 - bcrypt hashing (cost 10), only hash stored
 - Constant-time verification via `bcrypt.compare()`
@@ -37,12 +38,14 @@ M14 has been successfully completed, bringing the Developer Portal to production
 - Methods: createKey, revokeKey, listKeys, getKey, verifyKeyForAuth, recordUsage, getKeyMetrics
 
 #### 2. WebhookSubscriptionsService (219 lines)
+
 - Secret generation: `whsec_{64_hex_chars}`
 - URL validation (http/https only)
 - Event type validation (`{domain}.{action}` pattern)
 - Methods: createSubscription, listSubscriptions, getSubscription, disable/enable, regenerateSecret, updateSubscription
 
 #### 3. WebhookDispatcherService (294 lines)
+
 - HMAC-SHA256 signature: `HMAC(secret, timestamp + '.' + body)`
 - HTTP delivery with axios (10s timeout)
 - Custom headers: X-ChefCloud-Signature, X-ChefCloud-Timestamp, X-ChefCloud-Event-Type, X-ChefCloud-Event-Id
@@ -54,6 +57,7 @@ M14 has been successfully completed, bringing the Developer Portal to production
 **17 New Endpoints Added** to `/services/api/src/dev-portal/dev-portal.controller.ts`:
 
 **API Keys** (6 endpoints):
+
 - GET /dev/keys - List keys
 - POST /dev/keys - Create (returns raw key once) 🔒
 - GET /dev/keys/:id - Get details
@@ -61,6 +65,7 @@ M14 has been successfully completed, bringing the Developer Portal to production
 - GET /dev/keys/:id/metrics - Usage stats
 
 **Webhook Subscriptions** (7 endpoints):
+
 - GET /dev/webhooks/subscriptions - List
 - POST /dev/webhooks/subscriptions - Create (returns secret once) 🔒
 - GET /dev/webhooks/subscriptions/:id - Get details
@@ -70,6 +75,7 @@ M14 has been successfully completed, bringing the Developer Portal to production
 - POST /dev/webhooks/subscriptions/:id/update - Update 🔒
 
 **Webhook Deliveries** (4 endpoints):
+
 - GET /dev/webhooks/deliveries - List with filters
 - GET /dev/webhooks/deliveries/:id - Get details
 - POST /dev/webhooks/deliveries/:id/retry - Manual retry 🔒
@@ -87,6 +93,7 @@ M14 has been successfully completed, bringing the Developer Portal to production
 - **DevPortalService** (11 tests): Existing tests (all still passing)
 
 **Run tests**:
+
 ```bash
 cd /workspaces/chefcloud/services/api
 pnpm test -- --testPathPattern=dev-portal
@@ -95,6 +102,7 @@ pnpm test -- --testPathPattern=dev-portal
 ### Documentation
 
 **DEV_GUIDE.md** - Added 570+ line M14 section with:
+
 - Architecture diagrams (API Key flow, Webhook flow)
 - Complete API reference with curl examples
 - Webhook payload structure and event types
@@ -103,6 +111,7 @@ pnpm test -- --testPathPattern=dev-portal
 - Rate limiting details
 
 **curl-examples-m14-dev-portal.sh** - 252 lines with 20 examples:
+
 - All CRUD operations for keys, subscriptions, deliveries
 - Webhook signature verification example
 - Colored output, JSON formatting
@@ -113,6 +122,7 @@ pnpm test -- --testPathPattern=dev-portal
 **Migration**: `20251120_m14_dev_portal_hardening` ✅ Applied
 
 **Models Added**:
+
 - **DevApiKey**: keyHash, prefix, name, environment, status, usageCount, lastUsedAt
 - **WebhookSubscription**: url, eventTypes, secret, status, disabledAt
 - **WebhookDelivery**: eventType, payload, status, attempts, responseCode, latencyMs, errorMessage
@@ -124,6 +134,7 @@ pnpm test -- --testPathPattern=dev-portal
 ## Security Implementation
 
 ### API Keys
+
 - ✅ 32 bytes entropy, base64 encoding
 - ✅ bcrypt cost 10, automatic salting
 - ✅ Raw keys shown once, never retrievable
@@ -132,6 +143,7 @@ pnpm test -- --testPathPattern=dev-portal
 - ✅ Revocation enforcement
 
 ### Webhooks
+
 - ✅ HMAC-SHA256 signatures
 - ✅ Timestamp-based replay protection
 - ✅ 64-char hex secrets (256-bit entropy)
@@ -143,21 +155,26 @@ pnpm test -- --testPathPattern=dev-portal
 ## Build & Test Results
 
 ### TypeScript Build
+
 ```bash
 pnpm --filter @chefcloud/api build
 ```
+
 **Result**: ✅ 0 errors, 0 warnings
 
 **Issues Resolved**:
+
 - Installed bcrypt@6.0.0 + @types/bcrypt@6.0.0
 - Regenerated Prisma client
 - Fixed import paths (relative vs package)
 - Added explicit return types
 
 ### Unit Tests
+
 ```bash
 pnpm test -- --testPathPattern=dev-portal
 ```
+
 **Result**: ✅ 51 passed, 0 failed (2.4s)
 
 ---
@@ -165,6 +182,7 @@ pnpm test -- --testPathPattern=dev-portal
 ## Files Created/Modified
 
 ### Created (6 files)
+
 - `services/api/src/dev-portal/dev-api-keys.service.ts` (318 lines)
 - `services/api/src/dev-portal/webhook-subscriptions.service.ts` (219 lines)
 - `services/api/src/dev-portal/webhook-dispatcher.service.ts` (294 lines)
@@ -173,12 +191,14 @@ pnpm test -- --testPathPattern=dev-portal
 - `services/api/src/dev-portal/webhook-dispatcher.service.spec.ts` (291 lines)
 
 ### Modified (4 files)
+
 - `services/api/src/dev-portal/dev-portal.controller.ts` - Added 17 endpoints
 - `services/api/src/dev-portal/dev-portal.module.ts` - Registered 3 services
 - `services/api/src/prisma.service.ts` - Added 3 model getters
 - `DEV_GUIDE.md` - Added 570+ line M14 section
 
 ### Documentation
+
 - `curl-examples-m14-dev-portal.sh` - 252 lines, 20 examples
 
 ---
@@ -186,6 +206,7 @@ pnpm test -- --testPathPattern=dev-portal
 ## Known Limitations & Future Work
 
 ### Current Limitations
+
 1. **Synchronous Delivery**: Webhooks block request cycle (10s timeout)
    - Future: Move to BullMQ worker queue
 2. **Manual Retry**: Failed webhooks need manual retry after 3 attempts
@@ -198,6 +219,7 @@ pnpm test -- --testPathPattern=dev-portal
    - Future: Add to main auth pipeline
 
 ### Future Enhancements
+
 - Webhook payload customization
 - Event replay capability
 - Advanced metrics dashboard (p95/p99 latencies)
@@ -219,7 +241,7 @@ pnpm test -- --testPathPattern=dev-portal
 ## Rate Limiting (Plan-Based)
 
 | Plan         | Requests/Minute | Monthly Limit |
-|--------------|-----------------|---------------|
+| ------------ | --------------- | ------------- |
 | Free         | 10              | 10,000        |
 | Starter      | 100             | 100,000       |
 | Professional | 500             | 1,000,000     |
@@ -232,6 +254,7 @@ Applied to: Create key, revoke key, create subscription, update subscription, di
 ## Quick Start Examples
 
 ### Create API Key
+
 ```bash
 curl -X POST http://localhost:3001/dev/keys \
   -H "Content-Type: application/json" \
@@ -240,6 +263,7 @@ curl -X POST http://localhost:3001/dev/keys \
 ```
 
 ### Create Webhook Subscription
+
 ```bash
 curl -X POST http://localhost:3001/dev/webhooks/subscriptions \
   -H "Content-Type: application/json" \
@@ -248,13 +272,13 @@ curl -X POST http://localhost:3001/dev/webhooks/subscriptions \
 ```
 
 ### Verify Webhook Signature (Node.js)
+
 ```javascript
 const crypto = require('crypto');
 
 function verifyWebhook(signature, timestamp, body, secret) {
   const payload = `${timestamp}.${JSON.stringify(body)}`;
-  const expected = crypto.createHmac('sha256', secret)
-    .update(payload).digest('hex');
+  const expected = crypto.createHmac('sha256', secret).update(payload).digest('hex');
   if (signature !== expected) throw new Error('Invalid signature');
   if (Date.now() / 1000 - timestamp > 300) throw new Error('Too old');
   return true;
@@ -266,6 +290,7 @@ function verifyWebhook(signature, timestamp, body, secret) {
 ## Compliance Checklist
 
 ✅ All requirements from M14-DEV-PORTAL-DESIGN.md met:
+
 - ✅ API key format (`cc_live_` / `cc_test_` + 32 chars)
 - ✅ bcrypt cost 10
 - ✅ Constant-time comparison (via bcrypt.compare)
@@ -291,6 +316,7 @@ function verifyWebhook(signature, timestamp, body, secret) {
 M14 is **complete and production-ready**. All core features have been implemented, tested, and documented. The Developer Portal now provides enterprise-grade API key management and webhook infrastructure with robust security.
 
 ### Summary Metrics
+
 - **3 Services**: 831 lines of production code
 - **17 Endpoints**: Full REST API
 - **51 Tests**: 100% passing
@@ -299,6 +325,7 @@ M14 is **complete and production-ready**. All core features have been implemente
 - **20 Examples**: Working curl scripts
 
 ### Next Steps (Optional)
+
 1. Integrate ApiKeyAuthGuard into main auth pipeline
 2. Move webhook delivery to worker queue
 3. Implement E2E tests

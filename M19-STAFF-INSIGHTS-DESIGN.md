@@ -9,11 +9,13 @@
 ## Executive Summary
 
 M19 creates a **unified staff insights system** that combines:
+
 - **Performance metrics** from M5 WaiterMetricsService (sales, voids, discounts)
 - **Reliability metrics** from M9 attendance tracking (attendance rate, punctuality, cover shifts)
 - **Risk assessment** from M5 AntiTheftService (threshold violations)
 
 The system provides:
+
 1. **Comprehensive staff rankings** with performance + reliability scoring
 2. **Automated employee-of-week/month recommendations** based on objective data
 3. **Award history persistence** for tracking trends and employee profiles
@@ -74,6 +76,7 @@ enum AwardCategory {
 ```
 
 **Design Rationale:**
+
 - **Idempotence**: Unique constraint prevents duplicate awards for same employee/period/rank
 - **Rank field**: Allows storing top 3 performers, not just #1
 - **scoreSnapshot JSON**: Preserves exact metrics at award time for auditing
@@ -111,6 +114,7 @@ Where:
 ```
 
 **Weights Rationale:**
+
 - **70% Performance**: Revenue generation is primary business driver
 - **30% Reliability**: Consistent presence and punctuality are essential but secondary
 
@@ -146,6 +150,7 @@ Where:
 ```
 
 **Components:**
+
 - **Attendance Rate**: Based on scheduled vs actual shifts worked
 - **Late Penalty**: AttendanceRecord.status = LATE
 - **Left Early Penalty**: AttendanceRecord.status = LEFT_EARLY
@@ -153,6 +158,7 @@ Where:
 - **Absence Penalty**: AttendanceRecord.status = ABSENT
 
 **Normalization:**
+
 - All components are ratios (0-1 scale)
 - No need for max normalization like performance score
 - Penalties can drive score negative (capped at 0 in final calculation)
@@ -161,10 +167,10 @@ Where:
 
 ```typescript
 function calculateCompositeScore(
-  performanceScore: number,  // 0-1 from M5
-  reliabilityScore: number,  // 0-1 from M9
+  performanceScore: number, // 0-1 from M5
+  reliabilityScore: number, // 0-1 from M9
 ): number {
-  const composite = (performanceScore * 0.70) + (reliabilityScore * 0.30);
+  const composite = performanceScore * 0.7 + reliabilityScore * 0.3;
   return Math.max(0, Math.min(1, composite)); // Clamp to [0, 1]
 }
 ```
@@ -176,18 +182,21 @@ function calculateCompositeScore(
 ### 3.1 Minimum Requirements
 
 **For WEEK Awards:**
+
 - Must be `Employee.status = ACTIVE`
 - Must have worked **3+ shifts** in the week
 - Must not be flagged **CRITICAL risk** in anti-theft
 - No maximum absence rate (too short period)
 
 **For MONTH Awards:**
+
 - Must be `Employee.status = ACTIVE`
 - Must have worked **10+ shifts** in the month
 - Must not be flagged **CRITICAL risk** in anti-theft
 - Maximum **20% absence rate** (e.g., 2 absences if 10 shifts scheduled)
 
 **For QUARTER/YEAR Awards:**
+
 - Must be `Employee.status = ACTIVE`
 - Must have worked **30+ shifts** in the quarter / **120+ shifts** in the year
 - Must not be flagged **CRITICAL risk** in anti-theft
@@ -196,18 +205,20 @@ function calculateCompositeScore(
 ### 3.2 Risk Flag Exclusion
 
 **Integration with M5 AntiTheftService:**
+
 ```typescript
 const antiTheftSummary = await antiTheftService.getAntiTheftSummary(orgId, branchId, from, to);
 
 const criticalRiskStaff = antiTheftSummary.flaggedStaff
-  .filter(f => f.violations.some(v => v.severity === 'CRITICAL'))
-  .map(f => f.metrics.userId);
+  .filter((f) => f.violations.some((v) => v.severity === 'CRITICAL'))
+  .map((f) => f.metrics.userId);
 
 // Exclude from award eligibility
-eligibleStaff = rankedStaff.filter(s => !criticalRiskStaff.includes(s.userId));
+eligibleStaff = rankedStaff.filter((s) => !criticalRiskStaff.includes(s.userId));
 ```
 
 **Risk Levels:**
+
 - **CRITICAL**: Excluded from all awards (multiple threshold violations at 1.5x+)
 - **WARN**: Eligible but noted in award reason ("Despite minor policy violations")
 - **None**: Fully eligible
@@ -217,6 +228,7 @@ eligibleStaff = rankedStaff.filter(s => !criticalRiskStaff.includes(s.userId));
 Only `Employee.status = ACTIVE` are eligible.
 
 **Excluded:**
+
 - INACTIVE: On leave, not currently working
 - TERMINATED: No longer employed
 
@@ -245,7 +257,7 @@ function resolvePeriod(periodType: AwardPeriodType, referenceDate: Date): Period
         type: 'WEEK',
         start: weekStart,
         end: weekEnd,
-        label: `Week ${weekNumber}, ${weekStart.getFullYear()}`
+        label: `Week ${weekNumber}, ${weekStart.getFullYear()}`,
       };
 
     case 'MONTH':
@@ -255,7 +267,7 @@ function resolvePeriod(periodType: AwardPeriodType, referenceDate: Date): Period
         type: 'MONTH',
         start: monthStart,
         end: monthEnd,
-        label: format(monthStart, 'MMMM yyyy') // "November 2025"
+        label: format(monthStart, 'MMMM yyyy'), // "November 2025"
       };
 
     case 'QUARTER':
@@ -266,7 +278,7 @@ function resolvePeriod(periodType: AwardPeriodType, referenceDate: Date): Period
         type: 'QUARTER',
         start: quarterStart,
         end: quarterEnd,
-        label: `Q${quarter} ${quarterStart.getFullYear()}`
+        label: `Q${quarter} ${quarterStart.getFullYear()}`,
       };
 
     case 'YEAR':
@@ -276,7 +288,7 @@ function resolvePeriod(periodType: AwardPeriodType, referenceDate: Date): Period
         type: 'YEAR',
         start: yearStart,
         end: yearEnd,
-        label: String(yearStart.getFullYear())
+        label: String(yearStart.getFullYear()),
       };
   }
 }
@@ -287,15 +299,12 @@ function resolvePeriod(periodType: AwardPeriodType, referenceDate: Date): Period
 ### 4.2 Period Queries
 
 **Example: Get employee-of-month for November 2025**
+
 ```typescript
 const period = resolvePeriod('MONTH', new Date('2025-11-15'));
 // Returns: { start: 2025-11-01 00:00, end: 2025-11-30 23:59, label: "November 2025" }
 
-const recommendation = await staffInsightsService.getAwardRecommendation(
-  orgId,
-  branchId,
-  period
-);
+const recommendation = await staffInsightsService.getAwardRecommendation(orgId, branchId, period);
 ```
 
 ---
@@ -309,9 +318,9 @@ const recommendation = await staffInsightsService.getAwardRecommendation(
 export class StaffInsightsService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly waiterMetrics: WaiterMetricsService,    // M5
-    private readonly attendance: AttendanceService,          // M9
-    private readonly antiTheft: AntiTheftService,            // M5
+    private readonly waiterMetrics: WaiterMetricsService, // M5
+    private readonly attendance: AttendanceService, // M9
+    private readonly antiTheft: AntiTheftService, // M5
   ) {}
 
   // Public API methods (see section 5.2)
@@ -323,6 +332,7 @@ export class StaffInsightsService {
 ### 5.2 Public Methods
 
 #### getStaffInsights()
+
 ```typescript
 async getStaffInsights(query: StaffInsightsQuery): Promise<StaffInsights> {
   // 1. Get performance metrics from M5
@@ -361,6 +371,7 @@ async getStaffInsights(query: StaffInsightsQuery): Promise<StaffInsights> {
 ```
 
 #### getAwardRecommendation()
+
 ```typescript
 async getAwardRecommendation(
   orgId: string,
@@ -407,6 +418,7 @@ async getAwardRecommendation(
 ```
 
 #### createAward()
+
 ```typescript
 async createAward(
   recommendation: AwardRecommendation,
@@ -449,6 +461,7 @@ async createAward(
 ```
 
 #### listAwards()
+
 ```typescript
 async listAwards(query: ListAwardsQuery): Promise<StaffAward[]> {
   const where: Prisma.StaffAwardWhereInput = {
@@ -488,6 +501,7 @@ async listAwards(query: ListAwardsQuery): Promise<StaffAward[]> {
 ### 5.3 Private Helper Methods
 
 #### getReliabilityMetrics()
+
 ```typescript
 private async getReliabilityMetrics(query: StaffInsightsQuery): Promise<ReliabilityMetrics[]> {
   const { orgId, branchId, from, to } = query;
@@ -567,6 +581,7 @@ private async getReliabilityMetrics(query: StaffInsightsQuery): Promise<Reliabil
 ```
 
 #### calculateReliabilityScore()
+
 ```typescript
 private calculateReliabilityScore(data: {
   attendanceRate: number;
@@ -595,6 +610,7 @@ private calculateReliabilityScore(data: {
 ```
 
 #### combineMetrics()
+
 ```typescript
 private combineMetrics(
   performanceRankings: RankedWaiter[],
@@ -627,6 +643,7 @@ private combineMetrics(
 ```
 
 #### filterEligible()
+
 ```typescript
 private filterEligible(
   combined: CombinedStaffMetrics[],
@@ -653,6 +670,7 @@ private filterEligible(
 ```
 
 #### getEligibilityRules()
+
 ```typescript
 private getEligibilityRules(periodType: AwardPeriodType): EligibilityRules {
   switch (periodType) {
@@ -689,6 +707,7 @@ private getEligibilityRules(periodType: AwardPeriodType): EligibilityRules {
 ```
 
 #### generateAwardReason()
+
 ```typescript
 private generateAwardReason(winner: CombinedStaffMetrics, category: AwardCategory): string {
   const { performanceMetrics: p, reliabilityMetrics: r, riskFlags } = winner;
@@ -754,18 +773,19 @@ export class StaffInsightsController {
     @Query('periodType') periodType: AwardPeriodType,
     @Query('from') from?: string,
     @Query('to') to?: string,
-    @Query('branchId') branchId?: string
+    @Query('branchId') branchId?: string,
   ) {
-    const period = from && to
-      ? { start: new Date(from), end: new Date(to), type: periodType }
-      : this.staffInsights.resolvePeriod(periodType, new Date());
+    const period =
+      from && to
+        ? { start: new Date(from), end: new Date(to), type: periodType }
+        : this.staffInsights.resolvePeriod(periodType, new Date());
 
     return this.staffInsights.getStaffInsights({
       orgId: user.orgId,
       branchId: branchId || null,
       from: period.start,
       to: period.end,
-      periodType
+      periodType,
     });
   }
 
@@ -780,7 +800,7 @@ export class StaffInsightsController {
     @Param('period') periodParam: string, // 'week', 'month', 'quarter', 'year'
     @Query('referenceDate') referenceDate?: string,
     @Query('branchId') branchId?: string,
-    @Query('category') category?: AwardCategory
+    @Query('category') category?: AwardCategory,
   ) {
     const periodType = periodParam.toUpperCase() as AwardPeriodType;
     const refDate = referenceDate ? new Date(referenceDate) : new Date();
@@ -790,7 +810,7 @@ export class StaffInsightsController {
       user.orgId,
       branchId || null,
       period,
-      category || 'TOP_PERFORMER'
+      category || 'TOP_PERFORMER',
     );
   }
 
@@ -800,18 +820,15 @@ export class StaffInsightsController {
    */
   @Post('awards')
   @Roles('L4', 'L5', 'HR')
-  async createAward(
-    @CurrentUser() user: any,
-    @Body() dto: CreateAwardDto
-  ) {
+  async createAward(@CurrentUser() user: any, @Body() dto: CreateAwardDto) {
     const period = this.staffInsights.resolvePeriod(dto.periodType, dto.referenceDate);
-    
+
     // Get recommendation
     const recommendation = await this.staffInsights.getAwardRecommendation(
       user.orgId,
       dto.branchId || null,
       period,
-      dto.category
+      dto.category,
     );
 
     if (!recommendation) {
@@ -828,13 +845,10 @@ export class StaffInsightsController {
    */
   @Get('awards')
   @Roles('L4', 'L5', 'HR', 'ACCOUNTANT')
-  async listAwards(
-    @CurrentUser() user: any,
-    @Query() query: ListAwardsQueryDto
-  ) {
+  async listAwards(@CurrentUser() user: any, @Query() query: ListAwardsQueryDto) {
     return this.staffInsights.listAwards({
       orgId: user.orgId,
-      ...query
+      ...query,
     });
   }
 
@@ -846,13 +860,13 @@ export class StaffInsightsController {
   @Roles('L1', 'L2', 'L3', 'L4', 'L5')
   async getMyInsights(
     @CurrentUser() user: any,
-    @Query('periodType') periodType: AwardPeriodType = 'MONTH'
+    @Query('periodType') periodType: AwardPeriodType = 'MONTH',
   ) {
     const period = this.staffInsights.resolvePeriod(periodType, new Date());
 
     // Find employee record for user
     const employee = await this.prisma.employee.findFirst({
-      where: { userId: user.userId, orgId: user.orgId }
+      where: { userId: user.userId, orgId: user.orgId },
     });
 
     if (!employee) {
@@ -864,17 +878,17 @@ export class StaffInsightsController {
       branchId: user.branchId,
       from: period.start,
       to: period.end,
-      periodType
+      periodType,
     });
 
     // Filter to just this user
-    const myInsight = insights.rankings.find(r => r.employeeId === employee.id);
+    const myInsight = insights.rankings.find((r) => r.employeeId === employee.id);
 
     return {
       ...myInsight,
       periodLabel: period.label,
       totalStaff: insights.summary.totalStaff,
-      myRank: myInsight?.rank || null
+      myRank: myInsight?.rank || null,
     };
   }
 }
@@ -993,7 +1007,7 @@ private async generateStaffInsightsSection(
 ): Promise<StaffInsightsSection> {
   // Map period type to award period type
   const awardPeriodType = periodType === 'WEEKLY' ? 'WEEK' : 'MONTH';
-  
+
   const period = this.staffInsights.resolvePeriod(awardPeriodType, referenceDate);
 
   // Get rankings
@@ -1020,7 +1034,7 @@ private async generateStaffInsightsSection(
 
   const mostCoverShifts = insights.rankings.filter(
     r => r.reliabilityMetrics.coverShiftsCount > 0
-  ).sort((a, b) => 
+  ).sort((a, b) =>
     b.reliabilityMetrics.coverShiftsCount - a.reliabilityMetrics.coverShiftsCount
   ).slice(0, 3);
 
@@ -1116,7 +1130,10 @@ Add to digest email template:
 <!-- Reliability Highlights -->
 <h3>Reliability Highlights</h3>
 <p><strong>Perfect Attendance:</strong> {{perfectAttendance.length}} staff with 100% attendance</p>
-<p><strong>Team Players:</strong> {{mostCoverShifts.[0].displayName}} covered {{mostCoverShifts.[0].reliabilityMetrics.coverShiftsCount}} shifts</p>
+<p>
+  <strong>Team Players:</strong> {{mostCoverShifts.[0].displayName}} covered
+  {{mostCoverShifts.[0].reliabilityMetrics.coverShiftsCount}} shifts
+</p>
 ```
 
 ---
@@ -1125,13 +1142,13 @@ Add to digest email template:
 
 ### 8.1 Access Matrix
 
-| Endpoint | L1-L3 (Staff) | L4 (Manager) | L5 (Owner) | HR | ACCOUNTANT |
-|----------|---------------|--------------|------------|-----|------------|
-| GET /rankings | ❌ | ✅ | ✅ | ✅ | ✅ |
-| GET /employee-of-month | ❌ | ✅ | ✅ | ✅ | ❌ |
-| POST /awards | ❌ | ✅ | ✅ | ✅ | ❌ |
-| GET /awards (list) | ❌ | ✅ | ✅ | ✅ | ✅ |
-| GET /me (self) | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Endpoint               | L1-L3 (Staff) | L4 (Manager) | L5 (Owner) | HR  | ACCOUNTANT |
+| ---------------------- | ------------- | ------------ | ---------- | --- | ---------- |
+| GET /rankings          | ❌            | ✅           | ✅         | ✅  | ✅         |
+| GET /employee-of-month | ❌            | ✅           | ✅         | ✅  | ❌         |
+| POST /awards           | ❌            | ✅           | ✅         | ✅  | ❌         |
+| GET /awards (list)     | ❌            | ✅           | ✅         | ✅  | ✅         |
+| GET /me (self)         | ✅            | ✅           | ✅         | ✅  | ✅         |
 
 ### 8.2 Rationale
 
@@ -1174,6 +1191,7 @@ Add to digest email template:
 ### 10.1 Unit Tests
 
 **StaffInsightsService:**
+
 - `getReliabilityMetrics()`: Correct aggregation of attendance records
 - `calculateReliabilityScore()`: Scoring formula edge cases (0 shifts, 100% attendance, late penalties)
 - `combineMetrics()`: Merging performance + reliability correctly
@@ -1182,6 +1200,7 @@ Add to digest email template:
 - `resolvePeriod()`: Week/month/quarter/year date ranges
 
 **Test Cases:**
+
 ```typescript
 describe('StaffInsightsService - Reliability Scoring', () => {
   it('should give 1.0 score for perfect attendance with no issues', () => {
@@ -1190,9 +1209,9 @@ describe('StaffInsightsService - Reliability Scoring', () => {
       lateCount: 0,
       leftEarlyCount: 0,
       coverShiftsCount: 0,
-      shiftsWorked: 20
+      shiftsWorked: 20,
     });
-    expect(score).toBeCloseTo(0.50, 2); // 0.50 from attendance rate alone
+    expect(score).toBeCloseTo(0.5, 2); // 0.50 from attendance rate alone
   });
 
   it('should apply late penalty correctly', () => {
@@ -1201,7 +1220,7 @@ describe('StaffInsightsService - Reliability Scoring', () => {
       lateCount: 5,
       leftEarlyCount: 0,
       coverShiftsCount: 0,
-      shiftsWorked: 20 // 5/20 = 0.25 late rate
+      shiftsWorked: 20, // 5/20 = 0.25 late rate
     });
     // 0.50 (attendance) - 0.25*0.20 (late penalty) = 0.45
     expect(score).toBeCloseTo(0.45, 2);
@@ -1213,7 +1232,7 @@ describe('StaffInsightsService - Reliability Scoring', () => {
       lateCount: 0,
       leftEarlyCount: 0,
       coverShiftsCount: 3,
-      shiftsWorked: 20 // 3/20 = 0.15 cover rate, capped at 1.0
+      shiftsWorked: 20, // 3/20 = 0.15 cover rate, capped at 1.0
     });
     // 0.50 (attendance) + 0.15*0.10 (cover bonus) = 0.515
     expect(score).toBeCloseTo(0.515, 3);
@@ -1244,6 +1263,7 @@ describe('StaffInsightsService - Reliability Scoring', () => {
 ### 10.2 Integration Tests
 
 **Controller Endpoints:**
+
 ```typescript
 describe('StaffInsightsController (Integration)', () => {
   it('GET /staff/insights/rankings should return ranked staff', async () => {
@@ -1276,7 +1296,7 @@ describe('StaffInsightsController (Integration)', () => {
       .send({
         periodType: 'MONTH',
         referenceDate: '2025-11-15',
-        category: 'TOP_PERFORMER'
+        category: 'TOP_PERFORMER',
       })
       .set('Authorization', `Bearer ${l5Token}`)
       .expect(201);
@@ -1290,7 +1310,7 @@ describe('StaffInsightsController (Integration)', () => {
       .send({
         periodType: 'MONTH',
         referenceDate: '2025-11-15',
-        category: 'TOP_PERFORMER'
+        category: 'TOP_PERFORMER',
       })
       .set('Authorization', `Bearer ${l5Token}`)
       .expect(201);
@@ -1322,13 +1342,14 @@ describe('StaffInsightsController (Integration)', () => {
 ### 10.3 E2E Tests
 
 **Scenario: Monthly Award Lifecycle**
+
 ```typescript
 describe('E2E: Monthly Award Lifecycle', () => {
   it('should compute, persist, and display award in digest', async () => {
     // 1. Seed data: 5 employees with varying performance/attendance
     const employees = await seedEmployees(org, branch, 5);
-    await seedOrders(org, branch, employees, /* Nov 2025 data */);
-    await seedAttendance(org, branch, employees, /* Nov 2025 attendance */);
+    await seedOrders(org, branch, employees /* Nov 2025 data */);
+    await seedAttendance(org, branch, employees /* Nov 2025 attendance */);
 
     // 2. Get rankings
     const rankings = await request(app.getHttpServer())
@@ -1360,7 +1381,7 @@ describe('E2E: Monthly Award Lifecycle', () => {
 
     // 5. Verify award in database
     const awards = await prisma.staffAward.findMany({
-      where: { orgId: org.id, periodType: 'MONTH' }
+      where: { orgId: org.id, periodType: 'MONTH' },
     });
     expect(awards).toHaveLength(1);
 
@@ -1369,7 +1390,7 @@ describe('E2E: Monthly Award Lifecycle', () => {
       org.id,
       branch.id,
       'MONTHLY',
-      new Date('2025-11-15')
+      new Date('2025-11-15'),
     );
 
     expect(digest.staffInsights.awardWinner.employeeId).toBe(topStaff.employeeId);
@@ -1383,6 +1404,7 @@ describe('E2E: Monthly Award Lifecycle', () => {
 ## 11. Deployment Checklist
 
 ### Pre-Deployment
+
 - [ ] Schema migration reviewed (StaffAward model + enums)
 - [ ] Reverse relations added to Org/Branch/Employee/User models
 - [ ] StaffInsightsService unit tests passing (80%+ coverage)
@@ -1392,6 +1414,7 @@ describe('E2E: Monthly Award Lifecycle', () => {
 - [ ] DEV_GUIDE updated with M19 section
 
 ### Deployment Steps
+
 1. [ ] Run Prisma migration (StaffAward table + enums)
 2. [ ] Deploy API service with new endpoints
 3. [ ] Verify health check passes
@@ -1401,6 +1424,7 @@ describe('E2E: Monthly Award Lifecycle', () => {
 7. [ ] Monitor logs for errors (first 24 hours)
 
 ### Post-Deployment Validation
+
 - [ ] Create week award for current week (should compute and persist)
 - [ ] Create month award for current month (should compute and persist)
 - [ ] Verify award idempotence (creating duplicate should upsert, not error)
@@ -1414,6 +1438,7 @@ describe('E2E: Monthly Award Lifecycle', () => {
 ## 12. Summary
 
 M19 delivers:
+
 - ✅ **Unified staff insights** combining performance (M5) + reliability (M9) + risk (M5 anti-theft)
 - ✅ **Automated award recommendations** for employee-of-week/month based on objective data
 - ✅ **Award history persistence** with StaffAward model for trend analysis

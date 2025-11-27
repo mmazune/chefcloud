@@ -33,7 +33,7 @@ export class DepositAccountingService {
       ? `RESERVATION-DEPOSIT-${reservationId}`
       : `EVENT-DEPOSIT-${eventBookingId}`;
 
-    await this.prisma.client.posting.create({
+    await this.prisma.posting.create({
       data: {
         orgId,
         branchId,
@@ -78,7 +78,7 @@ export class DepositAccountingService {
 
     const reference = `DEPOSIT-APPLY-${reservationId}`;
 
-    await this.prisma.client.posting.create({
+    await this.prisma.posting.create({
       data: {
         orgId,
         branchId,
@@ -123,7 +123,7 @@ export class DepositAccountingService {
 
     const reference = reservationId ? `NO-SHOW-${reservationId}` : `NO-SHOW-EVENT-${eventBookingId}`;
 
-    await this.prisma.client.posting.create({
+    await this.prisma.posting.create({
       data: {
         orgId,
         branchId,
@@ -169,7 +169,7 @@ export class DepositAccountingService {
 
     const reference = reservationId ? `REFUND-${reservationId}` : `REFUND-EVENT-${eventBookingId}`;
 
-    await this.prisma.client.posting.create({
+    await this.prisma.posting.create({
       data: {
         orgId,
         branchId,
@@ -219,7 +219,7 @@ export class DepositAccountingService {
     const reference = `LATE-CANCEL-${reservationId}`;
     const totalAmount = forfeitAmount + refundAmount;
 
-    await this.prisma.client.posting.create({
+    await this.prisma.posting.create({
       data: {
         orgId,
         branchId,

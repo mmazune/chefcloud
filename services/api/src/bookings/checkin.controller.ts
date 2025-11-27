@@ -4,7 +4,17 @@
  * REST endpoints for QR code check-in and ticket PDF download.
  */
 
-import { Controller, Post, Get, Body, Param, Res, UseGuards, UseInterceptors, Request } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Body,
+  Param,
+  Res,
+  UseGuards,
+  UseInterceptors,
+  Request,
+} from '@nestjs/common';
 import { Response } from 'express';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from '../auth/roles.guard';

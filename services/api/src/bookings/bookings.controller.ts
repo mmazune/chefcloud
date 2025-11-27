@@ -1,13 +1,22 @@
 /**
  * E42-s1: Bookings Controller (Private/Admin)
- * 
+ *
  * Authenticated endpoints for event management and booking administration.
  * Requires L2+ for booking operations, L4+ for event management.
  */
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { Controller, Get, Post, Body, Param, UseGuards, UseInterceptors, Request } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  UseGuards,
+  UseInterceptors,
+  Request,
+} from '@nestjs/common';
 import { BookingsService } from './bookings.service';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from '../auth/roles.guard';

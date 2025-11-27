@@ -9,11 +9,13 @@
 ## Current State
 
 ✅ **Design Complete**:
+
 - M14-STEP0-DEV-PORTAL-REVIEW.md (790 lines)
 - M14-DEV-PORTAL-DESIGN.md (1260 lines)
 - curl-examples-m14-dev-portal.sh
 
 ❌ **Not Implemented**:
+
 - Schema models (DevApiKey, WebhookSubscription, WebhookDelivery)
 - Services (DevApiKeysService, WebhookSubscriptionsService, WebhookDispatcherService)
 - Controllers (endpoints for API keys and webhooks)
@@ -59,10 +61,10 @@ model DevApiKey {
   revokedAt       DateTime?
   lastUsedAt      DateTime?
   usageCount      Int            @default(0)
-  
+
   org             Organization   @relation(fields: [orgId], references: [id], onDelete: Cascade)
   createdBy       User           @relation(fields: [createdByUserId], references: [id])
-  
+
   @@index([keyHash])
   @@index([orgId, status])
   @@map("dev_api_keys")
@@ -93,11 +95,11 @@ model WebhookSubscription {
   status          SubscriptionStatus   @default(ACTIVE)
   createdAt       DateTime             @default(now())
   disabledAt      DateTime?
-  
+
   org             Organization         @relation(fields: [orgId], references: [id], onDelete: Cascade)
   createdBy       User                 @relation(fields: [createdByUserId], references: [id])
   deliveries      WebhookDelivery[]
-  
+
   @@index([orgId, status])
   @@map("webhook_subscriptions")
 }
@@ -116,9 +118,9 @@ model WebhookDelivery {
   nextRetryAt    DateTime?
   errorMessage   String?
   createdAt      DateTime            @default(now())
-  
+
   subscription   WebhookSubscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
-  
+
   @@index([subscriptionId, status])
   @@index([nextRetryAt])
   @@map("webhook_deliveries")
@@ -133,6 +135,7 @@ npx prisma migrate dev --name m14_dev_portal_hardening --create-only
 ```
 
 **This command**:
+
 - ✅ Generates migration SQL file
 - ✅ Does NOT apply it to database
 - ✅ Does NOT prompt for confirmation
@@ -149,6 +152,7 @@ cat prisma/migrations/*_m14_dev_portal_hardening/migration.sql
 ```
 
 **Check for**:
+
 - CREATE TABLE statements look correct
 - Foreign keys reference existing tables
 - Indexes are created
@@ -162,9 +166,10 @@ npx prisma migrate deploy
 ```
 
 **This command**:
+
 - ✅ Applies pending migrations
 - ✅ Non-interactive (safe for CI/CD)
-- ✅ Updates _prisma_migrations table
+- ✅ Updates \_prisma_migrations table
 - ❌ No prompts at all
 
 ### Step 5: Generate Prisma Client
@@ -245,6 +250,7 @@ npx prisma migrate status
 ### Phase 2: Services (3 hours)
 
 **Create Files**:
+
 ```bash
 mkdir -p services/api/src/dev-portal/services
 touch services/api/src/dev-portal/services/dev-api-keys.service.ts
@@ -253,6 +259,7 @@ touch services/api/src/dev-portal/services/webhook-dispatcher.service.ts
 ```
 
 **Implement**:
+
 1. **DevApiKeysService**:
    - `createKey()` - Generate random key, bcrypt hash, store
    - `verifyKey()` - Constant-time hash comparison
@@ -275,6 +282,7 @@ touch services/api/src/dev-portal/services/webhook-dispatcher.service.ts
 ### Phase 3: Controllers (2 hours)
 
 **Extend DevPortalController**:
+
 ```typescript
 // API Keys Endpoints
 @Get('keys')
@@ -306,31 +314,32 @@ async retryDelivery(@Param('id') id: string) { ... }
 ### Phase 4: Guards & Middleware (1 hour)
 
 **Create ApiKeyAuthGuard**:
+
 ```typescript
 @Injectable()
 export class ApiKeyAuthGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
     const authHeader = request.headers['authorization'];
-    
+
     if (!authHeader?.startsWith('Bearer cc_')) {
       throw new UnauthorizedException('Invalid API key');
     }
-    
+
     const rawKey = authHeader.replace('Bearer ', '');
     const apiKey = await this.devApiKeysService.verifyKey(rawKey);
-    
+
     if (!apiKey) {
       throw new UnauthorizedException('Invalid or revoked API key');
     }
-    
+
     // Attach to request
     request.apiKey = apiKey;
     request.orgId = apiKey.orgId;
-    
+
     // Record usage
     await this.devApiKeysService.recordUsage(apiKey.id);
-    
+
     return true;
   }
 }
@@ -339,12 +348,14 @@ export class ApiKeyAuthGuard implements CanActivate {
 ### Phase 5: Tests (2 hours)
 
 **Unit Tests**:
+
 ```bash
 touch services/api/src/dev-portal/services/dev-api-keys.service.spec.ts
 touch services/api/src/dev-portal/services/webhook-dispatcher.service.spec.ts
 ```
 
 **Test Coverage**:
+
 - Key generation produces unique values
 - Hash verification works correctly
 - Revoked keys rejected
@@ -353,11 +364,13 @@ touch services/api/src/dev-portal/services/webhook-dispatcher.service.spec.ts
 - DLQ after max attempts
 
 **E2E Tests**:
+
 ```bash
 touch services/api/test/dev-portal.e2e-spec.ts
 ```
 
 **Scenarios**:
+
 - Create API key and use it for auth
 - Create webhook subscription
 - Trigger event and verify delivery
@@ -367,7 +380,8 @@ touch services/api/test/dev-portal.e2e-spec.ts
 ### Phase 6: Documentation (1 hour)
 
 **Update DEV_GUIDE.md**:
-```markdown
+
+````markdown
 ## M14: Developer Portal & Integrations
 
 ### API Keys
@@ -386,6 +400,7 @@ curl -X POST "http://localhost:3001/dev/keys" \
     "environment": "PRODUCTION"
   }'
 ```
+````
 
 #### Using an API Key
 
@@ -419,22 +434,20 @@ app.post('/webhooks/chefcloud', (req, res) => {
   const signature = req.headers['x-chefcloud-signature'];
   const timestamp = req.headers['x-chefcloud-timestamp'];
   const body = JSON.stringify(req.body);
-  
+
   const payload = `${timestamp}.${body}`;
-  const expected = crypto
-    .createHmac('sha256', WEBHOOK_SECRET)
-    .update(payload)
-    .digest('hex');
-  
+  const expected = crypto.createHmac('sha256', WEBHOOK_SECRET).update(payload).digest('hex');
+
   if (signature !== expected) {
     return res.status(401).json({ error: 'Invalid signature' });
   }
-  
+
   // Process webhook
   res.json({ received: true });
 });
 ```
-```
+
+````
 
 ---
 
@@ -445,26 +458,30 @@ app.post('/webhooks/chefcloud', (req, res) => {
 cd /workspaces/chefcloud/packages/db
 npx prisma validate
 npx prisma format
-```
+````
 
 ### Build & Type Check
+
 ```bash
 cd /workspaces/chefcloud
 pnpm --filter @chefcloud/api build
 ```
 
 ### Unit Tests
+
 ```bash
 pnpm --filter @chefcloud/api test dev-api-keys.service
 pnpm --filter @chefcloud/api test webhook-dispatcher.service
 ```
 
 ### E2E Tests
+
 ```bash
 pnpm --filter @chefcloud/api test:e2e dev-portal
 ```
 
 ### Manual Testing with Curl
+
 ```bash
 # Use the examples from curl-examples-m14-dev-portal.sh
 bash curl-examples-m14-dev-portal.sh
@@ -475,6 +492,7 @@ bash curl-examples-m14-dev-portal.sh
 ## Rollback Plan (If Issues Arise)
 
 ### Revert Migration
+
 ```bash
 cd /workspaces/chefcloud/packages/db
 
@@ -492,6 +510,7 @@ psql $DATABASE_URL -c "DROP TABLE IF EXISTS dev_api_keys CASCADE;"
 ```
 
 ### Clean Slate (Development Only)
+
 ```bash
 # WARNING: This deletes ALL data
 cd /workspaces/chefcloud/packages/db
@@ -503,6 +522,7 @@ npx prisma migrate reset --force --skip-seed
 ## Success Criteria
 
 ### Functional
+
 - [ ] Can create API key with bcrypt hash
 - [ ] Can authenticate request with API key
 - [ ] Can revoke API key
@@ -512,6 +532,7 @@ npx prisma migrate reset --force --skip-seed
 - [ ] Can view delivery logs
 
 ### Security
+
 - [ ] API keys never stored in plaintext
 - [ ] Hash comparison is constant-time (bcrypt)
 - [ ] Webhook signatures use HMAC-SHA256
@@ -519,11 +540,13 @@ npx prisma migrate reset --force --skip-seed
 - [ ] Environment scoping enforced (SANDBOX vs PRODUCTION)
 
 ### Performance
+
 - [ ] API key verification < 10ms
 - [ ] Webhook delivery < 2s
 - [ ] Delivery log queries < 100ms
 
 ### Code Quality
+
 - [ ] 0 TypeScript errors
 - [ ] All unit tests pass
 - [ ] All E2E tests pass
@@ -533,24 +556,24 @@ npx prisma migrate reset --force --skip-seed
 
 ## Estimated Timeline
 
-| Phase | Task | Time | Status |
-|-------|------|------|--------|
-| 1 | Add schema models | 30 min | ⏳ TODO |
-| 1 | Create migration (--create-only) | 5 min | ⏳ TODO |
-| 1 | Review & apply migration | 10 min | ⏳ TODO |
-| 1 | Generate Prisma client | 5 min | ⏳ TODO |
-| 2 | Implement DevApiKeysService | 90 min | ⏳ TODO |
-| 2 | Implement WebhookSubscriptionsService | 45 min | ⏳ TODO |
-| 2 | Implement WebhookDispatcherService | 60 min | ⏳ TODO |
-| 3 | Add controller endpoints | 60 min | ⏳ TODO |
-| 3 | Wire up guards | 30 min | ⏳ TODO |
-| 4 | Create ApiKeyAuthGuard | 30 min | ⏳ TODO |
-| 4 | Integrate with auth pipeline | 30 min | ⏳ TODO |
-| 5 | Write unit tests | 90 min | ⏳ TODO |
-| 5 | Write E2E tests | 30 min | ⏳ TODO |
-| 6 | Update DEV_GUIDE.md | 45 min | ⏳ TODO |
-| 6 | Test curl examples | 15 min | ⏳ TODO |
-| **TOTAL** | | **~8.5 hours** | |
+| Phase     | Task                                  | Time           | Status  |
+| --------- | ------------------------------------- | -------------- | ------- |
+| 1         | Add schema models                     | 30 min         | ⏳ TODO |
+| 1         | Create migration (--create-only)      | 5 min          | ⏳ TODO |
+| 1         | Review & apply migration              | 10 min         | ⏳ TODO |
+| 1         | Generate Prisma client                | 5 min          | ⏳ TODO |
+| 2         | Implement DevApiKeysService           | 90 min         | ⏳ TODO |
+| 2         | Implement WebhookSubscriptionsService | 45 min         | ⏳ TODO |
+| 2         | Implement WebhookDispatcherService    | 60 min         | ⏳ TODO |
+| 3         | Add controller endpoints              | 60 min         | ⏳ TODO |
+| 3         | Wire up guards                        | 30 min         | ⏳ TODO |
+| 4         | Create ApiKeyAuthGuard                | 30 min         | ⏳ TODO |
+| 4         | Integrate with auth pipeline          | 30 min         | ⏳ TODO |
+| 5         | Write unit tests                      | 90 min         | ⏳ TODO |
+| 5         | Write E2E tests                       | 30 min         | ⏳ TODO |
+| 6         | Update DEV_GUIDE.md                   | 45 min         | ⏳ TODO |
+| 6         | Test curl examples                    | 15 min         | ⏳ TODO |
+| **TOTAL** |                                       | **~8.5 hours** |         |
 
 ---
 

@@ -1,0 +1,100 @@
+import React, { useState } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { Button } from '../ui/button';
+import { Moon, Sun, User, LogOut, ChevronDown } from 'lucide-react';
+
+export function Topbar() {
+  const { user, logout } = useAuth();
+  const [isDark, setIsDark] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+
+  const toggleTheme = () => {
+    setIsDark(!isDark);
+    if (!isDark) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  };
+
+  const handleLogout = async () => {
+    await logout();
+  };
+
+  return (
+    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-6">
+      {/* Branch/Org Info */}
+      <div className="flex items-center space-x-4">
+        {user?.branch && (
+          <div>
+            <p className="text-sm font-medium">{user.branch.name}</p>
+            <p className="text-xs text-muted-foreground">{user.org.name}</p>
+          </div>
+        )}
+        {!user?.branch && user?.org && (
+          <div>
+            <p className="text-sm font-medium">{user.org.name}</p>
+            <p className="text-xs text-muted-foreground">All Branches</p>
+          </div>
+        )}
+      </div>
+
+      {/* Right Side Actions */}
+      <div className="flex items-center space-x-4">
+        {/* Theme Toggle */}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={toggleTheme}
+          title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+        >
+          {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+        </Button>
+
+        {/* User Menu */}
+        <div className="relative">
+          <button
+            onClick={() => setShowUserMenu(!showUserMenu)}
+            className="flex items-center space-x-2 rounded-lg px-3 py-2 hover:bg-accent transition-colors"
+          >
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground">
+              <User className="h-4 w-4" />
+            </div>
+            <div className="text-left">
+              <p className="text-sm font-medium">{user?.displayName}</p>
+              <p className="text-xs text-muted-foreground">{user?.roleLevel}</p>
+            </div>
+            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+          </button>
+
+          {/* Dropdown Menu */}
+          {showUserMenu && (
+            <>
+              {/* Backdrop */}
+              <div
+                className="fixed inset-0 z-40"
+                onClick={() => setShowUserMenu(false)}
+              />
+              {/* Menu */}
+              <div className="absolute right-0 mt-2 w-56 rounded-lg border bg-popover p-1 shadow-lg z-50">
+                <div className="px-3 py-2 border-b">
+                  <p className="text-sm font-medium">{user?.displayName}</p>
+                  <p className="text-xs text-muted-foreground">{user?.email}</p>
+                </div>
+                <div className="py-1">
+                  <button
+                    onClick={handleLogout}
+                    className="flex w-full items-center space-x-2 rounded-md px-3 py-2 text-sm text-destructive hover:bg-destructive/10 transition-colors"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    <span>Logout</span>
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </header>
+  );
+}

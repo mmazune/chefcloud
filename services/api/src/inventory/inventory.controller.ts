@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Controller, Post, Get, Body, UseGuards, Req, Query } from '@nestjs/common';
+import { Controller, Post, Get, Patch, Body, Param, UseGuards, Req, Query } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { InventoryService } from './inventory.service';
-import { CreateInventoryItemDto } from './inventory.dto';
+import { CreateInventoryItemDto, UpdateInventoryItemDto } from './inventory.dto';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 
@@ -21,6 +21,17 @@ export class InventoryController {
   @Roles('L3')
   async getItems(@Req() req: any): Promise<any> {
     return this.inventoryService.getItems(req.user.orgId);
+  }
+
+  // M24-S2: Update inventory item
+  @Patch('items/:id')
+  @Roles('L3')
+  async updateItem(
+    @Req() req: any,
+    @Param('id') itemId: string,
+    @Body() dto: UpdateInventoryItemDto,
+  ): Promise<any> {
+    return this.inventoryService.updateItem(req.user.orgId, itemId, dto);
   }
 
   @Get('levels')

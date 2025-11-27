@@ -38,6 +38,7 @@
 ### 1.2 Email Attachments
 
 **SMTP Configuration** (`owner.service.ts`):
+
 ```typescript
 - SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_SECURE
 - Uses nodemailer for email delivery
@@ -45,6 +46,7 @@
 ```
 
 **Email Types**:
+
 - Owner digests (PDF + 3 CSVs)
 - Shift-end reports (PDF + CSV)
 - Period reports (PDF + optional CSVs)
@@ -54,6 +56,7 @@
 ### 1.3 Swagger/OpenAPI Documentation
 
 **Location**: `services/api/src/docs/swagger.ts`
+
 - Exposes API documentation at `/docs`
 - JSON spec at `/openapi.json`
 - Not related to business document storage
@@ -94,17 +97,20 @@ model FiscalInvoice { ... }  // Could link EFRIS PDFs
 ### 2.2 Notable Fields
 
 **No existing file/document storage fields found in schema**:
+
 - No `documentUrl`, `attachmentUrl`, `fileUrl` fields
 - No `storageKey`, `fileName`, `mimeType` fields
 - No `Document` or `Attachment` model
 
 **Audit Trail** (`AuditEvent`):
+
 - Tracks actions but doesn't link to documents
 - Could be enhanced to log document operations
 
 ### 2.3 Enums
 
 Existing enums relevant to documents:
+
 ```prisma
 enum AccountType { ... }
 enum PaymentTerms { ... }
@@ -123,11 +129,13 @@ enum ReminderChannel { EMAIL, SLACK, SMS }
 ### 3.1 Missing: Persistent Document Storage
 
 **Current State**:
+
 - PDFs generated transiently (in-memory or `/tmp`)
 - No database records tracking documents
 - No file persistence beyond email delivery
 
 **Required**:
+
 - Persistent storage (local disk or S3/GCS)
 - Database model tracking document metadata
 - Storage provider abstraction
@@ -135,10 +143,12 @@ enum ReminderChannel { EMAIL, SLACK, SMS }
 ### 3.2 Missing: Document Model & Relationships
 
 **Current State**:
+
 - No `Document` table
 - No foreign keys linking documents to entities
 
 **Required**:
+
 ```prisma
 model Document {
   id              String
@@ -156,7 +166,7 @@ model Document {
   tags            String[]
   notes           String?
   deletedAt       DateTime?
-  
+
   // Entity links
   serviceProviderId?
   purchaseOrderId?
@@ -177,6 +187,7 @@ model Document {
 **Current State**: No categorization
 
 **Required**:
+
 ```prisma
 enum DocumentCategory {
   INVOICE
@@ -199,11 +210,13 @@ enum StorageProvider {
 ### 3.4 Missing: Upload & Management APIs
 
 **Current State**:
+
 - No upload endpoints
 - No document listing/search
 - No download/view endpoints
 
 **Required**:
+
 - `POST /documents` - multipart upload
 - `GET /documents` - list/search with filters
 - `GET /documents/:id` - fetch metadata + signed URL
@@ -213,10 +226,12 @@ enum StorageProvider {
 ### 3.5 Missing: RBAC for Documents
 
 **Current State**:
+
 - Existing role system (`RoleLevel`: L1-L5)
 - Role guards on endpoints
 
 **Required**:
+
 - Category-based access control:
   - INVOICE: L4+ (ACCOUNTANT, MANAGER, OWNER)
   - STOCK_RECEIPT: L3+ (STOCK, PROCUREMENT, CHEF)
@@ -230,10 +245,12 @@ enum StorageProvider {
 ### 3.6 Missing: Storage Abstraction
 
 **Current State**:
+
 - Direct file system writes in worker
 - No abstraction layer
 
 **Required**:
+
 ```typescript
 interface IStorageProvider {
   save(buffer: Buffer, options: SaveOptions): Promise<SaveResult>;
@@ -248,10 +265,12 @@ class S3StorageProvider implements IStorageProvider { ... }  // Future
 ### 3.7 Missing: Audit Logging for Documents
 
 **Current State**:
+
 - `AuditEvent` model exists
 - Used for critical operations
 
 **Required**:
+
 - Log document uploads: `document.uploaded`
 - Log document views: `document.viewed`
 - Log document deletes: `document.deleted`
@@ -301,6 +320,7 @@ class S3StorageProvider implements IStorageProvider { ... }  // Future
 ### 4.2 Recommended Additions
 
 For M18 implementation:
+
 - **Multer**: Already available via `@nestjs/platform-express` for multipart uploads
 - **File Validation**: Built-in (size limits, MIME type checks)
 - **Storage SDKs**: Future S3/GCS support:
@@ -314,11 +334,13 @@ For M18 implementation:
 ### 5.1 Security
 
 **Current State**:
+
 - RBAC enforced via guards
 - Tenant isolation via `orgId` + `branchId`
 - JWT authentication
 
 **Document Requirements**:
+
 - Tenant isolation (org + branch scoping)
 - Access controls per category
 - Audit trail for compliance
@@ -327,11 +349,13 @@ For M18 implementation:
 ### 5.2 Performance
 
 **Current Concerns**:
+
 - Large file uploads (need size limits)
 - Storage quota management (future)
 - Signed URL caching (future)
 
 **Mitigations**:
+
 - Max file size: 25 MB (configurable)
 - Lazy loading of document lists (pagination)
 - Indexes on frequently queried fields
@@ -339,6 +363,7 @@ For M18 implementation:
 ### 5.3 Scalability
 
 **Future Considerations**:
+
 - S3/GCS for production scale
 - CDN for frequently accessed documents
 - Thumbnail generation for images (out of scope for M18)
@@ -353,7 +378,7 @@ For M18 implementation:
 ✅ Email delivery with attachments  
 ✅ RBAC and authentication system  
 ✅ Audit event logging framework  
-✅ Tenant isolation patterns  
+✅ Tenant isolation patterns
 
 ### 6.2 What's Missing (M18 Scope)
 
@@ -364,7 +389,7 @@ For M18 implementation:
 ❌ Storage provider abstraction  
 ❌ Document-entity relationships  
 ❌ Search and filtering  
-❌ Integration with procurement, accounting, HR, events  
+❌ Integration with procurement, accounting, HR, events
 
 ### 6.3 Implementation Strategy
 

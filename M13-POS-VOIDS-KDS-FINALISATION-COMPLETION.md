@@ -16,6 +16,7 @@ M13 successfully brings the POS module to production-ready enterprise-grade qual
 4. **Zero TypeScript errors** maintained throughout implementation
 
 The POS module now supports:
+
 - ✅ Pre-prep voids (simple quantity reduction, L1+ role)
 - ✅ Post-prep voids (wastage creation, GL posting, L2+/L3+ roles)
 - ✅ Automatic order status sync from item statuses
@@ -30,6 +31,7 @@ The POS module now supports:
 ### Step 0: Review Current State ✅
 
 **Activities**:
+
 - Reviewed OrderItem schema (void fields already present: voidedAt, voidedById, voidReason)
 - Found existing order-level `voidOrder()` method in pos.service.ts
 - Identified KDS direct status mutations (line 227 in kds.service.ts) - needs refactoring
@@ -37,6 +39,7 @@ The POS module now supports:
 - Located WastageService and StockMovementsService (M3 integration points)
 
 **Key Findings**:
+
 - Schema ready for void implementation
 - Need to add item-level void alongside existing order-level void
 - KDS requires refactoring to use state machine pattern
@@ -46,6 +49,7 @@ The POS module now supports:
 **Deliverable**: `/workspaces/chefcloud/M13-VOID-DESIGN.md` (217 lines)
 
 **Design Highlights**:
+
 - **Two Void Cases**:
   - **Pre-Prep** (PENDING/SENT): No stock consumed, simple void, no wastage
   - **Post-Prep** (PREPARING/READY/SERVED): Stock consumed, creates wastage, GL posting
@@ -84,24 +88,24 @@ The POS module now supports:
 3. **pos.service.ts**:
    - Added imports: `WastageService`, `OrderTotalsCalculator`, `VoidOrderItemDto`, `Logger`
    - Implemented `voidOrderItem()` service method (180+ lines):
-     * Load order with orderItems and menuItems
-     * Validate order status (not CLOSED/VOIDED)
-     * Validate item exists and quantity valid
-     * Determine pre-prep vs post-prep based on item.status
-     * **Pre-Prep Logic**:
+     - Load order with orderItems and menuItems
+     - Validate order status (not CLOSED/VOIDED)
+     - Validate item exists and quantity valid
+     - Determine pre-prep vs post-prep based on item.status
+     - **Pre-Prep Logic**:
        - Reduce item.quantity or mark VOIDED
        - Recalculate item.subtotal proportionally
        - No wastage/GL involvement
-     * **Post-Prep Logic**:
+     - **Post-Prep Logic**:
        - RBAC validation (L2+ < 20k, L3+ ≥ 20k or READY/SERVED)
        - Manager approval validation if `approvedByEmployeeId` provided
        - Create wastage record via WastageService
        - Attempt GL posting (graceful failure if stubbed)
        - Always mark item as VOIDED
-     * Recalculate order totals (subtotal, tax, total)
-     * Create audit events (pre_prep vs post_prep)
-     * Call `syncOrderStatusFromItems()` to update order status
-     * Return comprehensive response with totals summary
+     - Recalculate order totals (subtotal, tax, total)
+     - Create audit events (pre_prep vs post_prep)
+     - Call `syncOrderStatusFromItems()` to update order status
+     - Return comprehensive response with totals summary
 
 **Build Status**: ✅ 0 TypeScript errors
 
@@ -111,30 +115,29 @@ The POS module now supports:
 
 1. **pos.service.ts**:
    - Added `syncOrderStatusFromItems()` helper method:
-     * Canonical state machine logic
-     * Rules:
+     - Canonical state machine logic
+     - Rules:
        - All non-voided items SERVED → order SERVED
        - All non-voided items READY/SERVED → order READY
        - Any item PREPARING → order IN_KITCHEN
        - All items SENT → order SENT
        - All items PENDING → order stays NEW
        - All items VOIDED → order VOIDED
-     * Integrated into: sendToKitchen(), markServed(), voidOrderItem()
+     - Integrated into: sendToKitchen(), markServed(), voidOrderItem()
 
 2. **kds.service.ts**:
    - Refactored `markReady()`:
-     * Load ticket with orderItems
-     * Update ticket status to READY
-     * Update all orderItems for station to READY status
-     * Set readyAt timestamp
-     * Sync order status (READY if all items ready)
-   
+     - Load ticket with orderItems
+     - Update ticket status to READY
+     - Update all orderItems for station to READY status
+     - Set readyAt timestamp
+     - Sync order status (READY if all items ready)
    - Refactored `recallTicket()`:
-     * Load ticket with orderItems
-     * Update ticket status to RECALLED
-     * Reset all orderItems for station back to PREPARING
-     * Clear readyAt timestamp
-     * Sync order status back to IN_KITCHEN
+     - Load ticket with orderItems
+     - Update ticket status to RECALLED
+     - Reset all orderItems for station back to PREPARING
+     - Clear readyAt timestamp
+     - Sync order status back to IN_KITCHEN
 
 3. **pos.service.ts** (additional updates):
    - Updated `sendToKitchen()`: Sets items to SENT, calls sync
@@ -149,34 +152,35 @@ The POS module now supports:
 1. **DEV_GUIDE.md** (appended section):
    - Added "## M11-M13 – POS Order Lifecycle, Payments & Voids Enterprise Hardening"
    - Comprehensive documentation (1000+ lines):
-     * Overview and architecture diagrams
-     * Item-level lifecycle tracking explanation
-     * Canonical state machine documentation
-     * Split payments & tips documentation
-     * Item-level voids documentation (pre-prep vs post-prep)
-     * KDS auto-sync behavior
-     * API endpoints reference
-     * Database schema
-     * Integration points (M3, M8, M5)
-     * Unit test examples
-     * Integration test examples
-     * Known limitations
-     * Success metrics
-     * Related documentation links
+     - Overview and architecture diagrams
+     - Item-level lifecycle tracking explanation
+     - Canonical state machine documentation
+     - Split payments & tips documentation
+     - Item-level voids documentation (pre-prep vs post-prep)
+     - KDS auto-sync behavior
+     - API endpoints reference
+     - Database schema
+     - Integration points (M3, M8, M5)
+     - Unit test examples
+     - Integration test examples
+     - Known limitations
+     - Success metrics
+     - Related documentation links
 
 2. **curl-examples-m11-m13.sh**:
    - Comprehensive curl examples for all endpoints:
-     * Order lifecycle (create, send to kitchen, mark served, transfers)
-     * Split payments and tips
-     * Item-level voids (pre-prep and post-prep)
-     * Order-level voids
-     * KDS operations (queue, mark ready, recall)
+     - Order lifecycle (create, send to kitchen, mark served, transfers)
+     - Split payments and tips
+     - Item-level voids (pre-prep and post-prep)
+     - Order-level voids
+     - KDS operations (queue, mark ready, recall)
 
 ### Step 5: Integration Tests (DOCUMENTED) 📋
 
 **Test Plan Created** (in DEV_GUIDE.md):
 
 **Scenario A: Full POS Lifecycle**:
+
 ```typescript
 it('completes full flow: order → KDS → serve → split payments → close', async () => {
   // 1. Create order (status=NEW, items=PENDING)
@@ -190,6 +194,7 @@ it('completes full flow: order → KDS → serve → split payments → close', 
 ```
 
 **Scenario B: Post-Prep Void with Wastage**:
+
 ```typescript
 it('handles post-prep void with wastage and GL posting', async () => {
   // 1. Create and send order
@@ -202,6 +207,7 @@ it('handles post-prep void with wastage and GL posting', async () => {
 ```
 
 **Unit Tests Needed**:
+
 - `syncOrderStatusFromItems()` (all status transitions)
 - `voidOrderItem()` (pre-prep, post-prep, RBAC validation)
 - KDS `markReady()` and `recallTicket()` with item updates
@@ -277,29 +283,29 @@ it('handles post-prep void with wastage and GL posting', async () => {
 
 ### New in M13
 
-| Method | Endpoint | Description | Role |
-|--------|----------|-------------|------|
-| POST | `/pos/orders/:orderId/items/:itemId/void` | Void single order item | L1+ |
+| Method | Endpoint                                  | Description            | Role |
+| ------ | ----------------------------------------- | ---------------------- | ---- |
+| POST   | `/pos/orders/:orderId/items/:itemId/void` | Void single order item | L1+  |
 
 ### Enhanced in M13
 
-| Endpoint | Enhancement |
-|----------|-------------|
-| POST `/pos/orders/:orderId/send-to-kitchen` | Sets item statuses to SENT, calls syncOrderStatusFromItems() |
-| POST `/pos/orders/:orderId/mark-served` | Sets item statuses to SERVED, calls syncOrderStatusFromItems() |
-| POST `/kds/tickets/:ticketId/mark-ready` | Updates item statuses to READY, syncs order status |
-| POST `/kds/tickets/:ticketId/recall` | Resets item statuses to PREPARING, syncs order status |
+| Endpoint                                    | Enhancement                                                    |
+| ------------------------------------------- | -------------------------------------------------------------- |
+| POST `/pos/orders/:orderId/send-to-kitchen` | Sets item statuses to SENT, calls syncOrderStatusFromItems()   |
+| POST `/pos/orders/:orderId/mark-served`     | Sets item statuses to SERVED, calls syncOrderStatusFromItems() |
+| POST `/kds/tickets/:ticketId/mark-ready`    | Updates item statuses to READY, syncs order status             |
+| POST `/kds/tickets/:ticketId/recall`        | Resets item statuses to PREPARING, syncs order status          |
 
 ---
 
 ## Integration Matrix
 
-| Feature | M3 Inventory | M8 Accounting | M5 Anti-Theft | M11 POS | M12 Payments |
-|---------|--------------|---------------|---------------|---------|--------------|
-| Pre-Prep Void | ❌ No | ❌ No | ✅ Anomaly event | ✅ Item status | ✅ Totals recalc |
-| Post-Prep Void | ✅ Wastage + Stock | ✅ GL posting | ✅ Anomaly event | ✅ Item status | ✅ Totals recalc |
-| KDS Mark Ready | ❌ No | ❌ No | ❌ No | ✅ Item READY | ❌ No |
-| Order Close | ✅ FIFO consume | ✅ Sale + COGS + Tips | ❌ No | ✅ Status CLOSED | ✅ Balance validation |
+| Feature        | M3 Inventory       | M8 Accounting         | M5 Anti-Theft    | M11 POS          | M12 Payments          |
+| -------------- | ------------------ | --------------------- | ---------------- | ---------------- | --------------------- |
+| Pre-Prep Void  | ❌ No              | ❌ No                 | ✅ Anomaly event | ✅ Item status   | ✅ Totals recalc      |
+| Post-Prep Void | ✅ Wastage + Stock | ✅ GL posting         | ✅ Anomaly event | ✅ Item status   | ✅ Totals recalc      |
+| KDS Mark Ready | ❌ No              | ❌ No                 | ❌ No            | ✅ Item READY    | ❌ No                 |
+| Order Close    | ✅ FIFO consume    | ✅ Sale + COGS + Tips | ❌ No            | ✅ Status CLOSED | ✅ Balance validation |
 
 ---
 
@@ -375,11 +381,13 @@ it('handles post-prep void with wastage and GL posting', async () => {
 ### Unit Tests
 
 **Existing** (M12):
+
 - ✅ OrderTotalsCalculator: 25 passing tests
 - ✅ Balance validation logic
 - ✅ Tips separation from bill
 
 **Documented** (M13):
+
 - 📋 syncOrderStatusFromItems() test cases (6 scenarios)
 - 📋 voidOrderItem() test cases (8 scenarios)
 - 📋 KDS markReady/recall test cases (4 scenarios)
@@ -389,6 +397,7 @@ it('handles post-prep void with wastage and GL posting', async () => {
 ### Integration Tests
 
 **Documented** (M13):
+
 - 📋 Scenario A: Full POS lifecycle (order → KDS → serve → payments → close)
 - 📋 Scenario B: Post-prep void with wastage and GL verification
 
@@ -471,6 +480,7 @@ M13 successfully brings the POS module to **100% enterprise-grade production-rea
 The POS module now provides a complete, auditable, and financially accurate order lifecycle from creation through service to closure, with full support for voids at any stage of preparation.
 
 **Next Steps**:
+
 1. Implement unit and integration tests (Step 5 documentation complete)
 2. Deploy to staging environment for QA testing
 3. Monitor void patterns in production
@@ -483,4 +493,3 @@ The POS module now provides a complete, auditable, and financially accurate orde
 **Build Status**: ✅ Clean (0 TypeScript errors)  
 **Documentation**: ✅ Complete (DEV_GUIDE.md + curl examples + design doc)  
 **Production Readiness**: ✅ **READY** (pending test implementation)
-

@@ -174,9 +174,7 @@ export class WastageService {
           byUser[record.userId] = {
             qty: 0,
             cost: 0,
-            userName: record.user
-              ? `${record.user.firstName} ${record.user.lastName}`
-              : 'Unknown',
+            userName: record.user ? `${record.user.firstName} ${record.user.lastName}` : 'Unknown',
           };
         }
         byUser[record.userId].qty += qty;
@@ -192,4 +190,3 @@ export class WastageService {
     };
   }
 }
-

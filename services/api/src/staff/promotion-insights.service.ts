@@ -1,12 +1,12 @@
 /**
  * M22: Promotion Insights Service
- * 
+ *
  * Thin wrapper around M19 StaffInsightsService to:
  * - Preview promotion candidates
  * - Generate & persist promotion suggestions
  * - Track decision history (ACCEPTED/REJECTED/IGNORED)
  * - Provide aggregated summaries for digests
- * 
+ *
  * Design: Composition over modification - reuses M19 without changes.
  */
 
@@ -30,9 +30,9 @@ export class PromotionInsightsService {
 
   // Default thresholds (can be made configurable via org settings)
   private readonly DEFAULT_CONFIG: Required<SuggestionConfig> = {
-    minScoreThreshold: 0.70,
+    minScoreThreshold: 0.7,
     minTenureMonths: 3,
-    maxAbsenceRate: 0.10,
+    maxAbsenceRate: 0.1,
     excludeRiskLevels: ['CRITICAL'],
     categories: [SuggestionCategory.PROMOTION, SuggestionCategory.TRAINING],
   };
@@ -53,7 +53,9 @@ export class PromotionInsightsService {
     to: Date;
     config?: SuggestionConfig;
   }): Promise<PromotionSuggestionDTO[]> {
-    this.logger.log(`Computing promotion suggestions for org ${query.orgId}, period ${query.periodType}`);
+    this.logger.log(
+      `Computing promotion suggestions for org ${query.orgId}, period ${query.periodType}`,
+    );
 
     const config = { ...this.DEFAULT_CONFIG, ...query.config };
     const period = this.staffInsights['resolvePeriod'](query.periodType, query.from);
@@ -91,7 +93,7 @@ export class PromotionInsightsService {
         if (
           staff.compositeScore >= config.minScoreThreshold &&
           tenureMonths >= config.minTenureMonths &&
-          (staff.reliabilityMetrics?.attendanceRate || 0) >= 0.90 &&
+          (staff.reliabilityMetrics?.attendanceRate || 0) >= 0.9 &&
           !staff.isCriticalRisk // Exclude CRITICAL risk staff
         ) {
           suggestions.push({
@@ -134,7 +136,7 @@ export class PromotionInsightsService {
 
       // PERFORMANCE_REVIEW: Top or bottom 10%
       if (config.categories.includes(SuggestionCategory.PERFORMANCE_REVIEW)) {
-        if (staff.compositeScore >= 0.85 || staff.compositeScore <= 0.50) {
+        if (staff.compositeScore >= 0.85 || staff.compositeScore <= 0.5) {
           const reviewType = staff.compositeScore >= 0.85 ? 'fast-track' : 'improvement';
           suggestions.push({
             employeeId: staff.employeeId,
@@ -176,7 +178,9 @@ export class PromotionInsightsService {
     updated: any[];
     total: number;
   }> {
-    this.logger.log(`Persisting promotion suggestions for org ${query.orgId}, actor ${actor.userId}`);
+    this.logger.log(
+      `Persisting promotion suggestions for org ${query.orgId}, actor ${actor.userId}`,
+    );
 
     const suggestions = await this.computeSuggestions(query);
     const period = this.staffInsights['resolvePeriod'](query.periodType, query.from);
@@ -461,7 +465,8 @@ export class PromotionInsightsService {
 
   private detectTrainingNeeds(staff: CombinedStaffMetrics): { reason: string } | null {
     const avgCheck = staff.performanceMetrics.avgCheckSize;
-    const voidRate = staff.performanceMetrics.voidCount / (staff.performanceMetrics.orderCount || 1);
+    const voidRate =
+      staff.performanceMetrics.voidCount / (staff.performanceMetrics.orderCount || 1);
     const noDrinksRate = staff.performanceMetrics.noDrinksRate;
 
     // Low avg check → upselling training
@@ -479,7 +484,7 @@ export class PromotionInsightsService {
     }
 
     // High no-drinks rate → suggestive selling training
-    if (noDrinksRate > 0.10) {
+    if (noDrinksRate > 0.1) {
       return {
         reason: `No-drinks rate (${(noDrinksRate * 100).toFixed(1)}%) above target (10%) - suggest suggestive selling training to increase beverage sales.`,
       };
@@ -488,7 +493,10 @@ export class PromotionInsightsService {
     return null;
   }
 
-  private generateReviewReason(staff: CombinedStaffMetrics, type: 'fast-track' | 'improvement'): string {
+  private generateReviewReason(
+    staff: CombinedStaffMetrics,
+    type: 'fast-track' | 'improvement',
+  ): string {
     const score = (staff.compositeScore * 100).toFixed(0);
 
     if (type === 'fast-track') {

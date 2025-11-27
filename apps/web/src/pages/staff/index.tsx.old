@@ -1,0 +1,64 @@
+import React from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { AppShell } from '@/components/layout/AppShell';
+import { PageHeader } from '@/components/layout/PageHeader';
+import { DataTable } from '@/components/ui/data-table';
+import { Badge } from '@/components/ui/badge';
+import { apiClient } from '@/lib/api';
+
+interface StaffMetric {
+  employeeId: string;
+  displayName: string;
+  totalSales: number;
+  voidRate: number;
+  avgCheck: number;
+  compositeScore?: number;
+}
+
+export default function StaffPage() {
+  const { data, isLoading } = useQuery({
+    queryKey: ['staff-metrics'],
+    queryFn: async () => {
+      const response = await apiClient.get<StaffMetric[]>('/staff/waiters/metrics');
+      return response.data;
+    },
+  });
+
+  const columns = [
+    { header: 'Name', accessor: 'displayName' as keyof StaffMetric },
+    {
+      header: 'Total Sales',
+      accessor: (row: StaffMetric) => `UGX ${row.totalSales.toLocaleString()}`,
+    },
+    {
+      header: 'Avg Check',
+      accessor: (row: StaffMetric) => `UGX ${row.avgCheck.toLocaleString()}`,
+    },
+    {
+      header: 'Void Rate',
+      accessor: (row: StaffMetric) => `${(row.voidRate * 100).toFixed(1)}%`,
+    },
+    {
+      header: 'Score',
+      accessor: (row: StaffMetric) =>
+        row.compositeScore ? (
+          <Badge variant={row.compositeScore >= 0.7 ? 'success' : 'warning'}>
+            {(row.compositeScore * 100).toFixed(0)}
+          </Badge>
+        ) : (
+          '—'
+        ),
+    },
+  ];
+
+  return (
+    <AppShell>
+      <PageHeader title="Staff Management" subtitle="View staff performance and metrics" />
+      {isLoading && <p>Loading staff data...</p>}
+      {!isLoading && data && <DataTable data={data} columns={columns} />}
+      <div className="mt-4 text-sm text-muted-foreground">
+        ✓ Connected to backend endpoint: GET /staff/waiters/metrics
+      </div>
+    </AppShell>
+  );
+}

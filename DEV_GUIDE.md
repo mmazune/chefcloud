@@ -7490,8 +7490,8 @@ pnpm test m2-shifts-scheduling.e2e-spec
 **Example**:
 
 ```sql
-UPDATE org_settings 
-SET stock_count_tolerance_pct = 10.0, 
+UPDATE org_settings
+SET stock_count_tolerance_pct = 10.0,
     stock_count_tolerance_absolute = 5.0
 WHERE org_id = 'your-org-id';
 ```
@@ -10791,6 +10791,7 @@ NODE_ENV="production"  # Enables HSTS header
 ChefCloud implements multiple layers of security hardening:
 
 **Helmet Security Headers:**
+
 - HSTS only enabled when `NODE_ENV=production` (15552000s max-age, includeSubDomains)
 - DNS prefetch control disabled
 - X-Frame-Options: SAMEORIGIN (prevent clickjacking)
@@ -10801,6 +10802,7 @@ ChefCloud implements multiple layers of security hardening:
 - Cross-Origin-Resource-Policy: same-site
 
 **CORS Protection:**
+
 - Env-driven allowlist via `CORS_ORIGINS`
 - Disallowed origins receive response without `Access-Control-Allow-Origin` header (browser blocks)
 - Server-to-server requests (no Origin header) are allowed for webhooks
@@ -10809,11 +10811,13 @@ ChefCloud implements multiple layers of security hardening:
 - Exposed headers: `Retry-After` (rate limiting)
 
 **SSE Compatibility:**
+
 - SSE endpoints (`/stream/kpis`) respect CORS allowlist
 - Preflight OPTIONS requests properly handled
 - Event stream headers preserved
 
 **Webhook Compatibility:**
+
 - Webhooks are server-to-server (no Origin header required)
 - OPTIONS requests return 204 without requiring CORS
 - HMAC signature verification (E24) remains intact
@@ -10935,6 +10939,7 @@ pnpm test -- security.helmet.spec
 ```
 
 **Test Coverage:**
+
 - ✅ CORS: Allowed origin preflight
 - ✅ CORS: Blocked origin preflight
 - ✅ CORS: Server-to-server (no Origin header)
@@ -10948,28 +10953,34 @@ pnpm test -- security.helmet.spec
 ### Troubleshooting
 
 **"CORS policy: No 'Access-Control-Allow-Origin' header"**
+
 - Origin not in `CORS_ORIGINS` allowlist
 - Solution: Add origin to `.env` and restart server
 
 **"CORS policy: The value of the 'Access-Control-Allow-Credentials' header in the response is '' which must be 'true'"**
+
 - Credentials are disabled by default for security
 - Solution: Only enable if truly needed (requires code change)
 
 **SSE connection fails with CORS error**
+
 - Ensure origin is in `CORS_ORIGINS`
 - Verify preflight OPTIONS request succeeds first
 - Check browser console for specific CORS error
 
 **Webhook fails with CORS error**
+
 - Webhooks should NOT send Origin header (server-to-server)
 - If Origin is present, ensure webhook sender is configured correctly
 - Verify `X-Sig`, `X-Ts`, `X-Id` headers are included (E24 verification)
 
 **HSTS not appearing in headers (development)**
+
 - Expected behavior: HSTS disabled when `NODE_ENV !== 'production'`
 - Solution: Set `NODE_ENV=production` to enable HSTS
 
 **Security headers missing**
+
 - Ensure Helmet middleware is applied in `main.ts`
 - Check middleware order (Helmet should be early)
 - Restart server after configuration changes
@@ -11033,6 +11044,7 @@ BUILD_DATE="2025-11-09T10:00:00Z"  # ISO timestamp of build
 ```
 
 If not set, defaults are used:
+
 - `version`: Read from `package.json`
 - `commit`: "unknown"
 - `builtAt`: "unknown"
@@ -11067,20 +11079,24 @@ curl -i -H "X-Request-Id: TRACE-456" "$BASE/stream/kpis"
 ---
 
 ## Structured HTTP Logging v1
+
 We emit JSON logs via pino/pino-http, correlated with Request-ID.
 
 **Env**
+
 - `LOG_LEVEL` (default `info`)
 - `PRETTY_LOGS=1` to enable human-readable logs in dev
 - `LOG_SILENCE_HEALTH=1` to omit `/healthz`
 - `LOG_SILENCE_METRICS=1` to omit `/metrics`
 
 **Redaction**
+
 - Sensitive headers: `Authorization`, `cookie`, `Set-Cookie`, `X-Sig`, `X-Ts`, `X-Id`
 - Sensitive body fields: `password`, `token`, `secret`, `key`
 - Webhook payloads: body omitted from logs
 
 **Examples**
+
 ```bash
 # Dev pretty logs
 PRETTY_LOGS=1 pnpm start:dev
@@ -11090,6 +11106,7 @@ curl -i -H "X-Request-Id: TRACE-42" "$BASE/healthz"
 ```
 
 ## Global Error Responses v1
+
 All errors now return a consistent JSON shape:
 
 ```json
@@ -11113,22 +11130,27 @@ Codes are derived from HTTP status (400→BAD_REQUEST, 404→NOT_FOUND, 500→IN
 In production, stack traces are suppressed by default. Enable in dev with `ERROR_INCLUDE_STACKS=1`.
 
 **Curl**
+
 ```bash
 curl -i -H "X-Request-Id: RID-42" "$BASE/does-not-exist"
 ```
 
 ## API Documentation v1 (OpenAPI/Swagger)
+
 Enable interactive docs in dev and export the OpenAPI spec for clients.
 
 **Env**
+
 - `DOCS_ENABLED=1` to serve:
   - UI: `GET /docs`
   - JSON: `GET /openapi.json`
 
 **Security**
+
 - HTTP Bearer JWT (`Authorization: Bearer <token>`) applied to protected routes.
 
 **Export**
+
 ```bash
 pnpm build
 pnpm openapi:export
@@ -11136,6 +11158,7 @@ pnpm openapi:export
 ```
 
 **Testing**
+
 ```bash
 # Start API with docs enabled
 DOCS_ENABLED=1 pnpm start:dev
@@ -11147,8 +11170,9 @@ curl http://localhost:3001/openapi.json | jq .
 ```
 
 **Tagged Endpoints**
+
 - `Franchise`: /franchise/overview, /franchise/rankings, /franchise/budgets
-- `SSE`: /stream/spout, /stream/kds  
+- `SSE`: /stream/spout, /stream/kds
 - `Webhooks`: /webhooks/billing, /webhooks/mtn, /webhooks/airtel
 - `Billing`: /billing/plan/change, /billing/cancel
 
@@ -11157,7 +11181,9 @@ curl http://localhost:3001/openapi.json | jq .
 ## M3: Enterprise Inventory Management
 
 ### Overview
+
 M3 brings inventory, recipes, wastage, and low-stock alerts to enterprise-grade standards with:
+
 - **Ingredient-level accuracy**: Every sale decrements ingredients via FIFO
 - **Comprehensive reconciliation**: opening + purchases = usage + wastage + closing
 - **Audit trails**: All wastage linked to shift and user
@@ -11169,6 +11195,7 @@ M3 brings inventory, recipes, wastage, and low-stock alerts to enterprise-grade 
 All inventory changes create `StockMovement` records for traceability:
 
 **Movement Types:**
+
 - `SALE`: Created when order closes (ingredient consumption)
 - `WASTAGE`: Created when wastage recorded
 - `ADJUSTMENT`: Manual inventory adjustments
@@ -11176,6 +11203,7 @@ All inventory changes create `StockMovement` records for traceability:
 - `COUNT_ADJUSTMENT`: From stock count reconciliation
 
 **Key Fields:**
+
 - `qty`: Quantity (positive = add, negative = deduct)
 - `cost`: COGS impact for accurate profit tracking
 - `batchId`: Links to FIFO batch for cost accuracy
@@ -11183,6 +11211,7 @@ All inventory changes create `StockMovement` records for traceability:
 
 **Automatic Creation:**
 When orders close, the POS service:
+
 1. Iterates through each order item
 2. Looks up recipe ingredients
 3. Consumes from FIFO batches
@@ -11194,11 +11223,13 @@ When orders close, the POS service:
 **Purpose:** Verify stock equation holds and identify theft/loss
 
 **Equation:**
+
 ```
 opening + purchases = theoretical usage + wastage + closing (+/- variance)
 ```
 
 **API Endpoint:**
+
 ```bash
 GET /inventory/reconciliation?branchId=<id>&shiftId=<id>
 # OR
@@ -11209,13 +11240,14 @@ Roles: OWNER, MANAGER, ACCOUNTANT, FRANCHISE
 ```
 
 **Response:**
+
 ```json
 {
   "summary": {
     "totalItems": 45,
     "itemsWithVariance": 3,
     "itemsOutOfTolerance": 1,
-    "totalVarianceCost": 127.50,
+    "totalVarianceCost": 127.5,
     "totalWastageCost": 89.25
   },
   "items": [
@@ -11232,11 +11264,11 @@ Roles: OWNER, MANAGER, ACCOUNTANT, FRANCHISE
       "varianceQty": 0.5,
       "varianceCost": 1.75,
       "withinTolerance": true,
-      "openingCost": 70.00,
-      "purchasesCost": 52.50,
+      "openingCost": 70.0,
+      "purchasesCost": 52.5,
       "wastageCost": 8.75,
-      "theoreticalUsageCost": 98.00,
-      "closingCost": 14.00
+      "theoreticalUsageCost": 98.0,
+      "closingCost": 14.0
     }
   ]
 }
@@ -11245,20 +11277,23 @@ Roles: OWNER, MANAGER, ACCOUNTANT, FRANCHISE
 **Tolerance:** Uses `stockCountTolerance` from org settings (default 5%)
 
 **Use Cases:**
+
 - Shift-end reconciliation
-- Daily/weekly variance reports  
+- Daily/weekly variance reports
 - Anti-theft dashboards
 - Accountant audits
 
 ### Wastage Tracking
 
 **Enhanced M3 Features:**
+
 - Links to shift and user (who reported it)
 - Automatically creates `WASTAGE` stock movement
 - Calculates wastage cost using WAC
 - Audit logged for traceability
 
 **API Endpoint:**
+
 ```bash
 POST /inventory/wastage
 Authorization: Bearer <token>
@@ -11271,12 +11306,14 @@ Authorization: Bearer <token>
 ```
 
 **Wastage Reasons:**
+
 - `SPOILED`: Went bad/expired
 - `DAMAGED`: Dropped/broken
 - `LOST`: Theft or unexplained loss
 - `EXPIRED`: Past expiry date
 
 **Wastage Summary:**
+
 ```bash
 GET /inventory/wastage/summary?branchId=<id>&startDate=2025-01-01&endDate=2025-01-31
 ```
@@ -11286,6 +11323,7 @@ Returns totals by reason and by user for accountability.
 ### Low-Stock Alerts
 
 **Configuration:**
+
 ```bash
 # Get current config
 GET /inventory/low-stock/config?branchId=<id>
@@ -11302,6 +11340,7 @@ PATCH /inventory/low-stock/config?branchId=<id>
 ```
 
 **Get Alerts:**
+
 ```bash
 GET /inventory/low-stock/alerts?branchId=<id>
 
@@ -11310,6 +11349,7 @@ Roles: OWNER, MANAGER, PROCUREMENT, INVENTORY
 ```
 
 **Response:**
+
 ```json
 [
   {
@@ -11330,6 +11370,7 @@ Roles: OWNER, MANAGER, PROCUREMENT, INVENTORY
 ```
 
 **Detection Logic:**
+
 1. For each item, check if:
    - `currentQty <= minQuantity` (if configured)
    - OR `estimatedDaysRemaining <= minDaysOfCover` (using 7-day avg usage)
@@ -11344,11 +11385,13 @@ Run detection job hourly or daily to feed notifications/digests.
 **Purpose:** Quick-start inventory for new venues
 
 **Available Packs:**
+
 - `tapas-bar-essentials`: Spanish tapas bar items
 - `cocktail-bar-basics`: Spirits, mixers, garnishes
 - `cafe-essentials`: Coffee, milk, pastries
 
 **List Packs:**
+
 ```bash
 GET /inventory/templates
 Authorization: Bearer <token>
@@ -11356,11 +11399,13 @@ Roles: OWNER, MANAGER, PROCUREMENT
 ```
 
 **Get Pack Details:**
+
 ```bash
 GET /inventory/templates/tapas-bar-essentials
 ```
 
 **Apply Pack (Idempotent):**
+
 ```bash
 POST /inventory/templates/apply
 Authorization: Bearer <token>
@@ -11372,6 +11417,7 @@ Authorization: Bearer <token>
 ```
 
 **Response:**
+
 ```json
 {
   "created": 8,
@@ -11401,11 +11447,13 @@ Re-applying updates existing items without duplication.
 | `waste_pct` | No | Wastage % (e.g. 2) |
 
 **Get Template:**
+
 ```bash
 GET /inventory/import/template
 ```
 
 **Import CSV:**
+
 ```bash
 POST /inventory/import?branchId=<id>
 Authorization: Bearer <token>
@@ -11439,6 +11487,7 @@ Roles: OWNER, MANAGER, PROCUREMENT
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -11450,6 +11499,7 @@ Roles: OWNER, MANAGER, PROCUREMENT
 ```
 
 **Notes:**
+
 - Import is idempotent (updates existing SKUs)
 - Recipes require menu items to exist first
 - Errors are non-blocking (partial import succeeds)
@@ -11458,16 +11508,19 @@ Roles: OWNER, MANAGER, PROCUREMENT
 
 **Indexes:**
 Stock movements table has indexes on:
+
 - `(orgId, branchId, createdAt)` for reconciliation queries
 - `itemId` for item-level reports
 - `shiftId`, `orderId` for contextual lookups
 
 **Query Limits:**
+
 - Reconciliation: Limit to 1 shift or ~30 days max
 - Low-stock detection: Runs per-branch, caches results
 - Movement queries: Use date ranges to avoid full scans
 
 **Scaling:**
+
 - For high-volume venues (>500 orders/day):
   - Consider partitioning stock_movements by month
   - Archive movements older than 1 year
@@ -11480,8 +11533,9 @@ Stock movements table has indexes on:
 ### Overview
 
 M4 delivers enterprise-grade automated reporting with:
+
 - **Shift-end reports**: Comprehensive summaries generated on shift close
-- **Scheduled digests**: Daily/weekly/monthly reports delivered automatically  
+- **Scheduled digests**: Daily/weekly/monthly reports delivered automatically
 - **Flexible subscriptions**: User or role-based recipients with PDF/CSV attachments
 - **Real-time metrics**: All reports pull from canonical APIs for consistency
 - **Email delivery**: Professional formatted reports via SMTP
@@ -11489,9 +11543,11 @@ M4 delivers enterprise-grade automated reporting with:
 ### Report Types
 
 #### SHIFT_END
+
 **Triggered:** Automatically when shift closes  
 **Scope:** Single shift performance  
 **Contents:**
+
 - **Sales Summary**: Total sales, order count, avg order value, breakdown by category/item/payment method
 - **Service Metrics**: Per-waiter performance (sales, orders, voids, discounts)
 - **Stock Management**: Usage, wastage (by reason/user), out-of-tolerance items, low stock alerts
@@ -11500,43 +11556,53 @@ M4 delivers enterprise-grade automated reporting with:
 - **Anomalies**: High-severity events with user context
 
 **Use Cases:**
+
 - Manager shift review
 - Owner daily operations oversight
 - Accounting reconciliation
 
 #### DAILY_SUMMARY
+
 **Schedule:** 06:00 daily  
 **Period:** Previous day (00:00 - 23:59)  
 **Contents:**
+
 - Aggregated sales, order count, avg order value
 - Total anomalies detected
 - Total wastage quantity and estimated cost
 
 **Use Cases:**
+
 - Owner morning briefing
 - Franchise HQ daily rollup
 
 #### WEEKLY_SUMMARY
+
 **Schedule:** 07:00 every Monday  
 **Period:** Previous week (Monday 00:00 - Sunday 23:59)  
 **Contents:**
+
 - Week-over-week sales trends
 - Weekly wastage and anomaly summaries
 - Key operational metrics
 
 **Use Cases:**
+
 - Weekly performance reviews
 - Multi-location comparisons
 
 #### MONTHLY_SUMMARY
+
 **Schedule:** 08:00 on 1st of each month  
 **Period:** Previous calendar month  
 **Contents:**
+
 - Month-over-month sales trends
 - Monthly wastage, variance, and anomaly reports
 - High-level operational KPIs
 
 **Use Cases:**
+
 - Board reporting
 - Franchise performance rankings
 - Accounting period close
@@ -11566,6 +11632,7 @@ M4 delivers enterprise-grade automated reporting with:
 #### RBAC
 
 **Who can manage subscriptions:**
+
 - **L4+ (OWNER, MANAGER)**: Full CRUD on subscriptions
 - **L3 (ACCOUNTANT)**: Read-only access
 - **L1-L2**: No access
@@ -11573,6 +11640,7 @@ M4 delivers enterprise-grade automated reporting with:
 #### API Endpoints
 
 ##### List Subscriptions
+
 ```bash
 GET /reports/subscriptions?branchId=<id>
 Authorization: Bearer <token>
@@ -11580,6 +11648,7 @@ Roles: L4+
 ```
 
 **Response:**
+
 ```json
 {
   "subscriptions": [
@@ -11599,6 +11668,7 @@ Roles: L4+
 ```
 
 ##### Create Subscription
+
 ```bash
 POST /reports/subscriptions
 Authorization: Bearer <token>
@@ -11615,6 +11685,7 @@ Content-Type: application/json
 ```
 
 **Example: Daily digest for specific user**
+
 ```bash
 curl -X POST http://localhost:3001/reports/subscriptions \
   -H "Authorization: Bearer ${TOKEN}" \
@@ -11630,6 +11701,7 @@ curl -X POST http://localhost:3001/reports/subscriptions \
 ```
 
 **Example: Shift-end reports for all managers**
+
 ```bash
 curl -X POST http://localhost:3001/reports/subscriptions \
   -H "Authorization: Bearer ${TOKEN}" \
@@ -11644,6 +11716,7 @@ curl -X POST http://localhost:3001/reports/subscriptions \
 ```
 
 ##### Update Subscription
+
 ```bash
 PATCH /reports/subscriptions/:id
 Authorization: Bearer <token>
@@ -11658,6 +11731,7 @@ Content-Type: application/json
 ```
 
 ##### Delete Subscription
+
 ```bash
 DELETE /reports/subscriptions/:id
 Authorization: Bearer <token>
@@ -11681,6 +11755,7 @@ await this.reportsQueue.add('shift-end-report', {
 ```
 
 The worker processes the job:
+
 1. Fetches all enabled `SHIFT_END` subscriptions for the branch
 2. Generates `ShiftEndReport` with real data from canonical APIs
 3. Creates PDF (professional multi-page layout)
@@ -11691,6 +11766,7 @@ The worker processes the job:
 #### Report Contents
 
 **PDF Layout:**
+
 - **Header**: Branch name, shift ID, open/close times, opened/closed by
 - **Sales Summary**: Total sales, order count, avg order value, payment method breakdown
 - **Category Performance**: Sales by category with charts
@@ -11704,6 +11780,7 @@ The worker processes the job:
 
 **CSV Structure:**
 Primary CSV contains:
+
 ```
 Section,Metric,Value
 Sales,Total Sales,245000
@@ -11715,26 +11792,31 @@ Service,Waiter 1 Orders,15
 ```
 
 Separate CSVs for detail tables (if requested):
+
 - `wastage-detail.csv`: Item, quantity, reason, user, timestamp
 - `top-items.csv`: Item, category, quantity sold, revenue
 
 #### Email Behavior
 
 **Subject Pattern:**
+
 ```
 Shift-End Report - {BranchName} - {Date}
 ```
 
 **Body (HTML):**
+
 - Summary metrics in formatted HTML
 - Links to dashboard (if applicable)
 - Attachment list
 
 **Attachments:**
+
 - `shift-end-report-{shiftId}.pdf` (if `includePDF = true`)
 - `shift-end-report-{shiftId}.csv` (if `includeCSVs = true`)
 
 **Error Handling:**
+
 - Email failures are logged but don't block other recipients
 - Worker retries with exponential backoff (BullMQ default)
 - Dead letter queue for persistent failures
@@ -11745,6 +11827,7 @@ Shift-End Report - {BranchName} - {Date}
 
 **Cron Job:** Runs every minute in worker  
 **Logic:**
+
 1. Query all enabled subscriptions for `DAILY_SUMMARY`, `WEEKLY_SUMMARY`, `MONTHLY_SUMMARY`
 2. Check `shouldRunScheduledDigest()` for each:
    - **DAILY**: Run if current hour = 06:00 and not run in last hour
@@ -11755,6 +11838,7 @@ Shift-End Report - {BranchName} - {Date}
 5. Update `subscription.lastRunAt` to prevent duplicates
 
 **Duplicate Protection:**
+
 - `lastRunAt` field prevents re-triggering within same hour
 - Idempotent job keys in BullMQ
 - Atomic updates with Prisma transactions
@@ -11762,18 +11846,21 @@ Shift-End Report - {BranchName} - {Date}
 #### Date Range Calculation
 
 **DAILY_SUMMARY:**
+
 ```typescript
 startDate = yesterday 00:00:00
 endDate = yesterday 23:59:59
 ```
 
 **WEEKLY_SUMMARY:**
+
 ```typescript
 startDate = last Monday 00:00:00
 endDate = last Sunday 23:59:59
 ```
 
 **MONTHLY_SUMMARY:**
+
 ```typescript
 startDate = first day of previous month 00:00:00
 endDate = last day of previous month 23:59:59
@@ -11784,22 +11871,26 @@ endDate = last day of previous month 23:59:59
 #### Period Digest Contents
 
 **Metrics Aggregated:**
+
 - **Sales**: Total sales, order count, avg order value
 - **Operational**: Anomaly count, wastage quantity/cost
 - **Trends**: Day-over-day, week-over-week, month-over-month comparisons (future)
 
 **Email Subject Pattern:**
+
 ```
 {ReportType} - {OrgName} - {StartDate}
 ```
 
 **Attachments:**
+
 - `{reportType}-{date}.pdf` (if `includePDF = true`)
 - `{reportType}-{date}.csv` (if `includeCSVs = true`)
 
 ### SMTP Configuration
 
 **Environment Variables:**
+
 ```bash
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
@@ -11810,6 +11901,7 @@ DIGEST_FROM_EMAIL=noreply@chefcloud.com
 ```
 
 **Nodemailer Transporter:**
+
 ```typescript
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
@@ -11823,6 +11915,7 @@ const transporter = nodemailer.createTransport({
 ```
 
 **Testing with Mailhog (Development):**
+
 ```bash
 docker run -d -p 1025:1025 -p 8025:8025 mailhog/mailhog
 
@@ -11842,6 +11935,7 @@ export SMTP_PASS=
 **Test Suite:** `digest-consistency.spec.ts`
 
 **Verification:**
+
 - Shift-end report sales ≈ Sales API `getSalesMetrics()`
 - Shift-end report wastage ≈ Reconciliation API `getShiftReconciliation()`
 - Shift-end report waiter metrics ≈ Anti-theft API `getWaiterPerformance()`
@@ -11849,6 +11943,7 @@ export SMTP_PASS=
 - Period digest totals ≈ Analytics APIs for date range
 
 **Why Consistency Matters:**
+
 - Owner trust in automated reports
 - Accounting compliance
 - Avoids "which number is correct?" confusion
@@ -11859,6 +11954,7 @@ export SMTP_PASS=
 #### Digests Not Sending
 
 **Check:**
+
 1. Subscription enabled: `subscription.enabled = true`
 2. Recipients configured: `recipientType = USER` requires `recipientId`, `ROLE` requires L4+ users
 3. SMTP configured: Verify `SMTP_*` env vars
@@ -11867,6 +11963,7 @@ export SMTP_PASS=
 6. Check logs: `logger.error()` in worker for failures
 
 **Debug Commands:**
+
 ```bash
 # Check worker logs
 cd services/worker
@@ -11886,6 +11983,7 @@ curl -X POST http://localhost:3001/reports/debug/trigger-digest \
 #### Email Not Arriving
 
 **Check:**
+
 1. Spam folder
 2. SMTP credentials valid
 3. Recipient email addresses correct
@@ -11893,6 +11991,7 @@ curl -X POST http://localhost:3001/reports/debug/trigger-digest \
 5. Email service rate limits (Gmail: 500/day for free accounts)
 
 **Test SMTP Connection:**
+
 ```bash
 # Using netcat
 nc -zv ${SMTP_HOST} ${SMTP_PORT}
@@ -11904,6 +12003,7 @@ telnet ${SMTP_HOST} ${SMTP_PORT}
 #### Reports Show Zero Data
 
 **Check:**
+
 1. Shift actually has orders: `SELECT COUNT(*) FROM orders WHERE shift_id = '...'`
 2. Date range correct: Period digests use previous period, not current
 3. Branch ID matches: Subscriptions are branch-scoped
@@ -11912,18 +12012,21 @@ telnet ${SMTP_HOST} ${SMTP_PORT}
 ### Performance Considerations
 
 **Report Generation:**
+
 - Shift-end reports: ~2-5 seconds for typical shift (50-200 orders)
 - Period digests: ~5-15 seconds for 30-day period with 1000+ orders
 - PDF generation: ~1-2 seconds (pdfkit is fast)
 - CSV generation: <1 second (simple string concatenation)
 
 **Optimization:**
+
 - All queries use indexes on `(orgId, branchId, createdAt)`
 - Prisma aggregations use database-level SUM/COUNT
 - Parallel fetching for report sections (Promise.all)
 - PDF streaming (no in-memory buffer for large reports)
 
 **Scaling:**
+
 - For 100+ branches: Consider dedicated report worker pool
 - For hourly digests: Use BullMQ rate limiting
 - For large franchises: Implement report caching (Redis)
@@ -11931,6 +12034,7 @@ telnet ${SMTP_HOST} ${SMTP_PORT}
 ### Future Enhancements
 
 **Planned:**
+
 - Slack delivery channel
 - Webhook delivery for custom integrations
 - Franchise-level digests (multi-branch aggregation)
@@ -11941,7 +12045,6 @@ telnet ${SMTP_HOST} ${SMTP_PORT}
 
 ---
 
-
 ## M5: Anti-Theft Dashboards & Waiter Rankings Enterprise Hardening
 
 ### Overview
@@ -11949,6 +12052,7 @@ telnet ${SMTP_HOST} ${SMTP_PORT}
 M5 establishes a **single, canonical source of truth** for waiter performance metrics, replacing scattered calculations across multiple services with a unified `WaiterMetricsService`. This eliminates data inconsistencies and provides enterprise-grade staff performance tracking, anti-theft detection, and employee-of-month inputs.
 
 **Key Achievements:**
+
 - ✅ **Canonical Metrics**: Single service calculates all waiter metrics (sales, voids, discounts, no-drinks, anomalies)
 - ✅ **Scoring Engine**: Configurable ranking algorithm with positive weights (sales, avg check) and penalties (voids, discounts, no-drinks, anomalies)
 - ✅ **Anti-Theft Detection**: Threshold-based risk scoring with WARN/CRITICAL severity levels
@@ -11961,14 +12065,17 @@ M5 establishes a **single, canonical source of truth** for waiter performance me
 #### Services
 
 ##### WaiterMetricsService
+
 **Location:** `services/api/src/staff/waiter-metrics.service.ts`  
 **Purpose:** Single source of truth for all waiter performance calculations  
 **Key Methods:**
+
 - `getWaiterMetrics(query)`: Returns raw metrics for all waiters in period
 - `getRankedWaiters(query, config?)`: Returns ranked waiters with scoring
 - `resolvePeriod(query)`: Converts shiftId or from/to to date range
 
 **Data Sources:**
+
 1. **Orders**: `totalSales`, `orderCount`, `avgCheckSize` (excludes voided orders)
 2. **AuditEvents**: `voidCount`, `voidValue` (where action='VOID')
 3. **Discounts**: `discountCount`, `discountValue` (by createdById)
@@ -11976,6 +12083,7 @@ M5 establishes a **single, canonical source of truth** for waiter performance me
 5. **AnomalyEvents**: `anomalyCount`, `anomalyScore` (severity-weighted: INFO=1, WARN=2, CRITICAL=3)
 
 **Aggregation Logic:**
+
 ```typescript
 // Per waiter, for period:
 totalSales = SUM(order.total WHERE status != 'VOIDED')
@@ -11992,11 +12100,13 @@ anomalyScore = SUM(severity weights)
 ```
 
 ##### AntiTheftService
+
 **Location:** `services/api/src/anti-theft/anti-theft.service.ts`  
 **Purpose:** Threshold violation detection and risk scoring  
 **Key Method:** `getAntiTheftSummary(orgId, branchId?, shiftId?, from?, to?)`
 
 **Returns:**
+
 ```typescript
 {
   flaggedStaff: Array<{
@@ -12019,38 +12129,43 @@ anomalyScore = SUM(severity weights)
 ```
 
 **Thresholds (configurable via OrgSettings.anomalyThresholds):**
+
 - `maxVoidRate`: 0.15 (15% of orders voided)
 - `maxDiscountRate`: 0.25 (25% of orders discounted)
 - `maxNoDrinksRate`: 0.40 (40% of orders without drinks)
 - `maxAnomalyScore`: 10 (weighted anomaly count)
 
 **Risk Scoring:**
+
 - Each violation adds to risk score
-- CRITICAL violations (> threshold * 1.5) = 2 points
+- CRITICAL violations (> threshold \* 1.5) = 2 points
 - WARN violations (> threshold) = 1 point
 - Staff sorted by risk score descending
 
 #### Scoring Algorithm
 
 **Formula:**
+
 ```
 score = (salesScore × 0.4 + avgCheckScore × 0.2)
-        - (voidPenalty × 0.15 + discountPenalty × 0.15 
+        - (voidPenalty × 0.15 + discountPenalty × 0.15
            + noDrinksPenalty × 0.05 + anomalyPenalty × 0.05)
 ```
 
 **Normalization (Min-Max Scaling):**
+
 ```typescript
 // For each metric, normalize to [0, 1]
-salesScore = totalSales / maxSales
-avgCheckScore = avgCheckSize / maxAvgCheck
-voidPenalty = voidCount / maxVoids
-discountPenalty = discountCount / maxDiscounts
-noDrinksPenalty = noDrinksRate  // Already 0-1
-anomalyPenalty = anomalyScore / maxAnomalyScore
+salesScore = totalSales / maxSales;
+avgCheckScore = avgCheckSize / maxAvgCheck;
+voidPenalty = voidCount / maxVoids;
+discountPenalty = discountCount / maxDiscounts;
+noDrinksPenalty = noDrinksRate; // Already 0-1
+anomalyPenalty = anomalyScore / maxAnomalyScore;
 ```
 
 **Weighting (DEFAULT_SCORING_CONFIG):**
+
 - Sales contribution: **40%** (rewards high revenue)
 - Average check contribution: **20%** (rewards high-value orders)
 - Void penalty: **15%** (penalizes order cancellations)
@@ -12065,13 +12180,16 @@ anomalyPenalty = anomalyScore / maxAnomalyScore
 #### Staff Performance (StaffController)
 
 ##### GET /staff/waiters/metrics
+
 **RBAC:** L3+ (ACCOUNTANT, MANAGER, OWNER)  
 **Query Params:**
+
 - `branchId` (required): Branch to query
 - `shiftId` (optional): Specific shift, OR
 - `from` + `to` (optional): Date range
 
 **Returns:** `WaiterMetrics[]`
+
 ```json
 [
   {
@@ -12095,15 +12213,18 @@ anomalyPenalty = anomalyScore / maxAnomalyScore
 ```
 
 **Use Cases:**
+
 - Dashboard waiter performance table
 - Export to CSV for analysis
 - Compare waiters across shifts
 
 ##### GET /staff/waiters/rankings
+
 **RBAC:** L3+ (ACCOUNTANT, MANAGER, OWNER)  
 **Query Params:** Same as /metrics
 
 **Returns:** `RankedWaiter[]` (sorted by score descending)
+
 ```json
 [
   {
@@ -12126,13 +12247,16 @@ anomalyPenalty = anomalyScore / maxAnomalyScore
 ```
 
 **Use Cases:**
+
 - Employee-of-week/month shortlist
 - Performance leaderboards
 - Identify top performers for rewards
 
 ##### GET /staff/waiters/top-performers
+
 **RBAC:** L3+ (ACCOUNTANT, MANAGER, OWNER)  
 **Query Params:**
+
 - `branchId` (required)
 - `shiftId` OR `from` + `to`
 - `limit` (optional, default: 5)
@@ -12140,17 +12264,20 @@ anomalyPenalty = anomalyScore / maxAnomalyScore
 **Returns:** Top N `RankedWaiter[]`
 
 **Use Cases:**
+
 - Quick dashboard widget (top 5 today)
 - Shift-end report top performers section
 - Employee recognition board
 
 ##### GET /staff/waiters/risk-staff
+
 **RBAC:** L4+ (MANAGER, OWNER) - **Sensitive endpoint**  
 **Query Params:** Same as top-performers
 
 **Returns:** Bottom N `RankedWaiter[]` (reverse sorted)
 
 **Use Cases:**
+
 - Manager alerts for underperformers
 - Training needs identification
 - Fraud investigation starting points
@@ -12160,17 +12287,22 @@ anomalyPenalty = anomalyScore / maxAnomalyScore
 #### Anti-Theft Detection (AntiTheftController)
 
 ##### GET /anti-theft/summary
+
 **RBAC:** L4+ (MANAGER, OWNER)  
 **Query Params:**
+
 - `branchId` (required)
 - `shiftId` OR `from` + `to`
 
 **Returns:** `AntiTheftSummary` (flaggedStaff sorted by riskScore desc)
+
 ```json
 {
   "flaggedStaff": [
     {
-      "metrics": { /* WaiterMetrics */ },
+      "metrics": {
+        /* WaiterMetrics */
+      },
       "violations": [
         {
           "metric": "voidRate",
@@ -12180,7 +12312,7 @@ anomalyPenalty = anomalyScore / maxAnomalyScore
         },
         {
           "metric": "discountRate",
-          "value": 0.30,
+          "value": 0.3,
           "threshold": 0.25,
           "severity": "WARN"
         }
@@ -12191,7 +12323,7 @@ anomalyPenalty = anomalyScore / maxAnomalyScore
   "thresholds": {
     "maxVoidRate": 0.15,
     "maxDiscountRate": 0.25,
-    "maxNoDrinksRate": 0.40,
+    "maxNoDrinksRate": 0.4,
     "maxAnomalyScore": 10
   },
   "summary": {
@@ -12203,6 +12335,7 @@ anomalyPenalty = anomalyScore / maxAnomalyScore
 ```
 
 **Use Cases:**
+
 - Real-time anti-theft dashboard
 - End-of-shift manager review
 - Fraud investigation alerts
@@ -12214,6 +12347,7 @@ anomalyPenalty = anomalyScore / maxAnomalyScore
 M5 updated **ReportGeneratorService** to use `WaiterMetricsService` for consistency:
 
 #### Shift-End Report Changes
+
 **Before (M4):** Used `DashboardsService.getVoidLeaderboard/getDiscountLeaderboard/getNoDrinksRate` + manual aggregation  
 **After (M5):** Uses `WaiterMetricsService.getWaiterMetrics()` directly
 
@@ -12222,13 +12356,16 @@ M5 updated **ReportGeneratorService** to use `WaiterMetricsService` for consiste
 **staffPerformance.riskStaff:** Uses `getRankedWaiters().slice(-3).reverse()`
 
 **Benefits:**
+
 - ✅ Shift-end reports match staff dashboard exactly
 - ✅ No duplicate queries (single fetch for all metrics)
 - ✅ Simplified report generation logic (50% fewer lines)
 - ✅ Rankings available in reports (previously empty)
 
 #### Period Digests (Future)
+
 **TODO:** When `generatePeriodDigest` is fully implemented, it should:
+
 1. Use `WaiterMetricsService` for staff performance aggregations
 2. Include top/bottom performers for period
 3. Match shift-end report metric definitions
@@ -12236,32 +12373,39 @@ M5 updated **ReportGeneratorService** to use `WaiterMetricsService` for consiste
 ### Data Consistency
 
 #### Tests: waiter-metrics-consistency.spec.ts
+
 **Location:** `services/api/src/staff/waiter-metrics-consistency.spec.ts`  
 **Coverage:** 12 test cases in 5 suites
 
 **Suite 1: Canonical Metrics vs Legacy Dashboards**
+
 - Test 1: Void counts match between WaiterMetricsService and DashboardsService
 - Test 2: Discount counts match
 - Test 3: No-drinks rates match
 - Test 4: Sales totals match
 
 **Suite 2: Report Generator Integration**
+
 - Test 5: Shift-end service report uses canonical metrics
 - Test 6: Staff performance rankings use canonical metrics
 
 **Suite 3: Anti-Theft Integration**
+
 - Test 7: Anti-theft summary uses canonical metrics
 - Test 8: Threshold violations are accurate
 
 **Suite 4: Scoring Algorithm**
+
 - Test 9: Rankings are deterministic and ordered correctly
 - Test 10: Score components sum correctly
 
 **Suite 5: Data Integrity**
+
 - Test 11: Metrics never have negative values
 - Test 12: Rates are within valid ranges (0-1)
 
 **Run Tests:**
+
 ```bash
 # All M5 tests
 pnpm --filter @chefcloud/api test waiter-metrics-consistency
@@ -12276,6 +12420,7 @@ pnpm --filter @chefcloud/api test:cov waiter-metrics-consistency
 
 **Per-Organization Thresholds:**
 Update `OrgSettings.anomalyThresholds`:
+
 ```typescript
 // In Prisma Studio or via API
 {
@@ -12294,6 +12439,7 @@ Update `OrgSettings.anomalyThresholds`:
 
 **Current:** Hardcoded `DEFAULT_SCORING_CONFIG` in `waiter-metrics.dto.ts`  
 **Future:** Store per-org configs in database:
+
 ```typescript
 // Proposed: OrgSettings.staffScoringConfig
 {
@@ -12315,12 +12461,14 @@ This allows franchises to tune scoring for their business model (e.g., fine-dini
 #### Dashboard: Real-Time Performance
 
 **Get today's top 5 performers:**
+
 ```bash
 curl -H "Authorization: Bearer $TOKEN" \
   "https://api.chefcloud.com/staff/waiters/top-performers?branchId=$BRANCH&from=$(date -u +%Y-%m-%dT00:00:00Z)&to=$(date -u +%Y-%m-%dT23:59:59Z)&limit=5"
 ```
 
 **Get shift-specific rankings:**
+
 ```bash
 curl -H "Authorization: Bearer $TOKEN" \
   "https://api.chefcloud.com/staff/waiters/rankings?branchId=$BRANCH&shiftId=$SHIFT"
@@ -12329,12 +12477,14 @@ curl -H "Authorization: Bearer $TOKEN" \
 #### Anti-Theft: Shift-End Review
 
 **Check for risky staff after shift close:**
+
 ```bash
 curl -H "Authorization: Bearer $TOKEN" \
   "https://api.chefcloud.com/anti-theft/summary?branchId=$BRANCH&shiftId=$SHIFT"
 ```
 
 **Daily anti-theft check (all shifts):**
+
 ```bash
 curl -H "Authorization: Bearer $TOKEN" \
   "https://api.chefcloud.com/anti-theft/summary?branchId=$BRANCH&from=$(date -u -d yesterday +%Y-%m-%dT00:00:00Z)&to=$(date -u -d yesterday +%Y-%m-%dT23:59:59Z)"
@@ -12343,6 +12493,7 @@ curl -H "Authorization: Bearer $TOKEN" \
 #### Employee of the Month
 
 **Get month's top performers:**
+
 ```bash
 curl -H "Authorization: Bearer $TOKEN" \
   "https://api.chefcloud.com/staff/waiters/rankings?branchId=$BRANCH&from=2024-01-01T00:00:00Z&to=2024-01-31T23:59:59Z" \
@@ -12350,6 +12501,7 @@ curl -H "Authorization: Bearer $TOKEN" \
 ```
 
 **Compare across branches (franchise):**
+
 ```bash
 # For each branch, get top performer
 for BRANCH in branch-1 branch-2 branch-3; do
@@ -12364,6 +12516,7 @@ done
 #### Metrics Don't Match Legacy Dashboards
 
 **Check:**
+
 1. **Date range alignment:** Ensure `from`/`to` match dashboard filters exactly
 2. **Timezone handling:** All dates must be UTC
 3. **Voided orders:** WaiterMetricsService excludes voided orders from sales (correct behavior)
@@ -12376,6 +12529,7 @@ done
 #### Anti-Theft Summary Shows No Flagged Staff
 
 **Possible Causes:**
+
 1. **Thresholds too lenient:** Check `OrgSettings.anomalyThresholds` (may need to lower thresholds)
 2. **Period too short:** Single shift may not have enough data to trigger violations
 3. **No orders:** Waiters with zero orders are excluded
@@ -12384,6 +12538,7 @@ done
 #### Rankings Seem Wrong
 
 **Verify:**
+
 1. **Scoring weights:** Check `DEFAULT_SCORING_CONFIG` in `waiter-metrics.dto.ts`
 2. **Normalization:** Scores are relative to period max values (not absolute)
 3. **Penalties:** High void/discount counts significantly lower scores
@@ -12395,6 +12550,7 @@ done
 #### Report Service Section Empty
 
 **Check:**
+
 1. **ReportsModule imports StaffModule:** Should be in `imports` array
 2. **WaiterMetricsService injected:** ReportGeneratorService constructor should have it
 3. **Period matches orders:** Shift must have orders with `userId` set
@@ -12403,17 +12559,20 @@ done
 ### Performance Considerations
 
 **Metrics Calculation:**
+
 - Typical shift (50 waiters, 200 orders): ~500ms
 - Full day (10 shifts, 2000 orders): ~2-3 seconds
 - Week aggregation (14k orders): ~5-10 seconds
 
 **Optimizations:**
+
 - All queries use composite indexes: `(orgId, branchId, createdAt)`
 - Prisma aggregations (SUM, COUNT) run in database
 - Parallel fetching for orders/voids/discounts/anomalies
 - Single query per metric type (no N+1)
 
 **Caching Strategy (Future):**
+
 - Cache shift metrics after shift close (immutable)
 - Invalidate cache on order edits/voids
 - Redis TTL: 1 hour for in-progress shifts, infinite for closed shifts
@@ -12421,6 +12580,7 @@ done
 ### Future Enhancements
 
 **Planned:**
+
 - **ML Risk Scoring:** Train model on historical fraud cases to predict risk beyond simple thresholds
 - **Feedback Integration:** Include customer ratings in performance scores (requires feedback feature)
 - **Net Margin Tracking:** Include cost of goods sold in metrics (requires cost tracking)
@@ -12431,6 +12591,7 @@ done
 - **Shift Fairness Scoring:** Account for shift difficulty (busy vs slow, day vs night)
 
 **Employee-of-Month Automation:**
+
 - Auto-generate shortlists based on configurable criteria
 - Include qualitative factors (punctuality, teamwork, feedback)
 - Generate certificates and announcements
@@ -12452,6 +12613,7 @@ The M7 module introduces comprehensive management of business operations costs:
 ### Architecture
 
 **Database Models:**
+
 - `ServiceProvider`: Vendors with contact info and category (RENT, ELECTRICITY, WATER, INTERNET, DJ, PHOTOGRAPHER, MARKETING, SECURITY, OTHER)
 - `ServiceContract`: Contract terms (frequency, amount, due dates, GL accounts)
 - `ServicePayableReminder`: Automated payment reminders with severity levels
@@ -12459,12 +12621,14 @@ The M7 module introduces comprehensive management of business operations costs:
 - `CostInsight`: Generated cost-cutting suggestions
 
 **Services:**
+
 - `ServiceProvidersService`: CRUD for providers and contracts
 - `RemindersService`: Payment reminder generation and management
 - `BudgetService`: Budget configuration and actuals computation
 - `CostInsightsService`: Rules-based cost-cutting suggestions
 
 **Worker Jobs:**
+
 - `service-reminders`: Daily at 08:00, generates payment reminders for next 30 days
 
 ### Quick Start
@@ -12693,6 +12857,7 @@ curl -X POST http://localhost:3001/finance/budgets/update-actuals \
 ```
 
 **How Actuals Are Computed:**
+
 - **STOCK**: Sum of completed purchase orders for the month
 - **PAYROLL**: Sum of payroll journal entries (debits to salary/wages accounts)
 - **RENT/UTILITIES/etc**: Sum of PAID service contract amounts matching the category
@@ -12782,6 +12947,7 @@ curl -X POST http://localhost:3001/reports/generate \
 ### Worker Job Details
 
 **Service Reminders Worker** (`service-reminders`):
+
 - **Schedule**: Daily at 08:00 (cron: `0 8 * * *`)
 - **Logic**:
   1. Scans all `ACTIVE` contracts
@@ -12797,6 +12963,7 @@ curl -X POST http://localhost:3001/reports/generate \
   4. Avoids duplicates using unique constraint on `(contractId, dueDate)`
 
 **Manual Trigger** (for testing):
+
 ```typescript
 // In worker console or test
 const remindersService = new RemindersService(prisma);
@@ -12807,6 +12974,7 @@ console.log(`Created: ${result.created}, Updated: ${result.updated}`);
 ### RBAC & Permissions
 
 **Access Levels:**
+
 - **L3 (Procurement, Accountant):**
   - Read providers, contracts, budgets
   - View reminders
@@ -12820,6 +12988,7 @@ console.log(`Created: ${result.created}, Updated: ${result.updated}`);
   - Trigger actuals computation
 
 **Endpoints by Role:**
+
 ```bash
 # L3+ can read
 GET /service-providers
@@ -12846,15 +13015,17 @@ POST /finance/budgets/update-actuals
 ### Validation Rules
 
 **Service Provider:**
+
 - `name`: Required, 1-200 characters
 - `category`: Must be valid enum value
 - `contactPhone`: Optional, must be valid E.164 format if provided
 - `contactEmail`: Optional, must be valid email if provided
 
 **Contract:**
+
 - `frequency`: Required (MONTHLY, WEEKLY, DAILY, ONE_OFF)
 - `amount`: Required, must be > 0
-- `dueDay`: 
+- `dueDay`:
   - MONTHLY: 1-31 (day of month)
   - WEEKLY: 0-6 (0=Sunday, 6=Saturday)
   - DAILY/ONE_OFF: null
@@ -12862,6 +13033,7 @@ POST /finance/budgets/update-actuals
 - `endDate`: Optional for recurring, required for ONE_OFF
 
 **Budget:**
+
 - `year`: Required, >= 2020
 - `month`: Required, 1-12
 - `category`: Must be valid BudgetCategory enum
@@ -12872,7 +13044,9 @@ POST /finance/budgets/update-actuals
 #### Reminders Not Generating
 
 **Check:**
+
 1. **Worker running**: Verify `service-reminders` worker is active
+
    ```bash
    # Check worker logs
    docker logs chefcloud-worker
@@ -12880,16 +13054,18 @@ POST /finance/budgets/update-actuals
    ```
 
 2. **Contracts active**: Ensure contracts have `status: 'ACTIVE'`
+
    ```sql
    SELECT id, frequency, dueDay, status FROM "ServiceContract" WHERE status != 'ACTIVE';
    ```
 
 3. **Due dates valid**: Check dueDay is valid for frequency
+
    ```sql
    -- Monthly contracts should have dueDay 1-31
-   SELECT id, frequency, dueDay FROM "ServiceContract" 
+   SELECT id, frequency, dueDay FROM "ServiceContract"
    WHERE frequency = 'MONTHLY' AND (dueDay < 1 OR dueDay > 31);
-   
+
    -- Weekly contracts should have dueDay 0-6
    SELECT id, frequency, dueDay FROM "ServiceContract"
    WHERE frequency = 'WEEKLY' AND (dueDay < 0 OR dueDay > 6);
@@ -12908,19 +13084,23 @@ POST /finance/budgets/update-actuals
 #### Budget Actuals Not Computing
 
 **Possible Causes:**
+
 1. **No budgets set**: Must create budget rows first
+
    ```sql
    SELECT * FROM "OpsBudget" WHERE "branchId" = 'branch-456' AND year = 2024 AND month = 11;
    ```
 
 2. **No paid reminders**: Service provider categories need PAID reminders
+
    ```sql
-   SELECT COUNT(*) FROM "ServicePayableReminder" 
-   WHERE status = 'PAID' 
+   SELECT COUNT(*) FROM "ServicePayableReminder"
+   WHERE status = 'PAID'
    AND "dueDate" BETWEEN '2024-11-01' AND '2024-11-30';
    ```
 
 3. **Purchase orders not completed**: STOCK actuals need completed POs
+
    ```sql
    SELECT COUNT(*) FROM "PurchaseOrder"
    WHERE status = 'COMPLETED'
@@ -12937,11 +13117,13 @@ POST /finance/budgets/update-actuals
 #### Cost Insights Not Appearing
 
 **Reasons:**
+
 1. **Insufficient data**: Need at least 2-3 months of budget data
 2. **Variance too small**: Default threshold is 10-15% over budget
 3. **No consecutive months**: Insights require 2+ months of overspending
 
 **Force regeneration**:
+
 ```bash
 # Get branch insights for last 6 months
 curl -H "Authorization: Bearer $TOKEN" \
@@ -12951,6 +13133,7 @@ curl -H "Authorization: Bearer $TOKEN" \
 #### Wrong Budget Category
 
 **Category Mapping:**
+
 - **STOCK**: Purchase orders and inventory costs
 - **PAYROLL**: Salary and wage journal entries
 - **RENT**: Service contracts with category RENT
@@ -12960,6 +13143,7 @@ curl -H "Authorization: Bearer $TOKEN" \
 - **MISC**: Other expenses
 
 **To recategorize**:
+
 ```bash
 # Update contract category
 curl -X PATCH http://localhost:3001/service-providers/contracts/contract-123 \
@@ -12977,16 +13161,19 @@ curl -X POST http://localhost:3001/finance/budgets/update-actuals \
 ### Performance Considerations
 
 **Reminder Generation:**
+
 - Typical franchise (10 branches, 50 contracts): ~2-3 seconds
 - Large franchise (50 branches, 200 contracts): ~10-15 seconds
 - Runs daily at 08:00, low load time
 
 **Budget Actuals Computation:**
+
 - Single branch, single month: ~500ms-1s
 - Franchise-wide (10 branches): ~5-10 seconds
 - Should be run end-of-month or on-demand
 
 **Cost Insights:**
+
 - Branch insights (3 months): ~1-2 seconds
 - Franchise insights (10 branches, 3 months): ~10-20 seconds
 - Results are cached in `CostInsight` table for dashboard display
@@ -12994,12 +13181,14 @@ curl -X POST http://localhost:3001/finance/budgets/update-actuals \
 ### Testing
 
 **Run M7 E2E tests:**
+
 ```bash
 cd services/api
 pnpm test:e2e -- m7-service-providers.e2e-spec.ts
 ```
 
 **Manual Test Flow:**
+
 1. Create provider → Verify in database
 2. Create contract → Check dueDay validation
 3. Generate reminders → Verify reminders created with correct severity
@@ -13012,6 +13201,7 @@ pnpm test:e2e -- m7-service-providers.e2e-spec.ts
 ### Future Enhancements
 
 **Planned:**
+
 - **SMS/Email Notifications**: Automatic reminder delivery to L5 users
 - **Payment Recording**: Direct payment entry from reminders screen
 - **Vendor Performance**: Track on-time delivery, service quality
@@ -13030,6 +13220,7 @@ pnpm test:e2e -- m7-service-providers.e2e-spec.ts
 M8 brings ChefCloud's accounting to enterprise-grade with complete double-entry bookkeeping, comprehensive GL integrations, fiscal period management, and robust financial reporting.
 
 **Key Features:**
+
 - **Expanded Chart of Accounts**: 18 accounts covering all operational flows
 - **Complete GL Integration**: Automatic posting from sales, COGS, wastage, payroll, service providers
 - **Fiscal Period Management**: OPEN → CLOSED → LOCKED progression with period closing entries
@@ -13040,28 +13231,34 @@ M8 brings ChefCloud's accounting to enterprise-grade with complete double-entry 
 ### Chart of Accounts (18 Accounts)
 
 #### Assets (1xxx)
+
 - **1000** - Cash
 - **1010** - Bank
 - **1100** - Accounts Receivable
 - **1200** - Inventory
 
 #### Liabilities (2xxx)
+
 - **2000** - Accounts Payable (vendors)
 - **2100** - Payroll Payable
 - **2200** - Service Provider Payables
 
 #### Equity (3xxx)
+
 - **3000** - Equity
 - **3100** - Retained Earnings (closing target)
 
 #### Revenue (4xxx)
+
 - **4000** - Sales Revenue
 - **4100** - Service Charges
 
 #### Cost of Goods Sold (5xxx)
+
 - **5000** - Cost of Goods Sold
 
 #### Expenses (5xxx/6xxx)
+
 - **5100** - Payroll Expense
 - **6000** - Operating Expenses
 - **6100** - Utilities
@@ -13072,115 +13269,149 @@ M8 brings ChefCloud's accounting to enterprise-grade with complete double-entry 
 ### GL Posting Flows
 
 #### 1. POS Sales (ORDER source)
+
 **Trigger:** Order status = CLOSED
+
 ```
 Dr Cash (1000) or AR (1100)    [total]
   Cr Sales Revenue (4000)      [subtotal]
 ```
+
 **Integration:** \`PostingService.postSale(orderId, userId)\`
 **Auto-posted:** Yes, from orders module when order closed
 
 #### 2. Cost of Goods Sold (COGS source)
+
 **Trigger:** After sale posted
+
 ```
 Dr COGS (5000)           [cost]
   Cr Inventory (1200)    [cost]
 ```
+
 **Integration:** \`PostingService.postCOGS(orderId, userId)\`
 **Auto-posted:** Yes, immediately after postSale()
 
 #### 3. Refunds (REFUND source)
+
 **Trigger:** Refund created
+
 ```
 Dr Sales Revenue (4000)  [amount]
   Cr Cash (1000)         [amount]
 ```
+
 **Integration:** \`PostingService.postRefund(refundId, userId)\`
 **Auto-posted:** Yes, from refunds module
 
 #### 4. Wastage (WASTAGE source - M8 New)
+
 **Trigger:** Inventory adjustment with reason='wastage' or 'damaged'
+
 ```
 Dr Wastage Expense (6400)  [costValue]
   Cr Inventory (1200)      [costValue]
 ```
+
 **Integration:** \`PostingService.postWastage(adjustmentId, userId)\`
 **Auto-posted:** Yes, from inventory reconciliation
 
 #### 5. Payroll (PAYROLL source)
+
 **Trigger:** PayRun approved
+
 ```
 Dr Payroll Expense (5100)   [gross]
   Cr Payroll Payable (2100) [net]
 ```
+
 **Integration:** \`PayrollService.postToGL()\`
 **Auto-posted:** Yes, when pay run approved
 
 #### 6. Service Provider Accrual (SERVICE_PROVIDER source - M8 New)
+
 **Trigger:** Service reminder due
+
 ```
 Dr Rent/Utilities Expense (6200/6100)      [estimatedCost]
   Cr Service Provider Payable (2200)       [estimatedCost]
 ```
+
 **Integration:** \`PostingService.postServiceProviderExpense(reminderId, userId)\`
 **Auto-posted:** Yes, when reminder status = DUE
 
 #### 7. Service Provider Payment (SERVICE_PROVIDER_PAYMENT source - M8 New)
+
 **Trigger:** Service reminder marked PAID
+
 ```
 Dr Service Provider Payable (2200)  [actualCost]
   Cr Cash (1000)                    [actualCost]
 ```
+
 **Integration:** \`PostingService.postServiceProviderPayment(reminderId, userId)\`
 **Auto-posted:** Yes, when reminder status = PAID
 
 #### 8. Manual Journal Entry (MANUAL source - M8 New)
+
 **Trigger:** Manual API call by accountant
+
 ```
 # Example: Adjust for prepaid expense
 Dr Prepaid Expenses (1xxx)  [amount]
   Cr Cash (1000)            [amount]
 ```
+
 **Integration:** \`PostingService.postManualJournal(data, userId)\`
 **Auto-posted:** No, requires explicit API call
 
 ### API Endpoints
 
 #### Manual Journal Entry (M8 New)
+
 \`\`\`bash
 POST /accounting/journals
 Authorization: Bearer <jwt>
 Content-Type: application/json
 
 {
-  "branchId": "optional-branch-id",
-  "date": "2024-12-31",
-  "memo": "Adjust prepaid rent",
-  "lines": [
-    {"accountCode": "1210", "debit": 5000, "credit": 0},
-    {"accountCode": "1000", "debit": 0, "credit": 5000}
-  ]
+"branchId": "optional-branch-id",
+"date": "2024-12-31",
+"memo": "Adjust prepaid rent",
+"lines": [
+{"accountCode": "1210", "debit": 5000, "credit": 0},
+{"accountCode": "1000", "debit": 0, "credit": 5000}
+]
 }
 \`\`\`
 
 #### Period Closing (M8 New)
+
 \`\`\`bash
+
 # Close period (creates closing entries)
+
 PATCH /accounting/periods/:periodId/close
 
 # Lock period (prevents modifications)
+
 PATCH /accounting/periods/:periodId/lock
 \`\`\`
 
 #### Enhanced Financial Statements (M8)
+
 \`\`\`bash
+
 # Trial Balance with branch filter
+
 GET /accounting/trial-balance?asOf=2024-12-31&branchId=branch-123
 
 # P&L with branch filter
+
 GET /accounting/pnl?from=2024-01-01&to=2024-12-31&branchId=branch-123
 
 # Balance Sheet with branch filter
+
 GET /accounting/balance-sheet?asOf=2024-12-31&branchId=branch-123
 \`\`\`
 
@@ -13198,7 +13429,7 @@ HAVING SUM(jl.debit) != SUM(jl.credit);
 **Missing GL Postings:**
 Check orders without journal entries:
 \`\`\`sql
-SELECT COUNT(*) FROM orders
+SELECT COUNT(\*) FROM orders
 WHERE status = 'CLOSED'
 AND id NOT IN (SELECT source_id FROM journal_entries WHERE source = 'ORDER');
 \`\`\`
@@ -13212,6 +13443,7 @@ AND id NOT IN (SELECT source_id FROM journal_entries WHERE source = 'ORDER');
 M9 enhances ChefCloud's HR and Payroll systems to enterprise-grade with structured employee management, formal attendance tracking, and support for multiple salary types. This builds on E43-s1 (Workforce) and E43-s2 (Payroll) foundations.
 
 **Key Features:**
+
 - **Employee Management**: Structured Employee + EmploymentContract models supporting PERMANENT/TEMPORARY/CASUAL staff
 - **Multiple Salary Types**: MONTHLY, DAILY, HOURLY, PER_SHIFT with automatic deduction rules
 - **Formal Attendance Tracking**: AttendanceRecord with PRESENT/ABSENT/LATE/LEFT_EARLY/COVERED statuses
@@ -13222,6 +13454,7 @@ M9 enhances ChefCloud's HR and Payroll systems to enterprise-grade with structur
 ### Data Models
 
 #### Employee
+
 ```prisma
 model Employee {
   id             String           @id
@@ -13241,11 +13474,13 @@ model Employee {
 ```
 
 **Key Points:**
+
 - `userId` nullable: Supports temporary staff without user accounts
 - `employmentType`: Distinguishes permanent, temporary, and casual employees
 - `employeeCode`: Unique identifier (can be badge number or HR code)
 
 #### EmploymentContract
+
 ```prisma
 model EmploymentContract {
   id                   String     @id
@@ -13267,20 +13502,23 @@ model EmploymentContract {
 ```
 
 **Salary Types:**
+
 - **MONTHLY**: Fixed monthly salary with per-day deduction for absences
 - **DAILY**: Pay per day worked (e.g., casual staff)
 - **HOURLY**: Traditional hourly rate (existing E43-s2 logic)
 - **PER_SHIFT**: Fixed pay per shift completed
 
 **Deduction Rules (MONTHLY example):**
+
 ```json
 {
-  "dailyRate": 45454.55,  // baseSalary / 22 working days
-  "hourlyRate": 5681.82   // baseSalary / 176 working hours
+  "dailyRate": 45454.55, // baseSalary / 22 working days
+  "hourlyRate": 5681.82 // baseSalary / 176 working hours
 }
 ```
 
 #### AttendanceRecord
+
 ```prisma
 model AttendanceRecord {
   id                   String           @id
@@ -13299,6 +13537,7 @@ model AttendanceRecord {
 ```
 
 **Status Types:**
+
 - **PRESENT**: Employee attended shift as scheduled
 - **ABSENT**: Employee scheduled but didn't show up (triggers deduction)
 - **LATE**: Clocked in after shift start time
@@ -13308,6 +13547,7 @@ model AttendanceRecord {
 ### Payroll Calculation Flow
 
 #### 1. MONTHLY Salary (with absence deductions)
+
 ```typescript
 // Example: Chef with 1,000,000 UGX monthly salary
 baseSalary = 1,000,000
@@ -13330,6 +13570,7 @@ finalGross = 909,090.90 + 17,045.46 = 926,136.36
 ```
 
 #### 2. DAILY Salary
+
 ```typescript
 // Example: Temp staff paid 30,000 UGX per day
 dailyRate = 30,000
@@ -13339,6 +13580,7 @@ gross = dailyRate * daysPresent = 30,000 * 15 = 450,000
 ```
 
 #### 3. HOURLY Salary (E43-s2 existing)
+
 ```typescript
 // Example: Waiter paid 5,000 UGX per hour
 hourlyRate = 5,000
@@ -13351,6 +13593,7 @@ gross = 800,000 + 37,500 = 837,500
 ```
 
 #### 4. PER_SHIFT Salary
+
 ```typescript
 // Example: Event staff paid 50,000 UGX per shift
 shiftRate = 50,000
@@ -13364,6 +13607,7 @@ gross = shiftRate * shiftsCompleted = 50,000 * 8 = 400,000
 #### Attendance Management
 
 **Clock In**
+
 ```bash
 POST /hr/attendance/clock-in
 Authorization: Bearer <jwt>
@@ -13389,6 +13633,7 @@ Response: 200 OK
 ```
 
 **Clock Out**
+
 ```bash
 POST /hr/attendance/clock-out
 Authorization: Bearer <jwt>
@@ -13408,6 +13653,7 @@ Response: 200 OK
 ```
 
 **Mark Absence (Manager L3+)**
+
 ```bash
 POST /hr/attendance/mark-absence
 Authorization: Bearer <jwt>
@@ -13423,6 +13669,7 @@ Content-Type: application/json
 ```
 
 **Register Cover Shift (Manager L3+)**
+
 ```bash
 POST /hr/attendance/register-cover
 Authorization: Bearer <jwt>
@@ -13440,6 +13687,7 @@ Content-Type: application/json
 ```
 
 **Query Attendance**
+
 ```bash
 GET /hr/attendance?orgId=org_xyz&branchId=branch_001&dateFrom=2024-12-01&dateTo=2024-12-31&status=ABSENT
 Authorization: Bearer <jwt>
@@ -13466,6 +13714,7 @@ Response: 200 OK
 #### Payroll Processing
 
 **Build Draft Payrun (Enhanced V2)**
+
 ```bash
 POST /payroll/runs/v2
 Authorization: Bearer <jwt>
@@ -13510,6 +13759,7 @@ Response: 200 OK
 ```
 
 **Approve Payrun (L4+)**
+
 ```bash
 PATCH /payroll/runs/:runId/approve
 Authorization: Bearer <jwt>
@@ -13523,6 +13773,7 @@ Response: 200 OK
 ```
 
 **Post to GL (L4+)**
+
 ```bash
 POST /payroll/runs/:runId/post
 Authorization: Bearer <jwt>
@@ -13562,10 +13813,12 @@ Response: 200 OK
 ### GL Integration (M8 Alignment)
 
 **Chart of Accounts:**
+
 - **5100** - Payroll Expense (EXPENSE) - Debited when payroll posted
 - **2100** - Payroll Payable (LIABILITY) - Credited when payroll posted
 
 **Posting Flow:**
+
 ```
 When PayRun posted:
 Dr Payroll Expense (5100)   [gross pay]
@@ -13578,6 +13831,7 @@ Dr Payroll Payable (2100)   [net pay]
 
 **Branch-Aware Posting:**
 M9 adds `branchId` to journal entries, enabling:
+
 - Per-branch P&L reports (M6 franchise management)
 - Budget tracking per branch (M7 budgets)
 - Consolidated vs branch-level financial statements
@@ -13585,6 +13839,7 @@ M9 adds `branchId` to journal entries, enabling:
 ### Budget Integration (M7)
 
 Once payroll posted to GL account 5100, M7's BudgetService automatically includes payroll in:
+
 - **Budget vs Actual**: Compare PAYROLL category budget to actuals
 - **Variance Analysis**: Alert when payroll exceeds budget
 - **Cost Insights**: Payroll as % of revenue
@@ -13593,35 +13848,37 @@ No additional integration needed - works via GL!
 
 ### RBAC Matrix
 
-| Operation               | L1 (Staff) | L2 (Senior) | L3 (Manager) | L4 (Accountant) | L5 (Owner) |
-|-------------------------|------------|-------------|--------------|-----------------|------------|
-| Clock in/out (self)     | ✅          | ✅           | ✅            | ✅               | ✅          |
-| View own attendance     | ✅          | ✅           | ✅            | ✅               | ✅          |
-| Mark absence            | ❌          | ❌           | ✅            | ✅               | ✅          |
-| Register cover          | ❌          | ❌           | ✅            | ✅               | ✅          |
-| View branch attendance  | ❌          | ❌           | ✅            | ✅               | ✅          |
-| Build payrun            | ❌          | ❌           | ❌            | ✅               | ✅          |
-| Approve payrun          | ❌          | ❌           | ❌            | ✅               | ✅          |
-| Post payrun to GL       | ❌          | ❌           | ❌            | ✅               | ✅          |
+| Operation              | L1 (Staff) | L2 (Senior) | L3 (Manager) | L4 (Accountant) | L5 (Owner) |
+| ---------------------- | ---------- | ----------- | ------------ | --------------- | ---------- |
+| Clock in/out (self)    | ✅         | ✅          | ✅           | ✅              | ✅         |
+| View own attendance    | ✅         | ✅          | ✅           | ✅              | ✅         |
+| Mark absence           | ❌         | ❌          | ✅           | ✅              | ✅         |
+| Register cover         | ❌         | ❌          | ✅           | ✅              | ✅         |
+| View branch attendance | ❌         | ❌          | ✅           | ✅              | ✅         |
+| Build payrun           | ❌         | ❌          | ❌           | ✅              | ✅         |
+| Approve payrun         | ❌         | ❌          | ❌           | ✅              | ✅         |
+| Post payrun to GL      | ❌         | ❌          | ❌           | ✅              | ✅         |
 
 ### Configuration
 
 **Org Settings (OrgSettings.metadata):**
+
 ```json
 {
   "attendance": {
-    "overtimeThresholdMinutes": 480,  // 8 hours
+    "overtimeThresholdMinutes": 480, // 8 hours
     "overtimeRate": 1.5,
     "lateThresholdMinutes": 15,
     "earlyDepartureThresholdMinutes": 15
   },
-  "payrollTaxPct": 10,  // 10% tax rate
+  "payrollTaxPct": 10, // 10% tax rate
   "workingDaysPerMonth": 22,
   "workingHoursPerDay": 8
 }
 ```
 
 **Employment Contract Example:**
+
 ```typescript
 // Create monthly salary contract
 await prisma.employmentContract.create({
@@ -13633,8 +13890,8 @@ await prisma.employmentContract.create({
     baseSalary: 1000000,
     currency: 'UGX',
     deductionRule: {
-      dailyRate: 1000000 / 22,      // 45,454.55
-      hourlyRate: 1000000 / (22*8), // 5,681.82
+      dailyRate: 1000000 / 22, // 45,454.55
+      hourlyRate: 1000000 / (22 * 8), // 5,681.82
     },
     overtimeRate: 1.5,
     workingDaysPerMonth: 22,
@@ -13648,20 +13905,22 @@ await prisma.employmentContract.create({
 ### Troubleshooting
 
 **Missing Payroll Accounts:**
+
 ```sql
 -- Check if payroll accounts exist
-SELECT * FROM accounts 
-WHERE org_id = 'org_xyz' 
+SELECT * FROM accounts
+WHERE org_id = 'org_xyz'
 AND code IN ('5100', '2100');
 
 -- If missing, run M8 seed data or add manually
 INSERT INTO accounts (org_id, code, name, category, type)
-VALUES 
+VALUES
   ('org_xyz', '5100', 'Payroll Expense', 'EXPENSE', 'DEBIT'),
   ('org_xyz', '2100', 'Payroll Payable', 'LIABILITY', 'CREDIT');
 ```
 
 **Payslip Calculation Mismatch:**
+
 ```typescript
 // Check PaySlip metadata for calculation details
 const slip = await prisma.paySlip.findUnique({
@@ -13674,12 +13933,13 @@ console.log(slip.metadata);
 ```
 
 **Attendance Record Missing:**
+
 ```sql
 -- Find employees without attendance for a period
 SELECT e.id, e.employee_code, e.first_name, e.last_name
 FROM employees e
-LEFT JOIN attendance_records ar 
-  ON ar.employee_id = e.id 
+LEFT JOIN attendance_records ar
+  ON ar.employee_id = e.id
   AND ar.date BETWEEN '2024-12-01' AND '2024-12-31'
 WHERE e.org_id = 'org_xyz'
   AND e.status = 'ACTIVE'
@@ -13689,6 +13949,7 @@ WHERE e.org_id = 'org_xyz'
 ### Testing
 
 **Unit Tests:**
+
 ```bash
 # Test AttendanceService
 pnpm test attendance.service.spec.ts
@@ -13701,6 +13962,7 @@ pnpm test payroll.service.spec.ts
 ```
 
 **E2E Test Scenario:**
+
 ```typescript
 // 1. Create employee with MONTHLY contract
 const employee = await createEmployee({
@@ -13747,11 +14009,13 @@ expect(entry.lines[1].accountId).toBe(account2100.id); // Payroll Payable
 ### Migration from E43 to M9
 
 **Backward Compatibility:**
+
 - Existing `TimeEntry` records still work
 - Original `buildDraftRun()` method preserved
 - New `buildDraftRunV2()` uses Employee/Contract models
 
 **Migration Steps:**
+
 1. Run schema migration: `prisma migrate dev`
 2. Create Employee records for existing Users
 3. Create EmploymentContract for each employee
@@ -13759,7 +14023,6 @@ expect(entry.lines[1].accountId).toBe(account2100.id); // Payroll Payable
 5. Switch to `buildDraftRunV2()` for new payruns
 
 ---
-
 
 ---
 
@@ -13904,13 +14167,13 @@ enum MsrCardStatus {
 
 Platform-specific idle timeout and max lifetime:
 
-| Platform       | Idle Timeout | Max Lifetime | Use Case |
-|----------------|--------------|--------------|----------|
-| POS_DESKTOP    | 10 min       | 12 hours     | Shared POS terminals |
-| KDS_SCREEN     | 5 min        | 12 hours     | Kitchen displays |
-| WEB_BACKOFFICE | 30 min       | 8 hours      | Admin web app |
+| Platform       | Idle Timeout | Max Lifetime | Use Case              |
+| -------------- | ------------ | ------------ | --------------------- |
+| POS_DESKTOP    | 10 min       | 12 hours     | Shared POS terminals  |
+| KDS_SCREEN     | 5 min        | 12 hours     | Kitchen displays      |
+| WEB_BACKOFFICE | 30 min       | 8 hours      | Admin web app         |
 | MOBILE_APP     | 60 min       | 24 hours     | Mobile (backgrounded) |
-| DEV_PORTAL     | 30 min       | 8 hours      | Developer tools |
+| DEV_PORTAL     | 30 min       | 8 hours      | Developer tools       |
 
 **Touch Throttling**: `lastActivityAt` updated max once per minute (POS/KDS) or 2 minutes (web/mobile) to reduce DB load.
 
@@ -14149,7 +14412,7 @@ curl -X GET http://localhost:3001/auth/msr/cards \
 @AllowedPlatforms('WEB_BACKOFFICE') // Only web backoffice
 export class AccountingController {
   // All endpoints inherit platform restriction
-  
+
   @Post('manual-journal')
   @Roles('L4', 'L5') // Also requires L4+ role
   async createManualJournal() { ... }
@@ -14176,7 +14439,7 @@ export class ApiKeysController {
 export class ReportsController {
   @Get('summary')
   async getSummary() { ... } // Allowed on web & mobile
-  
+
   @Post('advanced')
   @AllowedPlatforms('WEB_BACKOFFICE') // Override: web only
   async getAdvancedReport() { ... }
@@ -14203,20 +14466,21 @@ export class ReportsController {
 
 #### Endpoint Categories & Allowed Platforms
 
-| Category | Endpoints | Platforms | Typical Roles |
-|----------|-----------|-----------|---------------|
-| **Accounting** | `/accounting/*`, `/journals/*`, `/periods/*` | `WEB_BACKOFFICE` | L4, L5, SENIOR_ACCOUNTANT |
-| **HR & Payroll** | `/hr/*`, `/payroll/*` | `WEB_BACKOFFICE` | L3, L4, L5, HR |
-| **POS Orders** | `/pos/orders/*`, `/pos/tables/*` | `POS_DESKTOP` | L1, L2, L3 |
-| **KDS** | `/kds/*`, `/orders/kitchen/*` | `KDS_SCREEN` | L2, L3, CHEF |
-| **Inventory** | `/inventory/*`, `/stock/*`, `/purchasing/*` | `WEB_BACKOFFICE`, `MOBILE_APP` | L3, L4, STOCK, PROCUREMENT |
-| **Reports** | `/reports/*`, `/dash/*` | `WEB_BACKOFFICE`, `MOBILE_APP` | L3, L4, L5 |
-| **Dev Portal** | `/api-keys/*`, `/webhooks/*`, `/dev/*` | `DEV_PORTAL` | DEV_ADMIN, OWNER |
-| **Mobile** | `/mobile/*`, `/reservations/*` | `MOBILE_APP` | All |
+| Category         | Endpoints                                    | Platforms                      | Typical Roles              |
+| ---------------- | -------------------------------------------- | ------------------------------ | -------------------------- |
+| **Accounting**   | `/accounting/*`, `/journals/*`, `/periods/*` | `WEB_BACKOFFICE`               | L4, L5, SENIOR_ACCOUNTANT  |
+| **HR & Payroll** | `/hr/*`, `/payroll/*`                        | `WEB_BACKOFFICE`               | L3, L4, L5, HR             |
+| **POS Orders**   | `/pos/orders/*`, `/pos/tables/*`             | `POS_DESKTOP`                  | L1, L2, L3                 |
+| **KDS**          | `/kds/*`, `/orders/kitchen/*`                | `KDS_SCREEN`                   | L2, L3, CHEF               |
+| **Inventory**    | `/inventory/*`, `/stock/*`, `/purchasing/*`  | `WEB_BACKOFFICE`, `MOBILE_APP` | L3, L4, STOCK, PROCUREMENT |
+| **Reports**      | `/reports/*`, `/dash/*`                      | `WEB_BACKOFFICE`, `MOBILE_APP` | L3, L4, L5                 |
+| **Dev Portal**   | `/api-keys/*`, `/webhooks/*`, `/dev/*`       | `DEV_PORTAL`                   | DEV_ADMIN, OWNER           |
+| **Mobile**       | `/mobile/*`, `/reservations/*`               | `MOBILE_APP`                   | All                        |
 
 ### Idle Timeout Behavior
 
 **POS/KDS Scenario**:
+
 ```
 10:00 AM - Waiter swipes MSR card, logs in (session created)
 10:05 AM - Takes order (session touched)
@@ -14228,6 +14492,7 @@ export class ReportsController {
 ```
 
 **Web Backoffice Scenario**:
+
 ```
 9:00 AM  - Manager logs in (session created, expires at 5:00 PM)
 9:30 AM  - Views reports (session touched)
@@ -14267,7 +14532,7 @@ localStorage.setItem('sessionExpiresAt', session.expiresAt);
 await fetch('/hr/attendance/clock-in', {
   method: 'POST',
   headers: {
-    'Authorization': `Bearer ${access_token}`,
+    Authorization: `Bearer ${access_token}`,
     'Content-Type': 'application/json',
   },
   body: JSON.stringify({
@@ -14283,13 +14548,13 @@ await fetch('/hr/attendance/clock-in', {
 // Big logout button clicked
 async function handleLogout() {
   const jwt = localStorage.getItem('jwt');
-  
+
   // 1. Optional: Clock out
   try {
     await fetch('/hr/attendance/clock-out', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${jwt}`,
+        Authorization: `Bearer ${jwt}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -14299,17 +14564,17 @@ async function handleLogout() {
   } catch (err) {
     console.error('Clock-out failed (non-critical):', err);
   }
-  
+
   // 2. Logout (revoke session)
   await fetch('/auth/logout', {
     method: 'POST',
-    headers: { 'Authorization': `Bearer ${jwt}` },
+    headers: { Authorization: `Bearer ${jwt}` },
   });
-  
+
   // 3. Clear local storage
   localStorage.removeItem('jwt');
   localStorage.removeItem('sessionId');
-  
+
   // 4. Redirect to MSR login screen
   window.location.href = '/login/msr';
 }
@@ -14328,14 +14593,14 @@ function resetActivity() {
 }
 
 // Track activity events
-['mousedown', 'keydown', 'touchstart'].forEach(event => {
+['mousedown', 'keydown', 'touchstart'].forEach((event) => {
   document.addEventListener(event, resetActivity);
 });
 
 // Check idle every 30 seconds
 setInterval(() => {
   const elapsed = Date.now() - lastActivity;
-  
+
   if (elapsed > IDLE_WARNING_MS && elapsed < IDLE_TIMEOUT_MS) {
     showIdleWarning('Session will expire in 1 minute. Tap to continue.');
   } else if (elapsed >= IDLE_TIMEOUT_MS) {
@@ -14384,10 +14649,12 @@ x-client-platform: DEV_PORTAL
 **Cause**: No activity for longer than platform idle timeout (10 min POS, 30 min web).
 
 **Solution**:
+
 - User must re-login (swipe card, enter password)
 - Frontend should auto-retry login on 401, not show raw error
 
 **Query to check session**:
+
 ```sql
 SELECT id, platform, "lastActivityAt", "expiresAt",
        EXTRACT(EPOCH FROM (NOW() - "lastActivityAt"))/60 AS idle_minutes
@@ -14400,6 +14667,7 @@ WHERE id = 'session_abc123';
 **Cause**: JWT platform claim doesn't match `x-client-platform` header (possible spoofing attempt).
 
 **Solution**:
+
 - Check client is sending correct header
 - If intentional platform switch, user must re-login from new platform
 
@@ -14408,6 +14676,7 @@ WHERE id = 'session_abc123';
 **Cause**: Attempting to access web-only endpoint from POS/mobile.
 
 **Solution**:
+
 - This is intentional security restriction
 - Access endpoint from correct platform
 - Or remove `@AllowedPlatforms` decorator (if appropriate)
@@ -14417,6 +14686,7 @@ WHERE id = 'session_abc123';
 **Cause**: Card was revoked by manager (employee terminated, badge lost, etc.).
 
 **Solution**:
+
 - Check card status: `GET /auth/msr/cards`
 - Assign new card if employee is still active
 - If employee terminated, no action needed
@@ -14424,6 +14694,7 @@ WHERE id = 'session_abc123';
 #### Active session count mismatch
 
 **Query**:
+
 ```sql
 SELECT userId, COUNT(*) as active_sessions
 FROM sessions
@@ -14433,6 +14704,7 @@ HAVING COUNT(*) > 3; -- Find users with > 3 active sessions
 ```
 
 **Fix**:
+
 ```sql
 -- Revoke all sessions for user (except most recent)
 UPDATE sessions
@@ -14509,12 +14781,14 @@ psql $DATABASE_URL -c "SELECT id, \"revokedAt\", \"revokedReason\" FROM sessions
 #### Backwards Compatibility
 
 **Old Tokens** (E25):
+
 - Missing `sessionId` and `platform` claims
 - Still valid (validated by session version + deny list)
 - Logout returns success but does nothing (no session to revoke)
 - Platform falls back to header-based detection
 
 **New Tokens** (M10):
+
 - Include `sessionId` and `platform` claims
 - Full session lifecycle tracking
 - Idle timeout enforced
@@ -14541,8 +14815,8 @@ No data migration needed. Sessions table already exists (E25), M10 adds columns 
 
 ```sql
 -- Check session coverage (how many users have M10 sessions)
-SELECT 
-  (SELECT COUNT(DISTINCT "userId") FROM sessions 
+SELECT
+  (SELECT COUNT(DISTINCT "userId") FROM sessions
    WHERE platform IS NOT NULL) as m10_users,
   (SELECT COUNT(*) FROM users WHERE "isActive" = true) as total_users;
 ```
@@ -14566,6 +14840,7 @@ SELECT
 **Solution**: Cron job to delete old sessions.
 
 **Setup**:
+
 ```typescript
 // services/worker/src/index.ts (or create new cron service)
 import { SessionsService } from '@chefcloud/api/auth/sessions.service';
@@ -14578,6 +14853,7 @@ cron.schedule('0 3 * * *', async () => {
 ```
 
 **Query**:
+
 ```sql
 -- Cleanup logic (run daily)
 DELETE FROM sessions
@@ -14600,6 +14876,7 @@ WHERE "expiresAt" < NOW()
 **Risk**: Attacker steals JWT, uses to impersonate user.
 
 **Mitigations**:
+
 1. **Idle Timeout**: Stolen token becomes invalid after inactivity period
 2. **Max Lifetime**: Token expires after absolute max (8-24h)
 3. **IP Address Tracking**: Optionally alert on IP change (not enforced by default)
@@ -14608,26 +14885,31 @@ WHERE "expiresAt" < NOW()
 #### Token Storage
 
 **Client-Side**:
+
 - Web: `localStorage` or `sessionStorage` (XSS risk if not careful)
 - Mobile: Secure storage (iOS Keychain, Android Keystore)
 - POS: Local storage + auto-logout on idle
 
 **Never**:
+
 - Cookie with `httpOnly=false` (XSS vulnerable)
 - URL query params (logged in access logs)
 
 #### MSR Card Security
 
 **Track Data Hashing**:
+
 - Raw track data NEVER stored
 - SHA-256 hash stored as `cardToken`
 - One-way hash (cannot reverse to get track data)
 
 **PAN Detection**:
+
 - Rejects Track 1/Track 2 payment card formats
 - Only accepts `CLOUDBADGE:<CODE>` format
 
 **Physical Security**:
+
 - Cards should be non-transferable (photo on badge)
 - Report lost cards immediately
 - Manager revokes card → all sessions invalidated
@@ -14657,17 +14939,20 @@ WHERE "expiresAt" < NOW()
 ### Success Metrics
 
 **Auth Quality**:
+
 - ✅ All logins create sessions
 - ✅ Idle timeouts prevent abandoned sessions
 - ✅ Platform enforcement prevents wrong-client access
 - ✅ MSR cards tracked with audit trail
 
 **Performance**:
+
 - Session touch throttled (< 5 ms overhead per request)
 - Idle timeout checks in-memory (no DB query)
 - Redis deny list < 2 ms overhead
 
 **Security**:
+
 - 0 security incidents related to session hijacking
 - 100% of terminated employees have cards revoked within 1 hour
 - 0 POS-only endpoints accessed from mobile/web
@@ -14807,18 +15092,19 @@ enum StorageProvider {
 
 ### RBAC Matrix
 
-| Category         | L3 (Staff) | L4 (Manager) | L5 (Owner) | Notes |
-|------------------|------------|--------------|------------|-------|
-| INVOICE          | ❌          | ✅            | ✅          | Procurement only |
-| STOCK_RECEIPT    | ✅          | ✅            | ✅          | Stock users |
-| CONTRACT         | ❌          | ✅            | ✅          | Sensitive |
-| HR_DOC           | ❌          | ✅            | ✅          | Sensitive |
-| BANK_STATEMENT   | ❌          | ✅            | ✅          | Finance only |
-| PAYSLIP          | ✅ (self)   | ✅            | ✅          | Self-service |
-| RESERVATION_DOC  | ✅          | ✅            | ✅          | Booking confirmations |
-| OTHER            | ✅          | ✅            | ✅          | General use |
+| Category        | L3 (Staff) | L4 (Manager) | L5 (Owner) | Notes                 |
+| --------------- | ---------- | ------------ | ---------- | --------------------- |
+| INVOICE         | ❌         | ✅           | ✅         | Procurement only      |
+| STOCK_RECEIPT   | ✅         | ✅           | ✅         | Stock users           |
+| CONTRACT        | ❌         | ✅           | ✅         | Sensitive             |
+| HR_DOC          | ❌         | ✅           | ✅         | Sensitive             |
+| BANK_STATEMENT  | ❌         | ✅           | ✅         | Finance only          |
+| PAYSLIP         | ✅ (self)  | ✅           | ✅         | Self-service          |
+| RESERVATION_DOC | ✅         | ✅           | ✅         | Booking confirmations |
+| OTHER           | ✅         | ✅           | ✅         | General use           |
 
 **Special Rules**:
+
 - **Payslip Self-Access**: L3 users can view/download documents linked to their own `PaySlip.userId`
 - **Manager Deletion**: Only L4+ can soft-delete documents
 - **Cross-Org Isolation**: All queries filtered by `orgId`
@@ -14986,6 +15272,7 @@ curl -X GET http://localhost:3001/documents/links/employees/emp_xyz \
 #### V1: Local Filesystem
 
 **Path Structure**:
+
 ```
 /data/documents/
   org_001/
@@ -15000,11 +15287,13 @@ curl -X GET http://localhost:3001/documents/links/employees/emp_xyz \
 ```
 
 **Benefits**:
+
 - Simple, no cloud dependencies
 - Fast for small deployments
 - Easy to backup (rsync, tar)
 
 **Limitations**:
+
 - Single-server only (not horizontally scalable)
 - No CDN integration
 - Manual backup required
@@ -15014,6 +15303,7 @@ curl -X GET http://localhost:3001/documents/links/employees/emp_xyz \
 **Interface**: `IStorageProvider` abstraction ready for S3/GCS
 
 **S3 Example**:
+
 ```typescript
 export class S3StorageProvider implements IStorageProvider {
   async upload(buffer, fileName, mimeType, orgId) {
@@ -15046,12 +15336,14 @@ export class S3StorageProvider implements IStorageProvider {
 ```
 
 **Benefits**:
+
 - Horizontally scalable
 - CDN integration (CloudFront)
 - Automatic backups
 - Global replication
 
 **Migration Path**:
+
 1. Deploy S3StorageProvider
 2. Update `DocumentsModule` to inject S3 provider
 3. Backfill existing documents to S3
@@ -15096,7 +15388,12 @@ const pdfBuffer = await generatePayslipPDF(paySlip);
 
 // Upload to documents
 const document = await documentsService.upload(
-  { buffer: pdfBuffer, originalname: `payslip-${paySlip.id}.pdf`, mimetype: 'application/pdf', size: pdfBuffer.length },
+  {
+    buffer: pdfBuffer,
+    originalname: `payslip-${paySlip.id}.pdf`,
+    mimetype: 'application/pdf',
+    size: pdfBuffer.length,
+  },
   orgId,
   userId,
   RoleLevel.L5, // System upload
@@ -15105,7 +15402,7 @@ const document = await documentsService.upload(
     paySlipId: paySlip.id,
     employeeId: paySlip.employeeId,
     tags: ['payroll', payRun.periodStart],
-  }
+  },
 );
 
 // Employee can self-download via:
@@ -15144,15 +15441,18 @@ await emailService.send({
 #### Upload Validation
 
 **File Type Checks**:
+
 - MIME type validation (no .exe, .sh, .bat)
 - File extension whitelist
 - Magic number verification (first bytes match MIME)
 
 **Size Limits**:
+
 - 25MB default (prevents DoS)
 - Configurable per-category (e.g., 50MB for bank statements)
 
 **Checksum Verification**:
+
 - SHA-256 hash calculated on upload
 - Prevents duplicate uploads (future)
 - Integrity verification on download
@@ -15160,16 +15460,19 @@ await emailService.send({
 #### Access Control
 
 **Tenant Isolation**:
+
 - All queries filtered by `orgId`
 - Storage paths include `orgId` prefix
 - Cross-org access impossible
 
 **RBAC Enforcement**:
+
 - `canAccessCategory()` checks role before upload/download
 - Payslip self-access: L3 users limited to own `userId`
 - Entity link validation: FK checks before allowing links
 
 **Soft Deletion**:
+
 - Only L4+ can delete
 - Files remain on disk (audit trail)
 - `deletedAt` filters out from list queries
@@ -15178,11 +15481,13 @@ await emailService.send({
 #### Storage Security
 
 **Local Filesystem**:
+
 - `/data/documents/` should NOT be web-accessible
 - Serve files via NestJS controller (auth check on every download)
 - Set file permissions: `chmod 700 /data/documents`
 
 **S3/GCS**:
+
 - Buckets should be private (no public read)
 - Use signed URLs for downloads (expiry 1 hour)
 - Enable server-side encryption (SSE-S3, SSE-KMS)
@@ -15191,22 +15496,26 @@ await emailService.send({
 ### Performance Optimizations
 
 **Indexes**:
+
 - `@@index([orgId, category])` for filtered lists
 - `@@index([orgId, uploadedAt])` for recent documents
 - 11 indexes on FK fields for entity link queries
 - `@@index([deletedAt])` to exclude deleted docs efficiently
 
 **Caching**:
+
 - Document metadata cached in Redis (5 min TTL)
 - File buffers NOT cached (too large)
 - Signed URLs cached (S3/GCS) for 50% of TTL
 
 **Streaming Downloads**:
+
 - Large files (>10MB) use streaming
 - `res.send(buffer)` for small files
 - Signed URLs preferred for S3 (CDN direct download)
 
 **Upload Optimization**:
+
 - Multipart form parsing with Multer
 - In-memory buffer (< 25MB)
 - Future: Direct S3 presigned upload (client → S3, skip API)
@@ -15235,9 +15544,9 @@ describe('DocumentsService - RBAC', () => {
   });
 
   it('should deny L3 to view other users payslip', async () => {
-    await expect(
-      service.findOne('doc_xyz', 'org_001', 'user_456', RoleLevel.L3)
-    ).rejects.toThrow(ForbiddenException);
+    await expect(service.findOne('doc_xyz', 'org_001', 'user_456', RoleLevel.L3)).rejects.toThrow(
+      ForbiddenException,
+    );
   });
 });
 ```
@@ -15361,21 +15670,25 @@ describe('E2E: Purchase Order → Invoice Upload', () => {
 ### Success Metrics
 
 **Adoption**:
+
 - ✅ 80% of purchase orders have attached invoice documents
 - ✅ 100% of payslips have attached PDF documents
 - ✅ 60% of service contracts digitized
 
 **Performance**:
+
 - Document upload < 2 seconds for 5MB files
 - Download latency < 500ms for local storage
 - List queries < 100ms (with 10K documents per org)
 
 **RBAC Compliance**:
+
 - 0 unauthorized document access incidents
 - 100% of payslip self-access enforced (L3 users)
 - 100% of cross-org access blocked
 
 **Storage Health**:
+
 - < 1% duplicate documents (by checksum)
 - 95% of documents have entity links
 - < 5% orphaned documents (entity deleted but doc remains)
@@ -15463,10 +15776,12 @@ model StaffAward {
 ```
 
 **Enums**:
+
 - `AwardPeriodType`: WEEK, MONTH, QUARTER, YEAR
 - `AwardCategory`: TOP_PERFORMER, HIGHEST_SALES, BEST_SERVICE, MOST_RELIABLE, MOST_IMPROVED
 
 **Reverse Relations**:
+
 - `Org.staffAwards: StaffAward[]`
 - `Branch.staffAwards: StaffAward[]`
 - `Employee.awards: StaffAward[]`
@@ -15475,13 +15790,15 @@ model StaffAward {
 ### Scoring Model
 
 **Composite Score Formula**:
+
 ```
 Total Score = (Performance Score × 0.70) + (Reliability Score × 0.30)
 ```
 
 **Performance Score** (from M5 WaiterMetricsService):
+
 ```typescript
-Performance Score = 
+Performance Score =
   + (totalSales / maxSales)     × 0.30   // 30% weight
   + (avgCheckSize / maxAvgCheck) × 0.20   // 20% weight
   - (voidValue / maxVoidValue)   × 0.20   // 20% penalty
@@ -15491,6 +15808,7 @@ Performance Score =
 ```
 
 **Reliability Score** (new from M9 attendance):
+
 ```typescript
 Reliability Score =
   + attendanceRate         × 0.50   // 50% weight (most important)
@@ -15506,30 +15824,35 @@ Where:
 ### Eligibility Rules
 
 **For WEEK Awards**:
+
 - Must be `Employee.status = ACTIVE`
 - Must have worked **3+ shifts** in the week
 - Must not be flagged **CRITICAL risk** in anti-theft
 - No absence rate limit (period too short)
 
 **For MONTH Awards**:
+
 - Must be `Employee.status = ACTIVE`
 - Must have worked **10+ shifts** in the month
 - Must not be flagged **CRITICAL risk** in anti-theft
 - Maximum **20% absence rate** (e.g., 2 absences if 10 shifts scheduled)
 
 **For QUARTER Awards**:
+
 - Must be `Employee.status = ACTIVE`
 - Must have worked **30+ shifts** in the quarter
 - Must not be flagged **CRITICAL risk** in anti-theft
 - Maximum **15% absence rate**
 
 **For YEAR Awards**:
+
 - Must be `Employee.status = ACTIVE`
 - Must have worked **120+ shifts** in the year
 - Must not be flagged **CRITICAL risk** in anti-theft
 - Maximum **15% absence rate**
 
 **Risk Flag Exclusion**:
+
 - **CRITICAL risk** staff are excluded from all awards (multiple threshold violations at 1.5x+)
 - **WARN risk** staff are eligible but noted in award reason
 
@@ -15540,6 +15863,7 @@ Where:
 Get ranked staff with performance + reliability for a period.
 
 **Query Parameters**:
+
 - `periodType` (required): `WEEK`, `MONTH`, `QUARTER`, `YEAR`
 - `branchId` (optional): Filter to specific branch
 - `from` (optional): Custom period start date (ISO 8601)
@@ -15548,12 +15872,14 @@ Get ranked staff with performance + reliability for a period.
 **RBAC**: L4+ (Managers, Owners, HR, Accountants)
 
 **Example**:
+
 ```bash
 curl -X GET "$BASE_URL/staff/insights/rankings?periodType=MONTH" \
   -H "Authorization: Bearer $TOKEN"
 ```
 
 **Response**:
+
 ```json
 {
   "rankings": [
@@ -15614,9 +15940,11 @@ curl -X GET "$BASE_URL/staff/insights/rankings?periodType=MONTH" \
 Get recommended employee-of-week/month/quarter/year.
 
 **Path Parameters**:
+
 - `period`: `week`, `month`, `quarter`, `year`
 
 **Query Parameters**:
+
 - `referenceDate` (optional): Date within the period (defaults to today)
 - `branchId` (optional): Filter to specific branch
 - `category` (optional): Award category (defaults to `TOP_PERFORMER`)
@@ -15629,6 +15957,7 @@ Get recommended employee-of-week/month/quarter/year.
 **RBAC**: L4+ (Managers, Owners, HR)
 
 **Example**:
+
 ```bash
 # Get employee-of-the-month for November 2025
 curl -X GET "$BASE_URL/staff/insights/employee-of-month?referenceDate=2025-11-15" \
@@ -15640,6 +15969,7 @@ curl -X GET "$BASE_URL/staff/insights/employee-of-month?category=HIGHEST_SALES" 
 ```
 
 **Response**:
+
 ```json
 {
   "employeeId": "emp_456",
@@ -15667,6 +15997,7 @@ Create/persist an award (idempotent).
 **RBAC**: L4+ (Managers, Owners, HR)
 
 **Body**:
+
 ```json
 {
   "periodType": "MONTH",
@@ -15677,6 +16008,7 @@ Create/persist an award (idempotent).
 ```
 
 **Example**:
+
 ```bash
 curl -X POST "$BASE_URL/staff/insights/awards" \
   -H "Authorization: Bearer $TOKEN" \
@@ -15697,6 +16029,7 @@ curl -X POST "$BASE_URL/staff/insights/awards" \
 List award history with filters.
 
 **Query Parameters**:
+
 - `employeeId` (optional): Filter to specific employee
 - `branchId` (optional): Filter to specific branch
 - `periodType` (optional): Filter by period type
@@ -15709,6 +16042,7 @@ List award history with filters.
 **RBAC**: L4+ (Managers, Owners, HR, Accountants)
 
 **Example**:
+
 ```bash
 # List all awards
 curl -X GET "$BASE_URL/staff/insights/awards" \
@@ -15724,6 +16058,7 @@ curl -X GET "$BASE_URL/staff/insights/awards?periodType=MONTH&fromDate=2025-01-0
 ```
 
 **Response**:
+
 ```json
 [
   {
@@ -15757,17 +16092,20 @@ curl -X GET "$BASE_URL/staff/insights/awards?periodType=MONTH&fromDate=2025-01-0
 Get current user's own insights (staff self-view).
 
 **Query Parameters**:
+
 - `periodType` (optional): Defaults to `MONTH`
 
 **RBAC**: All authenticated users (L1-L5, HR, ACCOUNTANT)
 
 **Example**:
+
 ```bash
 curl -X GET "$BASE_URL/staff/insights/me?periodType=MONTH" \
   -H "Authorization: Bearer $STAFF_TOKEN"
 ```
 
 **Response**:
+
 ```json
 {
   "userId": "user_123",
@@ -15775,7 +16113,7 @@ curl -X GET "$BASE_URL/staff/insights/me?periodType=MONTH" \
   "displayName": "John Doe",
   "rank": 5,
   "compositeScore": 0.68,
-  "performanceScore": 0.70,
+  "performanceScore": 0.7,
   "reliabilityScore": 0.63,
   "periodLabel": "November 2025",
   "totalStaff": 25,
@@ -15792,6 +16130,7 @@ curl -X GET "$BASE_URL/staff/insights/me?periodType=MONTH" \
 When `generatePeriodDigest()` and `generateFranchiseDigest()` are implemented, they will include:
 
 **PeriodDigest.staffInsights**:
+
 ```typescript
 {
   periodLabel: "November 2025",
@@ -15810,6 +16149,7 @@ When `generatePeriodDigest()` and `generateFranchiseDigest()` are implemented, t
 ```
 
 **FranchiseDigest.staffInsights**:
+
 ```typescript
 {
   periodLabel: "November 2025",
@@ -15830,31 +16170,31 @@ The service automatically resolves periods using `date-fns`:
 
 ```typescript
 // WEEK: ISO week (Monday-Sunday)
-resolvePeriod('WEEK', new Date('2025-11-20'))
+resolvePeriod('WEEK', new Date('2025-11-20'));
 // → { start: 2025-11-17, end: 2025-11-23, label: "Week 47, 2025" }
 
 // MONTH: Calendar month
-resolvePeriod('MONTH', new Date('2025-11-15'))
+resolvePeriod('MONTH', new Date('2025-11-15'));
 // → { start: 2025-11-01, end: 2025-11-30, label: "November 2025" }
 
 // QUARTER: Q1 (Jan-Mar), Q2 (Apr-Jun), Q3 (Jul-Sep), Q4 (Oct-Dec)
-resolvePeriod('QUARTER', new Date('2025-11-01'))
+resolvePeriod('QUARTER', new Date('2025-11-01'));
 // → { start: 2025-10-01, end: 2025-12-31, label: "Q4 2025" }
 
 // YEAR: Calendar year
-resolvePeriod('YEAR', new Date('2025-11-01'))
+resolvePeriod('YEAR', new Date('2025-11-01'));
 // → { start: 2025-01-01, end: 2025-12-31, label: "2025" }
 ```
 
 ### RBAC Matrix
 
-| Endpoint | L1-L3 (Staff) | L4 (Manager) | L5 (Owner) | HR | ACCOUNTANT |
-|----------|---------------|--------------|------------|-----|------------|
-| GET /rankings | ❌ | ✅ | ✅ | ✅ | ✅ |
-| GET /employee-of-month | ❌ | ✅ | ✅ | ✅ | ❌ |
-| POST /awards | ❌ | ✅ | ✅ | ✅ | ❌ |
-| GET /awards (list) | ❌ | ✅ | ✅ | ✅ | ✅ |
-| GET /me (self) | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Endpoint               | L1-L3 (Staff) | L4 (Manager) | L5 (Owner) | HR  | ACCOUNTANT |
+| ---------------------- | ------------- | ------------ | ---------- | --- | ---------- |
+| GET /rankings          | ❌            | ✅           | ✅         | ✅  | ✅         |
+| GET /employee-of-month | ❌            | ✅           | ✅         | ✅  | ❌         |
+| POST /awards           | ❌            | ✅           | ✅         | ✅  | ❌         |
+| GET /awards (list)     | ❌            | ✅           | ✅         | ✅  | ✅         |
+| GET /me (self)         | ✅            | ✅           | ✅         | ✅  | ✅         |
 
 ### Known Limitations
 
@@ -15882,22 +16222,26 @@ resolvePeriod('YEAR', new Date('2025-11-01'))
 ### Success Metrics
 
 **Adoption**:
+
 - ✅ 80% of managers check staff rankings weekly
 - ✅ 100% of monthly awards created within 7 days of period end
 - ✅ 60% of staff view own insights monthly
 
 **Accuracy**:
+
 - ✅ 80% of awards align with manager expectations
 - ✅ < 5% award disputes (staff disagreeing with selection)
 - ✅ 100% backward compatibility with M5/M9 (no breaking changes)
 
 **Performance**:
+
 - Rankings query < 2 seconds (for 100 staff)
 - Award recommendation < 1 second
 - Award creation (idempotent) < 500ms
 - Self-view query < 500ms
 
 **RBAC Compliance**:
+
 - 0 unauthorized rankings access (L3 blocked)
 - 100% of self-view requests allowed (L1-L3)
 - 100% of cross-employee viewing blocked for L1-L3
@@ -15979,14 +16323,14 @@ model Feedback {
   createdById     String?          // Nullable (anonymous public submissions)
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
-  
+
   org             Org              @relation(fields: [orgId], references: [id], onDelete: Cascade)
   branch          Branch?          @relation(fields: [branchId], references: [id], onDelete: SetNull)
   order           Order?           @relation(fields: [orderId], references: [id], onDelete: Cascade)
   reservation     Reservation?     @relation(fields: [reservationId], references: [id], onDelete: Cascade)
   eventBooking    EventBooking?    @relation(fields: [eventBookingId], references: [id], onDelete: Cascade)
   createdBy       User?            @relation(fields: [createdById], references: [id], onDelete: SetNull)
-  
+
   @@index([orgId, createdAt(sort: Desc)])
   @@index([branchId, createdAt(sort: Desc)])
   @@index([orderId])
@@ -16014,6 +16358,7 @@ enum NpsCategory {
 ```
 
 **Relations**:
+
 - `Org.feedback[]`: All feedback for organization
 - `Branch.feedback[]`: Branch-specific feedback
 - `Order.feedback?`: One-to-one (optional) link to order
@@ -16022,6 +16367,7 @@ enum NpsCategory {
 - `User.feedbackSubmitted[]`: Staff-submitted feedback tracking
 
 **Indexes**:
+
 1. `(orgId, createdAt DESC)`: Fast org-wide feedback listing by date
 2. `(branchId, createdAt DESC)`: Branch-level feedback listing
 3. `(orderId)`: Duplicate prevention + order feedback lookup
@@ -16033,11 +16379,13 @@ enum NpsCategory {
 ### NPS Logic
 
 **Classification Rules** (Industry Standard):
+
 - **DETRACTOR** (score 0-6): Unhappy customers likely to churn or spread negative word-of-mouth
 - **PASSIVE** (score 7-8): Satisfied but unenthusiastic, vulnerable to competitive offers
 - **PROMOTER** (score 9-10): Enthusiastic customers likely to recommend business
 
 **NPS Formula**:
+
 ```
 NPS = (% Promoters) - (% Detractors)
 
@@ -16050,6 +16398,7 @@ Range: -100 to +100
 ```
 
 **Example Calculation**:
+
 ```
 Total Responses: 100
 Promoters (9-10): 60  → 60%
@@ -16090,6 +16439,7 @@ Response (201 Created):
 ```
 
 **Entity Verification**:
+
 - If `orderNumber` provided → lookup order, extract `orderId`
 - If `reservationId` provided → verify reservation exists (use CUID directly)
 - If `ticketCode` provided → lookup event booking, extract `eventBookingId`
@@ -16097,6 +16447,7 @@ Response (201 Created):
 - Return 404 if entity not found, 400 if duplicate feedback exists
 
 **Rate Limiting**:
+
 - `@nestjs/throttler` enforces 10 requests/hour per IP on `/feedback/public`
 - Returns 429 (Too Many Requests) if limit exceeded
 - Prevents spam/abuse of anonymous endpoint
@@ -16136,6 +16487,7 @@ Response (201 Created):
 ```
 
 **Validation**:
+
 - User must belong to same `orgId` as entity (order/reservation/eventBooking)
 - If `branchId` provided, user must have access to that branch (L4 managers branch-scoped)
 - Duplicate check same as public endpoint
@@ -16186,6 +16538,7 @@ Response (200 OK):
 ```
 
 **RBAC Branch Scoping**:
+
 - L4 managers: Automatically filtered to `branchId IN user.assignedBranches`
 - L5 owners/HR: See all feedback in org (no branch restriction)
 
@@ -16268,10 +16621,11 @@ Response (200 OK):
 ```
 
 **Calculation**:
+
 ```typescript
-const promoters = feedback.filter(f => f.score >= 9).length;
-const passives = feedback.filter(f => f.score >= 7 && f.score <= 8).length;
-const detractors = feedback.filter(f => f.score <= 6).length;
+const promoters = feedback.filter((f) => f.score >= 9).length;
+const passives = feedback.filter((f) => f.score >= 7 && f.score <= 8).length;
+const detractors = feedback.filter((f) => f.score <= 6).length;
 const total = promoters + passives + detractors;
 
 const promoterPct = (promoters / total) * 100;
@@ -16281,8 +16635,9 @@ const nps = promoterPct - detractorPct; // Can be negative!
 const avgScore = feedback.reduce((sum, f) => sum + f.score, 0) / total;
 
 // Response rate: feedback count / eligible entities (orders + reservations)
-const eligibleEntities = await prisma.order.count({ where: { createdAt: { gte: from, lte: to }, branchId } })
-  + await prisma.reservation.count({ where: { createdAt: { gte: from, lte: to }, branchId } });
+const eligibleEntities =
+  (await prisma.order.count({ where: { createdAt: { gte: from, lte: to }, branchId } })) +
+  (await prisma.reservation.count({ where: { createdAt: { gte: from, lte: to }, branchId } }));
 const responseRate = total / eligibleEntities;
 ```
 
@@ -16319,12 +16674,13 @@ Response (200 OK):
 ```
 
 **Query Uses Prisma groupBy**:
+
 ```typescript
 const breakdown = await prisma.feedback.groupBy({
   by: ['score'],
   where: { orgId, branchId, createdAt: { gte: from, lte: to } },
   _count: { score: true },
-  orderBy: { score: 'asc' }
+  orderBy: { score: 'asc' },
 });
 ```
 
@@ -16369,21 +16725,22 @@ Response (200 OK):
 ```
 
 **Sentiment Filtering**:
+
 - `sentiment=positive`: `score >= 9` (promoters only)
 - `sentiment=negative`: `score <= 6` (detractors only)
 - No sentiment param: All feedback with comments
 
 ### RBAC Matrix
 
-| Endpoint | Public (No Auth) | L1-L3 (Staff) | L4 (Manager) | L5 (Owner) | HR | ACCOUNTANT |
-|----------|------------------|---------------|--------------|------------|-----|------------|
-| POST /public/feedback | ✅ (10/hr rate limit) | ✅ | ✅ | ✅ | ✅ | ✅ |
-| POST /feedback | ❌ | ✅ | ✅ | ✅ | ✅ | ❌ |
-| GET /feedback | ❌ | ❌ | ✅ (branch-scoped) | ✅ | ✅ | ❌ |
-| GET /feedback/:id | ❌ | ✅ (own only) | ✅ | ✅ | ✅ | ❌ |
-| GET /analytics/nps-summary | ❌ | ❌ | ✅ | ✅ | ✅ | ✅ |
-| GET /analytics/breakdown | ❌ | ❌ | ✅ | ✅ | ✅ | ❌ |
-| GET /analytics/top-comments | ❌ | ❌ | ✅ | ✅ | ✅ | ❌ |
+| Endpoint                    | Public (No Auth)      | L1-L3 (Staff) | L4 (Manager)       | L5 (Owner) | HR  | ACCOUNTANT |
+| --------------------------- | --------------------- | ------------- | ------------------ | ---------- | --- | ---------- |
+| POST /public/feedback       | ✅ (10/hr rate limit) | ✅            | ✅                 | ✅         | ✅  | ✅         |
+| POST /feedback              | ❌                    | ✅            | ✅                 | ✅         | ✅  | ❌         |
+| GET /feedback               | ❌                    | ❌            | ✅ (branch-scoped) | ✅         | ✅  | ❌         |
+| GET /feedback/:id           | ❌                    | ✅ (own only) | ✅                 | ✅         | ✅  | ❌         |
+| GET /analytics/nps-summary  | ❌                    | ❌            | ✅                 | ✅         | ✅  | ✅         |
+| GET /analytics/breakdown    | ❌                    | ❌            | ✅                 | ✅         | ✅  | ❌         |
+| GET /analytics/top-comments | ❌                    | ❌            | ✅                 | ✅         | ✅  | ❌         |
 
 ### Digest Integration
 
@@ -16395,21 +16752,21 @@ M20 extends report DTOs (from M4) with optional `customerFeedback` sections:
 interface ShiftEndReport {
   // ... existing fields (sales, staff, inventory, anomalies) ...
   customerFeedback?: {
-    nps: number | null;                // NPS for shift (or null if < 5 responses)
-    totalResponses: number;            // Feedback count during shift
-    avgScore: number;                  // Average score 0-10
-    promoterPct: number;               // % promoters
-    passivePct: number;                // % passives
-    detractorPct: number;              // % detractors
-    responseRate: number;              // feedback / orders ratio
+    nps: number | null; // NPS for shift (or null if < 5 responses)
+    totalResponses: number; // Feedback count during shift
+    avgScore: number; // Average score 0-10
+    promoterPct: number; // % promoters
+    passivePct: number; // % passives
+    detractorPct: number; // % detractors
+    responseRate: number; // feedback / orders ratio
     sampleComments: Array<{
       score: number;
       comment: string;
       channel: string;
       timestamp: string;
-    }>;                                // Max 5 comments (critical feedback prioritized)
+    }>; // Max 5 comments (critical feedback prioritized)
     breakdown: Array<{
-      score: number;                   // 0-10
+      score: number; // 0-10
       count: number;
     }>;
   };
@@ -16417,20 +16774,28 @@ interface ShiftEndReport {
 ```
 
 **Generation Logic** (in `ReportGeneratorService.generateShiftEndReport()`):
-```typescript
-const feedback = await feedbackService.listFeedback({
-  branchId: shift.branchId,
-  from: shift.startTime,
-  to: shift.endTime
-}, context);
 
-if (feedback.total >= 5) {  // Only include NPS if statistically significant
-  const nps = await feedbackService.getNpsSummary({
+```typescript
+const feedback = await feedbackService.listFeedback(
+  {
     branchId: shift.branchId,
     from: shift.startTime,
-    to: shift.endTime
-  }, context);
-  
+    to: shift.endTime,
+  },
+  context,
+);
+
+if (feedback.total >= 5) {
+  // Only include NPS if statistically significant
+  const nps = await feedbackService.getNpsSummary(
+    {
+      branchId: shift.branchId,
+      from: shift.startTime,
+      to: shift.endTime,
+    },
+    context,
+  );
+
   report.customerFeedback = {
     nps: nps.nps,
     totalResponses: nps.totalResponses,
@@ -16440,19 +16805,24 @@ if (feedback.total >= 5) {  // Only include NPS if statistically significant
     detractorPct: nps.detractors.percentage,
     responseRate: nps.responseRate,
     sampleComments: feedback.items
-      .sort((a, b) => a.score - b.score)  // Prioritize low scores
+      .sort((a, b) => a.score - b.score) // Prioritize low scores
       .slice(0, 5)
-      .map(f => ({
+      .map((f) => ({
         score: f.score,
         comment: f.comment || '(No comment)',
         channel: f.channel,
-        timestamp: f.createdAt.toISOString()
+        timestamp: f.createdAt.toISOString(),
       })),
-    breakdown: await feedbackService.getFeedbackBreakdown({
-      branchId: shift.branchId,
-      from: shift.startTime,
-      to: shift.endTime
-    }, context).then(res => res.breakdown)
+    breakdown: await feedbackService
+      .getFeedbackBreakdown(
+        {
+          branchId: shift.branchId,
+          from: shift.startTime,
+          to: shift.endTime,
+        },
+        context,
+      )
+      .then((res) => res.breakdown),
   };
 }
 ```
@@ -16463,59 +16833,67 @@ if (feedback.total >= 5) {  // Only include NPS if statistically significant
 interface PeriodDigest {
   // ... existing fields (sales, inventory, staff, trends) ...
   customerFeedback?: {
-    nps: number | null;                // Period NPS
+    nps: number | null; // Period NPS
     totalResponses: number;
     responseRate: number;
     trend: Array<{
-      date: string;                    // ISO date
-      nps: number | null;              // Daily NPS (null if < 5 responses)
-    }>;                                // Sparkline data for NPS over period
+      date: string; // ISO date
+      nps: number | null; // Daily NPS (null if < 5 responses)
+    }>; // Sparkline data for NPS over period
     topComplaints: Array<{
-      tag: string;                     // From feedback.tags
+      tag: string; // From feedback.tags
       count: number;
       percentage: number;
-    }>;                                // Top 5 complaint tags
+    }>; // Top 5 complaint tags
     topPraise: Array<{
       tag: string;
       count: number;
       percentage: number;
-    }>;                                // Top 5 praise tags
+    }>; // Top 5 praise tags
     channelBreakdown: Array<{
       channel: string;
       count: number;
       avgScore: number;
-    }>;                                // Performance by channel
+    }>; // Performance by channel
     criticalFeedback: Array<{
       id: string;
-      score: number;                   // 0-3 (critical scores only)
+      score: number; // 0-3 (critical scores only)
       comment: string;
       orderNumber: string | null;
       timestamp: string;
-    }>;                                // All score 0-3 feedback (urgent attention)
+    }>; // All score 0-3 feedback (urgent attention)
   };
 }
 ```
 
 **Tag Aggregation**:
+
 ```typescript
 // Aggregate tags from all feedback in period
-const allTags = feedback.items.flatMap(f => f.tags || []);
-const tagCounts = allTags.reduce((acc, tag) => {
-  acc[tag] = (acc[tag] || 0) + 1;
-  return acc;
-}, {} as Record<string, number>);
+const allTags = feedback.items.flatMap((f) => f.tags || []);
+const tagCounts = allTags.reduce(
+  (acc, tag) => {
+    acc[tag] = (acc[tag] || 0) + 1;
+    return acc;
+  },
+  {} as Record<string, number>,
+);
 
 const sortedTags = Object.entries(tagCounts)
   .sort((a, b) => b[1] - a[1])
   .map(([tag, count]) => ({
     tag,
     count,
-    percentage: (count / feedback.total) * 100
+    percentage: (count / feedback.total) * 100,
   }));
 
 // Separate into complaints (detractor feedback) and praise (promoter feedback)
-const detractorTags = feedback.items.filter(f => f.npsCategory === 'DETRACTOR').flatMap(f => f.tags || []);
-const promoterTags = feedback.items.filter(f => f.npsCategory === 'PROMOTER').flatMap(f => f.tags || []);
+const detractorTags = feedback.items
+  .filter((f) => f.npsCategory === 'DETRACTOR')
+  .flatMap((f) => f.tags || []);
+const promoterTags = feedback.items
+  .filter((f) => f.npsCategory === 'PROMOTER')
+  .flatMap((f) => f.tags || []);
 ```
 
 #### Franchise Digest
@@ -16524,23 +16902,23 @@ const promoterTags = feedback.items.filter(f => f.npsCategory === 'PROMOTER').fl
 interface FranchiseDigest {
   // ... existing fields (sales, staff, inventory, benchmarking) ...
   customerFeedback?: {
-    franchiseNps: number | null;       // Org-wide NPS
+    franchiseNps: number | null; // Org-wide NPS
     totalResponses: number;
     byBranch: Array<{
       branchId: string;
       branchName: string;
       nps: number | null;
       responseCount: number;
-      ranking: number;                 // 1 = best NPS in franchise
-      change: number;                  // NPS change vs previous period
+      ranking: number; // 1 = best NPS in franchise
+      change: number; // NPS change vs previous period
     }>;
     npsTrend: Array<{
-      period: string;                  // "Week 1", "Week 2", ... or "Nov 2024"
+      period: string; // "Week 1", "Week 2", ... or "Nov 2024"
       nps: number | null;
       totalResponses: number;
     }>;
     benchmarking: {
-      avgNps: number;                  // Franchise average
+      avgNps: number; // Franchise average
       topPerformer: {
         branchId: string;
         branchName: string;
@@ -16551,29 +16929,33 @@ interface FranchiseDigest {
         branchName: string;
         nps: number;
         detractorPct: number;
-      }>;                              // Branches with NPS < 0 or detractorPct > 30%
+      }>; // Branches with NPS < 0 or detractorPct > 30%
     };
   };
 }
 ```
 
 **Cross-Branch Ranking**:
+
 ```typescript
 const branchNpsScores = await Promise.all(
-  branches.map(async branch => {
-    const nps = await feedbackService.getNpsSummary({
-      branchId: branch.id,
-      from: periodStart,
-      to: periodEnd
-    }, context);
-    
+  branches.map(async (branch) => {
+    const nps = await feedbackService.getNpsSummary(
+      {
+        branchId: branch.id,
+        from: periodStart,
+        to: periodEnd,
+      },
+      context,
+    );
+
     return {
       branchId: branch.id,
       branchName: branch.name,
       nps: nps.nps,
-      responseCount: nps.totalResponses
+      responseCount: nps.totalResponses,
     };
-  })
+  }),
 );
 
 // Sort by NPS descending and assign rankings
@@ -16612,18 +16994,21 @@ branchNpsScores.forEach((branch, index) => {
 ### Success Metrics
 
 **Adoption**:
+
 - ✅ 30% response rate on feedback requests (industry average 15-20%)
 - ✅ 80% of feedback includes comments (not just scores)
 - ✅ 90% of managers check NPS weekly
 - ✅ 100% of critical feedback (score 0-3) acknowledged within 24 hours
 
 **Data Quality**:
+
 - ✅ < 5% spam submissions (rate limiting effective)
 - ✅ < 2% duplicate prevention failures
 - ✅ 95% of feedback linked to valid entities (order/reservation/event)
 - ✅ 80% of tags are actionable (not generic like "other")
 
 **Performance**:
+
 - Public feedback submission < 500ms (anonymous, no auth)
 - Authenticated feedback submission < 300ms
 - NPS summary query < 1 second (for 10,000 feedback records)
@@ -16632,12 +17017,14 @@ branchNpsScores.forEach((branch, index) => {
 - Digest generation +2 seconds overhead (feedback section)
 
 **RBAC Compliance**:
+
 - 0 unauthorized analytics access (L3 blocked)
 - 100% rate limit enforcement on public endpoint
 - 100% duplicate prevention (unique constraints enforced)
 - 0 feedback spam incidents (ThrottlerGuard effective)
 
 **Business Impact**:
+
 - ✅ 15% increase in NPS within 6 months of M20 deployment
 - ✅ 50% reduction in customer complaint escalations (early detection via feedback)
 - ✅ 20% increase in repeat customer rate (NPS improvement correlation)
@@ -16649,12 +17036,14 @@ branchNpsScores.forEach((branch, index) => {
 **Purpose**: Prevent duplicate submissions from network retries, double-clicks, or offline sync by wiring the M16 idempotency infrastructure to write-heavy endpoints across POS, reservations, and bookings modules.
 
 **Key Problem Solved**: Without idempotency protection, clients retrying failed requests can cause:
+
 - **POS**: Duplicate orders, double charges on order close, multiple kitchen tickets for same order
 - **Reservations**: Double-booked tables, duplicate confirmation emails
 - **Bookings**: Multiple event registrations with duplicate charges, double payment processing
 - **Public Portals**: Customers charged twice due to network timeouts on payment submission
 
-**Core Behavior**: 
+**Core Behavior**:
+
 - Client sends `Idempotency-Key: <ULID>` header on POST requests
 - Server computes SHA256 fingerprint of request body (normalized JSON)
 - If key seen before with **same** fingerprint → return cached response (200 OK)
@@ -16752,12 +17141,14 @@ model IdempotencyKey {
 **Migration**: `20251122084642_m21_idempotency_keys` (63rd migration)
 
 **Key Fields**:
+
 - `key` (UNIQUE): Client-provided idempotency key (recommended: ULID per action)
 - `requestHash`: SHA256 of `JSON.stringify(body, Object.keys(body).sort())` (detects body changes)
 - `responseBody`: Full controller response (includes entity ID, status, metadata)
 - `expiresAt`: Prevents indefinite storage (24h TTL keeps table size bounded)
 
 **Design Rationale**:
+
 - **Why SHA256 full body?**: Detects any parameter change (quantity, item ID, discount, etc.)
 - **Why 24h TTL?**: Balances client retry window (network issues) vs. storage cost
 - **Why store response?**: Clients expect exact same response on retry (including generated IDs)
@@ -16814,16 +17205,17 @@ model IdempotencyKey {
 
 ### Idempotency Behavior Matrix
 
-| Scenario | Key Provided? | Body Match? | Server Behavior | Response | Use Case |
-|----------|---------------|-------------|-----------------|----------|----------|
-| **1. First Request** | ✅ Yes | N/A (new) | Process normally, store response | 200/201 OK | Normal operation |
-| **2. Retry (Same Body)** | ✅ Yes | ✅ Same | Return cached response (no processing) | 200/201 OK (cached) | Network retry after timeout |
-| **3. Retry (Different Body)** | ✅ Yes | ❌ Different | Reject request | 409 Conflict | Client bug (reused key for different action) |
-| **4. No Key** | ❌ No | N/A | Process normally (no caching) | 200/201 OK | Legacy clients, GET requests |
+| Scenario                      | Key Provided? | Body Match?  | Server Behavior                        | Response            | Use Case                                     |
+| ----------------------------- | ------------- | ------------ | -------------------------------------- | ------------------- | -------------------------------------------- |
+| **1. First Request**          | ✅ Yes        | N/A (new)    | Process normally, store response       | 200/201 OK          | Normal operation                             |
+| **2. Retry (Same Body)**      | ✅ Yes        | ✅ Same      | Return cached response (no processing) | 200/201 OK (cached) | Network retry after timeout                  |
+| **3. Retry (Different Body)** | ✅ Yes        | ❌ Different | Reject request                         | 409 Conflict        | Client bug (reused key for different action) |
+| **4. No Key**                 | ❌ No         | N/A          | Process normally (no caching)          | 200/201 OK          | Legacy clients, GET requests                 |
 
 **Example Scenarios**:
 
 **Scenario 1: Normal POS Order Creation**
+
 ```bash
 # First request
 curl -X POST "$BASE/pos/orders" \
@@ -16845,6 +17237,7 @@ curl -X POST "$BASE/pos/orders" \
 ```
 
 **Scenario 2: Network Retry (Same Body)**
+
 ```bash
 # Retry after timeout (same key, same body)
 curl -X POST "$BASE/pos/orders" \
@@ -16866,6 +17259,7 @@ curl -X POST "$BASE/pos/orders" \
 ```
 
 **Scenario 3: Client Bug (Reused Key)**
+
 ```bash
 # Client reuses key for different order (bug!)
 curl -X POST "$BASE/pos/orders" \
@@ -16886,6 +17280,7 @@ curl -X POST "$BASE/pos/orders" \
 ```
 
 **Scenario 4: No Idempotency Key**
+
 ```bash
 # Legacy client without idempotency support
 curl -X POST "$BASE/pos/orders" \
@@ -16912,6 +17307,7 @@ curl -X POST "$BASE/pos/orders" \
 **Algorithm**: SHA256 of normalized JSON (body keys sorted alphabetically)
 
 **Implementation** (`idempotency.service.ts`, lines 130-147):
+
 ```typescript
 private hashRequest(body: any): string {
   if (!body || typeof body !== 'object') {
@@ -16920,7 +17316,7 @@ private hashRequest(body: any): string {
 
   // Normalize JSON: Sort keys alphabetically for consistent hash
   const normalized = JSON.stringify(body, Object.keys(body).sort());
-  
+
   return crypto.createHash('sha256')
     .update(normalized, 'utf8')
     .digest('hex');
@@ -16928,11 +17324,13 @@ private hashRequest(body: any): string {
 ```
 
 **Why Full Body Fingerprint?**
+
 - Detects **any** parameter change (quantity, item ID, amount, etc.)
 - Prevents partial duplicate (e.g., reusing key for different order items)
 - Simple to implement (no field-specific logic)
 
 **What's Included**:
+
 - ✅ All request body fields (nested objects, arrays)
 - ✅ Field order normalized (keys sorted)
 - ❌ Headers (Authorization, User-Agent, etc.)
@@ -16940,6 +17338,7 @@ private hashRequest(body: any): string {
 - ❌ Timestamp fields (if client includes, will cause mismatch)
 
 **Example Fingerprints**:
+
 ```typescript
 // Body 1: { "tableNumber": 5, "items": [{"menuItemId": "mi_123", "quantity": 2}] }
 // Hash: a3f8b9c1d2e3f4g5h6i7j8k9l0m1n2o3p4q5r6s7t8u9v0w1x2y3z4 (example)
@@ -16952,6 +17351,7 @@ private hashRequest(body: any): string {
 ```
 
 **Limitations**:
+
 - **No Partial Fingerprinting**: Changing any field invalidates the cache (could add whitelist in future)
 - **No Semantic Equivalence**: `{"a": 1, "b": 2}` ≠ `{"a": "1", "b": 2}` (type matters)
 - **No TTL Variation**: All keys expire after 24h (could make configurable per endpoint)
@@ -16963,6 +17363,7 @@ private hashRequest(body: any): string {
 **Fixed TTL**: 24 hours (86,400 seconds)
 
 **Implementation** (`idempotency.service.ts`, lines 87-98):
+
 ```typescript
 async store(
   idempotencyKey: string,
@@ -16988,6 +17389,7 @@ async store(
 ```
 
 **Cleanup Job** (Daily Cron, runs at 02:00 UTC):
+
 ```typescript
 // Worker job: idempotency-cleanup (services/api/src/workers/idempotency-cleanup.worker.ts)
 @Cron('0 2 * * *')  // Daily at 2 AM UTC
@@ -16998,16 +17400,19 @@ async handleCron() {
 ```
 
 **Why 24 Hours?**
+
 - Covers network retry window (client timeout → manual retry within same day)
 - Balances storage cost (table size stays bounded: ~10,000 keys/day = ~3.6M/year)
 - Matches industry standard (Stripe, Square use 24h TTL)
 
 **Storage Estimate**:
+
 - Average key size: ~500 bytes (key + endpoint + hash + response JSON)
 - Daily writes: ~10,000 keys (busy restaurant, 500 orders/day × 20 operations)
 - Table size after 1 year: 10,000 keys/day × 365 days × 500 bytes = ~1.8 GB (acceptable)
 
 **Future Enhancements**:
+
 - Configurable TTL per endpoint (e.g., 1h for POS, 7 days for bookings)
 - Manual key invalidation (admin API to delete key early)
 - Redis migration (faster reads, auto-expiration via `EXPIRE`)
@@ -17017,18 +17422,19 @@ async handleCron() {
 ### Client Usage Recommendations
 
 **1. Generate ULID Per Action**
+
 ```typescript
 import { ulid } from 'ulid';
 
 // Example: POS tablet creating order
 function createOrder(tableNumber: number, items: MenuItem[]) {
-  const idempotencyKey = ulid();  // Generate new ULID for this action
-  
+  const idempotencyKey = ulid(); // Generate new ULID for this action
+
   return fetch('/pos/orders', {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${token}`,
-      'Idempotency-Key': idempotencyKey,  // Send key as header
+      Authorization: `Bearer ${token}`,
+      'Idempotency-Key': idempotencyKey, // Send key as header
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({ tableNumber, items }),
@@ -17037,40 +17443,40 @@ function createOrder(tableNumber: number, items: MenuItem[]) {
 ```
 
 **2. Reuse Key on Retry (Network Failure)**
+
 ```typescript
 async function createOrderWithRetry(tableNumber: number, items: MenuItem[]) {
-  const idempotencyKey = ulid();  // Generate once per action
+  const idempotencyKey = ulid(); // Generate once per action
   const maxRetries = 3;
-  
+
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       const response = await fetch('/pos/orders', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Idempotency-Key': idempotencyKey,  // Reuse same key on retry
+          Authorization: `Bearer ${token}`,
+          'Idempotency-Key': idempotencyKey, // Reuse same key on retry
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ tableNumber, items }),
-        timeout: 5000,  // 5s timeout
+        timeout: 5000, // 5s timeout
       });
-      
+
       if (response.ok) {
-        return await response.json();  // Success (201 or 200 cached)
+        return await response.json(); // Success (201 or 200 cached)
       }
-      
+
       if (response.status === 409) {
         // 409 Conflict = Client bug (reused key for different body)
         throw new Error('Idempotency key conflict - this is a client bug');
       }
-      
+
       // Other error (500, 503, etc.) → retry
       console.log(`Attempt ${attempt} failed, retrying...`);
-      await sleep(1000 * attempt);  // Exponential backoff
-      
+      await sleep(1000 * attempt); // Exponential backoff
     } catch (error) {
       if (attempt === maxRetries) {
-        throw error;  // Give up after max retries
+        throw error; // Give up after max retries
       }
     }
   }
@@ -17078,6 +17484,7 @@ async function createOrderWithRetry(tableNumber: number, items: MenuItem[]) {
 ```
 
 **3. Handle 409 Conflict (Client Bug)**
+
 ```typescript
 // 409 = You reused an idempotency key for a different request
 // This should NEVER happen in production (indicates client bug)
@@ -17092,12 +17499,12 @@ async function handleIdempotencyConflict() {
     },
     body: JSON.stringify({ tableNumber: 7, items: [...] }),  // Different body
   });
-  
+
   if (response.status === 409) {
     // DO NOT RETRY - This is a programming error
     // Generate a new key and retry
     console.error('Idempotency key conflict detected - regenerating key');
-    
+
     const newKey = ulid();  // Generate new key
     return fetch('/pos/orders', {
       method: 'POST',
@@ -17113,11 +17520,12 @@ async function handleIdempotencyConflict() {
 ```
 
 **4. Offline Sync (Queue with Keys)**
+
 ```typescript
 // Example: Mobile POS app with offline queue
 interface QueuedRequest {
-  id: string;              // Local queue ID
-  idempotencyKey: string;  // ULID generated at action time
+  id: string; // Local queue ID
+  idempotencyKey: string; // ULID generated at action time
   endpoint: string;
   body: any;
   createdAt: Date;
@@ -17125,26 +17533,25 @@ interface QueuedRequest {
 
 async function syncOfflineQueue() {
   const queue = await localDB.getQueue();
-  
+
   for (const request of queue) {
     try {
       const response = await fetch(request.endpoint, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Idempotency-Key': request.idempotencyKey,  // Use original key
+          Authorization: `Bearer ${token}`,
+          'Idempotency-Key': request.idempotencyKey, // Use original key
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(request.body),
       });
-      
+
       if (response.ok) {
-        await localDB.removeFromQueue(request.id);  // Success
+        await localDB.removeFromQueue(request.id); // Success
       } else if (response.status === 409) {
         // Server already processed this (race condition during sync)
-        await localDB.removeFromQueue(request.id);  // Remove from queue
+        await localDB.removeFromQueue(request.id); // Remove from queue
       }
-      
     } catch (error) {
       console.error(`Failed to sync ${request.id}:`, error);
       // Keep in queue for next sync attempt
@@ -17154,6 +17561,7 @@ async function syncOfflineQueue() {
 ```
 
 **Best Practices**:
+
 - ✅ Generate ULID at action time (button click, form submit)
 - ✅ Reuse same key on network retry (timeout, 503, connection error)
 - ✅ Store key in offline queue for later sync
@@ -17167,6 +17575,7 @@ async function syncOfflineQueue() {
 ### Testing Examples
 
 **Test 1: POS Order Creation - Duplicate Prevention**
+
 ```bash
 #!/bin/bash
 BASE="http://localhost:3000"
@@ -17213,6 +17622,7 @@ curl -X POST "$BASE/pos/orders" \
 ```
 
 **Test 2: Public Booking Portal - Payment Retry**
+
 ```bash
 #!/bin/bash
 BASE="http://localhost:3000"
@@ -17261,6 +17671,7 @@ curl -X POST "$BASE/public/bookings/$BOOKING_ID/pay" \
 ```
 
 **Test 3: Reservations - Confirmation Duplicate**
+
 ```bash
 #!/bin/bash
 BASE="http://localhost:3000"
@@ -17309,8 +17720,9 @@ curl -X POST "$BASE/reservations/$RESERVATION_ID/confirm" \
 ### Database Inspection Queries
 
 **1. View Recent Idempotency Keys**
+
 ```sql
-SELECT 
+SELECT
   key,
   endpoint,
   status_code,
@@ -17323,9 +17735,10 @@ LIMIT 20;
 ```
 
 **2. Find Duplicate Requests (Cache Hits)**
+
 ```sql
 -- Keys used multiple times (client retries)
-SELECT 
+SELECT
   key,
   endpoint,
   COUNT(*) AS request_count,
@@ -17338,9 +17751,10 @@ ORDER BY request_count DESC;
 ```
 
 **3. Identify Fingerprint Mismatches (409 Conflicts)**
+
 ```sql
 -- Keys with same key but different request hashes (client bugs)
-SELECT 
+SELECT
   ik1.key,
   ik1.endpoint,
   ik1.request_hash AS hash1,
@@ -17353,16 +17767,17 @@ WHERE ik1.created_at < ik2.created_at;
 ```
 
 **4. Analyze Cache Hit Rate**
+
 ```sql
 -- Percentage of requests that were duplicates (cache efficiency)
 WITH stats AS (
-  SELECT 
+  SELECT
     COUNT(DISTINCT key) AS unique_keys,
     COUNT(*) AS total_requests
   FROM idempotency_keys
   WHERE created_at > NOW() - INTERVAL '7 days'
 )
-SELECT 
+SELECT
   unique_keys,
   total_requests,
   total_requests - unique_keys AS cache_hits,
@@ -17371,9 +17786,10 @@ FROM stats;
 ```
 
 **5. Monitor Expiration Cleanup**
+
 ```sql
 -- Count of expired keys (should decrease after daily cleanup job)
-SELECT 
+SELECT
   COUNT(*) AS expired_keys,
   MIN(expires_at) AS oldest_expiration,
   MAX(expires_at) AS newest_expiration
@@ -17382,9 +17798,10 @@ WHERE expires_at < NOW();
 ```
 
 **6. Endpoint Popularity**
+
 ```sql
 -- Which endpoints use idempotency most (top 10)
-SELECT 
+SELECT
   endpoint,
   COUNT(*) AS request_count,
   COUNT(DISTINCT key) AS unique_keys,
@@ -17491,29 +17908,509 @@ LIMIT 10;
 ### Success Metrics
 
 **Cache Effectiveness**:
+
 - ✅ 10-15% cache hit rate (network retries, double-clicks)
 - ✅ < 0.1% 409 Conflict rate (indicates clean client key generation)
 - ✅ 100% of critical endpoints protected (closeOrder, payBooking, createReservation)
 
 **Performance**:
+
 - Idempotency check latency < 50ms (PostgreSQL query + hash computation)
 - Store operation latency < 100ms (INSERT with unique constraint)
 - Cleanup job duration < 5 seconds (for 50,000 expired keys)
 
 **Storage**:
+
 - Table size < 2 GB after 1 year (10,000 keys/day × 365 days × 500 bytes)
 - Expired key cleanup > 99% success rate (daily cron job)
 
 **RBAC Compliance**:
+
 - 0 unauthorized idempotency bypass (interceptor applied to all protected endpoints)
 - 100% of duplicate requests return cached response (no double-processing)
 - 100% of fingerprint mismatches return 409 Conflict
 
 **Business Impact**:
+
 - ✅ 0 duplicate charges after M21 deployment (POS closeOrder protected)
 - ✅ 0 duplicate event registrations (public bookings protected)
 - ✅ 0 duplicate kitchen tickets (sendToKitchen protected)
 - ✅ 95% reduction in customer complaints about double-charging
+
+---
+
+---
+
+## M23 – Frontend Foundations & Web Backoffice Shell
+
+**Milestone:** Web frontend MVP with authentication and real backend integration  
+**Status:** ✅ Complete  
+**Date:** November 22, 2025
+
+### Overview
+
+ChefCloud Web Backoffice is a Next.js-based frontend for owners and managers to view restaurant operations data. M23 establishes the foundation with authentication, navigation, and read-only data display from M5-M22 backend endpoints.
+
+**Key Features:**
+- Login with email/password or PIN
+- Authenticated app shell (sidebar + topbar)
+- 8 placeholder pages with real backend data
+- Light/dark theme toggle
+- Design system with ChefCloud branding
+
+### Tech Stack
+
+- **Framework:** Next.js 14.1.0 (Pages Router)
+- **Styling:** Tailwind CSS 3.4.1 + custom components
+- **State Management:** TanStack Query (React Query) v5
+- **HTTP Client:** Axios with JWT interceptors
+- **Forms:** React Hook Form + Zod (prepared for future CRUD)
+- **Icons:** Lucide React
+- **Components:** Custom (shadcn/ui-inspired)
+
+### Application Structure
+
+```
+apps/web/
+├── src/
+│   ├── components/
+│   │   ├── layout/          # AppShell, Sidebar, Topbar, PageHeader
+│   │   ├── ui/              # Button, Card, Badge, Input, StatCard, DataTable
+│   │   └── ProtectedRoute.tsx
+│   ├── contexts/
+│   │   └── AuthContext.tsx  # Auth state provider
+│   ├── hooks/               # Custom hooks (future)
+│   ├── lib/
+│   │   ├── api.ts           # Axios client with auth
+│   │   ├── auth.ts          # Auth functions
+│   │   └── utils.ts         # Utility functions
+│   ├── pages/
+│   │   ├── _app.tsx         # App wrapper with providers
+│   │   ├── index.tsx        # Redirect to dashboard
+│   │   ├── login.tsx        # Login page
+│   │   ├── dashboard.tsx    # Main dashboard
+│   │   ├── staff/           # Staff pages
+│   │   ├── inventory/       # Inventory pages
+│   │   ├── finance/         # Finance pages
+│   │   ├── feedback/        # Feedback pages
+│   │   ├── reservations/    # Reservation pages
+│   │   ├── service-providers/ # Provider pages
+│   │   └── settings/        # Settings pages
+│   └── styles/
+│       └── globals.css      # Tailwind + theme variables
+├── tailwind.config.js       # Tailwind configuration
+├── postcss.config.js        # PostCSS configuration
+└── .env.local               # Environment variables
+```
+
+### Running Locally
+
+**Prerequisites:**
+- Backend API running on `http://localhost:3001` (services/api)
+- Database migrations applied (packages/db)
+- Test user credentials available
+
+**Start Development Server:**
+```bash
+cd /workspaces/chefcloud/apps/web
+pnpm run dev
+```
+
+**Access:** http://localhost:3000
+
+**Build for Production:**
+```bash
+pnpm run build
+pnpm run start  # Serve production build
+```
+
+### Authentication Flow
+
+**Login Methods:**
+1. **Email + Password:** Standard login via POST `/auth/login`
+2. **PIN Login:** Fast login for returning users via POST `/auth/pin-login`
+
+**Token Management:**
+- JWT stored in HTTP-only cookie (`auth_token`)
+- 1-day expiry (configurable)
+- Auto-refresh on 401 responses (future enhancement)
+
+**Protected Routes:**
+- All pages except `/` and `/login` require authentication
+- `ProtectedRoute` HOC checks auth state
+- Redirects to `/login?redirect=/original-path` if not authenticated
+
+**User Context:**
+```typescript
+interface AuthUser {
+  id: string;
+  email: string;
+  displayName: string;
+  roleLevel: 'L1' | 'L2' | 'L3' | 'L4' | 'L5';
+  org: { id: string; name: string };
+  branch?: { id: string; name: string };
+}
+```
+
+**Logout:**
+- Calls POST `/auth/logout` to revoke session
+- Clears `auth_token` cookie
+- Redirects to `/login`
+
+### Page Routes & Backend Endpoints
+
+| Route | Purpose | Backend Endpoints | Status |
+|-------|---------|-------------------|--------|
+| `/dashboard` | KPI overview | `GET /feedback/analytics/nps-summary`<br>`GET /reports/daily-summary` | ✅ |
+| `/staff` | Staff metrics | `GET /staff/waiters/metrics`<br>`GET /staff/insights/rankings` | ✅ |
+| `/inventory` | Low stock alerts | `GET /inventory/low-stock/alerts`<br>`GET /inventory/low-stock/config` | ✅ |
+| `/finance` | Budget summary | `GET /finance/budgets/summary`<br>`GET /finance/budgets/insights` | ✅ |
+| `/feedback` | NPS analytics | `GET /feedback/analytics/nps-summary`<br>`GET /feedback/analytics/breakdown` | ✅ |
+| `/settings` | User profile | `GET /auth/me` | ✅ |
+| `/service-providers` | Providers | TBD (M7 partial) | 🟡 |
+| `/reservations` | Bookings | `GET /reservations` (M15) | 🟡 |
+
+**Legend:**
+- ✅ Fully integrated with backend
+- 🟡 Placeholder (endpoint exists but not yet integrated)
+
+### Design System
+
+**Color Palette:**
+```typescript
+// Tailwind config: apps/web/tailwind.config.js
+chefcloud: {
+  navy: '#00033D',      // Primary brand color
+  blue: '#0033FF',      // Interactive elements
+  lavender: '#977DFF',  // Accents
+  gray: '#EAEDF3',      // Backgrounds
+  ink: '#030812',       // Text
+}
+```
+
+**Core Components:**
+
+**1. Button**
+```tsx
+import { Button } from '@/components/ui/button';
+
+<Button variant="default">Primary Action</Button>
+<Button variant="destructive">Delete</Button>
+<Button variant="outline" size="sm">Cancel</Button>
+```
+
+Variants: `default`, `destructive`, `outline`, `secondary`, `ghost`, `link`  
+Sizes: `default`, `sm`, `lg`, `icon`
+
+**2. Card**
+```tsx
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+
+<Card>
+  <CardHeader>
+    <CardTitle>Title</CardTitle>
+  </CardHeader>
+  <CardContent>
+    Content here
+  </CardContent>
+</Card>
+```
+
+**3. Badge**
+```tsx
+import { Badge } from '@/components/ui/badge';
+
+<Badge variant="success">ACTIVE</Badge>
+<Badge variant="warning">LOW_STOCK</Badge>
+<Badge variant="destructive">CRITICAL</Badge>
+```
+
+Variants: `default`, `secondary`, `destructive`, `outline`, `success`, `warning`, `info`
+
+**4. StatCard (Custom)**
+```tsx
+import { StatCard } from '@/components/ui/stat-card';
+import { DollarSign } from 'lucide-react';
+
+<StatCard
+  label="Total Sales"
+  value="UGX 15,750,000"
+  delta={10.5}  // Percentage change
+  icon={<DollarSign className="h-4 w-4" />}
+/>
+```
+
+**5. DataTable (Custom)**
+```tsx
+import { DataTable } from '@/components/ui/data-table';
+import { Badge } from '@/components/ui/badge';
+
+const columns = [
+  { header: 'Name', accessor: 'name' },
+  { header: 'Email', accessor: 'email' },
+  {
+    header: 'Status',
+    accessor: (row) => <Badge variant="success">{row.status}</Badge>,
+  },
+];
+
+<DataTable data={users} columns={columns} />
+```
+
+**Layout Components:**
+
+**1. AppShell**
+```tsx
+import { AppShell } from '@/components/layout/AppShell';
+
+export default function MyPage() {
+  return (
+    <AppShell>
+      <h1>Page Content</h1>
+    </AppShell>
+  );
+}
+```
+
+Provides:
+- Sidebar navigation (fixed left)
+- Topbar with user menu (sticky top)
+- Protected route wrapper
+- Max-width content container
+
+**2. PageHeader**
+```tsx
+import { PageHeader } from '@/components/layout/PageHeader';
+import { Button } from '@/components/ui/button';
+
+<PageHeader
+  title="Staff Management"
+  subtitle="View staff performance metrics"
+  actions={<Button>Add Staff</Button>}
+/>
+```
+
+### Theme System
+
+**Light/Dark Mode:**
+- Toggle button in Topbar
+- CSS variables update based on `.dark` class on `<html>`
+- Theme persistence via localStorage (future enhancement)
+
+**Semantic Colors:**
+```css
+/* Light mode */
+--primary: hsl(239 100% 25%)      /* ChefCloud Navy */
+--background: hsl(0 0% 100%)      /* White */
+--foreground: hsl(240 10% 3.9%)   /* Dark text */
+
+/* Dark mode */
+--primary: hsl(239 100% 50%)      /* Brighter blue */
+--background: hsl(240 10% 3.9%)   /* Dark background */
+--foreground: hsl(0 0% 98%)       /* Light text */
+```
+
+**Using Semantic Colors:**
+```tsx
+// Auto-adapts to theme
+<div className="bg-background text-foreground">
+  <Card className="bg-card text-card-foreground">
+    <Button>Themed button</Button>
+  </Card>
+</div>
+```
+
+### API Integration
+
+**API Client (`lib/api.ts`):**
+```typescript
+import { apiClient } from '@/lib/api';
+
+// Automatic auth token injection
+const response = await apiClient.get('/staff/waiters/metrics');
+const data = response.data;
+
+// Error handling
+try {
+  const res = await apiClient.post('/some-endpoint', body);
+} catch (error) {
+  if (error.response?.status === 401) {
+    // Auto-redirects to /login
+  }
+  // Handle other errors
+}
+```
+
+**React Query Integration:**
+```tsx
+import { useQuery } from '@tanstack/react-query';
+import { apiClient } from '@/lib/api';
+
+function MyComponent() {
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['staff-metrics'],
+    queryFn: async () => {
+      const response = await apiClient.get('/staff/waiters/metrics');
+      return response.data;
+    },
+  });
+
+  if (isLoading) return <p>Loading...</p>;
+  if (error) return <p>Error: {error.message}</p>;
+
+  return <DataTable data={data} columns={columns} />;
+}
+```
+
+**Query Client Configuration:**
+```typescript
+// pages/_app.tsx
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 60 * 1000,      // 1 minute
+      refetchOnWindowFocus: false,
+    },
+  },
+});
+```
+
+### Utility Functions
+
+**Location:** `lib/utils.ts`
+
+```typescript
+import { cn, formatCurrency, formatDate, formatDateTime } from '@/lib/utils';
+
+// Class name merging (Tailwind conflicts resolved)
+<div className={cn('bg-blue-500', isActive && 'bg-green-500')} />
+
+// Currency formatting
+formatCurrency(15750000) // "UGX 15,750,000"
+
+// Date formatting
+formatDate('2025-11-22') // "Nov 22, 2025"
+formatDateTime('2025-11-22T14:30:00Z') // "Nov 22, 2025, 02:30 PM"
+
+// Percentage change
+calculatePercentageChange(110, 100) // 10
+
+// Percentage formatting
+formatPercentage(10.5) // "10.5%"
+
+// Text truncation
+truncate("Long text here", 10) // "Long text..."
+```
+
+### Environment Variables
+
+**File:** `apps/web/.env.local`
+
+```bash
+NEXT_PUBLIC_API_URL=http://localhost:3001
+NEXT_PUBLIC_APP_ENV=development
+```
+
+**Usage:**
+```typescript
+const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+```
+
+### Development Workflow
+
+**Start Development:**
+```bash
+# Terminal 1: Start backend API
+cd /workspaces/chefcloud/services/api
+pnpm run start:dev
+
+# Terminal 2: Start frontend
+cd /workspaces/chefcloud/apps/web
+pnpm run dev
+```
+
+**Build & Test:**
+```bash
+cd /workspaces/chefcloud/apps/web
+
+# Type-check and build
+pnpm run build
+
+# Lint
+pnpm run lint
+
+# Start production build
+pnpm run start
+```
+
+### Known Limitations (MVP)
+
+1. **Read-Only:** No CRUD forms yet (POST/PUT/DELETE coming in M24+)
+2. **No Real-Time:** Data fetched on load, no SSE/WebSocket (M16 can be integrated)
+3. **Desktop-Only:** Not optimized for mobile (backoffice assumes desktop use)
+4. **Single Branch:** No branch selector (assumes user's default branch)
+5. **Basic Errors:** Generic error messages, no retry logic or toast notifications
+6. **No Charts:** Summary metrics only, no data visualizations (M25+)
+7. **Theme Persistence:** Theme toggle works but doesn't persist on refresh
+8. **No Token Refresh:** JWT expires after 1 day, requires re-login
+
+### Future Enhancements
+
+**M24 – CRUD Operations:**
+- Add forms for staff, inventory, menu management
+- Implement POST/PUT/DELETE with validation
+- Toast notifications for success/error feedback
+
+**M25 – Advanced Analytics:**
+- Chart library integration (recharts)
+- Sales trends, staff performance graphs
+- Date range pickers, custom reports
+- Export functionality (CSV, PDF)
+
+**M26-M29 – Specialized UIs:**
+- M26: POS Terminal UI (order creation, payment)
+- M27: KDS UI (kitchen display, order status)
+- M28: Booking Portal UI (public reservations)
+- M29: Dev Portal UI (API key management)
+
+### Testing
+
+**Manual Testing Checklist:**
+- ✅ Login with email/password redirects to dashboard
+- ✅ Invalid credentials show error message
+- ✅ PIN login accepts 4-6 digit PINs
+- ✅ Protected routes redirect to login when unauthenticated
+- ✅ Logout clears token and redirects
+- ✅ All sidebar links navigate correctly
+- ✅ Active route highlighting works
+- ✅ Dashboard loads NPS and sales data
+- ✅ Staff page displays metrics from backend
+- ✅ Inventory shows low stock alerts
+- ✅ Theme toggle switches light/dark mode
+- ✅ User menu opens/closes correctly
+
+**Build Validation:**
+```bash
+cd /workspaces/chefcloud/apps/web
+pnpm run build  # Should complete without TypeScript errors
+```
+
+### Documentation
+
+- **M23-FRONTEND-SETUP.md** - Initial inventory and planning
+- **M23-DESIGN-SYSTEM.md** - Component documentation
+- **M23-FRONTEND-COMPLETION.md** - Implementation summary
+
+### Success Metrics
+
+✅ **All M23 Goals Achieved:**
+- Login system functional with JWT tokens
+- 8 pages created and navigable
+- 6/8 pages connected to real backend endpoints
+- Design system with 10+ reusable components
+- Light/dark theme working
+- Build passing with 0 TypeScript errors
+- Documentation complete
 
 ---
 

@@ -1,6 +1,6 @@
 /**
  * M22: Promotion Insights DTOs
- * 
+ *
  * Data Transfer Objects for promotion suggestion endpoints
  */
 
@@ -106,7 +106,11 @@ export class PreviewSuggestionsQueryDto {
   @IsString()
   branchId?: string;
 
-  @ApiPropertyOptional({ minimum: 0, maximum: 1, description: 'Minimum composite score (default 0.70)' })
+  @ApiPropertyOptional({
+    minimum: 0,
+    maximum: 1,
+    description: 'Minimum composite score (default 0.70)',
+  })
   @IsOptional()
   @IsNumber()
   @Min(0)

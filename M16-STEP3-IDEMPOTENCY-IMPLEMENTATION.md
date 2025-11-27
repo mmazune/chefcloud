@@ -9,12 +9,14 @@
 ## Files Created
 
 ### 1. Database Schema
+
 - **File**: `packages/db/prisma/schema.prisma`
 - **Addition**: `IdempotencyKey` model with indexes
 - **Migration**: `20251121_m16_idempotency_keys/migration.sql`
 - **Applied**: ✅ Yes
 
 ### 2. Idempotency Service
+
 - **File**: `services/api/src/common/idempotency.service.ts`
 - **Methods**:
   - `check(key, endpoint, requestBody)` - Check for duplicates
@@ -23,6 +25,7 @@
   - `hashRequest(requestBody)` - SHA256 fingerprinting
 
 ### 3. Idempotency Interceptor
+
 - **File**: `services/api/src/common/idempotency.interceptor.ts`
 - **Usage**: Decorate controllers with `@UseInterceptors(IdempotencyInterceptor)`
 - **Behavior**:
@@ -128,7 +131,7 @@ const idempotencyCleanupWorker = new Worker(
   'idempotency-cleanup',
   async (job: Job) => {
     logger.info('Cleaning up expired idempotency keys');
-    
+
     const deletedCount = await prisma.idempotencyKey.deleteMany({
       where: {
         expiresAt: {
@@ -237,17 +240,20 @@ curl -X POST http://localhost:3001/pos/orders \
 ## Limitations & Future Work
 
 ### Current Scope (M16)
+
 - ✅ Core idempotency infrastructure (service + interceptor)
 - ✅ Database schema and migration
 - ✅ SHA256 fingerprinting
 - ✅ 24-hour TTL with cleanup job
 
 ### Not Implemented (Deferred)
+
 - ❌ Automatic integration with all controllers (requires manual decoration)
 - ❌ Global interceptor (intentionally disabled to allow opt-in per endpoint)
 - ❌ Distributed idempotency (Redis-based for multi-server deployments)
 
 ### Recommendations
+
 1. **Apply selectively**: Only add `@UseInterceptors(IdempotencyInterceptor)` to write endpoints (POST/PUT/PATCH)
 2. **Monitor storage**: Track `idempotency_keys` table size monthly
 3. **Redis migration**: If table grows > 1M rows, migrate to Redis with TTL
@@ -261,6 +267,6 @@ curl -X POST http://localhost:3001/pos/orders \
 ✅ IdempotencyInterceptor handles header extraction and caching  
 ✅ Fingerprinting prevents modified retries  
 ✅ 409 Conflict responses for mismatches  
-✅ 24-hour TTL prevents unbounded growth  
+✅ 24-hour TTL prevents unbounded growth
 
 **Status**: COMPLETE ✅

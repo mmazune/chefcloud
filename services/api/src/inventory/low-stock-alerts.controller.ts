@@ -16,10 +16,7 @@ export class LowStockAlertsController {
    */
   @Get('alerts')
   @Roles('L4', 'L5', 'PROCUREMENT', 'INVENTORY')
-  async getAlerts(
-    @Req() req: Request & { user: any },
-    @Query('branchId') branchId: string,
-  ) {
+  async getAlerts(@Req() req: Request & { user: any }, @Query('branchId') branchId: string) {
     return this.lowStockAlertsService.detectLowStock(req.user.orgId, branchId);
   }
 
@@ -29,10 +26,7 @@ export class LowStockAlertsController {
    */
   @Get('config')
   @Roles('L4', 'L5', 'PROCUREMENT')
-  async getConfig(
-    @Req() req: Request & { user: any },
-    @Query('branchId') branchId?: string,
-  ) {
+  async getConfig(@Req() req: Request & { user: any }, @Query('branchId') branchId?: string) {
     return this.lowStockAlertsService.getConfig(req.user.orgId, branchId);
   }
 
@@ -47,11 +41,7 @@ export class LowStockAlertsController {
     @Query('branchId') branchId: string,
     @Body() dto: LowStockConfigDto,
   ) {
-    return this.lowStockAlertsService.upsertConfig(
-      req.user.orgId,
-      branchId || null,
-      dto,
-    );
+    return this.lowStockAlertsService.upsertConfig(req.user.orgId, branchId || null, dto);
   }
 
   /**
@@ -60,10 +50,7 @@ export class LowStockAlertsController {
    */
   @Delete('config/:configId')
   @Roles('L4', 'L5')
-  async deleteConfig(
-    @Req() req: Request & { user: any },
-    @Param('configId') configId: string,
-  ) {
+  async deleteConfig(@Req() req: Request & { user: any }, @Param('configId') configId: string) {
     await this.lowStockAlertsService.deleteConfig(req.user.orgId, configId);
     return { success: true };
   }

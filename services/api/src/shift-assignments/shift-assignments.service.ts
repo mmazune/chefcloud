@@ -104,10 +104,7 @@ export class ShiftAssignmentsService {
           },
         },
       },
-      orderBy: [
-        { isManagerOnDuty: 'desc' },
-        { role: 'asc' },
-      ],
+      orderBy: [{ isManagerOnDuty: 'desc' }, { role: 'asc' }],
     });
   }
 
@@ -147,10 +144,7 @@ export class ShiftAssignmentsService {
           },
         },
       },
-      orderBy: [
-        { schedule: { date: 'asc' } },
-        { schedule: { startTime: 'asc' } },
-      ],
+      orderBy: [{ schedule: { date: 'asc' } }, { schedule: { startTime: 'asc' } }],
     });
   }
 

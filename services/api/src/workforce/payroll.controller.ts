@@ -4,7 +4,7 @@
  * REST endpoints for payroll runs, payslips, and pay components (L4+ only).
  */
 
-import { Controller, Post, Patch, Get, Body, Param, UseGuards, Request } from '@nestjs/common';
+import { Controller, Post, Patch, Get, Body, Param, Query, UseGuards, Request } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
@@ -15,6 +15,44 @@ import { PayrollService } from './payroll.service';
 @Roles('L4', 'L5') // Manager/Accountant+ only
 export class PayrollController {
   constructor(private readonly payrollService: PayrollService) {}
+
+  /**
+   * GET /payroll/runs
+   * List payroll runs for organization
+   */
+  @Get('runs')
+  async listRuns(
+    @Query('orgId') orgId: string,
+    @Query('branchId') branchId?: string,
+    @Query('limit') limit?: string,
+  ) {
+    const runs = await this.payrollService['prisma'].client.payRun.findMany({
+      where: {
+        orgId,
+        ...(branchId ? { branchId } : {}),
+      },
+      orderBy: { periodEnd: 'desc' },
+      take: limit ? parseInt(limit) : 10,
+      include: {
+        _count: {
+          select: { slips: true },
+        },
+      },
+    });
+
+    return runs.map((run) => ({
+      id: run.id,
+      orgId: run.orgId,
+      branchId: run.branchId,
+      periodStart: run.periodStart,
+      periodEnd: run.periodEnd,
+      status: run.status,
+      totalGross: Number(run.totalGross || 0),
+      totalNet: Number(run.totalNet || 0),
+      createdAt: run.createdAt,
+      slipCount: run._count.slips,
+    }));
+  }
 
   /**
    * POST /payroll/runs

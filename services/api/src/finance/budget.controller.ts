@@ -16,6 +16,7 @@ import { CostInsightsService } from './cost-insights.service';
 import { CreateBudgetDto } from './dto/budget.dto';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
+import { RemindersService } from '../service-providers/reminders.service';
 
 @Controller('finance/budgets')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
@@ -23,6 +24,7 @@ export class BudgetController {
   constructor(
     private readonly budgetService: BudgetService,
     private readonly costInsightsService: CostInsightsService,
+    private readonly remindersService: RemindersService,
   ) {}
 
   /**
@@ -182,5 +184,61 @@ export class BudgetController {
     }
 
     return this.costInsightsService.getFranchiseInsights(orgId, months);
+  }
+
+  /**
+   * M24-S3: Get service reminders summary for a branch
+   * @rbac L3+ (Procurement, Accountant)
+   */
+  @Get('reminders/summary')
+  @Roles('L3', 'L4', 'L5')
+  async getRemindersSummary(
+    @Request() req: any,
+    @Query('branchId') branchId?: string,
+    @Query('days') days?: string,
+  ) {
+    const orgId = req.user.orgId;
+    
+    if (!branchId) {
+      throw new BadRequestException('branchId is required');
+    }
+
+    // Get summary statistics
+    const summary = await this.remindersService.getReminderSummary(orgId, branchId);
+
+    // Get upcoming reminders (within next N days, default 30)
+    const daysAhead = days ? parseInt(days, 10) : 30;
+    const today = new Date();
+    const endDate = new Date(today);
+    endDate.setDate(today.getDate() + daysAhead);
+
+    const upcoming = await this.remindersService.getReminders(
+      orgId,
+      branchId,
+      undefined, // status
+      undefined, // severity
+      today,
+      endDate,
+    );
+
+    return {
+      branchId,
+      days: daysAhead,
+      counts: {
+        overdue: summary.overdue,
+        dueToday: summary.dueToday,
+        dueSoon: summary.dueSoon,
+        total: summary.total,
+      },
+      totalOutstanding: summary.totalAmount,
+      upcoming: upcoming.slice(0, 10).map((r) => ({
+        id: r.id,
+        providerName: r.providerName || 'Unknown Provider',
+        category: r.providerCategory || 'OTHER',
+        dueDate: r.dueDate,
+        amount: r.contractAmount || 0,
+        severity: r.severity,
+      })),
+    };
   }
 }

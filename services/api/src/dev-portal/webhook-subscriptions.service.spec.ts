@@ -123,12 +123,7 @@ describe('WebhookSubscriptionsService', () => {
       const dto = {
         orgId: 'org-123',
         url: 'https://example.com/webhook',
-        eventTypes: [
-          'order.created',
-          'payment.succeeded',
-          'inventory.low',
-          'shift.opened',
-        ],
+        eventTypes: ['order.created', 'payment.succeeded', 'inventory.low', 'shift.opened'],
       };
 
       mockPrisma.webhookSubscription.create.mockImplementation((args: any) => {

@@ -7,7 +7,7 @@ import { DashboardsService } from '../dashboards/dashboards.service';
  * M4: Comprehensive Report Generation Service
  * Generates enterprise-grade shift-end reports, daily/weekly/monthly digests,
  * and franchise-level aggregations with consistent metrics.
- * 
+ *
  * Uses existing services to ensure data consistency:
  * - DashboardsService for waiter metrics (voids, discounts, no-drinks rate)
  * - ReconciliationService for stock variance and wastage (TODO: integrate for Period/Franchise)
@@ -44,14 +44,7 @@ export class ReportGeneratorService {
     };
 
     // Fetch all data in parallel
-    const [
-      sales,
-      service,
-      stock,
-      kds,
-      staffPerformance,
-      anomalies,
-    ] = await Promise.all([
+    const [sales, service, stock, kds, staffPerformance, anomalies] = await Promise.all([
       this.generateSalesReport(shift.orgId, shift.branchId, period),
       this.generateServiceReport(shift.orgId, shift.branchId, period),
       this.generateStockReport(shift.orgId, shift.branchId, shiftId, period),
@@ -106,13 +99,16 @@ export class ReportGeneratorService {
     });
 
     // Sales by category
-    const categoryMap = new Map<string, { categoryId: string; categoryName: string; quantity: number; revenue: number }>();
-    
+    const categoryMap = new Map<
+      string,
+      { categoryId: string; categoryName: string; quantity: number; revenue: number }
+    >();
+
     orders.forEach((order) => {
       order.orderItems.forEach((item) => {
         const categoryId = item.menuItem.categoryId || 'uncategorized';
         const categoryName = item.menuItem.category?.name || 'Uncategorized';
-        
+
         if (!categoryMap.has(categoryId)) {
           categoryMap.set(categoryId, {
             categoryId,
@@ -121,7 +117,7 @@ export class ReportGeneratorService {
             revenue: 0,
           });
         }
-        
+
         const cat = categoryMap.get(categoryId)!;
         cat.quantity += item.quantity;
         cat.revenue += Number(item.subtotal);
@@ -135,13 +131,16 @@ export class ReportGeneratorService {
     }));
 
     // Sales by item (top 20)
-    const itemMap = new Map<string, { itemId: string; itemName: string; quantity: number; revenue: number }>();
-    
+    const itemMap = new Map<
+      string,
+      { itemId: string; itemName: string; quantity: number; revenue: number }
+    >();
+
     orders.forEach((order) => {
       order.orderItems.forEach((item) => {
         const itemId = item.menuItemId;
         const itemName = item.menuItem.name;
-        
+
         if (!itemMap.has(itemId)) {
           itemMap.set(itemId, {
             itemId,
@@ -150,7 +149,7 @@ export class ReportGeneratorService {
             revenue: 0,
           });
         }
-        
+
         const itm = itemMap.get(itemId)!;
         itm.quantity += item.quantity;
         itm.revenue += Number(item.subtotal);
@@ -163,11 +162,11 @@ export class ReportGeneratorService {
 
     // Sales by payment method
     const paymentMap = new Map<string, { method: any; count: number; amount: number }>();
-    
+
     orders.forEach((order) => {
       order.payments.forEach((payment) => {
         const method = payment.method;
-        
+
         if (!paymentMap.has(method)) {
           paymentMap.set(method, {
             method: method as any,
@@ -175,7 +174,7 @@ export class ReportGeneratorService {
             amount: 0,
           });
         }
-        
+
         const pm = paymentMap.get(method)!;
         pm.count += 1;
         pm.amount += Number(payment.amount);
@@ -236,22 +235,25 @@ export class ReportGeneratorService {
     ]);
 
     // Group by waiter
-    const waiterMap = new Map<string, {
-      userId: string;
-      userName: string;
-      orders: number;
-      revenue: number;
-      voidCount: number;
-      voidAmount: number;
-      discountCount: number;
-      discountAmount: number;
-      noDrinksCount: number;
-    }>();
+    const waiterMap = new Map<
+      string,
+      {
+        userId: string;
+        userName: string;
+        orders: number;
+        revenue: number;
+        voidCount: number;
+        voidAmount: number;
+        discountCount: number;
+        discountAmount: number;
+        noDrinksCount: number;
+      }
+    >();
 
     orders.forEach((order) => {
       const userId = order.userId;
       const userName = order.user ? `${order.user.firstName} ${order.user.lastName}` : 'Unknown';
-      
+
       if (!waiterMap.has(userId)) {
         waiterMap.set(userId, {
           userId,
@@ -265,11 +267,11 @@ export class ReportGeneratorService {
           noDrinksCount: 0,
         });
       }
-      
+
       const waiter = waiterMap.get(userId)!;
       waiter.orders += 1;
       waiter.revenue += Number(order.total);
-      
+
       // Add discount from order discount field
       if (order.discount && Number(order.discount) > 0) {
         waiter.discountAmount += Number(order.discount);
@@ -372,14 +374,17 @@ export class ReportGeneratorService {
     });
 
     // Usage summary
-    const usageMap = new Map<string, { itemId: string; itemName: string; unitUsed: number; costUsed: number }>();
-    
+    const usageMap = new Map<
+      string,
+      { itemId: string; itemName: string; unitUsed: number; costUsed: number }
+    >();
+
     movements
       .filter((m) => m.type === 'SALE')
       .forEach((m) => {
         const itemId = m.itemId;
         const itemName = m.item.name;
-        
+
         if (!usageMap.has(itemId)) {
           usageMap.set(itemId, {
             itemId,
@@ -388,7 +393,7 @@ export class ReportGeneratorService {
             costUsed: 0,
           });
         }
-        
+
         const usage = usageMap.get(itemId)!;
         usage.unitUsed += Number(m.qty);
         usage.costUsed += Number(m.cost || 0);
@@ -430,20 +435,20 @@ export class ReportGeneratorService {
 
     // Calculate current quantities from stock batches
     const lowStock: ShiftEndReport['stock']['lowStock'] = [];
-    
+
     for (const config of lowStockAlerts) {
       if (!config.itemId) continue;
-      
+
       const batches = await this.prisma.client.stockBatch.findMany({
         where: {
           branchId,
           itemId: config.itemId,
         },
       });
-      
+
       const currentQty = batches.reduce((sum, b) => sum + Number(b.remainingQty), 0);
       const minQty = Number(config.minQuantity || 0);
-      
+
       if (currentQty <= minQty) {
         lowStock.push({
           itemId: config.itemId,
@@ -516,28 +521,34 @@ export class ReportGeneratorService {
     });
 
     const slaConfigMap = new Map(
-      slaConfigs.map((c) => [c.station, { green: c.greenThresholdSec, orange: c.orangeThresholdSec }])
+      slaConfigs.map((c) => [
+        c.station,
+        { green: c.greenThresholdSec, orange: c.orangeThresholdSec },
+      ]),
     );
 
     // Default SLA thresholds if not configured
     const defaultSla = { green: 300, orange: 600 }; // 5 min green, 10 min orange
 
     // Group by station
-    const stationMap = new Map<string, {
-      station: string;
-      tickets: number;
-      avgMinutes: number;
-      greenCount: number;
-      orangeCount: number;
-      redCount: number;
-    }>();
+    const stationMap = new Map<
+      string,
+      {
+        station: string;
+        tickets: number;
+        avgMinutes: number;
+        greenCount: number;
+        orangeCount: number;
+        redCount: number;
+      }
+    >();
 
     let totalCompletionMinutes = 0;
     let completedCount = 0;
 
     tickets.forEach((ticket) => {
       const station = ticket.station;
-      
+
       if (!stationMap.has(station)) {
         stationMap.set(station, {
           station,
@@ -548,7 +559,7 @@ export class ReportGeneratorService {
           redCount: 0,
         });
       }
-      
+
       const stationData = stationMap.get(station)!;
       stationData.tickets += 1;
 
@@ -556,13 +567,13 @@ export class ReportGeneratorService {
       if (ticket.readyAt) {
         const completionSec = (ticket.readyAt.getTime() - ticket.sentAt.getTime()) / 1000;
         const completionMin = completionSec / 60;
-        
+
         totalCompletionMinutes += completionMin;
         completedCount += 1;
 
         // Determine SLA color
         const sla = slaConfigMap.get(station as any) || defaultSla;
-        
+
         if (completionSec <= sla.green) {
           stationData.greenCount += 1;
         } else if (completionSec <= sla.orange) {
@@ -575,7 +586,8 @@ export class ReportGeneratorService {
 
     const byStation = Array.from(stationMap.values()).map((s) => {
       const completed = s.greenCount + s.orangeCount + s.redCount;
-      const avgMin = completed > 0 ? (s.greenCount * 3 + s.orangeCount * 7 + s.redCount * 12) / completed : 0;
+      const avgMin =
+        completed > 0 ? (s.greenCount * 3 + s.orangeCount * 7 + s.redCount * 12) / completed : 0;
       return {
         station: s.station,
         ticketsCompleted: completed,
@@ -598,7 +610,8 @@ export class ReportGeneratorService {
       totals: {
         totalTickets: tickets.length,
         averageCompletionMinutes: completedCount > 0 ? totalCompletionMinutes / completedCount : 0,
-        overallSlaPercentage: totalCompleted > 0 ? ((greenTotal + orangeTotal) / totalCompleted) * 100 : 100,
+        overallSlaPercentage:
+          totalCompleted > 0 ? ((greenTotal + orangeTotal) / totalCompleted) * 100 : 100,
       },
     };
   }
@@ -746,4 +759,3 @@ export class ReportGeneratorService {
     return 'year';
   } */
 }
-

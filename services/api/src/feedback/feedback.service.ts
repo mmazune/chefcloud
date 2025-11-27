@@ -15,7 +15,7 @@ import {
   ScoreBreakdown,
   EntityVerification,
 } from './dto/feedback.dto';
-import { FeedbackChannel, NpsCategory, Feedback } from '@prisma/client';
+import { FeedbackChannel, NpsCategory, Feedback } from '@chefcloud/db';
 
 /**
  * M20: Customer Feedback & NPS Service
@@ -167,8 +167,10 @@ export class FeedbackService {
         orgId: verification.orgId,
         branchId: verification.branchId,
         orderId: verification.entityType === 'order' ? verification.entityId : undefined,
-        reservationId: verification.entityType === 'reservation' ? verification.entityId : undefined,
-        eventBookingId: verification.entityType === 'eventBooking' ? verification.entityId : undefined,
+        reservationId:
+          verification.entityType === 'reservation' ? verification.entityId : undefined,
+        eventBookingId:
+          verification.entityType === 'eventBooking' ? verification.entityId : undefined,
         channel: dto.channel,
         score: dto.score,
         npsCategory,
@@ -243,7 +245,9 @@ export class FeedbackService {
       }
 
       if (reservation.orgId !== context.orgId) {
-        throw new ForbiddenException('Cannot submit feedback for reservations in other organizations');
+        throw new ForbiddenException(
+          'Cannot submit feedback for reservations in other organizations',
+        );
       }
 
       if (reservation.feedback) {
@@ -268,7 +272,9 @@ export class FeedbackService {
       }
 
       if (eventBooking.event.orgId !== context.orgId) {
-        throw new ForbiddenException('Cannot submit feedback for event bookings in other organizations');
+        throw new ForbiddenException(
+          'Cannot submit feedback for event bookings in other organizations',
+        );
       }
 
       if (eventBooking.feedback) {
@@ -431,7 +437,10 @@ export class FeedbackService {
   /**
    * Calculate NPS summary
    */
-  async getNpsSummary(query: NpsSummaryQueryDto, context: { orgId: string; branchIds?: string[] }): Promise<NpsSummary> {
+  async getNpsSummary(
+    query: NpsSummaryQueryDto,
+    context: { orgId: string; branchIds?: string[] },
+  ): Promise<NpsSummary> {
     const where: any = {
       orgId: context.orgId,
       createdAt: {
@@ -475,7 +484,9 @@ export class FeedbackService {
   ): NpsSummary {
     const promoterCount = feedbackList.filter((f) => f.npsCategory === NpsCategory.PROMOTER).length;
     const passiveCount = feedbackList.filter((f) => f.npsCategory === NpsCategory.PASSIVE).length;
-    const detractorCount = feedbackList.filter((f) => f.npsCategory === NpsCategory.DETRACTOR).length;
+    const detractorCount = feedbackList.filter(
+      (f) => f.npsCategory === NpsCategory.DETRACTOR,
+    ).length;
     const totalCount = feedbackList.length;
 
     const promoterPct = totalCount > 0 ? (promoterCount / totalCount) * 100 : 0;
@@ -567,7 +578,16 @@ export class FeedbackService {
   async getTopComments(
     query: TopCommentsQueryDto,
     context: { orgId: string; branchIds?: string[] },
-  ): Promise<{ comments: Array<{ id: string; score: number; comment: string; createdAt: Date; channel: FeedbackChannel }>; total: number }> {
+  ): Promise<{
+    comments: Array<{
+      id: string;
+      score: number;
+      comment: string;
+      createdAt: Date;
+      channel: FeedbackChannel;
+    }>;
+    total: number;
+  }> {
     const where: any = {
       orgId: context.orgId,
       createdAt: {

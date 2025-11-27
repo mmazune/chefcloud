@@ -30,6 +30,7 @@ The system is now production-ready for handling table reservations, event bookin
 ### 1. Schema Enhancements (`packages/db/prisma/schema.prisma`)
 
 **Reservation Model** (+8 fields):
+
 - `guestEmail`: Email for confirmation and reminders
 - `source`: ReservationSource enum (WEB, PHONE, WALK_IN, APP, THIRD_PARTY)
 - `notes`: Special requests or dietary restrictions
@@ -40,6 +41,7 @@ The system is now production-ready for handling table reservations, event bookin
 - `seatedAt`: Timestamp when guest was seated
 
 **Event Model** (+6 fields):
+
 - `status`: EventStatus enum (DRAFT, PUBLISHED, SOLD_OUT, CANCELLED, COMPLETED)
 - `capacity`: Total event capacity (optional, can use table-level instead)
 - `bookingDeadline`: Last time to book before event
@@ -48,6 +50,7 @@ The system is now production-ready for handling table reservations, event bookin
 - `cancelReason`: Reason for event cancellation
 
 **Enums Added**:
+
 - `ReservationStatus`: Added `NO_SHOW` state
 - `EventBookingStatus`: Added `CHECKED_IN`, `NO_SHOW`, `EXPIRED` states
 - `DepositStatus`: NEW enum (NONE, HELD, CAPTURED, REFUNDED, FORFEITED)
@@ -55,6 +58,7 @@ The system is now production-ready for handling table reservations, event bookin
 - `EventStatus`: NEW enum (DRAFT, PUBLISHED, SOLD_OUT, CANCELLED, COMPLETED)
 
 **depositStatus Migration**:
+
 - Converted from `String` to `DepositStatus` enum
 - Handled data migration for existing records (NONE/HELD/CAPTURED → enum values)
 
@@ -65,6 +69,7 @@ The system is now production-ready for handling table reservations, event bookin
 #### ReservationsService (`services/api/src/reservations/reservations.service.ts`)
 
 **Existing Methods**:
+
 - `create()`: Create reservation with deposit handling
 - `findAll()`: List reservations with filters
 - `confirm()`: Capture deposit and update status
@@ -73,6 +78,7 @@ The system is now production-ready for handling table reservations, event bookin
 - `getSummary()`: Aggregate booking metrics
 
 **New Methods Added**:
+
 - `getById(orgId, id)`: Get single reservation with full details
 - `update(orgId, id, dto)`: Update reservation fields (with overlap validation)
 - `noShow(orgId, id, userId)`: Mark no-show and forfeit deposit (requires L3+)
@@ -85,6 +91,7 @@ The system is now production-ready for handling table reservations, event bookin
 **NEW SERVICE** - GL Integration for Deposits
 
 **Methods**:
+
 - `recordDepositCollection()`: Dr 1010 Cash, Cr 2200 Deposit Liability
 - `applyDepositToBill()`: Dr 2200 Deposit Liability, Cr 4000 Revenue
 - `forfeitDeposit()`: Dr 2200 Deposit Liability, Cr 4901 No-Show Revenue
@@ -96,11 +103,13 @@ The system is now production-ready for handling table reservations, event bookin
 #### BookingsService (`services/api/src/bookings/bookings.service.ts`)
 
 **Existing Methods**:
+
 - `upsertEvent()`, `publishEvent()`, `unpublishEvent()`, `getEvent()`
 - `createBooking()`, `confirmBooking()`, `checkIn()`
 - `getPublicEvent()`, `applyCredits()`
 
 **New Methods Added**:
+
 - `listPublishedEvents(params)`: List events for public portal with availability
 - `getPublicEventWithAvailability(slug)`: Event details + capacity calculation
 
@@ -111,6 +120,7 @@ The system is now production-ready for handling table reservations, event bookin
 **NEW SERVICE** - Multi-Branch Aggregation
 
 **Methods**:
+
 - `getBranchBookingSummary(branchId, from, to)`: Per-branch metrics
   - Reservations by status
   - Show-up rate / no-show rate
@@ -127,6 +137,7 @@ The system is now production-ready for handling table reservations, event bookin
 #### ReservationsController (`services/api/src/reservations/reservations.controller.ts`)
 
 **Existing Endpoints**:
+
 - `POST /reservations` [L2+]: Create reservation
 - `GET /reservations` [L2+]: List reservations
 - `POST /reservations/:id/confirm` [L2+]: Confirm and capture deposit
@@ -135,6 +146,7 @@ The system is now production-ready for handling table reservations, event bookin
 - `GET /reservations/summary` [L3+]: Booking metrics
 
 **New Endpoints Added**:
+
 - `GET /reservations/:id` [L2+]: Get reservation details
 - `PATCH /reservations/:id` [L2+]: Update reservation
 - `POST /reservations/:id/no-show` [L3+]: Mark no-show
@@ -148,12 +160,14 @@ The system is now production-ready for handling table reservations, event bookin
 **NEW CONTROLLER** - Public Portal APIs (No JWT Required)
 
 **Endpoints**:
+
 - `GET /public/availability`: Check table availability
 - `POST /public/reservations`: Create reservation from booking portal (source=WEB)
 - `GET /public/events`: List published events
 - `GET /public/events/:slug`: Event details with availability
 
 **Rate Limiting**: Should be applied at nginx/API gateway level
+
 - `/public/availability`: 30 requests/minute
 - `/public/reservations`: 5 requests/minute
 - `/public/events`: 60 requests/minute
@@ -164,6 +178,7 @@ The system is now production-ready for handling table reservations, event bookin
 #### BookingsController (Existing, endpoints already present)
 
 **Endpoints**:
+
 - `POST /events` [L3+]: Create event
 - `GET /events` [L2+]: List events
 - `PATCH /events/:id` [L3+]: Update event
@@ -179,6 +194,7 @@ The system is now production-ready for handling table reservations, event bookin
 #### ReservationsService Tests (`services/api/src/reservations/reservations.service.spec.ts`)
 
 **Test Cases** (9 total):
+
 1. ✅ Should create a reservation without deposit
 2. ✅ Should throw ConflictException for overlapping reservations
 3. ✅ Should confirm a HELD reservation and post GL entry for deposit
@@ -194,6 +210,7 @@ The system is now production-ready for handling table reservations, event bookin
 #### Bookings Ticket Tests (`services/api/src/bookings/bookings-ticket.spec.ts`)
 
 **Test Cases** (6 total):
+
 1. ✅ Should create event with tables
 2. ✅ Should publish event
 3. ✅ Should create booking with HELD status
@@ -216,6 +233,7 @@ The system is now production-ready for handling table reservations, event bookin
 **New Section**: `## M15 – Reservations, Deposits & Booking Portal Hardening`
 
 **Content** (10,000+ words):
+
 - Complete architecture diagrams (reservation lifecycle, deposit flows)
 - State transition reference tables
 - All API endpoint documentation (24 endpoints total)
@@ -233,6 +251,7 @@ The system is now production-ready for handling table reservations, event bookin
 **NEW FILE** - Comprehensive API Testing Script
 
 **Sections**:
+
 1. Public Booking Portal (no auth) - 4 examples
 2. Internal Reservations Management - 6 examples
 3. Reservation Lifecycle Transitions - 4 examples
@@ -266,6 +285,7 @@ await depositAccounting.refundDeposit({...});
 ```
 
 **Chart of Accounts Extended**:
+
 - `2200`: Reservation Deposit Liability (current liability)
 - `4901`: No-Show Fee Revenue (other income)
 - `4902`: Cancellation Fee Revenue (other income)
@@ -273,6 +293,7 @@ await depositAccounting.refundDeposit({...});
 ### M11-M13 (POS) Integration
 
 **Seating Flow**:
+
 1. Call `reservationsService.seat(orgId, reservationId, orderId)`
 2. System updates:
    - `reservation.status = SEATED`
@@ -281,6 +302,7 @@ await depositAccounting.refundDeposit({...});
 3. Deposit applied as prepayment on order
 
 **Order Close Flow**:
+
 - Check if `order.reservation` exists and has deposit
 - Apply deposit to reduce final amount due
 - Post GL entry for deposit application
@@ -288,16 +310,19 @@ await depositAccounting.refundDeposit({...});
 ### M2 (Shifts) Integration
 
 **Validation**:
+
 - Before creating reservation, verify shift exists for time slot
 - Reject reservations outside of scheduled shift hours
 
 **Reporting**:
+
 - Shift reports include expected covers from reservations
 - Compare actual vs reserved party sizes
 
 ### M6 (Franchise) Integration
 
 **Franchise Overview**:
+
 - `FranchiseBookingOverviewService` provides aggregated metrics
 - Per-branch breakdown of reservations, no-shows, deposits
 - Franchise-wide totals and averages
@@ -305,6 +330,7 @@ await depositAccounting.refundDeposit({...});
 ### M4 (Digests) Integration
 
 **Owner Digests**:
+
 - Booking section added to daily/weekly/monthly digests
 - Includes: total reservations, show-up rate, deposit revenue
 - Insights: "3 no-shows cost $150 in lost revenue"
@@ -318,6 +344,7 @@ await depositAccounting.refundDeposit({...});
 **Applied**: November 20, 2025
 
 **Changes**:
+
 - Created 3 new enums (DepositStatus, ReservationSource, EventStatus)
 - Altered 2 enums (ReservationStatus +NO_SHOW, EventBookingStatus +3 states)
 - Added 8 columns to `reservations` table
@@ -333,29 +360,29 @@ await depositAccounting.refundDeposit({...});
 
 ## Files Created
 
-| File | Lines | Description |
-|------|-------|-------------|
-| `/services/api/src/reservations/deposit-accounting.service.ts` | 265 | GL integration for deposit lifecycle |
-| `/services/api/src/franchise/franchise-booking-overview.service.ts` | 269 | Multi-branch booking aggregation |
-| `/services/api/src/public-booking/public-booking.controller.ts` | 150 | Public portal APIs (no JWT) |
-| `/services/api/src/reservations/reservations.service.spec.ts` | 361 | Unit tests for reservations |
-| `/services/api/src/bookings/bookings-ticket.spec.ts` | 180 | Unit tests for tickets |
-| `/workspaces/chefcloud/curl-examples-m15-reservations.sh` | 430 | API testing examples |
-| `/workspaces/chefcloud/M15-STEP0-RESERVATIONS-REVIEW.md` | 570 | Initial inventory document |
-| `/workspaces/chefcloud/M15-RESERVATIONS-DESIGN.md` | 850 | Design document with state machines |
+| File                                                                | Lines | Description                          |
+| ------------------------------------------------------------------- | ----- | ------------------------------------ |
+| `/services/api/src/reservations/deposit-accounting.service.ts`      | 265   | GL integration for deposit lifecycle |
+| `/services/api/src/franchise/franchise-booking-overview.service.ts` | 269   | Multi-branch booking aggregation     |
+| `/services/api/src/public-booking/public-booking.controller.ts`     | 150   | Public portal APIs (no JWT)          |
+| `/services/api/src/reservations/reservations.service.spec.ts`       | 361   | Unit tests for reservations          |
+| `/services/api/src/bookings/bookings-ticket.spec.ts`                | 180   | Unit tests for tickets               |
+| `/workspaces/chefcloud/curl-examples-m15-reservations.sh`           | 430   | API testing examples                 |
+| `/workspaces/chefcloud/M15-STEP0-RESERVATIONS-REVIEW.md`            | 570   | Initial inventory document           |
+| `/workspaces/chefcloud/M15-RESERVATIONS-DESIGN.md`                  | 850   | Design document with state machines  |
 
 **Total New Files**: 8  
 **Total New Lines**: ~3,075
 
 ## Files Enhanced
 
-| File | Previous | Current | Lines Added | Description |
-|------|----------|---------|-------------|-------------|
-| `reservations.service.ts` | 287 | 543 | +256 | Added noShow, update, getById, checkAvailability |
-| `reservations.controller.ts` | 100 | 150 | +50 | Added 4 new endpoints |
-| `bookings.service.ts` | 452 | 600+ | +148 | Added listPublishedEvents, availability calc |
-| `schema.prisma` | - | - | +40 | Added fields and enums |
-| `DEV_GUIDE.md` | 16034 | 17234 | +1200 | Added M15 section with full documentation |
+| File                         | Previous | Current | Lines Added | Description                                      |
+| ---------------------------- | -------- | ------- | ----------- | ------------------------------------------------ |
+| `reservations.service.ts`    | 287      | 543     | +256        | Added noShow, update, getById, checkAvailability |
+| `reservations.controller.ts` | 100      | 150     | +50         | Added 4 new endpoints                            |
+| `bookings.service.ts`        | 452      | 600+    | +148        | Added listPublishedEvents, availability calc     |
+| `schema.prisma`              | -        | -       | +40         | Added fields and enums                           |
+| `DEV_GUIDE.md`               | 16034    | 17234   | +1200       | Added M15 section with full documentation        |
 
 **Total Enhanced Files**: 5  
 **Total Lines Modified/Added**: ~1,694
@@ -427,16 +454,16 @@ chmod +x curl-examples-m15-reservations.sh
 
 1. **Table Optimization**: AI-powered table assignment algorithm to maximize capacity utilization
 
-2. **Guest History Tracking**: 
+2. **Guest History Tracking**:
    - Track repeat guests
    - No-show patterns and blacklisting
    - Lifetime value calculations
 
-3. **Controlled Overbooking**: 
+3. **Controlled Overbooking**:
    - Airline-style overbooking with buffer
    - Historical no-show rates inform overbooking percentage
 
-4. **Group Reservations**: 
+4. **Group Reservations**:
    - Link multiple reservations for large parties
    - Split across tables but single billing
 
@@ -462,18 +489,18 @@ chmod +x curl-examples-m15-reservations.sh
 
 ## Success Criteria
 
-| Criterion | Status | Notes |
-|-----------|--------|-------|
-| Schema includes all required fields | ✅ | 14 new fields, 5 enums |
-| Reservation lifecycle fully implemented | ✅ | 5 states with validation |
-| Deposit accounting integrated with M8 | ✅ | 5 GL posting scenarios |
-| Public booking portal APIs created | ✅ | 4 endpoints, no JWT required |
-| Event booking system functional | ✅ | QR tickets, capacity mgmt |
-| Multi-branch reporting available | ✅ | Franchise overview service |
-| Tests cover core functionality | ✅ | 15 test cases, ~85% coverage |
-| Documentation comprehensive | ✅ | 1200+ lines in DEV_GUIDE |
-| Migration applied successfully | ✅ | Non-interactive pattern |
-| Build passes with 0 TS errors | ✅ | Verified Nov 21, 2025 |
+| Criterion                               | Status | Notes                        |
+| --------------------------------------- | ------ | ---------------------------- |
+| Schema includes all required fields     | ✅     | 14 new fields, 5 enums       |
+| Reservation lifecycle fully implemented | ✅     | 5 states with validation     |
+| Deposit accounting integrated with M8   | ✅     | 5 GL posting scenarios       |
+| Public booking portal APIs created      | ✅     | 4 endpoints, no JWT required |
+| Event booking system functional         | ✅     | QR tickets, capacity mgmt    |
+| Multi-branch reporting available        | ✅     | Franchise overview service   |
+| Tests cover core functionality          | ✅     | 15 test cases, ~85% coverage |
+| Documentation comprehensive             | ✅     | 1200+ lines in DEV_GUIDE     |
+| Migration applied successfully          | ✅     | Non-interactive pattern      |
+| Build passes with 0 TS errors           | ✅     | Verified Nov 21, 2025        |
 
 **Overall Status**: ✅ **10/10 SUCCESS**
 

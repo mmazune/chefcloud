@@ -58,7 +58,7 @@ export class CostInsightsService {
     for (const [category, categoryBudgets] of Object.entries(byCategory)) {
       const typedCategory = category as BudgetCategory;
       const budgets = categoryBudgets as any[];
-      
+
       const monthsOverBudget = budgets.filter(
         (b: any) => Number(b.actualAmount) > Number(b.budgetAmount) * 1.1, // 10% threshold
       ).length;
@@ -177,10 +177,7 @@ export class CostInsightsService {
   /**
    * Generate category-specific cost-cutting suggestions
    */
-  private generateCategorySuggestion(
-    category: BudgetCategory,
-    variancePercent: number,
-  ): string {
+  private generateCategorySuggestion(category: BudgetCategory, variancePercent: number): string {
     const suggestions: Record<BudgetCategory, string> = {
       STOCK:
         'Review supplier contracts and negotiate better rates. Implement stricter portion control. Analyze wastage patterns and adjust ordering quantities.',
@@ -190,15 +187,14 @@ export class CostInsightsService {
         'Renegotiate contracts with service providers. Compare quotes from alternative vendors. Consider bundling services for better rates.',
       UTILITIES:
         'Audit energy usage patterns. Install energy-efficient equipment. Review utility contracts for better rates. Implement conservation measures.',
-      RENT:
-        'Renegotiate lease terms. Consider relocating if variance continues. Explore subleasing unused space.',
+      RENT: 'Renegotiate lease terms. Consider relocating if variance continues. Explore subleasing unused space.',
       MARKETING:
         'Review ROI of marketing campaigns. Focus on high-performing channels. Leverage low-cost digital marketing alternatives.',
-      MISC:
-        'Categorize miscellaneous expenses properly. Identify and eliminate unnecessary recurring costs. Establish approval process for misc spending.',
+      MISC: 'Categorize miscellaneous expenses properly. Identify and eliminate unnecessary recurring costs. Establish approval process for misc spending.',
     };
 
-    const baseSuggestion = suggestions[category] || 'Review spending patterns and identify areas for cost reduction.';
+    const baseSuggestion =
+      suggestions[category] || 'Review spending patterns and identify areas for cost reduction.';
 
     if (variancePercent > 30) {
       return `URGENT: ${baseSuggestion} Consider immediate action to bring costs under control.`;

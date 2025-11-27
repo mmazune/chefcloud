@@ -1,6 +1,6 @@
 /**
  * Canonical Shift-End Report Data Structure
- * 
+ *
  * This interface defines the complete data structure for a shift-end report,
  * ensuring consistency across PDF/CSV generation, API responses, and dashboards.
  */
@@ -381,10 +381,13 @@ export interface FranchiseDigest {
       compositeScore: number;
       totalSales: number;
     }>;
-    byBranch: Record<string, {
-      topPerformer: { displayName: string; score: number };
-      averageScore: number;
-    }>;
+    byBranch: Record<
+      string,
+      {
+        topPerformer: { displayName: string; score: number };
+        averageScore: number;
+      }
+    >;
   };
 
   // M20: Cross-branch customer feedback & NPS
@@ -418,15 +421,18 @@ export interface FranchiseDigest {
       compositeScore: number;
       status: 'PENDING' | 'ACCEPTED';
     }>;
-    byBranch: Record<string, {
-      branchName: string;
-      suggestedCount: number;
-      acceptedCount: number;
-      topCandidate: {
-        displayName: string;
-        category: string;
-        score: number;
-      } | null;
-    }>;
+    byBranch: Record<
+      string,
+      {
+        branchName: string;
+        suggestedCount: number;
+        acceptedCount: number;
+        topCandidate: {
+          displayName: string;
+          category: string;
+          score: number;
+        } | null;
+      }
+    >;
   };
 }

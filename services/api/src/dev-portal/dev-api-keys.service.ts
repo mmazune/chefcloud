@@ -1,4 +1,9 @@
-import { Injectable, BadRequestException, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { DevEnvironment, ApiKeyStatus } from '@chefcloud/db';
 import * as bcrypt from 'bcrypt';
@@ -32,13 +37,13 @@ export interface DevApiKeyWithSecret {
 
 /**
  * DevApiKeysService
- * 
+ *
  * Manages developer API keys lifecycle:
  * - Secure key generation with bcrypt hashing
  * - Environment-scoped keys (SANDBOX vs PRODUCTION)
  * - Key verification with constant-time comparison
  * - Usage tracking and revocation
- * 
+ *
  * Security:
  * - Raw keys never stored (only bcrypt hash with cost 10)
  * - Keys shown only once on creation
@@ -57,10 +62,7 @@ export class DevApiKeysService {
     const prefix = environment === 'PRODUCTION' ? 'cc_live_' : 'cc_test_';
     const randomBytes = crypto.randomBytes(32);
     // Base62-like encoding (alphanumeric, URL-safe)
-    const base62 = randomBytes
-      .toString('base64')
-      .replace(/[+/=]/g, '')
-      .substring(0, 32);
+    const base62 = randomBytes.toString('base64').replace(/[+/=]/g, '').substring(0, 32);
     return `${prefix}${base62}`;
   }
 
@@ -84,20 +86,17 @@ export class DevApiKeysService {
 
   /**
    * Create new API key
-   * 
+   *
    * Returns raw key ONCE - it will never be shown again
    * Stores only bcrypt hash in database
    */
-  async createKey(
-    dto: CreateDevApiKeyDto,
-    createdByUserId: string,
-  ): Promise<DevApiKeyWithSecret> {
+  async createKey(dto: CreateDevApiKeyDto, createdByUserId: string): Promise<DevApiKeyWithSecret> {
     // Generate raw key with environment prefix
     const rawKey = this.generateApiKey(dto.environment);
-    
+
     // Extract prefix from raw key
     const prefix = dto.environment === 'PRODUCTION' ? 'cc_live_' : 'cc_test_';
-    
+
     // Hash key for storage (bcrypt cost 10)
     const keyHash = await this.hashKey(rawKey);
 
@@ -226,13 +225,13 @@ export class DevApiKeysService {
   /**
    * Verify API key for authentication
    * Returns key details if valid and active, null otherwise
-   * 
+   *
    * Used by API key authentication guard
    */
   async verifyKeyForAuth(rawKey: string) {
     // Extract prefix to identify environment
     const prefix = rawKey.substring(0, 8); // "cc_live_" or "cc_test_"
-    
+
     if (!prefix.startsWith('cc_')) {
       return null;
     }
@@ -261,7 +260,7 @@ export class DevApiKeysService {
   /**
    * Record API key usage
    * Updates lastUsedAt and increments usageCount
-   * 
+   *
    * Called after successful authentication
    */
   async recordUsage(keyId: string): Promise<void> {

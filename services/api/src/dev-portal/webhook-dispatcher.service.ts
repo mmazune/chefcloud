@@ -13,13 +13,13 @@ export interface WebhookEvent {
 
 /**
  * WebhookDispatcherService
- * 
+ *
  * Handles webhook event delivery:
  * - Queue events for matching subscriptions
  * - HTTP POST delivery with HMAC signatures
  * - Retry logic with exponential backoff
  * - Delivery tracking and metrics
- * 
+ *
  * Signature format:
  * - Header: X-ChefCloud-Signature
  * - Value: HMAC-SHA256(secret, timestamp + body)
@@ -39,10 +39,7 @@ export class WebhookDispatcherService {
    */
   private computeSignature(secret: string, timestamp: number, body: string): string {
     const payload = `${timestamp}.${body}`;
-    return crypto
-      .createHmac('sha256', secret)
-      .update(payload)
-      .digest('hex');
+    return crypto.createHmac('sha256', secret).update(payload).digest('hex');
   }
 
   /**

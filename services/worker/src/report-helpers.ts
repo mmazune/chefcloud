@@ -1,6 +1,6 @@
 /**
  * M4: Report Generation Helpers for Worker
- * 
+ *
  * Implements real report generation queries matching the API service.
  * Uses direct Prisma queries since worker can't import NestJS services.
  */
@@ -52,9 +52,7 @@ export async function generateShiftEndReport(
     openedAt: shift.openedAt,
     closedAt: shift.closedAt,
     openedBy: `${shift.openedBy.firstName} ${shift.openedBy.lastName}`,
-    closedBy: shift.closedBy 
-      ? `${shift.closedBy.firstName} ${shift.closedBy.lastName}`
-      : null,
+    closedBy: shift.closedBy ? `${shift.closedBy.firstName} ${shift.closedBy.lastName}` : null,
     sales,
     service,
     stock,
@@ -99,7 +97,7 @@ async function generateSalesReport(
 
   // Sales by category
   const categoryMap = new Map<string, { name: string; quantity: number; revenue: number }>();
-  
+
   orders.forEach((order) => {
     order.orderItems.forEach((item) => {
       const cat = item.menuItem.category?.name || 'Uncategorized';
@@ -112,7 +110,7 @@ async function generateSalesReport(
 
   // Sales by item (top 20)
   const itemMap = new Map<string, { name: string; quantity: number; revenue: number }>();
-  
+
   orders.forEach((order) => {
     order.orderItems.forEach((item) => {
       const itemId = item.menuItemId;
@@ -133,7 +131,7 @@ async function generateSalesReport(
 
   // Sales by payment method
   const paymentMap = new Map<string, { method: string; count: number; amount: number }>();
-  
+
   orders.forEach((order) => {
     order.payments.forEach((payment) => {
       const method = payment.method;
@@ -311,10 +309,7 @@ async function generateStockReport(
     },
   });
 
-  const totalWastageValue = wastageRecords.reduce(
-    (sum, w) => sum + Number(w.qty) * 5000,
-    0
-  );
+  const totalWastageValue = wastageRecords.reduce((sum, w) => sum + Number(w.qty) * 5000, 0);
 
   // Get low stock items using StockBatch for branch-specific stock
   const lowStockBatches = await prisma.stockBatch.findMany({
@@ -333,8 +328,11 @@ async function generateStockReport(
   });
 
   // Aggregate by item
-  const itemStockMap = new Map<string, { itemName: string; currentStock: number; reorderLevel: number }>();
-  
+  const itemStockMap = new Map<
+    string,
+    { itemName: string; currentStock: number; reorderLevel: number }
+  >();
+
   lowStockBatches.forEach((batch) => {
     const itemKey = batch.itemId;
     if (!itemStockMap.has(itemKey)) {
@@ -391,7 +389,10 @@ async function generateKdsReport(
   let orangeCount = 0;
   let redCount = 0;
 
-  const stationStats = new Map<string, { station: string; green: number; orange: number; red: number }>();
+  const stationStats = new Map<
+    string,
+    { station: string; green: number; orange: number; red: number }
+  >();
 
   tickets.forEach((ticket) => {
     if (!ticket.readyAt) return; // Skip incomplete tickets
@@ -523,9 +524,7 @@ async function generateAnomaliesReport(
     type: event.type,
     description: event.details ? JSON.stringify(event.details) : event.type,
     severity: event.severity,
-    userId: event.user
-      ? `${event.user.firstName} ${event.user.lastName}`
-      : 'Unknown',
+    userId: event.user ? `${event.user.firstName} ${event.user.lastName}` : 'Unknown',
     timestamp: event.occurredAt,
   }));
 }

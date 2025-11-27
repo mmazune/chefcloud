@@ -7,7 +7,7 @@ import { ReportGeneratorService } from '../reports/report-generator.service';
 
 /**
  * M5: Waiter Metrics Consistency Tests
- * 
+ *
  * Verifies that the new canonical WaiterMetricsService produces consistent results
  * with the legacy DashboardsService and that all consuming services (reports, anti-theft)
  * use the canonical service.
@@ -126,10 +126,7 @@ describe('Waiter Metrics Consistency (M5)', () => {
       noDrinksData.forEach((entry: any) => {
         const metric = metricsByUser.get(entry.waiterId);
         if (metric && metric.orderCount > 0) {
-          expect(metric.noDrinksRate).toBeCloseTo(
-            entry.noDrinks / (entry.orders || 1),
-            2,
-          );
+          expect(metric.noDrinksRate).toBeCloseTo(entry.noDrinks / (entry.orders || 1), 2);
         }
       });
     });

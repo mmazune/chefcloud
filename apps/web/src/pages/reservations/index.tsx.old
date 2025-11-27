@@ -1,0 +1,33 @@
+import React from 'react';
+import { AppShell } from '@/components/layout/AppShell';
+import { PageHeader } from '@/components/layout/PageHeader';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
+export default function ReservationsPage() {
+  return (
+    <AppShell>
+      <PageHeader title="Reservations" subtitle="View and manage table bookings" />
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>Reservations Overview</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground">
+            Reservations management interface coming soon. This will include:
+          </p>
+          <ul className="mt-4 space-y-2 text-sm">
+            <li>• Upcoming bookings calendar</li>
+            <li>• Table availability view</li>
+            <li>• Guest information</li>
+            <li>• Deposit tracking</li>
+          </ul>
+        </CardContent>
+      </Card>
+
+      <div className="mt-4 text-sm text-muted-foreground">
+        ✓ Backend endpoint: GET /reservations (M15)
+      </div>
+    </AppShell>
+  );
+}

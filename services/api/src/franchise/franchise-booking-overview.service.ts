@@ -7,7 +7,7 @@
 
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
-import { ReservationStatus, DepositStatus, EventBookingStatus } from '@prisma/client';
+import { ReservationStatus, DepositStatus, EventBookingStatus } from '@chefcloud/db';
 
 export interface BranchBookingSummary {
   branchId: string;

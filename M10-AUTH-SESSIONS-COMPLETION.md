@@ -1,9 +1,10 @@
 # M10 – Auth, Sessions, MSR Login & Platform Access Hardening
+
 ## Completion Summary
 
 **Status**: ✅ **COMPLETED** (Core Implementation)  
 **Date**: 2025-11-19  
-**Milestone**: M10 – Enterprise-Grade Authentication & Session Management  
+**Milestone**: M10 – Enterprise-Grade Authentication & Session Management
 
 ---
 
@@ -26,13 +27,14 @@ Successfully implemented comprehensive authentication and session management sys
 ### 1. Enhanced Session Model
 
 **Database Schema**:
+
 - Enhanced `Session` model with 11 new fields:
-  * `platform` (SessionPlatform enum) - WEB_BACKOFFICE, POS_DESKTOP, MOBILE_APP, KDS_SCREEN, DEV_PORTAL, OTHER
-  * `source` (SessionSource enum) - PASSWORD, PIN, MSR_CARD, API_KEY, SSO, WEBAUTHN
-  * `orgId`, `branchId`, `employeeId` - M9 HR integration
-  * `lastActivityAt` - Idle timeout tracking
-  * `revokedAt`, `revokedById`, `revokedReason` - Audit trail
-  * `ipAddress`, `userAgent` - Security metadata
+  - `platform` (SessionPlatform enum) - WEB_BACKOFFICE, POS_DESKTOP, MOBILE_APP, KDS_SCREEN, DEV_PORTAL, OTHER
+  - `source` (SessionSource enum) - PASSWORD, PIN, MSR_CARD, API_KEY, SSO, WEBAUTHN
+  - `orgId`, `branchId`, `employeeId` - M9 HR integration
+  - `lastActivityAt` - Idle timeout tracking
+  - `revokedAt`, `revokedById`, `revokedReason` - Audit trail
+  - `ipAddress`, `userAgent` - Security metadata
 - Added 4 new relations: `org`, `branch`, `employee`, `revokedBy`
 - Added 3 new indexes: `lastActivityAt`, `revokedAt`, improved query performance
 - Added opposite relations on Org, Branch, Employee, User models
@@ -42,6 +44,7 @@ Successfully implemented comprehensive authentication and session management sys
 ### 2. Session Policies
 
 **Per-Platform Configuration** (`session-policies.ts`):
+
 ```typescript
 POS_DESKTOP:      { idleTimeoutMinutes: 10,  maxLifetimeHours: 12, touchThrottleSeconds: 60 }
 KDS_SCREEN:       { idleTimeoutMinutes: 5,   maxLifetimeHours: 12, touchThrottleSeconds: 60 }
@@ -51,6 +54,7 @@ DEV_PORTAL:       { idleTimeoutMinutes: 30,  maxLifetimeHours: 8,  touchThrottle
 ```
 
 **Helper Functions**:
+
 - `getSessionPolicy(platform)` - Returns policy for platform
 - `calculateSessionExpiry(platform)` - Calculates JWT expiry
 - `isSessionIdle(lastActivityAt, platform)` - Checks idle timeout
@@ -61,42 +65,49 @@ DEV_PORTAL:       { idleTimeoutMinutes: 30,  maxLifetimeHours: 8,  touchThrottle
 **Core Lifecycle Management** (280 lines, 10 methods):
 
 **Create**:
+
 - `createSession(params)` - Creates session on login with platform, source, employeeId, JTI
 - Generates CUID session ID
 - Sets expiry based on platform policy
 - Stores IP address, user agent
 
 **Validate**:
+
 - `validateSession(sessionId)` - Validates active, checks revoked/expired/idle
 - Returns `shouldTouch` flag (throttled)
 - Auto-revokes if idle timeout exceeded
 
 **Touch**:
+
 - `touchSession(sessionId)` - Updates `lastActivityAt` (throttled)
 - Fire-and-forget in JwtStrategy (doesn't block requests)
 
 **Revoke**:
+
 - `revokeSession(sessionId, revokedById?, reason?)` - Manual single session revocation
 - `revokeAllUserSessions(userId, revokedById?, reason?)` - "Logout all" functionality
 - `revokeAllBadgeSessions(badgeId, reason)` - Badge revocation cleanup (E25 integration)
 
 **Query**:
+
 - `getUserSessions(userId)` - List active sessions for user
 - `getSessionByJti(jti)` - Lookup by JWT ID
 
 **Cleanup**:
+
 - `cleanupExpiredSessions()` - Cron job method (deletes expired + old revoked)
 
 ### 4. MSR Card Model
 
 **Database Schema**:
+
 - New `MsrCard` model (13 fields):
-  * `cardToken` (string, unique) - SHA-256 hash of track data (never raw)
-  * `employeeId` (string, unique) - One card per employee
-  * `status` (MsrCardStatus enum) - ACTIVE, REVOKED, SUSPENDED
-  * `assignedAt`, `assignedById` - Assignment audit
-  * `revokedAt`, `revokedById`, `revokedReason` - Revocation audit
-  * `metadata` (JSON) - Flexible additional data
+  - `cardToken` (string, unique) - SHA-256 hash of track data (never raw)
+  - `employeeId` (string, unique) - One card per employee
+  - `status` (MsrCardStatus enum) - ACTIVE, REVOKED, SUSPENDED
+  - `assignedAt`, `assignedById` - Assignment audit
+  - `revokedAt`, `revokedById`, `revokedReason` - Revocation audit
+  - `metadata` (JSON) - Flexible additional data
 - Relations: `employee`, `assignedBy`, `revokedBy`
 - Indexes: `cardToken` (unique), `employeeId` (unique), `orgId`, `status`
 
@@ -107,48 +118,56 @@ DEV_PORTAL:       { idleTimeoutMinutes: 30,  maxLifetimeHours: 8,  touchThrottle
 **Core Management** (370 lines, 8 methods):
 
 **Assign**:
+
 - `assignCard({ employeeId, trackData, assignedById, metadata })` - Assigns new card
 - Hashes track data with SHA-256 (never stores raw)
 - Checks for duplicate cardToken (throws if already assigned)
 - Enforces one card per employee (unique constraint)
 
 **Revoke**:
+
 - `revokeCard(cardId, revokedById, reason)` - Permanent revocation
 - Sets `status = REVOKED`, stores audit trail
 - Calls `SessionsService.revokeAllUserSessions()` to invalidate all sessions
 
 **Suspend**:
+
 - `suspendCard(cardId, suspendedById, reason)` - Temporary suspension
 - Can be reactivated later (vs revoke = permanent)
 - Also invalidates sessions
 
 **Reactivate**:
+
 - `reactivateCard(cardId, reactivatedById)` - Restore suspended card
 - Cannot reactivate revoked cards
 
 **Authenticate**:
+
 - `authenticateByCard(trackData)` - Core MSR login logic
 - Hashes track data, finds card, validates status/employee/user
 - Returns full context: user, employee, badge, branch, org
 
 **Query**:
+
 - `getCardByEmployee(employeeId)` - Get employee's card
 - `listCards(orgId, filters?)` - List with status/employeeCode filters
 
 ### 6. Authentication Integration
 
 **Updated AuthService**:
+
 - Added `SessionsService` and `MsrCardService` dependencies
 - Enhanced `login()`: Create session with platform=WEB_BACKOFFICE, include employee relation
 - Enhanced `pinLogin()`: Create session with platform=POS_DESKTOP, include employee relation
 - Enhanced `msrSwipe()`: Use `MsrCardService.authenticateByCard()` with legacy fallback to `EmployeeProfile.badgeId`
-- Rewrote `generateAuthResponse()`: 
-  * Accepts sessionContext (platform, source, employeeId, badgeId, deviceId, ipAddress, userAgent)
-  * Creates Session via `SessionsService.createSession()`
-  * Embeds sessionId and platform in JWT payload
-  * Returns session metadata in AuthResponse
+- Rewrote `generateAuthResponse()`:
+  - Accepts sessionContext (platform, source, employeeId, badgeId, deviceId, ipAddress, userAgent)
+  - Creates Session via `SessionsService.createSession()`
+  - Embeds sessionId and platform in JWT payload
+  - Returns session metadata in AuthResponse
 
 **Updated JWT DTOs**:
+
 - Added `SessionPlatform` enum to `auth.dto.ts`
 - Added optional `platform` field to LoginDto, PinLoginDto, MsrSwipeDto
 - Enhanced `AuthResponse` interface with optional `session` metadata
@@ -156,14 +175,15 @@ DEV_PORTAL:       { idleTimeoutMinutes: 30,  maxLifetimeHours: 8,  touchThrottle
 ### 7. JWT Strategy Enhancement
 
 **Session Validation**:
+
 - Added `SessionsService` dependency
 - Enhanced `JwtPayload`: Added `sessionId?: string` and `platform?: string`
 - Enhanced `validate()` method:
-  * Validates session via `SessionsService.validateSession()` if sessionId present
-  * Checks revoked, expired, idle timeout
-  * Auto-revokes idle sessions
-  * Touches session if throttle elapsed (fire-and-forget)
-  * Returns sessionId and platform in user context
+  - Validates session via `SessionsService.validateSession()` if sessionId present
+  - Checks revoked, expired, idle timeout
+  - Auto-revokes idle sessions
+  - Touches session if throttle elapsed (fire-and-forget)
+  - Returns sessionId and platform in user context
 - **Backwards Compat**: Gracefully handles tokens without sessionId (legacy tokens)
 
 ### 8. Logout Endpoints
@@ -171,16 +191,19 @@ DEV_PORTAL:       { idleTimeoutMinutes: 30,  maxLifetimeHours: 8,  touchThrottle
 **Added to AuthController** (3 new endpoints):
 
 **POST /auth/logout**:
+
 - Revokes current session (from JWT sessionId)
 - Returns success message
 - "Big logout" button on POS/KDS calls this
 
 **POST /auth/logout-all**:
+
 - Revokes all active sessions for user
 - Returns count of sessions revoked
 - Use when account compromised or employee terminated
 
 **GET /auth/sessions**:
+
 - Lists user's active sessions
 - Returns: id, platform, source, createdAt, lastActivityAt, expiresAt, deviceName, ipAddress
 - Useful for "Where you're logged in" UI
@@ -190,18 +213,21 @@ DEV_PORTAL:       { idleTimeoutMinutes: 30,  maxLifetimeHours: 8,  touchThrottle
 **Added to AuthController** (3 new endpoints, L3+ required):
 
 **POST /auth/msr/assign**:
+
 - Assigns MSR card to employee
 - Body: `{ employeeId, trackData, metadata? }`
 - Returns: card details with employee info
 - RBAC: @Roles('L3', 'L4', 'L5')
 
 **POST /auth/msr/revoke**:
+
 - Revokes MSR card
 - Body: `{ cardId, reason }`
 - Invalidates all employee sessions
 - RBAC: @Roles('L3', 'L4', 'L5')
 
 **GET /auth/msr/cards**:
+
 - Lists org's MSR cards
 - Query: `status`, `employeeCode` filters
 - Returns: array of cards with employee info
@@ -210,11 +236,13 @@ DEV_PORTAL:       { idleTimeoutMinutes: 30,  maxLifetimeHours: 8,  touchThrottle
 ### 10. Enhanced Platform Access Control
 
 **@AllowedPlatforms Decorator**:
+
 - Created `allowed-platforms.decorator.ts`
 - Usage: `@AllowedPlatforms('WEB_BACKOFFICE')` on controllers/endpoints
 - Highest priority (overrides role-based matrix)
 
 **Enhanced PlatformAccessGuard**:
+
 - Added `Reflector` dependency for decorator support
 - Added `Logger` for anti-spoofing alerts
 - Enhanced `canActivate()` with 3-tier priority:
@@ -225,6 +253,7 @@ DEV_PORTAL:       { idleTimeoutMinutes: 30,  maxLifetimeHours: 8,  touchThrottle
 - **Backwards Compat**: Falls back to header if JWT lacks platform claim
 
 **Helper Methods**:
+
 - `normalizePlatform(headerValue)` - Maps legacy/new values to M10 enums
 - `normalizeToLegacyPlatform(headerValue)` - Maps M10 enums to E23-s3 values
 
@@ -234,30 +263,30 @@ DEV_PORTAL:       { idleTimeoutMinutes: 30,  maxLifetimeHours: 8,  touchThrottle
 
 ### Files Created (6)
 
-| File | Lines | Description |
-|------|-------|-------------|
-| `/workspaces/chefcloud/M10-STEP0-AUTH-REVIEW.md` | 900 | Infrastructure review, 85% foundation complete |
-| `/services/api/src/auth/session-policies.ts` | 120 | Per-platform session policies config |
-| `/services/api/src/auth/sessions.service.ts` | 280 | Session lifecycle management service |
-| `/services/api/src/auth/msr-card.service.ts` | 370 | MSR card lifecycle management service |
-| `/services/api/src/auth/allowed-platforms.decorator.ts` | 25 | @AllowedPlatforms decorator |
-| `/workspaces/chefcloud/M10-AUTH-SESSIONS-COMPLETION.md` | (this file) | Completion summary |
+| File                                                    | Lines       | Description                                    |
+| ------------------------------------------------------- | ----------- | ---------------------------------------------- |
+| `/workspaces/chefcloud/M10-STEP0-AUTH-REVIEW.md`        | 900         | Infrastructure review, 85% foundation complete |
+| `/services/api/src/auth/session-policies.ts`            | 120         | Per-platform session policies config           |
+| `/services/api/src/auth/sessions.service.ts`            | 280         | Session lifecycle management service           |
+| `/services/api/src/auth/msr-card.service.ts`            | 370         | MSR card lifecycle management service          |
+| `/services/api/src/auth/allowed-platforms.decorator.ts` | 25          | @AllowedPlatforms decorator                    |
+| `/workspaces/chefcloud/M10-AUTH-SESSIONS-COMPLETION.md` | (this file) | Completion summary                             |
 
 **Total New Code**: ~1,695 lines (services + config + docs)
 
 ### Files Modified (9)
 
-| File | Changes | Description |
-|------|---------|-------------|
-| `/packages/db/prisma/schema.prisma` | +50 lines | 3 new enums, 16 Session fields, MsrCard model, relations |
-| `/services/api/src/auth/dto/auth.dto.ts` | +15 lines | SessionPlatform enum, platform fields, session metadata |
-| `/services/api/src/auth/jwt.strategy.ts` | +40 lines | Session validation, touch, sessionId/platform in payload |
-| `/services/api/src/auth/auth.service.ts` | +85 lines | SessionsService/MsrCardService integration, msrSwipe rewrite |
-| `/services/api/src/auth/auth.module.ts` | +5 lines | Register SessionsService, MsrCardService |
-| `/services/api/src/auth/auth.controller.ts` | +150 lines | 6 new endpoints (logout, MSR management) |
-| `/services/api/src/auth/platform-access.guard.ts` | +120 lines | @AllowedPlatforms, JWT validation, anti-spoofing |
-| `/services/api/src/auth/auth.service.ts` | (included above) | generateAuthResponse rewrite |
-| `/workspaces/chefcloud/DEV_GUIDE.md` | +800 lines | Comprehensive M10 documentation section |
+| File                                              | Changes          | Description                                                  |
+| ------------------------------------------------- | ---------------- | ------------------------------------------------------------ |
+| `/packages/db/prisma/schema.prisma`               | +50 lines        | 3 new enums, 16 Session fields, MsrCard model, relations     |
+| `/services/api/src/auth/dto/auth.dto.ts`          | +15 lines        | SessionPlatform enum, platform fields, session metadata      |
+| `/services/api/src/auth/jwt.strategy.ts`          | +40 lines        | Session validation, touch, sessionId/platform in payload     |
+| `/services/api/src/auth/auth.service.ts`          | +85 lines        | SessionsService/MsrCardService integration, msrSwipe rewrite |
+| `/services/api/src/auth/auth.module.ts`           | +5 lines         | Register SessionsService, MsrCardService                     |
+| `/services/api/src/auth/auth.controller.ts`       | +150 lines       | 6 new endpoints (logout, MSR management)                     |
+| `/services/api/src/auth/platform-access.guard.ts` | +120 lines       | @AllowedPlatforms, JWT validation, anti-spoofing             |
+| `/services/api/src/auth/auth.service.ts`          | (included above) | generateAuthResponse rewrite                                 |
+| `/workspaces/chefcloud/DEV_GUIDE.md`              | +800 lines       | Comprehensive M10 documentation section                      |
 
 **Total Modified Lines**: ~1,265 lines
 
@@ -267,27 +296,27 @@ DEV_PORTAL:       { idleTimeoutMinutes: 30,  maxLifetimeHours: 8,  touchThrottle
 
 ### Authentication Endpoints (Enhanced)
 
-| Endpoint | Method | Changes | RBAC |
-|----------|--------|---------|------|
-| `/auth/login` | POST | Added `platform` param (default: WEB_BACKOFFICE), creates session | Public |
-| `/auth/pin-login` | POST | Added `platform` param (default: POS_DESKTOP), creates session | Public |
-| `/auth/msr-swipe` | POST | Uses MsrCardService, added `platform` param (default: POS_DESKTOP), legacy fallback | Public |
+| Endpoint          | Method | Changes                                                                             | RBAC   |
+| ----------------- | ------ | ----------------------------------------------------------------------------------- | ------ |
+| `/auth/login`     | POST   | Added `platform` param (default: WEB_BACKOFFICE), creates session                   | Public |
+| `/auth/pin-login` | POST   | Added `platform` param (default: POS_DESKTOP), creates session                      | Public |
+| `/auth/msr-swipe` | POST   | Uses MsrCardService, added `platform` param (default: POS_DESKTOP), legacy fallback | Public |
 
 ### Session Management Endpoints (New)
 
-| Endpoint | Method | Description | RBAC |
-|----------|--------|-------------|------|
-| `/auth/logout` | POST | Revoke current session (from JWT sessionId) | JWT Auth |
-| `/auth/logout-all` | POST | Revoke all user sessions | JWT Auth |
-| `/auth/sessions` | GET | List user's active sessions | JWT Auth |
+| Endpoint           | Method | Description                                 | RBAC     |
+| ------------------ | ------ | ------------------------------------------- | -------- |
+| `/auth/logout`     | POST   | Revoke current session (from JWT sessionId) | JWT Auth |
+| `/auth/logout-all` | POST   | Revoke all user sessions                    | JWT Auth |
+| `/auth/sessions`   | GET    | List user's active sessions                 | JWT Auth |
 
 ### MSR Card Management Endpoints (New)
 
-| Endpoint | Method | Description | RBAC |
-|----------|--------|-------------|------|
-| `/auth/msr/assign` | POST | Assign MSR card to employee | L3+ |
-| `/auth/msr/revoke` | POST | Revoke MSR card (invalidates sessions) | L3+ |
-| `/auth/msr/cards` | GET | List org's MSR cards (with filters) | L3+ |
+| Endpoint           | Method | Description                            | RBAC |
+| ------------------ | ------ | -------------------------------------- | ---- |
+| `/auth/msr/assign` | POST   | Assign MSR card to employee            | L3+  |
+| `/auth/msr/revoke` | POST   | Revoke MSR card (invalidates sessions) | L3+  |
+| `/auth/msr/cards`  | GET    | List org's MSR cards (with filters)    | L3+  |
 
 **Total New Endpoints**: 6  
 **Total Enhanced Endpoints**: 3
@@ -327,6 +356,7 @@ enum MsrCardStatus {
 ### Session Model Enhanced (16 new fields)
 
 **Added Fields**:
+
 - `platform` (SessionPlatform) - Binds session to platform
 - `source` (SessionSource) - Login method used
 - `orgId` (String) - Organization link
@@ -340,12 +370,14 @@ enum MsrCardStatus {
 - `userAgent` (String?) - Security metadata
 
 **Added Relations**:
+
 - `org` → Org
 - `branch` → Branch
 - `employee` → Employee
 - `revokedBy` → User
 
 **Added Indexes**:
+
 - `lastActivityAt` - Fast idle session queries
 - `revokedAt` - Fast cleanup queries
 - Enhanced compound indexes
@@ -353,6 +385,7 @@ enum MsrCardStatus {
 ### MsrCard Model Added (13 fields)
 
 **New Model**:
+
 ```prisma
 model MsrCard {
   id            String        @id @default(cuid())
@@ -368,12 +401,12 @@ model MsrCard {
   metadata      Json?
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
-  
+
   // Relations
   employee      Employee      @relation(fields: [employeeId], references: [id])
   assignedBy    User          @relation("AssignedMsrCards", fields: [assignedById], references: [id])
   revokedBy     User?         @relation("RevokedMsrCards", fields: [revokedById], references: [id])
-  
+
   @@index([orgId])
   @@index([status])
   @@index([cardToken])
@@ -390,6 +423,7 @@ model MsrCard {
 ### Migrations
 
 **Status**: ✅ 2 successful Prisma migrations
+
 - Migration 1: Enhanced Session model (via `prisma db push`)
 - Migration 2: Added MsrCard model (via `prisma db push`)
 - Prisma Client v5.22.0 generated successfully
@@ -402,16 +436,19 @@ model MsrCard {
 ### M9 HR/Attendance Integration
 
 **Session ↔ Employee Linking**:
+
 - `Session.employeeId` links to M9 Employee model
 - MSR swipe creates session with employeeId populated
 - Session list shows employee info (code, name, role)
 
 **Auto Clock-In** (Preserved from E43-s1):
+
 - `AuthService.msrSwipe()` still calls `WorkforceService.autoClockIn()`
 - Happens after successful MSR authentication
 - If already clocked in, skips (idempotent)
 
 **Card Revocation**:
+
 - Manager terminates employee → revokes MSR card
 - `MsrCardService.revokeCard()` → calls `SessionsService.revokeAllUserSessions()`
 - Employee immediately logged out from all devices
@@ -419,11 +456,13 @@ model MsrCard {
 ### M8 Accounting Integration
 
 **Audit Events** (Existing):
+
 - Session creation/revocation logged via AuditService
 - MSR card assign/revoke logged via AuditService
 - All use existing audit infrastructure from M8
 
 **Access Control**:
+
 - Accounting endpoints use `@AllowedPlatforms('WEB_BACKOFFICE')`
 - POS/Mobile cannot access `/accounting/*` endpoints
 - Enforced via PlatformAccessGuard
@@ -431,11 +470,13 @@ model MsrCard {
 ### E25 Session Invalidation Integration
 
 **Backwards Compatibility**:
+
 - Old E25 tokens (without sessionId) still work
 - Session version + Redis deny list still enforced
 - Logout endpoints handle both old and new tokens
 
 **Revocation Flow**:
+
 - `MsrCardService.revokeCard()` → `SessionsService.revokeAllUserSessions()`
 - `SessionsService.revokeSession()` → marks Session.revokedAt
 - JwtStrategy checks Session.revokedAt before session version/deny list
@@ -444,11 +485,13 @@ model MsrCard {
 ### E23-s3 Platform Access Integration
 
 **Legacy Role-Based Matrix**:
+
 - PlatformAccessGuard still supports E23-s3 role matrix as fallback
 - If no `@AllowedPlatforms` decorator → uses role-based matrix
 - Maintains backwards compatibility with existing endpoints
 
 **Migration Path**:
+
 - New endpoints: Use `@AllowedPlatforms` (preferred)
 - Existing endpoints: Keep role matrix (no breaking changes)
 - Gradual migration: Add `@AllowedPlatforms` to critical endpoints over time
@@ -463,6 +506,7 @@ model MsrCard {
 **After (M10)**: Formal Session records with full audit trail
 
 **Benefits**:
+
 - Admins can see "Where you're logged in" (GET /auth/sessions)
 - Managers can terminate employee sessions remotely
 - Security team can audit login patterns
@@ -473,6 +517,7 @@ model MsrCard {
 **After**: Per-platform idle timeouts (5-60 min)
 
 **Benefits**:
+
 - POS terminals auto-logout after 10 min inactivity
 - Reduces risk from unattended devices
 - Especially important for shared terminals
@@ -483,6 +528,7 @@ model MsrCard {
 **After**: Platform embedded in JWT, validated on every request
 
 **Benefits**:
+
 - Prevents malicious clients from spoofing platform
 - Logs warnings on mismatch (security monitoring)
 - Cryptographically enforced via JWT signature
@@ -493,6 +539,7 @@ model MsrCard {
 **After**: SHA-256 hash only, never raw track data
 
 **Benefits**:
+
 - Database breach doesn't expose track data
 - Cannot clone cards from database
 - Complies with PCI DSS (if using payment-compatible readers)
@@ -503,6 +550,7 @@ model MsrCard {
 **After**: `revokedAt`, `revokedById`, `revokedReason` tracked
 
 **Benefits**:
+
 - HR/Legal compliance (termination audit)
 - Security incident investigation
 - Accountability for admin actions
@@ -518,6 +566,7 @@ model MsrCard {
 **Fix Needed**: Set up cron job in worker service (daily at 3 AM)
 
 **Command**:
+
 ```typescript
 // services/worker/src/index.ts
 cron.schedule('0 3 * * *', async () => {
@@ -533,6 +582,7 @@ cron.schedule('0 3 * * *', async () => {
 **Enhancement Needed**: Store in `OrgSettings.sessionPolicies`, allow per-org override
 
 **Future Schema**:
+
 ```typescript
 interface OrgSettings {
   sessionPolicies?: {
@@ -549,6 +599,7 @@ interface OrgSettings {
 **Enhancement Needed**: Add per-user concurrent session limit (e.g., max 3 active sessions)
 
 **Future Logic**:
+
 ```typescript
 // In SessionsService.createSession()
 const activeSessions = await this.getUserSessions(userId);
@@ -571,6 +622,7 @@ if (activeSessions.length >= MAX_SESSIONS_PER_USER) {
 **Enhancement Needed**: Alert on login from new country/IP range
 
 **Future Logic**:
+
 ```typescript
 // In JwtStrategy.validate()
 if (session.ipAddress !== requestIp) {
@@ -586,6 +638,7 @@ if (session.ipAddress !== requestIp) {
 **Enhancement Needed**: Check DutyShift schedule, warn if login outside shift
 
 **Future Logic**:
+
 ```typescript
 // In AuthService.msrSwipe()
 const currentShift = await this.dutyShiftService.findCurrentShift(employeeId, branchId);
@@ -677,12 +730,14 @@ if (!currentShift) {
 ### Legacy Token Support
 
 **E25 Tokens** (without sessionId):
+
 - ✅ Still validated via session version + Redis deny list
 - ✅ Idle timeout NOT enforced (no session to check)
 - ✅ Logout endpoints return success but do nothing (graceful degradation)
 - ✅ Platform falls back to `x-client-platform` header
 
 **Migration Strategy**:
+
 1. **Phase 1** (Current): Deploy M10, all new logins get sessions
 2. **Phase 2** (Optional): Force re-login by incrementing `User.sessionVersion`
 3. **Phase 3** (Future): Require `sessionId` in all tokens, remove legacy support
@@ -690,15 +745,17 @@ if (!currentShift) {
 ### Legacy Badge Assignments
 
 **EmployeeProfile.badgeId** (E25):
+
 - ✅ Still works via fallback in `AuthService.msrSwipe()`
 - ✅ If MsrCard not found, tries EmployeeProfile lookup
 - ✅ Gradual migration: Assign MsrCards as employees re-swipe
 
 **Migration Command**:
+
 ```sql
 -- Migrate existing badge assignments to MsrCard
 INSERT INTO "MsrCard" (id, "orgId", "employeeId", "cardToken", status, "assignedAt", "assignedById")
-SELECT 
+SELECT
   'card_' || ep.id,
   e."orgId",
   ep.id,
@@ -721,16 +778,19 @@ ON CONFLICT ("employeeId") DO NOTHING;
 ### Database Load
 
 **Session Touch (Per Request)**:
+
 - Throttled: Only updates if >1 min since last touch (POS) or >2 min (web)
 - Fire-and-forget: Doesn't block request (async, no await)
 - **Overhead**: ~5 ms per request (in-memory check + optional DB write)
 
 **Session Validation (Per Request)**:
+
 - In-memory idle timeout calculation (no DB query)
 - DB query only if `sessionId` present in JWT (M10 tokens)
 - **Overhead**: ~10 ms per request (single SELECT by primary key)
 
 **Redis Deny List (Per Request)**:
+
 - E25 logic unchanged, still runs on every request
 - **Overhead**: ~2 ms per request (Redis is fast)
 
@@ -739,25 +799,29 @@ ON CONFLICT ("employeeId") DO NOTHING;
 ### Session Cleanup
 
 **Expired Sessions**:
+
 - Accumulate until cron job runs
 - Cleanup deletes sessions older than:
-  * `expiresAt < NOW()` (expired)
-  * `revokedAt < NOW() - 7 days` (old revoked)
+  - `expiresAt < NOW()` (expired)
+  - `revokedAt < NOW() - 7 days` (old revoked)
 - **Frequency**: Run daily at 3 AM (low-traffic period)
 
 **Estimated Cleanup Time**:
+
 - 10,000 expired sessions → ~2 seconds
 - Uses indexed queries (`expiresAt`, `revokedAt`)
 
 ### Scalability
 
 **Database Growth**:
+
 - Average session lifetime: 8-12 hours
 - 100 staff, 3 logins/day → 300 sessions/day
 - With weekly cleanup: ~2,100 active sessions at steady state
 - Negligible storage (<1 MB)
 
 **MSR Card Growth**:
+
 - One card per employee
 - 100 employees → 100 MsrCard records
 - Negligible storage
@@ -771,6 +835,7 @@ ON CONFLICT ("employeeId") DO NOTHING;
 **Status**: ⚠️ **NOT WRITTEN YET**
 
 **Required Test Suites**:
+
 1. `sessions.service.spec.ts` - SessionsService methods
 2. `msr-card.service.spec.ts` - MsrCardService methods
 3. `platform-access.guard.spec.ts` - PlatformAccessGuard logic
@@ -782,6 +847,7 @@ ON CONFLICT ("employeeId") DO NOTHING;
 **Status**: ⚠️ **NOT WRITTEN YET**
 
 **Required Test Scenarios**:
+
 1. Login flow (password, PIN, MSR) with session creation
 2. Idle timeout enforcement (wait, verify 401)
 3. Logout flow (single session, all sessions)
@@ -838,11 +904,13 @@ ON CONFLICT ("employeeId") DO NOTHING;
 ### Rollback Plan
 
 **If Issues Detected**:
+
 1. Revert to previous deployment
 2. Old tokens (E25) still work (backwards compatible)
 3. Database changes are additive (no data loss)
 
 **Database Rollback** (if needed):
+
 ```sql
 -- Rollback Session enhancements (non-destructive)
 -- No need to drop columns (nullable fields, have defaults)
@@ -890,25 +958,25 @@ DROP TYPE IF EXISTS "MsrCardStatus";
 ### User-Facing Docs
 
 - ✅ DEV_GUIDE.md updated with comprehensive M10 section
-  * Architecture overview
-  * Session model and lifecycle
-  * MSR card management
-  * Login/logout flows
-  * Platform access control
-  * POS/KDS client best practices
-  * Troubleshooting guide
-  * Migration guide
+  - Architecture overview
+  - Session model and lifecycle
+  - MSR card management
+  - Login/logout flows
+  - Platform access control
+  - POS/KDS client best practices
+  - Troubleshooting guide
+  - Migration guide
 
 ### API Docs
 
 - ⚠️ OpenAPI spec not updated yet (manual update needed)
 - New endpoints need to be added:
-  * POST /auth/logout
-  * POST /auth/logout-all
-  * GET /auth/sessions
-  * POST /auth/msr/assign
-  * POST /auth/msr/revoke
-  * GET /auth/msr/cards
+  - POST /auth/logout
+  - POST /auth/logout-all
+  - GET /auth/sessions
+  - POST /auth/msr/assign
+  - POST /auth/msr/revoke
+  - GET /auth/msr/cards
 
 ### Inline Code Docs
 
@@ -934,6 +1002,7 @@ M10 successfully delivers enterprise-grade authentication and session management
 **Production Ready**: ⚠️ After tests pass and build verified
 
 **Next Steps**:
+
 1. Write unit tests (SessionsService, MsrCardService, PlatformAccessGuard)
 2. Write E2E tests (login/logout/platform enforcement)
 3. Run build check (`pnpm build`)

@@ -56,13 +56,8 @@ export class TaxReportService {
     startDate: Date;
     endDate: Date;
   }): Promise<TaxSummary> {
-    // Get org currency
-    const org = await this.prisma.client.org.findUnique({
-      where: { id: params.orgId },
-      select: { currency: true },
-    });
-
-    const currency = org?.currency || 'UGX';
+    // Get org currency (TODO: Add currency field to Org model)
+    const currency = 'UGX';
 
     // Query closed orders in period
     const orderWhere: any = {
@@ -91,9 +86,10 @@ export class TaxReportService {
     const taxCollected: { [key: string]: number } = {};
 
     for (const order of orders) {
-      const breakdown = order.metadata && typeof order.metadata === 'object' 
-        ? (order.metadata as any).taxBreakdown 
-        : null;
+      const breakdown =
+        order.metadata && typeof order.metadata === 'object'
+          ? (order.metadata as any).taxBreakdown
+          : null;
 
       if (breakdown?.items) {
         // M17+ orders (detailed breakdown)
@@ -203,26 +199,30 @@ export class TaxReportService {
     });
 
     // Aggregate by category
-    const categoryMap = new Map<string, {
-      name: string;
-      taxCode: string;
-      taxRate: number;
-      netSales: number;
-      taxCollected: number;
-      grossSales: number;
-    }>();
+    const categoryMap = new Map<
+      string,
+      {
+        name: string;
+        taxCode: string;
+        taxRate: number;
+        netSales: number;
+        taxCollected: number;
+        grossSales: number;
+      }
+    >();
 
     for (const order of orders) {
-      const breakdown = order.metadata && typeof order.metadata === 'object' 
-        ? (order.metadata as any).taxBreakdown 
-        : null;
+      const breakdown =
+        order.metadata && typeof order.metadata === 'object'
+          ? (order.metadata as any).taxBreakdown
+          : null;
 
       if (breakdown?.items) {
         // M17+ orders with detailed breakdown
         for (const breakdownItem of breakdown.items) {
-          const orderItem = order.orderItems.find(oi => oi.menuItem.id === breakdownItem.itemId);
+          const orderItem = order.orderItems.find((oi) => oi.menuItem.id === breakdownItem.itemId);
           const categoryName = orderItem?.menuItem?.category?.name || 'Uncategorized';
-          
+
           if (!categoryMap.has(categoryName)) {
             categoryMap.set(categoryName, {
               name: categoryName,
@@ -244,7 +244,7 @@ export class TaxReportService {
         for (const orderItem of order.orderItems) {
           const categoryName = orderItem.menuItem?.category?.name || 'Uncategorized';
           const itemSubtotal = Number(orderItem.subtotal || 0);
-          
+
           if (!categoryMap.has(categoryName)) {
             categoryMap.set(categoryName, {
               name: categoryName,
@@ -279,7 +279,7 @@ export class TaxReportService {
     );
 
     return {
-      categories: categories.map(cat => ({
+      categories: categories.map((cat) => ({
         ...cat,
         netSales: Math.round(cat.netSales * 100) / 100,
         taxCollected: Math.round(cat.taxCollected * 100) / 100,

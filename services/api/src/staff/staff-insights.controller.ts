@@ -1,6 +1,6 @@
 /**
  * M19: Staff Insights Controller
- * 
+ *
  * Endpoints for staff insights, awards, and employee-of-period recommendations.
  */
 
@@ -37,15 +37,16 @@ export class StaffInsightsController {
   /**
    * GET /staff/insights/rankings
    * Get ranked staff with performance + reliability
-   * 
+   *
    * Access: L4+ (Managers, Owners, HR, Accountants)
    */
   @Get('rankings')
   @Roles('L4', 'L5', 'HR', 'ACCOUNTANT')
   async getRankings(@CurrentUser() user: any, @Query() query: StaffInsightsQueryDto) {
-    const period = query.from && query.to
-      ? this.staffInsights.resolvePeriod(query.periodType, new Date(query.from))
-      : this.staffInsights.resolvePeriod(query.periodType, new Date());
+    const period =
+      query.from && query.to
+        ? this.staffInsights.resolvePeriod(query.periodType, new Date(query.from))
+        : this.staffInsights.resolvePeriod(query.periodType, new Date());
 
     return this.staffInsights.getStaffInsights({
       orgId: user.orgId,
@@ -61,9 +62,9 @@ export class StaffInsightsController {
    * GET /staff/insights/employee-of-month
    * GET /staff/insights/employee-of-quarter
    * GET /staff/insights/employee-of-year
-   * 
+   *
    * Get recommended employee-of-period
-   * 
+   *
    * Access: L4+ (Managers, Owners, HR)
    */
   @Get('employee-of-:period')
@@ -76,7 +77,9 @@ export class StaffInsightsController {
     const periodType = periodParam.toUpperCase() as AwardPeriodType;
 
     if (!Object.values(AwardPeriodType).includes(periodType)) {
-      throw new BadRequestException(`Invalid period type: ${periodParam}. Use: week, month, quarter, or year`);
+      throw new BadRequestException(
+        `Invalid period type: ${periodParam}. Use: week, month, quarter, or year`,
+      );
     }
 
     const refDate = query.referenceDate ? new Date(query.referenceDate) : new Date();
@@ -99,12 +102,12 @@ export class StaffInsightsController {
   /**
    * POST /staff/insights/awards
    * Create/persist an award
-   * 
+   *
    * Access: L4+ (Managers, Owners, HR)
    */
   @Post('awards')
   @Roles('L4', 'L5', 'HR')
-  async createAward(@CurrentUser() user: any, @Body() dto: CreateAwardDto) {
+  async createAward(@CurrentUser() user: any, @Body() dto: CreateAwardDto): Promise<any> {
     const period = this.staffInsights.resolvePeriod(dto.periodType, new Date(dto.referenceDate));
 
     const recommendation = await this.staffInsights.getAwardRecommendation(
@@ -132,12 +135,12 @@ export class StaffInsightsController {
   /**
    * GET /staff/insights/awards
    * List award history
-   * 
+   *
    * Access: L4+ (Managers, Owners, HR, Accountants)
    */
   @Get('awards')
   @Roles('L4', 'L5', 'HR', 'ACCOUNTANT')
-  async listAwards(@CurrentUser() user: any, @Query() query: ListAwardsQueryDto) {
+  async listAwards(@CurrentUser() user: any, @Query() query: ListAwardsQueryDto): Promise<any> {
     return this.staffInsights.listAwards({
       orgId: user.orgId,
       branchId: query.branchId,
@@ -154,7 +157,7 @@ export class StaffInsightsController {
   /**
    * GET /staff/insights/me
    * Get current user's own insights (staff self-view)
-   * 
+   *
    * Access: All authenticated users
    */
   @Get('me')

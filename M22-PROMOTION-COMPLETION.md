@@ -9,6 +9,7 @@
 ## Executive Summary
 
 M22 adds a **lightweight promotion suggestion layer** on top of M19 Staff Insights, enabling managers to:
+
 - Preview promotion/training candidates without persistence
 - Generate and persist suggestions with idempotent constraints
 - Track decision history (PENDING → ACCEPTED/REJECTED/IGNORED)
@@ -40,33 +41,36 @@ enum SuggestionStatus {
 
 ### New Table: `promotion_suggestions`
 
-| Field | Type | Constraints | Description |
-|-------|------|-------------|-------------|
-| `id` | TEXT | PK | CUID |
-| `orgId` | TEXT | FK → orgs, NOT NULL | Organization |
-| `branchId` | TEXT | FK → branches, NULL | Branch (NULL for org-level) |
-| `employeeId` | TEXT | FK → employees, NOT NULL | Employee being suggested |
-| `periodType` | AwardPeriodType | NOT NULL | WEEK, MONTH, QUARTER, YEAR (reuse M19) |
-| `periodStart` | TIMESTAMP | NOT NULL | Period start date |
-| `periodEnd` | TIMESTAMP | NOT NULL | Period end date |
-| `category` | SuggestionCategory | NOT NULL | Suggestion type |
-| `scoreAtSuggestion` | DECIMAL(10,4) | NOT NULL | Composite score 0-1 at suggestion time |
-| `insightsSnapshot` | JSONB | NULL | Full M19 metrics for audit |
-| `reason` | TEXT | NOT NULL | Human-readable reason |
-| `status` | SuggestionStatus | DEFAULT 'PENDING' | Current status |
-| `statusUpdatedAt` | TIMESTAMP | NULL | When status changed |
-| `statusUpdatedById` | TEXT | FK → users, NULL | User who made decision |
-| `decisionNotes` | TEXT | NULL | Why accepted/rejected |
-| `createdAt` | TIMESTAMP | DEFAULT now() | When suggestion created |
-| `createdById` | TEXT | FK → users, NULL | User who generated (NULL if auto) |
+| Field               | Type               | Constraints              | Description                            |
+| ------------------- | ------------------ | ------------------------ | -------------------------------------- |
+| `id`                | TEXT               | PK                       | CUID                                   |
+| `orgId`             | TEXT               | FK → orgs, NOT NULL      | Organization                           |
+| `branchId`          | TEXT               | FK → branches, NULL      | Branch (NULL for org-level)            |
+| `employeeId`        | TEXT               | FK → employees, NOT NULL | Employee being suggested               |
+| `periodType`        | AwardPeriodType    | NOT NULL                 | WEEK, MONTH, QUARTER, YEAR (reuse M19) |
+| `periodStart`       | TIMESTAMP          | NOT NULL                 | Period start date                      |
+| `periodEnd`         | TIMESTAMP          | NOT NULL                 | Period end date                        |
+| `category`          | SuggestionCategory | NOT NULL                 | Suggestion type                        |
+| `scoreAtSuggestion` | DECIMAL(10,4)      | NOT NULL                 | Composite score 0-1 at suggestion time |
+| `insightsSnapshot`  | JSONB              | NULL                     | Full M19 metrics for audit             |
+| `reason`            | TEXT               | NOT NULL                 | Human-readable reason                  |
+| `status`            | SuggestionStatus   | DEFAULT 'PENDING'        | Current status                         |
+| `statusUpdatedAt`   | TIMESTAMP          | NULL                     | When status changed                    |
+| `statusUpdatedById` | TEXT               | FK → users, NULL         | User who made decision                 |
+| `decisionNotes`     | TEXT               | NULL                     | Why accepted/rejected                  |
+| `createdAt`         | TIMESTAMP          | DEFAULT now()            | When suggestion created                |
+| `createdById`       | TEXT               | FK → users, NULL         | User who generated (NULL if auto)      |
 
 **Unique Constraint:**
+
 ```sql
 UNIQUE (orgId, employeeId, periodType, periodStart, category)
 ```
+
 **Purpose:** Idempotent suggestion generation—prevents duplicate "John Doe, PROMOTION, November 2025" suggestions.
 
 **Indexes:**
+
 ```sql
 CREATE INDEX ON promotion_suggestions (orgId, branchId, periodStart);
 CREATE INDEX ON promotion_suggestions (employeeId, periodStart);
@@ -74,6 +78,7 @@ CREATE INDEX ON promotion_suggestions (status);
 ```
 
 **Reverse Relations Added:**
+
 - `Org.promotionSuggestions`
 - `Branch.promotionSuggestions`
 - `Employee.promotionSuggestions`
@@ -89,7 +94,7 @@ CREATE INDEX ON promotion_suggestions (status);
 
 **Core Methods:**
 
-1. **`computeSuggestions(query, config?)`** → `PromotionSuggestionDTO[]`  
+1. **`computeSuggestions(query, config?)`** → `PromotionSuggestionDTO[]`
    - **Preview-only** (no persistence)
    - Calls `StaffInsightsService.getStaffInsights()`
    - Applies M22-specific thresholds:
@@ -98,30 +103,31 @@ CREATE INDEX ON promotion_suggestions (status);
      - **PERFORMANCE_REVIEW:** Top 10% (score >= 0.85) OR bottom 10% (score <= 0.50)
    - Returns in-memory suggestions
 
-2. **`generateAndPersistSuggestions(query, actor)`** → `{ created, updated, total }`  
+2. **`generateAndPersistSuggestions(query, actor)`** → `{ created, updated, total }`
    - **RBAC:** L5 (OWNER) only
    - Calls `computeSuggestions()` then upserts each to DB
    - **Idempotent:** Unique constraint prevents duplicates
    - Only updates `PENDING` suggestions (preserves `ACCEPTED`/`REJECTED`)
    - Returns summary of created vs updated
 
-3. **`listSuggestions(filter)`** → `{ suggestions, total }`  
+3. **`listSuggestions(filter)`** → `{ suggestions, total }`
    - **RBAC:** L4+ (MANAGER, OWNER, HR)
    - Filters: org, branch, employee, period, category, status, date range
    - Pagination: limit (default 50, max 200), offset
    - Returns suggestions with employee details
 
-4. **`updateSuggestionStatus(id, { status, decisionNotes }, actor)`** → Updated suggestion  
+4. **`updateSuggestionStatus(id, { status, decisionNotes }, actor)`** → Updated suggestion
    - **RBAC:** L4+ (MANAGER, OWNER, HR)
    - Updates status + records timestamp/userId
    - **Validation:** Cannot change from ACCEPTED/REJECTED to another status (final states)
 
-5. **`getSuggestionSummary(query)`** → `SuggestionSummary`  
+5. **`getSuggestionSummary(query)`** → `SuggestionSummary`
    - Aggregate stats for a period
    - Used in digest generation (M4 integration)
    - Returns: totalSuggestions, byCategory, byStatus, topSuggestions (top 3 by score)
 
 **Default Thresholds (configurable):**
+
 ```typescript
 {
   minScoreThreshold: 0.70,    // Top 30%
@@ -141,6 +147,7 @@ CREATE INDEX ON promotion_suggestions (status);
 **Purpose:** Preview suggestions without saving (what-if analysis)  
 **RBAC:** L4+  
 **Query Params:**
+
 - `periodType` (required): WEEK | MONTH | QUARTER | YEAR
 - `from`, `to` (optional): ISO dates
 - `branchId` (optional): Filter to branch
@@ -148,6 +155,7 @@ CREATE INDEX ON promotion_suggestions (status);
 - `categories` (optional): Comma-separated (e.g., "PROMOTION,TRAINING")
 
 **Response:**
+
 ```json
 [
   {
@@ -166,6 +174,7 @@ CREATE INDEX ON promotion_suggestions (status);
 **Purpose:** Generate AND persist suggestions (idempotent)  
 **RBAC:** L5 (OWNER)  
 **Body:**
+
 ```json
 {
   "periodType": "MONTH",
@@ -178,6 +187,7 @@ CREATE INDEX ON promotion_suggestions (status);
 ```
 
 **Response:**
+
 ```json
 {
   "created": [
@@ -197,11 +207,13 @@ CREATE INDEX ON promotion_suggestions (status);
 **Purpose:** List historical suggestions with filters  
 **RBAC:** L4+  
 **Query Params:**
+
 - `branchId`, `employeeId`, `periodType`, `category`, `status` (filters)
 - `fromDate`, `toDate` (ISO dates)
 - `limit` (default 50, max 200), `offset` (default 0)
 
 **Response:**
+
 ```json
 {
   "suggestions": [
@@ -227,6 +239,7 @@ CREATE INDEX ON promotion_suggestions (status);
 **Purpose:** Update suggestion status (accept/reject/ignore)  
 **RBAC:** L4+  
 **Body:**
+
 ```json
 {
   "status": "ACCEPTED",
@@ -235,6 +248,7 @@ CREATE INDEX ON promotion_suggestions (status);
 ```
 
 **Response:**
+
 ```json
 {
   "id": "sug_123",
@@ -256,6 +270,7 @@ CREATE INDEX ON promotion_suggestions (status);
 **File:** `services/api/src/reports/dto/report-content.dto.ts`
 
 **Added Field:**
+
 ```typescript
 staffPromotions?: {
   periodLabel: string;                    // "November 2025"
@@ -283,6 +298,7 @@ staffPromotions?: {
 ### FranchiseDigest Extension
 
 **Added Field:**
+
 ```typescript
 franchisePromotions?: {
   periodLabel: string;
@@ -304,6 +320,7 @@ franchisePromotions?: {
 ```
 
 **Helper Method Added (commented out until Period/Franchise digests implemented):**
+
 ```typescript
 /* async generateStaffPromotionsSection(orgId, branchId, periodType, startDate, endDate) {
   const summary = await this.promotionInsights.getSuggestionSummary(...);
@@ -319,6 +336,7 @@ franchisePromotions?: {
 ### Automatic Promotion Detection
 
 **PROMOTION:**
+
 - ✅ Composite score >= 0.70 (top 30%)
 - ✅ Tenure >= 3 months (uses `employee.hiredAt` as proxy)
 - ✅ Attendance rate >= 90%
@@ -326,21 +344,25 @@ franchisePromotions?: {
 - ✅ Min 10 shifts in period (M19 eligibility)
 
 **TRAINING:**
+
 - ✅ Low avg check (< 15,000 UGX) → upselling training
 - ✅ High void rate (> 5%) → POS training
 - ✅ High no-drinks rate (> 10%) → suggestive selling training
 - ✅ Min 1 month tenure (no spam for new hires)
 
 **PERFORMANCE_REVIEW:**
+
 - ✅ Top 10% (score >= 0.85) → fast-track review
 - ✅ Or: Bottom 10% (score <= 0.50) → improvement plan
 
 **ROLE_CHANGE:**
+
 - ❌ Manual only (cannot auto-detect lateral move suitability)
 
 ### Exclusion Rules
 
 Never suggest if:
+
 - ❌ CRITICAL risk level (anti-theft flags)
 - ❌ Absence rate > 15%
 - ❌ Less than min shifts for period
@@ -349,6 +371,7 @@ Never suggest if:
 ### Period Resolution
 
 Reuse M19 period logic via `StaffInsightsService.resolvePeriod()`:
+
 - **WEEK:** ISO week (Monday-Sunday)
 - **MONTH:** Calendar month
 - **QUARTER:** Q1 (Jan-Mar), Q2 (Apr-Jun), Q3 (Jul-Sep), Q4 (Oct-Dec)
@@ -395,14 +418,14 @@ Reuse M19 period logic via `StaffInsightsService.resolvePeriod()`:
 
 ### Created
 
-1. **`M22-STEP0-PROMOTION-REVIEW.md`** (600+ lines)  
+1. **`M22-STEP0-PROMOTION-REVIEW.md`** (600+ lines)
    - Comprehensive inventory of M19 infrastructure
    - Gap analysis (5 gaps identified)
    - Proposed PromotionSuggestion model
    - Promotion detection rules
    - M22 MVP scope
 
-2. **`M22-PROMOTION-DESIGN.md`** (1,000+ lines)  
+2. **`M22-PROMOTION-DESIGN.md`** (1,000+ lines)
    - Final Prisma schema
    - Service method specifications
    - API endpoint specs (4 routes)
@@ -410,40 +433,40 @@ Reuse M19 period logic via `StaffInsightsService.resolvePeriod()`:
    - Digest integration design
    - DTOs (8 classes/interfaces)
 
-3. **`services/api/src/staff/promotion-insights.service.ts`** (500 lines)  
+3. **`services/api/src/staff/promotion-insights.service.ts`** (500 lines)
    - PromotionInsightsService implementation
    - 5 core methods
    - Automatic suggestion detection logic
    - Training needs detection
    - Reason generation
 
-4. **`services/api/src/staff/dto/promotion-insights.dto.ts`** (220 lines)  
+4. **`services/api/src/staff/dto/promotion-insights.dto.ts`** (220 lines)
    - Enums: SuggestionCategory, SuggestionStatus
    - Interfaces: SuggestionConfig, PromotionSuggestionDTO, SuggestionSummary
    - Request DTOs: PreviewSuggestionsQueryDto, GenerateSuggestionsDto, ListSuggestionsQueryDto, UpdateSuggestionStatusDto
 
-5. **`services/api/src/staff/promotion-insights.controller.ts`** (260 lines)  
+5. **`services/api/src/staff/promotion-insights.controller.ts`** (260 lines)
    - 4 endpoints (preview, generate, list, update status)
    - RBAC guards (L4+, L5)
    - Swagger documentation
 
 ### Modified
 
-1. **`packages/db/prisma/schema.prisma`**  
+1. **`packages/db/prisma/schema.prisma`**
    - Added `SuggestionCategory`, `SuggestionStatus` enums
    - Added `PromotionSuggestion` model
    - Added reverse relations to `Org`, `Branch`, `Employee`, `User`
 
-2. **`services/api/src/staff/staff.module.ts`**  
+2. **`services/api/src/staff/staff.module.ts`**
    - Registered `PromotionInsightsService` provider
    - Registered `PromotionInsightsController` controller
    - Exported `PromotionInsightsService` for external use
 
-3. **`services/api/src/reports/dto/report-content.dto.ts`**  
+3. **`services/api/src/reports/dto/report-content.dto.ts`**
    - Added `PeriodDigest.staffPromotions` (optional)
    - Added `FranchiseDigest.franchisePromotions` (optional)
 
-4. **`services/api/src/reports/report-generator.service.ts`**  
+4. **`services/api/src/reports/report-generator.service.ts`**
    - Added commented-out helper: `generateStaffPromotionsSection()`
    - Ready to uncomment when Period/Franchise digests are implemented
 
@@ -454,6 +477,7 @@ Reuse M19 period logic via `StaffInsightsService.resolvePeriod()`:
 **Name:** `20251122092809_m22_promotion_suggestions`
 
 **Generated SQL:**
+
 ```sql
 -- CreateEnum
 CREATE TYPE "SuggestionCategory" AS ENUM ('PROMOTION', 'ROLE_CHANGE', 'TRAINING', 'PERFORMANCE_REVIEW');
@@ -512,6 +536,7 @@ ALTER TABLE "promotion_suggestions" ADD CONSTRAINT "promotion_suggestions_create
 ```
 
 **To Apply:**
+
 ```bash
 cd /workspaces/chefcloud/packages/db
 npx prisma migrate deploy
@@ -604,6 +629,7 @@ npx prisma generate
 **Status:** ✅ M22 COMPLETE – READY FOR DEPLOYMENT (after migration apply)
 
 **Next Steps:**
+
 1. Apply migration: `cd packages/db && npx prisma migrate deploy`
 2. Restart API service to load new endpoints
 3. Test endpoints manually with curl/Postman

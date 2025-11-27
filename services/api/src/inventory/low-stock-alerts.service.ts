@@ -35,10 +35,7 @@ export class LowStockAlertsService {
   /**
    * Get or create low-stock configuration
    */
-  async getConfig(
-    orgId: string,
-    branchId?: string,
-  ): Promise<any[]> {
+  async getConfig(orgId: string, branchId?: string): Promise<any[]> {
     return this.prisma.client.lowStockConfig.findMany({
       where: {
         orgId,
@@ -61,11 +58,7 @@ export class LowStockAlertsService {
   /**
    * Update or create low-stock configuration
    */
-  async upsertConfig(
-    orgId: string,
-    branchId: string | null,
-    dto: LowStockConfigDto,
-  ): Promise<any> {
+  async upsertConfig(orgId: string, branchId: string | null, dto: LowStockConfigDto): Promise<any> {
     const existing = await this.prisma.client.lowStockConfig.findFirst({
       where: {
         orgId,
@@ -200,10 +193,7 @@ export class LowStockAlertsService {
           select: { qty: true },
         });
 
-        const totalUsage = usageMovements.reduce(
-          (sum, m) => sum + Number(m.qty),
-          0,
-        );
+        const totalUsage = usageMovements.reduce((sum, m) => sum + Number(m.qty), 0);
         const avgDailyUsage = totalUsage / 7;
 
         if (avgDailyUsage > 0) {
@@ -251,7 +241,9 @@ export class LowStockAlertsService {
       return a.currentQty - b.currentQty;
     });
 
-    this.logger.log(`Found ${alerts.length} low-stock alerts (${alerts.filter((a) => a.alertLevel === 'CRITICAL').length} critical)`);
+    this.logger.log(
+      `Found ${alerts.length} low-stock alerts (${alerts.filter((a) => a.alertLevel === 'CRITICAL').length} critical)`,
+    );
 
     return alerts;
   }

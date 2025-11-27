@@ -36,6 +36,25 @@ export class CreateInventoryItemDto {
   isActive?: boolean;
 }
 
+// M24-S2: Update inventory item DTO
+export class UpdateInventoryItemDto {
+  @IsString()
+  @IsOptional()
+  name?: string;
+
+  @IsBoolean()
+  @IsOptional()
+  isActive?: boolean;
+
+  @IsNumber()
+  @IsOptional()
+  reorderLevel?: number;
+
+  @IsString()
+  @IsOptional()
+  category?: string;
+}
+
 // E45-s1: Stock count DTOs
 export class StockCountLineDto {
   @IsString()

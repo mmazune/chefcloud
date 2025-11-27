@@ -9,9 +9,7 @@ import { Request } from 'express';
 @Controller('inventory/templates')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 export class TemplatesController {
-  constructor(
-    private readonly templatePacksService: TemplatePacksService,
-  ) {}
+  constructor(private readonly templatePacksService: TemplatePacksService) {}
 
   /**
    * List available template packs
@@ -43,11 +41,7 @@ export class TemplatesController {
     @Req() req: Request & { user: any },
     @Body() body: { packId: string; branchId: string },
   ) {
-    return this.templatePacksService.applyPack(
-      req.user.orgId,
-      body.branchId,
-      body.packId,
-    );
+    return this.templatePacksService.applyPack(req.user.orgId, body.branchId, body.packId);
   }
 }
 
@@ -77,11 +71,7 @@ export class ImportController {
     }
 
     // Perform import
-    const result = await this.csvImportService.importFromCsv(
-      req.user.orgId,
-      branchId,
-      body.rows,
-    );
+    const result = await this.csvImportService.importFromCsv(req.user.orgId, branchId, body.rows);
 
     return {
       success: result.errors.length === 0,

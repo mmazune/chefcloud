@@ -1,9 +1,11 @@
 # M3: Enterprise Inventory Management - Completion Summary
 
 ## Milestone
+
 **M3: Inventory, Recipes, Wastage & Low-Stock Alerts**
 
 ## Status
+
 ✅ **COMPLETE** (100%)
 
 All enterprise-grade inventory features specified in `ChefCloud_Enterprise_Grade_Backend_Spec_v1.md` have been implemented and are production-ready.
@@ -11,10 +13,12 @@ All enterprise-grade inventory features specified in `ChefCloud_Enterprise_Grade
 ## What Was Implemented
 
 ### 1. Reconciliation Service & Controller
+
 **Purpose:** Calculate inventory reconciliation using the formula:  
 `opening + purchases = theoretical usage + wastage + closing (+/- variance)`
 
 **Implementation:**
+
 - `ReconciliationService.reconcile()`: Main reconciliation logic that processes all items for a given period
 - `ReconciliationService.reconcileItem()`: Per-item calculation with:
   - Opening stock from FIFO batches
@@ -27,6 +31,7 @@ All enterprise-grade inventory features specified in `ChefCloud_Enterprise_Grade
 - `ReconciliationController`: 2 endpoints with RBAC
 
 **Key Features:**
+
 - Multi-source data reconciliation (stock batches, movements, receipts, counts)
 - Configurable variance tolerance per organization
 - Shift-based or date-range queries
@@ -34,9 +39,11 @@ All enterprise-grade inventory features specified in `ChefCloud_Enterprise_Grade
 - Detailed item-by-item breakdown + summary statistics
 
 ### 2. Wastage Service Enhancements
+
 **Purpose:** Track wastage with full audit trail linking to shifts and users
 
 **Implementation:**
+
 - Enhanced `WastageService.recordWastage()` to:
   - Fetch current shift context
   - Calculate WAC cost using `CostingService`
@@ -46,6 +53,7 @@ All enterprise-grade inventory features specified in `ChefCloud_Enterprise_Grade
 - Added `WastageService.getWastageSummary()`: Aggregation by reason and by user
 
 **Key Features:**
+
 - Shift-aware wastage tracking
 - Automatic cost calculation
 - Stock movement integration
@@ -53,9 +61,11 @@ All enterprise-grade inventory features specified in `ChefCloud_Enterprise_Grade
 - Franchise cache invalidation
 
 ### 3. Low-Stock Alerts System
+
 **Purpose:** Proactive alerts when inventory falls below thresholds
 
 **Implementation:**
+
 - `LowStockConfig` Prisma model with:
   - `minQuantity`: Absolute quantity threshold
   - `minDaysOfCover`: Days of stock remaining threshold
@@ -71,6 +81,7 @@ All enterprise-grade inventory features specified in `ChefCloud_Enterprise_Grade
 - `LowStockAlertsController`: 4 endpoints with RBAC
 
 **Key Features:**
+
 - Dual threshold system (quantity + days of cover)
 - Usage-based forecasting (7-day rolling average)
 - Auto-escalation to CRITICAL level
@@ -78,9 +89,11 @@ All enterprise-grade inventory features specified in `ChefCloud_Enterprise_Grade
 - REST API for configuration management
 
 ### 4. Template Packs
+
 **Purpose:** Quick-start inventory setups for common business types
 
 **Implementation:**
+
 - `TemplatePacksService` with 3 built-in packs:
   - **tapas-bar-essentials**: 10 items (olives, chorizo, manchego, wines, etc.) + 4 recipes
   - **cocktail-bar-basics**: 10 items (spirits, mixers, garnishes)
@@ -89,6 +102,7 @@ All enterprise-grade inventory features specified in `ChefCloud_Enterprise_Grade
 - `TemplatesController`: 3 endpoints with RBAC
 
 **Key Features:**
+
 - Pre-configured item catalogs with realistic units/costs
 - Recipe templates with wastage percentages
 - Idempotent application (safe to re-run)
@@ -96,9 +110,11 @@ All enterprise-grade inventory features specified in `ChefCloud_Enterprise_Grade
 - Extensible architecture for future packs
 
 ### 5. CSV Import Foundation
+
 **Purpose:** Bulk import of inventory items and recipes
 
 **Implementation:**
+
 - `CsvImportService.importFromCsv()`:
   - 2-pass import (items first, then recipes)
   - Pre-validation with `validateCsvStructure()`
@@ -111,6 +127,7 @@ All enterprise-grade inventory features specified in `ChefCloud_Enterprise_Grade
   - Recipe linking: `recipe_parent_sku`, `recipe_qty`, `waste_pct`
 
 **Key Features:**
+
 - Robust validation before processing
 - Graceful error handling (continues on row failures)
 - Detailed error messages with row numbers
@@ -118,9 +135,11 @@ All enterprise-grade inventory features specified in `ChefCloud_Enterprise_Grade
 - Recipe linking support
 
 ### 6. Documentation
+
 **Purpose:** Complete developer guide for M3 features
 
 **Implementation:**
+
 - Added comprehensive "M3: Enterprise Inventory Management" section to `DEV_GUIDE.md` (200+ lines)
 - Sections:
   - Stock Movements overview
@@ -140,6 +159,7 @@ All enterprise-grade inventory features specified in `ChefCloud_Enterprise_Grade
 ## Files Touched
 
 ### New Files (7 services + 4 controllers)
+
 1. `/services/api/src/inventory/reconciliation.service.ts` (388 lines)
 2. `/services/api/src/inventory/reconciliation.controller.ts` (62 lines)
 3. `/services/api/src/inventory/low-stock-alerts.service.ts` (269 lines)
@@ -149,6 +169,7 @@ All enterprise-grade inventory features specified in `ChefCloud_Enterprise_Grade
 7. `/services/api/src/inventory/templates.controller.ts` (139 lines)
 
 ### Modified Files
+
 1. `/services/api/src/inventory/wastage.service.ts` - Enhanced with movements and audit
 2. `/services/api/src/inventory/inventory.module.ts` - Added all new services/controllers
 3. `/packages/db/prisma/schema.prisma` - Added `LowStockConfig` model
@@ -158,6 +179,7 @@ All enterprise-grade inventory features specified in `ChefCloud_Enterprise_Grade
 ## Endpoints Created
 
 ### Reconciliation (2 endpoints)
+
 - `GET /inventory/reconciliation` - Full reconciliation with item breakdown
   - Query params: `branchId` (required), `shiftId`, `startDate`, `endDate`
   - RBAC: L4 (OWNER), L5 (MANAGER), ACCOUNTANT, FRANCHISE
@@ -169,6 +191,7 @@ All enterprise-grade inventory features specified in `ChefCloud_Enterprise_Grade
   - Returns: Summary statistics
 
 ### Low-Stock Alerts (4 endpoints)
+
 - `GET /inventory/low-stock/alerts` - Get current low-stock items
   - Query params: `branchId` (required)
   - RBAC: L4, L5, PROCUREMENT, INVENTORY
@@ -187,6 +210,7 @@ All enterprise-grade inventory features specified in `ChefCloud_Enterprise_Grade
   - RBAC: L4, L5
 
 ### Templates (3 endpoints)
+
 - `GET /inventory/templates` - List available packs
   - RBAC: L4, L5, PROCUREMENT
 
@@ -199,6 +223,7 @@ All enterprise-grade inventory features specified in `ChefCloud_Enterprise_Grade
   - Returns: `{itemsCreated, recipesCreated, errors[]}`
 
 ### CSV Import (2 endpoints)
+
 - `POST /inventory/import` - Import from CSV
   - Query params: `branchId` (required)
   - Body: `{rows: CsvRow[]}`
@@ -210,13 +235,16 @@ All enterprise-grade inventory features specified in `ChefCloud_Enterprise_Grade
   - Returns: Format documentation with examples
 
 ## Tests
+
 Integration tests are planned but not yet implemented. Test files to create:
+
 - `test/m3-reconciliation.e2e-spec.ts`
 - `test/m3-low-stock-alerts.e2e-spec.ts`
 - `test/m3-template-packs.e2e-spec.ts`
 - `test/m3-csv-import.e2e-spec.ts`
 
 Test coverage should include:
+
 - Reconciliation equation accuracy
 - Variance tolerance checking
 - Low-stock detection with CRITICAL escalation
@@ -226,40 +254,48 @@ Test coverage should include:
 ## Known Limitations
 
 ### 1. Stock Count Integration
+
 - Stock counts store line items in JSON `lines` field, not as separate table rows
 - Reconciliation service parses JSON to extract item quantities
 - Future: Consider dedicated `StockCountLine` table for better queryability
 
 ### 2. MenuItem Schema Constraints
+
 - `MenuItem` is branch-scoped, not org-scoped
 - Template pack recipes and CSV import use `name` lookups instead of SKU
 - Future: Add `sku` field to `MenuItem` for more robust linking
 
 ### 3. GoodsReceipt Relation Naming
+
 - Field is `gr` not `goodsReceipt` in `GoodsReceiptLine`
 - This is a schema design choice but could be more intuitive
 
 ### 4. Variance Tolerance
+
 - Currently only percentage-based tolerance
 - Future: Support absolute value tolerance (e.g., ±2 units)
 - Configuration is in `OrgSettings.inventoryTolerance` JSON field
 
 ### 5. CSV Import
+
 - No multipart file upload support yet (expects JSON body with rows)
 - Future: Add `multer` middleware for file uploads
 - Current implementation is foundation for full CSV upload feature
 
 ### 6. Low-Stock Forecasting
+
 - Uses simple 7-day rolling average
 - Future: More sophisticated forecasting (trend analysis, seasonality)
 - No support for lead time in reorder calculations yet
 
 ### 7. Template Packs
+
 - Fixed set of 3 built-in packs
 - Future: User-defined custom template packs
 - No template versioning or update mechanism
 
 ### 8. Audit Events
+
 - Wastage audit events created but no dedicated audit viewer yet
 - Future: Audit log viewer with filtering and export
 
@@ -282,6 +318,7 @@ Test coverage should include:
 ## Summary
 
 M3 is now **production-ready** with all core enterprise inventory features implemented:
+
 - ✅ Reconciliation with variance analysis
 - ✅ Wastage tracking with full audit trail
 - ✅ Low-stock alerts with intelligent forecasting
@@ -290,6 +327,7 @@ M3 is now **production-ready** with all core enterprise inventory features imple
 - ✅ Complete documentation
 
 The system provides:
+
 - Multi-source inventory reconciliation
 - Proactive alerting and forecasting
 - Quick-start templates for common business types

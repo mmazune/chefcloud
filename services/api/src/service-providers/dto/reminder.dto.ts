@@ -27,7 +27,7 @@ export interface ServiceReminderResponse {
   notes: string | null;
   createdAt: Date;
   updatedAt: Date;
-  
+
   // Related data
   providerName?: string;
   providerCategory?: string;

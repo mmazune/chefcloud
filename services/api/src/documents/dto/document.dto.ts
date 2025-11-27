@@ -3,7 +3,7 @@
  */
 
 import { IsString, IsEnum, IsOptional, IsArray, IsInt, Min } from 'class-validator';
-import { DocumentCategory } from '@prisma/client';
+import { DocumentCategory } from '@chefcloud/db';
 
 export class UploadDocumentDto {
   @IsEnum(DocumentCategory)

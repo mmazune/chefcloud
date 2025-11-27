@@ -100,9 +100,15 @@ export class AuthController {
   @Post('logout-all')
   @HttpCode(HttpStatus.OK)
   @UseGuards(AuthGuard('jwt'))
-  async logoutAll(@Request() req: any): Promise<{ success: boolean; message: string; count: number }> {
+  async logoutAll(
+    @Request() req: any,
+  ): Promise<{ success: boolean; message: string; count: number }> {
     const user = req.user;
-    const count = await this.sessionsService.revokeAllUserSessions(user.userId, user.userId, 'User logged out all sessions');
+    const count = await this.sessionsService.revokeAllUserSessions(
+      user.userId,
+      user.userId,
+      'User logged out all sessions',
+    );
 
     return { success: true, message: `Logged out from ${count} sessions`, count };
   }
@@ -118,7 +124,7 @@ export class AuthController {
     const sessions = await this.sessionsService.getUserSessions(user.userId);
 
     return {
-      sessions: sessions.map(s => ({
+      sessions: sessions.map((s) => ({
         id: s.id,
         platform: s.platform,
         source: s.source,
@@ -142,7 +148,7 @@ export class AuthController {
   @Roles('L3', 'L4', 'L5')
   async assignMsrCard(
     @Request() req: any,
-    @Body() body: { employeeId: string; trackData: string; metadata?: any }
+    @Body() body: { employeeId: string; trackData: string; metadata?: any },
   ) {
     const user = req.user;
     const card = await this.msrCardService.assignCard({
@@ -172,10 +178,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @UseGuards(AuthGuard('jwt'))
   @Roles('L3', 'L4', 'L5')
-  async revokeMsrCard(
-    @Request() req: any,
-    @Body() body: { cardId: string; reason: string }
-  ) {
+  async revokeMsrCard(@Request() req: any, @Body() body: { cardId: string; reason: string }) {
     const user = req.user;
     const card = await this.msrCardService.revokeCard(body.cardId, user.userId, body.reason);
 
@@ -198,7 +201,7 @@ export class AuthController {
     const cards = await this.msrCardService.listCards(user.orgId);
 
     return {
-      cards: cards.map(c => ({
+      cards: cards.map((c) => ({
         id: c.id,
         employeeId: c.employeeId,
         employeeCode: c.employee.employeeCode,

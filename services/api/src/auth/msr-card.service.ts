@@ -1,22 +1,28 @@
-import { Injectable, Logger, ConflictException, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  ConflictException,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { SessionsService } from './sessions.service';
 import { createHash } from 'crypto';
 
 /**
  * M10: MsrCardService
- * 
+ *
  * Manages MSR card lifecycle:
  * - Assign cards to employees (hashes track data)
  * - Revoke cards
  * - Authenticate by card swipe
  * - Track card audit trail
- * 
+ *
  * Security:
  * - Never stores raw track data
  * - Uses SHA-256 hash of track data as cardToken
  * - Integrates with SessionsService for session invalidation on revocation
- * 
+ *
  * @example
  * ```typescript
  * // Assign card to employee
@@ -25,10 +31,10 @@ import { createHash } from 'crypto';
  *   trackData: 'CLOUDBADGE:W001',
  *   assignedById: 'manager_456',
  * });
- * 
+ *
  * // Revoke card
  * await msrCardService.revokeCard('card_789', 'admin_012', 'Employee terminated');
- * 
+ *
  * // Authenticate by card swipe
  * const card = await msrCardService.authenticateByCard('CLOUDBADGE:W001');
  * // Returns employee, user, and context for session creation
@@ -60,7 +66,7 @@ export class MsrCardService {
     trackData: string; // Raw track data (will be hashed)
     assignedById: string;
     metadata?: any;
-  }) {
+  }): Promise<any> {
     const { employeeId, trackData, assignedById, metadata } = params;
 
     // Hash track data
@@ -79,7 +85,7 @@ export class MsrCardService {
     // Check if employee already has a card
     if (employee.msrCard) {
       throw new ConflictException(
-        `Employee already has MSR card assigned. Revoke existing card first.`
+        `Employee already has MSR card assigned. Revoke existing card first.`,
       );
     }
 
@@ -91,7 +97,7 @@ export class MsrCardService {
 
     if (existing) {
       throw new ConflictException(
-        `Card already assigned to employee ${existing.employee.employeeCode} (${existing.employee.firstName} ${existing.employee.lastName})`
+        `Card already assigned to employee ${existing.employee.employeeCode} (${existing.employee.firstName} ${existing.employee.lastName})`,
       );
     }
 
@@ -121,7 +127,7 @@ export class MsrCardService {
     });
 
     this.logger.log(
-      `MSR card assigned to employee ${employee.employeeCode} (${employee.firstName} ${employee.lastName}) by ${msrCard.assignedBy.firstName} ${msrCard.assignedBy.lastName}`
+      `MSR card assigned to employee ${employee.employeeCode} (${employee.firstName} ${employee.lastName}) by ${msrCard.assignedBy.firstName} ${msrCard.assignedBy.lastName}`,
     );
 
     return msrCard;
@@ -131,7 +137,7 @@ export class MsrCardService {
    * Revoke MSR card
    * Marks card as revoked and invalidates all associated sessions
    */
-  async revokeCard(cardId: string, revokedById: string, reason: string) {
+  async revokeCard(cardId: string, revokedById: string, reason: string): Promise<any> {
     const card = await this.prisma.client.msrCard.findUnique({
       where: { id: cardId },
       include: {
@@ -173,7 +179,7 @@ export class MsrCardService {
     });
 
     this.logger.log(
-      `MSR card revoked for employee ${card.employee.employeeCode} - Reason: ${reason}`
+      `MSR card revoked for employee ${card.employee.employeeCode} - Reason: ${reason}`,
     );
 
     // Invalidate all sessions for this user
@@ -181,7 +187,7 @@ export class MsrCardService {
       await this.sessionsService.revokeAllUserSessions(
         card.employee.userId,
         revokedById,
-        `MSR card revoked: ${reason}`
+        `MSR card revoked: ${reason}`,
       );
     }
 
@@ -191,7 +197,7 @@ export class MsrCardService {
   /**
    * Suspend MSR card temporarily (e.g., for investigation)
    */
-  async suspendCard(cardId: string, suspendedById: string, reason: string) {
+  async suspendCard(cardId: string, suspendedById: string, reason: string): Promise<any> {
     const card = await this.prisma.client.msrCard.findUnique({
       where: { id: cardId },
       include: { employee: true },
@@ -216,7 +222,7 @@ export class MsrCardService {
     });
 
     this.logger.log(
-      `MSR card suspended for employee ${card.employee.employeeCode} - Reason: ${reason}`
+      `MSR card suspended for employee ${card.employee.employeeCode} - Reason: ${reason}`,
     );
 
     // Invalidate active sessions
@@ -224,7 +230,7 @@ export class MsrCardService {
       await this.sessionsService.revokeAllUserSessions(
         card.employee.userId,
         suspendedById,
-        `MSR card suspended: ${reason}`
+        `MSR card suspended: ${reason}`,
       );
     }
 
@@ -234,7 +240,7 @@ export class MsrCardService {
   /**
    * Reactivate suspended card
    */
-  async reactivateCard(cardId: string, reactivatedById: string) {
+  async reactivateCard(cardId: string, reactivatedById: string): Promise<any> {
     const card = await this.prisma.client.msrCard.findUnique({
       where: { id: cardId },
       include: { employee: true },
@@ -270,7 +276,7 @@ export class MsrCardService {
    * Authenticate by card swipe
    * Finds active card by hashed track data and returns employee/user context
    */
-  async authenticateByCard(trackData: string) {
+  async authenticateByCard(trackData: string): Promise<any> {
     const cardToken = this.hashTrackData(trackData);
 
     const card = await this.prisma.client.msrCard.findUnique({
@@ -313,9 +319,7 @@ export class MsrCardService {
       throw new UnauthorizedException('Employee is not active');
     }
 
-    this.logger.debug(
-      `MSR authentication successful for employee ${card.employee.employeeCode}`
-    );
+    this.logger.debug(`MSR authentication successful for employee ${card.employee.employeeCode}`);
 
     return {
       card,
@@ -327,7 +331,7 @@ export class MsrCardService {
   /**
    * Get MSR card by employee ID
    */
-  async getCardByEmployee(employeeId: string) {
+  async getCardByEmployee(employeeId: string): Promise<any> {
     return this.prisma.client.msrCard.findUnique({
       where: { employeeId },
       include: {
@@ -353,10 +357,14 @@ export class MsrCardService {
   /**
    * List all MSR cards for an org (with filters)
    */
-  async listCards(orgId: string, filters?: {
-    status?: 'ACTIVE' | 'REVOKED' | 'SUSPENDED';
-    employeeCode?: string;
-  }) {
+  async listCards(
+    orgId: string,
+    filters?: {
+      status?: 'ACTIVE' | 'REVOKED' | 'SUSPENDED';
+      employeeCode?: string;
+    },
+  ): Promise<any> {
+  ) {
     return this.prisma.client.msrCard.findMany({
       where: {
         orgId,

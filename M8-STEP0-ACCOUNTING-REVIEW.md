@@ -15,7 +15,7 @@ ChefCloud already has a **substantial accounting foundation** implemented in **E
 ✅ Fiscal period locking  
 ✅ Automated postings from POS sales, COGS, refunds, and cash movements  
 ✅ Vendor bill management and AP/AR aging reports  
-✅ Bank reconciliation  
+✅ Bank reconciliation
 
 **Key Gap:** Not all operational flows fully post to GL yet (wastage, payroll, service providers need review/completion).
 
@@ -26,6 +26,7 @@ ChefCloud already has a **substantial accounting foundation** implemented in **E
 ### Existing Models (Well-Designed)
 
 #### 1.1 Account Model
+
 ```prisma
 model Account {
   id        String      @id @default(cuid())
@@ -48,6 +49,7 @@ model Account {
 ```
 
 **Assessment:** ✅ **Excellent**
+
 - Hierarchical structure supported (parentId)
 - Proper indexing for performance
 - Account types match standard accounting categories
@@ -56,6 +58,7 @@ model Account {
 ---
 
 #### 1.2 JournalEntry Model
+
 ```prisma
 model JournalEntry {
   id         String   @id @default(cuid())
@@ -75,6 +78,7 @@ model JournalEntry {
 ```
 
 **Assessment:** ✅ **Solid**
+
 - Captures audit trail (source, sourceId, postedById)
 - Indexed for reporting queries
 - Missing: `branchId` field (important for multi-branch orgs)
@@ -83,6 +87,7 @@ model JournalEntry {
 ---
 
 #### 1.3 JournalLine Model
+
 ```prisma
 model JournalLine {
   id        String   @id @default(cuid())
@@ -103,6 +108,7 @@ model JournalLine {
 ```
 
 **Assessment:** ✅ **Well-designed**
+
 - Separate debit/credit columns (standard practice)
 - Branch tracking at line level (good for franchise reporting)
 - Meta field for flexible context storage
@@ -111,6 +117,7 @@ model JournalLine {
 ---
 
 #### 1.4 FiscalPeriod Model (from E40-S2)
+
 ```prisma
 model FiscalPeriod {
   id         String             @id @default(cuid())
@@ -134,6 +141,7 @@ enum FiscalPeriodStatus {
 ```
 
 **Assessment:** ✅ **Good, but could be enhanced**
+
 - Supports OPEN/LOCKED states
 - Missing: `CLOSED` state (spec requires OPEN/CLOSED/LOCKED progression)
 - Missing: `closedById`, `closedAt` fields (only has lockedBy/At)
@@ -195,10 +203,8 @@ enum AccountType {
 
 - ❌ **Wastage** → Should post: Dr Wastage Expense → Cr Inventory
   - Current status: M3 tracks wastage in `StockAdjustment` but doesn't call PostingService
-  
 - ❌ **Payroll** → Should post: Dr Payroll Expense → Cr Payroll Payable
   - Current status: PayrollService has `postToGL()` method but may not be fully integrated
-  
 - ❌ **Service Providers** → Should post: Dr Utilities/Rent Expense → Cr Service Provider Payable
   - Current status: M7 tracks contracts/reminders but no GL posting mentioned
 
@@ -244,6 +250,7 @@ enum AccountType {
 3. ✅ `lockPeriod(periodId, userId)` → Lock period (prevents new postings)
 
 **Missing from spec:**
+
 - ❌ `closePeriod(periodId)` → Should mark period as CLOSED (intermediate state before LOCKED)
 - ❌ Period status should have OPEN → CLOSED → LOCKED progression
 
@@ -252,6 +259,7 @@ enum AccountType {
 ### 2.4 Existing API Endpoints
 
 **AccountingController:**
+
 ```typescript
 POST   /accounting/vendors
 GET    /accounting/vendors
@@ -267,6 +275,7 @@ GET    /accounting/balance-sheet
 ```
 
 **PeriodsController:**
+
 ```typescript
 GET    /accounting/periods
 POST   /accounting/periods
@@ -274,6 +283,7 @@ POST   /accounting/periods/:id/lock
 ```
 
 **BankRecController (E40-S2):**
+
 ```typescript
 POST   /accounting/bank/accounts
 GET    /accounting/bank/accounts
@@ -291,23 +301,24 @@ GET    /accounting/bank/unreconciled
 
 ### Seeded Accounts (from `prisma/seed.ts` and E40-S1 docs)
 
-| Code | Name                  | Type      | Purpose                     |
-| ---- | --------------------- | --------- | --------------------------- |
-| 1000 | Cash                  | ASSET     | Cash on hand                |
-| 1010 | Bank                  | ASSET     | Bank deposits               |
-| 1100 | Accounts Receivable   | ASSET     | Customer receivables        |
-| 1200 | Inventory             | ASSET     | Stock value (ingredients)   |
-| 2000 | Accounts Payable      | LIABILITY | Vendor bills                |
-| 3000 | Equity                | EQUITY    | Owner capital               |
-| 4000 | Sales Revenue         | REVENUE   | Food/beverage sales         |
-| 4100 | Service Charges       | REVENUE   | Service fees                |
-| 5000 | Cost of Goods Sold    | COGS      | Ingredient costs            |
-| 6000 | Operating Expenses    | EXPENSE   | General expenses            |
-| 6100 | Utilities             | EXPENSE   | Power/water/internet (M7)   |
+| Code | Name                | Type      | Purpose                   |
+| ---- | ------------------- | --------- | ------------------------- |
+| 1000 | Cash                | ASSET     | Cash on hand              |
+| 1010 | Bank                | ASSET     | Bank deposits             |
+| 1100 | Accounts Receivable | ASSET     | Customer receivables      |
+| 1200 | Inventory           | ASSET     | Stock value (ingredients) |
+| 2000 | Accounts Payable    | LIABILITY | Vendor bills              |
+| 3000 | Equity              | EQUITY    | Owner capital             |
+| 4000 | Sales Revenue       | REVENUE   | Food/beverage sales       |
+| 4100 | Service Charges     | REVENUE   | Service fees              |
+| 5000 | Cost of Goods Sold  | COGS      | Ingredient costs          |
+| 6000 | Operating Expenses  | EXPENSE   | General expenses          |
+| 6100 | Utilities           | EXPENSE   | Power/water/internet (M7) |
 
 **Assessment:** ✅ **Adequate starter CoA, but needs expansion for M8:**
 
 **Missing Accounts (Should Add):**
+
 - `6200` - Payroll Expense
 - `2100` - Payroll Payable
 - `6300` - Rent Expense
@@ -323,11 +334,13 @@ GET    /accounting/bank/unreconciled
 ### 4.1 POS / Sales Flow
 
 **Current Implementation:**
+
 - ✅ POS closes order → `PostingService.postSale()` called
 - ✅ Creates: Dr Cash/AR → Cr Sales
 - ✅ Tracks payment method in order.payments
 
 **Gaps:**
+
 - ❓ Tax posting: Currently included in sales total, may need separate Tax Payable line
 - ❓ Service charges: Code mentions ACCOUNT_SERVICE (4100) but posting logic unclear
 
@@ -338,11 +351,13 @@ GET    /accounting/bank/unreconciled
 ### 4.2 COGS & Inventory Flow
 
 **Current Implementation:**
+
 - ✅ After sale → `PostingService.postCOGS()` called
 - ✅ Creates: Dr COGS → Cr Inventory
 - ✅ Calculates cost from order items
 
 **Gaps:**
+
 - ❓ Timing: COGS posted immediately after sale (perpetual) or end-of-period?
 - ❓ Cost calculation: Uses item.cost from menu items, need to verify alignment with M3 reconciliation
 
@@ -353,10 +368,12 @@ GET    /accounting/bank/unreconciled
 ### 4.3 Wastage Flow (M3)
 
 **Current Implementation:**
+
 - ✅ M3 `ReconciliationService` tracks wastage in `StockAdjustment` model
 - ✅ `WastageService` provides wastage reporting
 
 **Gaps:**
+
 - ❌ **No GL posting**: Wastage adjustments don't call `PostingService`
 - ❌ Need to add: Dr Wastage Expense → Cr Inventory
 
@@ -367,11 +384,13 @@ GET    /accounting/bank/unreconciled
 ### 4.4 Payroll Flow (E43)
 
 **Current Implementation:**
+
 - ✅ `PayrollService.postToGL()` method exists
 - ✅ Creates: Dr Payroll Expense → Cr Payroll Payable (net)
 - ✅ Uses account codes: `5100-PAYROLL-EXPENSE`, `2100-PAYROLL-PAYABLE`
 
 **Gaps:**
+
 - ❓ Verify: Is `postToGL()` called automatically when payroll is approved?
 - ❓ Tax and deductions: Are employer taxes posted separately?
 
@@ -382,10 +401,12 @@ GET    /accounting/bank/unreconciled
 ### 4.5 Service Providers Flow (M7)
 
 **Current Implementation:**
+
 - ✅ M7 tracks service providers, contracts, and payment reminders
 - ✅ `BudgetService.updateBudgetActuals()` aggregates service provider costs
 
 **Gaps:**
+
 - ❌ **No GL posting**: When reminder is marked PAID, should post:
   - Dr Rent/Utilities/Marketing Expense → Cr Service Provider Payable
   - Then: Dr Service Provider Payable → Cr Cash (when paid)
@@ -397,9 +418,11 @@ GET    /accounting/bank/unreconciled
 ### 4.6 Manual Journals
 
 **Current Implementation:**
+
 - ❓ No clear "ManualJournalService" or controller found
 
 **Gaps:**
+
 - ❌ Need endpoint: `POST /accounting/journals` (L4+/Accountant only)
 - ❌ Need validation: Ensure balanced entries (debits = credits)
 - ❌ Need audit logging: Who posted, when, why
@@ -411,16 +434,19 @@ GET    /accounting/bank/unreconciled
 ## 5. Fiscal Period Management
 
 **Current State (E40-S2):**
+
 - ✅ `FiscalPeriod` model with OPEN/LOCKED states
 - ✅ `PeriodsService.lockPeriod()` prevents postings to locked periods
 - ✅ `PostingService.checkPeriodLock()` enforces lock
 
 **Gaps:**
+
 - ❌ Missing CLOSED state (spec requires OPEN → CLOSED → LOCKED)
 - ❌ No `closePeriod()` method
 - ❌ No period-end closing entries (e.g., close revenue/expense accounts to retained earnings)
 
 **Recommendations:**
+
 1. Add `FiscalPeriodStatus.CLOSED` enum value
 2. Add `closedById` and `closedAt` fields
 3. Implement `PeriodsService.closePeriod()`:
@@ -447,6 +473,7 @@ GET    /accounting/bank/unreconciled
 **Assessment:** ✅ **Functional**
 
 **Enhancements needed:**
+
 - Add opening balance support (currently starts from zero)
 - Add date range filtering (from/to, not just asOf)
 
@@ -474,6 +501,7 @@ GET    /accounting/bank/unreconciled
 **Assessment:** ✅ **Functional and well-structured**
 
 **Enhancements needed:**
+
 - Add account hierarchy (parent/child grouping)
 - Add branch filtering (per-branch P&L)
 
@@ -498,6 +526,7 @@ GET    /accounting/bank/unreconciled
 **Assessment:** ✅ **Functional**
 
 **Enhancements needed:**
+
 - Add current vs non-current classification
 - Add retained earnings calculation (net income YTD)
 - Add branch filtering
@@ -509,14 +538,17 @@ GET    /accounting/bank/unreconciled
 ### 7.1 M4 Owner Digests
 
 **Current State:**
+
 - M4 generates franchise digests with revenue, COGS, expenses
 - Source: Calculated from orders/inventory, not from GL
 
 **Issue:** ⚠️ **Potential divergence**
+
 - If M4 calculates metrics independently, numbers may not match P&L
 - Need consistency tests
 
 **Recommendation:**
+
 - M4 should either:
   a) Use GL data as source of truth, OR
   b) Have reconciliation tests to ensure operational metrics = GL
@@ -526,14 +558,17 @@ GET    /accounting/bank/unreconciled
 ### 7.2 M6 Franchise Management
 
 **Current State:**
+
 - M6 provides franchise overview with per-branch metrics
 - Includes revenue, COGS, margins by branch
 
 **Issue:** ⚠️ **Potential divergence**
+
 - M6 likely aggregates from operational tables (Order, StockAdjustment, etc.)
 - May not match GL if postings are incomplete
 
 **Recommendation:**
+
 - Add `branchId` to `JournalEntry` (currently only on JournalLine)
 - M6 should query GL for financial metrics, not operational tables
 
@@ -542,17 +577,20 @@ GET    /accounting/bank/unreconciled
 ### 7.3 M7 Budgets
 
 **Current State:**
+
 - M7 `BudgetService.updateBudgetActuals()` computes:
   - STOCK: From purchase orders
   - PAYROLL: From payroll postings
   - SERVICE_PROVIDERS: From paid reminders
 
 **Issue:** ⚠️ **Mixed sources**
+
 - STOCK uses PO data (not GL)
 - PAYROLL may use GL if postings work
 - SERVICE_PROVIDERS doesn't post to GL yet
 
 **Recommendation:**
+
 - All budget actuals should derive from GL accounts
 - This ensures one source of truth
 
@@ -593,10 +631,12 @@ GET    /accounting/bank/unreconciled
 ## 9. Test Coverage
 
 **Existing Tests:**
+
 - ✅ `services/api/test/e2e/accounting.e2e-spec.ts` exists
 - ✅ Unit tests in `services/api/src/workforce/payroll.service.spec.ts` (GL posting balance test)
 
 **Coverage Status:**
+
 - ✅ Sales posting tested
 - ✅ COGS posting tested
 - ✅ Financial statements tested
@@ -610,6 +650,7 @@ GET    /accounting/bank/unreconciled
 ## 10. Documentation
 
 **Existing Docs:**
+
 - ✅ E40-S1-COMPLETION.md (comprehensive accounting core docs)
 - ✅ E40-S2-COMPLETION.md (fiscal periods & bank rec)
 - ❓ DEV_GUIDE.md section: Need to check if accounting section exists

@@ -10,10 +10,10 @@ import {
   ForbiddenException,
   BadRequestException,
 } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { PrismaService } from '../prisma.service';
 import { LocalStorageProvider } from './storage/local.provider';
 import { UploadDocumentDto, ListDocumentsQueryDto } from './dto/document.dto';
-import { DocumentCategory, RoleLevel, Prisma } from '@prisma/client';
+import { DocumentCategory, RoleLevel, Prisma } from '@chefcloud/db';
 
 @Injectable()
 export class DocumentsService {
@@ -197,7 +197,7 @@ export class DocumentsService {
    * Upload a document
    */
   async upload(
-    file: Express.Multer.File,
+    file: any,
     orgId: string,
     userId: string,
     userRole: RoleLevel,
@@ -205,9 +205,7 @@ export class DocumentsService {
   ) {
     // RBAC check
     if (!this.canAccessCategory(dto.category, userRole, false)) {
-      throw new ForbiddenException(
-        `Role ${userRole} cannot upload ${dto.category} documents`,
-      );
+      throw new ForbiddenException(`Role ${userRole} cannot upload ${dto.category} documents`);
     }
 
     // Validate entity links
@@ -253,9 +251,7 @@ export class DocumentsService {
       },
     });
 
-    this.logger.log(
-      `User ${userId} uploaded ${dto.category} document: ${document.id}`,
-    );
+    this.logger.log(`User ${userId} uploaded ${dto.category} document: ${document.id}`);
 
     return document;
   }
@@ -263,12 +259,7 @@ export class DocumentsService {
   /**
    * List documents with filtering
    */
-  async list(
-    orgId: string,
-    userId: string,
-    userRole: RoleLevel,
-    query: ListDocumentsQueryDto,
-  ) {
+  async list(orgId: string, userId: string, userRole: RoleLevel, query: ListDocumentsQueryDto) {
     const where: Prisma.DocumentWhereInput = {
       orgId,
       deletedAt: null,
@@ -278,16 +269,13 @@ export class DocumentsService {
     if (query.category) {
       // RBAC check
       if (!this.canAccessCategory(query.category, userRole, false)) {
-        throw new ForbiddenException(
-          `Role ${userRole} cannot access ${query.category} documents`,
-        );
+        throw new ForbiddenException(`Role ${userRole} cannot access ${query.category} documents`);
       }
       where.category = query.category;
     }
 
     if (query.branchId) where.branchId = query.branchId;
-    if (query.serviceProviderId)
-      where.serviceProviderId = query.serviceProviderId;
+    if (query.serviceProviderId) where.serviceProviderId = query.serviceProviderId;
     if (query.purchaseOrderId) where.purchaseOrderId = query.purchaseOrderId;
     if (query.goodsReceiptId) where.goodsReceiptId = query.goodsReceiptId;
     if (query.stockBatchId) where.stockBatchId = query.stockBatchId;
@@ -330,12 +318,7 @@ export class DocumentsService {
   /**
    * Get a single document
    */
-  async findOne(
-    documentId: string,
-    orgId: string,
-    userId: string,
-    userRole: RoleLevel,
-  ) {
+  async findOne(documentId: string, orgId: string, userId: string, userRole: RoleLevel) {
     const document = await this.prisma.document.findFirst({
       where: { id: documentId, orgId, deletedAt: null },
       include: {
@@ -350,10 +333,7 @@ export class DocumentsService {
     // RBAC check
     if (!this.canAccessCategory(document.category, userRole, false)) {
       // Special case: L3 users can view their own payslip documents
-      if (
-        document.category === DocumentCategory.PAYSLIP &&
-        userRole === RoleLevel.L3
-      ) {
+      if (document.category === DocumentCategory.PAYSLIP && userRole === RoleLevel.L3) {
         const paySlip = await this.prisma.paySlip.findUnique({
           where: { id: document.paySlipId! },
           select: { userId: true },
@@ -392,12 +372,7 @@ export class DocumentsService {
   /**
    * Soft delete a document
    */
-  async delete(
-    documentId: string,
-    orgId: string,
-    userId: string,
-    userRole: RoleLevel,
-  ) {
+  async delete(documentId: string, orgId: string, userId: string, userRole: RoleLevel) {
     const document = await this.findOne(documentId, orgId, userId, userRole);
 
     // Only L4+ can delete documents

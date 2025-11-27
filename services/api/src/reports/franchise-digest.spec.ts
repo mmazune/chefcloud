@@ -6,7 +6,7 @@ import { FranchiseOverviewService } from '../franchise/franchise-overview.servic
 
 /**
  * M6: Franchise Digest Consistency Tests
- * 
+ *
  * Ensures franchise digest generation uses canonical FranchiseOverviewService
  * and produces consistent results with franchise API endpoints.
  */
@@ -47,9 +47,7 @@ describe('ReportGeneratorService - Franchise Digest (M6)', () => {
     }).compile();
 
     service = module.get<ReportGeneratorService>(ReportGeneratorService);
-    franchiseOverviewService = module.get<FranchiseOverviewService>(
-      FranchiseOverviewService,
-    );
+    franchiseOverviewService = module.get<FranchiseOverviewService>(FranchiseOverviewService);
     prismaService = module.get<PrismaService>(PrismaService);
   });
 
@@ -110,7 +108,9 @@ describe('ReportGeneratorService - Franchise Digest (M6)', () => {
         totalCogsDelta: 30000,
       };
 
-      jest.spyOn(franchiseOverviewService, 'getFranchiseSummary').mockResolvedValue(mockSummary as any);
+      jest
+        .spyOn(franchiseOverviewService, 'getFranchiseSummary')
+        .mockResolvedValue(mockSummary as any);
       jest.spyOn(prismaService.client.anomalyEvent, 'count').mockResolvedValue(5);
 
       const result = await service.generateFranchiseDigest(mockOrgId, periodStart, periodEnd);
@@ -183,7 +183,9 @@ describe('ReportGeneratorService - Franchise Digest (M6)', () => {
         periodEnd: weekEnd,
       };
 
-      jest.spyOn(franchiseOverviewService, 'getFranchiseSummary').mockResolvedValue(mockSummary as any);
+      jest
+        .spyOn(franchiseOverviewService, 'getFranchiseSummary')
+        .mockResolvedValue(mockSummary as any);
       jest.spyOn(prismaService.client.anomalyEvent, 'count').mockResolvedValue(2);
 
       const result = await service.generateFranchiseDigest(mockOrgId, weekStart, weekEnd);
@@ -246,7 +248,9 @@ describe('ReportGeneratorService - Franchise Digest (M6)', () => {
         periodEnd,
       };
 
-      jest.spyOn(franchiseOverviewService, 'getFranchiseSummary').mockResolvedValue(mockSummary as any);
+      jest
+        .spyOn(franchiseOverviewService, 'getFranchiseSummary')
+        .mockResolvedValue(mockSummary as any);
       jest.spyOn(prismaService.client.anomalyEvent, 'count').mockResolvedValue(0);
 
       const result = await service.generateFranchiseDigest(mockOrgId, periodStart, periodEnd);
@@ -294,7 +298,9 @@ describe('ReportGeneratorService - Franchise Digest (M6)', () => {
         periodEnd,
       };
 
-      jest.spyOn(franchiseOverviewService, 'getFranchiseSummary').mockResolvedValue(mockSummary as any);
+      jest
+        .spyOn(franchiseOverviewService, 'getFranchiseSummary')
+        .mockResolvedValue(mockSummary as any);
       jest.spyOn(prismaService.client.anomalyEvent, 'count').mockResolvedValue(0);
 
       const result = await service.generateFranchiseDigest(mockOrgId, periodStart, periodEnd);
@@ -373,7 +379,9 @@ describe('ReportGeneratorService - Franchise Digest (M6)', () => {
         periodEnd,
       };
 
-      jest.spyOn(franchiseOverviewService, 'getFranchiseSummary').mockResolvedValue(mockSummary as any);
+      jest
+        .spyOn(franchiseOverviewService, 'getFranchiseSummary')
+        .mockResolvedValue(mockSummary as any);
       jest.spyOn(prismaService.client.anomalyEvent, 'count').mockResolvedValue(0);
 
       const result = await service.generateFranchiseDigest(mockOrgId, periodStart, periodEnd);

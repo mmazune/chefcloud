@@ -1,4 +1,4 @@
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import {
   SessionPlatform,
@@ -31,14 +31,14 @@ export interface SessionValidationResult {
 
 /**
  * M10: SessionsService
- * 
+ *
  * Manages canonical session lifecycle with:
  * - Platform-aware session creation
  * - Idle timeout enforcement
  * - Activity tracking with throttling
  * - Manual and automatic revocation
  * - Session audit trail
- * 
+ *
  * @example
  * ```typescript
  * // Create session on login
@@ -49,13 +49,13 @@ export interface SessionValidationResult {
  *   source: SessionSource.MSR_CARD,
  *   jti: 'abc123...',
  * });
- * 
+ *
  * // Validate and touch session on each request
  * const result = await sessionsService.validateSession(session.id);
  * if (!result.valid) {
  *   throw new UnauthorizedException(result.reason);
  * }
- * 
+ *
  * // Manual logout
  * await sessionsService.revokeSession(session.id, userId, 'User logged out');
  * ```
@@ -102,7 +102,7 @@ export class SessionsService {
     });
 
     this.logger.log(
-      `Session created: ${session.id} for user ${params.userId} on ${params.platform} via ${params.source}`
+      `Session created: ${session.id} for user ${params.userId} on ${params.platform} via ${params.source}`,
     );
 
     return session;
@@ -169,11 +169,7 @@ export class SessionsService {
   /**
    * Manually revoke a session (logout)
    */
-  async revokeSession(
-    sessionId: string,
-    revokedById?: string,
-    reason?: string
-  ): Promise<void> {
+  async revokeSession(sessionId: string, revokedById?: string, reason?: string): Promise<void> {
     const session = await this.prisma.client.session.findUnique({
       where: { id: sessionId },
       select: { id: true, userId: true, platform: true, revokedAt: true },
@@ -199,7 +195,7 @@ export class SessionsService {
     });
 
     this.logger.log(
-      `Session revoked: ${sessionId} for user ${session.userId} on ${session.platform} - ${reason || 'Manual logout'}`
+      `Session revoked: ${sessionId} for user ${session.userId} on ${session.platform} - ${reason || 'Manual logout'}`,
     );
   }
 
@@ -209,7 +205,7 @@ export class SessionsService {
   async revokeAllUserSessions(
     userId: string,
     revokedById?: string,
-    reason?: string
+    reason?: string,
   ): Promise<number> {
     const result = await this.prisma.client.session.updateMany({
       where: {
@@ -224,7 +220,7 @@ export class SessionsService {
     });
 
     this.logger.log(
-      `Revoked ${result.count} sessions for user ${userId} - ${reason || 'Logout all'}`
+      `Revoked ${result.count} sessions for user ${userId} - ${reason || 'Logout all'}`,
     );
 
     return result.count;

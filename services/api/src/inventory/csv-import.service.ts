@@ -31,11 +31,7 @@ export class CsvImportService {
   /**
    * Import inventory items and recipes from CSV data
    */
-  async importFromCsv(
-    orgId: string,
-    branchId: string,
-    rows: CsvRow[],
-  ): Promise<ImportResult> {
+  async importFromCsv(orgId: string, branchId: string, rows: CsvRow[]): Promise<ImportResult> {
     this.logger.log(`Importing ${rows.length} rows for org ${orgId}, branch ${branchId}`);
 
     const result: ImportResult = {

@@ -1,18 +1,18 @@
 /**
  * M19: Staff Insights Service
- * 
+ *
  * Combines performance metrics (M5) with reliability metrics (M9) to provide:
  * - Comprehensive staff rankings
  * - Automated employee-of-week/month recommendations
  * - Award history persistence
- * 
+ *
  * Design: Composition over modification - orchestrates existing services without changing them.
  */
 
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { WaiterMetricsService } from './waiter-metrics.service';
-import { AttendanceService } from '../hr/attendance.service';
+// import { AttendanceService } from '../hr/attendance.service'; // Unused for now
 import { AntiTheftService } from '../anti-theft/anti-theft.service';
 import {
   AwardPeriodType,
@@ -37,7 +37,7 @@ import {
   getQuarter,
   format,
 } from 'date-fns';
-import { Prisma } from '@prisma/client';
+import { Prisma } from '@chefcloud/db';
 
 @Injectable()
 export class StaffInsightsService {
@@ -46,7 +46,7 @@ export class StaffInsightsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly waiterMetrics: WaiterMetricsService,
-    private readonly attendance: AttendanceService,
+    // private readonly attendance: AttendanceService, // Unused for now
     private readonly antiTheft: AntiTheftService,
   ) {}
 
@@ -170,7 +170,7 @@ export class StaffInsightsService {
     recommendation: AwardRecommendation & { orgId: string; branchId?: string | null },
     period: Period,
     createdById: string,
-  ) {
+  ): Promise<any> {
     return this.prisma.staffAward.upsert({
       where: {
         orgId_employeeId_periodType_periodStart_rank: {
@@ -228,7 +228,7 @@ export class StaffInsightsService {
     toDate?: Date;
     limit?: number;
     offset?: number;
-  }) {
+  }): Promise<any> {
     const where: Prisma.StaffAwardWhereInput = {
       orgId: query.orgId,
     };
@@ -354,15 +354,15 @@ export class StaffInsightsService {
       where: {
         orgId: query.orgId,
         branchId: query.branchId || undefined,
-        date: { gte: query.from, lte: query.to },
-        assignedEmployeeId: { in: employees.map((e) => e.id) },
+        startsAt: { gte: query.from, lte: query.to },
+        userId: { in: employees.map((e) => e.userId).filter((id): id is string => id !== null) },
       },
     });
 
     // Aggregate per employee
     return employees.map((employee) => {
       const empAttendance = attendanceRecords.filter((a) => a.employeeId === employee.id);
-      const empScheduled = dutyShifts.filter((ds) => ds.assignedEmployeeId === employee.id);
+      const empScheduled = dutyShifts.filter((ds) => ds.userId === employee.userId);
 
       const shiftsScheduled = empScheduled.length;
       const shiftsWorked = empAttendance.filter((a) => a.status === 'PRESENT').length;
@@ -428,10 +428,14 @@ export class StaffInsightsService {
     riskSummary: any,
   ): CombinedStaffMetrics[] {
     const reliabilityMap = new Map(reliabilityMetrics.map((r) => [r.userId, r]));
-    const riskMap = new Map((riskSummary.flaggedStaff || []).map((f: any) => [f.metrics.userId, f]));
+    const riskMap = new Map(
+      (riskSummary.flaggedStaff || []).map((f: any) => [f.metrics.userId, f]),
+    );
 
     return performanceRankings.map((perf) => {
-      const reliability = reliabilityMap.get(perf.userId) || this.getDefaultReliability(perf.userId, perf.displayName);
+      const reliability =
+        reliabilityMap.get(perf.userId) ||
+        this.getDefaultReliability(perf.userId, perf.displayName);
       const risk = riskMap.get(perf.userId);
 
       const compositeScore = this.calculateCompositeScore(perf.score, reliability.reliabilityScore);
@@ -445,8 +449,8 @@ export class StaffInsightsService {
         compositeScore,
         performanceMetrics: perf,
         reliabilityMetrics: reliability,
-        riskFlags: risk ? risk.violations : [],
-        isCriticalRisk: risk ? risk.violations.some((v: any) => v.severity === 'CRITICAL') : false,
+        riskFlags: (risk as any)?.violations || [],
+        isCriticalRisk: (risk as any)?.violations ? (risk as any).violations.some((v: any) => v.severity === 'CRITICAL') : false,
       };
     });
   }
@@ -472,7 +476,10 @@ export class StaffInsightsService {
     return Math.max(0, Math.min(1, composite));
   }
 
-  private filterEligible(combined: CombinedStaffMetrics[], rules: EligibilityRules): CombinedStaffMetrics[] {
+  private filterEligible(
+    combined: CombinedStaffMetrics[],
+    rules: EligibilityRules,
+  ): CombinedStaffMetrics[] {
     return combined.filter((staff) => {
       // Must not be critical risk
       if (staff.isCriticalRisk) {
@@ -551,17 +558,24 @@ export class StaffInsightsService {
     }
   }
 
-  private selectWinnerByCategory(rankings: CombinedStaffMetrics[], category: AwardCategory): CombinedStaffMetrics {
+  private selectWinnerByCategory(
+    rankings: CombinedStaffMetrics[],
+    category: AwardCategory,
+  ): CombinedStaffMetrics {
     switch (category) {
       case AwardCategory.TOP_PERFORMER:
         // Already sorted by composite score
         return rankings[0];
 
       case AwardCategory.HIGHEST_SALES:
-        return rankings.sort((a, b) => b.performanceMetrics.totalSales - a.performanceMetrics.totalSales)[0];
+        return rankings.sort(
+          (a, b) => b.performanceMetrics.totalSales - a.performanceMetrics.totalSales,
+        )[0];
 
       case AwardCategory.BEST_SERVICE:
-        return rankings.sort((a, b) => b.performanceMetrics.avgCheckSize - a.performanceMetrics.avgCheckSize)[0];
+        return rankings.sort(
+          (a, b) => b.performanceMetrics.avgCheckSize - a.performanceMetrics.avgCheckSize,
+        )[0];
 
       case AwardCategory.MOST_RELIABLE:
         return rankings.sort((a, b) => b.reliabilityScore - a.reliabilityScore)[0];
@@ -585,7 +599,8 @@ export class StaffInsightsService {
         reasons.push(`Generated UGX ${p.totalSales.toLocaleString()} in sales`);
         reasons.push(`${(r.attendanceRate * 100).toFixed(0)}% attendance rate`);
         if (p.voidCount === 0) reasons.push('Zero voids');
-        if (r.coverShiftsCount > 0) reasons.push(`Covered ${r.coverShiftsCount} shift(s) for colleagues`);
+        if (r.coverShiftsCount > 0)
+          reasons.push(`Covered ${r.coverShiftsCount} shift(s) for colleagues`);
         break;
 
       case AwardCategory.HIGHEST_SALES:

@@ -5,7 +5,7 @@ import { WaiterMetrics } from '../staff/dto/waiter-metrics.dto';
 
 /**
  * M5: Anti-Theft Service
- * 
+ *
  * Analyzes waiter metrics against configurable thresholds to flag risky behavior.
  */
 @Injectable()
@@ -97,8 +97,7 @@ export class AntiTheftService {
             metric: 'anomalyScore',
             value: m.anomalyScore,
             threshold: thresholds.maxAnomalyScore,
-            severity:
-              m.anomalyScore > thresholds.maxAnomalyScore * 1.5 ? 'CRITICAL' : 'WARN',
+            severity: m.anomalyScore > thresholds.maxAnomalyScore * 1.5 ? 'CRITICAL' : 'WARN',
           });
         }
 

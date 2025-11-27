@@ -22,6 +22,6 @@ import { PrismaService } from '../prisma.service';
 @Module({
   controllers: [AccountingController, PeriodsController, BankRecController],
   providers: [AccountingService, PostingService, PeriodsService, BankRecService, PrismaService],
-  exports: [PostingService],
+  exports: [PostingService, AccountingService],
 })
 export class AccountingModule {}

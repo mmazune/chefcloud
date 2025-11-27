@@ -34,9 +34,7 @@ export interface ReconciliationQuery {
 export class ReconciliationService {
   private readonly logger = new Logger(ReconciliationService.name);
 
-  constructor(
-    private readonly prisma: PrismaService,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   /**
    * Perform comprehensive inventory reconciliation
@@ -120,7 +118,10 @@ export class ReconciliationService {
       }
     }
 
-    return results.filter((r) => r.openingQty > 0 || r.purchasesQty > 0 || r.wastageQty > 0 || r.theoreticalUsageQty > 0);
+    return results.filter(
+      (r) =>
+        r.openingQty > 0 || r.purchasesQty > 0 || r.wastageQty > 0 || r.theoreticalUsageQty > 0,
+    );
   }
 
   /**

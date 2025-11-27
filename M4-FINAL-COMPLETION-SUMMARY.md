@@ -11,6 +11,7 @@
 ## What I Implemented/Changed
 
 ### Core Architecture & Data Models (100% Complete)
+
 - ✅ Created comprehensive report DTOs (`report-content.dto.ts`, 312 lines)
   - ShiftEndReport with 6 sections: sales, service, stock, KDS, staff, anomalies
   - PeriodDigest for daily/weekly/monthly aggregations
@@ -22,6 +23,7 @@
 - ✅ Migration applied successfully: `20251118100000_m4_report_subscriptions`
 
 ### Business Logic Services (90% Complete)
+
 - ✅ **ReportGeneratorService** (`report-generator.service.ts`, 670 lines)
   - generateShiftEndReport(): Comprehensive shift-end reports using real data
   - generateSalesReport(): Real POS data (orders, categories, items, payments)
@@ -36,7 +38,6 @@
   - CRUD operations for report subscriptions
   - Role-based recipient resolution (L3/L4/L5 → user emails)
   - Active subscription filtering by report type
-  
 - ✅ **CsvGeneratorService** (`csv-generator.service.ts`, 350 lines)
   - generateSalesCSV(), generateServiceCSV(), generateStockCSV(), generateKdsCSV()
   - generateShiftEndCSV(): Complete report in CSV format
@@ -44,6 +45,7 @@
   - Proper CSV escaping for special characters
 
 ### API Layer (100% Complete)
+
 - ✅ Added 4 subscription management endpoints (L4+ RBAC):
   - GET /reports/subscriptions (list)
   - POST /reports/subscriptions (create)
@@ -52,6 +54,7 @@
 - ✅ Updated ReportsModule with service dependencies (DashboardsModule, InventoryModule, FranchiseModule)
 
 ### Integration Layer (60% Complete)
+
 - ✅ Updated ShiftsService.closeShift() to enqueue shift-end-report jobs
 - ✅ Worker has shift-end-report job handler with subscription resolution
 - ⚠️ Worker uses placeholder report data (needs to use ReportGeneratorService)
@@ -63,6 +66,7 @@
 ## Files Touched (High Level)
 
 ### New Files Created
+
 - `services/api/src/reports/dto/report-content.dto.ts` (312 lines)
 - `services/api/src/reports/report-generator.service.ts` (670 lines)
 - `services/api/src/reports/subscription.service.ts` (155 lines)
@@ -70,6 +74,7 @@
 - `packages/db/prisma/migrations/20251118100000_m4_report_subscriptions/migration.sql`
 
 ### Modified Files
+
 - `packages/db/prisma/schema.prisma` (added ReportSubscription model + relations)
 - `services/api/src/reports/reports.controller.ts` (added 4 endpoints)
 - `services/api/src/reports/reports.module.ts` (added service providers and imports)
@@ -83,23 +88,28 @@
 All subscription endpoints require **L4+ (Manager/Owner)** role.
 
 ### GET /reports/subscriptions
+
 List all report subscriptions for org/branch.
 
 **Query params:**
+
 - `orgId` (required)
 - `branchId` (optional) - filter by branch
 - `reportType` (optional) - filter by type
 
 **Example:**
+
 ```bash
 curl -X GET "http://localhost:3000/reports/subscriptions?orgId=org_abc&branchId=branch_123" \
   -H "Authorization: Bearer $JWT_TOKEN"
 ```
 
 ### POST /reports/subscriptions
+
 Create new report subscription.
 
 **Body:**
+
 ```json
 {
   "orgId": "org_abc",
@@ -115,6 +125,7 @@ Create new report subscription.
 ```
 
 **Example:**
+
 ```bash
 curl -X POST "http://localhost:3000/reports/subscriptions" \
   -H "Authorization: Bearer $JWT_TOKEN" \
@@ -123,9 +134,11 @@ curl -X POST "http://localhost:3000/reports/subscriptions" \
 ```
 
 ### PATCH /reports/subscriptions/:id
+
 Update existing subscription (partial update).
 
 **Body:**
+
 ```json
 {
   "enabled": false,
@@ -134,6 +147,7 @@ Update existing subscription (partial update).
 ```
 
 **Example:**
+
 ```bash
 curl -X PATCH "http://localhost:3000/reports/subscriptions/sub_xyz" \
   -H "Authorization: Bearer $JWT_TOKEN" \
@@ -142,15 +156,18 @@ curl -X PATCH "http://localhost:3000/reports/subscriptions/sub_xyz" \
 ```
 
 ### DELETE /reports/subscriptions/:id
+
 Delete subscription.
 
 **Example:**
+
 ```bash
 curl -X DELETE "http://localhost:3000/reports/subscriptions/sub_xyz" \
   -H "Authorization: Bearer $JWT_TOKEN"
 ```
 
 ### Existing Endpoints (Unchanged)
+
 - `GET /reports/x` - X Report (current shift summary)
 - `GET /reports/z/:shiftId` - Z Report (closed shift)
 
@@ -163,6 +180,7 @@ curl -X DELETE "http://localhost:3000/reports/subscriptions/sub_xyz" \
 ### Planned Tests
 
 #### Unit Tests
+
 ```bash
 cd services/api
 pnpm test -- reports/report-generator.service.spec.ts
@@ -171,6 +189,7 @@ pnpm test -- reports/csv-generator.service.spec.ts
 ```
 
 **Test Coverage Needed:**
+
 - ReportGeneratorService:
   - Each report section generation method
   - Period and franchise digest generation
@@ -184,19 +203,23 @@ pnpm test -- reports/csv-generator.service.spec.ts
   - CSV escaping logic
 
 #### Integration Tests
+
 ```bash
 cd services/api
 pnpm test:e2e -- reports
 ```
 
 **Test Scenarios:**
+
 - Subscription CRUD operations via REST API
 - RBAC enforcement (L4+ required, L3 blocked)
 - End-to-end report generation flow
 - Role-based recipient resolution
 
 #### E2E Tests
+
 **Test Flow:**
+
 1. Create subscription for branch with SHIFT_END type
 2. Close shift in that branch
 3. Verify report job enqueued
@@ -208,6 +231,7 @@ pnpm test:e2e -- reports
 ## Known Limitations / Follow-Ups
 
 ### Critical (Blocks Production Use)
+
 1. **Schema Mismatch in ReportGeneratorService** ⚠️
    - Code references `Order.items` but should be `Order.orderItems`
    - Code references `Order.tip` but field doesn't exist in schema
@@ -232,6 +256,7 @@ pnpm test:e2e -- reports
    - Estimate: 30 minutes
 
 ### Medium Priority (Enhances Quality)
+
 5. **Scheduled Digests Not Implemented**
    - Daily/weekly/monthly cron jobs not added
    - Need: Add scheduler for DAILY_SUMMARY, WEEKLY_SUMMARY, MONTHLY_SUMMARY
@@ -253,6 +278,7 @@ pnpm test:e2e -- reports
    - Estimate: 1 hour
 
 ### Low Priority (Nice to Have)
+
 9. **Staff Performance Ranking Not Implemented**
    - generateStaffPerformance() returns empty arrays
    - Enhancement: Implement composite scoring (revenue, voids, discounts, no-drinks rate)
@@ -365,18 +391,22 @@ CsvGeneratorService
 ## Migration Notes
 
 ### Database Changes
+
 - **New table**: `report_subscriptions`
 - **Indexes**: (org_id), (branch_id), (report_type, enabled)
 - **Foreign keys**: org_id → orgs, branch_id → branches
 - **Reverse relations**: Added reportSubscriptions[] to Org and Branch models
 
 ### Backward Compatibility
+
 - ✅ Old OwnerDigest system continues to work unchanged
 - ✅ New system triggered by same shift-close event (parallel execution)
 - ✅ No breaking changes to existing APIs or data models
 
 ### Rollback Plan
+
 If issues arise:
+
 1. Disable all new subscriptions: `UPDATE report_subscriptions SET enabled = false`
 2. Remove shift-end-report job enqueue from ShiftsService
 3. Old OwnerDigest system continues working
@@ -387,17 +417,20 @@ If issues arise:
 ## Estimated Effort to Complete
 
 ### Critical Items (Production Blocking): **3-4 hours**
+
 - Fix schema mismatches in ReportGeneratorService: 30 min
 - Wire ReportGeneratorService into worker: 1-2 hours
 - Implement real email delivery in worker: 1 hour
 - Fix DTO type mismatches: 30 min
 
 ### Medium Priority Items: **6-8 hours**
+
 - Scheduled digests (daily/weekly/monthly): 2-3 hours
 - Enhanced PDF generation: 2-3 hours
 - Data consistency tests: 2 hours
 
 ### Low Priority Items: **12-15 hours**
+
 - Staff performance ranking: 2-3 hours
 - Unit test coverage: 6-8 hours
 - Documentation (DEV_GUIDE): 2-3 hours
@@ -412,6 +445,7 @@ If issues arise:
 ## Recommendations
 
 ### Immediate Next Steps (Priority Order)
+
 1. **Fix schema mismatches** - Blocks all report generation
 2. **Wire worker to use ReportGeneratorService** - Blocks real data in reports
 3. **Implement email sending** - Blocks actual delivery
@@ -421,6 +455,7 @@ If issues arise:
 7. **Enhance PDF/documentation** - Polish for user experience
 
 ### Long-Term Improvements
+
 - **Caching**: Cache expensive aggregations for franchise digests
 - **Incremental reports**: For very long periods, break into chunks
 - **Notification preferences**: Let users customize delivery times

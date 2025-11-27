@@ -17,15 +17,8 @@ import { IdempotencyInterceptor } from './idempotency.interceptor';
 import { PrismaService } from '../prisma.service';
 
 @Module({
-  providers: [
-    PrismaService,
-    IdempotencyService,
-    IdempotencyInterceptor,
-  ],
-  exports: [
-    IdempotencyService,
-    IdempotencyInterceptor,
-  ],
+  providers: [PrismaService, IdempotencyService, IdempotencyInterceptor],
+  exports: [IdempotencyService, IdempotencyInterceptor],
 })
 export class CommonModule {}
 ```
@@ -171,7 +164,7 @@ const idempotencyCleanupWorker = new Worker(
   'idempotency-cleanup',
   async (job: Job) => {
     logger.info('Starting idempotency key cleanup');
-    
+
     const deletedCount = await prisma.idempotencyKey.deleteMany({
       where: {
         expiresAt: {
@@ -241,7 +234,8 @@ curl -X POST http://localhost:3001/pos/orders \
 # Verify: Same order ID returned (no new order created)
 ```
 
-**Expected Result**: 
+**Expected Result**:
+
 - First request: `201 Created`, new order ID
 - Second request: `201 Created`, **same order ID** (from cache)
 
@@ -259,7 +253,8 @@ curl -X POST http://localhost:3001/pos/orders \
   }'
 ```
 
-**Expected Result**: 
+**Expected Result**:
+
 ```json
 {
   "statusCode": 409,
@@ -313,6 +308,7 @@ time curl -X POST http://localhost:3001/pos/orders \
 ```
 
 **Expected Overhead**:
+
 - First request: +5-10ms (check + store)
 - Duplicate request: -50-100ms (cached, skips controller)
 
@@ -336,7 +332,8 @@ time curl -X POST http://localhost:3001/pos/orders \
 
 **Cause**: Migration not applied or database connection issue
 
-**Fix**: 
+**Fix**:
+
 ```bash
 cd packages/db
 npx prisma migrate status
@@ -349,6 +346,7 @@ npx prisma migrate deploy
 **Cause**: Request body normalization issue (e.g., different field order)
 
 **Fix**: The `hashRequest` method in `IdempotencyService` sorts keys before hashing. If still failing, check for:
+
 - Timestamps in request body (should be excluded from hash)
 - Floating-point precision differences
 - Nested object ordering
@@ -361,7 +359,7 @@ npx prisma migrate deploy
 ✅ Duplicate requests return cached responses (same order ID)  
 ✅ Modified retries return `409 Conflict`  
 ✅ Cleanup cron removes expired keys daily  
-✅ No performance regression (overhead <10ms)  
+✅ No performance regression (overhead <10ms)
 
 ---
 

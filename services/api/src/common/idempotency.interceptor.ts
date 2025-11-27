@@ -1,9 +1,9 @@
 /**
  * M16: Idempotency Interceptor
- * 
+ *
  * NestJS interceptor that checks for Idempotency-Key header
  * and prevents duplicate API requests from being processed.
- * 
+ *
  * Usage:
  * @UseInterceptors(IdempotencyInterceptor)
  * @Post()
@@ -33,8 +33,7 @@ export class IdempotencyInterceptor implements NestInterceptor {
     const response = context.switchToHttp().getResponse();
 
     // Extract idempotency key from header or body
-    const idempotencyKey =
-      request.headers['idempotency-key'] || request.body?._idempotencyKey;
+    const idempotencyKey = request.headers['idempotency-key'] || request.body?._idempotencyKey;
 
     // If no idempotency key provided, proceed normally
     if (!idempotencyKey) {
@@ -45,11 +44,7 @@ export class IdempotencyInterceptor implements NestInterceptor {
     const endpoint = `${request.method} ${request.route?.path || request.url}`;
 
     // Check if key was already used
-    const check = await this.idempotencyService.check(
-      idempotencyKey,
-      endpoint,
-      request.body,
-    );
+    const check = await this.idempotencyService.check(idempotencyKey, endpoint, request.body);
 
     if (check.isDuplicate) {
       if (check.fingerprintMismatch) {

@@ -1,4 +1,4 @@
-import { Controller, Post, Param, Body, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Controller, Post, Get, Param, Body, Query, UseGuards, UseInterceptors } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { PosService } from './pos.service';
 import {
@@ -17,6 +17,30 @@ import { IdempotencyInterceptor } from '../common/idempotency.interceptor';
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 export class PosController {
   constructor(private posService: PosService) {}
+
+  /**
+   * M26-S1: Get all orders for POS (open orders, today's closed, etc.)
+   */
+  @Get()
+  @Roles('L1')
+  async getOrders(
+    @Query('status') status?: string,
+    @User() user?: { branchId: string },
+  ): Promise<unknown> {
+    return this.posService.getOrders(user.branchId, status);
+  }
+
+  /**
+   * M26-S1: Get single order details
+   */
+  @Get(':id')
+  @Roles('L1')
+  async getOrder(
+    @Param('id') orderId: string,
+    @User() user?: { branchId: string },
+  ): Promise<unknown> {
+    return this.posService.getOrder(orderId, user.branchId);
+  }
 
   @Post()
   @Roles('L1')

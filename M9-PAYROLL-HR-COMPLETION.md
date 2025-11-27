@@ -11,6 +11,7 @@
 M9 successfully enhances ChefCloud's HR and Payroll infrastructure to enterprise-grade, building on E43-s1 (Workforce) and E43-s2 (Payroll) foundations. The implementation adds structured employee management, formal attendance tracking, multiple salary type support, and enhanced GL integration with M8 accounting.
 
 **Key Achievements:**
+
 - ✅ **3 New Database Models**: Employee, EmploymentContract, AttendanceRecord
 - ✅ **4 Salary Types Supported**: MONTHLY, DAILY, HOURLY, PER_SHIFT
 - ✅ **Formal Attendance Tracking**: 5 attendance statuses with cover shift tracking
@@ -27,6 +28,7 @@ M9 successfully enhances ChefCloud's HR and Payroll infrastructure to enterprise
 #### New Models (3)
 
 **Employee Model:**
+
 ```prisma
 model Employee {
   id             String           @id @default(cuid())
@@ -44,9 +46,11 @@ model Employee {
   metadata       Json?
 }
 ```
+
 **Purpose:** Structured employee records supporting temp staff without user accounts
 
 **EmploymentContract Model:**
+
 ```prisma
 model EmploymentContract {
   id                   String     @id @default(cuid())
@@ -66,9 +70,11 @@ model EmploymentContract {
   metadata             Json?
 }
 ```
+
 **Purpose:** Multiple salary types with configurable deduction rules
 
 **AttendanceRecord Model:**
+
 ```prisma
 model AttendanceRecord {
   id                   String           @id @default(cuid())
@@ -83,15 +89,17 @@ model AttendanceRecord {
   coveredForEmployeeId String?          // Cover shift tracking
   source               AttendanceSource @default(MANUAL)
   notes                String?
-  
+
   @@unique([employeeId, date])
 }
 ```
+
 **Purpose:** Formal attendance tracking with cover shifts
 
 #### Enhanced Models (1)
 
 **PaySlip Enhancements:**
+
 - Added `employeeId` field (nullable for backward compat)
 - Added `daysPresent`, `daysAbsent`, `absenceDeductions` fields
 - Added `metadata` JSON field for calculation details
@@ -101,8 +109,10 @@ model AttendanceRecord {
 ### 2. New Services (2)
 
 #### AttendanceService (`/services/api/src/hr/attendance.service.ts`)
+
 **Lines of Code:** 450+
 **Methods:**
+
 - `clockIn(data)` - Create attendance record with PRESENT status
 - `clockOut(data)` - Update with clock out time, detect LEFT_EARLY
 - `markAbsence(data, markedById)` - Manager marks employee absent
@@ -111,13 +121,16 @@ model AttendanceRecord {
 - `getAttendanceSummary(orgId, employeeId, dateFrom, dateTo)` - Aggregates for payroll
 
 **Key Features:**
+
 - Backward compatible: Creates TimeEntry records alongside AttendanceRecord
 - Automatic status detection: LATE, LEFT_EARLY based on shift times
 - Cover shift tracking: Links covering employee to covered employee
 
 #### PayrollEngineService (`/services/api/src/workforce/payroll-engine.service.ts`)
+
 **Lines of Code:** 330+
 **Methods:**
+
 - `calculatePayslip(orgId, employeeId, periodStart, periodEnd)` - Route to salary type handler
 - `calculateMonthly(contract, attendance, periodStart, periodEnd)` - MONTHLY with absence deductions
 - `calculateDaily(contract, attendance)` - DAILY pay per day worked
@@ -127,6 +140,7 @@ model AttendanceRecord {
 - `calculateDeductions(orgId, userId, gross)` - Tax and deduction components
 
 **Key Algorithm (MONTHLY):**
+
 ```typescript
 baseSalary = 1,000,000 UGX
 dailyRate = baseSalary / 22 = 45,454.55
@@ -139,12 +153,15 @@ gross = baseSalary - absenceDeductions + overtimePay
 #### PayrollService Updates (`/services/api/src/workforce/payroll.service.ts`)
 
 **New Method:**
+
 - `buildDraftRunV2(orgId, branchId, periodStart, periodEnd, userId)` - Uses PayrollEngineService
 
 **Enhanced Method:**
+
 - `postToGL(payRunId, userId, branchId?)` - Fixed account codes, added branch support
 
 **Key Changes:**
+
 ```diff
 - const ACCOUNT_PAYROLL_EXPENSE = '6000'; // WRONG
 - const ACCOUNT_PAYROLL_PAYABLE = '2000'; // WRONG
@@ -162,7 +179,9 @@ gross = baseSalary - absenceDeductions + overtimePay
 ### 4. New Controllers (1)
 
 #### AttendanceController (`/services/api/src/hr/attendance.controller.ts`)
+
 **Endpoints (6):**
+
 - `POST /hr/attendance/clock-in` - Clock in (L1+, self)
 - `POST /hr/attendance/clock-out` - Clock out (L1+, self)
 - `POST /hr/attendance/mark-absence` - Mark absence (L3+)
@@ -175,6 +194,7 @@ gross = baseSalary - absenceDeductions + overtimePay
 ### 5. New Modules (1)
 
 #### HrModule (`/services/api/src/hr/hr.module.ts`)
+
 **Exports:** AttendanceService
 **Imports:** PrismaModule, AuthModule
 **Integrated Into:** AppModule, WorkforceModule
@@ -183,6 +203,7 @@ gross = baseSalary - absenceDeductions + overtimePay
 
 **DEV_GUIDE.md Section Added:** "## M9 – Payroll, Attendance & HR Enterprise Hardening" (500+ lines)
 **Contents:**
+
 - Overview and key features
 - Data model documentation with examples
 - Payroll calculation flows for all 4 salary types
@@ -200,6 +221,7 @@ gross = baseSalary - absenceDeductions + overtimePay
 ## Files Changed
 
 ### Created (6 files)
+
 1. `/services/api/src/hr/attendance.service.ts` - AttendanceService (450 lines)
 2. `/services/api/src/hr/attendance.controller.ts` - AttendanceController (160 lines)
 3. `/services/api/src/hr/hr.module.ts` - HrModule (15 lines)
@@ -208,6 +230,7 @@ gross = baseSalary - absenceDeductions + overtimePay
 6. `/workspaces/chefcloud/M9-PAYROLL-HR-COMPLETION.md` - This document
 
 ### Modified (4 files)
+
 1. `/packages/db/prisma/schema.prisma`
    - Added Employee, EmploymentContract, AttendanceRecord models
    - Enhanced PaySlip model with M9 fields
@@ -231,6 +254,7 @@ gross = baseSalary - absenceDeductions + overtimePay
    - Appended M9 documentation section (500+ lines)
 
 ### Database Migration
+
 - Migration created: `m9_hr_payroll_models`
 - Schema pushed to database successfully
 
@@ -239,11 +263,14 @@ gross = baseSalary - absenceDeductions + overtimePay
 ## Integration Points
 
 ### M8 Accounting (Fixed & Enhanced)
+
 **Before M9:**
+
 - ❌ PayrollService used wrong accounts (6000, 2000)
 - ❌ No branchId on journal entries
 
 **After M9:**
+
 - ✅ Correct accounts (5100 Payroll Expense, 2100 Payroll Payable)
 - ✅ Branch-aware posting for per-branch P&L
 - ✅ Multiple journal entries per branch (if applicable)
@@ -251,8 +278,10 @@ gross = baseSalary - absenceDeductions + overtimePay
 **Impact:** Payroll now appears correctly in M8 financial statements
 
 ### M7 Budgets (Automatic)
+
 **Integration:** Via GL account 5100
 **Result:** M7 BudgetService automatically includes payroll in:
+
 - Budget vs Actual reports (PAYROLL category)
 - Variance analysis
 - Cost insights (payroll as % of revenue)
@@ -260,10 +289,12 @@ gross = baseSalary - absenceDeductions + overtimePay
 **No additional work needed!**
 
 ### M6 Franchise Management (Enhanced)
+
 **Integration:** Via branchId on journal entries
 **Result:** Franchise overview now includes per-branch payroll costs
 
 ### M4 Owner Digests (Enhanced)
+
 **Integration:** Via P&L (includes payroll from GL)
 **Result:** Digests automatically show payroll expense
 **Optional Enhancement:** Add dedicated HR summary section (not implemented yet)
@@ -273,6 +304,7 @@ gross = baseSalary - absenceDeductions + overtimePay
 ## Backward Compatibility
 
 ### Preserved E43 Functionality
+
 - ✅ Existing `TimeEntry` records still valid
 - ✅ Original `buildDraftRun()` method unchanged
 - ✅ Existing `LeaveRequest` workflow unchanged
@@ -280,7 +312,9 @@ gross = baseSalary - absenceDeductions + overtimePay
 - ✅ WorkforceService methods unchanged
 
 ### Migration Path
+
 **For Existing Orgs:**
+
 1. Run schema migration (automatic on next deploy)
 2. Create Employee records for existing Users (manual/script)
 3. Create EmploymentContract for each employee (manual/script)
@@ -288,6 +322,7 @@ gross = baseSalary - absenceDeductions + overtimePay
 5. Optionally import historical TimeEntry as AttendanceRecord
 
 **For New Orgs:**
+
 - Start with Employee + EmploymentContract models directly
 - Use AttendanceService for all attendance tracking
 - Use `buildDraftRunV2()` for payroll
@@ -297,20 +332,23 @@ gross = baseSalary - absenceDeductions + overtimePay
 ## Testing Status
 
 ### Unit Tests
+
 - ⚠️ **TODO**: AttendanceService unit tests
 - ⚠️ **TODO**: PayrollEngineService unit tests
 - ⚠️ **TODO**: Enhanced PayrollService tests
 
 ### E2E Tests
+
 - ⚠️ **TODO**: Full payroll cycle test (E2E)
-  * Create employee with MONTHLY contract
-  * Record attendance (present/absent)
-  * Build payrun
-  * Verify calculations
-  * Approve and post to GL
-  * Verify journal entries
+  - Create employee with MONTHLY contract
+  - Record attendance (present/absent)
+  - Build payrun
+  - Verify calculations
+  - Approve and post to GL
+  - Verify journal entries
 
 ### Manual Testing
+
 - ✅ Schema migration successful
 - ✅ Prisma client generated
 - ✅ No compilation errors
@@ -321,6 +359,7 @@ gross = baseSalary - absenceDeductions + overtimePay
 ## Known Limitations
 
 ### Functional Limitations
+
 1. **Payment Recording:** Only accrual posting implemented (Dr Expense, Cr Payable). Payment recording (Dr Payable, Cr Cash) not implemented.
 2. **Tax Complexity:** Simple percentage-based tax. No support for:
    - Progressive tax brackets
@@ -331,12 +370,14 @@ gross = baseSalary - absenceDeductions + overtimePay
 5. **Payroll Approval Workflow:** Only single-stage approval (DRAFT → APPROVED → POSTED). No multi-level approval.
 
 ### Technical Limitations
+
 1. **Performance:** No pagination on attendance queries (could be slow for large datasets)
 2. **Concurrency:** No locking on payrun creation (concurrent runs could create duplicates)
 3. **Audit Trail:** Limited audit trail on attendance modifications
 4. **Reporting:** No dedicated payroll reports (P&L, payslips PDF, etc.)
 
 ### Future Enhancements
+
 - [ ] Payment recording (cash/bank transfer)
 - [ ] Multi-stage payroll approval workflow
 - [ ] Advanced tax calculation engine
@@ -352,12 +393,14 @@ gross = baseSalary - absenceDeductions + overtimePay
 ## Performance Characteristics
 
 ### Database Queries
+
 - **AttendanceService.getAttendanceSummary()**: O(n) where n = days in period
 - **PayrollService.buildDraftRunV2()**: O(m) where m = active employees
 - **PayrollEngineService.calculatePayslip()**: O(1) per employee
 - **postToGL()**: O(b) where b = number of branches
 
 ### Optimization Opportunities
+
 1. **Batch Attendance Queries:** Use single query with GROUP BY instead of per-employee queries
 2. **Caching:** Cache EmploymentContract lookups during payrun
 3. **Pagination:** Add pagination to attendance query endpoints
@@ -373,6 +416,7 @@ gross = baseSalary - absenceDeductions + overtimePay
 ## Security Considerations
 
 ### RBAC Enforced
+
 - ✅ All endpoints protected with JwtAuthGuard
 - ✅ Role-based access control via MinRole decorator
 - ✅ Staff can only view own attendance (L1-L2)
@@ -380,11 +424,13 @@ gross = baseSalary - absenceDeductions + overtimePay
 - ✅ Accountants can process payroll (L4+)
 
 ### Data Privacy
+
 - ✅ PaySlip metadata stores calculation details (transparent audit trail)
 - ✅ Attendance notes field for manager comments
 - ⚠️ **TODO**: Redact sensitive payroll data in logs
 
 ### Validation
+
 - ✅ Employee must be ACTIVE to clock in
 - ✅ Cannot clock in twice on same day
 - ✅ Cannot clock out without clock in
@@ -396,6 +442,7 @@ gross = baseSalary - absenceDeductions + overtimePay
 ## Deployment Checklist
 
 ### Pre-Deployment
+
 - [x] Schema migration created
 - [x] Schema pushed to dev database
 - [x] Prisma client generated
@@ -405,6 +452,7 @@ gross = baseSalary - absenceDeductions + overtimePay
 - [ ] Manual API testing completed
 
 ### Post-Deployment
+
 - [ ] Run schema migration in production
 - [ ] Create Employee records for existing Users (migration script)
 - [ ] Create EmploymentContract for existing employees
@@ -415,6 +463,7 @@ gross = baseSalary - absenceDeductions + overtimePay
 - [ ] Verify M7 budget actuals update
 
 ### Rollback Plan
+
 - Schema changes are additive (no data loss)
 - Original buildDraftRun() still works (fallback)
 - Can revert to E43 by removing HrModule from imports
@@ -424,6 +473,7 @@ gross = baseSalary - absenceDeductions + overtimePay
 ## Success Metrics
 
 ### Functional Metrics
+
 - ✅ 4 salary types supported (MONTHLY, DAILY, HOURLY, PER_SHIFT)
 - ✅ 5 attendance statuses tracked
 - ✅ Branch-aware GL posting implemented
@@ -431,6 +481,7 @@ gross = baseSalary - absenceDeductions + overtimePay
 - ✅ Cover shifts tracked in attendance
 
 ### Code Metrics
+
 - **New Code:** ~1,500 lines
 - **Modified Code:** ~300 lines
 - **Documentation:** ~1,000 lines
@@ -440,6 +491,7 @@ gross = baseSalary - absenceDeductions + overtimePay
 - **API Endpoints Added:** 6
 
 ### Integration Metrics
+
 - ✅ M8 Accounting: Fixed account codes
 - ✅ M7 Budgets: Automatic via GL
 - ✅ M6 Franchise: Branch-aware reporting
@@ -460,6 +512,7 @@ M9 successfully enhances ChefCloud's HR and Payroll infrastructure to enterprise
 **Status:** ✅ **PRODUCTION READY** (pending tests)
 
 **Next Steps:**
+
 1. Write unit tests for AttendanceService and PayrollEngineService
 2. Write E2E tests for full payroll cycle
 3. Manual API testing

@@ -1,6 +1,6 @@
 /**
  * M22: Promotion Insights Controller
- * 
+ *
  * API endpoints for promotion suggestions:
  * - Preview suggestions (read-only)
  * - Generate & persist suggestions (L5/HR only)
@@ -28,12 +28,14 @@ import {
   ListSuggestionsQueryDto,
   UpdateSuggestionStatusDto,
   SuggestionCategory,
+  SuggestionStatus,
 } from './dto/promotion-insights.dto';
+import { AwardPeriodType } from './dto/staff-insights.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { Roles } from '../auth/roles.decorator';
-import { RoleLevel } from '@prisma/client';
+import { RoleLevel } from '@chefcloud/db';
 
 @ApiTags('staff')
 @ApiBearerAuth()
@@ -52,12 +54,11 @@ export class PromotionInsightsController {
   @ApiOperation({ summary: 'Preview promotion suggestions without saving' })
   @ApiResponse({ status: 200, description: 'Suggestions computed successfully' })
   @ApiResponse({ status: 403, description: 'Forbidden - requires L4+ role' })
-  async previewSuggestions(
-    @Query() query: PreviewSuggestionsQueryDto,
-    @CurrentUser() user: any,
-  ) {
+  async previewSuggestions(@Query() query: PreviewSuggestionsQueryDto, @CurrentUser() user: any) {
     const categories = query.categories
-      ? query.categories.split(',').filter((c) => Object.values(SuggestionCategory).includes(c as any))
+      ? query.categories
+          .split(',')
+          .filter((c) => Object.values(SuggestionCategory).includes(c as any))
       : undefined;
 
     const config = {
@@ -71,7 +72,7 @@ export class PromotionInsightsController {
     return this.promotionInsights.computeSuggestions({
       orgId: user.orgId,
       branchId: query.branchId || null,
-      periodType: query.periodType,
+      periodType: query.periodType || AwardPeriodType.WEEK,
       from,
       to,
       config,
@@ -105,7 +106,7 @@ export class PromotionInsightsController {
       {
         orgId: user.orgId,
         branchId: body.branchId || null,
-        periodType: body.periodType,
+        periodType: body.periodType || AwardPeriodType.WEEK,
         from,
         to,
         config,
@@ -120,7 +121,7 @@ export class PromotionInsightsController {
     const summary = await this.promotionInsights.getSuggestionSummary({
       orgId: user.orgId,
       branchId: body.branchId,
-      periodType: body.periodType,
+      periodType: body.periodType || AwardPeriodType.WEEK,
       periodStart: from,
       periodEnd: to,
     });
@@ -234,7 +235,7 @@ export class PromotionInsightsController {
     const result = await this.promotionInsights.updateSuggestionStatus(
       id,
       {
-        status: body.status,
+        status: body.status || SuggestionStatus.PENDING,
         decisionNotes: body.decisionNotes,
       },
       {

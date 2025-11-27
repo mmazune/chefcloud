@@ -9,12 +9,14 @@
 ## Executive Summary
 
 M19 provides comprehensive staff ranking capabilities combining:
+
 - **Performance Metrics (70%)**: Sales, avg check, voids, discounts, no-drinks rate, anomalies (from M5 WaiterMetricsService)
 - **Reliability Metrics (30%)**: Attendance rate, late penalties, cover shift bonuses (from M9 AttendanceService)
 - **Risk Filtering**: Exclusion of CRITICAL risk staff (from M5 AntiTheftService)
 - **Award Persistence**: StaffAward model tracks employee-of-week/month/quarter/year
 
 **Key Gap**: M19 focuses on **temporary awards** (recognition), but lacks:
+
 1. **Persistent promotion tracking** (who was suggested for promotion when, and what happened)
 2. **Decision history** (accepted/rejected/ignored status + reasons)
 3. **Multi-category suggestions** (not just awards, but training, role changes, performance reviews)
@@ -85,6 +87,7 @@ model StaffAward {
 ```
 
 **Key Limitations for Promotions:**
+
 - ❌ No **status tracking** (was suggestion accepted? rejected? ignored?)
 - ❌ No **suggestion category** beyond awards (need PROMOTION, TRAINING, ROLE_CHANGE, PERFORMANCE_REVIEW)
 - ❌ No **decision metadata** (who decided? when? why rejected?)
@@ -93,6 +96,7 @@ model StaffAward {
 ### 3. Available Metrics Per Employee
 
 **From M5 WaiterMetricsService:**
+
 - `totalSales` (UGX)
 - `orderCount`
 - `avgCheckSize` (UGX)
@@ -103,6 +107,7 @@ model StaffAward {
 - **Performance Score** (0-1, composite of above)
 
 **From M9 AttendanceService:**
+
 - `shiftsScheduled`, `shiftsWorked`, `shiftsAbsent`
 - `lateCount`, `leftEarlyCount`
 - `coverShiftsCount` (helped colleagues)
@@ -110,15 +115,18 @@ model StaffAward {
 - **Reliability Score** (0-1, attendance-based)
 
 **From M5 AntiTheftService:**
+
 - `riskLevel` (NONE, WARN, CRITICAL)
 - `riskReasons` (array of flags: high voids, suspicious discounts, anomalies)
 
 **Composite Score:**
+
 ```typescript
 compositeScore = (performanceScore × 0.70) + (reliabilityScore × 0.30)
 ```
 
 **What's NOT Tracked (but could be for promotions):**
+
 - ❌ Tenure (how long employee has been in role)
 - ❌ Prior promotions/role changes (career trajectory)
 - ❌ Training completion records
@@ -132,19 +140,21 @@ compositeScore = (performanceScore × 0.70) + (reliabilityScore × 0.30)
 
 **File:** `services/api/src/staff/staff-insights.service.ts` (lines 450-500)
 
-| Period | Min Shifts | Max Absence Rate | Risk Exclusion |
-|--------|-----------|------------------|----------------|
-| WEEK | 3 | 15% | CRITICAL only |
-| MONTH | 10 | 10% | CRITICAL only |
-| QUARTER | 30 | 8% | CRITICAL only |
-| YEAR | 120 | 8% | CRITICAL only |
+| Period  | Min Shifts | Max Absence Rate | Risk Exclusion |
+| ------- | ---------- | ---------------- | -------------- |
+| WEEK    | 3          | 15%              | CRITICAL only  |
+| MONTH   | 10         | 10%              | CRITICAL only  |
+| QUARTER | 30         | 8%               | CRITICAL only  |
+| YEAR    | 120        | 8%               | CRITICAL only  |
 
 **Rationale:**
+
 - **Min shifts**: Ensures sufficient data for scoring (avoid outliers from 1-2 shifts)
 - **Max absence**: Penalizes unreliable staff
 - **Risk**: Excludes staff with serious theft/fraud flags
 
 **For Promotions, Additional Rules Needed:**
+
 - ✅ **Min tenure in current role**: e.g., 3 months before promotion eligible
 - ✅ **Min composite score threshold**: e.g., >= 0.70 (top 30% performers)
 - ✅ **No recent warnings/disciplinary actions**: check HR records (not in M19)
@@ -157,11 +167,13 @@ compositeScore = (performanceScore × 0.70) + (reliabilityScore × 0.30)
 ### 1. Persistent Promotion Suggestions
 
 **Problem:** M19 `StaffAward` model only tracks awards (recognition). No way to track:
+
 - "We suggested John Doe for promotion to Shift Manager in Nov 2025"
 - "Suggestion was accepted by Owner on Dec 1, 2025"
 - "Jane Smith was suggested for training in Nov, but rejected (already trained)"
 
 **Solution Needed:** New model `PromotionSuggestion` (or similar) with:
+
 - `suggestionId`
 - `employeeId`
 - `periodType`, `periodStart`, `periodEnd`
@@ -178,11 +190,13 @@ compositeScore = (performanceScore × 0.70) + (reliabilityScore × 0.30)
 **Problem:** No way to record **who decided** and **why** for audit trail.
 
 **Example Use Cases:**
+
 - Owner accepts promotion suggestion → HR needs to know when, by whom, for payroll
 - Manager rejects training suggestion → need reason ("already completed this training")
 - Suggestion ignored (no action after 30 days) → auto-archive
 
 **Solution Needed:**
+
 - `status` field with transitions: PENDING → ACCEPTED | REJECTED | IGNORED
 - `statusUpdatedAt` (timestamp of decision)
 - `statusUpdatedById` (user who made decision, FK to users)
@@ -193,6 +207,7 @@ compositeScore = (performanceScore × 0.70) + (reliabilityScore × 0.30)
 **Problem:** M19 `AwardCategory` only has award types (TOP_PERFORMER, HIGHEST_SALES, etc.). Need broader categories for career development.
 
 **Solution Needed:** New `SuggestionCategory` enum:
+
 - `PROMOTION`: Suggest moving to higher role (waiter → shift manager)
 - `ROLE_CHANGE`: Lateral move (waiter → bartender, kitchen → front-of-house)
 - `TRAINING`: Suggest training program (customer service, upselling, management)
@@ -200,6 +215,7 @@ compositeScore = (performanceScore × 0.70) + (reliabilityScore × 0.30)
 - (Optional) `SALARY_ADJUSTMENT`: Flag for HR to review compensation
 
 **Business Logic:**
+
 - **PROMOTION**: Triggered by high composite score (>= 0.75) + min tenure (3+ months)
 - **TRAINING**: Triggered by low specific metric (e.g., low avg check → upselling training)
 - **PERFORMANCE_REVIEW**: Triggered by consistent top 10% or bottom 10% ranking
@@ -210,10 +226,12 @@ compositeScore = (performanceScore × 0.70) + (reliabilityScore × 0.30)
 **Problem:** M19 only looks at **single period** (this month). No comparison to past periods to detect improvement or decline.
 
 **Example Use Cases:**
+
 - "John's sales increased 30% month-over-month for 3 consecutive months" → suggest promotion
 - "Jane's reliability dropped from 95% to 70% in last quarter" → suggest performance review
 
 **Solution Needed (Optional, not blocking M22):**
+
 - Query multiple periods (e.g., last 3 months) and calculate trend
 - Add `MOST_IMPROVED` category to promotions (already in awards, could extend)
 - Store historical scores in `insightsSnapshot` for easy comparison
@@ -223,6 +241,7 @@ compositeScore = (performanceScore × 0.70) + (reliabilityScore × 0.30)
 **Problem:** M4 reports (shift-end, period digests, franchise digests) have placeholders for staff insights but no promotion data.
 
 **Current M19 Integration:**
+
 ```typescript
 // Period digest placeholder (not implemented)
 staffInsights?: {
@@ -234,6 +253,7 @@ staffInsights?: {
 ```
 
 **M22 Extension Needed:**
+
 ```typescript
 // Add to period digest
 staffPromotions?: {
@@ -252,6 +272,7 @@ staffPromotions?: {
 ```
 
 **Franchise Digest Extension:**
+
 ```typescript
 // Cross-branch promotion candidates
 franchisePromotions?: {
@@ -272,6 +293,7 @@ franchisePromotions?: {
 ### Automatic Suggestion Triggers
 
 **PROMOTION (Upward Career Move):**
+
 - ✅ Composite score >= 0.75 (top 25% performers)
 - ✅ Min tenure in current role >= 3 months
 - ✅ Attendance rate >= 90%
@@ -280,6 +302,7 @@ franchisePromotions?: {
 - ❌ Exclude if recently promoted (within 6 months)
 
 **TRAINING (Skill Development):**
+
 - ✅ Low specific metric:
   - Avg check < 50th percentile → upselling training
   - High void rate (> 5%) → POS training
@@ -288,12 +311,14 @@ franchisePromotions?: {
 - ✅ Min 1 month in role (no training spam for new hires)
 
 **PERFORMANCE_REVIEW (Formal Assessment):**
+
 - ✅ Top 10% performers (identify for fast-track promotion)
 - ✅ Or: Bottom 10% performers (improvement plan needed)
 - ✅ Or: Significant trend change (± 20% score over 2 months)
 - ✅ Min 3 months in role
 
 **ROLE_CHANGE (Lateral Move):**
+
 - ❌ Cannot auto-detect (requires manager judgment)
 - Manual suggestion only via API
 
@@ -368,6 +393,7 @@ franchisePromotions?: {
 **Impact:** Cannot enforce "min 3 months in role before promotion"
 
 **Workaround for M22:**
+
 - Use `Employee.createdAt` as proxy (assumes employee joined in current role)
 - Or: Add `roleChangedAt` field to Employee model (future enhancement)
 
@@ -378,6 +404,7 @@ franchisePromotions?: {
 **Impact:** Cannot detect trends ("improved 20% month-over-month")
 
 **Workaround for M22:**
+
 - For MOST_IMPROVED category, query 2+ periods and compare manually
 - Or: Store period scores in `PromotionSuggestion.insightsSnapshot` for future reference
 
@@ -388,6 +415,7 @@ franchisePromotions?: {
 **Impact:** Cannot suggest training based on missing certifications
 
 **Workaround for M22:**
+
 - Training suggestions based on performance gaps only (not cert requirements)
 - Future: Add Training model in HR module
 
@@ -398,6 +426,7 @@ franchisePromotions?: {
 **Impact:** Cannot factor customer feedback into promotion decisions
 
 **Workaround for M22:**
+
 - Promotion suggestions use only performance + reliability (no feedback)
 - Future: Add feedback score to M19 composite scoring
 
@@ -408,6 +437,7 @@ franchisePromotions?: {
 **Impact:** Cannot validate "is there an open role for this promotion?"
 
 **Workaround for M22:**
+
 - Promotions are **suggestions only**, not auto-approved
 - Manager must validate availability of higher role manually
 - Future: Add JobLevel, CareerPath models
@@ -419,6 +449,7 @@ franchisePromotions?: {
 ### Minimal Viable Product (Scope for M22)
 
 **IN SCOPE:**
+
 1. ✅ New `PromotionSuggestion` model with status tracking
 2. ✅ `PromotionInsightsService` using M19 infrastructure
 3. ✅ API endpoints (preview, generate, list, update status)
@@ -426,6 +457,7 @@ franchisePromotions?: {
 5. ✅ Digest integration (optional section in period reports)
 
 **OUT OF SCOPE (Future Enhancements):**
+
 - ❌ Training/certification tracking (need HR module extension)
 - ❌ Feedback score integration (M20 → M19 → M22 pipeline)
 - ❌ Historical trend analysis (multi-period comparison)
@@ -438,11 +470,13 @@ franchisePromotions?: {
 ### Dependencies
 
 **Required:**
+
 - ✅ M19 Staff Insights (COMPLETE)
 - ✅ M5 Waiter Metrics (COMPLETE)
 - ✅ M9 Attendance (COMPLETE)
 
 **Optional (Future):**
+
 - ⏳ M20 Feedback → M19 integration (customer feedback in rankings)
 - ⏳ HR Training module (track certifications)
 - ⏳ Job Level / Career Path models
@@ -523,6 +557,7 @@ model PromotionSuggestion {
 ```
 
 **Key Design Decisions:**
+
 1. ✅ Unique constraint on `(orgId, employeeId, periodType, periodStart, category)` → idempotent generation
 2. ✅ Status tracking with nullable `statusUpdatedAt/By` → audit trail
 3. ✅ `insightsSnapshot` as JSON → store full metrics for historical reference
@@ -534,6 +569,7 @@ model PromotionSuggestion {
 ## Next Steps (Step 1)
 
 Create `M22-PROMOTION-DESIGN.md` with:
+
 1. ✅ Final Prisma model (based on draft above)
 2. ✅ Service method signatures (PromotionInsightsService)
 3. ✅ API endpoint specs (request/response formats)

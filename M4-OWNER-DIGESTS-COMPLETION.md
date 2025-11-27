@@ -7,12 +7,14 @@
 ### Phase 1: Foundation & Architecture (COMPLETED ✅)
 
 #### Step 0: Re-alignment with Spec & Current State
+
 - ✅ Analyzed `ChefCloud_Enterprise_Grade_Backend_Spec_v1.md` section 3.5
 - ✅ Mapped existing OwnerDigest implementation (basic PDF/CSV, shift-close trigger)
 - ✅ Identified available services: DashboardsService, ReconciliationService, FranchiseService, KdsService
 - ✅ Verified data sources: M3 reconciliation, anti-theft dashboards, franchise endpoints, KDS metrics
 
 #### Step 1: Canonical Report Content Structure (COMPLETED ✅)
+
 - ✅ Created comprehensive TypeScript DTOs for all report types (312 lines)
 - ✅ **ShiftEndReport**: Complete shift-end report with 6 major sections:
   - Sales Report: by category, item, payment method
@@ -25,6 +27,7 @@
 - ✅ **FranchiseDigest**: Franchise-level multi-branch aggregation
 
 #### Step 2: Recipient Configuration & Report Types (COMPLETED ✅)
+
 - ✅ Created `ReportSubscription` Prisma model with:
   - Report types: SHIFT_END, DAILY_SUMMARY, WEEKLY_SUMMARY, MONTHLY_SUMMARY, FRANCHISE_WEEKLY
   - Delivery channels: EMAIL, SLACK
@@ -41,6 +44,7 @@
 ### Phase 2: Data Integration (COMPLETED ✅)
 
 #### Step 1: Wire Real Data into ShiftEndReport (COMPLETED ✅)
+
 - ✅ Implemented `ReportGeneratorService` with real data queries (670 lines):
   - **generateShiftEndReport()**: Main orchestration using parallel queries
   - **generateSalesReport()**: Real POS data (orders, items, payments, categories)
@@ -59,6 +63,7 @@
   - **generateAnomaliesReport()**: Real anomaly events by type
 
 #### Step 2: Wire PeriodDigest and FranchiseDigest (COMPLETED ✅)
+
 - ✅ Implemented `generatePeriodDigest()`:
   - Aggregates data across multiple days for single branch
   - Reuses same section generation methods as ShiftEndReport
@@ -72,6 +77,7 @@
 ### Phase 3: Output Generation (COMPLETED ✅)
 
 #### Step 3: CSV Generation (COMPLETED ✅)
+
 - ✅ Created `CsvGeneratorService` (350+ lines):
   - **generateSalesCSV()**: Item-level sales with categories
   - **generateServiceCSV()**: Per-waiter performance metrics
@@ -85,6 +91,7 @@
 ### Phase 4: Integration & Delivery (PARTIAL ⚠️)
 
 #### Worker Integration
+
 - ✅ Updated `ShiftsService.closeShift()` to enqueue `shift-end-report` jobs
 - ✅ Added `shift-end-report` job type to worker
 - ⚠️ Worker has subscription resolution logic
@@ -94,6 +101,7 @@
 ### Phase 5: Remaining Work (15%)
 
 #### TODO: Complete Worker Implementation
+
 1. **Use ReportGeneratorService in Worker** (HIGH PRIORITY)
    - Import and instantiate services in worker
    - Replace placeholder reportData with actual report generation
@@ -111,6 +119,7 @@
    - Add charts/visualizations if desired
 
 #### TODO: Scheduled Digests (MEDIUM PRIORITY)
+
 4. **Daily/Weekly/Monthly Scheduler**
    - Add cron jobs for DAILY_SUMMARY, WEEKLY_SUMMARY, MONTHLY_SUMMARY
    - Use generatePeriodDigest() method
@@ -122,6 +131,7 @@
    - Target franchise-level roles
 
 #### TODO: Testing & Documentation (MEDIUM PRIORITY)
+
 6. **Data Consistency Tests**
    - Create test scenarios with known data
    - Generate report and query APIs directly
@@ -143,6 +153,7 @@
    - Document PDF/CSV contents and structure
 
 #### TODO: Performance & Robustness (LOW PRIORITY)
+
 10. **Performance Optimization**
     - Review query performance
     - Add indexes if needed
@@ -158,12 +169,14 @@
 ### Phase 1: Foundation & Architecture (COMPLETED)
 
 #### Step 0: Re-alignment with Spec & Current State
+
 - ✅ Analyzed `ChefCloud_Enterprise_Grade_Backend_Spec_v1.md` section 3.5
 - ✅ Mapped existing OwnerDigest implementation (basic PDF/CSV, shift-close trigger)
 - ✅ Identified gaps: service reports, stock reports, KDS performance, role-based subscriptions
 - ✅ Verified availability of data sources: M3 reconciliation, anti-theft dashboards, franchise endpoints
 
 #### Step 1: Canonical Report Content Structure
+
 - ✅ Created comprehensive TypeScript DTOs for all report types:
   - **ShiftEndReport**: Complete shift-end report with 5 major sections
     - Sales Report: by category, item, payment method
@@ -175,6 +188,7 @@
   - **FranchiseDigest**: Franchise-level multi-branch aggregation
 
 #### Step 2: Recipient Configuration & Report Types
+
 - ✅ Created `ReportSubscription` Prisma model with:
   - Report types: SHIFT_END, DAILY_SUMMARY, WEEKLY_SUMMARY, MONTHLY_SUMMARY, FRANCHISE_WEEKLY
   - Delivery channels: EMAIL, SLACK
@@ -201,6 +215,7 @@
 ### Phase 2: Data Integration (IN PROGRESS)
 
 #### Current State:
+
 - Worker has placeholder logic for shift-end report generation
 - Report structure is defined but queries not yet fully implemented
 - PDF generation scaffold in place but needs enhancement with actual data
@@ -208,6 +223,7 @@
 ## Files Touched
 
 ### Core Business Logic (NEW)
+
 - `services/api/src/reports/dto/report-content.dto.ts` (NEW, 312 lines)
   - ShiftEndReport, PeriodDigest, FranchiseDigest interfaces
 - `services/api/src/reports/report-generator.service.ts` (NEW, 471 lines)
@@ -216,6 +232,7 @@
   - Subscription CRUD and recipient resolution
 
 ### Database Schema
+
 - `packages/db/prisma/schema.prisma` (UPDATED)
   - Added ReportSubscription model (16 fields)
   - Added reportSubscriptions[] relations to Org and Branch models
@@ -223,12 +240,14 @@
   - CREATE TABLE report_subscriptions with 3 indexes
 
 ### API Layer
+
 - `services/api/src/reports/reports.controller.ts` (UPDATED)
   - Added 4 subscription management endpoints
 - `services/api/src/reports/reports.module.ts` (UPDATED)
   - Added ReportGeneratorService and SubscriptionService to providers/exports
 
 ### Integration Layer
+
 - `services/api/src/shifts/shifts.service.ts` (UPDATED)
   - Added shift-end-report job enqueue on shift close
 - `services/worker/src/index.ts` (UPDATED)
@@ -240,6 +259,7 @@
 ### Report Subscription Management (L4+ required)
 
 #### `GET /reports/subscriptions`
+
 List all report subscriptions for org/branch. Query params: `orgId`, `branchId` (optional), `reportType` (optional).
 
 ```bash
@@ -248,6 +268,7 @@ curl -X GET "http://localhost:3000/reports/subscriptions?orgId=org_abc&branchId=
 ```
 
 #### `POST /reports/subscriptions`
+
 Create new report subscription.
 
 ```bash
@@ -268,6 +289,7 @@ curl -X POST "http://localhost:3000/reports/subscriptions" \
 ```
 
 #### `PATCH /reports/subscriptions/:id`
+
 Update existing subscription.
 
 ```bash
@@ -281,6 +303,7 @@ curl -X PATCH "http://localhost:3000/reports/subscriptions/sub_xyz" \
 ```
 
 #### `DELETE /reports/subscriptions/:id`
+
 Delete subscription.
 
 ```bash
@@ -289,6 +312,7 @@ curl -X DELETE "http://localhost:3000/reports/subscriptions/sub_xyz" \
 ```
 
 ### Existing Endpoints (unchanged)
+
 - `GET /reports/x` - X Report (current shift summary)
 - `GET /reports/z/:shiftId` - Z Report (closed shift)
 
@@ -297,6 +321,7 @@ curl -X DELETE "http://localhost:3000/reports/subscriptions/sub_xyz" \
 ### Status: NOT YET IMPLEMENTED
 
 Planned tests:
+
 1. **Unit Tests** (ReportGeneratorService)
    - Test each report section generation method
    - Test data aggregation logic
@@ -323,6 +348,7 @@ Planned tests:
    - Test multi-branch franchise reports
 
 ### Test Command
+
 ```bash
 cd services/api
 pnpm test -- reports
@@ -331,6 +357,7 @@ pnpm test -- reports
 ## Known Limitations & TODO
 
 ### Immediate (Blocking Production)
+
 1. **Data Queries Not Fully Implemented** ⚠️
    - Worker has placeholder reportData structure
    - Need to implement actual queries for:
@@ -352,28 +379,33 @@ pnpm test -- reports
    - **Action**: Create CSV generators in ReportGeneratorService
 
 ### Step 3: Data Correctness & Consistency Checks (NOT STARTED)
+
 - Validate numbers in reports match API endpoint responses
 - Add consistency tests comparing report metrics to dashboard queries
 - Document metric calculation logic
 
 ### Step 4: Franchise-Level Digests (NOT STARTED)
+
 - Implement FRANCHISE_WEEKLY report type in worker
 - Schedule for franchise roles (FRANCHISE_MANAGER, SENIOR_ACCOUNTANT)
 - Test with multi-branch data aggregation
 
 ### Step 5: PDF/CSV Quality & Robustness (NOT STARTED)
+
 - Enhance PDF templates with actual comprehensive data
 - Improve formatting: better tables, charts, currency symbols
 - Add localization based on OrgSettings (date formats, currency)
 - Ensure deterministic output for same inputs
 
 ### Step 6: Performance, Scheduling & Resilience (NOT STARTED)
+
 - Review query performance in ReportGeneratorService
 - Add database indexes if needed (check query plans)
 - Test shift-close with multiple branches closing simultaneously
 - Document scheduling recommendations in DEV_GUIDE
 
 ### Step 7: Tests & Documentation (NOT STARTED)
+
 - Write unit tests for all new services
 - Write integration tests for endpoints
 - Write E2E test for full flow
@@ -431,7 +463,9 @@ pnpm test -- reports
 ## Architecture Notes
 
 ### Data Flow
+
 1. **Shift Close Trigger**:
+
    ```
    ShiftsService.closeShift()
      → Enqueue 'shift-end-report' job to digest queue
@@ -445,6 +479,7 @@ pnpm test -- reports
    ```
 
 2. **Scheduled Reports** (NOT YET IMPLEMENTED):
+
    ```
    Cron scheduler
      → Query ReportSubscription (DAILY_SUMMARY/WEEKLY_SUMMARY/MONTHLY_SUMMARY)
@@ -463,6 +498,7 @@ pnpm test -- reports
    ```
 
 ### Design Decisions
+
 1. **Dual System (Legacy + New)**: Kept existing OwnerDigest system running alongside new ReportSubscription system for backward compatibility. Legacy can be deprecated later.
 
 2. **Subscription Model**: Flexible design supports both explicit users and role-based recipients, per-branch or org-level subscriptions.
@@ -476,17 +512,21 @@ pnpm test -- reports
 ## Migration Notes
 
 ### Database Changes
+
 - New table: `report_subscriptions` with 3 indexes
 - Indexes on: (org_id), (branch_id), (report_type, enabled)
 - Foreign keys to orgs and branches tables
 
 ### Backward Compatibility
+
 - Old OwnerDigest system continues to work unchanged
 - New system runs in parallel, triggered by same shift-close event
 - Gradual migration path: configure ReportSubscription, disable old OwnerDigest.sendOnShiftClose flag
 
 ### Rollback Plan
+
 If issues arise:
+
 1. Disable new system: Set all ReportSubscription.enabled = false
 2. Remove shift-end-report job enqueue from ShiftsService
 3. Old system continues working

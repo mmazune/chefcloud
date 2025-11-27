@@ -65,9 +65,7 @@ export function pollKdsQueue() {
     'tickets have slaState': (r) => {
       try {
         const body = JSON.parse(r.body);
-        return (
-          body.length === 0 || ['GREEN', 'ORANGE', 'RED'].includes(body[0].slaState)
-        );
+        return body.length === 0 || ['GREEN', 'ORANGE', 'RED'].includes(body[0].slaState);
       } catch {
         return false;
       }

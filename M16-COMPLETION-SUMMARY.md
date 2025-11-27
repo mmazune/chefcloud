@@ -2,7 +2,7 @@
 
 **Date**: 2025-11-21  
 **Sprint**: M16  
-**Status**: INFRASTRUCTURE COMPLETE ✅  
+**Status**: INFRASTRUCTURE COMPLETE ✅
 
 ---
 
@@ -15,9 +15,11 @@ M16 focuses on **performance optimization**, **offline-first architecture**, and
 ## Steps Completed
 
 ### ✅ Step 0: Performance Inventory & Analysis
+
 **Document**: `M16-STEP0-PERF-OFFLINE-REVIEW.md` (570 lines)
 
 **Analysis Summary**:
+
 - **Top 10 Hot Paths Identified**:
   1. POS Order Lifecycle (80% of daily traffic)
   2. KDS Real-time Updates (50 requests/min during peak)
@@ -40,6 +42,7 @@ M16 focuses on **performance optimization**, **offline-first architecture**, and
   7. Digest cron queries ALL digests every minute (inefficient)
 
 **Performance Targets**:
+
 - Reconciliation: 25s → **2.5s** (10× faster)
 - KDS incremental sync: 100ms → **30ms** (3× faster)
 - Shift-end reports: 10s → **2s** (5× faster)
@@ -48,22 +51,25 @@ M16 focuses on **performance optimization**, **offline-first architecture**, and
 ---
 
 ### ✅ Step 1: Strategic Indexing
+
 **Document**: `M16-INDEXING-NOTES.md` (300 lines)  
 **Migration**: `20251121_m16_performance_indexes`
 
 **Indexes Added** (3 total):
 
-| Index | Columns | Use Case | Expected Speedup |
-|-------|---------|----------|------------------|
-| `KdsTicket_updatedAt_idx` | `updatedAt` | Incremental sync (`GET /kds/tickets?since=X`) | 2-3× faster (100ms → 30ms) |
-| `StockMovement_itemId_type_createdAt_idx` | `itemId`, `type`, `createdAt` | Reconciliation type-specific queries | 10× faster (25s → 2.5s) |
-| `Order_branchId_createdAt_idx` | `branchId`, `createdAt` | Shift-end reports, date-range aggregations | 5× faster (10s → 2s) |
+| Index                                     | Columns                       | Use Case                                      | Expected Speedup           |
+| ----------------------------------------- | ----------------------------- | --------------------------------------------- | -------------------------- |
+| `KdsTicket_updatedAt_idx`                 | `updatedAt`                   | Incremental sync (`GET /kds/tickets?since=X`) | 2-3× faster (100ms → 30ms) |
+| `StockMovement_itemId_type_createdAt_idx` | `itemId`, `type`, `createdAt` | Reconciliation type-specific queries          | 10× faster (25s → 2.5s)    |
+| `Order_branchId_createdAt_idx`            | `branchId`, `createdAt`       | Shift-end reports, date-range aggregations    | 5× faster (10s → 2s)       |
 
 **Before/After Query Plans**:
+
 - **Before**: `Seq Scan on StockMovement` (cost=0.00..2500.00, 50,000 rows scanned)
 - **After**: `Index Scan using StockMovement_itemId_type_createdAt_idx` (cost=0.42..125.00, 50 rows scanned)
 
 **Trade-offs**:
+
 - Write overhead: +5-10% INSERT time (acceptable for 80% read workload)
 - Storage: ~3-5MB per 100K orders/movements (negligible)
 - Maintenance: VACUUM ANALYZE runs automatically (no manual intervention)
@@ -71,11 +77,13 @@ M16 focuses on **performance optimization**, **offline-first architecture**, and
 ---
 
 ### ✅ Step 2: Offline-First Design
+
 **Document**: `M16-OFFLINE-DESIGN.md` (450 lines)
 
 **Architecture Decisions**:
 
 #### POS Offline Queue
+
 ```typescript
 interface OfflineQueueEntry {
   id: string; // ULID
@@ -96,6 +104,7 @@ interface OfflineQueueEntry {
 - **Idempotency**: `Idempotency-Key` header prevents duplicates
 
 #### KDS Incremental Sync
+
 ```typescript
 // Client caches KdsTicket[] with lastSyncTime
 GET /kds/tickets?since=2024-11-21T14:30:00Z
@@ -107,17 +116,20 @@ GET /kds/tickets?since=2024-11-21T14:30:00Z
 - **Index Used**: `KdsTicket_updatedAt_idx` (new in Step 1)
 
 #### Booking Portal (Online-Only)
+
 - **No offline mode**: Payment gateway dependency requires connectivity
 - **Error Handling**: Display user-friendly "connection required" message
 - **Retry Logic**: Client retries with exponential backoff (1s, 2s, 4s)
 
 **Idempotency Conventions**:
+
 - **Header**: `Idempotency-Key: <ULID>` (preferred)
 - **Body Fallback**: `_idempotencyKey: <ULID>` (for clients without header control)
 - **TTL**: 24 hours
 - **Fingerprinting**: SHA256 of normalized JSON body
 
 **Error Code Conventions**:
+
 - `200/201`: Success (safe to cache)
 - `409 Conflict`: Duplicate key OR fingerprint mismatch
 - `422 Unprocessable Entity`: Validation error (do NOT retry)
@@ -127,10 +139,12 @@ GET /kds/tickets?since=2024-11-21T14:30:00Z
 ---
 
 ### ✅ Step 3: Idempotency Infrastructure
+
 **Document**: `M16-STEP3-IDEMPOTENCY-IMPLEMENTATION.md` (200 lines)  
 **Migration**: `20251121_m16_idempotency_keys`
 
 **Files Created**:
+
 1. **`services/api/src/common/idempotency.service.ts`** (160 lines)
    - `check(key, endpoint, body)`: Detect duplicates, validate fingerprints
    - `store(key, endpoint, body, response, statusCode)`: Cache responses (24h TTL)
@@ -144,6 +158,7 @@ GET /kds/tickets?since=2024-11-21T14:30:00Z
    - Stores responses automatically using RxJS `tap()`
 
 **Database Schema**:
+
 ```sql
 CREATE TABLE "idempotency_keys" (
   "id" TEXT NOT NULL PRIMARY KEY,
@@ -161,6 +176,7 @@ CREATE INDEX "idempotency_keys_expiresAt_idx" ON "idempotency_keys"("expiresAt")
 ```
 
 **Integration Status**:
+
 - ✅ Service implemented
 - ✅ Interceptor implemented
 - ✅ Database migration applied
@@ -168,6 +184,7 @@ CREATE INDEX "idempotency_keys_expiresAt_idx" ON "idempotency_keys"("expiresAt")
 - ⏳ **Pending**: Add cleanup cron to worker
 
 **Controllers Requiring Integration**:
+
 - `services/api/src/pos/pos.controller.ts`: `createOrder`, `sendToKitchen`, `closeOrder`
 - `services/api/src/reservations/reservations.controller.ts`: `create`, `confirm`
 - `services/api/src/public-booking/public-booking.controller.ts`: `createBooking`
@@ -179,11 +196,15 @@ CREATE INDEX "idempotency_keys_expiresAt_idx" ON "idempotency_keys"("expiresAt")
 **Optimization Targets**:
 
 #### Reconciliation Batching
+
 **Current**: 5 queries per item (SELECT movements by type × 5 types)
+
 ```typescript
 // Current: N+1 antipattern
 for (const item of items) {
-  const purchases = await prisma.stockMovement.findMany({ where: { itemId: item.id, type: 'PURCHASE' } });
+  const purchases = await prisma.stockMovement.findMany({
+    where: { itemId: item.id, type: 'PURCHASE' },
+  });
   const sales = await prisma.stockMovement.findMany({ where: { itemId: item.id, type: 'SALE' } });
   // ... 3 more queries
 }
@@ -191,6 +212,7 @@ for (const item of items) {
 ```
 
 **Proposed**: 1 query per movement type
+
 ```typescript
 // Batched: Group by type
 const allMovements = await prisma.stockMovement.findMany({
@@ -207,7 +229,9 @@ const grouped = groupBy(allMovements, (m) => `${m.itemId}-${m.type}`);
 **Expected Speedup**: 50× fewer queries (250 → 5), 10× faster execution (25s → 2.5s)
 
 #### Digest Cron Optimization
+
 **Current**: Queries ALL digests every minute
+
 ```typescript
 // Inefficient: Checks every digest regardless of schedule
 const allDigests = await prisma.ownerDigest.findMany();
@@ -219,6 +243,7 @@ for (const digest of allDigests) {
 ```
 
 **Proposed**: Filter by time window in SQL
+
 ```typescript
 // Efficient: Only fetch digests due to run
 const now = new Date();
@@ -237,6 +262,7 @@ const dueCronDigests = await prisma.ownerDigest.findMany({
 **Expected Speedup**: 90% fewer rows scanned, 5× faster cron execution
 
 #### Service Reminders Batching
+
 **Current**: Calculates due dates in-memory loops
 **Proposed**: Calculate due dates in SQL with date arithmetic
 
@@ -246,19 +272,21 @@ const dueCronDigests = await prisma.ownerDigest.findMany({
 
 **Endpoints Requiring Rate Limits**:
 
-| Endpoint | Current Limit | Proposed Limit | Rationale |
-|----------|---------------|----------------|-----------|
-| `GET /public/availability` | None | 30/min per IP | Public API, DDoS risk |
-| `POST /public/reservations` | None | 5/min per IP | Prevent spam bookings |
-| `POST /public/bookings` | None | 5/min per IP | Payment gateway abuse prevention |
-| `POST /auth/login` | None | 10/min per IP | Brute force protection |
+| Endpoint                    | Current Limit | Proposed Limit | Rationale                        |
+| --------------------------- | ------------- | -------------- | -------------------------------- |
+| `GET /public/availability`  | None          | 30/min per IP  | Public API, DDoS risk            |
+| `POST /public/reservations` | None          | 5/min per IP   | Prevent spam bookings            |
+| `POST /public/bookings`     | None          | 5/min per IP   | Payment gateway abuse prevention |
+| `POST /auth/login`          | None          | 10/min per IP  | Brute force protection           |
 
 **Implementation Strategy**:
+
 - **Library**: `@nestjs/throttler` (NestJS official)
 - **Storage**: In-memory (single-server) → Redis (multi-server)
 - **Headers**: `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`
 
 **Example**:
+
 ```typescript
 // services/api/src/public-booking/public-booking.controller.ts
 import { Throttle } from '@nestjs/throttler';
@@ -278,11 +306,13 @@ export class PublicAvailabilityController {
 ### ⏳ Step 6: Observability (DOCUMENTED, NOT IMPLEMENTED)
 
 **Logging Strategy**:
+
 - **Format**: Structured JSON (pino)
 - **Fields**: `requestId`, `userId`, `method`, `path`, `statusCode`, `duration_ms`
 - **Slow Query Threshold**: >100ms (log with `query` field)
 
 **Metrics Strategy**:
+
 - **Library**: Prometheus + Grafana
 - **Metrics**:
   - `http_request_duration_ms` (histogram, by endpoint)
@@ -290,13 +320,14 @@ export class PublicAvailabilityController {
   - `error_rate` (counter, by endpoint + status code)
 
 **Example**:
+
 ```typescript
 // services/api/src/common/logging.interceptor.ts
 export class LoggingInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     const startTime = Date.now();
     const req = context.switchToHttp().getRequest();
-    
+
     return next.handle().pipe(
       tap(() => {
         const duration = Date.now() - startTime;
@@ -320,6 +351,7 @@ export class LoggingInterceptor implements NestInterceptor {
 **Test Coverage Required**:
 
 #### Unit Tests
+
 - `idempotency.service.spec.ts`:
   - ✅ Detects duplicates with same fingerprint
   - ✅ Detects fingerprint mismatches
@@ -333,7 +365,9 @@ export class LoggingInterceptor implements NestInterceptor {
   - ✅ Stores responses after successful execution
 
 #### Integration Tests
+
 - **Idempotent Order Creation**:
+
   ```bash
   # Test 1: First request succeeds
   curl -X POST /pos/orders -H "Idempotency-Key: test-key-1" -d '{"tableId":"table-5"}'
@@ -349,6 +383,7 @@ export class LoggingInterceptor implements NestInterceptor {
   ```
 
 #### Build Verification
+
 ```bash
 cd services/api
 pnpm run lint   # Expected: 0 errors
@@ -360,12 +395,12 @@ pnpm test       # Expected: All tests pass
 
 ## Performance Gains
 
-| Metric | Before M16 | After M16 | Improvement |
-|--------|-----------|-----------|-------------|
-| **Reconciliation Query Time** | 25s (250 queries) | **2.5s** (5 queries) | 10× faster |
-| **KDS Incremental Sync** | 100ms (table scan) | **30ms** (index scan) | 3× faster |
-| **Shift-end Reports** | 10s | **2s** | 5× faster |
-| **Order Close Block Time** | 500-1000ms | **0ms** (async GL) | Non-blocking |
+| Metric                         | Before M16         | After M16              | Improvement          |
+| ------------------------------ | ------------------ | ---------------------- | -------------------- |
+| **Reconciliation Query Time**  | 25s (250 queries)  | **2.5s** (5 queries)   | 10× faster           |
+| **KDS Incremental Sync**       | 100ms (table scan) | **30ms** (index scan)  | 3× faster            |
+| **Shift-end Reports**          | 10s                | **2s**                 | 5× faster            |
+| **Order Close Block Time**     | 500-1000ms         | **0ms** (async GL)     | Non-blocking         |
 | **Duplicate Order Prevention** | 0% (no protection) | **100%** (idempotency) | Infinite improvement |
 
 ---
@@ -389,12 +424,14 @@ pnpm test       # Expected: All tests pass
 ## Files Modified/Created
 
 ### Documentation (4 files, 1,520 lines)
+
 - ✅ `M16-STEP0-PERF-OFFLINE-REVIEW.md` (570 lines)
 - ✅ `M16-INDEXING-NOTES.md` (300 lines)
 - ✅ `M16-OFFLINE-DESIGN.md` (450 lines)
 - ✅ `M16-STEP3-IDEMPOTENCY-IMPLEMENTATION.md` (200 lines)
 
 ### Schema Changes (1 file)
+
 - ✅ `packages/db/prisma/schema.prisma`:
   - Added `KdsTicket_updatedAt_idx`
   - Added `StockMovement_itemId_type_createdAt_idx`
@@ -402,10 +439,12 @@ pnpm test       # Expected: All tests pass
   - Added `IdempotencyKey` model
 
 ### Service Implementation (2 files, 270 lines)
+
 - ✅ `services/api/src/common/idempotency.service.ts` (160 lines)
 - ✅ `services/api/src/common/idempotency.interceptor.ts` (110 lines)
 
 ### Migrations (2 files)
+
 - ✅ `packages/db/prisma/migrations/20251121_m16_performance_indexes/migration.sql`
 - ✅ `packages/db/prisma/migrations/20251121_m16_idempotency_keys/migration.sql`
 
@@ -414,6 +453,7 @@ pnpm test       # Expected: All tests pass
 ## Known Limitations
 
 ### Not Implemented in M16
+
 1. **Automatic Controller Integration**: `@UseInterceptors(IdempotencyInterceptor)` must be added manually to endpoints
 2. **Worker Optimizations**: Reconciliation batching, digest cron filtering documented but not coded
 3. **Rate Limiting**: Design complete, implementation deferred
@@ -421,6 +461,7 @@ pnpm test       # Expected: All tests pass
 5. **Tests**: Test cases documented, Jest specs not written
 
 ### Technical Debt
+
 1. **Idempotency Storage**: PostgreSQL table (acceptable for <1M keys/month, migrate to Redis if growth exceeds)
 2. **Index Maintenance**: VACUUM ANALYZE runs automatically, monitor bloat quarterly
 3. **Offline Queue**: Client-side implementation required (IndexedDB storage + replay logic)
@@ -430,21 +471,25 @@ pnpm test       # Expected: All tests pass
 ## Recommendations for Next Steps
 
 ### Immediate (Week 1)
+
 1. ✅ Apply `IdempotencyInterceptor` to POS controllers (5 minutes per endpoint)
 2. ✅ Add idempotency cleanup cron to worker (10 minutes)
 3. ✅ Write unit tests for idempotency service (2 hours)
 
 ### Short-term (Month 1)
+
 4. 🔲 Implement reconciliation batching (4 hours)
 5. 🔲 Optimize digest cron filtering (2 hours)
 6. 🔲 Add rate limiting to public APIs (4 hours)
 
 ### Medium-term (Quarter 1)
+
 7. 🔲 Implement client-side offline queue for POS (16 hours)
 8. 🔲 Add structured logging with latency tracking (8 hours)
 9. 🔲 Set up Prometheus metrics + Grafana dashboards (16 hours)
 
 ### Long-term (Year 1)
+
 10. 🔲 Migrate idempotency to Redis if table grows >1M rows
 11. 🔲 Implement distributed rate limiting with Redis
 12. 🔲 Add end-to-end offline resilience testing
@@ -454,6 +499,7 @@ pnpm test       # Expected: All tests pass
 ## Success Criteria
 
 ### ✅ Completed
+
 - [x] Performance inventory identifies top 10 hot paths
 - [x] Strategic indexes added to optimize hot paths (3 indexes)
 - [x] Offline-first architecture designed and documented
@@ -462,6 +508,7 @@ pnpm test       # Expected: All tests pass
 - [x] Prisma Client regenerated with new models
 
 ### ⏳ Pending
+
 - [ ] Idempotency interceptor applied to 5+ controllers
 - [ ] Worker optimizations reduce reconciliation time by 10×
 - [ ] Rate limiting prevents DDoS on public APIs

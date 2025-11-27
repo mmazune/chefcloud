@@ -212,14 +212,8 @@ export class StockMovementsService {
       select: { qty: true, cost: true },
     });
 
-    const totalQty = movements.reduce(
-      (sum: number, m: any) => sum + Number(m.qty),
-      0,
-    );
-    const totalCost = movements.reduce(
-      (sum: number, m: any) => sum + Number(m.cost),
-      0,
-    );
+    const totalQty = movements.reduce((sum: number, m: any) => sum + Number(m.qty), 0);
+    const totalCost = movements.reduce((sum: number, m: any) => sum + Number(m.cost), 0);
 
     return { qty: totalQty, cost: totalCost };
   }
@@ -254,44 +248,47 @@ export class StockMovementsService {
     });
 
     // Group by itemId and type
-    const summary = movements.reduce((acc: Record<string, any>, movement: any) => {
-      const key = movement.itemId;
-      if (!acc[key]) {
-        acc[key] = {
-          itemId: movement.itemId,
-          itemName: movement.item.name,
-          itemSku: movement.item.sku,
-          unit: movement.item.unit,
-          sales: { qty: 0, cost: 0 },
-          wastage: { qty: 0, cost: 0 },
-          adjustments: { qty: 0, cost: 0 },
-          purchases: { qty: 0, cost: 0 },
-          countAdjustments: { qty: 0, cost: 0 },
-        };
-      }
+    const summary = movements.reduce(
+      (acc: Record<string, any>, movement: any) => {
+        const key = movement.itemId;
+        if (!acc[key]) {
+          acc[key] = {
+            itemId: movement.itemId,
+            itemName: movement.item.name,
+            itemSku: movement.item.sku,
+            unit: movement.item.unit,
+            sales: { qty: 0, cost: 0 },
+            wastage: { qty: 0, cost: 0 },
+            adjustments: { qty: 0, cost: 0 },
+            purchases: { qty: 0, cost: 0 },
+            countAdjustments: { qty: 0, cost: 0 },
+          };
+        }
 
-      const qty = Number(movement.qty);
-      const cost = Number(movement.cost);
+        const qty = Number(movement.qty);
+        const cost = Number(movement.cost);
 
-      if (movement.type === StockMovementType.SALE) {
-        acc[key].sales.qty += qty;
-        acc[key].sales.cost += cost;
-      } else if (movement.type === StockMovementType.WASTAGE) {
-        acc[key].wastage.qty += qty;
-        acc[key].wastage.cost += cost;
-      } else if (movement.type === StockMovementType.ADJUSTMENT) {
-        acc[key].adjustments.qty += qty;
-        acc[key].adjustments.cost += cost;
-      } else if (movement.type === StockMovementType.PURCHASE) {
-        acc[key].purchases.qty += qty;
-        acc[key].purchases.cost += cost;
-      } else if (movement.type === StockMovementType.COUNT_ADJUSTMENT) {
-        acc[key].countAdjustments.qty += qty;
-        acc[key].countAdjustments.cost += cost;
-      }
+        if (movement.type === StockMovementType.SALE) {
+          acc[key].sales.qty += qty;
+          acc[key].sales.cost += cost;
+        } else if (movement.type === StockMovementType.WASTAGE) {
+          acc[key].wastage.qty += qty;
+          acc[key].wastage.cost += cost;
+        } else if (movement.type === StockMovementType.ADJUSTMENT) {
+          acc[key].adjustments.qty += qty;
+          acc[key].adjustments.cost += cost;
+        } else if (movement.type === StockMovementType.PURCHASE) {
+          acc[key].purchases.qty += qty;
+          acc[key].purchases.cost += cost;
+        } else if (movement.type === StockMovementType.COUNT_ADJUSTMENT) {
+          acc[key].countAdjustments.qty += qty;
+          acc[key].countAdjustments.cost += cost;
+        }
 
-      return acc;
-    }, {} as Record<string, any>);
+        return acc;
+      },
+      {} as Record<string, any>,
+    );
 
     return Object.values(summary);
   }

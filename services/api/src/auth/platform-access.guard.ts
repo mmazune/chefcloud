@@ -1,4 +1,10 @@
-import { Injectable, CanActivate, ExecutionContext, ForbiddenException, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  ForbiddenException,
+  Logger,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { PrismaService } from '../prisma.service';
 import { ROLE_TO_LEVEL } from './role-constants';
@@ -88,7 +94,7 @@ export class PlatformAccessGuard implements CanActivate {
       const headerPlatform = this.normalizePlatform(request.headers['x-client-platform']);
       if (headerPlatform !== jwtPlatform && headerPlatform !== 'OTHER') {
         this.logger.warn(
-          `Platform spoofing attempt: JWT=${jwtPlatform}, Header=${headerPlatform} for user ${user.userId}`
+          `Platform spoofing attempt: JWT=${jwtPlatform}, Header=${headerPlatform} for user ${user.userId}`,
         );
         throw new ForbiddenException({
           code: 'PLATFORM_MISMATCH',

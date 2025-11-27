@@ -1,10 +1,15 @@
-import { IsString, IsEnum, IsOptional, IsBoolean, IsNumber, IsDateString, Min, Max } from 'class-validator';
+import {
+  IsString,
+  IsEnum,
+  IsOptional,
+  IsBoolean,
+  IsNumber,
+  IsDateString,
+  Min,
+  Max,
+} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { 
-  ServiceProviderCategory, 
-  ContractFrequency, 
-  ContractStatus 
-} from '@chefcloud/db';
+import { ServiceProviderCategory, ContractFrequency, ContractStatus } from '@chefcloud/db';
 
 // ===== Service Provider DTOs =====
 
@@ -110,7 +115,9 @@ export class CreateServiceContractDto {
   @IsNumber()
   taxRate?: number;
 
-  @ApiPropertyOptional({ description: 'Day of month (1-31) for MONTHLY, day of week (0-6) for WEEKLY' })
+  @ApiPropertyOptional({
+    description: 'Day of month (1-31) for MONTHLY, day of week (0-6) for WEEKLY',
+  })
   @IsOptional()
   @IsNumber()
   @Min(0)

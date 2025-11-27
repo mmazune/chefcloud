@@ -1,6 +1,6 @@
 /**
  * M5: Canonical Waiter Metrics DTOs
- * 
+ *
  * Single source of truth for waiter/staff performance metrics used across:
  * - Anti-theft dashboards
  * - Owner digests
@@ -11,24 +11,24 @@
 export interface WaiterMetrics {
   userId: string;
   displayName: string;
-  
+
   // Sales metrics
   totalSales: number;
   orderCount: number;
   avgCheckSize: number;
-  
+
   // Risk metrics
   voidCount: number;
   voidValue: number;
   discountCount: number;
   discountValue: number;
   noDrinksRate: number; // 0-1 (proportion)
-  
+
   // Operational metrics
   wastageCostAttributed?: number; // If wastage attribution available
   anomalyCount: number;
   anomalyScore?: number; // Weighted severity score
-  
+
   // Period context
   periodStart: Date;
   periodEnd: Date;
@@ -50,7 +50,7 @@ export interface RankedWaiter extends WaiterMetrics {
 export interface WaiterMetricsQuery {
   orgId: string;
   branchId?: string;
-  
+
   // Period specification (use shiftId OR date range)
   shiftId?: string;
   from?: Date;
@@ -61,7 +61,7 @@ export interface WaiterScoringConfig {
   // Positive weight factors (0-1)
   salesWeight: number;
   avgCheckWeight: number;
-  
+
   // Penalty factors (0-1)
   voidPenalty: number;
   discountPenalty: number;

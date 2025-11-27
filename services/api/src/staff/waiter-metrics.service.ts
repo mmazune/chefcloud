@@ -10,14 +10,14 @@ import {
 
 /**
  * M5: Canonical Waiter Metrics Service
- * 
+ *
  * Single source of truth for waiter performance metrics.
  * Used by:
  * - Anti-theft dashboards
  * - Staff rankings
  * - Owner digests
  * - Employee-of-the-month suggestions (future)
- * 
+ *
  * All metric calculations are centralized here to ensure consistency.
  */
 @Injectable()
@@ -119,7 +119,7 @@ export class WaiterMetricsService {
       }
 
       const metrics = metricsMap.get(userId)!;
-      
+
       // Only count non-voided orders for sales
       if (order.status !== 'VOIDED') {
         metrics.totalSales += Number(order.total);

@@ -1,6 +1,6 @@
 /**
  * M4: CSV Generation Helpers for Worker
- * 
+ *
  * Generates CSV exports for shift-end reports.
  * Matches the CsvGeneratorService from the API.
  */
@@ -57,10 +57,12 @@ export function generateShiftEndCSV(report: ShiftEndReport): string {
   // Service Report
   sections.push('SERVICE REPORT');
   sections.push('');
-  sections.push('Waiter,Orders,Total Sales,Avg Order,Voids,Void Value,Discounts,Discount Value,No-Drinks');
+  sections.push(
+    'Waiter,Orders,Total Sales,Avg Order,Voids,Void Value,Discounts,Discount Value,No-Drinks',
+  );
   for (const waiter of report.service.waiters) {
     sections.push(
-      `${waiter.waiterName},${waiter.ordersServed},${waiter.totalSales.toFixed(2)},${waiter.avgOrderValue.toFixed(2)},${waiter.voidCount},${waiter.voidValue.toFixed(2)},${waiter.discountCount},${waiter.discountValue.toFixed(2)},${waiter.noDrinksCount}`
+      `${waiter.waiterName},${waiter.ordersServed},${waiter.totalSales.toFixed(2)},${waiter.avgOrderValue.toFixed(2)},${waiter.voidCount},${waiter.voidValue.toFixed(2)},${waiter.discountCount},${waiter.discountValue.toFixed(2)},${waiter.noDrinksCount}`,
     );
   }
   sections.push('');
@@ -124,7 +126,7 @@ export function generateShiftEndCSV(report: ShiftEndReport): string {
     sections.push('Order ID,Type,Description,Severity,User,Timestamp');
     for (const anomaly of report.anomalies) {
       sections.push(
-        `${anomaly.orderId},${anomaly.type},${anomaly.description},${anomaly.severity},${anomaly.userId},${anomaly.timestamp.toISOString()}`
+        `${anomaly.orderId},${anomaly.type},${anomaly.description},${anomaly.severity},${anomaly.userId},${anomaly.timestamp.toISOString()}`,
       );
     }
   }

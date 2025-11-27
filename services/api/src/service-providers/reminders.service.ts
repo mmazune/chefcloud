@@ -1,20 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
-import { 
-  UpdateReminderDto, 
-  ServiceReminderResponse, 
-  ReminderSummary 
-} from './dto/reminder.dto';
-import { 
-  ContractFrequency, 
-  ContractStatus, 
-  ReminderSeverity, 
-  ReminderStatus 
-} from '@chefcloud/db';
+import { UpdateReminderDto, ServiceReminderResponse, ReminderSummary } from './dto/reminder.dto';
+import { ContractFrequency, ContractStatus, ReminderSeverity, ReminderStatus } from '@chefcloud/db';
 
 /**
  * M7: Service Payable Reminders
- * 
+ *
  * Manages payment reminders for service contracts with automatic
  * generation based on contract terms and due dates.
  */
@@ -39,9 +30,10 @@ export class RemindersService {
         ...(branchId && { branchId }),
         ...(status && { status }),
         ...(severity && { severity }),
-        ...(startDate && endDate && {
-          dueDate: { gte: startDate, lte: endDate },
-        }),
+        ...(startDate &&
+          endDate && {
+            dueDate: { gte: startDate, lte: endDate },
+          }),
       },
       include: {
         contract: {
@@ -156,7 +148,7 @@ export class RemindersService {
 
     for (const reminder of reminders) {
       summary.totalAmount += Number(reminder.contract.amount);
-      
+
       if (reminder.severity === 'OVERDUE') {
         summary.overdue++;
       } else if (reminder.severity === 'DUE_TODAY') {
@@ -185,10 +177,7 @@ export class RemindersService {
       where: {
         status: ContractStatus.ACTIVE,
         startDate: { lte: today },
-        OR: [
-          { endDate: null },
-          { endDate: { gte: today } },
-        ],
+        OR: [{ endDate: null }, { endDate: { gte: today } }],
       },
       include: {
         provider: {
@@ -199,10 +188,10 @@ export class RemindersService {
 
     for (const contract of contracts) {
       const dueDates = this.calculateDueDates(contract, today);
-      
+
       for (const dueDate of dueDates) {
         const severity = this.calculateSeverity(dueDate, today);
-        
+
         if (severity) {
           // Try to find existing reminder for this date and severity
           const existing = await this.prisma.client.servicePayableReminder.findUnique({
@@ -286,8 +275,12 @@ export class RemindersService {
       const endDate = new Date(fromDate);
       endDate.setMonth(endDate.getMonth() + 3); // Look ahead 3 months
 
-      const checkDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), contract.dueDay);
-      
+      const checkDate = new Date(
+        currentDate.getFullYear(),
+        currentDate.getMonth(),
+        contract.dueDay,
+      );
+
       while (checkDate <= endDate) {
         if (checkDate >= fromDate) {
           if (!contract.endDate || checkDate <= contract.endDate) {
@@ -308,11 +301,13 @@ export class RemindersService {
   private calculateSeverity(dueDate: Date, today: Date): ReminderSeverity | null {
     const dueDateOnly = new Date(dueDate);
     dueDateOnly.setHours(0, 0, 0, 0);
-    
+
     const todayOnly = new Date(today);
     todayOnly.setHours(0, 0, 0, 0);
 
-    const diffDays = Math.floor((dueDateOnly.getTime() - todayOnly.getTime()) / (1000 * 60 * 60 * 24));
+    const diffDays = Math.floor(
+      (dueDateOnly.getTime() - todayOnly.getTime()) / (1000 * 60 * 60 * 24),
+    );
 
     if (diffDays < 0) {
       return ReminderSeverity.OVERDUE;

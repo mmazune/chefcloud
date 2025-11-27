@@ -12,6 +12,7 @@
 M20 introduces **enterprise-grade customer feedback collection and Net Promoter Score (NPS) analytics** to ChefCloud, enabling restaurants to capture, analyze, and act on customer sentiment across multiple touchpoints. The system supports both **anonymous public feedback** (zero-friction via QR codes, email surveys, SMS) and **authenticated staff-submitted feedback** (POS integration), with comprehensive analytics dashboards for managers and franchise owners.
 
 **Key Deliverables**:
+
 1. ✅ **Multi-Channel Feedback**: 7 channels (POS, Portal, Email, QR, SMS, Kiosk, Other)
 2. ✅ **NPS Calculation**: Industry-standard formula (% Promoters - % Detractors) with 0-10 scoring
 3. ✅ **Public Anonymous Endpoint**: `/feedback/public` with rate limiting (10/hour per IP)
@@ -23,6 +24,7 @@ M20 introduces **enterprise-grade customer feedback collection and Net Promoter 
 9. ✅ **Entity Verification**: Link feedback to orders (via orderNumber), reservations, event bookings
 
 **Business Impact**:
+
 - **Response Rate Target**: 30% (industry average 15-20%)
 - **NPS Visibility**: Real-time NPS tracking at branch, franchise, and org levels
 - **Critical Feedback Detection**: Identify score 0-3 feedback for immediate manager attention
@@ -36,6 +38,7 @@ M20 introduces **enterprise-grade customer feedback collection and Net Promoter 
 ### New Enums
 
 #### 1. `FeedbackChannel`
+
 ```prisma
 enum FeedbackChannel {
   POS      // Staff submits at point-of-sale
@@ -49,6 +52,7 @@ enum FeedbackChannel {
 ```
 
 #### 2. `NpsCategory`
+
 ```prisma
 enum NpsCategory {
   DETRACTOR  // Score 0-6 (unhappy customers)
@@ -60,6 +64,7 @@ enum NpsCategory {
 ### New Table: `feedback`
 
 **14 Fields**:
+
 - `id` (String, CUID, Primary Key)
 - `orgId` (String, FK → organizations)
 - `branchId` (String?, FK → branches)
@@ -77,6 +82,7 @@ enum NpsCategory {
 - `updatedAt` (DateTime, auto-update)
 
 **7 Indexes**:
+
 1. `(orgId, createdAt DESC)` – Org-wide feedback listing by date
 2. `(branchId, createdAt DESC)` – Branch-level feedback listing
 3. `(orderId)` – Duplicate prevention + order feedback lookup
@@ -86,6 +92,7 @@ enum NpsCategory {
 7. `(score)` – Score-based analytics
 
 **6 Foreign Key Constraints**:
+
 - `orgId` → `organizations.id` (CASCADE delete)
 - `branchId` → `branches.id` (SET NULL on delete)
 - `orderId` → `orders.id` (CASCADE delete)
@@ -94,6 +101,7 @@ enum NpsCategory {
 - `createdById` → `users.id` (SET NULL on delete)
 
 **Unique Constraints**:
+
 - `orderId` UNIQUE – One feedback per order
 - `reservationId` UNIQUE – One feedback per reservation
 - `eventBookingId` UNIQUE – One feedback per event booking
@@ -101,6 +109,7 @@ enum NpsCategory {
 ### Updated Relations
 
 **Org Model**:
+
 ```prisma
 model Org {
   // ... existing fields ...
@@ -109,6 +118,7 @@ model Org {
 ```
 
 **Branch Model**:
+
 ```prisma
 model Branch {
   // ... existing fields ...
@@ -117,6 +127,7 @@ model Branch {
 ```
 
 **Order Model**:
+
 ```prisma
 model Order {
   // ... existing fields ...
@@ -125,6 +136,7 @@ model Order {
 ```
 
 **Reservation Model**:
+
 ```prisma
 model Reservation {
   // ... existing fields ...
@@ -133,6 +145,7 @@ model Reservation {
 ```
 
 **EventBooking Model**:
+
 ```prisma
 model EventBooking {
   // ... existing fields ...
@@ -141,6 +154,7 @@ model EventBooking {
 ```
 
 **User Model**:
+
 ```prisma
 model User {
   // ... existing fields ...
@@ -157,6 +171,7 @@ model User {
 **10 Public Methods**:
 
 #### 1. `createPublicFeedback(dto: CreatePublicFeedbackDto): Promise<{ id, message, npsCategory }>`
+
 - **Purpose**: Handle anonymous feedback submission (no authentication)
 - **Validation**: Verify entity link (orderNumber/reservationId/ticketCode exists)
 - **Duplicate Check**: Return 400 if feedback already exists for entity
@@ -164,6 +179,7 @@ model User {
 - **Returns**: Feedback ID + thank-you message + NPS category
 
 #### 2. `createFeedback(dto: CreateFeedbackDto, context: AuthContext): Promise<Feedback>`
+
 - **Purpose**: Authenticated feedback submission (staff on behalf of customers)
 - **Authorization**: User must belong to same `orgId` as entity, L4 managers branch-scoped
 - **Duplicate Check**: Enforce unique constraint on orderId/reservationId/eventBookingId
@@ -171,17 +187,20 @@ model User {
 - **Returns**: Full feedback record with relations
 
 #### 3. `listFeedback(query: ListFeedbackQueryDto, context: AuthContext): Promise<{ items, total, limit, offset }>`
+
 - **Purpose**: Paginated feedback listing with filters
 - **Filters**: branchId, from/to dates, minScore/maxScore, channel, hasComment, npsCategory, limit/offset
 - **RBAC**: L4 managers auto-scoped to assigned branches, L5+HR see all
 - **Returns**: Array of feedback with relations (order, reservation, branch, createdBy)
 
 #### 4. `getFeedbackById(id: string, context: AuthContext): Promise<Feedback>`
+
 - **Purpose**: Retrieve single feedback record
 - **RBAC**: L1-L3 can only view own feedback (createdById match), L4+ can view all in accessible branches
 - **Returns**: Full feedback record with all relations
 
 #### 5. `getNpsSummary(query: NpsSummaryQueryDto, context: AuthContext): Promise<NpsSummary>`
+
 - **Purpose**: Calculate NPS for given period and filters
 - **Formula**: `NPS = (% Promoters) - (% Detractors)` (passives excluded)
 - **Metrics**: NPS score, total responses, promoter/passive/detractor counts + percentages, avg score, response rate
@@ -189,16 +208,19 @@ model User {
 - **Returns**: NpsSummary object with all metrics
 
 #### 6. `calculateNpsSummary(feedbackList: Feedback[], filters): NpsSummary`
+
 - **Purpose**: Helper method to calculate NPS from array of feedback
 - **Used By**: Digest generation (shift-end, period, franchise reports)
 - **Flexible**: Works with pre-filtered feedback arrays (no database queries)
 
 #### 7. `getFeedbackBreakdown(query: NpsSummaryQueryDto, context: AuthContext): Promise<ScoreBreakdown>`
+
 - **Purpose**: Score distribution (0-10) for period
 - **Query**: Uses Prisma `groupBy` for efficiency
 - **Returns**: Array of `{ score, count }` objects (11 items, scores 0-10)
 
 #### 8. `getTopComments(query: TopCommentsQueryDto, context: AuthContext): Promise<{ comments, total }>`
+
 - **Purpose**: Sample comments filtered by sentiment
 - **Sentiment Filters**:
   - `positive`: score >= 9 (promoters only)
@@ -207,6 +229,7 @@ model User {
 - **Returns**: Array of feedback with comments, limited by `query.limit` (max 100)
 
 #### 9. `verifyEntityLink(input: { orderNumber?, reservationId?, ticketCode? }): Promise<EntityVerification>`
+
 - **Purpose**: Validate and resolve entity references for public feedback
 - **Logic**:
   - If `orderNumber` provided → lookup order, return `{ orderId, entityType: 'order' }`
@@ -216,6 +239,7 @@ model User {
 - **Returns**: EntityVerification object with resolved IDs
 
 #### 10. `classifyNps(score: number): NpsCategory` (Private)
+
 - **Purpose**: Map 0-10 score to NpsCategory enum
 - **Logic**:
   - 0-6 → DETRACTOR
@@ -231,6 +255,7 @@ model User {
 **7 REST Endpoints**:
 
 #### 1. `POST /feedback/public` (Public, Rate-Limited)
+
 - **Auth**: None (anonymous)
 - **Rate Limit**: 10 requests/hour per IP (ThrottlerGuard)
 - **Body**: `{ orderNumber?, reservationId?, ticketCode?, score, comment?, channel, tags? }`
@@ -238,6 +263,7 @@ model User {
 - **Errors**: 404 (entity not found), 400 (duplicate feedback), 429 (rate limit exceeded)
 
 #### 2. `POST /feedback` (Authenticated)
+
 - **Auth**: JwtAuthGuard + RolesGuard
 - **Roles**: L1, L2, L3, L4, L5, HR (all staff can submit)
 - **Body**: `{ orderId?, reservationId?, eventBookingId?, branchId?, score, comment?, channel, tags?, sentimentHint? }`
@@ -245,6 +271,7 @@ model User {
 - **Errors**: 400 (duplicate feedback), 403 (unauthorized branch access)
 
 #### 3. `GET /feedback` (Authenticated, Paginated)
+
 - **Auth**: JwtAuthGuard + RolesGuard
 - **Roles**: L4, L5, HR (managers and above)
 - **Query**: `?branchId&from&to&minScore&maxScore&channel&hasComment&npsCategory&limit&offset`
@@ -252,6 +279,7 @@ model User {
 - **Branch Scoping**: L4 managers auto-filtered to assigned branches
 
 #### 4. `GET /feedback/:id` (Authenticated)
+
 - **Auth**: JwtAuthGuard + RolesGuard
 - **Roles**: L1-L5, HR (all staff can view)
 - **RBAC**: L1-L3 can only view own feedback (createdById match), L4+ see all
@@ -259,6 +287,7 @@ model User {
 - **Errors**: 404 (not found), 403 (unauthorized)
 
 #### 5. `GET /feedback/analytics/nps-summary` (Analytics)
+
 - **Auth**: JwtAuthGuard + RolesGuard
 - **Roles**: L4, L5, HR, ACCOUNTANT
 - **Query**: `?from&to&branchId&channel` (from/to REQUIRED)
@@ -266,12 +295,14 @@ model User {
 - **Errors**: 400 (missing from/to)
 
 #### 6. `GET /feedback/analytics/breakdown` (Analytics)
+
 - **Auth**: JwtAuthGuard + RolesGuard
 - **Roles**: L4, L5, HR
 - **Query**: `?from&to&branchId&channel` (from/to REQUIRED)
 - **Returns**: `{ breakdown: [{ score, count }], total, period }` (200 OK)
 
 #### 7. `GET /feedback/analytics/top-comments` (Analytics)
+
 - **Auth**: JwtAuthGuard + RolesGuard
 - **Roles**: L4, L5, HR
 - **Query**: `?from&to&branchId&sentiment&limit` (from/to REQUIRED)
@@ -282,11 +313,12 @@ model User {
 ## DTOs and Validation
 
 ### `CreatePublicFeedbackDto`
+
 ```typescript
 class CreatePublicFeedbackDto {
   @IsOptional()
   @IsString()
-  orderNumber?: string;         // OR reservationId OR ticketCode
+  orderNumber?: string; // OR reservationId OR ticketCode
 
   @IsOptional()
   @IsString()
@@ -299,7 +331,7 @@ class CreatePublicFeedbackDto {
   @IsInt()
   @Min(0)
   @Max(10)
-  score: number;                // Required: 0-10
+  score: number; // Required: 0-10
 
   @IsOptional()
   @IsString()
@@ -307,7 +339,7 @@ class CreatePublicFeedbackDto {
   comment?: string;
 
   @IsEnum(FeedbackChannel)
-  channel: FeedbackChannel;     // Required
+  channel: FeedbackChannel; // Required
 
   @IsOptional()
   @IsArray()
@@ -318,11 +350,12 @@ class CreatePublicFeedbackDto {
 ```
 
 ### `CreateFeedbackDto`
+
 ```typescript
 class CreateFeedbackDto {
   @IsOptional()
   @IsString()
-  orderId?: string;             // OR reservationId OR eventBookingId
+  orderId?: string; // OR reservationId OR eventBookingId
 
   @IsOptional()
   @IsString()
@@ -334,7 +367,7 @@ class CreateFeedbackDto {
 
   @IsOptional()
   @IsString()
-  branchId?: string;            // Optional branch override
+  branchId?: string; // Optional branch override
 
   @IsInt()
   @Min(0)
@@ -357,11 +390,12 @@ class CreateFeedbackDto {
 
   @IsOptional()
   @IsString()
-  sentimentHint?: string;       // "positive", "negative", "neutral"
+  sentimentHint?: string; // "positive", "negative", "neutral"
 }
 ```
 
 ### `ListFeedbackQueryDto`
+
 ```typescript
 class ListFeedbackQueryDto {
   @IsOptional()
@@ -404,7 +438,7 @@ class ListFeedbackQueryDto {
   @IsInt()
   @Min(1)
   @Max(200)
-  limit?: number;               // Default 50, max 200
+  limit?: number; // Default 50, max 200
 
   @IsOptional()
   @IsInt()
@@ -414,13 +448,14 @@ class ListFeedbackQueryDto {
 ```
 
 ### `NpsSummaryQueryDto`
+
 ```typescript
 class NpsSummaryQueryDto {
   @IsISO8601()
-  from: string;                 // REQUIRED
+  from: string; // REQUIRED
 
   @IsISO8601()
-  to: string;                   // REQUIRED
+  to: string; // REQUIRED
 
   @IsOptional()
   @IsString()
@@ -433,13 +468,14 @@ class NpsSummaryQueryDto {
 ```
 
 ### `TopCommentsQueryDto`
+
 ```typescript
 class TopCommentsQueryDto {
   @IsISO8601()
-  from: string;                 // REQUIRED
+  from: string; // REQUIRED
 
   @IsISO8601()
-  to: string;                   // REQUIRED
+  to: string; // REQUIRED
 
   @IsOptional()
   @IsString()
@@ -447,13 +483,13 @@ class TopCommentsQueryDto {
 
   @IsOptional()
   @IsString()
-  sentiment?: string;           // "positive" | "negative"
+  sentiment?: string; // "positive" | "negative"
 
   @IsOptional()
   @IsInt()
   @Min(1)
   @Max(100)
-  limit?: number;               // Default 20, max 100
+  limit?: number; // Default 20, max 100
 }
 ```
 
@@ -464,7 +500,9 @@ class TopCommentsQueryDto {
 M20 extends 3 report DTOs with optional `customerFeedback` sections:
 
 ### 1. `ShiftEndReport.customerFeedback?`
+
 **Fields**:
+
 - `nps` (number | null) – NPS for shift (null if < 5 responses)
 - `totalResponses` – Feedback count during shift
 - `avgScore` – Average 0-10 score
@@ -477,7 +515,9 @@ M20 extends 3 report DTOs with optional `customerFeedback` sections:
 **Generation**: Called in `ReportGeneratorService.generateShiftEndReport()` if `feedback.total >= 5`
 
 ### 2. `PeriodDigest.customerFeedback?`
+
 **Fields**:
+
 - `nps`, `totalResponses`, `responseRate` – Summary metrics
 - `trend[]` – Daily NPS sparkline: `{ date, nps }`
 - `topComplaints[]` – Top 5 detractor tags: `{ tag, count, percentage }`
@@ -488,7 +528,9 @@ M20 extends 3 report DTOs with optional `customerFeedback` sections:
 **Generation**: Called in `ReportGeneratorService.generatePeriodDigest()` with tag aggregation logic
 
 ### 3. `FranchiseDigest.customerFeedback?`
+
 **Fields**:
+
 - `franchiseNps`, `totalResponses` – Org-wide metrics
 - `byBranch[]` – Branch-level NPS rankings: `{ branchId, branchName, nps, responseCount, ranking, change }`
 - `npsTrend[]` – Weekly/monthly trend: `{ period, nps, totalResponses }`
@@ -504,22 +546,26 @@ M20 extends 3 report DTOs with optional `customerFeedback` sections:
 ## Module Configuration
 
 ### `FeedbackModule`
+
 ```typescript
 @Module({
   imports: [
-    ThrottlerModule.forRoot([{
-      ttl: 60 * 60 * 1000,  // 1 hour
-      limit: 10             // 10 requests per hour
-    }])
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60 * 60 * 1000, // 1 hour
+        limit: 10, // 10 requests per hour
+      },
+    ]),
   ],
   controllers: [FeedbackController],
   providers: [FeedbackService, PrismaService],
-  exports: [FeedbackService]  // For ReportsModule
+  exports: [FeedbackService], // For ReportsModule
 })
 export class FeedbackModule {}
 ```
 
 **Dependencies**:
+
 - `@nestjs/throttler` v6.4.0 (already installed)
 - `PrismaService` (injected)
 - `JwtAuthGuard`, `RolesGuard` (from `AuthModule`)
@@ -527,11 +573,12 @@ export class FeedbackModule {}
 **Registered In**: `AppModule.imports[]` (after DocumentsModule M18)
 
 ### `ReportsModule` Update
+
 ```typescript
 @Module({
   imports: [
     // ... existing imports ...
-    FeedbackModule  // NEW: Import to access FeedbackService
+    FeedbackModule, // NEW: Import to access FeedbackService
   ],
   // ...
 })
@@ -544,17 +591,18 @@ export class ReportsModule {}
 
 ## RBAC Matrix
 
-| Endpoint | Public | L1-L3 (Staff) | L4 (Manager) | L5 (Owner) | HR | ACCOUNTANT |
-|----------|--------|---------------|--------------|------------|-----|------------|
-| POST /public/feedback | ✅ (10/hr) | ✅ | ✅ | ✅ | ✅ | ✅ |
-| POST /feedback | ❌ | ✅ | ✅ | ✅ | ✅ | ❌ |
-| GET /feedback | ❌ | ❌ | ✅ (branch-scoped) | ✅ | ✅ | ❌ |
-| GET /feedback/:id | ❌ | ✅ (own only) | ✅ | ✅ | ✅ | ❌ |
-| GET /analytics/nps-summary | ❌ | ❌ | ✅ | ✅ | ✅ | ✅ |
-| GET /analytics/breakdown | ❌ | ❌ | ✅ | ✅ | ✅ | ❌ |
-| GET /analytics/top-comments | ❌ | ❌ | ✅ | ✅ | ✅ | ❌ |
+| Endpoint                    | Public     | L1-L3 (Staff) | L4 (Manager)       | L5 (Owner) | HR  | ACCOUNTANT |
+| --------------------------- | ---------- | ------------- | ------------------ | ---------- | --- | ---------- |
+| POST /public/feedback       | ✅ (10/hr) | ✅            | ✅                 | ✅         | ✅  | ✅         |
+| POST /feedback              | ❌         | ✅            | ✅                 | ✅         | ✅  | ❌         |
+| GET /feedback               | ❌         | ❌            | ✅ (branch-scoped) | ✅         | ✅  | ❌         |
+| GET /feedback/:id           | ❌         | ✅ (own only) | ✅                 | ✅         | ✅  | ❌         |
+| GET /analytics/nps-summary  | ❌         | ❌            | ✅                 | ✅         | ✅  | ✅         |
+| GET /analytics/breakdown    | ❌         | ❌            | ✅                 | ✅         | ✅  | ❌         |
+| GET /analytics/top-comments | ❌         | ❌            | ✅                 | ✅         | ✅  | ❌         |
 
 **Branch Scoping** (L4 Managers):
+
 - `GET /feedback`: Auto-filtered to `user.assignedBranches`
 - `GET /analytics/*`: Can specify `branchId` query param, validated against assigned branches
 - Franchise owners (L5) and HR see all branches in org
@@ -566,6 +614,7 @@ export class ReportsModule {}
 ### Curl Examples (`curl-examples-m20-feedback.sh`)
 
 **10 Test Sections**:
+
 1. **Authentication** – Login to obtain JWT token
 2. **Public Feedback** – Anonymous submissions (4 valid + 4 negative tests)
 3. **Authenticated Feedback** – Staff submissions (2 valid + 1 duplicate test)
@@ -578,12 +627,14 @@ export class ReportsModule {}
 10. **Summary** – Test completion checklist
 
 **Usage**:
+
 ```bash
 chmod +x curl-examples-m20-feedback.sh
 ./curl-examples-m20-feedback.sh
 ```
 
 **Prerequisites**:
+
 - Backend running on `http://localhost:4000`
 - Update `ORG_ID`, `BRANCH_ID`, `ORDER_ID`, `ORDER_NUMBER`, `RESERVATION_ID` variables with valid IDs
 - Update login credentials in Section 1
@@ -669,50 +720,50 @@ chmod +x curl-examples-m20-feedback.sh
 
 ### Adoption Metrics
 
-| Metric | Target | Measurement |
-|--------|--------|-------------|
-| **Response Rate** | 30% (industry 15-20%) | `total_feedback / (total_orders + total_reservations)` |
-| **Comment Richness** | 80% include comments | `feedback_with_comments / total_feedback` |
-| **Manager Engagement** | 90% check NPS weekly | Track `GET /analytics/nps-summary` API calls |
-| **Critical Feedback Response** | 100% acknowledged in 24hr | Manual tracking (no alert system yet) |
+| Metric                         | Target                    | Measurement                                            |
+| ------------------------------ | ------------------------- | ------------------------------------------------------ |
+| **Response Rate**              | 30% (industry 15-20%)     | `total_feedback / (total_orders + total_reservations)` |
+| **Comment Richness**           | 80% include comments      | `feedback_with_comments / total_feedback`              |
+| **Manager Engagement**         | 90% check NPS weekly      | Track `GET /analytics/nps-summary` API calls           |
+| **Critical Feedback Response** | 100% acknowledged in 24hr | Manual tracking (no alert system yet)                  |
 
 ### Data Quality Metrics
 
-| Metric | Target | Measurement |
-|--------|--------|-------------|
-| **Spam Rate** | < 5% | Manual review of flagged feedback |
-| **Duplicate Prevention** | < 2% failures | Monitor unique constraint violations |
-| **Entity Verification** | 95% valid links | `feedback_with_entity / total_feedback` |
-| **Tag Quality** | 80% actionable tags | Manual review of top 20 tags |
+| Metric                   | Target              | Measurement                             |
+| ------------------------ | ------------------- | --------------------------------------- |
+| **Spam Rate**            | < 5%                | Manual review of flagged feedback       |
+| **Duplicate Prevention** | < 2% failures       | Monitor unique constraint violations    |
+| **Entity Verification**  | 95% valid links     | `feedback_with_entity / total_feedback` |
+| **Tag Quality**          | 80% actionable tags | Manual review of top 20 tags            |
 
 ### Performance Metrics
 
-| Metric | Target | Actual |
-|--------|--------|--------|
-| **Public Submission** | < 500ms | ✅ Validated |
-| **Authenticated Submission** | < 300ms | ✅ Validated |
-| **NPS Summary Query** | < 1s (10K records) | ✅ Validated (7 indexes) |
-| **Breakdown Query** | < 800ms | ✅ Validated (Prisma groupBy) |
-| **Top Comments Query** | < 600ms | ✅ Validated (limit 100) |
-| **Digest Generation Overhead** | +2s per report | 🔄 To be measured in production |
+| Metric                         | Target             | Actual                          |
+| ------------------------------ | ------------------ | ------------------------------- |
+| **Public Submission**          | < 500ms            | ✅ Validated                    |
+| **Authenticated Submission**   | < 300ms            | ✅ Validated                    |
+| **NPS Summary Query**          | < 1s (10K records) | ✅ Validated (7 indexes)        |
+| **Breakdown Query**            | < 800ms            | ✅ Validated (Prisma groupBy)   |
+| **Top Comments Query**         | < 600ms            | ✅ Validated (limit 100)        |
+| **Digest Generation Overhead** | +2s per report     | 🔄 To be measured in production |
 
 ### RBAC Compliance
 
-| Metric | Target | Validation |
-|--------|--------|------------|
-| **Unauthorized Analytics Access** | 0 violations | ✅ L3 blocked by RolesGuard |
-| **Rate Limit Enforcement** | 100% on public endpoint | ✅ ThrottlerGuard tested |
-| **Duplicate Prevention** | 100% enforcement | ✅ Unique constraints tested |
-| **Spam Incidents** | 0 in first 90 days | 🔄 Monitor post-deployment |
+| Metric                            | Target                  | Validation                   |
+| --------------------------------- | ----------------------- | ---------------------------- |
+| **Unauthorized Analytics Access** | 0 violations            | ✅ L3 blocked by RolesGuard  |
+| **Rate Limit Enforcement**        | 100% on public endpoint | ✅ ThrottlerGuard tested     |
+| **Duplicate Prevention**          | 100% enforcement        | ✅ Unique constraints tested |
+| **Spam Incidents**                | 0 in first 90 days      | 🔄 Monitor post-deployment   |
 
 ### Business Impact Metrics (6-Month Goals)
 
-| Metric | Target | Measurement |
-|--------|--------|-------------|
-| **NPS Improvement** | +15 points | Compare Q1 vs Q2 NPS |
-| **Complaint Escalations** | -50% reduction | Track customer service tickets |
-| **Repeat Customer Rate** | +20% increase | Compare order frequency pre/post M20 |
-| **Manager Satisfaction** | 8/10 survey score | Quarterly manager survey |
+| Metric                    | Target            | Measurement                          |
+| ------------------------- | ----------------- | ------------------------------------ |
+| **NPS Improvement**       | +15 points        | Compare Q1 vs Q2 NPS                 |
+| **Complaint Escalations** | -50% reduction    | Track customer service tickets       |
+| **Repeat Customer Rate**  | +20% increase     | Compare order frequency pre/post M20 |
+| **Manager Satisfaction**  | 8/10 survey score | Quarterly manager survey             |
 
 ---
 
@@ -734,6 +785,7 @@ chmod +x curl-examples-m20-feedback.sh
 ### Deployment Steps
 
 1. **Database Migration**:
+
    ```bash
    cd packages/db
    npx prisma migrate deploy
@@ -741,6 +793,7 @@ chmod +x curl-examples-m20-feedback.sh
    ```
 
 2. **Backend Restart**:
+
    ```bash
    cd services/api
    pnpm install  # Ensure @nestjs/throttler installed
@@ -749,18 +802,20 @@ chmod +x curl-examples-m20-feedback.sh
    ```
 
 3. **Verify Health**:
+
    ```bash
    curl http://localhost:4000/health
    # Should return 200 OK
    ```
 
 4. **Smoke Tests**:
+
    ```bash
    # Test public feedback submission
    curl -X POST http://localhost:4000/feedback/public \
      -H "Content-Type: application/json" \
      -d '{"orderNumber":"ORD-TEST-001","score":9,"channel":"QR"}'
-   
+
    # Test authenticated feedback listing (requires JWT)
    curl -X GET "http://localhost:4000/feedback?limit=10" \
      -H "Authorization: Bearer $JWT_TOKEN"
@@ -781,6 +836,7 @@ chmod +x curl-examples-m20-feedback.sh
 If critical issues arise:
 
 1. **Revert Migration** (if database issues):
+
    ```bash
    cd packages/db
    # Restore from backup or manually drop feedback table
@@ -790,6 +846,7 @@ If critical issues arise:
    ```
 
 2. **Disable FeedbackModule** (if API issues):
+
    ```typescript
    // services/api/src/app.module.ts
    @Module({
@@ -946,9 +1003,10 @@ M20 successfully delivers **enterprise-grade customer feedback and NPS analytics
 ✅ **Integrate into existing reports** (shift-end, period, franchise digests)  
 ✅ **Enforce robust RBAC** (public submission, L4+ analytics, branch scoping)  
 ✅ **Prevent spam** via rate limiting (10/hour per IP on public endpoint)  
-✅ **Ensure data quality** with entity verification and duplicate prevention  
+✅ **Ensure data quality** with entity verification and duplicate prevention
 
 **Key Achievements**:
+
 - 0 breaking changes to existing codebase
 - 7 REST endpoints with comprehensive validation
 - 10 service methods for flexible feedback management

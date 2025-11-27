@@ -18,13 +18,10 @@ export function DocumentLinksController(entityType: string, idField: string) {
   @Controller()
   @UseGuards(JwtAuthGuard, RolesGuard)
   class BaseDocumentLinksController {
-    constructor(private readonly documentsService: DocumentsService) {}
+    constructor(public readonly documentsService: DocumentsService) {}
 
     @Get(`${entityType}/:id/documents`)
-    async listEntityDocuments(
-      @Param('id') entityId: string,
-      @CurrentUser() user: any,
-    ) {
+    async listEntityDocuments(@Param('id') entityId: string, @CurrentUser() user: any) {
       const query: any = { [idField]: entityId };
       return this.documentsService.list(user.orgId, user.userId, user.role, query);
     }

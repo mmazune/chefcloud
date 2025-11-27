@@ -42,6 +42,23 @@ export class InventoryService {
     });
   }
 
+  // M24-S2: Update inventory item
+  async updateItem(orgId: string, itemId: string, updates: any): Promise<any> {
+    // Verify item belongs to org
+    const item = await this.prisma.client.inventoryItem.findFirst({
+      where: { id: itemId, orgId },
+    });
+
+    if (!item) {
+      throw new Error('Inventory item not found or access denied');
+    }
+
+    return this.prisma.client.inventoryItem.update({
+      where: { id: itemId },
+      data: updates,
+    });
+  }
+
   async getOnHandLevels(orgId: string, branchId?: string, itemIds?: string[]): Promise<any> {
     const where: any = { orgId };
     if (branchId) {

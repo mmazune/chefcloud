@@ -10,7 +10,7 @@
 ChefCloud has **functional but incomplete** reservations and event booking infrastructure:
 
 - ✅ **Basic reservations** exist with table assignment and deposit support
-- ✅ **Event bookings** with table-based ticketing (E42-s1) 
+- ✅ **Event bookings** with table-based ticketing (E42-s1)
 - ✅ **Prepaid credits** system for event deposits
 - ⚠️ **Limited state management** - missing NO_SHOW, limited validation
 - ⚠️ **No booking portal public API** - all endpoints require internal auth
@@ -86,6 +86,7 @@ model Reservation {
 ```
 
 **Strengths**:
+
 - ✅ Links to org, branch, table, floor plan
 - ✅ Time window tracking (startAt, endAt)
 - ✅ Deposit support with PaymentIntent linkage
@@ -93,6 +94,7 @@ model Reservation {
 - ✅ Reminder system (ReservationReminder)
 
 **Weaknesses**:
+
 - ❌ No `guestEmail` field (only phone)
 - ❌ No `source` field (WEB, PHONE, WALK_IN)
 - ❌ No `notes` field for special requests
@@ -130,12 +132,14 @@ model Event {
 ```
 
 **Strengths**:
+
 - ✅ Slug-based public URLs
 - ✅ Published/draft state
 - ✅ Time window tracking
 - ✅ Floor plan snapshot for historical reference
 
 **Weaknesses**:
+
 - ❌ No `capacity` field (total event capacity)
 - ❌ No `status` enum (DRAFT, PUBLISHED, CANCELLED, COMPLETED)
 - ❌ No `createdByUserId` tracking
@@ -167,12 +171,14 @@ model EventTable {
 ```
 
 **Strengths**:
+
 - ✅ Flexible pricing per table
 - ✅ Minimum spend enforcement
 - ✅ Deposit requirements
 - ✅ Partial booking support
 
 **Weaknesses**:
+
 - ❌ No `bookedCount` / `availableCount` tracking
 - ❌ No `sortOrder` for display
 - ❌ No `description` field
@@ -211,12 +217,14 @@ model EventBooking {
 ```
 
 **Strengths**:
+
 - ✅ QR code check-in system (ticketCode)
 - ✅ Check-in tracking with timestamp and user
 - ✅ Prepaid credit linkage
 - ✅ Metadata for extensibility
 
 **Weaknesses**:
+
 - ❌ No `quantity` field (always assumes 1 table?)
 - ❌ No `cancelledAt` / `cancelReason` tracking
 - ❌ `depositIntentId` should link to PaymentIntent model
@@ -248,11 +256,13 @@ model PrepaidCredit {
 ```
 
 **Strengths**:
+
 - ✅ Tracks consumption over time
 - ✅ Expiration date
 - ✅ Links to event bookings and tables
 
 **Weaknesses**:
+
 - ❌ No `orderId` link to track which order consumed the credit
 - ❌ No `status` field (ACTIVE, CONSUMED, EXPIRED, REFUNDED)
 - ❌ No GL posting linkage (should reference journal entries)
@@ -284,12 +294,14 @@ model PaymentIntent {
 ```
 
 **Strengths**:
+
 - ✅ Multiple provider support
 - ✅ Status tracking
 - ✅ Provider reference for reconciliation
 - ✅ Links back to reservations
 
 **Weaknesses**:
+
 - ❌ No link to EventBooking model
 - ❌ No `refundedAt` / `refundAmount` tracking
 - ❌ `status` as String instead of enum
@@ -315,11 +327,13 @@ model ReservationReminder {
 ```
 
 **Strengths**:
+
 - ✅ Multi-channel support (SMS, EMAIL)
 - ✅ Scheduled delivery
 - ✅ Sent tracking
 
 **Weaknesses**:
+
 - ❌ No `status` field (PENDING, SENT, FAILED)
 - ❌ No error tracking
 - ❌ No retry mechanism
@@ -334,16 +348,17 @@ model ReservationReminder {
 
 **Auth**: Requires JWT + RolesGuard
 
-| Method | Endpoint                     | Role | Implemented | Notes                          |
-|--------|------------------------------|------|-------------|--------------------------------|
-| POST   | /reservations                | L2+  | ✅           | Create reservation             |
-| GET    | /reservations                | L2+  | ✅           | List with filters              |
-| POST   | /reservations/:id/confirm    | L2+  | ✅           | HELD → CONFIRMED               |
-| POST   | /reservations/:id/cancel     | L2+  | ✅           | Cancel with deposit refund     |
-| POST   | /reservations/:id/seat       | L2+  | ✅           | CONFIRMED → SEATED, link order |
-| GET    | /reservations/summary        | L3+  | ✅           | Metrics by status/deposit      |
+| Method | Endpoint                  | Role | Implemented | Notes                          |
+| ------ | ------------------------- | ---- | ----------- | ------------------------------ |
+| POST   | /reservations             | L2+  | ✅          | Create reservation             |
+| GET    | /reservations             | L2+  | ✅          | List with filters              |
+| POST   | /reservations/:id/confirm | L2+  | ✅          | HELD → CONFIRMED               |
+| POST   | /reservations/:id/cancel  | L2+  | ✅          | Cancel with deposit refund     |
+| POST   | /reservations/:id/seat    | L2+  | ✅          | CONFIRMED → SEATED, link order |
+| GET    | /reservations/summary     | L3+  | ✅          | Metrics by status/deposit      |
 
 **Missing Endpoints**:
+
 - ❌ POST /reservations/:id/no-show (mark NO_SHOW, forfeit deposit)
 - ❌ PATCH /reservations/:id (update guest details, time)
 - ❌ GET /reservations/:id (single reservation details)
@@ -356,16 +371,17 @@ model ReservationReminder {
 
 **Auth**: Requires JWT + RolesGuard
 
-| Method | Endpoint                        | Role | Implemented | Notes                         |
-|--------|---------------------------------|------|-------------|-------------------------------|
-| POST   | /bookings/events                | L4+  | ✅           | Create/update event + tables  |
-| POST   | /bookings/events/:id/publish    | L4+  | ✅           | Publish event                 |
-| POST   | /bookings/events/:id/unpublish  | L4+  | ✅           | Unpublish event               |
-| GET    | /bookings/events/:id            | L2+  | ✅           | Get event with bookings       |
-| POST   | /bookings/check-in              | L2+  | ✅           | Check-in guest by ticketCode  |
-| GET    | /bookings/check-in/:ticketCode  | L2+  | ✅           | Get booking by ticketCode     |
+| Method | Endpoint                       | Role | Implemented | Notes                        |
+| ------ | ------------------------------ | ---- | ----------- | ---------------------------- |
+| POST   | /bookings/events               | L4+  | ✅          | Create/update event + tables |
+| POST   | /bookings/events/:id/publish   | L4+  | ✅          | Publish event                |
+| POST   | /bookings/events/:id/unpublish | L4+  | ✅          | Unpublish event              |
+| GET    | /bookings/events/:id           | L2+  | ✅          | Get event with bookings      |
+| POST   | /bookings/check-in             | L2+  | ✅          | Check-in guest by ticketCode |
+| GET    | /bookings/check-in/:ticketCode | L2+  | ✅          | Get booking by ticketCode    |
 
 **Missing Endpoints**:
+
 - ❌ GET /bookings/events (list all events with filters)
 - ❌ POST /bookings/events/:id/cancel (cancel event, handle refunds)
 - ❌ GET /bookings/events/:id/summary (attendance metrics)
@@ -373,6 +389,7 @@ model ReservationReminder {
 ### Bookings Public API (NO PUBLIC ENDPOINTS EXIST)
 
 **Missing Entire Surface**:
+
 - ❌ GET /public/events (list published events)
 - ❌ GET /public/events/:slug (event details)
 - ❌ POST /public/events/:slug/book (create event booking)
@@ -424,6 +441,7 @@ model ReservationReminder {
    - **Issues**: No per-branch breakdown, no show-up rate
 
 **Missing Methods**:
+
 - ❌ `noShow(orgId, id)` - mark NO_SHOW, forfeit deposit
 - ❌ `update(orgId, id, dto)` - update guest details/time
 - ❌ `getById(orgId, id)` - single reservation details
@@ -473,6 +491,7 @@ model ReservationReminder {
    - **Issues**: No email delivery integration
 
 **Missing Methods**:
+
 - ❌ `listEvents(filters)` - list events with availability
 - ❌ `cancelEvent(id)` - cancel event, refund all bookings
 - ❌ `cancelBooking(id)` - cancel single booking with refund
@@ -486,11 +505,13 @@ model ReservationReminder {
 ### 1. Reservation Lifecycle
 
 **Current Flow**:
+
 ```
 HELD → CONFIRMED → SEATED → CANCELLED
 ```
 
 **Missing**:
+
 - ❌ NO_SHOW status and handling
 - ❌ Auto-cancellation for unpaid HELD reservations
 - ❌ Deposit forfeiture logic for late cancellations/no-shows
@@ -498,6 +519,7 @@ HELD → CONFIRMED → SEATED → CANCELLED
 - ❌ Capacity enforcement at creation and confirmation
 
 **Required Logic**:
+
 ```
 HELD (auto-cancel after X min if no deposit)
   ↓ confirm() + capture deposit
@@ -512,11 +534,13 @@ NO_SHOW (after cutoff → forfeit deposit)
 ### 2. Deposit & Payment Handling
 
 **Current**:
+
 - Creates PaymentIntent on reservation creation
 - Marks depositStatus as HELD/CAPTURED/REFUNDED
 - Creates Refund record on cancellation
 
 **Missing**:
+
 - ❌ **No GL posting integration** (deposits not in accounting system)
 - ❌ No deposit forfeiture → revenue recognition for no-shows
 - ❌ No deposit application to final bill when seated
@@ -524,6 +548,7 @@ NO_SHOW (after cutoff → forfeit deposit)
 - ❌ No retry logic for failed payment captures
 
 **Required GL Flow** (ref M8):
+
 ```
 On Deposit Collected:
   Dr: Cash/Bank
@@ -545,11 +570,13 @@ On Early Cancellation:
 ### 3. Capacity Management
 
 **Current**:
+
 - Basic table overlap check for single reservation
 - No branch-level capacity validation
 - No party size vs table capacity validation
 
 **Missing**:
+
 - ❌ Real-time capacity calculation (sum of partySize for time slot)
 - ❌ Table size matching (partySize 6 → should use 6+ seat table)
 - ❌ Floor plan integration (respect table layout)
@@ -557,6 +584,7 @@ On Early Cancellation:
 - ❌ Overbooking protection
 
 **Required**:
+
 ```typescript
 async checkAvailability(branchId, dateTime, partySize) {
   // 1. Find all CONFIRMED/SEATED reservations in time window
@@ -569,11 +597,13 @@ async checkAvailability(branchId, dateTime, partySize) {
 ### 4. Event Booking Lifecycle
 
 **Current Flow**:
+
 ```
 HELD → CONFIRMED → (checkedInAt set) → CANCELLED
 ```
 
 **Missing**:
+
 - ❌ EXPIRED status for unpaid HELD bookings
 - ❌ NO_SHOW status for confirmed but not checked-in
 - ❌ Automatic expiration of HELD bookings after timeout
@@ -581,6 +611,7 @@ HELD → CONFIRMED → (checkedInAt set) → CANCELLED
 - ❌ Partial booking support (allowPartial=true not enforced)
 
 **Required Flow**:
+
 ```
 HELD (expire after 15 min if not confirmed)
   ↓ confirmBooking() + payment
@@ -596,11 +627,13 @@ EXPIRED (auto-transition if HELD timeout)
 ### 5. Multi-Branch & Franchise Views
 
 **Current**:
+
 - ReservationsService.getSummary() provides org-level summary
 - No branch breakdown
 - No franchise aggregation
 
 **Missing**:
+
 - ❌ Per-branch reservation metrics
 - ❌ Franchise-wide booking dashboard
 - ❌ Show-up rate tracking
@@ -608,6 +641,7 @@ EXPIRED (auto-transition if HELD timeout)
 - ❌ Event attendance analytics
 
 **Required** (ref M6 FranchiseOverviewService pattern):
+
 ```typescript
 async getFranchiseBookingOverview(franchiseId, period) {
   // Aggregate across all branches in franchise:
@@ -628,11 +662,13 @@ async getFranchiseBookingOverview(franchiseId, period) {
 **Status**: ❌ **NOT INTEGRATED**
 
 Deposits are tracked in Reservation/EventBooking models but:
+
 - ❌ No GL journal entries created
 - ❌ Liability account not established
 - ❌ Revenue recognition not automated
 
 **Required**:
+
 - Create PostingService entries for deposit flows
 - Reference M8 patterns for journal entry creation
 - Integrate with existing chartOfAccounts
@@ -642,12 +678,14 @@ Deposits are tracked in Reservation/EventBooking models but:
 **Status**: ⚠️ **PARTIAL**
 
 ReservationsService.seat() can link orderId to tableId, but:
+
 - ❌ No automatic order creation when seating
 - ❌ Deposit not applied to order total
 - ❌ No validation that order is for correct table
 - ❌ Event credits (PrepaidCredit) application is manual
 
 **Required**:
+
 - Auto-create POS order when seating reservation
 - Apply deposit to order.payments or reduce order.total
 - Link EventBooking credits to order for redemption
@@ -657,11 +695,13 @@ ReservationsService.seat() can link orderId to tableId, but:
 **Status**: ❌ **NOT INTEGRATED**
 
 Reservations have no awareness of shift schedules:
+
 - ❌ Can't prevent reservations outside operating hours
 - ❌ No shift-level reservation reporting
 - ❌ Staff scheduling doesn't account for reservation load
 
 **Required**:
+
 - Validate reservation time against shift schedule
 - Aggregate reservations per shift for staffing insights
 
@@ -670,11 +710,13 @@ Reservations have no awareness of shift schedules:
 **Status**: ❌ **NOT INTEGRATED**
 
 Reservation/booking data not in daily/weekly digests:
+
 - ❌ Owner doesn't see reservation trends
 - ❌ No alerts for high no-show rates
 - ❌ Deposit revenue not in financial summaries
 
 **Required**:
+
 - Add booking section to OwnerDigestService
 - Include: reservations created, seated, no-shows, deposit $
 
@@ -683,12 +725,14 @@ Reservation/booking data not in daily/weekly digests:
 **Status**: ⚠️ **PARTIAL**
 
 ReservationReminder exists but:
+
 - ❌ No actual SMS/email sending implementation
 - ❌ No confirmation emails for bookings
 - ❌ No cancellation notifications
 - ❌ Event reminders not implemented
 
 **Required**:
+
 - Integrate with EmailService (B1)
 - Send confirmation/cancellation emails
 - Send reminder 24h before reservation
@@ -701,9 +745,11 @@ ReservationReminder exists but:
 ### Unit Tests
 
 **Reservations**:
+
 - ❌ No unit tests found for ReservationsService
 
 **Bookings**:
+
 - ✅ `bookings-ticket.spec.ts` exists but minimal coverage
 
 **Coverage Estimate**: < 20%
@@ -711,10 +757,12 @@ ReservationReminder exists but:
 ### E2E Tests
 
 **Found**:
+
 - ✅ `test/e2e/bookings.e2e-spec.ts` (event bookings)
 - ⚠️ Coverage is basic (happy path only)
 
 **Missing**:
+
 - ❌ Reservation lifecycle E2E tests
 - ❌ Deposit capture/refund/forfeiture flows
 - ❌ Capacity validation scenarios
@@ -729,11 +777,13 @@ ReservationReminder exists but:
 **Status**: ❌ **DOES NOT EXIST**
 
 All endpoints require JWT authentication:
+
 - ❌ Public can't view events
 - ❌ Public can't create reservations
 - ❌ Public can't book event tickets
 
 **Required**:
+
 - Separate public controller (no JWT guard)
 - Rate limiting for abuse prevention
 - Input validation & sanitization
@@ -742,10 +792,12 @@ All endpoints require JWT authentication:
 ### 2. RBAC Granularity
 
 **Current**:
+
 - Most operations require L2+ (host/manager)
 - No distinction between viewing and mutating
 
 **Improvements Needed**:
+
 - L1 (waiter) should view but not create/cancel
 - L4+ required for deposit forfeiture
 - L5 (owner) required for event cancellation
@@ -753,10 +805,12 @@ All endpoints require JWT authentication:
 ### 3. Org/Branch Isolation
 
 **Current**:
+
 - Services validate orgId on most operations
 - **Issue**: No branchId validation in some methods
 
 **Required**:
+
 - Enforce branchId checks consistently
 - Prevent cross-branch reservation manipulation
 
@@ -769,6 +823,7 @@ All endpoints require JWT authentication:
 **Status**: ❌ **NO M15 SECTION**
 
 No documentation for:
+
 - Reservation API endpoints
 - Booking portal usage
 - Event management
@@ -776,6 +831,7 @@ No documentation for:
 - State transitions
 
 **Required**: Add comprehensive M15 section with:
+
 - Lifecycle diagrams
 - Endpoint reference
 - Curl examples
@@ -789,6 +845,7 @@ No documentation for:
 No `curl-examples-m15-reservations.sh`
 
 **Required**: Create script with 20+ examples covering:
+
 - Create/confirm/seat/cancel reservation
 - Check availability
 - Create/publish event
@@ -811,6 +868,7 @@ No `curl-examples-m15-reservations.sh`
 **Status**: ✅ All applied successfully (54 total migrations)
 
 **Schema Changes Needed for M15**:
+
 - Add `guestEmail`, `source`, `notes`, `orderId`, `cancelledBy`, `cancelReason` to Reservation
 - Add NO_SHOW to ReservationStatus enum
 - Change `depositStatus` from String to enum
@@ -861,6 +919,7 @@ No `curl-examples-m15-reservations.sh`
 ## Recommended M15 Implementation Order
 
 **Phase 1 - Schema Hardening** (Step 1-2):
+
 1. Add missing fields to models
 2. Convert String fields to enums
 3. Add NO_SHOW status
@@ -868,6 +927,7 @@ No `curl-examples-m15-reservations.sh`
 5. Add indexes for performance
 
 **Phase 2 - Core Lifecycle** (Step 3):
+
 1. Implement noShow() method
 2. Add state transition validation
 3. Implement capacity checking
@@ -875,6 +935,7 @@ No `curl-examples-m15-reservations.sh`
 5. Add availability API
 
 **Phase 3 - Public Booking Portal** (Step 3-4):
+
 1. Create public controller (no auth)
 2. Add rate limiting
 3. Implement public reservation creation
@@ -882,18 +943,21 @@ No `curl-examples-m15-reservations.sh`
 5. Add CAPTCHA for fraud prevention
 
 **Phase 4 - Accounting Integration** (Step 5):
+
 1. Create posting patterns for deposits
 2. Integrate with PostingService (M8)
 3. Add GL entries for all deposit flows
 4. Create liability accounts in chart
 
 **Phase 5 - Multi-Branch Views** (Step 6):
+
 1. Create FranchiseBookingOverviewService
 2. Add per-branch summaries
 3. Calculate show-up rates
 4. Add to digests (M4)
 
 **Phase 6 - Tests & Documentation** (Step 7-8):
+
 1. Write comprehensive unit tests (80%+ coverage)
 2. Create E2E test scenarios
 3. Add M15 section to DEV_GUIDE.md

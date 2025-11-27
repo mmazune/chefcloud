@@ -40,7 +40,7 @@ export class DocumentsController {
     }),
   )
   async upload(
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFile() file: any,
     @Body() dto: UploadDocumentDto,
     @CurrentUser() user: any,
   ) {
@@ -48,13 +48,7 @@ export class DocumentsController {
       throw new Error('No file uploaded');
     }
 
-    return this.documentsService.upload(
-      file,
-      user.orgId,
-      user.userId,
-      user.role,
-      dto,
-    );
+    return this.documentsService.upload(file, user.orgId, user.userId, user.role, dto);
   }
 
   /**
@@ -77,13 +71,13 @@ export class DocumentsController {
    * GET /documents/:id/download - Download document file
    */
   @Get(':id/download')
-  async download(
-    @Param('id') id: string,
-    @CurrentUser() user: any,
-    @Res() res: Response,
-  ) {
-    const { buffer, fileName, mimeType } =
-      await this.documentsService.download(id, user.orgId, user.userId, user.role);
+  async download(@Param('id') id: string, @CurrentUser() user: any, @Res() res: Response) {
+    const { buffer, fileName, mimeType } = await this.documentsService.download(
+      id,
+      user.orgId,
+      user.userId,
+      user.role,
+    );
 
     res.setHeader('Content-Type', mimeType);
     res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
@@ -105,10 +99,7 @@ export class DocumentsController {
    * GET /documents/links/purchase-orders/:id - List documents for a purchase order
    */
   @Get('links/purchase-orders/:id')
-  async listPurchaseOrderDocuments(
-    @Param('id') poId: string,
-    @CurrentUser() user: any,
-  ) {
+  async listPurchaseOrderDocuments(@Param('id') poId: string, @CurrentUser() user: any) {
     return this.documentsService.list(user.orgId, user.userId, user.role, {
       purchaseOrderId: poId,
     });
@@ -118,10 +109,7 @@ export class DocumentsController {
    * GET /documents/links/pay-slips/:id - List documents for a pay slip
    */
   @Get('links/pay-slips/:id')
-  async listPaySlipDocuments(
-    @Param('id') paySlipId: string,
-    @CurrentUser() user: any,
-  ) {
+  async listPaySlipDocuments(@Param('id') paySlipId: string, @CurrentUser() user: any) {
     return this.documentsService.list(user.orgId, user.userId, user.role, {
       paySlipId,
     });
@@ -131,10 +119,7 @@ export class DocumentsController {
    * GET /documents/links/reservations/:id - List documents for a reservation
    */
   @Get('links/reservations/:id')
-  async listReservationDocuments(
-    @Param('id') reservationId: string,
-    @CurrentUser() user: any,
-  ) {
+  async listReservationDocuments(@Param('id') reservationId: string, @CurrentUser() user: any) {
     return this.documentsService.list(user.orgId, user.userId, user.role, {
       reservationId,
     });
@@ -157,10 +142,7 @@ export class DocumentsController {
    * GET /documents/links/employees/:id - List documents for an employee
    */
   @Get('links/employees/:id')
-  async listEmployeeDocuments(
-    @Param('id') employeeId: string,
-    @CurrentUser() user: any,
-  ) {
+  async listEmployeeDocuments(@Param('id') employeeId: string, @CurrentUser() user: any) {
     return this.documentsService.list(user.orgId, user.userId, user.role, {
       employeeId,
     });

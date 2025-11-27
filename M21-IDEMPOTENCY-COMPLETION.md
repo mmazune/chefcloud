@@ -10,7 +10,8 @@
 
 **Objective**: Wire M16 idempotency infrastructure to write-heavy endpoints (POS, reservations, bookings) to prevent duplicate submissions from network retries, double-clicks, or offline sync.
 
-**Scope**: 
+**Scope**:
+
 - Created `IdempotencyKey` model in PostgreSQL (schema was documented in M16 but not implemented)
 - Fixed `IdempotencyService` to use correct Prisma accessor
 - Created `CommonModule` to export idempotency services
@@ -20,12 +21,14 @@
 - Updated `DEV_GUIDE.md` with M21 section (900+ lines)
 
 **Business Impact**:
+
 - **POS**: Prevents duplicate orders, double charges on order close, multiple kitchen tickets
 - **Reservations**: Prevents double-booked tables, duplicate confirmation emails
 - **Bookings**: Prevents duplicate event registrations, double payment processing (Flutterwave/Pesapal timeout retries)
 - **Public Portals**: Protects anonymous users from duplicate charges due to network failures
 
 **Key Metrics**:
+
 - ✅ 19 endpoints protected (7 POS, 4 Reservations, 5 Bookings, 1 Checkin, 1 Public Portal, 1 Public Booking)
 - ✅ 24-hour cache TTL (balances retry window vs. storage cost)
 - ✅ SHA256 full-body fingerprint (detects any parameter change)
@@ -39,25 +42,30 @@
 ### Pain Points Before M21
 
 **POS Duplicate Submissions**:
+
 - Waiter double-clicks "Close Order" → customer charged twice (payment processed, EFRIS receipt issued)
 - Network timeout on "Send to Kitchen" → waiter retries → kitchen receives duplicate ticket
 - Offline POS syncs same order twice → duplicate order IDs in system
 
 **Reservations Duplicate Submissions**:
+
 - Manager confirms reservation → network timeout → clicks again → duplicate confirmation emails sent
 - Customer books table on slow connection → clicks "Submit" multiple times → multiple reservations created
 
 **Bookings Duplicate Submissions**:
+
 - Public portal timeout on payment submission (Flutterwave/Pesapal webhook delay) → customer reloads page → charged twice
 - Event check-in QR code scanned twice (slow network) → duplicate check-in records
 
 **Root Causes**:
+
 1. **Network Retries**: Client timeout (5s) → retry → server processed first request but response not received
 2. **Double-Clicks**: User impatience on slow UI → clicks button multiple times
 3. **Offline Sync**: Mobile POS queues same action multiple times due to connection drops
 4. **Race Conditions**: Load-balanced servers process duplicate requests simultaneously (no shared state)
 
 **Financial Impact**:
+
 - Estimated 2-3% of orders had duplicate close attempts (10 orders/week charged twice)
 - Average double-charge value: 50,000 UGX (refund processing + customer complaint)
 - Monthly cost: ~10 incidents × 50,000 UGX = 500,000 UGX ($135 USD) in refunds + reputation damage
@@ -147,6 +155,7 @@
 ```
 
 **Key Decision Points**:
+
 1. **No Idempotency-Key header?** → Skip check, process normally (legacy client support)
 2. **Key not found in database?** → First request, process and cache response
 3. **Key found with same hash?** → Duplicate detected, return cached response (no controller execution)
@@ -195,6 +204,7 @@ CREATE INDEX "idempotency_keys_expiresAt_idx" ON "idempotency_keys"("expiresAt")
 ```
 
 **Design Rationale**:
+
 - **Unique constraint on `key`**: Prevents race conditions (first INSERT wins, subsequent fail gracefully)
 - **`requestHash` field**: Detects client bugs (same key, different body → 409 Conflict)
 - **`responseBody` as JSON**: Full response cached (includes generated IDs, status, metadata)
@@ -202,6 +212,7 @@ CREATE INDEX "idempotency_keys_expiresAt_idx" ON "idempotency_keys"("expiresAt")
 - **24h TTL**: Balances retry window (client timeout → manual retry within day) vs. storage cost
 
 **Storage Analysis**:
+
 - Average key size: ~500 bytes (key + endpoint + hash + response JSON)
 - Daily writes: ~10,000 keys (busy restaurant: 500 orders/day × 20 operations)
 - Table size after 1 year: 10,000 keys/day × 365 days × 500 bytes ≈ **1.8 GB** (acceptable)
@@ -216,6 +227,7 @@ CREATE INDEX "idempotency_keys_expiresAt_idx" ON "idempotency_keys"("expiresAt")
 **Key Methods**:
 
 **3.1 check(key, endpoint, body)** - Duplicate Detection
+
 ```typescript
 async check(
   idempotencyKey: string,
@@ -225,7 +237,7 @@ async check(
   try {
     // Query for existing key (not expired)
     const existing = await this.prisma.idempotencyKey.findUnique({
-      where: { 
+      where: {
         key: idempotencyKey,
         expiresAt: { gt: new Date() },  // Only valid keys
       },
@@ -264,6 +276,7 @@ async check(
 ```
 
 **3.2 store(key, endpoint, body, response, statusCode)** - Cache Response
+
 ```typescript
 async store(
   idempotencyKey: string,
@@ -299,6 +312,7 @@ async store(
 ```
 
 **3.3 hashRequest(body)** - Fingerprint Computation
+
 ```typescript
 private hashRequest(body: any): string {
   if (!body || typeof body !== 'object') {
@@ -307,7 +321,7 @@ private hashRequest(body: any): string {
 
   // Normalize JSON: Sort keys alphabetically for consistent hash
   const normalized = JSON.stringify(body, Object.keys(body).sort());
-  
+
   return crypto.createHash('sha256')
     .update(normalized, 'utf8')
     .digest('hex');
@@ -315,11 +329,13 @@ private hashRequest(body: any): string {
 ```
 
 **Why SHA256 Full Body?**
+
 - Detects **any** parameter change (quantity, item ID, amount, discount, etc.)
 - Prevents partial duplicate (e.g., reusing key for different order items)
 - Simple to implement (no field-specific whitelisting)
 
 **Example Fingerprints**:
+
 ```typescript
 // Body 1: { "tableNumber": 5, "items": [{"menuItemId": "mi_123", "quantity": 2}] }
 // Hash: a3f8b9c1d2e3f4g5h6i7j8k9l0m1n2o3p4q5r6s7t8u9v0w1x2y3z4
@@ -332,6 +348,7 @@ private hashRequest(body: any): string {
 ```
 
 **3.4 cleanupExpired()** - Daily Cleanup Job
+
 ```typescript
 async cleanupExpired(): Promise<number> {
   const result = await this.prisma.idempotencyKey.deleteMany({
@@ -345,6 +362,7 @@ async cleanupExpired(): Promise<number> {
 ```
 
 **Cron Job**: Runs daily at 02:00 UTC (low traffic period)
+
 ```typescript
 // Worker: idempotency-cleanup.worker.ts
 @Cron('0 2 * * *')
@@ -361,6 +379,7 @@ async handleCron() {
 **File**: `services/api/src/common/idempotency.interceptor.ts`
 
 **How it Works**:
+
 1. Extracts `Idempotency-Key` header from request
 2. If no key → skip idempotency check (legacy client support)
 3. Calls `IdempotencyService.check(key, endpoint, body)`
@@ -369,6 +388,7 @@ async handleCron() {
 6. After success → call `IdempotencyService.store(key, body, response, statusCode)`
 
 **Code** (simplified):
+
 ```typescript
 @Injectable()
 export class IdempotencyInterceptor implements NestInterceptor {
@@ -403,7 +423,7 @@ export class IdempotencyInterceptor implements NestInterceptor {
           endpoint,
           body,
           response,
-          200,  // Assume 200 OK (interceptor can't access status code)
+          200, // Assume 200 OK (interceptor can't access status code)
         );
       }),
     );
@@ -424,29 +444,23 @@ import { IdempotencyService } from './idempotency.service';
 import { IdempotencyInterceptor } from './idempotency.interceptor';
 
 @Module({
-  providers: [
-    PrismaService,
-    IdempotencyService,
-    IdempotencyInterceptor,
-  ],
-  exports: [
-    IdempotencyService,
-    IdempotencyInterceptor,
-  ],
+  providers: [PrismaService, IdempotencyService, IdempotencyInterceptor],
+  exports: [IdempotencyService, IdempotencyInterceptor],
 })
 export class CommonModule {}
 ```
 
 **Usage in Feature Modules**:
+
 ```typescript
 // Example: pos.module.ts
 import { Module } from '@nestjs/common';
-import { CommonModule } from '../common/common.module';  // Import CommonModule
+import { CommonModule } from '../common/common.module'; // Import CommonModule
 import { PosController } from './pos.controller';
 import { PosService } from './pos.service';
 
 @Module({
-  imports: [CommonModule],  // Import to access IdempotencyInterceptor
+  imports: [CommonModule], // Import to access IdempotencyInterceptor
   controllers: [PosController],
   providers: [PosService],
 })
@@ -469,49 +483,49 @@ import { IdempotencyInterceptor } from '../common/idempotency.interceptor';
 export class PosController {
   // 1. Create Order
   @Post('orders')
-  @UseInterceptors(IdempotencyInterceptor)  // ✅ Protected
+  @UseInterceptors(IdempotencyInterceptor) // ✅ Protected
   async createOrder(@Body() dto: CreateOrderDto) {
     // ...
   }
 
   // 2. Send to Kitchen (CRITICAL: Prevents duplicate kitchen tickets)
   @Post('orders/:id/send-to-kitchen')
-  @UseInterceptors(IdempotencyInterceptor)  // ✅ Protected
+  @UseInterceptors(IdempotencyInterceptor) // ✅ Protected
   async sendToKitchen(@Param('id') id: string) {
     // ...
   }
 
   // 3. Modify Order
   @Post('orders/:id/modify')
-  @UseInterceptors(IdempotencyInterceptor)  // ✅ Protected
+  @UseInterceptors(IdempotencyInterceptor) // ✅ Protected
   async modifyOrder(@Param('id') id: string, @Body() dto: ModifyOrderDto) {
     // ...
   }
 
   // 4. Void Order
   @Post('orders/:id/void')
-  @UseInterceptors(IdempotencyInterceptor)  // ✅ Protected
+  @UseInterceptors(IdempotencyInterceptor) // ✅ Protected
   async voidOrder(@Param('id') id: string, @Body() dto: VoidOrderDto) {
     // ...
   }
 
   // 5. Close Order (CRITICAL: Prevents duplicate charges)
   @Post('orders/:id/close')
-  @UseInterceptors(IdempotencyInterceptor)  // ✅ Protected
+  @UseInterceptors(IdempotencyInterceptor) // ✅ Protected
   async closeOrder(@Param('id') id: string, @Body() dto: CloseOrderDto) {
     // ...
   }
 
   // 6. Apply Discount
   @Post('orders/:id/discount')
-  @UseInterceptors(IdempotencyInterceptor)  // ✅ Protected
+  @UseInterceptors(IdempotencyInterceptor) // ✅ Protected
   async applyDiscount(@Param('id') id: string, @Body() dto: DiscountDto) {
     // ...
   }
 
   // 7. Post-Close Void (CRITICAL: Prevents duplicate refunds)
   @Post('orders/:id/post-close-void')
-  @UseInterceptors(IdempotencyInterceptor)  // ✅ Protected
+  @UseInterceptors(IdempotencyInterceptor) // ✅ Protected
   async postCloseVoid(@Param('id') id: string, @Body() dto: PostCloseVoidDto) {
     // ...
   }
@@ -519,6 +533,7 @@ export class PosController {
 ```
 
 **Critical Use Cases**:
+
 - **closeOrder**: Prevents duplicate payment processing (customer charged twice)
 - **sendToKitchen**: Prevents KDS ticket flood (kitchen receives 5 copies of same order)
 - **postCloseVoid**: Prevents duplicate refunds after shift close
@@ -537,28 +552,28 @@ import { IdempotencyInterceptor } from '../common/idempotency.interceptor';
 export class ReservationsController {
   // 1. Create Reservation
   @Post()
-  @UseInterceptors(IdempotencyInterceptor)  // ✅ Protected
+  @UseInterceptors(IdempotencyInterceptor) // ✅ Protected
   async create(@Body() dto: CreateReservationDto) {
     // ...
   }
 
   // 2. Confirm Reservation
   @Post(':id/confirm')
-  @UseInterceptors(IdempotencyInterceptor)  // ✅ Protected
+  @UseInterceptors(IdempotencyInterceptor) // ✅ Protected
   async confirm(@Param('id') id: string) {
     // ...
   }
 
   // 3. Cancel Reservation
   @Post(':id/cancel')
-  @UseInterceptors(IdempotencyInterceptor)  // ✅ Protected
+  @UseInterceptors(IdempotencyInterceptor) // ✅ Protected
   async cancel(@Param('id') id: string, @Body() dto: CancelReservationDto) {
     // ...
   }
 
   // 4. Seat Reservation
   @Post(':id/seat')
-  @UseInterceptors(IdempotencyInterceptor)  // ✅ Protected
+  @UseInterceptors(IdempotencyInterceptor) // ✅ Protected
   async seat(@Param('id') id: string, @Body() dto: SeatReservationDto) {
     // ...
   }
@@ -566,6 +581,7 @@ export class ReservationsController {
 ```
 
 **Critical Use Cases**:
+
 - **create**: Prevents double-booked tables (same customer, same time slot)
 - **confirm**: Prevents duplicate confirmation emails (spam prevention)
 - **cancel**: Prevents double no-show penalties (refund logic)
@@ -581,14 +597,14 @@ export class ReservationsController {
 export class BookingsController {
   // 1. Confirm Booking (Admin)
   @Post(':id/confirm')
-  @UseInterceptors(IdempotencyInterceptor)  // ✅ Protected
+  @UseInterceptors(IdempotencyInterceptor) // ✅ Protected
   async confirmBooking(@Param('id') id: string) {
     // ...
   }
 
   // 2. Cancel Booking (Admin)
   @Post(':id/cancel')
-  @UseInterceptors(IdempotencyInterceptor)  // ✅ Protected
+  @UseInterceptors(IdempotencyInterceptor) // ✅ Protected
   async cancelBooking(@Param('id') id: string, @Body() dto: CancelBookingDto) {
     // ...
   }
@@ -602,14 +618,14 @@ export class BookingsController {
 export class PublicBookingsController {
   // 3. Create Booking (Public Portal, CRITICAL)
   @Post()
-  @UseInterceptors(IdempotencyInterceptor)  // ✅ Protected
+  @UseInterceptors(IdempotencyInterceptor) // ✅ Protected
   async createBooking(@Body() dto: CreatePublicBookingDto) {
     // ...
   }
 
   // 4. Pay for Booking (Public Portal, CRITICAL)
   @Post(':id/pay')
-  @UseInterceptors(IdempotencyInterceptor)  // ✅ Protected
+  @UseInterceptors(IdempotencyInterceptor) // ✅ Protected
   async payBooking(@Param('id') id: string, @Body() dto: PaymentDto) {
     // ...
   }
@@ -623,7 +639,7 @@ export class PublicBookingsController {
 export class CheckinController {
   // 5. Check In (QR Code Scan)
   @Post('checkin')
-  @UseInterceptors(IdempotencyInterceptor)  // ✅ Protected
+  @UseInterceptors(IdempotencyInterceptor) // ✅ Protected
   async checkin(@Body() dto: CheckinDto) {
     // ...
   }
@@ -631,6 +647,7 @@ export class CheckinController {
 ```
 
 **Critical Use Cases**:
+
 - **createBooking**: Prevents duplicate event registrations (public portal, no auth)
 - **payBooking**: Prevents double payment (Flutterwave/Pesapal timeout retry → duplicate charge)
 - **checkin**: Prevents duplicate check-ins (QR code scanned twice)
@@ -646,7 +663,7 @@ export class CheckinController {
 export class PublicBookingController {
   // 1. Create Reservation (Public Portal, CRITICAL)
   @Post('reservations')
-  @UseInterceptors(IdempotencyInterceptor)  // ✅ Protected
+  @UseInterceptors(IdempotencyInterceptor) // ✅ Protected
   async createReservation(@Body() dto: CreatePublicReservationDto) {
     // ...
   }
@@ -654,6 +671,7 @@ export class PublicBookingController {
 ```
 
 **Critical Use Case**:
+
 - **createReservation**: Prevents duplicate reservations from public portal (anonymous users, slow network)
 
 ---
@@ -665,6 +683,7 @@ export class PublicBookingController {
 **Algorithm**: SHA256 of normalized JSON (body keys sorted alphabetically)
 
 **What's Included**:
+
 - ✅ All request body fields (nested objects, arrays)
 - ✅ Field order normalized (keys sorted)
 - ❌ Headers (Authorization, User-Agent, etc.)
@@ -672,6 +691,7 @@ export class PublicBookingController {
 - ❌ Timestamp fields (if client includes, will cause mismatch)
 
 **Example**:
+
 ```typescript
 // Request 1:
 {
@@ -702,6 +722,7 @@ export class PublicBookingController {
 **Fixed TTL**: 24 hours (86,400 seconds)
 
 **Rationale**:
+
 - Covers client retry window (network timeout → manual retry within day)
 - Balances storage cost (table size stays bounded)
 - Matches industry standard (Stripe, Square use 24h)
@@ -712,12 +733,12 @@ export class PublicBookingController {
 
 ### Behavior Matrix
 
-| Scenario | Key Provided? | Body Match? | Server Behavior | Response |
-|----------|---------------|-------------|-----------------|----------|
-| **First Request** | ✅ Yes | N/A (new) | Process normally, store response | 200/201 OK |
-| **Retry (Same Body)** | ✅ Yes | ✅ Same | Return cached response | 200/201 OK (cached) |
-| **Retry (Different Body)** | ✅ Yes | ❌ Different | Reject request | 409 Conflict |
-| **No Key** | ❌ No | N/A | Process normally (no caching) | 200/201 OK |
+| Scenario                   | Key Provided? | Body Match?  | Server Behavior                  | Response            |
+| -------------------------- | ------------- | ------------ | -------------------------------- | ------------------- |
+| **First Request**          | ✅ Yes        | N/A (new)    | Process normally, store response | 200/201 OK          |
+| **Retry (Same Body)**      | ✅ Yes        | ✅ Same      | Return cached response           | 200/201 OK (cached) |
+| **Retry (Different Body)** | ✅ Yes        | ❌ Different | Reject request                   | 409 Conflict        |
+| **No Key**                 | ❌ No         | N/A          | Process normally (no caching)    | 200/201 OK          |
 
 ---
 
@@ -728,6 +749,7 @@ export class PublicBookingController {
 **File**: `curl-examples-m21-idempotency.sh` (530+ lines, executable)
 
 **Sections**:
+
 1. **Authentication**: Login to get JWT token
 2. **POS Create Order**: First request, duplicate, fingerprint mismatch
 3. **POS Close Order**: Setup order, first close, duplicate close (prevents double charge)
@@ -738,6 +760,7 @@ export class PublicBookingController {
 8. **Summary**: All protected endpoints listed, client usage recommendations
 
 **Run Tests**:
+
 ```bash
 # Make executable (already done)
 chmod +x curl-examples-m21-idempotency.sh
@@ -751,6 +774,7 @@ chmod +x curl-examples-m21-idempotency.sh
 ```
 
 **Expected Output**:
+
 - ✅ GREEN: Successful idempotency behavior (cached response, same order ID)
 - ❌ RED: Failure (409 Conflict on fingerprint mismatch)
 - ℹ️ YELLOW: Info messages (test setup, key generation)
@@ -763,6 +787,7 @@ chmod +x curl-examples-m21-idempotency.sh
 **File**: `services/api/src/common/idempotency.service.spec.ts`
 
 **Test Cases**:
+
 1. `check()` returns `isDuplicate: false` for first request
 2. `check()` returns cached response for duplicate request (same hash)
 3. `check()` throws 409 Conflict for fingerprint mismatch (different hash)
@@ -779,6 +804,7 @@ chmod +x curl-examples-m21-idempotency.sh
 **File**: `services/api/test/idempotency.e2e-spec.ts`
 
 **Test Cases**:
+
 1. POST `/pos/orders` with duplicate key returns same order ID
 2. POST `/pos/orders` with different body returns 409 Conflict
 3. POST `/public/reservations` prevents duplicate reservations
@@ -837,13 +863,13 @@ chmod +x curl-examples-m21-idempotency.sh
 5. **`services/api/src/pos/pos.controller.ts`** (+9 lines)
    - Imported `UseInterceptors`, `IdempotencyInterceptor`
    - Added `@UseInterceptors(IdempotencyInterceptor)` to 7 endpoints:
-     * `POST /pos/orders` (createOrder)
-     * `POST /pos/orders/:id/send-to-kitchen` (sendToKitchen)
-     * `POST /pos/orders/:id/modify` (modifyOrder)
-     * `POST /pos/orders/:id/void` (voidOrder)
-     * `POST /pos/orders/:id/close` (closeOrder) - CRITICAL
-     * `POST /pos/orders/:id/discount` (applyDiscount)
-     * `POST /pos/orders/:id/post-close-void` (postCloseVoid)
+     - `POST /pos/orders` (createOrder)
+     - `POST /pos/orders/:id/send-to-kitchen` (sendToKitchen)
+     - `POST /pos/orders/:id/modify` (modifyOrder)
+     - `POST /pos/orders/:id/void` (voidOrder)
+     - `POST /pos/orders/:id/close` (closeOrder) - CRITICAL
+     - `POST /pos/orders/:id/discount` (applyDiscount)
+     - `POST /pos/orders/:id/post-close-void` (postCloseVoid)
 
 6. **`services/api/src/reservations/reservations.module.ts`** (+2 lines)
    - Imported `CommonModule`
@@ -851,10 +877,10 @@ chmod +x curl-examples-m21-idempotency.sh
 7. **`services/api/src/reservations/reservations.controller.ts`** (+6 lines)
    - Imported `UseInterceptors`, `IdempotencyInterceptor`
    - Added `@UseInterceptors(IdempotencyInterceptor)` to 4 endpoints:
-     * `POST /reservations` (create)
-     * `POST /reservations/:id/confirm` (confirm)
-     * `POST /reservations/:id/cancel` (cancel)
-     * `POST /reservations/:id/seat` (seat)
+     - `POST /reservations` (create)
+     - `POST /reservations/:id/confirm` (confirm)
+     - `POST /reservations/:id/cancel` (cancel)
+     - `POST /reservations/:id/seat` (seat)
 
 8. **`services/api/src/bookings/bookings.module.ts`** (+2 lines)
    - Imported `CommonModule`
@@ -862,19 +888,19 @@ chmod +x curl-examples-m21-idempotency.sh
 9. **`services/api/src/bookings/bookings.controller.ts`** (+4 lines)
    - Imported `UseInterceptors`, `IdempotencyInterceptor`
    - Added `@UseInterceptors(IdempotencyInterceptor)` to 2 endpoints:
-     * `POST /bookings/:id/confirm` (confirmBooking)
-     * `POST /bookings/:id/cancel` (cancelBooking)
+     - `POST /bookings/:id/confirm` (confirmBooking)
+     - `POST /bookings/:id/cancel` (cancelBooking)
 
 10. **`services/api/src/bookings/public-bookings.controller.ts`** (+4 lines)
     - Imported `UseInterceptors`, `IdempotencyInterceptor`
     - Added `@UseInterceptors(IdempotencyInterceptor)` to 2 endpoints:
-      * `POST /public/bookings` (createBooking) - CRITICAL
-      * `POST /public/bookings/:id/pay` (payBooking) - CRITICAL
+      - `POST /public/bookings` (createBooking) - CRITICAL
+      - `POST /public/bookings/:id/pay` (payBooking) - CRITICAL
 
 11. **`services/api/src/bookings/checkin.controller.ts`** (+3 lines)
     - Imported `UseInterceptors`, `IdempotencyInterceptor`
     - Added `@UseInterceptors(IdempotencyInterceptor)` to 1 endpoint:
-      * `POST /events/checkin` (checkin)
+      - `POST /events/checkin` (checkin)
 
 12. **`services/api/src/public-booking/public-booking.module.ts`** (+3 lines)
     - Imported `CommonModule`
@@ -883,7 +909,7 @@ chmod +x curl-examples-m21-idempotency.sh
 13. **`services/api/src/public-booking/public-booking.controller.ts`** (+3 lines)
     - Imported `UseInterceptors`, `IdempotencyInterceptor`
     - Added `@UseInterceptors(IdempotencyInterceptor)` to 1 endpoint:
-      * `POST /public/reservations` (createReservation) - CRITICAL
+      - `POST /public/reservations` (createReservation) - CRITICAL
 
 14. **`DEV_GUIDE.md`** (+900 lines)
     - Added comprehensive M21 section after M20
@@ -1000,20 +1026,24 @@ chmod +x curl-examples-m21-idempotency.sh
 ### Technical Metrics
 
 **Cache Effectiveness**:
+
 - ✅ Target: 10-15% cache hit rate (network retries, double-clicks)
 - ✅ Target: < 0.1% 409 Conflict rate (indicates clean client key generation)
 - ✅ Target: 100% of critical endpoints protected
 
 **Performance**:
+
 - ✅ Idempotency check latency < 50ms (PostgreSQL query + hash computation)
 - ✅ Store operation latency < 100ms (INSERT with unique constraint)
 - ✅ Cleanup job duration < 5 seconds (for 50,000 expired keys)
 
 **Storage**:
+
 - ✅ Table size < 2 GB after 1 year (10,000 keys/day × 365 days × 500 bytes)
 - ✅ Expired key cleanup > 99% success rate (daily cron job)
 
 **RBAC Compliance**:
+
 - ✅ 0 unauthorized idempotency bypass (interceptor applied to all protected endpoints)
 - ✅ 100% of duplicate requests return cached response (no double-processing)
 - ✅ 100% of fingerprint mismatches return 409 Conflict
@@ -1023,6 +1053,7 @@ chmod +x curl-examples-m21-idempotency.sh
 ### Business Metrics
 
 **Financial Impact**:
+
 - ✅ **Target**: 0 duplicate charges after M21 deployment
   - **Before**: 10 incidents/month × 50,000 UGX = 500,000 UGX ($135 USD) in refunds
   - **After**: 0 incidents (100% prevention)
@@ -1037,6 +1068,7 @@ chmod +x curl-examples-m21-idempotency.sh
   - **After**: 0 incidents
 
 **Customer Satisfaction**:
+
 - ✅ **Target**: 95% reduction in customer complaints about double-charging
   - **Before**: ~40 complaints/month (10 double-charge incidents × 4 customers)
   - **After**: ~2 complaints/month (false positives, user error)
@@ -1045,6 +1077,7 @@ chmod +x curl-examples-m21-idempotency.sh
   - **Impact**: Customers trust payment submission (no fear of timeout → double charge)
 
 **Operational Efficiency**:
+
 - ✅ **Target**: 50% reduction in customer support time (refund processing)
   - **Before**: 10 incidents/month × 30 minutes/incident = 5 hours/month
   - **After**: 0 incidents = 0 hours/month
@@ -1075,12 +1108,14 @@ chmod +x curl-examples-m21-idempotency.sh
 ### Migration Steps (Production)
 
 **1. Apply Schema Migration**
+
 ```bash
 cd packages/db
 pnpm prisma migrate deploy
 ```
 
 **2. Verify Migration**
+
 ```sql
 -- Check table exists
 SELECT * FROM idempotency_keys LIMIT 1;
@@ -1091,18 +1126,21 @@ SELECT indexname, indexdef FROM pg_indexes WHERE tablename = 'idempotency_keys';
 ```
 
 **3. Regenerate Prisma Client**
+
 ```bash
 cd services/api
 pnpm prisma generate
 ```
 
 **4. Build & Deploy**
+
 ```bash
 pnpm -w build
 pnpm -w deploy  # Or docker build/push
 ```
 
 **5. Verify Deployment**
+
 ```bash
 # Test POS order creation (with idempotency key)
 curl -X POST "$BASE/pos/orders" \
@@ -1120,16 +1158,17 @@ curl -X POST "$BASE/pos/orders" \
 ```
 
 **6. Monitor Metrics** (SQL queries)
+
 ```sql
 -- Cache hit rate (run after 24 hours)
 WITH stats AS (
-  SELECT 
+  SELECT
     COUNT(DISTINCT key) AS unique_keys,
     COUNT(*) AS total_requests
   FROM idempotency_keys
   WHERE created_at > NOW() - INTERVAL '1 day'
 )
-SELECT 
+SELECT
   unique_keys,
   total_requests,
   total_requests - unique_keys AS cache_hits,
@@ -1146,6 +1185,7 @@ FROM stats;
 **If Issues Arise**:
 
 1. **Revert Code Deployment** (remove interceptor decorators)
+
    ```bash
    git revert <commit-hash>
    pnpm -w build
@@ -1157,10 +1197,11 @@ FROM stats;
    - Table will auto-cleanup after 24h (daily cron)
 
 3. **Revert Migration** (optional, if table causes issues)
+
    ```bash
    cd packages/db
    pnpm prisma migrate resolve --rolled-back 20251122084642_m21_idempotency_keys
-   
+
    # Manually drop table
    psql $DATABASE_URL -c "DROP TABLE idempotency_keys;"
    ```
@@ -1172,12 +1213,13 @@ FROM stats;
 ### 1. Update POS Clients (JavaScript/TypeScript)
 
 **Before** (no idempotency):
+
 ```typescript
 async function closeOrder(orderId: string, amountPaid: number) {
   return fetch(`/pos/orders/${orderId}/close`, {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${token}`,
+      Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({ amountPaid }),
@@ -1186,17 +1228,18 @@ async function closeOrder(orderId: string, amountPaid: number) {
 ```
 
 **After** (with idempotency):
+
 ```typescript
 import { ulid } from 'ulid';
 
 async function closeOrder(orderId: string, amountPaid: number) {
-  const idempotencyKey = ulid();  // Generate new ULID
-  
+  const idempotencyKey = ulid(); // Generate new ULID
+
   return fetch(`/pos/orders/${orderId}/close`, {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${token}`,
-      'Idempotency-Key': idempotencyKey,  // Add header
+      Authorization: `Bearer ${token}`,
+      'Idempotency-Key': idempotencyKey, // Add header
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({ amountPaid }),
@@ -1205,38 +1248,38 @@ async function closeOrder(orderId: string, amountPaid: number) {
 ```
 
 **With Retry Logic**:
+
 ```typescript
 import { ulid } from 'ulid';
 
 async function closeOrderWithRetry(orderId: string, amountPaid: number) {
-  const idempotencyKey = ulid();  // Generate once per action
+  const idempotencyKey = ulid(); // Generate once per action
   const maxRetries = 3;
-  
+
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       const response = await fetch(`/pos/orders/${orderId}/close`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Idempotency-Key': idempotencyKey,  // Reuse same key
+          Authorization: `Bearer ${token}`,
+          'Idempotency-Key': idempotencyKey, // Reuse same key
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ amountPaid }),
         timeout: 5000,
       });
-      
+
       if (response.ok) {
         return await response.json();
       }
-      
+
       if (response.status === 409) {
         // 409 = Client bug (reused key)
         throw new Error('Idempotency conflict - regenerating key');
       }
-      
+
       // Retry on other errors
       await sleep(1000 * attempt);
-      
     } catch (error) {
       if (attempt === maxRetries) throw error;
     }
@@ -1249,6 +1292,7 @@ async function closeOrderWithRetry(orderId: string, amountPaid: number) {
 ### 2. Update Web Clients (React Example)
 
 **Before**:
+
 ```typescript
 const handleSubmitBooking = async () => {
   const response = await fetch('/public/bookings', {
@@ -1260,13 +1304,14 @@ const handleSubmitBooking = async () => {
 ```
 
 **After**:
+
 ```typescript
 import { ulid } from 'ulid';
 import { useState } from 'react';
 
 const handleSubmitBooking = async () => {
-  const [idempotencyKey] = useState(() => ulid());  // Generate once per component mount
-  
+  const [idempotencyKey] = useState(() => ulid()); // Generate once per component mount
+
   const response = await fetch('/public/bookings', {
     method: 'POST',
     headers: {
@@ -1284,6 +1329,7 @@ const handleSubmitBooking = async () => {
 ### 3. Update Mobile Clients (React Native Example)
 
 **Offline Queue Integration**:
+
 ```typescript
 interface QueuedRequest {
   id: string;
@@ -1295,32 +1341,32 @@ interface QueuedRequest {
 async function addToQueue(endpoint: string, body: any) {
   const request: QueuedRequest = {
     id: ulid(),
-    idempotencyKey: ulid(),  // Generate at action time
+    idempotencyKey: ulid(), // Generate at action time
     endpoint,
     body,
   };
-  
+
   await AsyncStorage.setItem(`queue_${request.id}`, JSON.stringify(request));
 }
 
 async function syncQueue() {
   const keys = await AsyncStorage.getAllKeys();
-  const queueKeys = keys.filter(k => k.startsWith('queue_'));
-  
+  const queueKeys = keys.filter((k) => k.startsWith('queue_'));
+
   for (const key of queueKeys) {
     const request: QueuedRequest = JSON.parse(await AsyncStorage.getItem(key));
-    
+
     try {
       const response = await fetch(request.endpoint, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Idempotency-Key': request.idempotencyKey,  // Use original key
+          Authorization: `Bearer ${token}`,
+          'Idempotency-Key': request.idempotencyKey, // Use original key
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(request.body),
       });
-      
+
       if (response.ok || response.status === 409) {
         // Success or already processed → remove from queue
         await AsyncStorage.removeItem(key);
@@ -1349,6 +1395,7 @@ async function syncQueue() {
 - [x] ✅ **Completion Summary Created**: This document
 
 **Future Work** (Not Blocking):
+
 - [ ] Unit tests for `IdempotencyService`
 - [ ] E2E tests for protected endpoints
 - [ ] Redis migration (M16-s2)
@@ -1362,6 +1409,7 @@ async function syncQueue() {
 **M21 is COMPLETE and PRODUCTION-READY.**
 
 **What We Delivered**:
+
 - ✅ Complete idempotency infrastructure (schema, service, interceptor, module)
 - ✅ 19 critical endpoints protected (POS, Reservations, Bookings, Public Portals)
 - ✅ SHA256 full-body fingerprint (detects any parameter change)
@@ -1370,12 +1418,14 @@ async function syncQueue() {
 - ✅ Comprehensive documentation (DEV_GUIDE, curl examples, completion summary)
 
 **Business Value**:
+
 - **Zero duplicate charges** on POS order close (saves 500,000 UGX/month)
 - **Zero duplicate event registrations** from public portal
 - **Zero duplicate kitchen tickets** (improves kitchen efficiency)
 - **95% reduction in customer complaints** about double-charging
 
 **Next Steps**:
+
 1. **Production Deployment**: Apply migration, verify with curl tests
 2. **Client Updates**: Update POS/booking clients to send `Idempotency-Key` header (phased rollout)
 3. **Monitoring**: Track cache hit rate, 409 errors via SQL queries (add Prometheus metrics in M16)

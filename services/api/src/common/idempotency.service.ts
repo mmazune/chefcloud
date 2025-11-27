@@ -1,6 +1,6 @@
 /**
  * M16: Idempotency Service
- * 
+ *
  * Prevents duplicate API requests by storing and checking idempotency keys.
  * Used for safe write operations during network retries and offline sync.
  */
@@ -28,11 +28,7 @@ export class IdempotencyService {
    * Check if idempotency key was already used
    * Returns existing response if key exists and fingerprint matches
    */
-  async check(
-    key: string,
-    endpoint: string,
-    requestBody: any,
-  ): Promise<IdempotencyCheckResult> {
+  async check(key: string, endpoint: string, requestBody: any): Promise<IdempotencyCheckResult> {
     // Calculate request fingerprint
     const requestHash = this.hashRequest(requestBody);
 
@@ -48,15 +44,12 @@ export class IdempotencyService {
 
     // Check if fingerprint matches
     if (existing.requestHash !== requestHash) {
-      this.logger.warn(
-        `Idempotency key ${key} used with different request body`,
-        {
-          key,
-          endpoint,
-          existingHash: existing.requestHash,
-          newHash: requestHash,
-        },
-      );
+      this.logger.warn(`Idempotency key ${key} used with different request body`, {
+        key,
+        endpoint,
+        existingHash: existing.requestHash,
+        newHash: requestHash,
+      });
 
       return {
         isDuplicate: true,
@@ -139,9 +132,7 @@ export class IdempotencyService {
   private hashRequest(requestBody: any): string {
     // Normalize request body (sort keys, remove whitespace)
     const normalized = JSON.stringify(requestBody, Object.keys(requestBody).sort());
-    
-    return createHash('sha256')
-      .update(normalized)
-      .digest('hex');
+
+    return createHash('sha256').update(normalized).digest('hex');
   }
 }

@@ -210,4 +210,18 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
   get idempotencyKey(): typeof prisma.idempotencyKey {
     return prisma.idempotencyKey;
   }
+
+  // M15: Event bookings
+  get eventBooking(): typeof prisma.eventBooking {
+    return prisma.eventBooking;
+  }
+
+  // M18: Documents
+  get document(): typeof prisma.document {
+    return prisma.document;
+  }
+
+  get posting(): typeof prisma.posting {
+    return prisma.posting;
+  }
 }

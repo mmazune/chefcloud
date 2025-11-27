@@ -9,6 +9,7 @@
 ## Executive Summary
 
 M22 adds a **promotion suggestions layer** on top of M19's staff ranking system, enabling managers to:
+
 - **Preview** promotion candidates for a period without persistence
 - **Generate** suggestions with automatic eligibility and threshold checks
 - **Track** decisions (ACCEPTED, REJECTED, IGNORED) for audit and HR compliance
@@ -44,24 +45,24 @@ model PromotionSuggestion {
   orgId             String
   branchId          String?             // NULL for org-level suggestions
   employeeId        String
-  
+
   // Period
   periodType        AwardPeriodType     // Reuse M19 enum (WEEK, MONTH, QUARTER, YEAR)
   periodStart       DateTime
   periodEnd         DateTime
-  
+
   // Suggestion details
   category          SuggestionCategory
   scoreAtSuggestion Decimal             @db.Decimal(10, 4)  // Composite score 0-1
   insightsSnapshot  Json?               // Full M19 metrics at suggestion time
   reason            String              // Why suggested (auto-generated or manual)
-  
+
   // Decision tracking
   status            SuggestionStatus    @default(PENDING)
   statusUpdatedAt   DateTime?
   statusUpdatedById String?
   decisionNotes     String?             // Why accepted/rejected (freetext)
-  
+
   // Audit
   createdAt         DateTime            @default(now())
   createdById       String?             // User who generated (NULL if auto-generated)
@@ -82,6 +83,7 @@ model PromotionSuggestion {
 ```
 
 **Reverse Relations (Add to existing models):**
+
 ```prisma
 model Org {
   // ... existing fields
@@ -107,25 +109,25 @@ model User {
 
 ### Field Descriptions
 
-| Field | Type | Constraints | Description |
-|-------|------|-------------|-------------|
-| `id` | String | PK | CUID |
-| `orgId` | String | FK, NOT NULL | Organization |
-| `branchId` | String | FK, NULL | Branch (NULL for org-level suggestions like franchise manager) |
-| `employeeId` | String | FK, NOT NULL | Employee being suggested |
-| `periodType` | AwardPeriodType | NOT NULL | WEEK, MONTH, QUARTER, YEAR (reuse M19 enum) |
-| `periodStart` | DateTime | NOT NULL | Period start date |
-| `periodEnd` | DateTime | NOT NULL | Period end date |
-| `category` | SuggestionCategory | NOT NULL | PROMOTION, ROLE_CHANGE, TRAINING, PERFORMANCE_REVIEW |
-| `scoreAtSuggestion` | Decimal(10,4) | NOT NULL | Composite score 0-1 at time of suggestion |
-| `insightsSnapshot` | Json | NULL | Full M19 metrics (performance, reliability, risk) for historical reference |
-| `reason` | String | NOT NULL | Human-readable reason (auto-generated or manual) |
-| `status` | SuggestionStatus | DEFAULT PENDING | PENDING, ACCEPTED, REJECTED, IGNORED |
-| `statusUpdatedAt` | DateTime | NULL | When status changed |
-| `statusUpdatedById` | String | FK, NULL | User who made decision |
-| `decisionNotes` | String | NULL | Freetext notes on why accepted/rejected |
-| `createdAt` | DateTime | DEFAULT now() | When suggestion created |
-| `createdById` | String | FK, NULL | User who created (NULL if auto-generated) |
+| Field               | Type               | Constraints     | Description                                                                |
+| ------------------- | ------------------ | --------------- | -------------------------------------------------------------------------- |
+| `id`                | String             | PK              | CUID                                                                       |
+| `orgId`             | String             | FK, NOT NULL    | Organization                                                               |
+| `branchId`          | String             | FK, NULL        | Branch (NULL for org-level suggestions like franchise manager)             |
+| `employeeId`        | String             | FK, NOT NULL    | Employee being suggested                                                   |
+| `periodType`        | AwardPeriodType    | NOT NULL        | WEEK, MONTH, QUARTER, YEAR (reuse M19 enum)                                |
+| `periodStart`       | DateTime           | NOT NULL        | Period start date                                                          |
+| `periodEnd`         | DateTime           | NOT NULL        | Period end date                                                            |
+| `category`          | SuggestionCategory | NOT NULL        | PROMOTION, ROLE_CHANGE, TRAINING, PERFORMANCE_REVIEW                       |
+| `scoreAtSuggestion` | Decimal(10,4)      | NOT NULL        | Composite score 0-1 at time of suggestion                                  |
+| `insightsSnapshot`  | Json               | NULL            | Full M19 metrics (performance, reliability, risk) for historical reference |
+| `reason`            | String             | NOT NULL        | Human-readable reason (auto-generated or manual)                           |
+| `status`            | SuggestionStatus   | DEFAULT PENDING | PENDING, ACCEPTED, REJECTED, IGNORED                                       |
+| `statusUpdatedAt`   | DateTime           | NULL            | When status changed                                                        |
+| `statusUpdatedById` | String             | FK, NULL        | User who made decision                                                     |
+| `decisionNotes`     | String             | NULL            | Freetext notes on why accepted/rejected                                    |
+| `createdAt`         | DateTime           | DEFAULT now()   | When suggestion created                                                    |
+| `createdById`       | String             | FK, NULL        | User who created (NULL if auto-generated)                                  |
 
 ### Unique Constraint
 
@@ -134,10 +136,12 @@ model User {
 ```
 
 **Purpose:** Idempotent suggestion generation. Prevents:
+
 - Duplicate "John Doe, PROMOTION, Nov 2025" suggestions
 - Multiple TRAINING suggestions for same person in same period
 
 **Allowed:**
+
 - ✅ John Doe: PROMOTION + TRAINING in same period (different categories)
 - ✅ John Doe: PROMOTION in Nov + Dec (different periods)
 - ❌ John Doe: PROMOTION in Nov (duplicate, upsert instead)
@@ -163,7 +167,7 @@ model User {
 export class PromotionInsightsService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly staffInsights: StaffInsightsService,  // M19
+    private readonly staffInsights: StaffInsightsService, // M19
   ) {}
 }
 ```
@@ -175,6 +179,7 @@ export class PromotionInsightsService {
 **Purpose:** Generate in-memory promotion suggestions (preview, no persistence)
 
 **Signature:**
+
 ```typescript
 async computeSuggestions(query: {
   orgId: string;
@@ -187,17 +192,19 @@ async computeSuggestions(query: {
 ```
 
 **SuggestionConfig** (optional overrides):
+
 ```typescript
 interface SuggestionConfig {
-  minScoreThreshold?: number;          // Default 0.70 (top 30%)
-  minTenureMonths?: number;            // Default 3 months
-  maxAbsenceRate?: number;             // Default 0.10 (10%)
-  excludeRiskLevels?: RiskLevel[];     // Default ['CRITICAL']
-  categories?: SuggestionCategory[];   // Default ['PROMOTION', 'TRAINING']
+  minScoreThreshold?: number; // Default 0.70 (top 30%)
+  minTenureMonths?: number; // Default 3 months
+  maxAbsenceRate?: number; // Default 0.10 (10%)
+  excludeRiskLevels?: RiskLevel[]; // Default ['CRITICAL']
+  categories?: SuggestionCategory[]; // Default ['PROMOTION', 'TRAINING']
 }
 ```
 
 **Logic:**
+
 1. Call `staffInsights.getStaffInsights(query)` to get ranked staff
 2. Apply M22-specific thresholds:
    - **For PROMOTION:**
@@ -216,25 +223,31 @@ interface SuggestionConfig {
 4. Return DTO array (not saved)
 
 **Example Return:**
+
 ```typescript
 [
   {
-    employeeId: "emp_123",
-    displayName: "John Doe",
-    category: "PROMOTION",
+    employeeId: 'emp_123',
+    displayName: 'John Doe',
+    category: 'PROMOTION',
     scoreAtSuggestion: 0.82,
-    reason: "Consistently high performer (top 15%) with 95% attendance rate and no disciplinary issues",
-    metrics: { /* full M19 insights */ },
+    reason:
+      'Consistently high performer (top 15%) with 95% attendance rate and no disciplinary issues',
+    metrics: {
+      /* full M19 insights */
+    },
   },
   {
-    employeeId: "emp_456",
-    displayName: "Jane Smith",
-    category: "TRAINING",
+    employeeId: 'emp_456',
+    displayName: 'Jane Smith',
+    category: 'TRAINING',
     scoreAtSuggestion: 0.65,
-    reason: "Average check size below branch average - suggest upselling training",
-    metrics: { /* ... */ },
-  }
-]
+    reason: 'Average check size below branch average - suggest upselling training',
+    metrics: {
+      /* ... */
+    },
+  },
+];
 ```
 
 #### 2. generateAndPersistSuggestions()
@@ -242,6 +255,7 @@ interface SuggestionConfig {
 **Purpose:** Generate suggestions AND save to database (idempotent)
 
 **Signature:**
+
 ```typescript
 async generateAndPersistSuggestions(
   query: {
@@ -263,6 +277,7 @@ async generateAndPersistSuggestions(
 **RBAC:** L5 (OWNER) or HR only
 
 **Logic:**
+
 1. Call `computeSuggestions(query)` to get candidates
 2. For each candidate:
    ```typescript
@@ -302,6 +317,7 @@ async generateAndPersistSuggestions(
 3. Return summary: `{ created: [...], updated: [...], total: count }`
 
 **Idempotence:**
+
 - Unique constraint prevents duplicates
 - Running twice in same period updates scores but preserves status (unless PENDING)
 
@@ -310,6 +326,7 @@ async generateAndPersistSuggestions(
 **Purpose:** Query historical suggestions with filters
 
 **Signature:**
+
 ```typescript
 async listSuggestions(filter: {
   orgId: string;
@@ -331,6 +348,7 @@ async listSuggestions(filter: {
 **RBAC:** L4+ (MANAGER, OWNER, HR, ACCOUNTANT)
 
 **Returns:**
+
 ```typescript
 {
   suggestions: [
@@ -365,6 +383,7 @@ async listSuggestions(filter: {
 ```
 
 **Pagination:**
+
 - Default limit: 50
 - Max limit: 200
 
@@ -373,6 +392,7 @@ async listSuggestions(filter: {
 **Purpose:** Mark suggestion as ACCEPTED, REJECTED, or IGNORED
 
 **Signature:**
+
 ```typescript
 async updateSuggestionStatus(
   suggestionId: string,
@@ -387,12 +407,14 @@ async updateSuggestionStatus(
 **RBAC:** L4+ (MANAGER, OWNER, HR)
 
 **Validation:**
+
 - ✅ Suggestion must exist
 - ✅ Actor must have L4+ role or be HR
 - ✅ Org scoping (actor must belong to suggestion's org)
 - ❌ Cannot change status from ACCEPTED to REJECTED (final states)
 
 **Logic:**
+
 ```typescript
 const suggestion = await prisma.promotionSuggestion.findUnique({
   where: { id: suggestionId },
@@ -426,6 +448,7 @@ return prisma.promotionSuggestion.update({
 **Purpose:** Aggregate stats for a period (used in digests)
 
 **Signature:**
+
 ```typescript
 async getSuggestionSummary(query: {
   orgId: string;
@@ -437,6 +460,7 @@ async getSuggestionSummary(query: {
 ```
 
 **Returns:**
+
 ```typescript
 {
   totalSuggestions: 12,
@@ -478,6 +502,7 @@ async getSuggestionSummary(query: {
 **RBAC:** L4+ (MANAGER, OWNER, HR)
 
 **Query Params:**
+
 ```typescript
 {
   periodType: 'WEEK' | 'MONTH' | 'QUARTER' | 'YEAR';
@@ -490,6 +515,7 @@ async getSuggestionSummary(query: {
 ```
 
 **Response:** `PromotionSuggestionDTO[]`
+
 ```json
 [
   {
@@ -510,6 +536,7 @@ async getSuggestionSummary(query: {
 ```
 
 **Example:**
+
 ```bash
 GET /staff/promotion-suggestions/preview?periodType=MONTH&branchId=branch_abc&minScore=0.75
 Authorization: Bearer <JWT>
@@ -522,6 +549,7 @@ Authorization: Bearer <JWT>
 **RBAC:** L5 (OWNER) or HR
 
 **Body:**
+
 ```typescript
 {
   periodType: 'WEEK' | 'MONTH' | 'QUARTER' | 'YEAR';
@@ -537,6 +565,7 @@ Authorization: Bearer <JWT>
 ```
 
 **Response:**
+
 ```json
 {
   "created": [
@@ -561,6 +590,7 @@ Authorization: Bearer <JWT>
 ```
 
 **Example:**
+
 ```bash
 POST /staff/promotion-suggestions/generate
 Authorization: Bearer <JWT>
@@ -583,6 +613,7 @@ Content-Type: application/json
 **RBAC:** L4+ (MANAGER, OWNER, HR, ACCOUNTANT)
 
 **Query Params:**
+
 ```typescript
 {
   branchId?: string;
@@ -598,6 +629,7 @@ Content-Type: application/json
 ```
 
 **Response:**
+
 ```json
 {
   "suggestions": [
@@ -636,6 +668,7 @@ Content-Type: application/json
 ```
 
 **Example:**
+
 ```bash
 GET /staff/promotion-suggestions?employeeId=emp_123&status=PENDING
 Authorization: Bearer <JWT>
@@ -648,6 +681,7 @@ Authorization: Bearer <JWT>
 **RBAC:** L4+ (MANAGER, OWNER, HR)
 
 **Body:**
+
 ```typescript
 {
   status: 'ACCEPTED' | 'REJECTED' | 'IGNORED';
@@ -656,6 +690,7 @@ Authorization: Bearer <JWT>
 ```
 
 **Response:**
+
 ```json
 {
   "id": "sug_123",
@@ -670,6 +705,7 @@ Authorization: Bearer <JWT>
 ```
 
 **Example:**
+
 ```bash
 PATCH /staff/promotion-suggestions/sug_123
 Authorization: Bearer <JWT>
@@ -688,6 +724,7 @@ Content-Type: application/json
 ### Promotion Thresholds
 
 **PROMOTION Suggestions:**
+
 - ✅ Composite score >= 0.70 (configurable, default top 30%)
 - ✅ Tenure >= 3 months (use `employee.createdAt` as proxy)
 - ✅ Attendance rate >= 90%
@@ -695,22 +732,26 @@ Content-Type: application/json
 - ✅ Min 10 shifts in period (M19 eligibility)
 
 **TRAINING Suggestions:**
+
 - ✅ Low avg check (< 50th percentile) → upselling training
 - ✅ High void rate (> 5% of orders) → POS training
 - ✅ High no-drinks rate (> 10%) → suggestive selling training
 - ✅ Min 1 month tenure (no training spam for new hires)
 
 **PERFORMANCE_REVIEW Suggestions:**
+
 - ✅ Top 10% (score >= 0.85) → fast-track review
 - ✅ Or: Bottom 10% (score <= 0.50) → improvement plan
 - ✅ Min 3 months tenure
 
 **ROLE_CHANGE Suggestions:**
+
 - ❌ Manual only (cannot auto-detect lateral move suitability)
 
 ### Exclusion Rules
 
 Never suggest if:
+
 - ❌ CRITICAL risk level (anti-theft flags)
 - ❌ Absence rate > 15%
 - ❌ Less than min shifts for period (3 WEEK, 10 MONTH, etc.)
@@ -719,6 +760,7 @@ Never suggest if:
 ### Period Resolution
 
 Reuse M19 period logic:
+
 - **WEEK**: ISO week (Monday-Sunday)
 - **MONTH**: Calendar month
 - **QUARTER**: Q1 (Jan-Mar), Q2 (Apr-Jun), Q3 (Jul-Sep), Q4 (Oct-Dec)
@@ -727,21 +769,22 @@ Reuse M19 period logic:
 ### Reason Generation
 
 **Auto-generated reasons (examples):**
+
 ```typescript
 // PROMOTION
-"Consistently high performer (top 15%) with 95% attendance rate and no disciplinary issues over 3 consecutive months"
+'Consistently high performer (top 15%) with 95% attendance rate and no disciplinary issues over 3 consecutive months';
 
 // TRAINING - Low avg check
-"Average check size (12,500 UGX) below branch average (18,000 UGX) - suggest upselling training to improve customer spend"
+'Average check size (12,500 UGX) below branch average (18,000 UGX) - suggest upselling training to improve customer spend';
 
 // TRAINING - High voids
-"Void rate (8%) above acceptable threshold (5%) - suggest POS system training to reduce order errors"
+'Void rate (8%) above acceptable threshold (5%) - suggest POS system training to reduce order errors';
 
 // PERFORMANCE_REVIEW - Top performer
-"Top 5% performer in branch with composite score 0.92 - recommend for fast-track promotion review"
+'Top 5% performer in branch with composite score 0.92 - recommend for fast-track promotion review';
 
 // PERFORMANCE_REVIEW - Underperformer
-"Bottom 10% performer with declining metrics over 2 months - recommend improvement plan and coaching"
+'Bottom 10% performer with declining metrics over 2 months - recommend improvement plan and coaching';
 ```
 
 ---
@@ -753,29 +796,31 @@ Reuse M19 period logic:
 **File:** `services/api/src/reports/dto/report-content.dto.ts`
 
 **Add to `PeriodDigest` interface:**
+
 ```typescript
 export interface PeriodDigest {
   // ... existing fields (period, branches, sales, inventory, etc.)
 
   // M22: Promotion suggestions
   staffPromotions?: {
-    periodLabel: string;                    // "November 2025"
-    suggestedCount: number;                 // Total suggestions generated
-    acceptedCount: number;                  // Suggestions accepted
-    rejectedCount: number;                  // Suggestions rejected
-    pendingCount: number;                   // Awaiting decision
+    periodLabel: string; // "November 2025"
+    suggestedCount: number; // Total suggestions generated
+    acceptedCount: number; // Suggestions accepted
+    rejectedCount: number; // Suggestions rejected
+    pendingCount: number; // Awaiting decision
     byCategory: {
-      promotions: number;                   // PROMOTION suggestions
-      training: number;                     // TRAINING suggestions
-      reviews: number;                      // PERFORMANCE_REVIEW suggestions
-      roleChanges: number;                  // ROLE_CHANGE suggestions
+      promotions: number; // PROMOTION suggestions
+      training: number; // TRAINING suggestions
+      reviews: number; // PERFORMANCE_REVIEW suggestions
+      roleChanges: number; // ROLE_CHANGE suggestions
     };
-    topSuggestions: Array<{                 // Top 3 by score
-      displayName: string;                  // "John Doe"
-      branchName: string;                   // "Downtown Branch"
+    topSuggestions: Array<{
+      // Top 3 by score
+      displayName: string; // "John Doe"
+      branchName: string; // "Downtown Branch"
       category: 'PROMOTION' | 'TRAINING' | 'PERFORMANCE_REVIEW';
-      reason: string;                       // "Consistently high performer..."
-      score: number;                        // 0.82
+      reason: string; // "Consistently high performer..."
+      score: number; // 0.82
       status: 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'IGNORED';
     }>;
   };
@@ -785,6 +830,7 @@ export interface PeriodDigest {
 ### Franchise Digest Extension
 
 **Add to `FranchiseDigest` interface:**
+
 ```typescript
 export interface FranchiseDigest {
   // ... existing fields
@@ -792,24 +838,29 @@ export interface FranchiseDigest {
   // M22: Cross-branch promotion candidates
   franchisePromotions?: {
     periodLabel: string;
-    topCandidatesAcrossOrg: Array<{         // Top 5 across all branches
-      displayName: string;                  // "John Doe"
-      branchName: string;                   // "Downtown Branch"
-      currentPosition: string;              // "Senior Waiter"
+    topCandidatesAcrossOrg: Array<{
+      // Top 5 across all branches
+      displayName: string; // "John Doe"
+      branchName: string; // "Downtown Branch"
+      currentPosition: string; // "Senior Waiter"
       suggestedCategory: 'PROMOTION' | 'TRAINING';
-      compositeScore: number;               // 0.88
+      compositeScore: number; // 0.88
       status: 'PENDING' | 'ACCEPTED';
     }>;
-    byBranch: Record<string, {              // Per-branch summary
-      branchName: string;
-      suggestedCount: number;
-      acceptedCount: number;
-      topCandidate: {
-        displayName: string;
-        category: string;
-        score: number;
-      } | null;
-    }>;
+    byBranch: Record<
+      string,
+      {
+        // Per-branch summary
+        branchName: string;
+        suggestedCount: number;
+        acceptedCount: number;
+        topCandidate: {
+          displayName: string;
+          category: string;
+          score: number;
+        } | null;
+      }
+    >;
   };
 }
 ```
@@ -819,6 +870,7 @@ export interface FranchiseDigest {
 **File:** `services/api/src/reports/report-generator.service.ts`
 
 **Add helper method:**
+
 ```typescript
 /**
  * Generate staff promotions summary for period digest
@@ -874,6 +926,7 @@ private async generateStaffPromotions(
 ```
 
 **Usage in `generatePeriodDigest()` (existing method):**
+
 ```typescript
 async generatePeriodDigest(query: GenerateDigestDto, actor: RequestContext): Promise<PeriodDigest> {
   // ... existing logic
@@ -932,7 +985,7 @@ export interface PromotionSuggestionDTO {
   category: SuggestionCategory;
   scoreAtSuggestion: number;
   reason: string;
-  metrics?: any;  // Full M19 CombinedStaffMetrics
+  metrics?: any; // Full M19 CombinedStaffMetrics
 }
 
 export interface PromotionSuggestionWithEmployee {
@@ -1008,7 +1061,7 @@ export class PreviewSuggestionsQueryDto {
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
-  categories?: string;  // Comma-separated
+  categories?: string; // Comma-separated
 }
 
 export class GenerateSuggestionsDto {
@@ -1111,6 +1164,7 @@ export class UpdateSuggestionStatusDto {
 **File:** `services/api/src/staff/promotion-insights.service.spec.ts`
 
 **Test Cases:**
+
 1. ✅ `computeSuggestions()` returns PROMOTION for high-scoring staff (>= 0.70)
 2. ✅ `computeSuggestions()` excludes CRITICAL risk staff
 3. ✅ `computeSuggestions()` excludes staff with high absence rate (> 15%)
@@ -1127,6 +1181,7 @@ export class UpdateSuggestionStatusDto {
 **File:** `services/api/test/promotion-insights.e2e-spec.ts`
 
 **Test Cases:**
+
 1. ✅ GET `/preview` returns suggestions without saving (DB unchanged)
 2. ✅ POST `/generate` creates suggestions in DB
 3. ✅ POST `/generate` is idempotent (second call updates, not duplicates)

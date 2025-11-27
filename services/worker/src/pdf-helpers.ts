@@ -1,6 +1,6 @@
 /**
  * M4: PDF Generation Helpers for Worker
- * 
+ *
  * Generates professional PDF reports for shift-end reports.
  */
 
@@ -130,7 +130,7 @@ export async function generateShiftEndPDF(
       doc.fontSize(10);
       for (const station of report.kdsMetrics.byStation) {
         doc.text(
-          `  ${station.station}: Green ${station.green}, Orange ${station.orange}, Red ${station.red}`
+          `  ${station.station}: Green ${station.green}, Orange ${station.orange}, Red ${station.red}`,
         );
       }
       doc.moveDown(1);

@@ -9,22 +9,26 @@
 ## I. Design Principles
 
 ### 1. Single Source of Truth
+
 - **One** tax calculation service (`TaxService`)
 - **One** tax configuration source (`OrgSettings.taxMatrix`)
 - All business domains use same service (POS, events, reservations, service providers)
 
 ### 2. Backwards Compatibility
+
 - Existing orders with legacy tax keep working
 - Migration path for `TaxCategory` → `taxMatrix`
 - No breaking changes to external APIs
 
 ### 3. Separation of Concerns
+
 - **Tax calculation** = TaxService responsibility
 - **GL posting** = AccountingService responsibility
 - **Currency conversion** = CurrencyService responsibility
 - Services compose, don't duplicate logic
 
 ### 4. Pragmatic Multi-Currency
+
 - **V1**: Constrain to single currency per transaction (document limitation)
 - **V2** (future): Full multi-currency with FX gain/loss accounting
 
@@ -42,6 +46,7 @@ Organization (baseCurrencyCode: "UGX")
 ```
 
 **Resolution Logic**:
+
 1. Check `Branch.currencyCode` (branch-specific)
 2. Fallback to `OrgSettings.baseCurrencyCode`
 3. Fallback to `OrgSettings.currency` (legacy)
@@ -50,6 +55,7 @@ Organization (baseCurrencyCode: "UGX")
 ### B. Exchange Rate Management
 
 **Manual Entry** (V1):
+
 ```typescript
 POST /settings/exchange-rate
 {
@@ -61,6 +67,7 @@ POST /settings/exchange-rate
 ```
 
 **Automatic Update** (V2 - Future):
+
 ```typescript
 // Cron job fetches daily rates from Bank of Uganda API
 GET https://www.bou.or.ug/bou/rates_downloads/INTER_BANK.xml
@@ -91,14 +98,15 @@ Order {
 ```
 
 **Validation**:
+
 ```typescript
 // services/api/src/pos/pos.service.ts
 async createOrder(dto, userId, branchId) {
   const branchCurrency = await this.currencyService.getBranchCurrency(branchId);
-  
+
   // Validate all menu items are priced in branch currency
   // (Future: if MenuItem has currencyCode field, check here)
-  
+
   return this.prisma.client.order.create({ /* ... */ });
 }
 ```
@@ -119,6 +127,7 @@ Response:
 ```
 
 **V2 Fix**:
+
 ```typescript
 GET /digests/123?currency=UGX
 
@@ -143,6 +152,7 @@ Response:
 ### A. Tax Matrix Structure
 
 **Recommended taxMatrix**:
+
 ```json
 {
   "defaultTax": {
@@ -159,12 +169,12 @@ Response:
   },
   "zeroRated": {
     "code": "VAT_ZERO",
-    "rate": 0.00,
+    "rate": 0.0,
     "inclusive": false,
     "description": "Zero-rated (exports, medical)"
   },
   "serviceCharge": {
-    "rate": 0.10,
+    "rate": 0.1,
     "inclusive": false,
     "description": "Service charge (10%, added at end)"
   }
@@ -172,6 +182,7 @@ Response:
 ```
 
 **Fields**:
+
 - `code` (String): Tax identifier for eFIRS/URA integration
 - `rate` (Decimal): Tax rate (0.18 = 18%)
 - `inclusive` (Boolean): Tax included in display price?
@@ -188,6 +199,7 @@ Response:
 ```
 
 **Example**:
+
 ```typescript
 // MenuItem for Beer
 {
@@ -211,6 +223,7 @@ tax = 5000 - 4347.83 = 652.17
 ### C. Tax Calculation Service (Refactored)
 
 **Existing** (`TaxService`):
+
 ```typescript
 // E39-S1 implementation (already exists)
 async resolveLineTax(orgId: string, itemId: string): Promise<TaxRule>
@@ -220,6 +233,7 @@ applyRounding(orgId: string, amount: number, currencyCode: string): Promise<numb
 ```
 
 **New Methods** (M17 additions):
+
 ```typescript
 /**
  * Calculate order totals with tax breakdown
@@ -265,11 +279,12 @@ interface OrderTotals {
 ```
 
 **Usage in POS**:
+
 ```typescript
 // services/api/src/pos/pos.service.ts
 async createOrder(dto, userId, branchId) {
   const orgId = await this.getOrgId(branchId);
-  
+
   // Single call to tax service (replaces inline calculation)
   const totals = await this.taxService.calculateOrderTotals({
     orgId,
@@ -279,7 +294,7 @@ async createOrder(dto, userId, branchId) {
       quantity: item.qty,
     })),
   });
-  
+
   await this.prisma.client.order.create({
     data: {
       branchId,
@@ -298,12 +313,13 @@ async createOrder(dto, userId, branchId) {
 ### D. Tax on Events & Reservations
 
 **EventBooking Schema** (new fields):
+
 ```prisma
 model EventBooking {
   // Existing
   depositIntentId String?
   creditTotal     Decimal @default(0) @db.Decimal(12, 2)
-  
+
   // NEW: Tax breakdown
   netAmount       Decimal? @db.Decimal(12, 2)   // Deposit net of tax
   taxAmount       Decimal? @db.Decimal(12, 2)   // Tax on deposit
@@ -314,6 +330,7 @@ model EventBooking {
 ```
 
 **Tax Calculation**:
+
 ```typescript
 // services/api/src/public-booking/public-booking.service.ts
 async createEventBooking(dto: CreateEventBookingDto) {
@@ -321,18 +338,18 @@ async createEventBooking(dto: CreateEventBookingDto) {
     where: { id: dto.eventTableId },
     include: { event: { include: { branch: true } } },
   });
-  
+
   const orgId = eventTable.event.orgId;
-  
+
   // Resolve tax rule (use defaultTax or "events" category)
   const taxRule = await this.taxService.getTaxRule(orgId, 'events');
-  
+
   // Calculate deposit tax
   const depositCalc = this.taxService.calculateTax(
     eventTable.deposit,
     taxRule,
   );
-  
+
   const booking = await this.prisma.client.eventBooking.create({
     data: {
       eventId: dto.eventId,
@@ -347,7 +364,7 @@ async createEventBooking(dto: CreateEventBookingDto) {
       taxInclusive: taxRule.inclusive,
     },
   });
-  
+
   // Create PaymentIntent for gross amount
   await this.paymentsService.createPaymentIntent({
     orgId,
@@ -363,6 +380,7 @@ async createEventBooking(dto: CreateEventBookingDto) {
 **Decision**: Reservations remain **price-free** (no deposit required)
 
 **Rationale**:
+
 - Reservation = table hold (no payment)
 - EventBooking = paid table booking (has deposit)
 - If restaurant wants paid reservations, use EventBooking model
@@ -376,25 +394,28 @@ async createEventBooking(dto: CreateEventBookingDto) {
 ### A. Chart of Accounts (New Accounts)
 
 **Add to COA**:
-| Code  | Name                 | Type      | Description               |
+| Code | Name | Type | Description |
 | ----- | -------------------- | --------- | ------------------------- |
-| 2310  | VAT Payable          | LIABILITY | Output VAT owed to URA    |
-| 2320  | VAT Receivable       | ASSET     | Input VAT on purchases    |
-| 4010  | Sales Revenue (Net)  | REVENUE   | Revenue net of tax        |
-| 4020  | Service Charge       | REVENUE   | Service charge income     |
+| 2310 | VAT Payable | LIABILITY | Output VAT owed to URA |
+| 2320 | VAT Receivable | ASSET | Input VAT on purchases |
+| 4010 | Sales Revenue (Net) | REVENUE | Revenue net of tax |
+| 4020 | Service Charge | REVENUE | Service charge income |
 
 **Legacy Account**:
+
 - 4000 "Sales Revenue" → Rename to "Sales Revenue (Gross)" or deprecate
 
 ### B. POS Order Close Posting (Tax Split)
 
 **Current** (M8 - incorrect):
+
 ```typescript
 // Dr Cash = gross
 // Cr Sales Revenue = gross  ← WRONG!
 ```
 
 **Target** (M17):
+
 ```typescript
 // Order: 11,800 UGX (10,000 net + 1,800 VAT)
 
@@ -404,6 +425,7 @@ Dr  1000 Cash                  11,800
 ```
 
 **With Service Charge**:
+
 ```typescript
 // Order: 13,100 UGX (10,000 net + 1,800 VAT + 1,300 service charge)
 
@@ -414,6 +436,7 @@ Dr  1000 Cash                  13,100
 ```
 
 **Implementation**:
+
 ```typescript
 // services/api/src/accounting/gl-posting.service.ts (NEW)
 async postOrderClose(orderId: string): Promise<void> {
@@ -421,19 +444,19 @@ async postOrderClose(orderId: string): Promise<void> {
     where: { id: orderId },
     include: { payments: true },
   });
-  
+
   const taxBreakdown = order.metadata?.taxBreakdown || {
     subtotal: { net: order.subtotal, tax: order.tax },
     serviceCharge: { amount: 0 },
   };
-  
+
   const entries: JournalEntry[] = [];
-  
+
   // Dr Cash (from payments)
   const totalCash = order.payments
     .filter(p => p.method === 'CASH')
     .reduce((sum, p) => sum + Number(p.amount), 0);
-  
+
   if (totalCash > 0) {
     entries.push({
       accountCode: '1000',  // Cash
@@ -441,14 +464,14 @@ async postOrderClose(orderId: string): Promise<void> {
       credit: 0,
     });
   }
-  
+
   // Cr Sales Revenue (net)
   entries.push({
     accountCode: '4010',  // Sales Revenue (Net)
     debit: 0,
     credit: taxBreakdown.subtotal.net,
   });
-  
+
   // Cr VAT Payable
   if (taxBreakdown.subtotal.tax > 0) {
     entries.push({
@@ -457,7 +480,7 @@ async postOrderClose(orderId: string): Promise<void> {
       credit: taxBreakdown.subtotal.tax,
     });
   }
-  
+
   // Cr Service Charge
   if (taxBreakdown.serviceCharge.amount > 0) {
     entries.push({
@@ -466,7 +489,7 @@ async postOrderClose(orderId: string): Promise<void> {
       credit: taxBreakdown.serviceCharge.amount,
     });
   }
-  
+
   await this.prisma.client.journalEntry.createMany({
     data: entries.map(e => ({
       periodId: currentPeriod.id,
@@ -502,6 +525,7 @@ Dr  2320 VAT Receivable        18,000  // Input VAT (can reclaim)
 ```
 
 **Tax Remittance** (when paying URA):
+
 ```typescript
 // Output VAT collected: 50,000
 // Input VAT paid: 18,000
@@ -515,6 +539,7 @@ Dr  2310 VAT Payable           50,000
 ### E. Trial Balance Impact
 
 **Before M17** (incorrect):
+
 ```
 Assets:
   Cash                    500,000
@@ -535,6 +560,7 @@ Balance: ✅ (assets = liabilities + equity + revenue - expenses)
 ```
 
 **After M17** (correct):
+
 ```
 Assets:
   Cash                    500,000
@@ -606,6 +632,7 @@ Response:
 ```
 
 **Implementation**:
+
 ```typescript
 // services/api/src/reports/tax-report.service.ts (NEW)
 async getTaxSummary(params: {
@@ -621,13 +648,13 @@ async getTaxSummary(params: {
     },
     include: { branch: true },
   });
-  
+
   // Aggregate tax by code
   const taxCollected = {};
-  
+
   for (const order of orders) {
     const breakdown = order.metadata?.taxBreakdown;
-    
+
     if (breakdown) {
       for (const item of breakdown.items) {
         const taxCode = item.taxRule.code || 'VAT_STD';
@@ -638,7 +665,7 @@ async getTaxSummary(params: {
       taxCollected['VAT_STD'] = (taxCollected['VAT_STD'] || 0) + Number(order.tax);
     }
   }
-  
+
   // Query vendor bills (input VAT)
   const bills = await this.prisma.client.vendorBill.findMany({
     where: {
@@ -646,9 +673,9 @@ async getTaxSummary(params: {
       billDate: { gte: params.startDate, lte: params.endDate },
     },
   });
-  
+
   const taxPaid = bills.reduce((sum, bill) => sum + Number(bill.tax || 0), 0);
-  
+
   return {
     period: { startDate: params.startDate, endDate: params.endDate },
     currency: await this.currencyService.getOrgCurrency(params.orgId),
@@ -710,20 +737,24 @@ Response:
 ChefCloud V1 supports multi-currency **configuration** but has the following constraints:
 
 ### Transaction Currency
+
 - All items in an order must be in the **same currency** as the branch.
 - Mixed-currency orders are not supported.
 - Attempting to add a USD item to a UGX order will fail validation.
 
 ### Reporting Currency
+
 - Owner digests aggregate amounts in **transaction currency** (no conversion).
 - If Branch A uses UGX and Branch B uses USD, digest shows separate totals.
 - **Workaround**: Manually convert amounts using exchange rates.
 
 ### FX Gain/Loss
+
 - Exchange rate fluctuations are **not** automatically reflected in GL.
 - FX gain/loss accounts do not exist in V1.
 
 ### V2 Roadmap
+
 - Full multi-currency with automatic conversion
 - Home currency reporting (convert all to base currency)
 - FX gain/loss accounting
@@ -739,16 +770,16 @@ async createOrder(dto, userId, branchId) {
     where: { id: branchId },
     include: { org: { include: { settings: true } } },
   });
-  
-  const branchCurrency = branch.currencyCode || 
+
+  const branchCurrency = branch.currencyCode ||
                          branch.org.settings.baseCurrencyCode ||
                          branch.org.settings.currency ||
                          'UGX';
-  
+
   // Validate all menu items are in branch currency
   // (For V1, assume all items inherit branch currency)
   // (V2 will add MenuItem.currencyCode field)
-  
+
   // For now, just document constraint
   this.logger.log(`Creating order in ${branchCurrency} for branch ${branchId}`);
 }
@@ -757,6 +788,7 @@ async createOrder(dto, userId, branchId) {
 ### C. Future: FX Conversion in Digests
 
 **V2 Design** (not implemented in M17):
+
 ```typescript
 GET /digests/123?currency=USD
 
@@ -772,6 +804,7 @@ GET /digests/123?currency=USD
 ### A. Deprecate TaxCategory (Gradual)
 
 **Phase 1** (M17): Add TaxService to POS (keep TaxCategory as fallback)
+
 ```typescript
 // Resolve tax rule (prefer taxMatrix, fallback to taxCategory)
 let taxRule;
@@ -783,7 +816,7 @@ if (menuItem.metadata?.taxCode) {
   taxRule = {
     code: menuItem.taxCategory.efirsTaxCode || 'VAT_STD',
     rate: Number(menuItem.taxCategory.rate) / 100,
-    inclusive: false,  // Assume exclusive for legacy
+    inclusive: false, // Assume exclusive for legacy
   };
 } else {
   taxRule = await this.taxService.getTaxMatrix(orgId).defaultTax;
@@ -791,29 +824,30 @@ if (menuItem.metadata?.taxCode) {
 ```
 
 **Phase 2** (Post-M17): Migrate existing TaxCategory data
+
 ```typescript
 // Script: services/api/scripts/migrate-tax-categories.ts
 async function migrateTaxCategories() {
   const orgs = await prisma.org.findMany({
     include: { taxCategories: true, settings: true },
   });
-  
+
   for (const org of orgs) {
     const taxMatrix = {};
-    
+
     for (const category of org.taxCategories) {
       taxMatrix[category.name.toLowerCase()] = {
         code: category.efirsTaxCode || `TAX_${category.id}`,
         rate: Number(category.rate) / 100,
-        inclusive: true,  // Assume inclusive (East Africa default)
+        inclusive: true, // Assume inclusive (East Africa default)
       };
     }
-    
+
     await prisma.orgSettings.update({
       where: { orgId: org.id },
       data: { taxMatrix },
     });
-    
+
     console.log(`Migrated ${org.taxCategories.length} tax categories for ${org.name}`);
   }
 }
@@ -824,6 +858,7 @@ async function migrateTaxCategories() {
 ### B. Legacy Order Support
 
 **Existing orders** (no taxBreakdown in metadata):
+
 ```typescript
 // services/api/src/reports/tax-report.service.ts
 if (order.metadata?.taxBreakdown) {
@@ -844,6 +879,7 @@ if (order.metadata?.taxBreakdown) {
 ### A. Unit Tests
 
 **New Test Files**:
+
 1. `services/api/src/tax/tax-calculator.spec.ts`
    - `calculateOrderTotals()` with multiple items
    - Tax-inclusive vs tax-exclusive menus
@@ -863,7 +899,9 @@ if (order.metadata?.taxBreakdown) {
 ### B. Integration Tests
 
 **E2E Test Scenarios**:
+
 1. **POS Order with Tax-Inclusive Menu**
+
    ```typescript
    // Setup: OrgSettings.taxMatrix with 18% VAT inclusive
    // Create order with 2 items
@@ -871,6 +909,7 @@ if (order.metadata?.taxBreakdown) {
    ```
 
 2. **Event Booking with Deposit + Tax**
+
    ```typescript
    // Create event with 50,000 UGX deposit
    // Calculate tax: 42,372 net + 7,628 VAT
@@ -878,6 +917,7 @@ if (order.metadata?.taxBreakdown) {
    ```
 
 3. **GL Posting Verification**
+
    ```typescript
    // Close order with 11,800 total (10,000 net + 1,800 tax)
    // Assert journal entries:
@@ -920,6 +960,7 @@ if (order.metadata?.taxBreakdown) {
 ## X. File Structure
 
 **New Files**:
+
 ```
 services/api/src/
 ├── tax/
@@ -937,6 +978,7 @@ services/api/src/
 ```
 
 **Modified Files**:
+
 ```
 services/api/src/
 ├── pos/pos.service.ts                         (tax calculation)
@@ -952,6 +994,7 @@ services/api/src/
 **Status**: Design complete ✅
 
 **Key Decisions**:
+
 1. ✅ Use existing TaxService (no breaking changes)
 2. ✅ Add `calculateOrderTotals()` orchestration method
 3. ✅ Split tax in GL postings (VAT Payable account)

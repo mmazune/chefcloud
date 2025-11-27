@@ -2,7 +2,12 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 
 export interface CreateSubscriptionDto {
-  reportType: 'SHIFT_END' | 'DAILY_SUMMARY' | 'WEEKLY_SUMMARY' | 'MONTHLY_SUMMARY' | 'FRANCHISE_WEEKLY';
+  reportType:
+    | 'SHIFT_END'
+    | 'DAILY_SUMMARY'
+    | 'WEEKLY_SUMMARY'
+    | 'MONTHLY_SUMMARY'
+    | 'FRANCHISE_WEEKLY';
   branchId?: string;
   deliveryChannel?: 'EMAIL' | 'SLACK';
   recipientType: 'USER' | 'ROLE';

@@ -10,9 +10,9 @@ export interface JwtPayload {
   email: string;
   orgId: string;
   roleLevel: string;
-  sv?: number;      // E25: Session version for revocation
+  sv?: number; // E25: Session version for revocation
   badgeId?: string; // E25: Badge ID if authenticated via badge swipe
-  jti?: string;     // E25: JWT ID for deny list lookup
+  jti?: string; // E25: JWT ID for deny list lookup
   sessionId?: string; // M10: Session ID for lifecycle tracking
   platform?: string; // M10: Platform (WEB_BACKOFFICE, POS_DESKTOP, etc.)
 }
@@ -51,7 +51,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       // Touch session if throttle period elapsed (updates lastActivityAt)
       if (validation.shouldTouch) {
         // Fire and forget - don't await to avoid slowing down request
-        this.sessionsService.touchSession(payload.sessionId).catch(err => {
+        this.sessionsService.touchSession(payload.sessionId).catch((err) => {
           // Log error but don't fail the request
           console.error('Failed to touch session:', err);
         });

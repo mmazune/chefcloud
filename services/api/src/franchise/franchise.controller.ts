@@ -11,6 +11,7 @@ import {
   ForecastItemData,
   ProcurementSuggestion,
 } from './franchise.service';
+import { FranchiseOverviewService } from './franchise-overview.service';
 
 interface RequestWithUser {
   user: {
@@ -36,6 +37,7 @@ export class FranchiseController {
 
   constructor(
     private franchiseService: FranchiseService,
+    private franchiseOverviewService: FranchiseOverviewService,
     private cacheService: CacheService,
   ) {}
 
@@ -244,5 +246,37 @@ export class FranchiseController {
   @Roles('L5')
   async approvePOs(@Request() req: RequestWithUser, @Body() body: { poIds: string[] }) {
     return this.franchiseService.approvePOs(req.user.orgId, body.poIds);
+  }
+
+  @ApiOperation({
+    summary: 'Branch metrics for analytics',
+    description: 'Get per-branch KPIs for analytics dashboard (M25-S2)',
+  })
+  @ApiQuery({ name: 'from', required: true, type: String })
+  @ApiQuery({ name: 'to', required: true, type: String })
+  @Get('branch-metrics')
+  @Roles('L4', 'L5', 'ACCOUNTANT')
+  async getBranchMetrics(
+    @Request() req: RequestWithUser,
+    @Query('from') from: string,
+    @Query('to') to: string,
+  ) {
+    if (!from || !to) {
+      return { error: 'Missing from/to date parameters' };
+    }
+
+    const fromDate = new Date(from);
+    const toDate = new Date(to);
+
+    if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime())) {
+      return { error: 'Invalid date format' };
+    }
+
+    const summary = await this.franchiseOverviewService.getFranchiseSummary(
+      req.user.orgId,
+      fromDate,
+      toDate,
+    );
+    return summary.branches;
   }
 }

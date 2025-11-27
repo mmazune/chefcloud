@@ -19,6 +19,7 @@ This inventory analyzes the existing ChefCloud codebase to identify any existing
 ### Models Reviewed
 
 #### Order Model (line 783)
+
 ```prisma
 model Order {
   id           String      @id @default(cuid())
@@ -41,6 +42,7 @@ model Order {
 ```
 
 **Findings**:
+
 - ❌ No `rating` or `score` field
 - ❌ No `customerComment` or `feedback` field
 - ❌ No `npsScore` field
@@ -48,6 +50,7 @@ model Order {
 - ✅ Has `anomalyFlags` (for anti-theft, not customer satisfaction)
 
 #### Reservation Model (line 629)
+
 ```prisma
 model Reservation {
   id              String            @id @default(cuid())
@@ -73,11 +76,13 @@ model Reservation {
 ```
 
 **Findings**:
+
 - ❌ No feedback/rating fields
 - ❌ No post-visit satisfaction tracking
 - ✅ Has `reminderSentAt` (could send feedback request SMS/email after visit)
 
 #### EventBooking Model (line 2138)
+
 ```prisma
 model EventBooking {
   id              String             @id @default(cuid())
@@ -101,6 +106,7 @@ model EventBooking {
 ```
 
 **Findings**:
+
 - ❌ No feedback/rating fields
 - ✅ Has `metadata` JSON field
 - ✅ Has `email` field (could send post-event feedback request)
@@ -108,6 +114,7 @@ model EventBooking {
 ### Existing Score/Rating Fields
 
 **grep search results for "rating|review|feedback|comment|nps|satisfaction|score"**:
+
 - Line 1873: `score Decimal @db.Decimal(10, 2)` → **WaiterMetrics model** (M5 performance scoring, NOT customer feedback)
 - Line 2440: `score Decimal @db.Decimal(10, 4)` → **StaffAward model** (M19 staff performance, NOT customer feedback)
 - Line 2442: `scoreSnapshot Json?` → **StaffAward model** (M19 staff metrics snapshot)
@@ -119,6 +126,7 @@ model EventBooking {
 ## 2. API/Controller Analysis
 
 ### Searched For
+
 - `feedback` controller or endpoints
 - `review` endpoints
 - `rating` endpoints
@@ -135,6 +143,7 @@ model EventBooking {
 ### PeriodDigest DTO (services/api/src/reports/dto/report-content.dto.ts)
 
 Current structure includes:
+
 ```typescript
 export interface PeriodDigest {
   reportId: string;
@@ -154,6 +163,7 @@ export interface PeriodDigest {
 ```
 
 **Findings**:
+
 - ❌ No `customerFeedback` or `nps` section
 - ✅ Structure supports adding new optional sections (like `staffInsights` in M19)
 
@@ -174,6 +184,7 @@ export interface FranchiseDigest {
 ```
 
 **Findings**:
+
 - ❌ No `customerFeedback` or `nps` section
 - ✅ Structure supports adding new optional sections
 
@@ -184,6 +195,7 @@ export interface FranchiseDigest {
 ### Email/SMS Channels
 
 From `ReservationReminder` model (line 664):
+
 ```prisma
 model ReservationReminder {
   id            String    @id @default(cuid())
@@ -197,6 +209,7 @@ model ReservationReminder {
 ```
 
 **Findings**:
+
 - ✅ Infrastructure exists to send SMS/email reminders
 - ✅ Could be extended to send post-visit feedback requests
 - ✅ Has `channel` and `target` pattern we can reuse
@@ -204,6 +217,7 @@ model ReservationReminder {
 ### Document Storage (M18)
 
 From M18 implementation:
+
 ```prisma
 model Document {
   id                String            @id @default(cuid())
@@ -219,16 +233,19 @@ model Document {
 ```
 
 **Findings**:
+
 - ✅ Can link documents to orders/reservations/events
 - ✅ Could potentially attach feedback screenshots or uploaded images (future)
 
 ### Metadata Fields
 
 Several models have `metadata Json?` fields:
+
 - Order.metadata
 - EventBooking.metadata
 
 **Findings**:
+
 - ⚠️ Could temporarily store feedback in metadata JSON
 - ❌ Not structured, not queryable, not suitable for NPS aggregation
 - ❌ Not recommended for production feedback system
@@ -238,6 +255,7 @@ Several models have `metadata Json?` fields:
 ## 5. Gap Analysis
 
 ### What We HAVE
+
 1. ✅ Order, Reservation, EventBooking models to link feedback to
 2. ✅ Email/SMS infrastructure (ReservationReminder pattern)
 3. ✅ Org/Branch hierarchy for aggregation
@@ -248,6 +266,7 @@ Several models have `metadata Json?` fields:
 ### What We NEED (M20 Requirements)
 
 #### 1. Core Feedback Model ❌
+
 - New `Feedback` table with:
   - Links to Order/Reservation/EventBooking
   - NPS-style score (0-10)
@@ -258,21 +277,25 @@ Several models have `metadata Json?` fields:
   - Timestamps and optional user link
 
 #### 2. NPS Calculation Logic ❌
+
 - Compute NPS = %Promoters - %Detractors
 - Aggregate by org/branch/period
 - Filter by date range, channel, linked entity type
 
 #### 3. Public Feedback Submission ❌
+
 - Public API endpoint (no auth or token-based)
 - Allows guests to submit feedback after order/reservation/event
 - Validates links to org/branch entities
 
 #### 4. Internal Feedback Management APIs ❌
+
 - List/filter feedback (RBAC: L4+ only)
 - View single feedback record (RBAC: L4+, HR)
 - NPS summary endpoint (RBAC: L4+, ACCOUNTANT)
 
 #### 5. Digest Integration ❌
+
 - Extend PeriodDigest with `customerFeedback` section:
   - NPS score for period
   - Total feedback count
@@ -281,6 +304,7 @@ Several models have `metadata Json?` fields:
 - Extend FranchiseDigest with cross-branch NPS comparison
 
 #### 6. Privacy & RBAC Considerations ❌
+
 - Public submission (anonymous or minimal auth)
 - L1-L3 staff: NO access to feedback (privacy)
 - L4-L5 managers/owners: Full access
@@ -288,11 +312,13 @@ Several models have `metadata Json?` fields:
 - Consider GDPR-style redaction for sensitive comments
 
 #### 7. Feedback Request Automation (Future) 🔮
+
 - Send post-order/reservation/event SMS/email with feedback link
 - QR code on receipts linking to feedback form
 - Automated follow-up reminders (24h after visit)
 
 #### 8. Sentiment Analysis (Future) 🔮
+
 - Tag comments with sentiment: POSITIVE, NEUTRAL, NEGATIVE
 - Use ML/NLP to categorize feedback topics (food quality, service speed, cleanliness)
 - Alert on sudden spikes in negative feedback
@@ -308,30 +334,30 @@ model Feedback {
   id              String         @id @default(cuid())
   orgId           String
   branchId        String?
-  
+
   // Links (at most one)
   orderId         String?
   reservationId   String?
   eventBookingId  String?
-  
+
   // Submission metadata
   channel         FeedbackChannel @default(OTHER)
   submittedAt     DateTime        @default(now())
   createdById     String?         // NULL if anonymous guest
-  
+
   // NPS & satisfaction
   score           Int             // 0-10
   npsCategory     NpsCategory     // Derived from score
   comment         String?         @db.Text
-  
+
   // Optional metadata
   tags            String[]        // ["food_quality", "service_speed"]
   sentimentHint   String?         // "POSITIVE" | "NEUTRAL" | "NEGATIVE" (future ML)
   metadata        Json?           // Additional context
-  
+
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
-  
+
   // Relations
   org            Org             @relation(...)
   branch         Branch?         @relation(...)
@@ -339,7 +365,7 @@ model Feedback {
   reservation    Reservation?    @relation(...)
   eventBooking   EventBooking?   @relation(...)
   createdBy      User?           @relation(...)
-  
+
   // Indexes
   @@index([orgId, branchId, submittedAt])
   @@index([orderId])
@@ -370,16 +396,19 @@ enum NpsCategory {
 **Formula**: `NPS = (Promoters / Total) × 100 - (Detractors / Total) × 100`
 
 **Ranges**:
+
 - **Promoters**: score 9-10
 - **Passives**: score 7-8
 - **Detractors**: score 0-6
 
 **Example**:
+
 - 100 feedback records
 - 50 promoters (50%), 30 passives (30%), 20 detractors (20%)
 - NPS = 50% - 20% = **+30** (good)
 
 **NPS Scale**:
+
 - **+50 to +100**: Excellent
 - **+0 to +49**: Good
 - **-1 to -49**: Needs improvement
@@ -392,18 +421,22 @@ enum NpsCategory {
 ### Public Endpoints (No Auth or Token-Based)
 
 #### POST /public/feedback
+
 **Purpose**: Submit feedback for order/reservation/event  
 **Auth**: None (public) or short token from receipt/email  
 **Body**:
+
 ```json
 {
-  "orderCode": "BR01-00123",  // OR reservationId, eventBookingId
+  "orderCode": "BR01-00123", // OR reservationId, eventBookingId
   "score": 9,
   "comment": "Excellent service, food was amazing!",
   "channel": "QR"
 }
 ```
+
 **Response**:
+
 ```json
 {
   "id": "clxy123abc",
@@ -415,8 +448,10 @@ enum NpsCategory {
 ### Internal Endpoints (Authenticated)
 
 #### GET /feedback
+
 **RBAC**: L4+, HR, ACCOUNTANT  
 **Query**:
+
 - `branchId?`: Filter by branch
 - `from?`, `to?`: Date range
 - `minScore?`, `maxScore?`: Score filter (0-10)
@@ -426,6 +461,7 @@ enum NpsCategory {
 - `limit?`, `offset?`: Pagination
 
 **Response**:
+
 ```json
 {
   "items": [
@@ -447,16 +483,20 @@ enum NpsCategory {
 ```
 
 #### GET /feedback/:id
+
 **RBAC**: L4+, HR  
 **Purpose**: View single feedback record with full details
 
 #### GET /feedback/nps-summary
+
 **RBAC**: L4+, ACCOUNTANT  
 **Query**:
+
 - `branchId?`: Single branch or org-wide
 - `from`, `to`: Date range (required)
 
 **Response**:
+
 ```json
 {
   "period": { "from": "2025-11-01", "to": "2025-11-30" },
@@ -481,6 +521,7 @@ enum NpsCategory {
 ### PeriodDigest Extension
 
 Add `customerFeedback?` section:
+
 ```typescript
 customerFeedback?: {
   nps: number;              // -100 to +100
@@ -502,6 +543,7 @@ customerFeedback?: {
 ### FranchiseDigest Extension
 
 Add `customerFeedback?` section:
+
 ```typescript
 customerFeedback?: {
   overallNps: number;
@@ -526,17 +568,18 @@ customerFeedback?: {
 
 ### Access Matrix
 
-| Role | Submit Feedback | View Raw Comments | View Aggregates | Manage Feedback |
-|------|----------------|-------------------|-----------------|-----------------|
-| **Guest (Public)** | ✅ Yes | ❌ No | ❌ No | ❌ No |
-| **L1-L3 Staff** | ✅ Yes (authenticated) | ❌ No | ❌ No | ❌ No |
-| **L4 Manager** | ✅ Yes | ✅ Yes (own branch) | ✅ Yes | ❌ No |
-| **L5 Owner** | ✅ Yes | ✅ Yes (all branches) | ✅ Yes | ✅ Yes |
-| **HR** | ✅ Yes | ⚠️ Maybe (redacted?) | ✅ Yes | ❌ No |
-| **ACCOUNTANT** | ✅ Yes | ❌ No | ✅ Yes | ❌ No |
-| **MARKETING** | ✅ Yes | ✅ Yes (for campaigns) | ✅ Yes | ❌ No |
+| Role               | Submit Feedback        | View Raw Comments      | View Aggregates | Manage Feedback |
+| ------------------ | ---------------------- | ---------------------- | --------------- | --------------- |
+| **Guest (Public)** | ✅ Yes                 | ❌ No                  | ❌ No           | ❌ No           |
+| **L1-L3 Staff**    | ✅ Yes (authenticated) | ❌ No                  | ❌ No           | ❌ No           |
+| **L4 Manager**     | ✅ Yes                 | ✅ Yes (own branch)    | ✅ Yes          | ❌ No           |
+| **L5 Owner**       | ✅ Yes                 | ✅ Yes (all branches)  | ✅ Yes          | ✅ Yes          |
+| **HR**             | ✅ Yes                 | ⚠️ Maybe (redacted?)   | ✅ Yes          | ❌ No           |
+| **ACCOUNTANT**     | ✅ Yes                 | ❌ No                  | ✅ Yes          | ❌ No           |
+| **MARKETING**      | ✅ Yes                 | ✅ Yes (for campaigns) | ✅ Yes          | ❌ No           |
 
 **Privacy Notes**:
+
 1. **Anonymous Submission**: Allow guests to submit without creating account
 2. **Comment Redaction**: Consider redacting personally identifiable info in comments
 3. **GDPR Compliance**: Add ability to delete feedback on request (future)
@@ -547,6 +590,7 @@ customerFeedback?: {
 ## 10. Known Limitations & Future Work
 
 ### Not Included in M20 V1
+
 1. ❌ Automated feedback request emails/SMS (manual for now)
 2. ❌ QR code generation on receipts
 3. ❌ Sentiment analysis / topic extraction (ML/NLP)
@@ -559,6 +603,7 @@ customerFeedback?: {
 10. ❌ Audio/video feedback (only text)
 
 ### Future Enhancements (V2+)
+
 1. **Automated Requests**: Send SMS/email 1 hour after order close
 2. **QR Codes**: Generate unique QR per receipt linking to feedback form
 3. **Sentiment Analysis**: Use ML to tag comments as POSITIVE/NEUTRAL/NEGATIVE
@@ -587,18 +632,21 @@ customerFeedback?: {
 ## 12. Success Criteria
 
 ### Adoption Metrics
+
 - **80%** of completed orders receive feedback within 24 hours (after automation)
 - **60%** of reservations receive feedback (higher engagement for reservations)
 - **70%** of event bookings receive feedback
 - **50%** of managers check NPS summary weekly
 
 ### Quality Metrics
+
 - **NPS > +30**: Target "good" NPS score org-wide
 - **20%+ response rate**: Industry standard for restaurant feedback
 - **50%+** of feedback includes comments (not just scores)
 - **<5% spam/abuse**: Maintain feedback quality
 
 ### Technical Metrics
+
 - **<500ms** feedback submission (public endpoint)
 - **<1s** NPS summary query (aggregation)
 - **<2s** feedback list query (with filters)
@@ -611,6 +659,7 @@ customerFeedback?: {
 **Current State**: ChefCloud has **NO customer feedback infrastructure**. No models, no APIs, no reports.
 
 **M20 Scope**: Build comprehensive feedback & NPS system from scratch:
+
 1. ✅ Feedback model with NPS scoring (0-10)
 2. ✅ Public submission API (anonymous or token-based)
 3. ✅ Internal management APIs (list, filter, aggregate)

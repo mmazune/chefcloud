@@ -14,6 +14,7 @@
 ### 1.1 Auth Module (`services/api/src/auth/`)
 
 **Files Present:**
+
 - ✅ `auth.module.ts` - Central auth module with JWT configuration
 - ✅ `auth.service.ts` - Business logic for 3 auth methods
 - ✅ `auth.controller.ts` - REST endpoints
@@ -25,19 +26,21 @@
 - ✅ `platform-access.guard.ts` - Platform-based access control (E23-s3)
 
 **Dependencies:**
+
 - JWT with 24h expiry (configurable via `JWT_SECRET`)
 - SessionInvalidationService with Redis deny list
 - WorkforceService (auto-clock-in on MSR login)
 
 ### 1.2 Authentication Methods (Current)
 
-| Method | Endpoint | Description | Status |
-|--------|----------|-------------|--------|
-| **Password** | `POST /auth/login` | Email + password | ✅ Production |
-| **PIN** | `POST /auth/pin-login` | Employee code + PIN + branch | ✅ Production |
+| Method        | Endpoint               | Description                  | Status        |
+| ------------- | ---------------------- | ---------------------------- | ------------- |
+| **Password**  | `POST /auth/login`     | Email + password             | ✅ Production |
+| **PIN**       | `POST /auth/pin-login` | Employee code + PIN + branch | ✅ Production |
 | **MSR Swipe** | `POST /auth/msr-swipe` | Badge ID (CLOUDBADGE format) | ✅ Production |
 
 **Auth Flow:**
+
 1. Client calls auth endpoint (login/pin-login/msr-swipe)
 2. Service validates credentials (Argon2id for password/PIN, badge lookup for MSR)
 3. Service checks `User.isActive` and `User.sessionVersion`
@@ -53,6 +56,7 @@
 **Role Levels**: L1 → L5 (Waiter → Owner)
 
 **Role Slugs** (from `role-constants.ts`):
+
 - L1: WAITER, CASHIER, SUPERVISOR, TICKET_MASTER
 - L2: ASSISTANT_CHEF, CHEF, HEAD_CHEF
 - L3: STOCK, PROCUREMENT, ASSISTANT_MANAGER, EVENT_MANAGER, HEAD_BARISTA
@@ -60,10 +64,12 @@
 - L5: OWNER, ADMIN, DEV_ADMIN
 
 **Guards:**
+
 - `RolesGuard` - Enforces role hierarchy via `@Roles()` decorator
 - Applied per controller/endpoint
 
 **Example:**
+
 ```typescript
 @Roles('MANAGER', 'OWNER') // L4+
 async createPayroll() { ... }
@@ -76,17 +82,20 @@ async createPayroll() { ... }
 **Status**: ✅ Implemented, registered as `APP_GUARD` in `app.module.ts`
 
 **Platforms Supported**:
+
 - `web` - Backoffice web app
 - `desktop` - POS desktop app
 - `mobile` - Mobile app
 
 **Mechanism**:
+
 - Client sends `x-client-platform` header (defaults to `web` if missing)
 - Guard loads `OrgSettings.platformAccess` (JSON matrix)
 - Checks if role slug has access to platform
 - Throws 403 `PLATFORM_FORBIDDEN` if denied
 
 **Default Matrix** (from guard):
+
 ```typescript
 {
   WAITER: { desktop: true, web: false, mobile: false },
@@ -130,6 +139,7 @@ model Session {
 ```
 
 **⚠️ Issue**: Session records exist but are **NOT actively managed**:
+
 - Session creation not implemented (no records inserted on login)
 - No `lastActivityAt` field for idle timeout
 - No `platform` field to track client type
@@ -143,6 +153,7 @@ model Session {
 **Purpose**: Invalidate sessions when badges are revoked/lost
 
 **Features**:
+
 - Increments `User.sessionVersion` to invalidate all old JWTs
 - Adds JTI to Redis deny list (24h TTL) for immediate rejection
 - Methods:
@@ -152,6 +163,7 @@ model Session {
   - `getSessionVersion(userId)` - Fetches current version
 
 **Mechanism**:
+
 1. Badge revoked → BadgesService calls `invalidateByBadge()`
 2. Service increments `User.sessionVersion` (e.g., 0 → 1)
 3. Service adds all session JTIs to Redis deny list
@@ -161,6 +173,7 @@ model Session {
    - Checks `User.sessionVersion` matches token `sv` → 401 if mismatch
 
 **User Model Enhancement (E25)**:
+
 ```prisma
 model User {
   sessionVersion Int @default(0) // Incremented on revocation
@@ -171,19 +184,21 @@ model User {
 ### 2.3 JWT Payload Structure
 
 **Interface** (`jwt.strategy.ts`):
+
 ```typescript
 export interface JwtPayload {
-  sub: string;         // User ID
+  sub: string; // User ID
   email: string;
   orgId: string;
-  roleLevel: string;   // L1-L5
-  sv?: number;         // Session version (E25)
-  badgeId?: string;    // Badge code if MSR login (E25)
-  jti?: string;        // JWT ID for deny list (E25)
+  roleLevel: string; // L1-L5
+  sv?: number; // Session version (E25)
+  badgeId?: string; // Badge code if MSR login (E25)
+  jti?: string; // JWT ID for deny list (E25)
 }
 ```
 
 **⚠️ Missing Platform Context**:
+
 - No `platform` claim to indicate client type
 - Platform only detected via header (can be spoofed)
 - Should embed platform in JWT at login time
@@ -197,6 +212,7 @@ export interface JwtPayload {
 **Endpoint**: `POST /auth/msr-swipe`
 
 **Request Body**:
+
 ```json
 {
   "badgeId": "CLOUDBADGE:W001",
@@ -205,6 +221,7 @@ export interface JwtPayload {
 ```
 
 **Process** (`auth.service.ts`):
+
 1. Reject PAN-like payment card data (Track 1/2 formats)
 2. Parse CLOUDBADGE format: `CLOUDBADGE:<CODE>`
 3. Check `BadgeAsset` state:
@@ -218,6 +235,7 @@ export interface JwtPayload {
 9. Generate JWT with `badgeId` in payload
 
 **Badge Enrollment** (`POST /auth/enroll-badge`):
+
 - Manager assigns badge to user
 - Creates/updates `EmployeeProfile.badgeId`
 - Validates alphanumeric format `[A-Za-z0-9_-]+`
@@ -227,6 +245,7 @@ export interface JwtPayload {
 ### 3.2 Badge Asset Management (E25)
 
 **Model** (`BadgeAsset`):
+
 ```prisma
 model BadgeAsset {
   id         String   @id @default(cuid())
@@ -246,6 +265,7 @@ enum BadgeState {
 ```
 
 **Integration with Session Invalidation**:
+
 - Badge state change → `BadgesService` calls `SessionInvalidationService.invalidateByBadge()`
 - All sessions with that `badgeId` are revoked
 - User must re-swipe badge to login (if badge still ACTIVE)
@@ -253,17 +273,20 @@ enum BadgeState {
 ### 3.3 ⚠️ Gap: MSR Card Model Missing
 
 **Current**:
+
 - Badge assignment stored in `EmployeeProfile.badgeId` (string field)
 - Badge lifecycle managed via `BadgeAsset` (E25)
 - No formal `MsrCard` model for card → employee mapping
 
 **Issue**:
+
 - `EmployeeProfile.badgeId` is a simple string field
 - No `cardToken` hashing (currently stores badge code plaintext)
 - No formal `assignedAt`, `revokedAt`, `revokedById` tracking
 - No separation between physical badge asset and logical card assignment
 
 **Recommendation**:
+
 - Keep `BadgeAsset` for physical badge tracking
 - Create `MsrCard` model for logical card → employee mapping
 - Store hashed `cardToken` (not raw track data)
@@ -276,11 +299,13 @@ enum BadgeState {
 ### 4.1 Current Mechanism
 
 **Header-Based** (E23-s3):
+
 - Client sends `x-client-platform: web|desktop|mobile`
 - PlatformAccessGuard reads header (defaults to `web`)
 - No validation of header authenticity
 
 **⚠️ Security Gap**:
+
 - Headers can be spoofed
 - No binding between login platform and subsequent requests
 - No enforcement of "you logged in from POS, you must stay on POS"
@@ -288,6 +313,7 @@ enum BadgeState {
 ### 4.2 Recommended Enhancement (M10)
 
 **Platform Enum**:
+
 ```typescript
 enum Platform {
   WEB_BACKOFFICE   // Admin web app
@@ -299,6 +325,7 @@ enum Platform {
 ```
 
 **Flow**:
+
 1. Client specifies platform at login time (new field in login DTOs)
 2. Platform embedded in JWT payload
 3. Platform stored in Session record
@@ -315,11 +342,13 @@ enum Platform {
 **Logout Endpoint**: ❌ Not implemented
 
 **Idle Timeout**: ❌ Not implemented
+
 - JWT has fixed 24h expiry
 - No backend-side idle timeout enforcement
 - No `lastActivityAt` tracking
 
 **Session Lifecycle**:
+
 - Login → Generate JWT (no Session record created)
 - Each request → Validate JWT (no activity tracking)
 - Token expires after 24h → User must re-login
@@ -352,16 +381,19 @@ enum Platform {
 ### 6.1 Attendance & HR (M9)
 
 **Current Integration** (E43-s1):
+
 - MSR login triggers auto-clock-in if `OrgSettings.attendance.autoClockInOnMsr = true`
 - Calls `WorkforceService.clockIn({ userId, orgId, branchId, method: 'MSR' })`
 - Creates `TimeEntry` record (legacy E43 model)
 
 **M9 Enhancement**:
+
 - M9 introduced `Employee`, `AttendanceRecord` models
 - Should create `AttendanceRecord` (formal model) instead of/alongside `TimeEntry`
 - Session should link to `employeeId` (not just `userId`)
 
 **M10 Enhancement**:
+
 - Session creation should:
   - Resolve `User` → `Employee` (via M9 model)
   - Optionally auto-create `AttendanceRecord` (clock-in)
@@ -373,11 +405,13 @@ enum Platform {
 ### 6.2 Shifts & Scheduling (M2)
 
 **Current**:
+
 - `DutyShift` model exists
 - Shift assignments track who should be on duty
 - No enforcement at login time
 
 **Potential M10 Enhancement**:
+
 - At POS login, verify employee has active shift
 - Warn/deny login if employee not scheduled for this shift
 - Track shift adherence (logged in during scheduled time)
@@ -385,11 +419,13 @@ enum Platform {
 ### 6.3 Accounting & Payroll (M8, M9)
 
 **Audit Trail**:
+
 - All auth events logged to `AuditEvent` table
 - Actions: `auth.login`, `auth.pin_login`, `BADGE_LOGIN`, `BADGE_ENROLL`
 - Used for audit reports and forensics
 
 **Session Audit**:
+
 - Should log session lifecycle events:
   - `SESSION_CREATED` - Login
   - `SESSION_TOUCHED` - Activity update
@@ -399,11 +435,13 @@ enum Platform {
 ### 6.4 Dev Portal (Future)
 
 **Current**:
+
 - No dedicated dev portal endpoints yet
 - `DEV_ADMIN` role exists
 - Platform access guard has `DEV_PORTAL` support (not used)
 
 **M10 Requirement**:
+
 - Add `DEV_PORTAL` platform to enum
 - Create dev portal login endpoints
 - Enforce dev portal endpoints only accessible from `DEV_PORTAL` platform
@@ -523,49 +561,34 @@ enum Platform {
 ### 9.1 New Files (Estimated 10-12)
 
 **Models & Services:**
+
 1. `services/api/src/auth/sessions.service.ts` - Canonical session management
 2. `services/api/src/auth/msr-card.service.ts` - MSR card lifecycle
 3. `services/api/src/auth/session-policies.ts` - Per-platform policies config
 
-**Controllers & DTOs:**
-4. `services/api/src/auth/dto/session.dto.ts` - Session DTOs
-5. `services/api/src/auth/dto/msr-card.dto.ts` - MSR card DTOs
+**Controllers & DTOs:** 4. `services/api/src/auth/dto/session.dto.ts` - Session DTOs 5. `services/api/src/auth/dto/msr-card.dto.ts` - MSR card DTOs
 
-**Guards & Decorators:**
-6. `services/api/src/auth/allowed-platforms.decorator.ts` - `@AllowedPlatforms()`
-7. `services/api/src/auth/idle-timeout.guard.ts` - Idle timeout enforcement
+**Guards & Decorators:** 6. `services/api/src/auth/allowed-platforms.decorator.ts` - `@AllowedPlatforms()` 7. `services/api/src/auth/idle-timeout.guard.ts` - Idle timeout enforcement
 
-**Tests:**
-8. `services/api/src/auth/sessions.service.spec.ts`
-9. `services/api/src/auth/msr-card.service.spec.ts`
-10. `services/api/test/auth-sessions.e2e-spec.ts`
+**Tests:** 8. `services/api/src/auth/sessions.service.spec.ts` 9. `services/api/src/auth/msr-card.service.spec.ts` 10. `services/api/test/auth-sessions.e2e-spec.ts`
 
-**Documentation:**
-11. `/workspaces/chefcloud/M10-AUTH-SESSIONS-COMPLETION.md`
+**Documentation:** 11. `/workspaces/chefcloud/M10-AUTH-SESSIONS-COMPLETION.md`
 
 ### 9.2 Modified Files (Estimated 8-10)
 
 **Prisma Schema:**
+
 1. `packages/db/prisma/schema.prisma` - Add fields to Session, create MsrCard model
 
-**Auth Module:**
-2. `services/api/src/auth/auth.module.ts` - Register new services
-3. `services/api/src/auth/auth.service.ts` - Integrate SessionsService, add platform to login
-4. `services/api/src/auth/auth.controller.ts` - Add logout endpoints
-5. `services/api/src/auth/jwt.strategy.ts` - Add idle timeout checks, platform validation
-6. `services/api/src/auth/platform-access.guard.ts` - Validate JWT claim vs header
+**Auth Module:** 2. `services/api/src/auth/auth.module.ts` - Register new services 3. `services/api/src/auth/auth.service.ts` - Integrate SessionsService, add platform to login 4. `services/api/src/auth/auth.controller.ts` - Add logout endpoints 5. `services/api/src/auth/jwt.strategy.ts` - Add idle timeout checks, platform validation 6. `services/api/src/auth/platform-access.guard.ts` - Validate JWT claim vs header
 
-**DTOs:**
-7. `services/api/src/auth/dto/auth.dto.ts` - Add platform field to login DTOs
+**DTOs:** 7. `services/api/src/auth/dto/auth.dto.ts` - Add platform field to login DTOs
 
-**App Module:**
-8. `services/api/src/app.module.ts` - Register SessionsService as APP_GUARD if needed
+**App Module:** 8. `services/api/src/app.module.ts` - Register SessionsService as APP_GUARD if needed
 
-**Documentation:**
-9. `/workspaces/chefcloud/DEV_GUIDE.md` - Add M10 section
+**Documentation:** 9. `/workspaces/chefcloud/DEV_GUIDE.md` - Add M10 section
 
-**HR Integration:**
-10. `services/api/src/hr/attendance.service.ts` - Integrate with session lifecycle (optional)
+**HR Integration:** 10. `services/api/src/hr/attendance.service.ts` - Integrate with session lifecycle (optional)
 
 ---
 
@@ -574,16 +597,19 @@ enum Platform {
 ### 10.1 Breaking Changes
 
 **Low Risk** (backward compatible):
+
 - Adding fields to Session model (nullable, optional)
 - Adding new endpoints (logout, msr/assign, etc.)
 - Adding platform claim to JWT (existing tokens still work)
 - Enhancing PlatformAccessGuard (defaults to current behavior)
 
 **Medium Risk** (may break clients):
+
 - Enforcing platform in JWT payload (old tokens lack platform claim)
 - Implementing idle timeout (existing long-lived tokens may be rejected)
 
 **Mitigation**:
+
 - Make platform claim optional initially (`platform?: string`)
 - Add feature flag for idle timeout enforcement
 - Deploy in phases: session creation → logout → idle timeout → platform enforcement
@@ -591,14 +617,17 @@ enum Platform {
 ### 10.2 Performance Considerations
 
 **Database Load**:
+
 - Session touch on every request (update `lastActivityAt`)
 - Mitigation: Throttle updates (e.g., only update if >1min since last touch)
 
 **Redis Load**:
+
 - Deny list checks on every request (already implemented in E25)
 - Mitigation: Redis is fast, 2ms overhead acceptable
 
 **Session Cleanup**:
+
 - Expired sessions accumulate in database
 - Mitigation: Add cron job to delete sessions where `expiresAt < now()`
 
@@ -642,6 +671,7 @@ enum Platform {
 ## 12. Conclusion
 
 **Summary**:
+
 - ChefCloud has a strong auth foundation (85% complete)
 - Key gaps: Session lifecycle, logout, idle timeout, platform binding
 - M10 will formalize and harden existing primitives
@@ -651,6 +681,7 @@ enum Platform {
 **Next Step**: Proceed to **Step 1 - Canonical Session Model** implementation.
 
 **Estimated Effort**:
+
 - Step 1-4 (Core): 6-8 hours
 - Step 5-6 (Integration): 3-4 hours
 - Step 7-8 (Docs & Tests): 2-3 hours

@@ -66,11 +66,7 @@ interface SpoutConsumeJob {
 }
 
 interface OwnerDigestRunJob {
-  type:
-    | 'owner-digest-run'
-    | 'owner-digest-shift-close'
-    | 'shift-end-report'
-    | 'period-digest';
+  type: 'owner-digest-run' | 'owner-digest-shift-close' | 'shift-end-report' | 'period-digest';
   digestId?: string;
   orgId?: string;
   branchId?: string;
@@ -903,7 +899,10 @@ const digestWorker = new Worker<OwnerDigestRunJob>(
         }
 
         if (recipients.length === 0) {
-          logger.warn({ subscriptionId: subscription.id }, 'No recipients resolved for subscription');
+          logger.warn(
+            { subscriptionId: subscription.id },
+            'No recipients resolved for subscription',
+          );
           continue;
         }
 
@@ -987,7 +986,8 @@ See attached reports for detailed breakdowns.
         `;
 
         // Read attachments as buffers
-        const emailAttachments: Array<{ filename: string; content: Buffer; contentType: string }> = [];
+        const emailAttachments: Array<{ filename: string; content: Buffer; contentType: string }> =
+          [];
         if (subscription.includePDF) {
           const pdfBuffer = await fs.promises.readFile(pdfPath);
           emailAttachments.push({
@@ -1016,14 +1016,18 @@ See attached reports for detailed breakdowns.
           });
 
           logger.info(
-            { subscriptionId: subscription.id, recipients, attachments: attachments.map((a) => a.filename) },
-            'Shift-end report email sent'
+            {
+              subscriptionId: subscription.id,
+              recipients,
+              attachments: attachments.map((a) => a.filename),
+            },
+            'Shift-end report email sent',
           );
           sentCount++;
         } catch (error) {
           logger.error(
             { subscriptionId: subscription.id, recipients, error },
-            'Failed to send shift-end report email'
+            'Failed to send shift-end report email',
           );
         }
       }
@@ -1035,7 +1039,9 @@ See attached reports for detailed breakdowns.
     if (job.data.type === 'period-digest') {
       const { subscriptionId, orgId, branchId, reportType, startDate, endDate } = job.data;
       if (!subscriptionId || !orgId || !reportType || !startDate || !endDate) {
-        logger.error('subscriptionId, orgId, reportType, startDate, and endDate required for period-digest');
+        logger.error(
+          'subscriptionId, orgId, reportType, startDate, and endDate required for period-digest',
+        );
         return { success: false, error: 'Missing required fields for period-digest' };
       }
 
@@ -1258,7 +1264,8 @@ See attached reports for detailed breakdowns.
         <p>Please see attached reports for detailed breakdowns.</p>
       `;
 
-      const emailAttachments: Array<{ filename: string; content: Buffer; contentType: string }> = [];
+      const emailAttachments: Array<{ filename: string; content: Buffer; contentType: string }> =
+        [];
       if (subscription.includePDF) {
         const pdfBuffer = await fs.promises.readFile(pdfPath);
         emailAttachments.push({
@@ -1286,10 +1293,7 @@ See attached reports for detailed breakdowns.
           attachments: emailAttachments,
         });
 
-        logger.info(
-          { subscriptionId, recipients, reportType },
-          'Period digest email sent',
-        );
+        logger.info({ subscriptionId, recipients, reportType }, 'Period digest email sent');
       } catch (error) {
         logger.error(
           { subscriptionId, recipients, reportType, error },

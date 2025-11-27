@@ -1,6 +1,6 @@
 /**
  * M19: Staff Insights & Employee-of-the-Month DTOs
- * 
+ *
  * Combines performance metrics (M5) with reliability metrics (M9)
  * to provide comprehensive staff insights and award recommendations.
  */
@@ -32,7 +32,7 @@ export interface ReliabilityMetrics {
   employeeId: string;
   userId: string | null;
   displayName: string;
-  
+
   // Attendance data
   shiftsScheduled: number;
   shiftsWorked: number;
@@ -40,7 +40,7 @@ export interface ReliabilityMetrics {
   lateCount: number;
   leftEarlyCount: number;
   coverShiftsCount: number;
-  
+
   // Computed scores
   attendanceRate: number; // 0-1
   reliabilityScore: number; // 0-1 (weighted)
@@ -50,21 +50,21 @@ export interface CombinedStaffMetrics {
   userId: string;
   employeeId: string;
   displayName: string;
-  
+
   // Composite scoring
   performanceScore: number; // 0-1 from M5
   reliabilityScore: number; // 0-1 from M9
   compositeScore: number; // 0-1 (70% performance + 30% reliability)
   rank?: number; // Assigned after ranking
-  
+
   // Source metrics
   performanceMetrics: WaiterMetrics;
   reliabilityMetrics: ReliabilityMetrics;
-  
+
   // Risk flags
   riskFlags: any[]; // From AntiTheftService
   isCriticalRisk: boolean;
-  
+
   // Eligibility
   isEligible?: boolean;
   eligibilityReason?: string;
@@ -102,15 +102,15 @@ export interface AwardRecommendation {
   category: AwardCategory;
   score: number;
   rank: number;
-  
+
   performanceScore: number;
   reliabilityScore: number;
-  
+
   metrics: {
     performance: WaiterMetrics;
     reliability: ReliabilityMetrics;
   };
-  
+
   reason: string;
   periodLabel: string;
   eligibilityPassed: boolean;

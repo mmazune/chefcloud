@@ -17,12 +17,7 @@ export interface IStorageProvider {
    * @param orgId Organization ID for path isolation
    * @returns Storage key and checksum
    */
-  upload(
-    buffer: Buffer,
-    fileName: string,
-    mimeType: string,
-    orgId: string,
-  ): Promise<UploadResult>;
+  upload(buffer: Buffer, fileName: string, mimeType: string, orgId: string): Promise<UploadResult>;
 
   /**
    * Download a file from storage

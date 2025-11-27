@@ -1,0 +1,57 @@
+import React from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { AppShell } from '@/components/layout/AppShell';
+import { PageHeader } from '@/components/layout/PageHeader';
+import { DataTable } from '@/components/ui/data-table';
+import { Badge } from '@/components/ui/badge';
+import { apiClient } from '@/lib/api';
+
+interface LowStockAlert {
+  itemId: string;
+  itemName: string;
+  currentStock: number;
+  minThreshold: number;
+  unit: string;
+  status: 'LOW' | 'CRITICAL';
+}
+
+export default function InventoryPage() {
+  const { data, isLoading } = useQuery({
+    queryKey: ['low-stock-alerts'],
+    queryFn: async () => {
+      const response = await apiClient.get<LowStockAlert[]>('/inventory/low-stock/alerts');
+      return response.data;
+    },
+  });
+
+  const columns = [
+    { header: 'Item Name', accessor: 'itemName' as keyof LowStockAlert },
+    {
+      header: 'Current Stock',
+      accessor: (row: LowStockAlert) => `${row.currentStock} ${row.unit}`,
+    },
+    {
+      header: 'Min Threshold',
+      accessor: (row: LowStockAlert) => `${row.minThreshold} ${row.unit}`,
+    },
+    {
+      header: 'Status',
+      accessor: (row: LowStockAlert) => (
+        <Badge variant={row.status === 'CRITICAL' ? 'destructive' : 'warning'}>
+          {row.status}
+        </Badge>
+      ),
+    },
+  ];
+
+  return (
+    <AppShell>
+      <PageHeader title="Inventory" subtitle="Monitor stock levels and low stock alerts" />
+      {isLoading && <p>Loading inventory data...</p>}
+      {!isLoading && data && <DataTable data={data} columns={columns} emptyMessage="All stock levels are healthy" />}
+      <div className="mt-4 text-sm text-muted-foreground">
+        ✓ Connected to backend endpoint: GET /inventory/low-stock/alerts
+      </div>
+    </AppShell>
+  );
+}

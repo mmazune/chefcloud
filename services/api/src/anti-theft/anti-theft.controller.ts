@@ -7,7 +7,7 @@ import { AntiTheftService } from './anti-theft.service';
 
 /**
  * M5: Anti-Theft Dashboards API
- * 
+ *
  * Endpoints for anti-theft analysis and risk detection.
  * RBAC: L4+ (OWNER, MANAGER)
  */
@@ -18,12 +18,12 @@ export class AntiTheftController {
 
   /**
    * Get anti-theft summary with flagged staff
-   * 
+   *
    * @param branchId - Optional: Specific branch
    * @param shiftId - Optional: Specific shift
    * @param from - Optional: Start date (ISO string)
    * @param to - Optional: End date (ISO string)
-   * 
+   *
    * Returns staff with threshold violations sorted by risk score
    */
   @Get('summary')

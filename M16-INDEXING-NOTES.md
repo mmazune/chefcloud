@@ -25,15 +25,17 @@ After reviewing Step 0 findings and current schema (packages/db/prisma/schema.pr
 #### 1. KdsTicket.updatedAt (for incremental sync)
 
 **Current State**:
+
 - No index on `updatedAt` field
 - KDS incremental sync uses `WHERE updatedAt >= since` filter
 - 12-20 req/min per station × 4 stations = 48-80 req/min
 
 **Justification**:
+
 ```sql
 -- Query pattern from services/api/src/kds/kds.service.ts:27-30
-SELECT * FROM kds_tickets 
-WHERE station = 'GRILL' 
+SELECT * FROM kds_tickets
+WHERE station = 'GRILL'
   AND status IN ('QUEUED', 'IN_PROGRESS')
   AND updatedAt >= '2025-11-21T14:30:00Z'
 ORDER BY sentAt ASC
@@ -42,6 +44,7 @@ ORDER BY sentAt ASC
 Without `updatedAt` index, Postgres must scan all tickets matching `(station, status, sentAt)` index, then filter by `updatedAt` in memory.
 
 **Solution**: Add composite index `(station, status, updatedAt)` to support both filtering and incremental sync. However, since queries also ORDER BY `sentAt`, we need to balance:
+
 - Option A: `@@index([station, status, updatedAt, sentAt])` - Optimal for incremental sync + ordering
 - Option B: Keep existing `@@index([station, status, sentAt])` + add `@@index([updatedAt])` - Simpler, less storage
 
@@ -52,12 +55,14 @@ Without `updatedAt` index, Postgres must scan all tickets matching `(station, st
 #### 2. StockMovement (type, createdAt) composite
 
 **Current State**:
+
 - `@@index([itemId])` - Good for per-item queries
 - `@@index([orgId, branchId, createdAt])` - Good for branch-wide time-range
 - NO index on `type` field
 
 **Justification**:
 Reconciliation queries from `services/api/src/inventory/reconciliation.service.ts`:
+
 ```sql
 -- Line 164: Purchase movements
 SELECT * FROM stock_movements
@@ -65,7 +70,7 @@ WHERE orgId = ? AND branchId = ? AND itemId = ?
   AND type = 'PURCHASE'
   AND createdAt >= ? AND createdAt <= ?
 
--- Line 213: Sale movements  
+-- Line 213: Sale movements
 WHERE type = 'SALE' ...
 
 -- Line 235: Wastage movements
@@ -76,7 +81,8 @@ WHERE type = 'WASTAGE' ...
 
 **Solution**: Add `@@index([itemId, type, createdAt])` composite to support all reconciliation queries efficiently.
 
-**Estimated Impact**: 
+**Estimated Impact**:
+
 - Current: 50 items × 5 queries × 100ms = 25 seconds per reconciliation
 - With index: 50 items × 5 queries × 10ms = 2.5 seconds (10× speedup)
 
@@ -85,16 +91,18 @@ WHERE type = 'WASTAGE' ...
 #### 3. Order (branchId, createdAt) composite
 
 **Current State**:
+
 - `@@index([branchId])` - Basic branch filter
 - `@@index([updatedAt])` - For sorting
 - `@@index([status, updatedAt])` - For status queries
 
 **Justification**:
 Shift-end and digest queries from `services/worker/src/index.ts` and `services/api/src/reports/report-generator.service.ts`:
+
 ```sql
 -- Owner digest aggregation (line 1318)
 SELECT SUM(total) FROM orders
-WHERE branchId IN (?, ?, ?) 
+WHERE branchId IN (?, ?, ?)
   AND createdAt >= '2025-11-21T00:00:00Z'
   AND status = 'COMPLETED'
 
@@ -116,10 +124,12 @@ WHERE branchId = ?
 #### 4. TimeEntry (employeeId, date) composite
 
 **Current State**:
+
 - No indexes on `TimeEntry` model (E43 workforce module)
 
 **Justification**:
 Attendance queries from `services/api/src/hr/attendance.service.ts`:
+
 ```typescript
 // Line 375: getAttendanceRecords
 where: {
@@ -136,17 +146,17 @@ where: {
 
 ### 🔴 Deferred (Low Priority or Already Handled)
 
-1. **JournalLine (accountId, createdAt)**: 
+1. **JournalLine (accountId, createdAt)**:
    - Existing `@@index([accountId])` is sufficient
    - Most balance queries aggregate over all time (no date filter)
    - If performance issues arise, add later
 
-2. **Reservation (status)**: 
+2. **Reservation (status)**:
    - Most queries already filter by branchId + time range
    - Status filter is secondary (cheap after date range)
    - No additional index needed
 
-3. **EventBooking (checkedInAt)**: 
+3. **EventBooking (checkedInAt)**:
    - Low query frequency (manual check-in lookups)
    - Can be added if event attendance reporting becomes frequent
 
@@ -161,11 +171,11 @@ where: {
 CREATE INDEX "kds_tickets_updatedAt_idx" ON "kds_tickets"("updatedAt");
 
 -- Stock movement reconciliation (type + date filtering)
-CREATE INDEX "stock_movements_itemId_type_createdAt_idx" 
+CREATE INDEX "stock_movements_itemId_type_createdAt_idx"
   ON "stock_movements"("itemId", "type", "createdAt");
 
 -- Order shift-end and digest aggregations (branch + date filtering)
-CREATE INDEX "orders_branchId_createdAt_idx" 
+CREATE INDEX "orders_branchId_createdAt_idx"
   ON "orders"("branchId", "createdAt");
 
 -- TimeEntry attendance lookups (employee + date range)
@@ -177,12 +187,12 @@ CREATE INDEX "time_entries_orgId_branchId_employeeId_date_idx"
 
 ## Query Patterns Addressed
 
-| Query Pattern | Before | After |
-|---------------|--------|-------|
-| KDS incremental sync (`updatedAt >= since`) | Full scan + filter | Index scan on `updatedAt` |
-| Reconciliation (itemId + type + date) | Index scan on `itemId`, filter type+date | 3-column composite index (optimal) |
-| Shift-end report (branchId + date range) | Index scan on `branchId`, filter date | 2-column composite index |
-| Employee attendance (employeeId + date range) | Full scan | 4-column composite index |
+| Query Pattern                                 | Before                                   | After                              |
+| --------------------------------------------- | ---------------------------------------- | ---------------------------------- |
+| KDS incremental sync (`updatedAt >= since`)   | Full scan + filter                       | Index scan on `updatedAt`          |
+| Reconciliation (itemId + type + date)         | Index scan on `itemId`, filter type+date | 3-column composite index (optimal) |
+| Shift-end report (branchId + date range)      | Index scan on `branchId`, filter date    | 2-column composite index           |
+| Employee attendance (employeeId + date range) | Full scan                                | 4-column composite index           |
 
 ---
 
@@ -191,6 +201,7 @@ CREATE INDEX "time_entries_orgId_branchId_employeeId_date_idx"
 ### Before/After Benchmarks
 
 1. **KDS Incremental Sync**:
+
    ```bash
    # Query 1000 tickets updated in last 5 minutes
    GET /kds/queue?station=GRILL&since=2025-11-21T14:25:00Z
@@ -198,6 +209,7 @@ CREATE INDEX "time_entries_orgId_branchId_employeeId_date_idx"
    ```
 
 2. **Reconciliation**:
+
    ```bash
    # Full branch reconciliation with 50 items
    GET /inventory/reconciliation?branchId=<id>&shiftId=<id>
@@ -205,6 +217,7 @@ CREATE INDEX "time_entries_orgId_branchId_employeeId_date_idx"
    ```
 
 3. **Shift-End Report**:
+
    ```bash
    # 300 orders in 8-hour shift
    POST /shifts/:id/close
@@ -222,10 +235,10 @@ CREATE INDEX "time_entries_orgId_branchId_employeeId_date_idx"
 
 ```sql
 -- Verify index usage
-EXPLAIN ANALYZE 
-SELECT * FROM kds_tickets 
-WHERE station = 'GRILL' 
-  AND status = 'QUEUED' 
+EXPLAIN ANALYZE
+SELECT * FROM kds_tickets
+WHERE station = 'GRILL'
+  AND status = 'QUEUED'
   AND "updatedAt" >= NOW() - INTERVAL '5 minutes'
 ORDER BY "sentAt" ASC;
 
@@ -272,6 +285,7 @@ ORDER BY "sentAt" ASC;
    WHERE schemaname = 'public'
    ORDER BY idx_scan ASC;
    ```
+
    - Drop indexes with `idx_scan = 0` after 30 days (unused)
 
 ---
@@ -279,11 +293,13 @@ ORDER BY "sentAt" ASC;
 ## Conclusion
 
 Added 4 strategic indexes covering:
+
 - ✅ 80% of high-frequency queries (KDS, orders, reconciliation)
 - ✅ Worst N+1 antipattern (reconciliation per-item queries)
 - ✅ Background job efficiency (shift reports, attendance)
 
 **Estimated performance gains**:
+
 - Reconciliation: 10× faster (25s → 2.5s)
 - KDS incremental sync: 2-3× faster (100ms → 30-50ms)
 - Shift-end reports: 5× faster (10s → 2s)

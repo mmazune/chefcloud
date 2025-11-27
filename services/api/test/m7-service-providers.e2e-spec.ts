@@ -6,7 +6,7 @@ import { AppModule } from '../src/app.module';
 
 /**
  * M7 E2E Test: Service Providers, Budgets & Cost Insights
- * 
+ *
  * Tests the complete flow:
  * 1. Create a service provider (landlord)
  * 2. Create a contract (monthly rent)
@@ -92,7 +92,9 @@ describe('M7: Service Providers, Budgets & Cost Insights (e2e)', () => {
   async function cleanupTestData() {
     if (testOrgId) {
       // Delete in correct order to respect foreign keys
-      await prisma.client.servicePayableReminder.deleteMany({ where: { contract: { provider: { orgId: testOrgId } } } });
+      await prisma.client.servicePayableReminder.deleteMany({
+        where: { contract: { provider: { orgId: testOrgId } } },
+      });
       await prisma.client.serviceContract.deleteMany({ where: { provider: { orgId: testOrgId } } });
       await prisma.client.serviceProvider.deleteMany({ where: { orgId: testOrgId } });
       await prisma.client.opsBudget.deleteMany({ where: { branch: { orgId: testOrgId } } });
@@ -159,7 +161,7 @@ describe('M7: Service Providers, Budgets & Cost Insights (e2e)', () => {
     it('should generate reminders for active contracts', async () => {
       // Call the reminders service directly (simulating worker job)
       const remindersService = app.get('RemindersService');
-      
+
       const result = await remindersService.generateReminders();
 
       expect(result).toBeDefined();
@@ -177,14 +179,14 @@ describe('M7: Service Providers, Budgets & Cost Insights (e2e)', () => {
 
     it('should list reminders for a branch', async () => {
       const remindersService = app.get('RemindersService');
-      
+
       const reminders = await remindersService.getReminders({
         branchId: testBranchId,
       });
 
       expect(Array.isArray(reminders)).toBe(true);
       expect(reminders.length).toBeGreaterThan(0);
-      
+
       const reminder = reminders[0];
       expect(reminder).toHaveProperty('dueDate');
       expect(reminder).toHaveProperty('status');
@@ -193,7 +195,7 @@ describe('M7: Service Providers, Budgets & Cost Insights (e2e)', () => {
 
     it('should get reminder summary', async () => {
       const remindersService = app.get('RemindersService');
-      
+
       const summary = await remindersService.getReminderSummary(testOrgId, testBranchId);
 
       expect(summary).toBeDefined();
@@ -206,10 +208,14 @@ describe('M7: Service Providers, Budgets & Cost Insights (e2e)', () => {
 
     it('should mark reminder as paid', async () => {
       const remindersService = app.get('RemindersService');
-      
-      const updated = await remindersService.updateReminder(reminderId, {
-        status: 'PAID',
-      }, testUserId);
+
+      const updated = await remindersService.updateReminder(
+        reminderId,
+        {
+          status: 'PAID',
+        },
+        testUserId,
+      );
 
       expect(updated.status).toBe('PAID');
       expect(updated.acknowledgedById).toBe(testUserId);
@@ -219,7 +225,7 @@ describe('M7: Service Providers, Budgets & Cost Insights (e2e)', () => {
   describe('3. Ops Budget Management', () => {
     it('should set a budget for a category', async () => {
       const budgetService = app.get('BudgetService');
-      
+
       const budget = await budgetService.setBudget(testOrgId, {
         branchId: testBranchId,
         year: 2024,
@@ -235,13 +241,9 @@ describe('M7: Service Providers, Budgets & Cost Insights (e2e)', () => {
 
     it('should compute budget actuals', async () => {
       const budgetService = app.get('BudgetService');
-      
+
       // Update actuals (simulates end-of-month computation)
-      const result = await budgetService.updateBudgetActuals(
-        testBranchId,
-        2024,
-        11,
-      );
+      const result = await budgetService.updateBudgetActuals(testBranchId, 2024, 11);
 
       expect(result).toBeDefined();
       expect(result.updated).toBeGreaterThanOrEqual(0);
@@ -249,7 +251,7 @@ describe('M7: Service Providers, Budgets & Cost Insights (e2e)', () => {
       // Verify budget was updated
       const budgets = await budgetService.getBudgets(testOrgId, testBranchId, 2024, 11);
       expect(budgets.length).toBeGreaterThan(0);
-      
+
       const rentBudget = budgets.find((b) => b.category === 'RENT');
       expect(rentBudget).toBeDefined();
       expect(rentBudget?.actualAmount).toBeGreaterThanOrEqual(0);
@@ -258,13 +260,8 @@ describe('M7: Service Providers, Budgets & Cost Insights (e2e)', () => {
 
     it('should get budget summary', async () => {
       const budgetService = app.get('BudgetService');
-      
-      const summary = await budgetService.getBudgetSummary(
-        testOrgId,
-        testBranchId,
-        2024,
-        11,
-      );
+
+      const summary = await budgetService.getBudgetSummary(testOrgId, testBranchId, 2024, 11);
 
       expect(summary).toBeDefined();
       expect(summary.branchId).toBe(testBranchId);
@@ -277,12 +274,8 @@ describe('M7: Service Providers, Budgets & Cost Insights (e2e)', () => {
 
     it('should get franchise budget summary', async () => {
       const budgetService = app.get('BudgetService');
-      
-      const summary = await budgetService.getFranchiseBudgetSummary(
-        testOrgId,
-        2024,
-        11,
-      );
+
+      const summary = await budgetService.getFranchiseBudgetSummary(testOrgId, 2024, 11);
 
       expect(summary).toBeDefined();
       expect(summary).toHaveProperty('period');
@@ -296,10 +289,10 @@ describe('M7: Service Providers, Budgets & Cost Insights (e2e)', () => {
   describe('4. Cost-Cutting Insights', () => {
     it('should generate cost insights for a branch', async () => {
       const costInsightsService = app.get('CostInsightsService');
-      
+
       // Create some variance to trigger insights
       // (In real scenario, would have multiple months of data with variances)
-      
+
       const insights = await costInsightsService.getBranchInsights(testBranchId, 3);
 
       expect(Array.isArray(insights)).toBe(true);
@@ -309,7 +302,7 @@ describe('M7: Service Providers, Budgets & Cost Insights (e2e)', () => {
 
     it('should generate franchise-wide insights', async () => {
       const costInsightsService = app.get('CostInsightsService');
-      
+
       const franchiseInsights = await costInsightsService.getFranchiseInsights(testOrgId, 3);
 
       expect(franchiseInsights).toBeDefined();
@@ -324,10 +317,10 @@ describe('M7: Service Providers, Budgets & Cost Insights (e2e)', () => {
   describe('5. Integration with Owner Digests', () => {
     it('should include M7 data in franchise digest', async () => {
       const reportGeneratorService = app.get('ReportGeneratorService');
-      
+
       const startDate = new Date('2024-11-01');
       const endDate = new Date('2024-11-30');
-      
+
       const digest = await reportGeneratorService.generateFranchiseDigest(
         testOrgId,
         startDate,
@@ -337,13 +330,13 @@ describe('M7: Service Providers, Budgets & Cost Insights (e2e)', () => {
       expect(digest).toBeDefined();
       expect(digest.reportId).toBeDefined();
       expect(digest.orgId).toBe(testOrgId);
-      
+
       // Verify M7 additions
       // costInsights may be undefined if no insights generated
       if (digest.costInsights) {
         expect(Array.isArray(digest.costInsights)).toBe(true);
       }
-      
+
       // serviceReminders may be undefined if no reminders
       if (digest.serviceReminders) {
         expect(digest.serviceReminders).toHaveProperty('overdue');
@@ -374,16 +367,16 @@ describe('M7: Service Providers, Budgets & Cost Insights (e2e)', () => {
 
     it('should prevent deleting provider with active contracts', async () => {
       const serviceProvidersService = app.get('ServiceProvidersService');
-      
+
       // Try to delete provider with active contract
-      await expect(
-        serviceProvidersService.deleteProvider(providerId),
-      ).rejects.toThrow(/active contracts/i);
+      await expect(serviceProvidersService.deleteProvider(providerId)).rejects.toThrow(
+        /active contracts/i,
+      );
     });
 
     it('should require budget parameters', async () => {
       const budgetService = app.get('BudgetService');
-      
+
       const invalidBudget = {
         branchId: testBranchId,
         year: 2024,
@@ -392,9 +385,7 @@ describe('M7: Service Providers, Budgets & Cost Insights (e2e)', () => {
         budgetAmount: 1000000,
       };
 
-      await expect(
-        budgetService.setBudget(testOrgId, invalidBudget),
-      ).rejects.toThrow();
+      await expect(budgetService.setBudget(testOrgId, invalidBudget)).rejects.toThrow();
     });
   });
 });

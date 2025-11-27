@@ -224,53 +224,134 @@ export class PosService {
   ): Promise<any> {
     const order = await this.prisma.client.order.findFirst({
       where: { id: orderId, branchId },
+      include: { orderItems: true },
     });
 
     if (!order) throw new BadRequestException('Order not found');
 
-    // For simplicity, just add new items
-    const menuItemIds = dto.items.map((item) => item.menuItemId);
-    const menuItems = await this.prisma.client.menuItem.findMany({
-      where: { id: { in: menuItemIds } },
-      include: { taxCategory: true },
-    });
+    // M26-S3/S4: State validation - only allow modifications in editable states
+    const editableStates = ['NEW', 'SENT', 'IN_PROGRESS'];
+    if (!editableStates.includes(order.status)) {
+      throw new BadRequestException(
+        `Cannot modify order in status ${order.status}. Only NEW, SENT, or IN_PROGRESS orders can be modified.`,
+      );
+    }
 
-    const menuItemMap = new Map(menuItems.map((item) => [item.id, item]));
+    let subtotalAdjustment = 0;
+    let taxAdjustment = 0;
 
+    // M26-S3/S4: Handle updateItems (quantity changes, notes updates, removals)
+    if (dto.updateItems && dto.updateItems.length > 0) {
+      for (const updateItem of dto.updateItems) {
+        const existingItem = order.orderItems.find((oi) => oi.id === updateItem.orderItemId);
+        if (!existingItem) {
+          throw new BadRequestException(`Order item ${updateItem.orderItemId} not found`);
+        }
+
+        // Fetch menu item for tax calculation
+        const menuItem = await this.prisma.client.menuItem.findUnique({
+          where: { id: existingItem.menuItemId },
+          include: { taxCategory: true },
+        });
+
+        if (!menuItem) {
+          throw new BadRequestException(`Menu item ${existingItem.menuItemId} not found`);
+        }
+
+        const oldSubtotal = Number(existingItem.subtotal);
+        const unitPrice = Number(existingItem.price);
+        const taxRate = menuItem.taxCategory ? Number(menuItem.taxCategory.rate) / 100 : 0;
+        const oldTax = oldSubtotal * taxRate;
+
+        let shouldDelete = false;
+        const updateData: any = {};
+
+        // Handle quantity updates
+        if (typeof updateItem.quantity === 'number') {
+          if (updateItem.quantity <= 0) {
+            shouldDelete = true;
+          } else {
+            const newSubtotal = unitPrice * updateItem.quantity;
+            const newTax = newSubtotal * taxRate;
+
+            updateData.quantity = updateItem.quantity;
+            updateData.subtotal = newSubtotal;
+
+            subtotalAdjustment += newSubtotal - oldSubtotal;
+            taxAdjustment += newTax - oldTax;
+          }
+        }
+
+        // M26-S4: Handle notes updates
+        if (typeof updateItem.notes === 'string') {
+          updateData.notes = updateItem.notes.trim() || null;
+        }
+
+        if (shouldDelete) {
+          // Remove item completely
+          await this.prisma.client.orderItem.delete({
+            where: { id: existingItem.id },
+          });
+          subtotalAdjustment -= oldSubtotal;
+          taxAdjustment -= oldTax;
+        } else if (Object.keys(updateData).length > 0) {
+          // Update item
+          await this.prisma.client.orderItem.update({
+            where: { id: existingItem.id },
+            data: updateData,
+          });
+        }
+      }
+    }
+
+    // M26-S2: Handle adding new items
     let additionalSubtotal = 0;
     let additionalTax = 0;
+    const newOrderItems: any[] = [];
 
-    const newOrderItems = dto.items.map((item) => {
-      const menuItem = menuItemMap.get(item.menuItemId);
-      if (!menuItem) throw new BadRequestException(`Menu item ${item.menuItemId} not found`);
+    if (dto.items && dto.items.length > 0) {
+      const menuItemIds = dto.items.map((item) => item.menuItemId);
+      const menuItems = await this.prisma.client.menuItem.findMany({
+        where: { id: { in: menuItemIds } },
+        include: { taxCategory: true },
+      });
 
-      const itemPrice = Number(menuItem.price);
-      const itemSubtotal = itemPrice * item.qty;
-      additionalSubtotal += itemSubtotal;
+      const menuItemMap = new Map(menuItems.map((item) => [item.id, item]));
 
-      const itemTax = menuItem.taxCategory
-        ? (itemSubtotal * Number(menuItem.taxCategory.rate)) / 100
-        : 0;
-      additionalTax += itemTax;
+      for (const item of dto.items) {
+        const menuItem = menuItemMap.get(item.menuItemId);
+        if (!menuItem) throw new BadRequestException(`Menu item ${item.menuItemId} not found`);
 
-      return {
-        menuItemId: item.menuItemId,
-        quantity: item.qty,
-        price: menuItem.price,
-        subtotal: itemSubtotal,
-        metadata: item.modifiers ? { modifiers: item.modifiers } : undefined,
-      } as any;
-    });
+        const itemPrice = Number(menuItem.price);
+        const itemSubtotal = itemPrice * item.qty;
+        additionalSubtotal += itemSubtotal;
 
+        const itemTax = menuItem.taxCategory
+          ? (itemSubtotal * Number(menuItem.taxCategory.rate)) / 100
+          : 0;
+        additionalTax += itemTax;
+
+        newOrderItems.push({
+          menuItemId: item.menuItemId,
+          quantity: item.qty,
+          price: menuItem.price,
+          subtotal: itemSubtotal,
+          notes: item.notes?.trim() || null,
+          metadata: item.modifiers ? { modifiers: item.modifiers } : undefined,
+        });
+      }
+    }
+
+    // Update order totals atomically
     const updatedOrder = await this.prisma.client.order.update({
       where: { id: orderId },
       data: {
-        subtotal: { increment: additionalSubtotal },
-        tax: { increment: additionalTax },
-        total: { increment: additionalSubtotal + additionalTax },
-        orderItems: {
+        subtotal: Number(order.subtotal) + subtotalAdjustment + additionalSubtotal,
+        tax: Number(order.tax) + taxAdjustment + additionalTax,
+        total: Number(order.total) + subtotalAdjustment + taxAdjustment + additionalSubtotal + additionalTax,
+        orderItems: newOrderItems.length > 0 ? {
           create: newOrderItems,
-        },
+        } : undefined,
       },
       include: {
         orderItems: true,
@@ -285,7 +366,10 @@ export class PosService {
         action: 'order.modified',
         resource: 'orders',
         resourceId: orderId,
-        metadata: { addedItems: dto.items.length },
+        metadata: {
+          addedItems: dto.items?.length || 0,
+          updatedItems: dto.updateItems?.length || 0,
+        },
       },
     });
 
@@ -912,5 +996,93 @@ export class PosService {
     });
 
     return updatedOrder;
+  }
+
+  /**
+   * M26-S1: Get orders for POS interface
+   * If status param provided, filter by that status
+   * Otherwise return orders from today (open, closed, voided)
+   */
+  async getOrders(branchId: string, status?: string): Promise<any[]> {
+    const where: any = { branchId };
+
+    if (status === 'OPEN') {
+      where.status = { notIn: ['CLOSED', 'VOIDED'] };
+    } else if (status) {
+      where.status = status;
+    } else {
+      // Default: today's orders
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      where.createdAt = { gte: today };
+    }
+
+    const orders = await this.prisma.client.order.findMany({
+      where,
+      include: {
+        table: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return orders.map((order) => ({
+      id: order.id,
+      tableName: order.table?.name || null,
+      tabName: order.serviceType === 'TAKEAWAY' ? 'Takeaway' : null,
+      status: order.status,
+      subtotal: Number(order.subtotal),
+      total: Number(order.total),
+      createdAt: order.createdAt.toISOString(),
+    }));
+  }
+
+  /**
+   * M26-S1: Get single order with full details
+   */
+  async getOrder(orderId: string, branchId: string): Promise<any> {
+    const order = await this.prisma.client.order.findFirst({
+      where: { id: orderId, branchId },
+      include: {
+        table: true,
+        items: {
+          include: {
+            menuItem: true,
+          },
+        },
+        payments: true,
+      },
+    });
+
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+
+    const items = order.items.map((item) => ({
+      id: item.id,
+      name: item.menuItem?.name || 'Unknown',
+      sku: item.menuItem?.sku || null,
+      quantity: item.quantity,
+      unitPrice: Number(item.price),
+      total: Number(item.subtotal),
+      status: item.status || 'PENDING',
+    }));
+
+    const payments = order.payments.map((payment) => ({
+      id: payment.id,
+      amount: Number(payment.amount),
+      method: payment.method,
+    }));
+
+    return {
+      id: order.id,
+      tableName: order.table?.name || null,
+      tabName: order.serviceType === 'TAKEAWAY' ? 'Takeaway' : null,
+      status: order.status,
+      items,
+      subtotal: Number(order.subtotal),
+      tax: Number(order.tax),
+      total: Number(order.total),
+      payments,
+    };
   }
 }

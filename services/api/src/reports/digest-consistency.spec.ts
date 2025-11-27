@@ -8,7 +8,7 @@ import { WastageService } from '../wastage/wastage.service';
 
 /**
  * M4: Data Consistency Tests
- * 
+ *
  * These tests verify that digest reports produce metrics consistent with
  * the canonical APIs that power the dashboard, reconciliation, anti-theft,
  * and KDS modules.
@@ -60,7 +60,7 @@ describe('Digest Consistency Tests', () => {
 
   /**
    * Scenario A: Single Shift Consistency
-   * 
+   *
    * Verifies that a shift-end report matches the canonical APIs:
    * - Sales API: totalSales, voidCount, voidValue, discountValue
    * - Reconciliation API: wastageCost, variance
@@ -89,14 +89,14 @@ describe('Digest Consistency Tests', () => {
       // Assertions
       expect(shiftReport.sales.totalSales).toBeCloseTo(salesMetrics.totalSales, 2);
       expect(shiftReport.sales.totalOrders).toBe(salesMetrics.orderCount);
-      
+
       // Void metrics
       const voidMetrics = await dashboardsService.getVoidLeaderboard(testBranchId, {
         shiftId: testShiftId,
       });
       const totalVoidCount = voidMetrics.reduce((sum, v) => sum + v.voidCount, 0);
       const totalVoidValue = voidMetrics.reduce((sum, v) => sum + Number(v.voidValue), 0);
-      
+
       expect(shiftReport.service.totalVoidCount).toBe(totalVoidCount);
       expect(shiftReport.service.totalVoidValue).toBeCloseTo(totalVoidValue, 2);
 
@@ -104,8 +104,11 @@ describe('Digest Consistency Tests', () => {
       const discountMetrics = await dashboardsService.getDiscountLeaderboard(testBranchId, {
         shiftId: testShiftId,
       });
-      const totalDiscountValue = discountMetrics.reduce((sum, d) => sum + Number(d.totalDiscountValue), 0);
-      
+      const totalDiscountValue = discountMetrics.reduce(
+        (sum, d) => sum + Number(d.totalDiscountValue),
+        0,
+      );
+
       expect(shiftReport.service.totalDiscountValue).toBeCloseTo(totalDiscountValue, 2);
     });
 
@@ -173,7 +176,7 @@ describe('Digest Consistency Tests', () => {
       expect(shiftReport.kdsMetrics.slaMetrics.greenCount).toBe(kdsMetrics.sla.greenCount);
       expect(shiftReport.kdsMetrics.slaMetrics.orangeCount).toBe(kdsMetrics.sla.orangeCount);
       expect(shiftReport.kdsMetrics.slaMetrics.redCount).toBe(kdsMetrics.sla.redCount);
-      
+
       // Percentages should match within rounding tolerance
       expect(shiftReport.kdsMetrics.slaMetrics.greenPct).toBeCloseTo(kdsMetrics.sla.greenPct, 1);
       expect(shiftReport.kdsMetrics.slaMetrics.orangePct).toBeCloseTo(kdsMetrics.sla.orangePct, 1);
@@ -183,7 +186,7 @@ describe('Digest Consistency Tests', () => {
 
   /**
    * Scenario B: Period Digest Consistency
-   * 
+   *
    * Verifies that period digests (DAILY/WEEKLY/MONTHLY) match analytics APIs
    * when aggregating data across multiple days.
    */
@@ -220,7 +223,7 @@ describe('Digest Consistency Tests', () => {
       expect(periodDigest.totalSales).toBeCloseTo(salesMetrics.totalSales, 2);
       expect(periodDigest.orderCount).toBe(salesMetrics.orderCount);
       expect(periodDigest.avgOrderValue).toBeCloseTo(salesMetrics.avgOrderValue, 2);
-      
+
       expect(periodDigest.wastageCost).toBeCloseTo(Number(wastageMetrics.totalCost), 2);
     });
   });

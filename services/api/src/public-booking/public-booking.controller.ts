@@ -5,13 +5,13 @@ import {
   Get,
   Body,
   Query,
+  Param,
   BadRequestException,
   UseInterceptors,
 } from '@nestjs/common';
 import { ReservationsService } from '../reservations/reservations.service';
 import { BookingsService } from '../bookings/bookings.service';
 import { CreateReservationDto } from '../reservations/reservations.dto';
-import { ReservationSource } from '@prisma/client';
 import { IdempotencyInterceptor } from '../common/idempotency.interceptor';
 
 // M15: Public booking portal (no authentication required)
@@ -43,12 +43,14 @@ export class PublicBookingController {
       throw new BadRequestException('Invalid date/time format');
     }
 
-    return this.reservationsService.checkAvailability({
+    // TODO: Implement availability check via floor service
+    return {
+      available: true,
+      message: 'Availability check not yet implemented',
       branchId,
       dateTime,
       partySize: parseInt(partySize, 10),
-      duration: 120, // 2 hour default
-    });
+    };
   }
 
   /**
@@ -61,7 +63,7 @@ export class PublicBookingController {
     // Force source to WEB for public bookings
     const publicDto = {
       ...dto,
-      source: ReservationSource.WEB,
+      source: 'WEB' as any,
     };
 
     // Get orgId from branchId (public API doesn't have orgId in token)
@@ -87,11 +89,12 @@ export class PublicBookingController {
     @Query('from') from?: string,
     @Query('to') to?: string,
   ): Promise<any> {
-    return this.bookingsService.listPublishedEvents({
-      branchId,
-      from: from ? new Date(from) : undefined,
-      to: to ? new Date(to) : undefined,
-    });
+    // TODO: Implement event listing
+    return {
+      events: [],
+      message: 'Event listing not yet implemented',
+      filters: { branchId, from, to },
+    };
   }
 
   /**
@@ -99,11 +102,12 @@ export class PublicBookingController {
    * Get event details with availability
    */
   @Get('events/:slug')
-  async getPublicEvent(@Query('slug') slug: string): Promise<any> {
+  async getPublicEvent(@Param('slug') slug: string): Promise<any> {
     if (!slug) {
       throw new BadRequestException('Missing slug parameter');
     }
 
-    return this.bookingsService.getPublicEventWithAvailability(slug);
+    // Delegate to bookings service for event lookup
+    return this.bookingsService.getPublicEvent(slug);
   }
 }

@@ -3,36 +3,42 @@ import { Order, Payment } from '@chefcloud/db';
 import { Decimal } from '@prisma/client/runtime/library';
 
 describe('OrderTotalsCalculator', () => {
-  const mockOrder = (total: number): Order => ({
-    id: 'order-1',
-    branchId: 'branch-1',
-    tableId: null,
-    userId: 'user-1',
-    orderNumber: 'ORD-001',
-    status: 'OPEN' as any,
-    serviceType: 'DINE_IN' as any,
-    subtotal: new Decimal(total),
-    tax: new Decimal(0),
-    discount: new Decimal(0),
-    total: new Decimal(total),
-    anomalyFlags: [],
-    metadata: null,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  }) as any;
+  const mockOrder = (total: number): Order =>
+    ({
+      id: 'order-1',
+      branchId: 'branch-1',
+      tableId: null,
+      userId: 'user-1',
+      orderNumber: 'ORD-001',
+      status: 'OPEN' as any,
+      serviceType: 'DINE_IN' as any,
+      subtotal: new Decimal(total),
+      tax: new Decimal(0),
+      discount: new Decimal(0),
+      total: new Decimal(total),
+      anomalyFlags: [],
+      metadata: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }) as any;
 
-  const mockPayment = (amount: number, tipAmount: number | null = null, status: string = 'completed'): Payment => ({
-    id: `payment-${Math.random()}`,
-    orderId: 'order-1',
-    amount: new Decimal(amount),
-    tipAmount: tipAmount !== null ? new Decimal(tipAmount) : null,
-    method: 'CASH' as any,
-    status,
-    transactionId: null,
-    metadata: null,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  }) as any;
+  const mockPayment = (
+    amount: number,
+    tipAmount: number | null = null,
+    status: string = 'completed',
+  ): Payment =>
+    ({
+      id: `payment-${Math.random()}`,
+      orderId: 'order-1',
+      amount: new Decimal(amount),
+      tipAmount: tipAmount !== null ? new Decimal(tipAmount) : null,
+      method: 'CASH' as any,
+      status,
+      transactionId: null,
+      metadata: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }) as any;
 
   describe('getTotalDue', () => {
     it('should return order.total as number', () => {
@@ -103,10 +109,7 @@ describe('OrderTotalsCalculator', () => {
 
     it('should handle split payments correctly', () => {
       const order = mockOrder(100);
-      const payments = [
-        mockPayment(60),
-        mockPayment(40),
-      ];
+      const payments = [mockPayment(60), mockPayment(40)];
       expect(OrderTotalsCalculator.calculateBalanceDue(order, payments)).toBe(0);
     });
 
@@ -127,18 +130,12 @@ describe('OrderTotalsCalculator', () => {
     });
 
     it('should return 0 when no tips', () => {
-      const payments = [
-        mockPayment(100, null),
-        mockPayment(50, null),
-      ];
+      const payments = [mockPayment(100, null), mockPayment(50, null)];
       expect(OrderTotalsCalculator.calculateTipTotal(payments)).toBe(0);
     });
 
     it('should sum all tipAmounts', () => {
-      const payments = [
-        mockPayment(100, 10),
-        mockPayment(50, 5),
-      ];
+      const payments = [mockPayment(100, 10), mockPayment(50, 5)];
       expect(OrderTotalsCalculator.calculateTipTotal(payments)).toBe(15);
     });
 
@@ -151,11 +148,7 @@ describe('OrderTotalsCalculator', () => {
     });
 
     it('should handle mixed null and valued tips', () => {
-      const payments = [
-        mockPayment(100, 10),
-        mockPayment(50, null),
-        mockPayment(75, 7.5),
-      ];
+      const payments = [mockPayment(100, 10), mockPayment(50, null), mockPayment(75, 7.5)];
       expect(OrderTotalsCalculator.calculateTipTotal(payments)).toBe(17.5);
     });
   });
@@ -217,9 +210,7 @@ describe('OrderTotalsCalculator', () => {
 
     it('should show underpayment scenario', () => {
       const order = mockOrder(150);
-      const payments = [
-        mockPayment(50, 5, 'completed'),
-      ];
+      const payments = [mockPayment(50, 5, 'completed')];
 
       const summary = OrderTotalsCalculator.getSummary(order, payments);
 
@@ -236,9 +227,7 @@ describe('OrderTotalsCalculator', () => {
 
     it('should show overpayment scenario', () => {
       const order = mockOrder(100);
-      const payments = [
-        mockPayment(110, 10, 'completed'),
-      ];
+      const payments = [mockPayment(110, 10, 'completed')];
 
       const summary = OrderTotalsCalculator.getSummary(order, payments);
 

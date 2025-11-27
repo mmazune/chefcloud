@@ -1,6 +1,6 @@
 /**
  * M10: Session Policies Configuration
- * 
+ *
  * Defines idle timeout, max lifetime, and other policies per platform.
  */
 

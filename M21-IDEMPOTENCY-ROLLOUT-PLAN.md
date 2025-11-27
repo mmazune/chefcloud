@@ -9,6 +9,7 @@
 ## Executive Summary
 
 M21 reuses the **M16 idempotency infrastructure** (IdempotencyService, IdempotencyInterceptor) and wires it into POS, reservations, and booking endpoints to prevent duplicate submissions from:
+
 - Network retries (flaky connections)
 - Double-clicks in UI
 - Offline sync replays
@@ -40,12 +41,12 @@ M21 reuses the **M16 idempotency infrastructure** (IdempotencyService, Idempoten
 
 ### Behavior
 
-| Scenario | Idempotency-Key | Request Body | Response |
-|----------|-----------------|--------------|----------|
-| First request | `abc123` | `{ table: 5 }` | 201 Created, order ID `ord-001` |
-| Duplicate (same body) | `abc123` | `{ table: 5 }` | 201 Created, **same** order ID `ord-001` (cached) |
-| Modified (different body) | `abc123` | `{ table: 6 }` | **409 Conflict** (fingerprint mismatch) |
-| No key provided | (none) | `{ table: 7 }` | Normal processing (no idempotency check) |
+| Scenario                  | Idempotency-Key | Request Body   | Response                                          |
+| ------------------------- | --------------- | -------------- | ------------------------------------------------- |
+| First request             | `abc123`        | `{ table: 5 }` | 201 Created, order ID `ord-001`                   |
+| Duplicate (same body)     | `abc123`        | `{ table: 5 }` | 201 Created, **same** order ID `ord-001` (cached) |
+| Modified (different body) | `abc123`        | `{ table: 6 }` | **409 Conflict** (fingerprint mismatch)           |
+| No key provided           | (none)          | `{ table: 7 }` | Normal processing (no idempotency check)          |
 
 ---
 
@@ -55,15 +56,15 @@ M21 reuses the **M16 idempotency infrastructure** (IdempotencyService, Idempoten
 
 **Controller**: `services/api/src/pos/pos.controller.ts`
 
-| Endpoint | Method | Idempotent? | Reason | TTL |
-|----------|--------|-------------|--------|-----|
-| `POST /pos/orders` | Create order | ✅ YES | Prevent double orders from network retries | 24h |
-| `POST /pos/orders/:id/send-to-kitchen` | KDS submit | ✅ YES | Prevent duplicate kitchen tickets | 24h |
-| `POST /pos/orders/:id/modify` | Modify items | ✅ YES | Prevent duplicate item adds | 24h |
-| `POST /pos/orders/:id/void` | Void order | ✅ YES | Prevent duplicate void attempts | 24h |
-| `POST /pos/orders/:id/close` | Close/finalize | ✅ YES | **CRITICAL** - prevent double-charging | 24h |
-| `POST /pos/orders/:id/discount` | Apply discount | ✅ YES | Prevent duplicate discounts | 24h |
-| `POST /pos/orders/:id/post-close-void` | Post-close void | ✅ YES | Prevent duplicate refunds | 24h |
+| Endpoint                               | Method          | Idempotent? | Reason                                     | TTL |
+| -------------------------------------- | --------------- | ----------- | ------------------------------------------ | --- |
+| `POST /pos/orders`                     | Create order    | ✅ YES      | Prevent double orders from network retries | 24h |
+| `POST /pos/orders/:id/send-to-kitchen` | KDS submit      | ✅ YES      | Prevent duplicate kitchen tickets          | 24h |
+| `POST /pos/orders/:id/modify`          | Modify items    | ✅ YES      | Prevent duplicate item adds                | 24h |
+| `POST /pos/orders/:id/void`            | Void order      | ✅ YES      | Prevent duplicate void attempts            | 24h |
+| `POST /pos/orders/:id/close`           | Close/finalize  | ✅ YES      | **CRITICAL** - prevent double-charging     | 24h |
+| `POST /pos/orders/:id/discount`        | Apply discount  | ✅ YES      | Prevent duplicate discounts                | 24h |
+| `POST /pos/orders/:id/post-close-void` | Post-close void | ✅ YES      | Prevent duplicate refunds                  | 24h |
 
 **Fingerprint Strategy**: Full request body (table, items, payments, etc.)
 
@@ -73,12 +74,12 @@ M21 reuses the **M16 idempotency infrastructure** (IdempotencyService, Idempoten
 
 **Controller**: `services/api/src/reservations/reservations.controller.ts`
 
-| Endpoint | Method | Idempotent? | Reason | TTL |
-|----------|--------|-------------|--------|-----|
-| `POST /reservations` | Create reservation | ✅ YES | Prevent duplicate bookings | 24h |
-| `POST /reservations/:id/confirm` | Confirm booking | ✅ YES | Prevent duplicate confirmations (email spam) | 24h |
-| `POST /reservations/:id/cancel` | Cancel booking | ✅ YES | Prevent duplicate cancellations | 24h |
-| `POST /reservations/:id/seat` | Seat guests | ✅ YES | Prevent duplicate seating logs | 24h |
+| Endpoint                         | Method             | Idempotent? | Reason                                       | TTL |
+| -------------------------------- | ------------------ | ----------- | -------------------------------------------- | --- |
+| `POST /reservations`             | Create reservation | ✅ YES      | Prevent duplicate bookings                   | 24h |
+| `POST /reservations/:id/confirm` | Confirm booking    | ✅ YES      | Prevent duplicate confirmations (email spam) | 24h |
+| `POST /reservations/:id/cancel`  | Cancel booking     | ✅ YES      | Prevent duplicate cancellations              | 24h |
+| `POST /reservations/:id/seat`    | Seat guests        | ✅ YES      | Prevent duplicate seating logs               | 24h |
 
 **Fingerprint Strategy**: Full request body (guest count, date, table preferences, etc.)
 
@@ -88,16 +89,16 @@ M21 reuses the **M16 idempotency infrastructure** (IdempotencyService, Idempoten
 
 **Controller**: `services/api/src/bookings/*.controller.ts`
 
-| Endpoint | Method | Idempotent? | Reason | TTL |
-|----------|--------|-------------|--------|-----|
-| `POST /bookings/events` | Create event | ⚠️ NO | Admin operation, rare duplicates acceptable | - |
-| `POST /bookings/events/:id/publish` | Publish event | ⚠️ NO | Idempotent by design (can republish safely) | - |
-| `POST /bookings/events/:id/unpublish` | Unpublish event | ⚠️ NO | Idempotent by design | - |
-| `POST /bookings/:id/confirm` | Confirm booking | ✅ YES | Prevent duplicate confirmations | 24h |
-| `POST /bookings/:id/cancel` | Cancel booking | ✅ YES | Prevent duplicate cancellations | 24h |
-| `POST /bookings/checkin` | Check-in guest | ✅ YES | Prevent duplicate check-ins | 24h |
-| `POST /bookings/public` | **Public ticket purchase** | ✅ YES | **CRITICAL** - prevent double-charging | 24h |
-| `POST /bookings/:id/pay` | Payment processing | ✅ YES | **CRITICAL** - prevent double-charging | 24h |
+| Endpoint                              | Method                     | Idempotent? | Reason                                      | TTL |
+| ------------------------------------- | -------------------------- | ----------- | ------------------------------------------- | --- |
+| `POST /bookings/events`               | Create event               | ⚠️ NO       | Admin operation, rare duplicates acceptable | -   |
+| `POST /bookings/events/:id/publish`   | Publish event              | ⚠️ NO       | Idempotent by design (can republish safely) | -   |
+| `POST /bookings/events/:id/unpublish` | Unpublish event            | ⚠️ NO       | Idempotent by design                        | -   |
+| `POST /bookings/:id/confirm`          | Confirm booking            | ✅ YES      | Prevent duplicate confirmations             | 24h |
+| `POST /bookings/:id/cancel`           | Cancel booking             | ✅ YES      | Prevent duplicate cancellations             | 24h |
+| `POST /bookings/checkin`              | Check-in guest             | ✅ YES      | Prevent duplicate check-ins                 | 24h |
+| `POST /bookings/public`               | **Public ticket purchase** | ✅ YES      | **CRITICAL** - prevent double-charging      | 24h |
+| `POST /bookings/:id/pay`              | Payment processing         | ✅ YES      | **CRITICAL** - prevent double-charging      | 24h |
 
 **Fingerprint Strategy**: Full request body (event ID, tickets, payment details)
 
@@ -107,9 +108,9 @@ M21 reuses the **M16 idempotency infrastructure** (IdempotencyService, Idempoten
 
 **Controller**: `services/api/src/public-booking/public-booking.controller.ts`
 
-| Endpoint | Method | Idempotent? | Reason | TTL |
-|----------|--------|-------------|--------|-----|
-| `POST /public-booking/reservations` | Public reservation | ✅ YES | **CRITICAL** - prevent duplicate bookings from public portal | 24h |
+| Endpoint                            | Method             | Idempotent? | Reason                                                       | TTL |
+| ----------------------------------- | ------------------ | ----------- | ------------------------------------------------------------ | --- |
+| `POST /public-booking/reservations` | Public reservation | ✅ YES      | **CRITICAL** - prevent duplicate bookings from public portal | 24h |
 
 **Fingerprint Strategy**: Full request body (phone, email, date, guest count)
 
@@ -119,10 +120,10 @@ M21 reuses the **M16 idempotency infrastructure** (IdempotencyService, Idempoten
 
 **Controller**: `services/api/src/feedback/feedback.controller.ts`
 
-| Endpoint | Method | Idempotent? | Reason | TTL |
-|----------|--------|-------------|--------|-----|
-| `POST /feedback/public` | Anonymous feedback | ⚠️ OPTIONAL | Already rate-limited (10/hr), duplicate prevention via `orderId` unique constraint | - |
-| `POST /feedback` | Authenticated feedback | ⚠️ OPTIONAL | Duplicate prevention via unique constraints | - |
+| Endpoint                | Method                 | Idempotent? | Reason                                                                             | TTL |
+| ----------------------- | ---------------------- | ----------- | ---------------------------------------------------------------------------------- | --- |
+| `POST /feedback/public` | Anonymous feedback     | ⚠️ OPTIONAL | Already rate-limited (10/hr), duplicate prevention via `orderId` unique constraint | -   |
+| `POST /feedback`        | Authenticated feedback | ⚠️ OPTIONAL | Duplicate prevention via unique constraints                                        | -   |
 
 **Decision**: **Skip feedback endpoints** – existing duplicate prevention (unique constraints on orderId/reservationId) is sufficient.
 
@@ -302,10 +303,12 @@ async createReservation(...) { ... }
 ### Step 4: Fingerprint Configuration
 
 **Current Behavior** (from IdempotencyInterceptor):
+
 - Fingerprint = SHA256 of full request body (JSON stringified with sorted keys)
 - No configuration needed for most endpoints
 
 **Special Cases**:
+
 - If an endpoint includes timestamp fields that change on retry, consider normalizing them
 - Example: `createdAt` set by client should be excluded from fingerprint
 - **M21 Decision**: Use full body fingerprint (no exclusions) – if timestamp drift is an issue, clients should not send it
@@ -315,12 +318,14 @@ async createReservation(...) { ... }
 ### Step 5: TTL Configuration
 
 **Current Behavior**:
+
 - Fixed 24-hour TTL (set in `IdempotencyService.store()`)
 - Cleanup via daily cron job (to be added in Step 4)
 
 **M21 Configuration**: Keep 24-hour default for all endpoints.
 
 **Rationale**:
+
 - Most duplicate submissions occur within minutes (network retries)
 - 24 hours provides safety buffer for offline devices syncing later
 - Longer TTL (e.g., 7 days) would bloat `idempotency_keys` table unnecessarily
@@ -469,6 +474,7 @@ describe('Idempotency (e2e)', () => {
 ## Exceptions (Endpoints NOT Made Idempotent)
 
 ### Admin Event Operations
+
 - `POST /bookings/events` (create event)
 - `POST /bookings/events/:id/publish`
 - `POST /bookings/events/:id/unpublish`
@@ -476,12 +482,14 @@ describe('Idempotency (e2e)', () => {
 **Reason**: Admin-only operations, low frequency, naturally idempotent (can republish safely).
 
 ### Feedback Endpoints
+
 - `POST /feedback/public`
 - `POST /feedback`
 
 **Reason**: Already protected by unique constraints (orderId, reservationId, eventBookingId). Idempotency would be redundant.
 
 ### Read-Only Endpoints
+
 - All `GET`, `DELETE` methods
 
 **Reason**: GET is naturally idempotent, DELETE typically has service-level duplicate prevention.
@@ -545,7 +553,7 @@ describe('Idempotency (e2e)', () => {
 ✅ Docs: DEV_GUIDE.md updated with M21 section  
 ✅ Curl Examples: `curl-examples-m21-idempotency.sh` created  
 ✅ Build: TypeScript build passes with zero errors  
-✅ Completion: `M21-IDEMPOTENCY-COMPLETION.md` created  
+✅ Completion: `M21-IDEMPOTENCY-COMPLETION.md` created
 
 **Estimated Effort**: 4-6 hours (mostly decorator additions + testing)
 
@@ -554,17 +562,21 @@ describe('Idempotency (e2e)', () => {
 ## Deployment Notes
 
 ### Pre-Deployment
+
 1. Run migration: `npx prisma migrate deploy`
 2. Verify schema: `npx prisma generate`
 3. Test on staging with duplicate requests
 
 ### Post-Deployment
+
 1. Monitor `idempotency_keys` table size (should grow slowly)
 2. Check logs for 409 Conflict errors (indicates fingerprint mismatches – may reveal client bugs)
 3. Verify cleanup job runs daily (check `idempotency_keys` count stabilizes)
 
 ### Rollback Plan
+
 If issues arise:
+
 1. Remove `@UseInterceptors(IdempotencyInterceptor)` from affected endpoints
 2. Restart API servers
 3. Idempotency keys in DB can remain (cleanup job will purge after 24h)

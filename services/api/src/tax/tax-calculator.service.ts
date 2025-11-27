@@ -68,9 +68,9 @@ export class TaxCalculatorService {
 
   /**
    * Calculate order totals with item-level tax breakdown
-   * 
+   *
    * This is the canonical method for POS orders - replaces inline tax calculation.
-   * 
+   *
    * @param params - Order calculation parameters
    * @returns Comprehensive order totals with net/tax/gross breakdown
    */
@@ -160,9 +160,9 @@ export class TaxCalculatorService {
 
   /**
    * Calculate event booking deposit totals with tax breakdown
-   * 
+   *
    * Used by events/bookings module when creating EventBooking records.
-   * 
+   *
    * @param params - Event booking calculation parameters
    * @returns Tax breakdown for deposit (net/tax/gross)
    */
@@ -176,11 +176,12 @@ export class TaxCalculatorService {
 
     // Resolve tax rule (use events tax or defaultTax)
     const taxCode = params.taxCode || 'events';
-    const taxRule = taxMatrix[taxCode] || taxMatrix.defaultTax || {
-      code: 'VAT_STD',
-      rate: 0.18,
-      inclusive: true,
-    };
+    const taxRule = taxMatrix[taxCode] ||
+      taxMatrix.defaultTax || {
+        code: 'VAT_STD',
+        rate: 0.18,
+        inclusive: true,
+      };
 
     // Calculate tax
     const taxCalc = this.taxService.calculateTax(params.deposit, taxRule);
@@ -197,7 +198,7 @@ export class TaxCalculatorService {
 
   /**
    * Calculate single item tax (simple utility)
-   * 
+   *
    * @param params - Item calculation parameters
    * @returns Tax breakdown for single item
    */

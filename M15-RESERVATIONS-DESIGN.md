@@ -93,11 +93,13 @@ enum ReservationStatus {
 #### 1. Create Reservation → HELD
 
 **Preconditions**:
+
 - Valid branch, date/time, partySize
 - No overlapping reservation for same table (if tableId specified)
 - Capacity available for time slot (if enforced)
 
 **Actions**:
+
 - Create Reservation record with status = HELD
 - If deposit > 0:
   - Create PaymentIntent with status = PENDING
@@ -109,6 +111,7 @@ enum ReservationStatus {
 - Schedule reminder if startAt > 24h away
 
 **Output**:
+
 - Reservation ID
 - PaymentIntent ID (if deposit required)
 - autoCancelAt timestamp
@@ -120,12 +123,14 @@ enum ReservationStatus {
 #### 2. HELD → CONFIRMED (confirm)
 
 **Preconditions**:
+
 - Current status = HELD
 - If depositStatus = HELD: payment must be captured
 - Capacity still available (revalidate)
 - Not past autoCancelAt
 
 **Actions**:
+
 - Update status = CONFIRMED
 - If depositStatus = HELD:
   - Capture payment via payment provider
@@ -136,6 +141,7 @@ enum ReservationStatus {
 - Allocate table (if not already assigned)
 
 **Output**:
+
 - Updated reservation with status = CONFIRMED
 - Confirmation code
 
@@ -146,11 +152,13 @@ enum ReservationStatus {
 #### 3. CONFIRMED → SEATED (seat)
 
 **Preconditions**:
+
 - Current status = HELD or CONFIRMED
 - Within time window (startAt - 30min to endAt + 30min)
 - Table available (if tableId specified)
 
 **Actions**:
+
 - Update status = SEATED
 - Link to POS order (create or link existing)
 - If deposit > 0 and depositStatus = CAPTURED:
@@ -160,6 +168,7 @@ enum ReservationStatus {
 - Record seatedAt timestamp
 
 **Output**:
+
 - Updated reservation with status = SEATED
 - Linked orderId
 
@@ -170,10 +179,12 @@ enum ReservationStatus {
 #### 4. HELD → CANCELLED (cancel, early)
 
 **Preconditions**:
+
 - Current status = HELD
 - Cancellation before autoCancelAt timeout
 
 **Actions**:
+
 - Update status = CANCELLED
 - Set cancelledAt, cancelledBy, cancelReason
 - If depositStatus = HELD:
@@ -183,6 +194,7 @@ enum ReservationStatus {
 - Send cancellation confirmation
 
 **Output**:
+
 - Updated reservation with status = CANCELLED
 - Refund confirmation (if applicable)
 
@@ -193,10 +205,12 @@ enum ReservationStatus {
 #### 5. CONFIRMED → CANCELLED (cancel, late)
 
 **Preconditions**:
+
 - Current status = CONFIRMED
 - Cancellation within cutoff period (e.g., < 24h before startAt)
 
 **Actions**:
+
 - Update status = CANCELLED
 - Set cancelledAt, cancelledBy, cancelReason
 - Check cancellation policy:
@@ -209,6 +223,7 @@ enum ReservationStatus {
 - Send cancellation notification with refund details
 
 **Output**:
+
 - Updated reservation with status = CANCELLED
 - Refund amount (may be 0 if after cutoff)
 
@@ -219,11 +234,13 @@ enum ReservationStatus {
 #### 6. CONFIRMED → NO_SHOW (noShow)
 
 **Preconditions**:
+
 - Current status = CONFIRMED
 - Current time > startAt + noShowGracePeriod (e.g., 15 minutes)
 - Not already SEATED
 
 **Actions**:
+
 - Update status = NO_SHOW
 - Set noShowAt timestamp
 - Forfeit deposit:
@@ -234,6 +251,7 @@ enum ReservationStatus {
 - Update guest history (no-show count for future reservations)
 
 **Output**:
+
 - Updated reservation with status = NO_SHOW
 - Deposit forfeited amount
 
@@ -244,11 +262,13 @@ enum ReservationStatus {
 #### 7. HELD → CANCELLED (auto-timeout)
 
 **Preconditions**:
+
 - Current status = HELD
 - Current time > autoCancelAt
 - depositStatus != CAPTURED
 
 **Actions** (automated job):
+
 - Update status = CANCELLED
 - Set cancelReason = 'auto_timeout'
 - If PaymentIntent exists:
@@ -256,6 +276,7 @@ enum ReservationStatus {
 - Release capacity
 
 **Output**:
+
 - Updated reservation with status = CANCELLED
 
 **Who**: Automated background job (every 1 minute)
@@ -269,7 +290,7 @@ Add to `Reservation` model:
 ```prisma
 model Reservation {
   // ... existing fields ...
-  
+
   guestEmail      String?           // Email for confirmation
   source          ReservationSource @default(PHONE) // WEB, PHONE, WALK_IN
   notes           String?           // Special requests
@@ -278,7 +299,7 @@ model Reservation {
   cancelReason    String?           // GUEST_REQUEST, VENUE_CAPACITY, AUTO_TIMEOUT, etc.
   noShowAt        DateTime?         // Timestamp when marked no-show
   seatedAt        DateTime?         // Timestamp when seated
-  
+
   order           Order?            @relation(fields: [orderId], references: [id])
 }
 
@@ -385,14 +406,14 @@ enum EventStatus {
 
 model Event {
   // ... existing fields ...
-  
+
   status          EventStatus @default(DRAFT)
   capacity        Int?        // Total event capacity (optional)
   bookingDeadline DateTime?   // Last time to book
   createdByUserId String?
   cancelledAt     DateTime?
   cancelReason    String?
-  
+
   createdBy       User?       @relation(fields: [createdByUserId], references: [id])
 }
 ```
@@ -402,17 +423,20 @@ model Event {
 #### 1. Create Booking → HELD
 
 **Preconditions**:
+
 - Event is PUBLISHED
 - EventTable is active
 - Capacity available (bookings < table.capacity or event.capacity)
 
 **Actions**:
+
 - Create EventBooking with status = HELD
 - Calculate creditTotal based on pricing
 - Set expiration = now + 15 minutes
 - Create PaymentIntent for deposit
 
 **Output**:
+
 - Booking ID
 - PaymentIntent ID
 - Expiration time
@@ -422,11 +446,13 @@ model Event {
 #### 2. HELD → CONFIRMED (confirmBooking)
 
 **Preconditions**:
+
 - Current status = HELD
 - Payment successfully captured
 - Not expired
 
 **Actions**:
+
 - Update status = CONFIRMED
 - Set depositCaptured = true
 - Generate unique ticketCode (ULID)
@@ -436,6 +462,7 @@ model Event {
 - Send confirmation email with PDF
 
 **Output**:
+
 - Ticket code
 - QR code
 - PDF download link
@@ -445,18 +472,21 @@ model Event {
 #### 3. CONFIRMED → CHECKED_IN (checkIn)
 
 **Preconditions**:
+
 - Current status = CONFIRMED
 - ticketCode matches
 - Event has started (after startsAt - 30min)
 - Not already checked in
 
 **Actions**:
+
 - Update status = CHECKED_IN
 - Set checkedInAt = now
 - Set checkedInById = staff user ID
 - Activate prepaid credits for use
 
 **Output**:
+
 - Booking details
 - Available credits
 
@@ -465,12 +495,14 @@ model Event {
 #### 4. Cancel Booking
 
 **Before Event**:
+
 - HELD/CONFIRMED → CANCELLED
 - Full refund if > 48h before event
 - Partial refund if < 48h (policy dependent)
 - Post GL reversal or partial
 
 **After Event**:
+
 - Not allowed (event completed)
 
 ---
@@ -483,16 +515,17 @@ model Event {
 
 ```typescript
 interface DepositPolicy {
-  minPartySize?: number;        // Require deposit if partySize >= X
-  minAdvanceHours?: number;      // Require deposit if booking > X hours ahead
-  peakTimes?: TimeRange[];       // Require deposit for peak periods
-  specialEvents?: boolean;       // Always require for special events
+  minPartySize?: number; // Require deposit if partySize >= X
+  minAdvanceHours?: number; // Require deposit if booking > X hours ahead
+  peakTimes?: TimeRange[]; // Require deposit for peak periods
+  specialEvents?: boolean; // Always require for special events
   amount: 'FIXED' | 'PER_PERSON' | 'PERCENTAGE';
-  value: number;                 // Amount in currency or %
+  value: number; // Amount in currency or %
 }
 ```
 
 **Example Policies**:
+
 - Parties of 8+: $50 deposit
 - Weekend evenings (Fri-Sun, 6pm-10pm): $20/person
 - Special events: Full prepayment
@@ -753,17 +786,17 @@ async function checkAvailability(params: {
   partySize: number;
 }): Promise<AvailabilityResult> {
   const { branchId, dateTime, duration, partySize } = params;
-  
+
   // 1. Get branch total capacity
   const branch = await prisma.branch.findUnique({
     where: { id: branchId },
     select: { totalSeats: true },
   });
-  
+
   // 2. Find all active reservations in overlapping time window
   const startWindow = new Date(dateTime.getTime() - duration * 60 * 1000);
   const endWindow = new Date(dateTime.getTime() + duration * 60 * 1000);
-  
+
   const overlappingReservations = await prisma.reservation.findMany({
     where: {
       branchId,
@@ -772,25 +805,19 @@ async function checkAvailability(params: {
         { startAt: { gte: startWindow, lt: endWindow } },
         { endAt: { gt: startWindow, lte: endWindow } },
         {
-          AND: [
-            { startAt: { lte: startWindow } },
-            { endAt: { gte: endWindow } },
-          ],
+          AND: [{ startAt: { lte: startWindow } }, { endAt: { gte: endWindow } }],
         },
       ],
     },
     select: { partySize: true },
   });
-  
+
   // 3. Calculate occupied seats
-  const occupiedSeats = overlappingReservations.reduce(
-    (sum, res) => sum + res.partySize,
-    0
-  );
-  
+  const occupiedSeats = overlappingReservations.reduce((sum, res) => sum + res.partySize, 0);
+
   // 4. Calculate available seats
   const availableSeats = (branch.totalSeats || 0) - occupiedSeats;
-  
+
   // 5. Check if party can be accommodated
   if (availableSeats >= partySize) {
     return {
@@ -807,7 +834,7 @@ async function checkAvailability(params: {
       partySize,
       searchRange: 2, // hours before/after
     });
-    
+
     return {
       available: false,
       availableSeats,
@@ -841,10 +868,7 @@ async function assignBestTable(params: {
             { startAt: { gte: params.startAt, lt: params.endAt } },
             { endAt: { gt: params.startAt, lte: params.endAt } },
             {
-              AND: [
-                { startAt: { lte: params.startAt } },
-                { endAt: { gte: params.endAt } },
-              ],
+              AND: [{ startAt: { lte: params.startAt } }, { endAt: { gte: params.endAt } }],
             },
           ],
         },
@@ -852,14 +876,12 @@ async function assignBestTable(params: {
     },
     orderBy: { seats: 'asc' }, // Prefer smallest suitable table
   });
-  
+
   // 2. Find best fit (smallest table >= partySize)
-  const bestFit = availableTables.find(
-    (table) => table.seats >= params.partySize
-  );
-  
+  const bestFit = availableTables.find((table) => table.seats >= params.partySize);
+
   if (bestFit) return bestFit;
-  
+
   // 3. If no exact fit, find largest table (for partial seating)
   const largest = availableTables[availableTables.length - 1];
   return largest || null;
@@ -878,7 +900,6 @@ async function assignBestTable(params: {
 ```typescript
 @Controller('public')
 export class PublicBookingController {
-  
   /**
    * GET /public/availability
    * Check table availability for given date/time
@@ -898,7 +919,7 @@ export class PublicBookingController {
       duration: 120, // 2 hour default
     });
   }
-  
+
   /**
    * POST /public/reservations
    * Create reservation request (HELD status)
@@ -908,7 +929,7 @@ export class PublicBookingController {
   async createReservation(@Body() dto: CreatePublicReservationDto) {
     return this.reservationsService.createPublic(dto);
   }
-  
+
   /**
    * GET /public/events
    * List published events
@@ -925,7 +946,7 @@ export class PublicBookingController {
       to: to ? new Date(to) : undefined,
     });
   }
-  
+
   /**
    * GET /public/events/:slug
    * Get event details with availability
@@ -934,17 +955,14 @@ export class PublicBookingController {
   async getPublicEvent(@Param('slug') slug: string) {
     return this.bookingsService.getPublicEventWithAvailability(slug);
   }
-  
+
   /**
    * POST /public/events/:slug/book
    * Create event booking
    */
   @Post('events/:slug/book')
   @UseGuards(RateLimitGuard, RecaptchaGuard)
-  async bookEvent(
-    @Param('slug') slug: string,
-    @Body() dto: CreateEventBookingDto,
-  ) {
+  async bookEvent(@Param('slug') slug: string, @Body() dto: CreateEventBookingDto) {
     return this.bookingsService.createPublicBooking(slug, dto);
   }
 }
@@ -955,16 +973,17 @@ export class PublicBookingController {
 ```typescript
 // Per-IP limits for public endpoints
 const rateLimits = {
-  '/public/availability': { window: 60, max: 30 },      // 30/min
-  '/public/reservations': { window: 60, max: 5 },       // 5/min
-  '/public/events': { window: 60, max: 60 },            // 60/min
-  '/public/events/:slug/book': { window: 60, max: 3 },  // 3/min
+  '/public/availability': { window: 60, max: 30 }, // 30/min
+  '/public/reservations': { window: 60, max: 5 }, // 5/min
+  '/public/events': { window: 60, max: 60 }, // 60/min
+  '/public/events/:slug/book': { window: 60, max: 3 }, // 3/min
 };
 ```
 
 ### CAPTCHA Integration
 
 Add reCAPTCHA verification for high-value operations:
+
 - Creating reservations with deposits
 - Booking event tickets
 - Bulk operations
@@ -975,17 +994,17 @@ export class RecaptchaGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
     const token = request.body.recaptchaToken;
-    
+
     if (!token) {
       throw new BadRequestException('CAPTCHA token required');
     }
-    
+
     const verified = await this.recaptchaService.verify(token);
-    
+
     if (!verified) {
       throw new UnauthorizedException('CAPTCHA verification failed');
     }
-    
+
     return true;
   }
 }
@@ -1002,7 +1021,7 @@ interface BranchBookingSummary {
   branchId: string;
   branchName: string;
   period: { from: Date; to: Date };
-  
+
   reservations: {
     total: number;
     byStatus: Record<ReservationStatus, number>;
@@ -1011,14 +1030,14 @@ interface BranchBookingSummary {
     avgPartySize: number;
     capacityUtilization: number; // % of available seats used
   };
-  
+
   deposits: {
     collected: number;
     applied: number;
     forfeited: number;
     refunded: number;
   };
-  
+
   events: {
     total: number;
     ticketsSold: number;
@@ -1033,28 +1052,26 @@ interface BranchBookingSummary {
 ```typescript
 @Injectable()
 export class FranchiseBookingOverviewService {
-  
   async getFranchiseBookingOverview(params: {
     franchiseId: string;
     period: { from: Date; to: Date };
   }): Promise<FranchiseBookingOverview> {
-    
     // 1. Get all branches in franchise
     const branches = await this.prisma.branch.findMany({
       where: { franchise: { id: params.franchiseId } },
       select: { id: true, name: true },
     });
-    
+
     // 2. Aggregate reservations per branch
     const branchSummaries = await Promise.all(
-      branches.map(branch =>
+      branches.map((branch) =>
         this.getBranchBookingSummary({
           branchId: branch.id,
           period: params.period,
-        })
-      )
+        }),
+      ),
     );
-    
+
     // 3. Calculate franchise totals
     return {
       franchiseId: params.franchiseId,
@@ -1115,7 +1132,7 @@ async function seatReservation(reservationId: string) {
     where: { id: reservationId },
     include: { table: true },
   });
-  
+
   // Create POS order
   const order = await posService.createOrder({
     orgId: reservation.orgId,
@@ -1128,7 +1145,7 @@ async function seatReservation(reservationId: string) {
       partySize: reservation.partySize,
     },
   });
-  
+
   // Link reservation to order
   await prisma.reservation.update({
     where: { id: reservationId },
@@ -1138,7 +1155,7 @@ async function seatReservation(reservationId: string) {
       seatedAt: new Date(),
     },
   });
-  
+
   return order;
 }
 ```
@@ -1153,19 +1170,19 @@ async function closeOrderWithDeposit(orderId: string) {
       reservation: true,
     },
   });
-  
+
   if (order.reservation && order.reservation.deposit > 0) {
     // Apply deposit as prepayment
     const depositAmount = Number(order.reservation.deposit);
     const remainingDue = Number(order.total) - depositAmount;
-    
+
     // Post GL entries (see deposit flows above)
     await postingService.applyReservationDeposit({
       reservationId: order.reservation.id,
       orderId: order.id,
       depositAmount,
     });
-    
+
     // Update order payments
     await prisma.payment.create({
       data: {
@@ -1176,7 +1193,7 @@ async function closeOrderWithDeposit(orderId: string) {
         reference: `DEPOSIT-${order.reservation.id}`,
       },
     });
-    
+
     // Update reservation
     await prisma.reservation.update({
       where: { id: order.reservation.id },
@@ -1185,7 +1202,7 @@ async function closeOrderWithDeposit(orderId: string) {
       },
     });
   }
-  
+
   // Continue with normal order close logic (M12)
   return posService.closeOrder(orderId);
 }
@@ -1200,7 +1217,6 @@ async function validateReservationTime(params: {
   branchId: string;
   dateTime: Date;
 }): Promise<{ valid: boolean; reason?: string }> {
-  
   // Find shift covering the reservation time
   const shift = await prisma.shiftSchedule.findFirst({
     where: {
@@ -1210,14 +1226,14 @@ async function validateReservationTime(params: {
       endTime: { gte: params.dateTime },
     },
   });
-  
+
   if (!shift) {
     return {
       valid: false,
       reason: 'No shift scheduled for this time',
     };
   }
-  
+
   return { valid: true };
 }
 ```
@@ -1229,7 +1245,7 @@ async function getShiftReservations(shiftId: string) {
   const shift = await prisma.shiftSchedule.findUnique({
     where: { id: shiftId },
   });
-  
+
   const reservations = await prisma.reservation.findMany({
     where: {
       branchId: shift.branchId,
@@ -1239,12 +1255,12 @@ async function getShiftReservations(shiftId: string) {
       },
     },
   });
-  
+
   return {
     shiftId,
     expectedCovers: reservations.reduce((sum, r) => sum + r.partySize, 0),
-    actualSeated: reservations.filter(r => r.status === 'SEATED').length,
-    noShows: reservations.filter(r => r.status === 'NO_SHOW').length,
+    actualSeated: reservations.filter((r) => r.status === 'SEATED').length,
+    noShows: reservations.filter((r) => r.status === 'NO_SHOW').length,
   };
 }
 ```
@@ -1259,7 +1275,7 @@ async function sendReservationConfirmation(reservationId: string) {
     where: { id: reservationId },
     include: { branch: true },
   });
-  
+
   await emailService.send({
     to: reservation.guestEmail,
     template: 'reservation-confirmation',
@@ -1281,7 +1297,7 @@ async function sendReservationConfirmation(reservationId: string) {
 // Cron job runs hourly
 async function sendPendingReminders() {
   const reminderTime = new Date(Date.now() + 24 * 60 * 60 * 1000);
-  
+
   const reminders = await prisma.reservationReminder.findMany({
     where: {
       scheduledAt: {
@@ -1296,7 +1312,7 @@ async function sendPendingReminders() {
       },
     },
   });
-  
+
   for (const reminder of reminders) {
     if (reminder.channel === 'SMS') {
       await smsService.send({
@@ -1310,7 +1326,7 @@ async function sendPendingReminders() {
         data: { reservation: reminder.reservation },
       });
     }
-    
+
     await prisma.reservationReminder.update({
       where: { id: reminder.id },
       data: { sentAt: new Date() },
@@ -1325,22 +1341,22 @@ async function sendPendingReminders() {
 
 ### RBAC Matrix
 
-| Operation | Public | L1 (Waiter) | L2 (Host) | L3 (Manager) | L4+ (Owner) |
-|-----------|--------|-------------|-----------|--------------|-------------|
-| View availability | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Create reservation (web) | ✅ | ❌ | ❌ | ❌ | ❌ |
-| Create reservation (internal) | ❌ | ❌ | ✅ | ✅ | ✅ |
-| List reservations | ❌ | ✅ (view only) | ✅ | ✅ | ✅ |
-| Confirm reservation | ❌ | ❌ | ✅ | ✅ | ✅ |
-| Seat reservation | ❌ | ✅ | ✅ | ✅ | ✅ |
-| Cancel reservation (early) | ✅ (own) | ❌ | ✅ | ✅ | ✅ |
-| Cancel reservation (late) | ❌ | ❌ | ❌ | ✅ | ✅ |
-| Mark no-show | ❌ | ❌ | ❌ | ✅ | ✅ |
-| View deposit status | ❌ | ❌ | ✅ | ✅ | ✅ |
-| Create event | ❌ | ❌ | ❌ | ✅ | ✅ |
-| Publish event | ❌ | ❌ | ❌ | ✅ | ✅ |
-| Cancel event | ❌ | ❌ | ❌ | ❌ | ✅ |
-| Check-in guest | ❌ | ✅ | ✅ | ✅ | ✅ |
+| Operation                     | Public   | L1 (Waiter)    | L2 (Host) | L3 (Manager) | L4+ (Owner) |
+| ----------------------------- | -------- | -------------- | --------- | ------------ | ----------- |
+| View availability             | ✅       | ✅             | ✅        | ✅           | ✅          |
+| Create reservation (web)      | ✅       | ❌             | ❌        | ❌           | ❌          |
+| Create reservation (internal) | ❌       | ❌             | ✅        | ✅           | ✅          |
+| List reservations             | ❌       | ✅ (view only) | ✅        | ✅           | ✅          |
+| Confirm reservation           | ❌       | ❌             | ✅        | ✅           | ✅          |
+| Seat reservation              | ❌       | ✅             | ✅        | ✅           | ✅          |
+| Cancel reservation (early)    | ✅ (own) | ❌             | ✅        | ✅           | ✅          |
+| Cancel reservation (late)     | ❌       | ❌             | ❌        | ✅           | ✅          |
+| Mark no-show                  | ❌       | ❌             | ❌        | ✅           | ✅          |
+| View deposit status           | ❌       | ❌             | ✅        | ✅           | ✅          |
+| Create event                  | ❌       | ❌             | ❌        | ✅           | ✅          |
+| Publish event                 | ❌       | ❌             | ❌        | ✅           | ✅          |
+| Cancel event                  | ❌       | ❌             | ❌        | ❌           | ✅          |
+| Check-in guest                | ❌       | ✅             | ✅        | ✅           | ✅          |
 
 ### Validation & Sanitization
 
@@ -1352,26 +1368,26 @@ class CreatePublicReservationDto {
   @MinLength(2)
   @MaxLength(100)
   name: string;
-  
+
   @IsEmail()
   guestEmail: string;
-  
+
   @IsPhoneNumber('UG') // Uganda format
   phone: string;
-  
+
   @IsInt()
   @Min(1)
   @Max(50)
   partySize: number;
-  
+
   @IsDateString()
   startAt: string;
-  
+
   @IsOptional()
   @IsString()
   @MaxLength(500)
   notes?: string;
-  
+
   @IsString()
   recaptchaToken: string; // Required for high-value bookings
 }
@@ -1385,11 +1401,11 @@ async function getReservation(id: string, orgId: string) {
   const reservation = await prisma.reservation.findUnique({
     where: { id },
   });
-  
+
   if (!reservation || reservation.orgId !== orgId) {
     throw new NotFoundException('Reservation not found');
   }
-  
+
   return reservation;
 }
 
@@ -1403,10 +1419,10 @@ async function canAccessBranch(userId: string, branchId: string) {
       },
     },
   });
-  
+
   if (!user.franchise) return false;
-  
-  return user.franchise.branches.some(b => b.id === branchId);
+
+  return user.franchise.branches.some((b) => b.id === branchId);
 }
 ```
 

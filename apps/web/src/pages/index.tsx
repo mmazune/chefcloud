@@ -1,23 +1,28 @@
+import { useEffect } from 'react';
+import { useRouter } from 'next/router';
+import { useAuth } from '@/contexts/AuthContext';
+
 export default function Home() {
+  const router = useRouter();
+  const { user, loading } = useAuth();
+
+  useEffect(() => {
+    if (!loading) {
+      if (user) {
+        router.push('/dashboard');
+      } else {
+        router.push('/login');
+      }
+    }
+  }, [user, loading, router]);
+
+  // Show loading state while redirecting
   return (
-    <main style={{ padding: '2rem', fontFamily: 'system-ui' }}>
-      <h1>ChefCloud Web</h1>
-      <p>Enterprise-grade POS for restaurants and bars in Uganda</p>
-      <div style={{ marginTop: '2rem' }}>
-        <h2>API Routes:</h2>
-        <ul>
-          <li>
-            <a href="/api/health" target="_blank" rel="noopener noreferrer">
-              /api/health
-            </a>
-          </li>
-          <li>
-            <a href="/api/version" target="_blank" rel="noopener noreferrer">
-              /api/version
-            </a>
-          </li>
-        </ul>
+    <div className="flex h-screen items-center justify-center">
+      <div className="text-center">
+        <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent motion-reduce:animate-[spin_1.5s_linear_infinite]"></div>
+        <p className="text-muted-foreground">Loading ChefCloud...</p>
       </div>
-    </main>
+    </div>
   );
 }

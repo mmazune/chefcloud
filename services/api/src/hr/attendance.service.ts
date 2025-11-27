@@ -43,7 +43,14 @@ export class AttendanceService {
    * Also creates TimeEntry for backward compatibility
    */
   async clockIn(data: ClockInData, _userId?: string) {
-    const { employeeId, orgId, branchId, dutyShiftId, source = AttendanceSource.CLOCK, notes } = data;
+    const {
+      employeeId,
+      orgId,
+      branchId,
+      dutyShiftId,
+      source = AttendanceSource.CLOCK,
+      notes,
+    } = data;
 
     // Verify employee exists and is active
     const employee = await this.prisma.client.employee.findFirst({
@@ -262,7 +269,8 @@ export class AttendanceService {
    * Register cover shift - employee B covered for employee A
    */
   async registerCover(data: RegisterCoverData, _registeredById: string) {
-    const { coveringEmployeeId, coveredForEmployeeId, orgId, branchId, dutyShiftId, date, notes } = data;
+    const { coveringEmployeeId, coveredForEmployeeId, orgId, branchId, dutyShiftId, date, notes } =
+      data;
 
     const coverDate = new Date(date);
     coverDate.setHours(0, 0, 0, 0);

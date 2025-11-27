@@ -2,7 +2,7 @@ import { Order, Payment } from '@chefcloud/db';
 
 /**
  * M12: Utility for calculating order monetary totals and balances.
- * 
+ *
  * Canonical monetary model:
  * - totalDue = order.total (subtotal - discount + tax)
  * - totalPaid = sum(payments.amount where status='completed')
@@ -24,7 +24,7 @@ export class OrderTotalsCalculator {
    */
   static calculateTotalPaid(payments: Payment[]): number {
     return payments
-      .filter(p => p.status === 'completed')
+      .filter((p) => p.status === 'completed')
       .reduce((sum, p) => sum + Number(p.amount), 0);
   }
 
@@ -72,7 +72,7 @@ export class OrderTotalsCalculator {
       tipTotal,
       canClose,
       paymentsCount: payments.length,
-      completedPaymentsCount: payments.filter(p => p.status === 'completed').length,
+      completedPaymentsCount: payments.filter((p) => p.status === 'completed').length,
     };
   }
 }

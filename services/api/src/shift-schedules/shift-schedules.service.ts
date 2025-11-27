@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { CreateShiftScheduleDto } from './dto/create-shift-schedule.dto';
 
@@ -96,12 +101,7 @@ export class ShiftSchedulesService {
   /**
    * List schedules for a branch within a date range
    */
-  async findByBranchAndDateRange(
-    orgId: string,
-    branchId: string,
-    startDate: Date,
-    endDate: Date,
-  ) {
+  async findByBranchAndDateRange(orgId: string, branchId: string, startDate: Date, endDate: Date) {
     // Validate branch belongs to org
     const branch = await this.prisma.branch.findFirst({
       where: { id: branchId, orgId },

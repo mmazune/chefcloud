@@ -12,7 +12,6 @@ import {
   Param,
   Body,
   UseGuards,
-  BadRequestException,
   NotFoundException,
   HttpCode,
   HttpStatus,
@@ -66,10 +65,7 @@ export class FeedbackController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('L1', 'L2', 'L3', 'L4', 'L5', 'HR')
   @HttpCode(HttpStatus.CREATED)
-  async submitFeedback(
-    @CurrentUser() user: any,
-    @Body() dto: CreateFeedbackDto,
-  ) {
+  async submitFeedback(@CurrentUser() user: any, @Body() dto: CreateFeedbackDto) {
     const feedback = await this.feedbackService.createFeedback(dto, {
       userId: user.id,
       orgId: user.orgId,
@@ -102,10 +98,7 @@ export class FeedbackController {
   @Get()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('L4', 'L5', 'HR')
-  async listFeedback(
-    @CurrentUser() user: any,
-    @Query() query: ListFeedbackQueryDto,
-  ) {
+  async listFeedback(@CurrentUser() user: any, @Query() query: ListFeedbackQueryDto) {
     const isOrgLevel = user.roleLevel === 'L5' || user.roles?.includes('HR');
 
     return this.feedbackService.listFeedback(query, {
@@ -125,10 +118,7 @@ export class FeedbackController {
   @Get(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('L1', 'L2', 'L3', 'L4', 'L5', 'HR')
-  async getFeedback(
-    @CurrentUser() user: any,
-    @Param('id') id: string,
-  ) {
+  async getFeedback(@CurrentUser() user: any, @Param('id') id: string) {
     const isOrgLevel = user.roleLevel === 'L5' || user.roles?.includes('HR');
 
     const feedback = await this.feedbackService.getFeedbackById(id, {
@@ -157,10 +147,7 @@ export class FeedbackController {
   @Get('/analytics/nps-summary')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('L4', 'L5', 'HR', 'ACCOUNTANT')
-  async getNpsSummary(
-    @CurrentUser() user: any,
-    @Query() query: NpsSummaryQueryDto,
-  ) {
+  async getNpsSummary(@CurrentUser() user: any, @Query() query: NpsSummaryQueryDto) {
     return this.feedbackService.getNpsSummary(query, {
       orgId: user.orgId,
       branchIds: user.branches?.map((b: any) => b.id),
@@ -176,10 +163,7 @@ export class FeedbackController {
   @Get('/analytics/breakdown')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('L4', 'L5', 'HR')
-  async getBreakdown(
-    @CurrentUser() user: any,
-    @Query() query: NpsSummaryQueryDto,
-  ) {
+  async getBreakdown(@CurrentUser() user: any, @Query() query: NpsSummaryQueryDto) {
     return this.feedbackService.getFeedbackBreakdown(query, {
       orgId: user.orgId,
       branchIds: user.branches?.map((b: any) => b.id),
@@ -195,10 +179,7 @@ export class FeedbackController {
   @Get('/analytics/top-comments')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('L4', 'L5', 'HR')
-  async getTopComments(
-    @CurrentUser() user: any,
-    @Query() query: TopCommentsQueryDto,
-  ) {
+  async getTopComments(@CurrentUser() user: any, @Query() query: TopCommentsQueryDto) {
     return this.feedbackService.getTopComments(query, {
       orgId: user.orgId,
       branchIds: user.branches?.map((b: any) => b.id),

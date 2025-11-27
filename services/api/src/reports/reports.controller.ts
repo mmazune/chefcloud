@@ -1,8 +1,23 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Controller, Get, Post, Patch, Delete, Param, Query, Body, UseGuards, Req } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Param,
+  Query,
+  Body,
+  UseGuards,
+  Req,
+} from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ReportsService } from './reports.service';
-import { SubscriptionService, CreateSubscriptionDto, UpdateSubscriptionDto } from './subscription.service';
+import {
+  SubscriptionService,
+  CreateSubscriptionDto,
+  UpdateSubscriptionDto,
+} from './subscription.service';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 
@@ -34,10 +49,7 @@ export class ReportsController {
    */
   @Get('subscriptions')
   @Roles('L4', 'L5', 'ACCOUNTANT')
-  async getSubscriptions(
-    @Req() req: any,
-    @Query('branchId') branchId?: string,
-  ): Promise<any> {
+  async getSubscriptions(@Req() req: any, @Query('branchId') branchId?: string): Promise<any> {
     return this.subscriptionService.getSubscriptions(req.user.orgId, branchId);
   }
 
@@ -47,10 +59,7 @@ export class ReportsController {
    */
   @Post('subscriptions')
   @Roles('L4', 'L5')
-  async createSubscription(
-    @Req() req: any,
-    @Body() dto: CreateSubscriptionDto,
-  ): Promise<any> {
+  async createSubscription(@Req() req: any, @Body() dto: CreateSubscriptionDto): Promise<any> {
     return this.subscriptionService.createSubscription(req.user.orgId, dto);
   }
 
@@ -74,10 +83,7 @@ export class ReportsController {
    */
   @Delete('subscriptions/:id')
   @Roles('L4', 'L5')
-  async deleteSubscription(
-    @Req() req: any,
-    @Param('id') id: string,
-  ): Promise<void> {
+  async deleteSubscription(@Req() req: any, @Param('id') id: string): Promise<void> {
     await this.subscriptionService.deleteSubscription(req.user.orgId, id);
   }
 }

@@ -95,7 +95,7 @@ export class ShiftsService {
         // M2-SHIFTS: Handle out-of-tolerance stock counts with manager override
         if (error.status === 409 && error.response?.code === 'COUNT_OUT_OF_TOLERANCE') {
           stockCountOutOfTolerance = true;
-          
+
           // If override not provided, block shift close
           if (!dto.override) {
             throw error;
