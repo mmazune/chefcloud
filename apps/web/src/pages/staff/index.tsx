@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AppShell } from '@/components/layout/AppShell';
 import { PageHeader } from '@/components/layout/PageHeader';
@@ -11,6 +11,11 @@ import { EmployeeForm } from '@/components/staff/EmployeeForm';
 import { apiClient } from '@/lib/api';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { Plus, Search } from 'lucide-react';
+import { registerPosServiceWorker } from '@/lib/registerPosServiceWorker';
+import { useOnlineStatus } from '@/hooks/useOnlineStatus';
+import { useStaffCachedOverview } from '@/hooks/useStaffCachedOverview';
+
+// M27-S5: Extended with offline-first caching
 
 interface Employee {
   id: string;
@@ -42,6 +47,18 @@ export default function StaffPage() {
   const [isActiveFilter, setIsActiveFilter] = useState<boolean | undefined>(undefined);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
+
+  // M27-S5: Register service worker for offline support
+  useEffect(() => {
+    registerPosServiceWorker();
+  }, []);
+
+  // M27-S5: Online status and cached staff overview
+  const isOnline = useOnlineStatus();
+  const {
+    source: cacheSource,
+    isStale: cacheIsStale,
+  } = useStaffCachedOverview();
 
   const { data, isLoading } = useQuery({
     queryKey: ['employees', page, search, isActiveFilter],
@@ -150,6 +167,30 @@ export default function StaffPage() {
 
   return (
     <AppShell>
+      {/* M27-S5: Offline/stale banners */}
+      {!isOnline && cacheSource !== 'none' && (
+        <div className="bg-amber-50 border-b border-amber-200 px-3 py-1 text-xs text-amber-900">
+          Viewing last-known staff metrics from this device.
+          {cacheIsStale && (
+            <span className="ml-2 font-semibold">
+              Note: data is older than your freshness window; connect soon to refresh.
+            </span>
+          )}
+        </div>
+      )}
+
+      {!isOnline && cacheSource === 'none' && (
+        <div className="bg-red-50 border-b border-red-200 px-3 py-1 text-xs text-red-900">
+          No cached staff overview available. Connect at least once to enable offline staff view.
+        </div>
+      )}
+
+      {isOnline && cacheIsStale && cacheSource !== 'none' && (
+        <div className="bg-orange-50 border-b border-orange-200 px-3 py-1 text-xs text-orange-900">
+          Staff snapshot is stale. A fresh version will load when the server is reachable.
+        </div>
+      )}
+
       <PageHeader
         title="Staff Management"
         subtitle="Manage employees, contracts, and HR information"

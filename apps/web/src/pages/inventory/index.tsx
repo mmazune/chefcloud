@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AppShell } from '@/components/layout/AppShell';
 import { PageHeader } from '@/components/layout/PageHeader';
@@ -10,8 +10,12 @@ import { Card } from '@/components/ui/card';
 import { Drawer } from '@/components/ui/drawer';
 import { apiClient } from '@/lib/api';
 import { Search, AlertTriangle, CheckCircle } from 'lucide-react';
+import { registerPosServiceWorker } from '@/lib/registerPosServiceWorker';
+import { useOnlineStatus } from '@/hooks/useOnlineStatus';
+import { useInventoryCachedOverview } from '@/hooks/useInventoryCachedOverview';
 
 // M24-S2: Inventory Management Page
+// M27-S5: Extended with offline-first caching
 
 interface InventoryItem {
   id: string;
@@ -46,6 +50,18 @@ export default function InventoryPage() {
   const [showLowStockOnly, setShowLowStockOnly] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
+
+  // M27-S5: Register service worker for offline support
+  useEffect(() => {
+    registerPosServiceWorker();
+  }, []);
+
+  // M27-S5: Online status and cached inventory overview
+  const isOnline = useOnlineStatus();
+  const {
+    source: cacheSource,
+    isStale: cacheIsStale,
+  } = useInventoryCachedOverview();
 
   // Fetch inventory items
   const { data: items, isLoading: itemsLoading } = useQuery({
@@ -233,6 +249,30 @@ export default function InventoryPage() {
 
   return (
     <AppShell>
+      {/* M27-S5: Offline/stale banners */}
+      {!isOnline && cacheSource !== 'none' && (
+        <div className="bg-amber-50 border-b border-amber-200 px-3 py-1 text-xs text-amber-900">
+          Viewing last-known inventory data from this device.
+          {cacheIsStale && (
+            <span className="ml-2 font-semibold">
+              Note: data is older than your freshness window; connect soon to refresh.
+            </span>
+          )}
+        </div>
+      )}
+
+      {!isOnline && cacheSource === 'none' && (
+        <div className="bg-red-50 border-b border-red-200 px-3 py-1 text-xs text-red-900">
+          No cached inventory data available. Connect at least once to enable offline inventory view.
+        </div>
+      )}
+
+      {isOnline && cacheIsStale && cacheSource !== 'none' && (
+        <div className="bg-orange-50 border-b border-orange-200 px-3 py-1 text-xs text-orange-900">
+          Inventory snapshot is stale. A fresh version will load when the server is reachable.
+        </div>
+      )}
+
       <PageHeader
         title="Inventory"
         subtitle="Stock levels, low-stock alerts, and basic item settings"

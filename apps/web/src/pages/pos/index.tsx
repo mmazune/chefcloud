@@ -12,6 +12,8 @@ import { usePosCachedOpenOrders } from '@/hooks/usePosCachedOpenOrders';
 import { useOfflineStorageEstimate } from '@/hooks/useOfflineStorageEstimate';
 import { clearPosSnapshots } from '@/lib/posIndexedDb';
 import { PosSyncStatusPanel } from '@/components/pos/PosSyncStatusPanel';
+import { PosSplitBillDrawer } from '@/components/pos/PosSplitBillDrawer';
+import type { PosSplitPaymentsDto } from '@/types/pos';
 
 interface Order {
   id: string;
@@ -79,6 +81,9 @@ export default function PosPage() {
   const [paymentMethod, setPaymentMethod] = useState<'CASH' | 'CARD' | 'MOBILE'>('CASH');
   const [voidModalOpen, setVoidModalOpen] = useState(false);
   const [voidReason, setVoidReason] = useState('');
+  // M26-EXT1: Split bill state
+  const [activeSplitOrderId, setActiveSplitOrderId] = useState<string | null>(null);
+  const [isSplitSubmitting, setIsSplitSubmitting] = useState(false);
   const [menuSearch, setMenuSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
@@ -91,8 +96,8 @@ export default function PosPage() {
     registerPosServiceWorker();
   }, []);
 
-  // M27-S1 + M27-S2 + M27-S4 + M27-S6: Offline queue for resilient POS operations with sync logging
-  const { isOnline, isSyncing, queue, syncLog, addToQueue, syncQueue, clearQueue } = useOfflineQueue();
+  // M27-S1 + M27-S2 + M27-S4 + M27-S6 + M27-S8: Offline queue for resilient POS operations with sync logging
+  const { isOnline, isSyncing, queue, syncLog, addToQueue, syncQueue, clearQueue, clearSyncHistory } = useOfflineQueue();
 
   // M27-S4 + M27-S7: Derived sync status counts
   const queuedCount = queue.length;
@@ -518,6 +523,17 @@ export default function PosPage() {
     clearQueue();
   };
 
+  // M27-S8: Clear sync history handler
+  const handleClearSyncHistory = () => {
+    if (typeof window !== 'undefined') {
+      const ok = window.confirm(
+        'This will remove all recorded sync history on this device. Pending actions and cached data will not be affected. Continue?'
+      );
+      if (!ok) return;
+    }
+    clearSyncHistory();
+  };
+
   const handleConfirmPayment = () => {
     if (!selectedOrderId) return;
     closeOrderMutation.mutate({ orderId: selectedOrderId, amount: paymentAmount });
@@ -531,6 +547,52 @@ export default function PosPage() {
   const handleConfirmVoid = () => {
     if (!selectedOrderId || !voidReason.trim()) return;
     voidOrderMutation.mutate({ orderId: selectedOrderId, reason: voidReason });
+  };
+
+  // M26-EXT1: Handle split bill submission with offline queue support
+  const handleSubmitSplit = async (orderId: string, payload: PosSplitPaymentsDto) => {
+    setIsSplitSubmitting(true);
+    try {
+      const url = `/api/pos/orders/${orderId}/split-payments`;
+      const idempotencyKey = generateIdempotencyKey(`pos-split-${orderId}`);
+
+      if (!isOnline) {
+        // Queue for background sync using existing offlineQueue infra
+        addToQueue({
+          url,
+          method: 'POST',
+          body: payload,
+          idempotencyKey,
+        });
+        // Optimistically close drawer and refresh order list
+        queryClient.invalidateQueries({ queryKey: ['pos-open-orders'] });
+        queryClient.invalidateQueries({ queryKey: ['pos-order', orderId] });
+        setActiveSplitOrderId(null);
+        return;
+      }
+
+      const resp = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+          'X-Idempotency-Key': idempotencyKey,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!resp.ok) {
+        const text = await resp.text();
+        throw new Error(text || `Split payments failed: ${resp.status}`);
+      }
+
+      // Success - refresh order data
+      queryClient.invalidateQueries({ queryKey: ['pos-open-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['pos-order', orderId] });
+      setActiveSplitOrderId(null);
+    } finally {
+      setIsSplitSubmitting(false);
+    }
   };
 
   const totalPaid = activeOrder?.payments.reduce((sum, p) => sum + p.amount, 0) || 0;
@@ -888,13 +950,22 @@ export default function PosPage() {
                 )}
 
                 {['SENT', 'IN_KITCHEN', 'READY', 'SERVED'].includes(activeOrder.status) && balance > 0 && (
-                  <Button
-                    variant="default"
-                    className="w-full"
-                    onClick={handleOpenPayment}
-                  >
-                    Take Payment
-                  </Button>
+                  <>
+                    <Button
+                      variant="default"
+                      className="w-full"
+                      onClick={handleOpenPayment}
+                    >
+                      Take Payment
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      className="w-full"
+                      onClick={() => setActiveSplitOrderId(activeOrder.id)}
+                    >
+                      Split Bill
+                    </Button>
+                  </>
                 )}
 
                 {['NEW', 'SENT'].includes(activeOrder.status) && (
@@ -1188,7 +1259,7 @@ export default function PosPage() {
         </div>
       )}
 
-      {/* M27-S4 + M27-S6: Sync Status Panel with cache management */}
+      {/* M27-S4 + M27-S6 + M27-S8: Sync Status Panel with cache management and persistent sync history */}
       <PosSyncStatusPanel
         isOpen={isSyncPanelOpen}
         onClose={() => setIsSyncPanelOpen(false)}
@@ -1197,12 +1268,26 @@ export default function PosPage() {
         onRetryAll={syncQueue}
         onClearSnapshots={handleClearSnapshots}
         onClearQueue={handleClearQueue}
+        onClearSyncHistory={handleClearSyncHistory}
         menuAgeMs={menuAgeMs}
         menuIsStale={menuIsStale}
         openOrdersAgeMs={openOrdersAgeMs}
         openOrdersIsStale={openOrdersIsStale}
         storageEstimate={storageEstimate}
       />
+
+      {/* M26-EXT1: Split Bill Drawer */}
+      {activeSplitOrderId && activeOrder && (
+        <PosSplitBillDrawer
+          isOpen={true}
+          onClose={() => setActiveSplitOrderId(null)}
+          orderId={activeSplitOrderId}
+          orderTotal={activeOrder.total}
+          currency="UGX"
+          isSubmitting={isSplitSubmitting}
+          onSubmitSplit={payload => handleSubmitSplit(activeSplitOrderId, payload)}
+        />
+      )}
     </AppShell>
   );
 }

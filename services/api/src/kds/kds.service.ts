@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Injectable } from '@nestjs/common';
+import { Injectable, forwardRef, Inject } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { EventBusService } from '../events/event-bus.service';
 import { KdsTicketDto, SlaState, UpdateKdsSlaConfigDto } from './dto/kds-ticket.dto';
@@ -9,6 +9,8 @@ export class KdsService {
   constructor(
     private prisma: PrismaService,
     private eventBus: EventBusService,
+    @Inject(forwardRef(() => import('./kds.gateway').then((m) => m.KdsGateway)))
+    private kdsGateway?: any, // Use lazy injection to avoid circular dependency
   ) {}
 
   /**
@@ -227,6 +229,11 @@ export class KdsService {
       });
     }
 
+    // M28-KDS-S3: Broadcast real-time update to all connected clients
+    if (this.kdsGateway) {
+      await this.kdsGateway.broadcastOrdersUpdated();
+    }
+
     return ticket;
   }
 
@@ -247,6 +254,11 @@ export class KdsService {
       status: 'RECALLED',
       at: new Date().toISOString(),
     });
+
+    // M28-KDS-S3: Broadcast real-time update to all connected clients
+    if (this.kdsGateway) {
+      await this.kdsGateway.broadcastOrdersUpdated();
+    }
 
     return ticket;
   }

@@ -1,10 +1,12 @@
 /**
- * M27-S1 + M27-S2 + M27-S4 + M27-S7: useOfflineQueue Hook
+ * M27-S1 + M27-S2 + M27-S4 + M27-S6 + M27-S7 + M27-S8: useOfflineQueue Hook
  * 
  * Manages offline/online state and provides queue operations for POS
  * M27-S2: Added Background Sync support and service worker coordination
  * M27-S4: Added sync status tracking and observability layer
+ * M27-S6: Added manual cache clearing and queue management
  * M27-S7: Added conflict detection and resolution
+ * M27-S8: Added persistent sync logs across reloads
  */
 
 import { useEffect, useState, useCallback } from 'react';
@@ -15,6 +17,11 @@ import {
   saveQueue,
   clearQueue as clearQueueStorage,
 } from '@/lib/offlineQueue';
+import {
+  loadPersistedSyncLog,
+  savePersistedSyncLog,
+  clearPersistedSyncLog,
+} from '@/lib/posSyncLogDb';
 
 type SyncStatus = 'pending' | 'syncing' | 'success' | 'failed' | 'conflict';
 
@@ -178,25 +185,52 @@ export function useOfflineQueue() {
   );
   const [queue, setQueue] = useState<QueuedRequest[]>([]);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
-  const [syncLog, setSyncLog] = useState<SyncLogEntry[]>([]);
+  const [syncLog, setSyncLogState] = useState<SyncLogEntry[]>([]);
 
-  // Load initial queue on mount
+  // M27-S8: Wrapper for sync log updates with persistence
+  const applySyncLogUpdate = useCallback(
+    (updater: (prev: SyncLogEntry[]) => SyncLogEntry[]) => {
+      setSyncLogState(prev => {
+        const next = updater(prev);
+        // Fire-and-forget persistence
+        void savePersistedSyncLog(next);
+        return next;
+      });
+    },
+    []
+  );
+
+  // M27-S8: Load initial queue and persisted sync log on mount
   useEffect(() => {
     if (typeof window === 'undefined') return;
     setQueue(loadQueue());
+
+    let cancelled = false;
+
+    void (async () => {
+      const persisted = await loadPersistedSyncLog();
+      if (cancelled) return;
+      if (persisted.length > 0) {
+        setSyncLogState(persisted);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  // M27-S4: Helper to update sync log entry
+  // M27-S4 + M27-S8: Helper to update sync log entry with persistence
   const updateLogStatus = useCallback(
     (id: string, updater: (entry: SyncLogEntry | null) => SyncLogEntry) => {
-      setSyncLog(prev => {
+      applySyncLogUpdate(prev => {
         const existing = prev.find(e => e.id === id) ?? null;
         const updated = updater(existing);
         const rest = prev.filter(e => e.id !== id);
         return [...rest, updated];
       });
     },
-    []
+    [applySyncLogUpdate]
   );
 
   // M27-S2 + M27-S4: syncQueue function with isSyncing state and sync logging
@@ -359,10 +393,10 @@ export function useOfflineQueue() {
 
       setQueue(updatedQueue);
 
-      // M27-S4: Create log entry for new queued item
+      // M27-S4 + M27-S8: Create log entry for new queued item with persistence
       if (newItem) {
         const now = new Date().toISOString();
-        setSyncLog(prev => [
+        applySyncLogUpdate(prev => [
           ...prev,
           {
             id: newItem.id,
@@ -378,7 +412,7 @@ export function useOfflineQueue() {
         void scheduleBackgroundSync();
       }
     },
-    [queue, scheduleBackgroundSync]
+    [queue, scheduleBackgroundSync, applySyncLogUpdate]
   );
 
   // M27-S2: Online/offline event handling with auto-sync
@@ -423,15 +457,22 @@ export function useOfflineQueue() {
     };
   }, [syncQueue]);
 
-  // M27-S6: Clear queue and related log entries
+  // M27-S6 + M27-S8: Clear queue and related log entries with persistence
   const clearQueue = useCallback(() => {
     if (typeof window === 'undefined') return;
     clearQueueStorage();
     setQueue([]);
     // Keep success entries, remove pending/failed/conflict
-    setSyncLog(prev =>
+    applySyncLogUpdate(prev =>
       prev.filter(entry => entry.status === 'success')
     );
+  }, [applySyncLogUpdate]);
+
+  // M27-S8: Clear sync history
+  const clearSyncHistory = useCallback(() => {
+    if (typeof window === 'undefined') return;
+    void clearPersistedSyncLog();
+    setSyncLogState([]);
   }, []);
 
   return {
@@ -442,5 +483,6 @@ export function useOfflineQueue() {
     addToQueue,
     syncQueue,
     clearQueue,
+    clearSyncHistory,
   };
 }

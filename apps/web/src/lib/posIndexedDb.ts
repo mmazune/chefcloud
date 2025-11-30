@@ -1,13 +1,15 @@
 /**
  * M27-S3: POS IndexedDB Utility
  * M27-S6: Extended with staleness detection and cache lifecycle management
+ * M27-S5: Extended to support backoffice snapshots (inventory + staff)
+ * M28-KDS-S1: Extended to support KDS orders snapshot
  * 
  * Simple snapshot-based caching for POS menu and open orders.
  * Enables offline-first experience by storing last-known data.
  * Tracks cache age and provides TTL-based staleness detection.
  */
 
-export type PosSnapshotKey = 'menu' | 'openOrders';
+export type PosSnapshotKey = 'menu' | 'openOrders' | 'inventoryOverview' | 'staffOverview' | 'kdsOrders';
 
 export interface PosSnapshot<T> {
   key: PosSnapshotKey;

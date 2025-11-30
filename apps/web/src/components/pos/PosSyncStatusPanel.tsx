@@ -2,10 +2,12 @@
  * M27-S4: POS Sync Status Panel
  * M27-S6: Extended with offline data management and cache lifecycle
  * M27-S7: Extended with conflict detection and display
+ * M27-S8: Extended with persistent sync history management
  * 
  * Slide-out panel showing detailed sync status for offline actions.
  * Provides visibility into pending, syncing, successful, failed, and conflicted actions.
  * Shows storage usage, cache age, and manual cache clearing controls.
+ * Sync history persists across reloads on this device.
  */
 
 'use client';
@@ -22,6 +24,8 @@ interface PosSyncStatusPanelProps {
   // M27-S6: Cache management props
   onClearSnapshots: () => void;
   onClearQueue: () => void;
+  // M27-S8: Sync history management
+  onClearSyncHistory: () => void;
   menuAgeMs: number | null;
   menuIsStale: boolean;
   openOrdersAgeMs: number | null;
@@ -59,6 +63,7 @@ export function PosSyncStatusPanel({
   onRetryAll,
   onClearSnapshots,
   onClearQueue,
+  onClearSyncHistory,
   menuAgeMs,
   menuIsStale,
   openOrdersAgeMs,
@@ -221,6 +226,13 @@ export function PosSyncStatusPanel({
                 className="rounded-md border border-red-200 bg-red-50 px-2 py-1 text-[11px] text-red-700 hover:bg-red-100"
               >
                 Clear offline queue
+              </button>
+              <button
+                type="button"
+                onClick={onClearSyncHistory}
+                className="rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-[11px] text-slate-600 hover:bg-slate-100"
+              >
+                Clear sync history
               </button>
             </div>
           </div>
