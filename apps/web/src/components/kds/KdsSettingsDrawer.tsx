@@ -110,6 +110,9 @@ export function KdsSettingsDrawer(props: KdsSettingsDrawerProps) {
                 />
               </label>
             </div>
+            <p className="mt-1 text-[11px] text-slate-500">
+              Values are automatically kept in a safe range. &quot;Late&quot; will always be after &quot;due soon&quot;.
+            </p>
           </section>
 
           {/* Display */}

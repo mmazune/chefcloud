@@ -1,28 +1,32 @@
+// M29-PWA-S2: Smart root redirect based on device role
+'use client';
+
 import { useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { useAuth } from '@/contexts/AuthContext';
+import Link from 'next/link';
+import { useDeviceRole } from '@/hooks/useDeviceRole';
+import { DEVICE_ROLE_ROUTE } from '@/types/deviceRole';
 
-export default function Home() {
+export default function RootRedirectPage() {
   const router = useRouter();
-  const { user, loading } = useAuth();
+  const { role, isLoaded } = useDeviceRole();
 
   useEffect(() => {
-    if (!loading) {
-      if (user) {
-        router.push('/dashboard');
-      } else {
-        router.push('/login');
-      }
-    }
-  }, [user, loading, router]);
+    if (!isLoaded) return;
+    const target = DEVICE_ROLE_ROUTE[role] ?? '/pos';
+    void router.replace(target);
+  }, [isLoaded, role, router]);
 
-  // Show loading state while redirecting
   return (
-    <div className="flex h-screen items-center justify-center">
-      <div className="text-center">
-        <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent motion-reduce:animate-[spin_1.5s_linear_infinite]"></div>
-        <p className="text-muted-foreground">Loading ChefCloud...</p>
-      </div>
+    <div className="flex h-screen flex-col items-center justify-center bg-slate-950 text-slate-100 text-xs">
+      <p>Redirecting to your default ChefCloud screen…</p>
+      <p className="mt-2 text-[11px] text-slate-500">
+        If nothing happens,{' '}
+        <Link href="/launch" className="underline">
+          tap here to choose a role
+        </Link>
+        .
+      </p>
     </div>
   );
 }

@@ -55,6 +55,9 @@ function describeQueuedRequest(req: { method: string; url: string }): string {
     if (method === 'PATCH' && path.match(/^\/api\/pos\/orders\/[^/]+\/items$/)) {
       return 'Update order items';
     }
+    if (method === 'PATCH' && path.match(/^\/api\/pos\/orders\/[^/]+\/tab-name$/)) {
+      return 'Update tab name';
+    }
     if (method === 'POST' && path.match(/^\/api\/pos\/orders\/[^/]+\/send$/)) {
       return 'Send order to kitchen';
     }
@@ -77,6 +80,7 @@ type QueueActionKind =
   | 'createOrder'
   | 'addItems'
   | 'updateItems'
+  | 'updateTabName'
   | 'sendToKitchen'
   | 'payOrder'
   | 'voidOrder'
@@ -117,8 +121,11 @@ function parseQueueAction(req: { method: string; url: string }): { kind: QueueAc
     }
 
     if (method === 'PATCH') {
-      const id = matchOrderId(/^\/api\/pos\/orders\/([^/]+)\/items$/);
+      let id = matchOrderId(/^\/api\/pos\/orders\/([^/]+)\/items$/);
       if (id) return { kind: 'updateItems', orderId: id };
+
+      id = matchOrderId(/^\/api\/pos\/orders\/([^/]+)\/tab-name$/);
+      if (id) return { kind: 'updateTabName', orderId: id };
     }
 
     return { kind: 'other' };
@@ -137,6 +144,7 @@ async function checkOrderConflict(
   }
 
   // Only run conflict checks for risky actions
+  // Note: updateTabName is low-risk (metadata only), no conflict check needed
   const riskyActions: QueueActionKind[] = ['payOrder', 'voidOrder', 'updateItems', 'addItems', 'sendToKitchen'];
   if (!riskyActions.includes(actionKind)) {
     return { hasConflict: false };

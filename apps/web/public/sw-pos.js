@@ -2,12 +2,22 @@
  * M27-S2: POS Service Worker
  * M27-S5: Extended to support backoffice offline (Inventory + Staff)
  * M28-KDS-S1: Extended to support KDS offline
+ * M29-PWA-S3: Extended to support controlled updates via SKIP_WAITING
  * 
  * Provides offline caching and Background Sync support for POS + backoffice + KDS
  * - Caches POS, backoffice, and KDS shells and static assets
  * - Caches POS, backoffice, and KDS GET API responses
  * - Responds to Background Sync events
+ * - Supports controlled app updates via message handler
  */
+
+// M29-PWA-S3: Message handler for controlled updates
+self.addEventListener('message', event => {
+  if (!event.data) return;
+  if (event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
 
 // Bump versions when you change caching strategy so old caches are dropped
 const APP_STATIC_CACHE = 'chefcloud-app-static-v3';

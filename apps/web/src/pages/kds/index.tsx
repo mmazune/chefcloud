@@ -19,7 +19,6 @@
 'use client';
 
 import React, { useEffect, useState, useMemo } from 'react';
-import { registerPosServiceWorker } from '@/lib/registerPosServiceWorker';
 import { useOnlineStatus } from '@/hooks/useOnlineStatus';
 import { useKdsOrders } from '@/hooks/useKdsOrders';
 import { useKdsSocket } from '@/hooks/useKdsSocket';
@@ -27,18 +26,28 @@ import { useKdsPreferences } from '@/hooks/useKdsPreferences';
 import { useKdsSoundAlerts } from '@/hooks/useKdsSoundAlerts';
 import { KdsOrderCard } from '@/components/kds/KdsOrderCard';
 import { KdsSettingsDrawer } from '@/components/kds/KdsSettingsDrawer';
+import { KioskToggleButton } from '@/components/common/KioskToggleButton';
+import { useDeviceRole } from '@/hooks/useDeviceRole';
+import { DEVICE_ROLE_LABELS } from '@/types/deviceRole';
+import { useAppUpdateBanner } from '@/hooks/useAppUpdateBanner';
+import { APP_VERSION } from '@/version';
+import Link from 'next/link';
 import { kdsAction } from '@/lib/kdsApi';
+import { SystemDiagnosticsPanel } from '@/components/common/SystemDiagnosticsPanel';
+import { DiagnosticsToggleButton } from '@/components/common/DiagnosticsToggleButton';
 
 type KdsFilter = 'ALL' | 'NEW' | 'IN_PROGRESS' | 'READY';
 
 export default function KdsPage() {
-  useEffect(() => {
-    registerPosServiceWorker();
-  }, []);
-
   const isOnline = useOnlineStatus();
   const [filter, setFilter] = useState<KdsFilter>('ALL');
   const [_isActioning, setIsActioning] = useState<string | null>(null);
+
+  // M29-PWA-S2: Device role for multi-device deployment
+  const { role } = useDeviceRole();
+
+  // M29-PWA-S3: App update detection
+  const { hasUpdate, reloadWithUpdate } = useAppUpdateBanner();
 
   // M28-KDS-S3: WebSocket connection status
   const [isRealtimeConnected, setIsRealtimeConnected] = useState(false);
@@ -46,6 +55,9 @@ export default function KdsPage() {
   // M28-KDS-S4: Settings drawer and preferences
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const { prefs } = useKdsPreferences();
+
+  // M30-OPS-S1: Diagnostics panel state
+  const [diagnosticsOpen, setDiagnosticsOpen] = useState(false);
 
   // Main data hook with polling fallback
   const { orders, isLoading, error, source, isStale, reload, lastUpdatedAt, setExternalOrders } = useKdsOrders({
@@ -115,6 +127,25 @@ export default function KdsPage() {
 
   return (
     <div className="flex h-screen flex-col bg-slate-950">
+      {/* M29-PWA-S3: App update banner */}
+      {hasUpdate && (
+        <div className="flex items-center justify-between gap-3 border-b border-emerald-400/40 bg-emerald-500/10 px-3 py-1.5 text-[11px] text-emerald-100">
+          <div>
+            <span className="font-medium">New ChefCloud version ready.</span>{' '}
+            <span className="text-emerald-200/80">
+              Current: {APP_VERSION}. Reload between services if safe.
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => void reloadWithUpdate()}
+            className="rounded-md bg-emerald-400 px-3 py-1 text-[10px] font-semibold text-slate-900 hover:bg-emerald-300"
+          >
+            Reload
+          </button>
+        </div>
+      )}
+
       {/* Top status bar */}
       <header className="flex items-center justify-between border-b border-slate-800 px-4 py-2 text-xs text-slate-100">
         <div className="flex items-center gap-3">
@@ -189,6 +220,13 @@ export default function KdsPage() {
             <span className="text-[13px]">⚙︎</span>
           </button>
 
+          <Link
+            href="/launch"
+            className="text-[10px] text-slate-400 hover:text-slate-200 flex items-center gap-1 border border-slate-700 rounded-full px-2 py-0.5 bg-slate-900/60"
+          >
+            Device: {DEVICE_ROLE_LABELS[role]}
+          </Link>
+
           <button
             type="button"
             onClick={reload}
@@ -196,6 +234,10 @@ export default function KdsPage() {
           >
             Refresh
           </button>
+
+          <DiagnosticsToggleButton onClick={() => setDiagnosticsOpen(true)} />
+
+          <KioskToggleButton size="sm" />
         </div>
       </header>
 
@@ -244,6 +286,13 @@ export default function KdsPage() {
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
         isRealtimeConnected={isRealtimeConnected}
+      />
+
+      {/* M30-OPS-S1: System Diagnostics Panel */}
+      <SystemDiagnosticsPanel
+        open={diagnosticsOpen}
+        onClose={() => setDiagnosticsOpen(false)}
+        context="KDS"
       />
     </div>
   );

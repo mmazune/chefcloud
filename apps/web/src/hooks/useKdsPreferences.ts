@@ -8,6 +8,7 @@ import {
   KdsPreferences,
   defaultKdsPreferences,
   KDS_PREFERENCES_STORAGE_KEY,
+  sanitizeKdsPreferences,
 } from '@/types/kds';
 
 interface UseKdsPreferencesResult {
@@ -21,7 +22,7 @@ export function useKdsPreferences(): UseKdsPreferencesResult {
   const [prefs, setPrefs] = useState<KdsPreferences>(defaultKdsPreferences);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Initial load from localStorage
+  // Initial load from localStorage with M28-KDS-S7 sanitization
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
@@ -34,23 +35,8 @@ export function useKdsPreferences(): UseKdsPreferencesResult {
       }
 
       const parsed = JSON.parse(raw) as Partial<KdsPreferences>;
-      setPrefs({
-        priority: {
-          dueSoonMinutes: parsed.priority?.dueSoonMinutes ?? defaultKdsPreferences.priority.dueSoonMinutes,
-          lateMinutes: parsed.priority?.lateMinutes ?? defaultKdsPreferences.priority.lateMinutes,
-        },
-        display: {
-          hideServed: parsed.display?.hideServed ?? defaultKdsPreferences.display.hideServed,
-          dimReadyAfterMinutes:
-            parsed.display?.dimReadyAfterMinutes ?? defaultKdsPreferences.display.dimReadyAfterMinutes,
-        },
-        sounds: {
-          enableNewTicketSound:
-            parsed.sounds?.enableNewTicketSound ?? defaultKdsPreferences.sounds.enableNewTicketSound,
-          enableLateTicketSound:
-            parsed.sounds?.enableLateTicketSound ?? defaultKdsPreferences.sounds.enableLateTicketSound,
-        },
-      });
+      const safe = sanitizeKdsPreferences(parsed);
+      setPrefs(safe);
     } catch {
       setPrefs(defaultKdsPreferences);
     } finally {
@@ -70,7 +56,8 @@ export function useKdsPreferences(): UseKdsPreferencesResult {
   const updatePrefs = useCallback(
     (updater: (prev: KdsPreferences) => KdsPreferences) => {
       setPrefs(prev => {
-        const next = updater(prev);
+        const nextRaw = updater(prev);
+        const next = sanitizeKdsPreferences(nextRaw);
         persist(next);
         return next;
       });

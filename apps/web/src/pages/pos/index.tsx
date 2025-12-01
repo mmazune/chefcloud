@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AppShell } from '@/components/layout/AppShell';
 import { PageHeader } from '@/components/layout/PageHeader';
@@ -6,14 +6,26 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useOfflineQueue } from '@/hooks/useOfflineQueue';
-import { registerPosServiceWorker } from '@/lib/registerPosServiceWorker';
 import { usePosCachedMenu } from '@/hooks/usePosCachedMenu';
 import { usePosCachedOpenOrders } from '@/hooks/usePosCachedOpenOrders';
 import { useOfflineStorageEstimate } from '@/hooks/useOfflineStorageEstimate';
 import { clearPosSnapshots } from '@/lib/posIndexedDb';
 import { PosSyncStatusPanel } from '@/components/pos/PosSyncStatusPanel';
 import { PosSplitBillDrawer } from '@/components/pos/PosSplitBillDrawer';
-import type { PosSplitPaymentsDto } from '@/types/pos';
+import { KioskToggleButton } from '@/components/common/KioskToggleButton';
+import { useDeviceRole } from '@/hooks/useDeviceRole';
+import { DEVICE_ROLE_LABELS } from '@/types/deviceRole';
+import { useAppUpdateBanner } from '@/hooks/useAppUpdateBanner';
+import { APP_VERSION } from '@/version';
+import { PosItemModifiersDrawer } from '@/components/pos/PosItemModifiersDrawer';
+import { buildModifierSummary } from '@/lib/posModifiers';
+import type { PosMenuItem } from '@/hooks/usePosCachedMenu';
+import Link from 'next/link';
+import type { PosSplitPaymentsDto, PosOrderLineModifier, PosOrderTabInfo } from '@/types/pos';
+import { PosTabsSidebar } from '@/components/pos/PosTabsSidebar';
+import { PosTabNameDialog } from '@/components/pos/PosTabNameDialog';
+import { SystemDiagnosticsPanel } from '@/components/common/SystemDiagnosticsPanel';
+import { DiagnosticsToggleButton } from '@/components/common/DiagnosticsToggleButton';
 
 interface Order {
   id: string;
@@ -40,23 +52,13 @@ interface OrderItem {
   total: number;
   status: string;
   notes: string | null;
+  modifiers?: PosOrderLineModifier[]; // M26-EXT2: Applied modifiers
 }
 
 interface Payment {
   id: string;
   amount: number;
   method: string;
-}
-
-interface PosMenuItem {
-  id: string;
-  name: string;
-  sku?: string | null;
-  price: number;
-  category?: {
-    name: string;
-  } | null;
-  isActive?: boolean;
 }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -89,12 +91,37 @@ export default function PosPage() {
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [isSyncPanelOpen, setIsSyncPanelOpen] = useState(false);
   
+  // M26-EXT2: Modifier drawer state
+  const [modifierDrawerOpen, setModifierDrawerOpen] = useState(false);
+  const [modifierTarget, setModifierTarget] = useState<{
+    orderId: string;
+    lineId?: string;
+    item: PosMenuItem;
+    basePrice: number;
+    existingModifiers?: PosOrderLineModifier[];
+  } | null>(null);
+  
+  // M26-EXT3: Tabs management state
+  const [tabsSidebarOpen, setTabsSidebarOpen] = useState(false);
+  const [tabNameDialogOpen, setTabNameDialogOpen] = useState(false);
+  const [tabNameDialogMode, setTabNameDialogMode] = useState<'create' | 'rename'>('create');
+  const [tabNameDialogTarget, setTabNameDialogTarget] = useState<string | null>(null);
+  
+  // M30-OPS-S1: Diagnostics panel state
+  const [diagnosticsOpen, setDiagnosticsOpen] = useState(false);
+  
   const queryClient = useQueryClient();
 
-  // M27-S2: Register POS service worker on mount
-  useEffect(() => {
-    registerPosServiceWorker();
-  }, []);
+  // M29-PWA-S2: Device role for multi-device deployment
+  const { role } = useDeviceRole();
+
+  // M29-PWA-S3: App update detection
+  const { hasUpdate, acknowledgeUpdate, reloadWithUpdate } = useAppUpdateBanner();
+
+  // M27-S2: Register POS service worker on mount (now handled in useAppUpdateBanner)
+  // useEffect(() => {
+  //   registerPosServiceWorker();
+  // }, []);
 
   // M27-S1 + M27-S2 + M27-S4 + M27-S6 + M27-S8: Offline queue for resilient POS operations with sync logging
   const { isOnline, isSyncing, queue, syncLog, addToQueue, syncQueue, clearQueue, clearSyncHistory } = useOfflineQueue();
@@ -119,7 +146,7 @@ export default function PosPage() {
     ageMs: openOrdersAgeMs,
   } = usePosCachedOpenOrders();
 
-  const orders = cachedOrders ?? [];
+  const orders = useMemo(() => cachedOrders ?? [], [cachedOrders]);
 
   // Fetch selected order details
   const { data: activeOrder, isLoading: orderLoading } = useQuery({
@@ -487,6 +514,19 @@ export default function PosPage() {
       return;
     }
 
+    // M26-EXT2: Open modifier drawer if item has modifier groups
+    if (item.modifierGroups && item.modifierGroups.length > 0) {
+      setModifierTarget({
+        orderId: selectedOrderId,
+        item,
+        basePrice: item.price,
+        existingModifiers: [],
+      });
+      setModifierDrawerOpen(true);
+      return;
+    }
+
+    // No modifiers - quick add
     addItemsMutation.mutate({ orderId: selectedOrderId, itemId: item.id });
   };
 
@@ -549,6 +589,148 @@ export default function PosPage() {
     voidOrderMutation.mutate({ orderId: selectedOrderId, reason: voidReason });
   };
 
+  // M26-EXT3: Derive tab info from open orders
+  const openTabs = useMemo<PosOrderTabInfo[]>(() => {
+    return orders
+      .filter(order => order.status !== 'CLOSED' && order.status !== 'VOIDED')
+      .map(order => ({
+        orderId: order.id,
+        tabName: order.tabName || null,
+        serviceType: 'DINE_IN', // Default - backend should provide this
+        tableLabel: order.tableName || null,
+        guestCount: null, // Not available in order list
+        createdAt: order.createdAt,
+        lastModifiedAt: order.createdAt,
+        itemCount: 0, // Not available in order list
+        orderTotal: order.total,
+        status: 'OPEN' as const,
+      }));
+  }, [orders]);
+
+  // M26-EXT3: Tab management handlers
+  const handleResumeTab = (tabId: string) => {
+    setSelectedOrderId(tabId);
+  };
+
+  const handleRenameTab = (tabId: string) => {
+    setTabNameDialogMode('rename');
+    setTabNameDialogTarget(tabId);
+    setTabNameDialogOpen(true);
+  };
+
+  const handleDetachTab = (tabId: string) => {
+    if (typeof window !== 'undefined') {
+      const ok = window.confirm(
+        'Close this tab without payment? The order will be voided.'
+      );
+      if (!ok) return;
+    }
+    voidOrderMutation.mutate({ orderId: tabId, reason: 'Tab detached' });
+  };
+
+  const handleTabNameConfirm = (tabName: string) => {
+    if (!tabNameDialogTarget) return;
+
+    // Update tab name via offline queue
+    const orderId = tabNameDialogTarget;
+    const url = `/api/pos/orders/${orderId}/tab-name`;
+    const idempotencyKey = generateIdempotencyKey(`pos-update-tab-${orderId}`);
+    const body = { tabName };
+
+    if (!isOnline) {
+      addToQueue({
+        url,
+        method: 'PATCH',
+        body,
+        idempotencyKey,
+      });
+      // Optimistically update local cache
+      queryClient.invalidateQueries({ queryKey: ['pos-open-orders'] });
+    } else {
+      fetch(url, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'X-Idempotency-Key': idempotencyKey,
+        },
+        body: JSON.stringify(body),
+      })
+        .then(res => {
+          if (!res.ok) throw new Error('Failed to update tab name');
+          return res.json();
+        })
+        .then(() => {
+          queryClient.invalidateQueries({ queryKey: ['pos-open-orders'] });
+        })
+        .catch(err => {
+          console.error('Update tab name failed:', err);
+        });
+    }
+
+    setTabNameDialogOpen(false);
+    setTabNameDialogTarget(null);
+  };
+
+  // M26-EXT2: Handle modifier confirmation
+  const handleModifierConfirm = (modifiers: PosOrderLineModifier[], _totalPrice: number) => {
+    if (!modifierTarget) return;
+
+    const { orderId, lineId, item } = modifierTarget;
+
+    if (lineId) {
+      // Editing existing line - update modifiers (will be handled by offline queue)
+      // For now, just add as a new item since backend update endpoint may not exist yet
+      alert('Modifier editing not yet implemented. Please add as new item.');
+    } else {
+      // Adding new item with modifiers
+      const url = `/api/pos/orders/${orderId}/items`;
+      const idempotencyKey = generateIdempotencyKey(`pos-add-item-${orderId}-${item.id}`);
+
+      const body = {
+        itemId: item.id,
+        quantity: 1,
+        modifiers: modifiers.map(m => ({
+          groupId: m.groupId,
+          optionId: m.optionId,
+          priceDelta: m.priceDelta,
+        })),
+      };
+
+      if (!isOnline) {
+        addToQueue({
+          url,
+          method: 'POST',
+          body,
+          idempotencyKey,
+        });
+      } else {
+        fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'X-Idempotency-Key': idempotencyKey,
+          },
+          body: JSON.stringify(body),
+        })
+          .then(res => {
+            if (!res.ok) throw new Error('Failed to add item');
+            return res.json();
+          })
+          .then(() => {
+            queryClient.invalidateQueries({ queryKey: ['pos-open-orders'] });
+          })
+          .catch(err => {
+            console.error('Add item with modifiers failed:', err);
+          });
+      }
+    }
+
+    setModifierDrawerOpen(false);
+    setModifierTarget(null);
+  };
+
   // M26-EXT1: Handle split bill submission with offline queue support
   const handleSubmitSplit = async (orderId: string, payload: PosSplitPaymentsDto) => {
     setIsSplitSubmitting(true);
@@ -603,7 +785,47 @@ export default function PosPage() {
       <PageHeader
         title="POS – Dining Room"
         subtitle="Create orders, send to kitchen, and process payments"
+        actions={
+          <div className="flex items-center gap-2">
+            <Link
+              href="/launch"
+              className="text-[10px] text-slate-400 hover:text-slate-200 flex items-center gap-1 border border-slate-700 rounded-full px-2 py-0.5 bg-slate-900/60"
+            >
+              Device: {DEVICE_ROLE_LABELS[role]}
+            </Link>
+            <KioskToggleButton size="sm" />
+            <DiagnosticsToggleButton onClick={() => setDiagnosticsOpen(true)} />
+          </div>
+        }
       />
+
+      {/* M29-PWA-S3: App update banner */}
+      {hasUpdate && (
+        <div className="flex items-center justify-between gap-3 border-b border-amber-500/40 bg-amber-500/10 px-3 py-1.5 text-[11px] text-amber-100">
+          <div>
+            <span className="font-medium">New ChefCloud version available.</span>{' '}
+            <span className="text-amber-200/80">
+              Current: {APP_VERSION}. Reload to apply updates.
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={acknowledgeUpdate}
+              className="rounded-md border border-amber-400/60 px-2 py-0.5 text-[10px] text-amber-100 hover:bg-amber-500/20"
+            >
+              Dismiss
+            </button>
+            <button
+              type="button"
+              onClick={() => void reloadWithUpdate()}
+              className="rounded-md bg-amber-400 px-3 py-1 text-[10px] font-semibold text-slate-900 hover:bg-amber-300"
+            >
+              Reload now
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* M27-S1 + M27-S2 + M27-S4 + M27-S7: Enhanced Offline/Online Banner */}
       {!isOnline && (
@@ -735,7 +957,22 @@ export default function PosPage() {
         {/* Left: Order List */}
         <Card className="lg:col-span-1">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold">Open Orders</h3>
+            <div className="flex items-center gap-2">
+              <h3 className="text-lg font-semibold">Open Orders</h3>
+              {/* M26-EXT3: Tabs button */}
+              {openTabs.length > 0 && (
+                <button
+                  onClick={() => setTabsSidebarOpen(true)}
+                  className="flex items-center gap-1 rounded-lg border border-blue-200 bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 hover:bg-blue-100 transition-colors"
+                  aria-label="Open tabs sidebar"
+                >
+                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  </svg>
+                  Tabs ({openTabs.length})
+                </button>
+              )}
+            </div>
             <Button
               variant="default"
               size="sm"
@@ -834,6 +1071,12 @@ export default function PosPage() {
                         <div className="text-xs text-gray-600">
                           UGX {item.unitPrice.toLocaleString()} each
                         </div>
+                        {/* M26-EXT2: Modifier summary */}
+                        {item.modifiers && item.modifiers.length > 0 && (
+                          <div className="text-xs text-emerald-600 mt-1">
+                            🔧 {buildModifierSummary(item.modifiers)}
+                          </div>
+                        )}
                         {item.notes && (
                           <div className="text-xs text-blue-600 mt-1 italic">
                             📝 {item.notes}
@@ -1288,6 +1531,55 @@ export default function PosPage() {
           onSubmitSplit={payload => handleSubmitSplit(activeSplitOrderId, payload)}
         />
       )}
+
+      {/* M26-EXT2: Modifier Configuration Drawer */}
+      {modifierTarget && (
+        <PosItemModifiersDrawer
+          open={modifierDrawerOpen}
+          onClose={() => {
+            setModifierDrawerOpen(false);
+            setModifierTarget(null);
+          }}
+          item={modifierTarget.item}
+          existingModifiers={modifierTarget.existingModifiers}
+          basePrice={modifierTarget.basePrice}
+          onConfirm={handleModifierConfirm}
+        />
+      )}
+
+      {/* M26-EXT3: Tabs Sidebar */}
+      <PosTabsSidebar
+        open={tabsSidebarOpen}
+        onClose={() => setTabsSidebarOpen(false)}
+        tabs={openTabs}
+        activeTabId={selectedOrderId}
+        onResumeTab={handleResumeTab}
+        onRenameTab={handleRenameTab}
+        onDetachTab={handleDetachTab}
+      />
+
+      {/* M26-EXT3: Tab Name Dialog */}
+      <PosTabNameDialog
+        open={tabNameDialogOpen}
+        onClose={() => {
+          setTabNameDialogOpen(false);
+          setTabNameDialogTarget(null);
+        }}
+        mode={tabNameDialogMode}
+        currentName={
+          tabNameDialogTarget
+            ? openTabs.find(t => t.orderId === tabNameDialogTarget)?.tabName || null
+            : null
+        }
+        onConfirm={handleTabNameConfirm}
+      />
+
+      {/* M30-OPS-S1: System Diagnostics Panel */}
+      <SystemDiagnosticsPanel
+        open={diagnosticsOpen}
+        onClose={() => setDiagnosticsOpen(false)}
+        context="POS"
+      />
     </AppShell>
   );
 }

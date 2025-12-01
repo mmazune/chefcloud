@@ -11,6 +11,7 @@
 
 import { useEffect, useState } from 'react';
 import { loadPosSnapshot, savePosSnapshot, isSnapshotStale, getSnapshotAgeMs } from '@/lib/posIndexedDb';
+import { PosModifierGroup } from '@/types/pos';
 
 export interface PosMenuItem {
   id: string;
@@ -21,6 +22,7 @@ export interface PosMenuItem {
     name: string;
   } | null;
   isActive?: boolean;
+  modifierGroups?: PosModifierGroup[]; // M26-EXT2: Structured modifiers
 }
 
 export type PosMenuData = PosMenuItem[];
