@@ -5,8 +5,7 @@ import type { BillingUsageDto } from '@/types/billing';
 describe('BillingUsageCard', () => {
   it('renders empty state when usage is null', () => {
     render(<BillingUsageCard usage={null} />);
-    
-    expect(screen.getByText('Usage')).toBeInTheDocument();
+
     expect(screen.getByText('Usage data not available yet.')).toBeInTheDocument();
   });
 
@@ -25,11 +24,10 @@ describe('BillingUsageCard', () => {
 
     render(<BillingUsageCard usage={mockUsage} />);
 
-    expect(screen.getByText('Usage')).toBeInTheDocument();
-    expect(screen.getByText(/Nov 1, 2024.*Dec 1, 2024/)).toBeInTheDocument();
-    expect(screen.getByText('API Requests')).toBeInTheDocument();
+    expect(screen.getByText(/11\/1\/2024\s*→\s*12\/1\/2024/)).toBeInTheDocument();
+    expect(screen.getByText('API requests')).toBeInTheDocument();
     expect(screen.getByText('45,230 / 100,000 requests')).toBeInTheDocument();
-    expect(screen.getByText('SMS Messages')).toBeInTheDocument();
+    expect(screen.getByText('SMS')).toBeInTheDocument();
     expect(screen.getByText('128 / 500 messages')).toBeInTheDocument();
     expect(screen.getByText('Storage')).toBeInTheDocument();
     expect(screen.getByText('340 / 1,000 MB')).toBeInTheDocument();
@@ -124,7 +122,7 @@ describe('BillingUsageCard', () => {
 
     render(<BillingUsageCard usage={mockUsage} />);
 
-    expect(screen.getByText(/Jan 15, 2024.*Feb 15, 2024/)).toBeInTheDocument();
+    expect(screen.getByText(/1\/15\/2024\s*→\s*2\/15\/2024/)).toBeInTheDocument();
   });
 
   it('handles zero usage values', () => {

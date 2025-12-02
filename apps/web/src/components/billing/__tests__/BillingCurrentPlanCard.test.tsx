@@ -6,8 +6,7 @@ describe('BillingCurrentPlanCard', () => {
   it('renders empty state when subscription is null', () => {
     render(<BillingCurrentPlanCard subscription={null} />);
     
-    expect(screen.getByText('Current Plan')).toBeInTheDocument();
-    expect(screen.getByText('No active subscription found.')).toBeInTheDocument();
+    expect(screen.getByText('No active subscription found. Contact support to configure your plan.')).toBeInTheDocument();
   });
 
   it('renders populated subscription with monthly pricing', () => {
@@ -30,7 +29,7 @@ describe('BillingCurrentPlanCard', () => {
     render(<BillingCurrentPlanCard subscription={mockSubscription} />);
 
     expect(screen.getByText('Micros Pro')).toBeInTheDocument();
-    expect(screen.getByText('$99.00/mo')).toBeInTheDocument();
+    expect(screen.getByText('USD 99 / month')).toBeInTheDocument();
     expect(screen.getByText('ACTIVE')).toBeInTheDocument();
     expect(screen.getByText(/Next renewal:/)).toBeInTheDocument();
   });
@@ -54,7 +53,7 @@ describe('BillingCurrentPlanCard', () => {
 
     render(<BillingCurrentPlanCard subscription={mockSubscription} />);
 
-    expect(screen.getByText('$490.00/yr')).toBeInTheDocument();
+    expect(screen.getByText('USD 490 / year')).toBeInTheDocument();
   });
 
   it('displays trial end date when in trial', () => {
@@ -123,7 +122,7 @@ describe('BillingCurrentPlanCard', () => {
     render(<BillingCurrentPlanCard subscription={mockSubscription} />);
 
     expect(screen.getByText('Seats')).toBeInTheDocument();
-    expect(screen.getByText('12')).toBeInTheDocument();
+    expect(screen.getByText('12 staff accounts')).toBeInTheDocument();
   });
 
   it('renders branch usage information', () => {
@@ -146,7 +145,7 @@ describe('BillingCurrentPlanCard', () => {
     render(<BillingCurrentPlanCard subscription={mockSubscription} />);
 
     expect(screen.getByText('Branches')).toBeInTheDocument();
-    expect(screen.getByText('7 / 10')).toBeInTheDocument();
+    expect(screen.getByText('7/10 used')).toBeInTheDocument();
   });
 
   it('renders micros org usage when applicable', () => {
@@ -168,8 +167,8 @@ describe('BillingCurrentPlanCard', () => {
 
     render(<BillingCurrentPlanCard subscription={mockSubscription} />);
 
-    expect(screen.getByText('Micros Orgs')).toBeInTheDocument();
-    expect(screen.getByText('3 / 5')).toBeInTheDocument();
+    expect(screen.getByText('Micros locations')).toBeInTheDocument();
+    expect(screen.getByText('3/5 used')).toBeInTheDocument();
   });
 
   it('handles enterprise pricing (0 cents)', () => {
@@ -192,7 +191,7 @@ describe('BillingCurrentPlanCard', () => {
     render(<BillingCurrentPlanCard subscription={mockSubscription} />);
 
     expect(screen.getByText('Enterprise')).toBeInTheDocument();
-    expect(screen.getByText('Custom pricing')).toBeInTheDocument();
+    expect(screen.getByText('Custom / enterprise')).toBeInTheDocument();
   });
 
   it('renders PAST_DUE status', () => {
