@@ -5,6 +5,7 @@ import {
   BadRequestException,
   Inject,
   forwardRef,
+  Optional,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma.service';
@@ -45,6 +46,7 @@ export class AuthService {
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
+    @Optional()
     @Inject(forwardRef(() => WorkforceService))
     private workforceService: WorkforceService,
     private sessionInvalidation: SessionInvalidationService,
@@ -404,11 +406,11 @@ export class AuthService {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const autoClockInOnMsr = (settings?.attendance as any)?.autoClockInOnMsr ?? false;
 
-      if (!autoClockInOnMsr) {
+      if (!autoClockInOnMsr || !this.workforceService) {
         return;
       }
 
-      // Clock in via WorkforceService
+      // Clock in via WorkforceService (only if available)
       await this.workforceService.clockIn({
         orgId,
         branchId: branchId || 'default',

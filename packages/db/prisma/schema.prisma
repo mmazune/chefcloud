@@ -247,6 +247,7 @@ model Org {
   forecastProfiles    ForecastProfile[]
   forecastPoints      ForecastPoint[]
   franchiseRanks      FranchiseRank[]
+  franchiseBudgets    FranchiseBudget[] // E22-S3: Franchise budgets
   badgeAssets         BadgeAsset[]
   kdsSlaConfigs       KdsSlaConfig[] // M1-KDS: SLA configuration per station
   shiftTemplates      ShiftTemplate[] // M2-SHIFTS: Shift templates
@@ -325,6 +326,7 @@ model Branch {
   forecastProfiles    ForecastProfile[]
   forecastPoints      ForecastPoint[]
   franchiseRanks      FranchiseRank[]
+  franchiseBudgets    FranchiseBudget[] // E22-S3: Franchise budgets
   shiftSchedules      ShiftSchedule[] // M2-SHIFTS: Shift schedules
   stockMovements      StockMovement[] // M3: All stock movements at this branch
   reportSubscriptions ReportSubscription[] // M4: Report subscriptions
@@ -1906,6 +1908,27 @@ model FranchiseRank {
   @@unique([orgId, period, branchId])
   @@index([orgId, period, rank])
   @@map("franchise_ranks")
+}
+
+// E22-S3: Franchise budgets (monthly, per branch, per category)
+model FranchiseBudget {
+  id           String   @id @default(cuid())
+  orgId        String
+  branchId     String
+  year         Int // Calendar year, e.g. 2025
+  month        Int // 1-12 (1 = January)
+  category     String // e.g. "NET_SALES" (future-proof for COGS/WASTE/etc)
+  amountCents  Int // Budgeted amount in smallest currency unit
+  currencyCode String // "UGX", "USD", etc.
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  org    Org    @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  branch Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  @@unique([orgId, branchId, year, month, category], name: "franchise_budget_period_key")
+  @@index([orgId, year, month])
+  @@map("franchise_budgets")
 }
 
 // ===== Accounting Core (E40-s1) =====

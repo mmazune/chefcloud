@@ -17,6 +17,13 @@ import {
   Legend,
 } from 'recharts';
 import { TrendingUp, DollarSign, ShoppingCart, Users } from 'lucide-react';
+import { useFranchiseBudgetVariance } from '@/hooks/useFranchiseBudgetVariance';
+import { useFranchiseForecast } from '@/hooks/useFranchiseForecast';
+import { useFranchiseMultiMonthSeries } from '@/hooks/useFranchiseMultiMonthSeries';
+import { FranchiseBudgetTable } from '@/components/analytics/franchise/FranchiseBudgetTable';
+import { FranchiseVarianceCard } from '@/components/analytics/franchise/FranchiseVarianceCard';
+import { FranchiseForecastCard } from '@/components/analytics/franchise/FranchiseForecastCard';
+import { FranchiseMultiMonthChart } from '@/components/analytics/franchise/FranchiseMultiMonthChart';
 
 interface DailyMetricPoint {
   date: string;
@@ -114,11 +121,19 @@ interface RiskEvent {
 
 export default function AnalyticsPage() {
   // View toggle state
-  const [view, setView] = useState<'overview' | 'branches' | 'financial' | 'risk'>('overview');
+  const [view, setView] = useState<'overview' | 'branches' | 'financial' | 'risk' | 'franchise'>('overview');
 
   // Date range state
   const [from, setFrom] = useState<string>(formatDateForInput(getDaysAgo(30)));
   const [to, setTo] = useState<string>(formatDateForInput(new Date()));
+
+  // Franchise analytics date selector (E22-FRANCHISE-FE-S1)
+  const currentDate = new Date();
+  const [franchiseYear, setFranchiseYear] = useState<number>(currentDate.getFullYear());
+  const [franchiseMonth, setFranchiseMonth] = useState<number>(currentDate.getMonth() + 1);
+  
+  // Franchise view mode (E22-FRANCHISE-FE-S2)
+  const [franchiseViewMode, setFranchiseViewMode] = useState<'current' | 'multi'>('current');
 
   // TODO: Get from user auth context
   const branchId = 'branch-1';
@@ -209,6 +224,30 @@ export default function AnalyticsPage() {
     },
     enabled: view === 'risk',
   });
+
+  // Fetch franchise analytics data (E22-FRANCHISE-FE-S1)
+  const { data: franchiseVariance, isLoading: isFranchiseVarianceLoading } = 
+    useFranchiseBudgetVariance({
+      year: franchiseYear,
+      month: franchiseMonth,
+    });
+
+  const { data: franchiseForecast, isLoading: isFranchiseForecastLoading } = 
+    useFranchiseForecast({
+      year: franchiseYear,
+      month: franchiseMonth,
+      lookbackMonths: 3,
+    });
+
+  // Fetch multi-month series for trend view (E22-FRANCHISE-FE-S2)
+  const multiMonths = 6;
+  const { data: franchiseMultiSeries, isLoading: isFranchiseMultiLoading } =
+    useFranchiseMultiMonthSeries({
+      startYear: franchiseYear,
+      startMonth: franchiseMonth,
+      months: multiMonths,
+      lookbackMonths: 3,
+    });
 
   // Quick date range buttons
   const setQuickRange = (days: number) => {
@@ -332,6 +371,12 @@ export default function AnalyticsPage() {
           onClick={() => setView('risk')}
         >
           Risk
+        </Button>
+        <Button
+          variant={view === 'franchise' ? 'default' : 'outline'}
+          onClick={() => setView('franchise')}
+        >
+          Franchise
         </Button>
       </div>
 
@@ -1288,6 +1333,176 @@ export default function AnalyticsPage() {
               )}
             </div>
           </Card>
+        </>
+      )}
+
+      {/* Franchise Analytics View (E22-FRANCHISE-FE-S1) */}
+      {view === 'franchise' && (
+        <>
+          {/* Month/Year Selector */}
+          <Card className="p-4 mb-6">
+            <div className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-3">
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Year</label>
+                  <Input
+                    type="number"
+                    min="2020"
+                    max="2099"
+                    value={franchiseYear}
+                    onChange={(e) => setFranchiseYear(parseInt(e.target.value) || franchiseYear)}
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Month</label>
+                  <Input
+                    type="number"
+                    min="1"
+                    max="12"
+                    value={franchiseMonth}
+                    onChange={(e) => setFranchiseMonth(parseInt(e.target.value) || franchiseMonth)}
+                  />
+                </div>
+                <div className="flex items-end">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      const now = new Date();
+                      setFranchiseYear(now.getFullYear());
+                      setFranchiseMonth(now.getMonth() + 1);
+                    }}
+                  >
+                    Current Month
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </Card>
+
+          {/* Franchise Analytics Cards */}
+          <div className="space-y-4">
+            <header className="flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-semibold text-slate-100 mb-1">
+                  Franchise budgets, variance & forecast
+                </h2>
+                <p className="text-sm text-slate-400">
+                  Compare performance by branch and track trends over time
+                </p>
+              </div>
+              <div className="inline-flex rounded-full border border-slate-700 p-0.5 text-xs">
+                <button
+                  type="button"
+                  className={`rounded-full px-3 py-1 transition-colors ${
+                    franchiseViewMode === 'current'
+                      ? 'bg-slate-100 text-slate-900'
+                      : 'text-slate-300 hover:text-slate-100'
+                  }`}
+                  onClick={() => setFranchiseViewMode('current')}
+                >
+                  Current month
+                </button>
+                <button
+                  type="button"
+                  className={`rounded-full px-3 py-1 transition-colors ${
+                    franchiseViewMode === 'multi'
+                      ? 'bg-slate-100 text-slate-900'
+                      : 'text-slate-300 hover:text-slate-100'
+                  }`}
+                  onClick={() => setFranchiseViewMode('multi')}
+                >
+                  Last 6 months
+                </button>
+              </div>
+            </header>
+
+            {franchiseViewMode === 'current' ? (
+              <>
+                <div className="grid gap-4 lg:grid-cols-3">
+                  {/* Budget vs Actual Table (2 columns) */}
+                  <div className="lg:col-span-2">
+                    {isFranchiseVarianceLoading || !franchiseVariance ? (
+                      <Card className="p-8">
+                        <div className="text-center text-slate-400">
+                          Loading budget variance…
+                        </div>
+                      </Card>
+                    ) : (
+                      <FranchiseBudgetTable variance={franchiseVariance} currency="UGX" />
+                    )}
+                  </div>
+
+                  {/* Variance & Forecast Cards (1 column) */}
+                  <div className="space-y-4">
+                    {isFranchiseVarianceLoading || !franchiseVariance ? (
+                      <Card className="p-8">
+                        <div className="text-center text-slate-400 text-sm">
+                          Loading variance rankings…
+                        </div>
+                      </Card>
+                    ) : (
+                      <FranchiseVarianceCard variance={franchiseVariance} currency="UGX" />
+                    )}
+
+                    {isFranchiseForecastLoading || !franchiseForecast ? (
+                      <Card className="p-8">
+                        <div className="text-center text-slate-400 text-sm">
+                          Loading forecast…
+                        </div>
+                      </Card>
+                    ) : (
+                      <FranchiseForecastCard forecast={franchiseForecast} currency="UGX" />
+                    )}
+                  </div>
+                </div>
+
+                {/* CSV Export Links */}
+                <Card className="p-4">
+                  <div className="flex flex-wrap gap-2 text-xs">
+                    <a
+                      href={`${API_URL}/franchise/export/budgets-variance.csv?year=${franchiseYear}&month=${franchiseMonth}`}
+                      className="rounded border border-slate-700 px-3 py-2 hover:bg-slate-800 transition-colors"
+                      download
+                    >
+                      📥 Download Budget Variance CSV
+                    </a>
+                    <a
+                      href={`${API_URL}/franchise/export/forecast.csv?year=${franchiseYear}&month=${franchiseMonth}`}
+                      className="rounded border border-slate-700 px-3 py-2 hover:bg-slate-800 transition-colors"
+                      download
+                    >
+                      📥 Download Forecast CSV
+                    </a>
+                    <a
+                      href={`${API_URL}/franchise/export/budgets.csv?year=${franchiseYear}&month=${franchiseMonth}`}
+                      className="rounded border border-slate-700 px-3 py-2 hover:bg-slate-800 transition-colors"
+                      download
+                    >
+                      📥 Download Budgets CSV
+                    </a>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-2">
+                    Exports are for current month only
+                  </p>
+                </Card>
+              </>
+            ) : (
+              <div className="space-y-3">
+                {isFranchiseMultiLoading ? (
+                  <Card className="p-8">
+                    <div className="text-center text-slate-400">
+                      Loading multi-month series…
+                    </div>
+                  </Card>
+                ) : (
+                  <FranchiseMultiMonthChart data={franchiseMultiSeries} currency="UGX" />
+                )}
+                <p className="text-xs text-slate-500">
+                  Last {multiMonths} months. Forecast uses a 3-month lookback per month.
+                </p>
+              </div>
+            )}
+          </div>
         </>
       )}
     </AppShell>

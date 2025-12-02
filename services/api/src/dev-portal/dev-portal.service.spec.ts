@@ -36,6 +36,9 @@ describe('DevPortalService', () => {
       delete: jest.fn(),
       count: jest.fn(),
     },
+    apiKey: {
+      findMany: jest.fn(),
+    },
   };
 
   beforeEach(async () => {
@@ -382,6 +385,136 @@ describe('DevPortalService', () => {
           plan: { select: { code: true, name: true } },
         },
         orderBy: { nextRenewalAt: 'asc' },
+      });
+    });
+  });
+
+  describe('getUsageSummaryForOrg', () => {
+    const testOrgId = 'test-org-123';
+
+    it('should return usage summary for 24h range', async () => {
+      mockPrisma.apiKey.findMany.mockResolvedValue([
+        { id: 'key-1', name: 'Test Key 1' },
+        { id: 'key-2', name: 'Test Key 2' },
+      ]);
+
+      const result = await service.getUsageSummaryForOrg(testOrgId, '24h');
+
+      expect(result).toHaveProperty('range', '24h');
+      expect(result).toHaveProperty('fromIso');
+      expect(result).toHaveProperty('toIso');
+      expect(result).toHaveProperty('totalRequests');
+      expect(result).toHaveProperty('totalErrors');
+      expect(result).toHaveProperty('errorRatePercent');
+      expect(result).toHaveProperty('sandboxRequests');
+      expect(result).toHaveProperty('productionRequests');
+      expect(result).toHaveProperty('timeseries');
+      expect(result).toHaveProperty('topKeys');
+      expect(result.timeseries).toBeInstanceOf(Array);
+      expect(result.topKeys).toBeInstanceOf(Array);
+      expect(result.timeseries.length).toBeGreaterThan(0);
+    });
+
+    it('should return usage summary for 7d range', async () => {
+      mockPrisma.apiKey.findMany.mockResolvedValue([
+        { id: 'key-1', name: 'Production Key' },
+      ]);
+
+      const result = await service.getUsageSummaryForOrg(testOrgId, '7d');
+
+      expect(result).toHaveProperty('range', '7d');
+      expect(result.timeseries.length).toBeGreaterThan(0);
+      expect(result.topKeys.length).toBeGreaterThan(0);
+    });
+
+    it('should calculate error rate percentage correctly', async () => {
+      mockPrisma.apiKey.findMany.mockResolvedValue([
+        { id: 'key-1', name: 'Test Key' },
+      ]);
+
+      const result = await service.getUsageSummaryForOrg(testOrgId, '24h');
+
+      expect(result.errorRatePercent).toBeGreaterThanOrEqual(0);
+      expect(result.errorRatePercent).toBeLessThanOrEqual(100);
+      
+      // Error rate should match: (totalErrors / totalRequests) * 100
+      if (result.totalRequests > 0) {
+        const expectedRate = (result.totalErrors / result.totalRequests) * 100;
+        expect(result.errorRatePercent).toBeCloseTo(expectedRate, 2);
+      }
+    });
+
+    it('should separate sandbox and production request counts', async () => {
+      mockPrisma.apiKey.findMany.mockResolvedValue([
+        { id: 'key-1', name: 'Key 1' },
+        { id: 'key-2', name: 'Key 2' },
+      ]);
+
+      const result = await service.getUsageSummaryForOrg(testOrgId, '24h');
+
+      expect(result.sandboxRequests).toBeGreaterThanOrEqual(0);
+      expect(result.productionRequests).toBeGreaterThanOrEqual(0);
+      
+      // Total should equal sum of sandbox + production
+      expect(result.totalRequests).toBe(
+        result.sandboxRequests + result.productionRequests,
+      );
+    });
+
+    it('should limit top keys to 10', async () => {
+      // Create 15 mock keys
+      const mockKeys = Array.from({ length: 15 }, (_, i) => ({
+        id: `key-${i}`,
+        name: `Key ${i}`,
+      }));
+      mockPrisma.apiKey.findMany.mockResolvedValue(mockKeys);
+
+      const result = await service.getUsageSummaryForOrg(testOrgId, '24h');
+
+      expect(result.topKeys.length).toBeLessThanOrEqual(10);
+    });
+
+    it('should return mock data when no API keys exist', async () => {
+      mockPrisma.apiKey.findMany.mockResolvedValue([]);
+
+      const result = await service.getUsageSummaryForOrg(testOrgId, '24h');
+
+      expect(result.topKeys.length).toBeGreaterThan(0);
+      expect(result.topKeys[0]).toHaveProperty('keyId');
+      expect(result.topKeys[0]).toHaveProperty('label');
+      expect(result.topKeys[0]).toHaveProperty('environment');
+      expect(result.topKeys[0]).toHaveProperty('requestCount');
+      expect(result.topKeys[0]).toHaveProperty('errorCount');
+    });
+
+    it('should have valid ISO timestamp strings', async () => {
+      mockPrisma.apiKey.findMany.mockResolvedValue([]);
+
+      const result = await service.getUsageSummaryForOrg(testOrgId, '24h');
+
+      expect(new Date(result.fromIso).toISOString()).toBe(result.fromIso);
+      expect(new Date(result.toIso).toISOString()).toBe(result.toIso);
+      expect(new Date(result.fromIso).getTime()).toBeLessThan(
+        new Date(result.toIso).getTime(),
+      );
+    });
+
+    it('should have timeseries with valid structure', async () => {
+      mockPrisma.apiKey.findMany.mockResolvedValue([
+        { id: 'key-1', name: 'Test' },
+      ]);
+
+      const result = await service.getUsageSummaryForOrg(testOrgId, '24h');
+
+      expect(result.timeseries.length).toBeGreaterThan(0);
+      result.timeseries.forEach((point) => {
+        expect(point).toHaveProperty('timestamp');
+        expect(point).toHaveProperty('requestCount');
+        expect(point).toHaveProperty('errorCount');
+        expect(typeof point.requestCount).toBe('number');
+        expect(typeof point.errorCount).toBe('number');
+        expect(point.requestCount).toBeGreaterThanOrEqual(0);
+        expect(point.errorCount).toBeGreaterThanOrEqual(0);
       });
     });
   });

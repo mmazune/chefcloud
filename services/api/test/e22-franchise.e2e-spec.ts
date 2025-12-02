@@ -2,7 +2,7 @@
 import { Test } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
-import { AppModule } from '../src/app.module';
+import { E2eAppModule } from './e2e-app.module';
 import { PrismaService } from '../src/prisma.service';
 
 describe('E22-s2: Franchise APIs (e2e)', () => {
@@ -15,7 +15,7 @@ describe('E22-s2: Franchise APIs (e2e)', () => {
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
-      imports: [AppModule],
+      imports: [E2eAppModule],
     }).compile();
 
     app = moduleRef.createNestApplication();
@@ -454,4 +454,640 @@ describe('E22-s2: Franchise APIs (e2e)', () => {
       });
     });
   });
+
+  // E22-S1: New analytics endpoints with date range support
+  describe('GET /franchise/analytics/overview', () => {
+    it('should return per-branch KPIs and totals for date range', async () => {
+      const res = await request(app.getHttpServer())
+        .get('/franchise/analytics/overview')
+        .query({
+          startDate: '2025-12-01',
+          endDate: '2025-12-31',
+        })
+        .set('Authorization', `Bearer ${ownerToken}`)
+        .set('x-org-id', orgId)
+        .expect(200);
+
+      expect(res.body).toHaveProperty('fromDate');
+      expect(res.body).toHaveProperty('toDate');
+      expect(res.body).toHaveProperty('branches');
+      expect(res.body).toHaveProperty('totals');
+
+      expect(Array.isArray(res.body.branches)).toBe(true);
+      expect(res.body.branches.length).toBeGreaterThanOrEqual(2);
+
+      // Check branch structure
+      const branch = res.body.branches[0];
+      expect(branch).toHaveProperty('branchId');
+      expect(branch).toHaveProperty('branchName');
+      expect(branch).toHaveProperty('grossSales');
+      expect(branch).toHaveProperty('netSales');
+      expect(branch).toHaveProperty('totalOrders');
+      expect(branch).toHaveProperty('avgCheck');
+      expect(branch).toHaveProperty('marginAmount');
+      expect(branch).toHaveProperty('marginPercent');
+      expect(branch).toHaveProperty('cancelledOrders');
+      expect(branch).toHaveProperty('voidedOrders');
+
+      // Check totals structure
+      expect(res.body.totals).toHaveProperty('grossSales');
+      expect(res.body.totals).toHaveProperty('netSales');
+      expect(res.body.totals).toHaveProperty('totalOrders');
+      expect(res.body.totals).toHaveProperty('marginAmount');
+      expect(res.body.totals).toHaveProperty('marginPercent');
+    });
+
+    it('should filter by branchIds when provided', async () => {
+      const res = await request(app.getHttpServer())
+        .get('/franchise/analytics/overview')
+        .query({
+          startDate: '2025-12-01',
+          endDate: '2025-12-31',
+          branchIds: [branch1Id],
+        })
+        .set('Authorization', `Bearer ${ownerToken}`)
+        .set('x-org-id', orgId)
+        .expect(200);
+
+      expect(res.body.branches.length).toBe(1);
+      expect(res.body.branches[0].branchId).toBe(branch1Id);
+    });
+
+    it('should default to today when dates omitted', async () => {
+      const res = await request(app.getHttpServer())
+        .get('/franchise/analytics/overview')
+        .set('Authorization', `Bearer ${ownerToken}`)
+        .set('x-org-id', orgId)
+        .expect(200);
+
+      expect(res.body.fromDate).toBeDefined();
+      expect(res.body.toDate).toBeDefined();
+      expect(res.body.branches).toBeDefined();
+    });
+
+    it('should reject non-manager/owner users', async () => {
+      // Create L2 user (Waiter)
+      const waiter = await prisma.client.user.create({
+        data: {
+          orgId,
+          email: 'waiter-analytics@test.local',
+          firstName: 'Waiter',
+          lastName: 'User',
+          role: 'L2',
+          passwordHash: 'dummy-hash',
+        },
+      });
+
+      const waiterToken = 'mock-waiter-token';
+
+      await request(app.getHttpServer())
+        .get('/franchise/analytics/overview')
+        .set('Authorization', `Bearer ${waiterToken}`)
+        .set('x-org-id', orgId)
+        .expect(403); // Forbidden - only L4+ can access
+
+      // Cleanup
+      await prisma.client.user.delete({ where: { id: waiter.id } });
+    });
+  });
+
+  describe('GET /franchise/analytics/rankings', () => {
+    it('should return branches ranked by NET_SALES', async () => {
+      const res = await request(app.getHttpServer())
+        .get('/franchise/analytics/rankings')
+        .query({
+          metric: 'NET_SALES',
+          startDate: '2025-12-01',
+          endDate: '2025-12-31',
+        })
+        .set('Authorization', `Bearer ${ownerToken}`)
+        .set('x-org-id', orgId)
+        .expect(200);
+
+      expect(res.body).toHaveProperty('fromDate');
+      expect(res.body).toHaveProperty('toDate');
+      expect(res.body).toHaveProperty('metric');
+      expect(res.body.metric).toBe('NET_SALES');
+      expect(res.body).toHaveProperty('entries');
+      expect(Array.isArray(res.body.entries)).toBe(true);
+
+      // Check entry structure
+      if (res.body.entries.length > 0) {
+        const entry = res.body.entries[0];
+        expect(entry).toHaveProperty('branchId');
+        expect(entry).toHaveProperty('branchName');
+        expect(entry).toHaveProperty('value');
+        expect(entry).toHaveProperty('rank');
+        expect(entry.rank).toBe(1); // First entry should be rank 1
+      }
+
+      // Verify ranking order (descending)
+      for (let i = 0; i < res.body.entries.length - 1; i++) {
+        expect(res.body.entries[i].value).toBeGreaterThanOrEqual(
+          res.body.entries[i + 1].value,
+        );
+        expect(res.body.entries[i].rank).toBe(i + 1);
+      }
+    });
+
+    it('should return branches ranked by MARGIN_PERCENT', async () => {
+      const res = await request(app.getHttpServer())
+        .get('/franchise/analytics/rankings')
+        .query({
+          metric: 'MARGIN_PERCENT',
+          startDate: '2025-12-01',
+          endDate: '2025-12-31',
+        })
+        .set('Authorization', `Bearer ${ownerToken}`)
+        .set('x-org-id', orgId)
+        .expect(200);
+
+      expect(res.body.metric).toBe('MARGIN_PERCENT');
+      expect(res.body.entries).toBeDefined();
+    });
+
+    it('should apply limit parameter', async () => {
+      const res = await request(app.getHttpServer())
+        .get('/franchise/analytics/rankings')
+        .query({
+          metric: 'NET_SALES',
+          limit: 1,
+        })
+        .set('Authorization', `Bearer ${ownerToken}`)
+        .set('x-org-id', orgId)
+        .expect(200);
+
+      expect(res.body.entries.length).toBeLessThanOrEqual(1);
+    });
+
+    it('should reject unsupported metrics', async () => {
+      const res = await request(app.getHttpServer())
+        .get('/franchise/analytics/rankings')
+        .query({
+          metric: 'WASTE_PERCENT', // Not yet supported in S1
+        })
+        .set('Authorization', `Bearer ${ownerToken}`)
+        .set('x-org-id', orgId)
+        .expect(400);
+
+      expect(res.body.message).toContain('Unsupported ranking metric');
+      expect(res.body.message).toContain('WASTE_PERCENT');
+    });
+
+    it('should reject requests without metric parameter', async () => {
+      await request(app.getHttpServer())
+        .get('/franchise/analytics/rankings')
+        .set('Authorization', `Bearer ${ownerToken}`)
+        .set('x-org-id', orgId)
+        .expect(400); // Bad request - metric is required
+    });
+  });
+
+  // E22-S3: NEW Franchise Budgets & Variance (FranchiseBudget model)
+  describe('E22-S3: Franchise Budgets & Variance', () => {
+    describe('GET /franchise/budgets (NEW)', () => {
+      beforeAll(async () => {
+        // Seed new FranchiseBudget records (year/month format)
+        await prisma.client.franchiseBudget.createMany({
+          data: [
+            {
+              orgId,
+              branchId: branch1Id,
+              year: 2025,
+              month: 1, // January
+              category: 'NET_SALES',
+              amountCents: 2000000, // 20,000 UGX in cents
+              currencyCode: 'UGX',
+            },
+            {
+              orgId,
+              branchId: branch2Id,
+              year: 2025,
+              month: 1,
+              category: 'NET_SALES',
+              amountCents: 1500000, // 15,000 UGX in cents
+              currencyCode: 'UGX',
+            },
+            {
+              orgId,
+              branchId: branch1Id,
+              year: 2025,
+              month: 2, // February
+              category: 'NET_SALES',
+              amountCents: 2500000,
+              currencyCode: 'UGX',
+            },
+          ],
+        });
+      });
+
+      afterAll(async () => {
+        await prisma.client.franchiseBudget.deleteMany({ where: { orgId } });
+      });
+
+      it('should return all budgets without filters', async () => {
+        const res = await request(app.getHttpServer())
+          .get('/franchise/budgets')
+          .set('Authorization', `Bearer ${ownerToken}`)
+          .set('x-org-id', orgId)
+          .expect(200);
+
+        expect(Array.isArray(res.body)).toBe(true);
+        expect(res.body.length).toBeGreaterThanOrEqual(3);
+
+        // Verify structure
+        const budget = res.body[0];
+        expect(budget).toHaveProperty('id');
+        expect(budget).toHaveProperty('branchId');
+        expect(budget).toHaveProperty('branchName');
+        expect(budget).toHaveProperty('year');
+        expect(budget).toHaveProperty('month');
+        expect(budget).toHaveProperty('category');
+        expect(budget).toHaveProperty('amountCents');
+        expect(budget).toHaveProperty('currencyCode');
+      });
+
+      it('should filter by year and month', async () => {
+        const res = await request(app.getHttpServer())
+          .get('/franchise/budgets')
+          .query({ year: 2025, month: 1 })
+          .set('Authorization', `Bearer ${ownerToken}`)
+          .set('x-org-id', orgId)
+          .expect(200);
+
+        expect(res.body.length).toBe(2); // Only Jan 2025 budgets
+        res.body.forEach((budget: any) => {
+          expect(budget.year).toBe(2025);
+          expect(budget.month).toBe(1);
+        });
+      });
+
+      it('should filter by branchIds', async () => {
+        const res = await request(app.getHttpServer())
+          .get('/franchise/budgets')
+          .query({ branchIds: [branch1Id] })
+          .set('Authorization', `Bearer ${ownerToken}`)
+          .set('x-org-id', orgId)
+          .expect(200);
+
+        expect(res.body.length).toBeGreaterThanOrEqual(2); // branch1 has Jan & Feb budgets
+        res.body.forEach((budget: any) => {
+          expect(budget.branchId).toBe(branch1Id);
+        });
+      });
+
+      it('should allow L4 (Manager) to read budgets', async () => {
+        // Create L4 user
+        const manager = await prisma.client.user.create({
+          data: {
+            orgId,
+            email: 'e22-s3-manager@test.local',
+            firstName: 'Manager',
+            lastName: 'S3',
+            role: 'L4',
+            passwordHash: 'dummy',
+          },
+        });
+
+        const managerToken = 'mock-manager-token-s3';
+
+        const res = await request(app.getHttpServer())
+          .get('/franchise/budgets')
+          .set('Authorization', `Bearer ${managerToken}`)
+          .set('x-org-id', orgId)
+          .expect(200);
+
+        expect(Array.isArray(res.body)).toBe(true);
+
+        // Cleanup
+        await prisma.client.user.delete({ where: { id: manager.id } });
+      });
+    });
+
+    describe('PUT /franchise/budgets (bulk upsert)', () => {
+      it('should create new budgets', async () => {
+        const res = await request(app.getHttpServer())
+          .put('/franchise/budgets')
+          .set('Authorization', `Bearer ${ownerToken}`)
+          .set('x-org-id', orgId)
+          .send({
+            items: [
+              {
+                branchId: branch1Id,
+                year: 2025,
+                month: 3,
+                category: 'NET_SALES',
+                amountCents: 3000000,
+                currencyCode: 'UGX',
+              },
+              {
+                branchId: branch2Id,
+                year: 2025,
+                month: 3,
+                category: 'NET_SALES',
+                amountCents: 2000000,
+                currencyCode: 'UGX',
+              },
+            ],
+          })
+          .expect(200);
+
+        expect(res.body).toEqual({ updated: 2 });
+
+        // Verify budgets were created
+        const budgets = await prisma.client.franchiseBudget.findMany({
+          where: { orgId, year: 2025, month: 3 },
+        });
+        expect(budgets.length).toBe(2);
+      });
+
+      it('should update existing budgets (idempotent)', async () => {
+        // First upsert
+        await request(app.getHttpServer())
+          .put('/franchise/budgets')
+          .set('Authorization', `Bearer ${ownerToken}`)
+          .set('x-org-id', orgId)
+          .send({
+            items: [
+              {
+                branchId: branch1Id,
+                year: 2025,
+                month: 4,
+                category: 'NET_SALES',
+                amountCents: 4000000,
+                currencyCode: 'UGX',
+              },
+            ],
+          })
+          .expect(200);
+
+        // Second upsert with updated amount
+        const res = await request(app.getHttpServer())
+          .put('/franchise/budgets')
+          .set('Authorization', `Bearer ${ownerToken}`)
+          .set('x-org-id', orgId)
+          .send({
+            items: [
+              {
+                branchId: branch1Id,
+                year: 2025,
+                month: 4,
+                category: 'NET_SALES',
+                amountCents: 5000000, // Updated
+                currencyCode: 'USD', // Also update currency
+              },
+            ],
+          })
+          .expect(200);
+
+        expect(res.body).toEqual({ updated: 1 });
+
+        // Verify only one budget exists with updated values
+        const budgets = await prisma.client.franchiseBudget.findMany({
+          where: { orgId, branchId: branch1Id, year: 2025, month: 4 },
+        });
+        expect(budgets.length).toBe(1);
+        expect(budgets[0].amountCents).toBe(5000000);
+        expect(budgets[0].currencyCode).toBe('USD');
+      });
+
+      it('should reject L4 (Manager) from upserting budgets', async () => {
+        const manager = await prisma.client.user.create({
+          data: {
+            orgId,
+            email: 'e22-s3-manager-put@test.local',
+            firstName: 'Manager',
+            lastName: 'Put',
+            role: 'L4',
+            passwordHash: 'dummy',
+          },
+        });
+
+        const managerToken = 'mock-manager-token-put';
+
+        await request(app.getHttpServer())
+          .put('/franchise/budgets')
+          .set('Authorization', `Bearer ${managerToken}`)
+          .set('x-org-id', orgId)
+          .send({
+            items: [
+              {
+                branchId: branch1Id,
+                year: 2025,
+                month: 5,
+                category: 'NET_SALES',
+                amountCents: 1000000,
+                currencyCode: 'UGX',
+              },
+            ],
+          })
+          .expect(403); // Forbidden - only L5/ACCOUNTANT/FRANCHISE_OWNER
+
+        // Cleanup
+        await prisma.client.user.delete({ where: { id: manager.id } });
+      });
+
+      it('should validate year range (2000-9999)', async () => {
+        const res = await request(app.getHttpServer())
+          .put('/franchise/budgets')
+          .set('Authorization', `Bearer ${ownerToken}`)
+          .set('x-org-id', orgId)
+          .send({
+            items: [
+              {
+                branchId: branch1Id,
+                year: 1999, // Invalid: below 2000
+                month: 1,
+                category: 'NET_SALES',
+                amountCents: 1000000,
+                currencyCode: 'UGX',
+              },
+            ],
+          })
+          .expect(400);
+
+        expect(res.body.message).toBeDefined();
+      });
+
+      it('should validate month range (1-12)', async () => {
+        const res = await request(app.getHttpServer())
+          .put('/franchise/budgets')
+          .set('Authorization', `Bearer ${ownerToken}`)
+          .set('x-org-id', orgId)
+          .send({
+            items: [
+              {
+                branchId: branch1Id,
+                year: 2025,
+                month: 13, // Invalid: above 12
+                category: 'NET_SALES',
+                amountCents: 1000000,
+                currencyCode: 'UGX',
+              },
+            ],
+          })
+          .expect(400);
+
+        expect(res.body.message).toBeDefined();
+      });
+    });
+
+    describe('GET /franchise/budgets/variance', () => {
+      beforeAll(async () => {
+        // Ensure budgets exist for January 2025
+        await prisma.client.franchiseBudget.deleteMany({
+          where: { orgId, year: 2025, month: 1 },
+        });
+
+        await prisma.client.franchiseBudget.createMany({
+          data: [
+            {
+              orgId,
+              branchId: branch1Id,
+              year: 2025,
+              month: 1,
+              category: 'NET_SALES',
+              amountCents: 5000000, // Budget: 50,000 UGX
+              currencyCode: 'UGX',
+            },
+            {
+              orgId,
+              branchId: branch2Id,
+              year: 2025,
+              month: 1,
+              category: 'NET_SALES',
+              amountCents: 3000000, // Budget: 30,000 UGX
+              currencyCode: 'UGX',
+            },
+          ],
+        });
+
+        // Create orders in January 2025 for variance calculation
+        await prisma.client.order.deleteMany({
+          where: {
+            branchId: { in: [branch1Id, branch2Id] },
+            createdAt: {
+              gte: new Date(Date.UTC(2025, 0, 1)),
+              lt: new Date(Date.UTC(2025, 1, 1)),
+            },
+          },
+        });
+
+        const baseDate = new Date(Date.UTC(2025, 0, 15)); // Mid-Jan 2025
+
+        await prisma.client.order.createMany({
+          data: [
+            // Branch 1: 55,000 UGX total (over budget by 10%)
+            {
+              orgId,
+              branchId: branch1Id,
+              status: 'CLOSED',
+              createdAt: baseDate,
+              total: 5500000, // 55,000 in cents
+            },
+            // Branch 2: No orders (under budget by 100%)
+          ],
+        });
+      });
+
+      afterAll(async () => {
+        // Cleanup variance test data
+        await prisma.client.order.deleteMany({
+          where: {
+            branchId: { in: [branch1Id, branch2Id] },
+            createdAt: {
+              gte: new Date(Date.UTC(2025, 0, 1)),
+              lt: new Date(Date.UTC(2025, 1, 1)),
+            },
+          },
+        });
+        await prisma.client.franchiseBudget.deleteMany({
+          where: { orgId, year: 2025, month: 1 },
+        });
+      });
+
+      it('should calculate variance for all branches', async () => {
+        const res = await request(app.getHttpServer())
+          .get('/franchise/budgets/variance')
+          .query({ year: 2025, month: 1 })
+          .set('Authorization', `Bearer ${ownerToken}`)
+          .set('x-org-id', orgId)
+          .expect(200);
+
+        expect(res.body).toHaveProperty('year', 2025);
+        expect(res.body).toHaveProperty('month', 1);
+        expect(res.body).toHaveProperty('branches');
+        expect(Array.isArray(res.body.branches)).toBe(true);
+        expect(res.body.branches.length).toBe(2);
+
+        // Branch 1: Over-performance
+        const branch1Variance = res.body.branches.find(
+          (b: any) => b.branchId === branch1Id,
+        );
+        expect(branch1Variance).toBeDefined();
+        expect(branch1Variance.budgetAmountCents).toBe(5000000);
+        expect(branch1Variance.actualNetSalesCents).toBe(5500000);
+        expect(branch1Variance.varianceAmountCents).toBe(500000); // 5000 UGX over
+        expect(branch1Variance.variancePercent).toBeCloseTo(10, 1); // +10%
+
+        // Branch 2: Under-performance
+        const branch2Variance = res.body.branches.find(
+          (b: any) => b.branchId === branch2Id,
+        );
+        expect(branch2Variance).toBeDefined();
+        expect(branch2Variance.budgetAmountCents).toBe(3000000);
+        expect(branch2Variance.actualNetSalesCents).toBe(0); // No sales
+        expect(branch2Variance.varianceAmountCents).toBe(-3000000); // 30,000 under
+        expect(branch2Variance.variancePercent).toBeCloseTo(-100, 1); // -100%
+      });
+
+      it('should filter variance by branchIds', async () => {
+        const res = await request(app.getHttpServer())
+          .get('/franchise/budgets/variance')
+          .query({ year: 2025, month: 1, branchIds: [branch1Id] })
+          .set('Authorization', `Bearer ${ownerToken}`)
+          .set('x-org-id', orgId)
+          .expect(200);
+
+        expect(res.body.branches.length).toBe(1);
+        expect(res.body.branches[0].branchId).toBe(branch1Id);
+      });
+
+      it('should return empty array when no budgets exist', async () => {
+        const res = await request(app.getHttpServer())
+          .get('/franchise/budgets/variance')
+          .query({ year: 2025, month: 12 }) // No budgets for Dec 2025
+          .set('Authorization', `Bearer ${ownerToken}`)
+          .set('x-org-id', orgId)
+          .expect(200);
+
+        expect(res.body.year).toBe(2025);
+        expect(res.body.month).toBe(12);
+        expect(res.body.branches).toEqual([]);
+      });
+
+      it('should require year parameter', async () => {
+        const res = await request(app.getHttpServer())
+          .get('/franchise/budgets/variance')
+          .query({ month: 1 }) // Missing year
+          .set('Authorization', `Bearer ${ownerToken}`)
+          .set('x-org-id', orgId)
+          .expect(400);
+
+        expect(res.body.message).toBeDefined();
+      });
+
+      it('should require month parameter', async () => {
+        const res = await request(app.getHttpServer())
+          .get('/franchise/budgets/variance')
+          .query({ year: 2025 }) // Missing month
+          .set('Authorization', `Bearer ${ownerToken}`)
+          .set('x-org-id', orgId)
+          .expect(400);
+
+        expect(res.body.message).toBeDefined();
+      });
+    });
+  });
 });
+

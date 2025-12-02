@@ -1,6 +1,8 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import * as argon2 from 'argon2';
+import { DevUsageSummaryDto } from './dto/dev-usage.dto';
+import { subHours } from 'date-fns';
 
 @Injectable()
 export class DevPortalService {
@@ -161,5 +163,152 @@ export class DevPortalService {
     }
 
     throw new BadRequestException('Invalid action');
+  }
+
+  /**
+   * Helper for time range resolution
+   */
+  private resolveRange(range: '24h' | '7d') {
+    const to = new Date();
+    const from = range === '24h' ? subHours(to, 24) : subHours(to, 24 * 7);
+    return { from, to };
+  }
+
+  /**
+   * Get API usage summary for a developer account
+   * 
+   * NOTE: This is a v1 implementation with mock data.
+   * In production, this would query an ApiRequestLog table or metrics service.
+   * 
+   * @param orgId - Organization ID (developer account)
+   * @param range - Time range ('24h' or '7d')
+   */
+  async getUsageSummaryForOrg(
+    orgId: string,
+    range: '24h' | '7d' = '24h',
+  ): Promise<DevUsageSummaryDto> {
+    const { from, to } = this.resolveRange(range);
+
+    // TODO: Replace with actual metrics query when ApiRequestLog table exists
+    // Example query structure:
+    // const rows = await this.prisma.apiRequestLog.groupBy({
+    //   by: ['keyId', 'keyLabel', 'environment'],
+    //   _count: { _all: true },
+    //   _sum: { isError: true },
+    //   where: {
+    //     orgId,
+    //     timestamp: { gte: from, lt: to },
+    //   },
+    // });
+
+    // For now, generate mock data based on actual API keys in the system
+    const apiKeys = await this.prisma.apiKey.findMany({
+      where: { orgId },
+      select: { id: true, name: true },
+    });
+
+    // Generate mock usage data
+    const mockData = this.generateMockUsageData(apiKeys, range);
+
+    // Calculate aggregates
+    let totalRequests = 0;
+    let totalErrors = 0;
+    let sandboxRequests = 0;
+    let productionRequests = 0;
+
+    const topKeys = mockData.keys.map((k) => {
+      totalRequests += k.requestCount;
+      totalErrors += k.errorCount;
+
+      if (k.environment === 'SANDBOX') {
+        sandboxRequests += k.requestCount;
+      } else {
+        productionRequests += k.requestCount;
+      }
+
+      return {
+        keyId: k.keyId,
+        label: k.label,
+        environment: k.environment as 'SANDBOX' | 'PRODUCTION',
+        requestCount: k.requestCount,
+        errorCount: k.errorCount,
+      };
+    });
+
+    // Sort by request count descending, limit to 10
+    topKeys.sort((a, b) => b.requestCount - a.requestCount);
+    const top10 = topKeys.slice(0, 10);
+
+    const errorRatePercent =
+      totalRequests > 0 ? (totalErrors / totalRequests) * 100 : 0;
+
+    return {
+      fromIso: from.toISOString(),
+      toIso: to.toISOString(),
+      range,
+      totalRequests,
+      totalErrors,
+      errorRatePercent,
+      sandboxRequests,
+      productionRequests,
+      timeseries: mockData.timeseries,
+      topKeys: top10,
+    };
+  }
+
+  /**
+   * Generate mock usage data for demonstration
+   * In production, this would be replaced with actual database queries
+   */
+  private generateMockUsageData(
+    apiKeys: Array<{ id: string; name: string }>,
+    range: '24h' | '7d',
+  ) {
+    // Generate timeseries (hourly buckets for 24h, 4-hour buckets for 7d)
+    const bucketCount = range === '24h' ? 24 : 42; // 7 days * 6 (4-hour buckets)
+    const bucketSizeHours = range === '24h' ? 1 : 4;
+    const now = new Date();
+
+    const timeseries = Array.from({ length: bucketCount }, (_, i) => {
+      const bucketTime = subHours(now, (bucketCount - 1 - i) * bucketSizeHours);
+      // Generate realistic-looking traffic with some variance
+      const baseRequests = Math.floor(Math.random() * 50) + 10;
+      const baseErrors = Math.floor(baseRequests * (Math.random() * 0.05)); // 0-5% error rate
+
+      return {
+        timestamp: bucketTime.toISOString(),
+        requestCount: baseRequests,
+        errorCount: baseErrors,
+      };
+    });
+
+    // Generate per-key mock data
+    const keys = apiKeys.length > 0
+      ? apiKeys.map((key, idx) => ({
+          keyId: key.id,
+          label: key.name,
+          environment: idx % 2 === 0 ? 'SANDBOX' : 'PRODUCTION',
+          requestCount: Math.floor(Math.random() * 500) + 50,
+          errorCount: Math.floor(Math.random() * 20),
+        }))
+      : [
+          // Default mock keys if none exist
+          {
+            keyId: 'mock_key_1',
+            label: 'Integration Test Key',
+            environment: 'SANDBOX',
+            requestCount: 342,
+            errorCount: 8,
+          },
+          {
+            keyId: 'mock_key_2',
+            label: 'Production App',
+            environment: 'PRODUCTION',
+            requestCount: 1024,
+            errorCount: 12,
+          },
+        ];
+
+    return { timeseries, keys };
   }
 }

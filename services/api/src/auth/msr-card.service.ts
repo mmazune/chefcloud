@@ -364,7 +364,6 @@ export class MsrCardService {
       employeeCode?: string;
     },
   ): Promise<any> {
-  ) {
     return this.prisma.client.msrCard.findMany({
       where: {
         orgId,

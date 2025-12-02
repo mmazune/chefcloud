@@ -1,14 +1,8 @@
 import { IsEmail, IsString, MinLength, IsOptional, IsEnum } from 'class-validator';
+import { SessionPlatform } from '@chefcloud/db';
 
-// M10: Platform enum (must match Prisma enum)
-export enum SessionPlatform {
-  WEB_BACKOFFICE = 'WEB_BACKOFFICE',
-  POS_DESKTOP = 'POS_DESKTOP',
-  MOBILE_APP = 'MOBILE_APP',
-  KDS_SCREEN = 'KDS_SCREEN',
-  DEV_PORTAL = 'DEV_PORTAL',
-  OTHER = 'OTHER',
-}
+// Re-export for convenience
+export { SessionPlatform };
 
 export class LoginDto {
   @IsEmail()

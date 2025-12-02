@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { SystemDiagnosticsPanel } from './SystemDiagnosticsPanel';
 
@@ -8,7 +8,7 @@ jest.mock('@/hooks/useDeviceRole', () => ({
   useDeviceRole: () => ({ role: 'POS', isLoaded: true }),
 }));
 jest.mock('@/hooks/useOnlineStatus', () => ({
-  useOnlineStatus: () => ({ isOnline: true }),
+  useOnlineStatus: () => true,
 }));
 jest.mock('@/hooks/useOfflineQueue', () => ({
   useOfflineQueue: () => ({
@@ -61,5 +61,29 @@ describe('SystemDiagnosticsPanel', () => {
 
     // Sanity-check one metric
     expect(screen.getByText(/Queued actions/i).closest('div')!).toHaveTextContent('1');
+
+    // New support tools buttons
+    expect(screen.getByRole('button', { name: /Copy JSON/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Download JSON/i })).toBeInTheDocument();
+  });
+
+  test('copy JSON uses clipboard when available', async () => {
+    const writeText = jest.fn().mockResolvedValue(undefined);
+    Object.assign(navigator, { clipboard: { writeText } });
+
+    const { getByRole } = render(
+      <SystemDiagnosticsPanel
+        open={true}
+        onClose={() => {}}
+        context="POS"
+      />,
+    );
+
+    const copyButton = getByRole('button', { name: /Copy JSON/i });
+    fireEvent.click(copyButton);
+
+    await waitFor(() => {
+      expect(writeText).toHaveBeenCalled();
+    });
   });
 });

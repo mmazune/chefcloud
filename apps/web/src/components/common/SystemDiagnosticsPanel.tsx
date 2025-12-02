@@ -10,7 +10,8 @@ import { useOfflineStorageEstimate } from '@/hooks/useOfflineStorageEstimate';
 import { usePosCachedMenu } from '@/hooks/usePosCachedMenu';
 import { usePosCachedOpenOrders } from '@/hooks/usePosCachedOpenOrders';
 import { useKioskMode } from '@/hooks/useKioskMode';
-import { formatAgeMs, formatBytes } from '@/lib/diagnostics';
+import { useLastErrorRecord } from '@/hooks/useLastErrorRecord';
+import { formatAgeMs, formatBytes, type DiagnosticsSnapshot, serializeDiagnosticsSnapshot } from '@/lib/diagnostics';
 
 export interface SystemDiagnosticsPanelProps {
   open: boolean;
@@ -32,9 +33,11 @@ export function SystemDiagnosticsPanel(props: SystemDiagnosticsPanelProps) {
   const { openOrders, isStale: isOrdersStale, ageMs: ordersAgeMs } =
     usePosCachedOpenOrders();
   const kiosk = useKioskMode();
+  const { lastError, clear: clearLastError } = useLastErrorRecord();
 
-  if (!open) return null;
+  const [copied, setCopied] = React.useState(false);
 
+  // Compute derived values
   const queuedCount = queue?.length ?? 0;
   const failedCount =
     syncLog?.filter(entry => entry.status === 'failed').length ?? 0;
@@ -42,6 +45,134 @@ export function SystemDiagnosticsPanel(props: SystemDiagnosticsPanelProps) {
     syncLog?.filter(entry => entry.status === 'conflict').length ?? 0;
 
   const now = new Date();
+
+  const snapshot: DiagnosticsSnapshot = React.useMemo(() => ({
+    appVersion: APP_VERSION,
+    context,
+
+    timestampIso: new Date().toISOString(),
+
+    deviceRole: isRoleLoaded ? String(role) : 'unknown',
+    online: !!isOnline,
+    kiosk: {
+      supported: !!kiosk.isSupported,
+      active: !!kiosk.isActive,
+    },
+
+    offlineQueue: {
+      queuedCount,
+      failedCount,
+      conflictCount,
+      historyCount: syncLog?.length ?? 0,
+    },
+
+    cache: {
+      menuItemsCount: menuItems?.length ?? 0,
+      menuStale: !!isMenuStale,
+      menuAgeMs: menuAgeMs ?? null,
+      openOrdersCount: openOrders?.length ?? 0,
+      openOrdersStale: !!isOrdersStale,
+      openOrdersAgeMs: ordersAgeMs ?? null,
+    },
+
+    storage: {
+      usageBytes: usage ?? null,
+      quotaBytes: quota ?? null,
+    },
+
+    environment: {
+      userAgent:
+        typeof navigator !== 'undefined' ? navigator.userAgent : null,
+      platform:
+        typeof navigator !== 'undefined' ? navigator.platform : null,
+      serviceWorkerSupported:
+        typeof navigator !== 'undefined' &&
+        'serviceWorker' in navigator,
+      language:
+        typeof navigator !== 'undefined' ? navigator.language : null,
+      locationHref:
+        typeof window !== 'undefined' ? window.location.href : null,
+      screen: {
+        width:
+          typeof window !== 'undefined' ? window.innerWidth : null,
+        height:
+          typeof window !== 'undefined' ? window.innerHeight : null,
+      },
+      nodeEnv: typeof process !== 'undefined' ? process.env.NODE_ENV ?? null : null,
+      apiBaseUrl:
+        typeof process !== 'undefined'
+          ? process.env.NEXT_PUBLIC_API_BASE_URL ?? null
+          : null,
+    },
+
+    lastError: {
+      hasError: !!lastError,
+      context: lastError?.context ?? null,
+      message: lastError?.message ?? null,
+      timestampIso: lastError?.timestampIso ?? null,
+    },
+  }), [
+    context,
+    isRoleLoaded,
+    role,
+    isOnline,
+    kiosk.isSupported,
+    kiosk.isActive,
+    queuedCount,
+    failedCount,
+    conflictCount,
+    syncLog?.length,
+    menuItems?.length,
+    isMenuStale,
+    menuAgeMs,
+    openOrders?.length,
+    isOrdersStale,
+    ordersAgeMs,
+    usage,
+    quota,
+    lastError,
+  ]);
+
+  const handleCopyJson = React.useCallback(async () => {
+    const payload = serializeDiagnosticsSnapshot(snapshot);
+    try {
+      if (navigator && 'clipboard' in navigator && (navigator as any).clipboard?.writeText) {
+        await (navigator as any).clipboard.writeText(payload);
+      } else {
+        // Fallback: create a temporary textarea (best effort)
+        const el = document.createElement('textarea');
+        el.value = payload;
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand('copy');
+        document.body.removeChild(el);
+      }
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // ignore copy errors; no user-facing error for now
+    }
+  }, [snapshot]);
+
+  const handleDownloadJson = React.useCallback(() => {
+    try {
+      const payload = serializeDiagnosticsSnapshot(snapshot);
+      const blob = new Blob([payload], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const timestamp = snapshot.timestampIso.replace(/[:.]/g, '-');
+      a.href = url;
+      a.download = `chefcloud-${snapshot.context.toLowerCase()}-diagnostics-${timestamp}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch {
+      // ignore download errors
+    }
+  }, [snapshot]);
+
+  if (!open) return null;
 
   return (
     <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/40 sm:items-center">
@@ -188,7 +319,64 @@ export function SystemDiagnosticsPanel(props: SystemDiagnosticsPanelProps) {
                     : 'Not supported'
                 }
               />
+              <Row
+                label="Last error"
+                value={
+                  lastError
+                    ? `${lastError.context} @ ${lastError.timestampIso}`
+                    : 'None'
+                }
+                hint={
+                  lastError
+                    ? (lastError.message.length > 80
+                        ? `${lastError.message.slice(0, 77)}…`
+                        : lastError.message)
+                    : 'No recent crash recorded'
+                }
+              />
             </dl>
+            {lastError && (
+              <div className="mt-2 flex justify-end">
+                <button
+                  type="button"
+                  onClick={clearLastError}
+                  className="rounded-md border border-slate-700 bg-slate-900 px-2 py-1 text-[10px] text-slate-300 hover:bg-slate-800"
+                >
+                  Clear last error
+                </button>
+              </div>
+            )}
+          </section>
+
+          {/* Support tools */}
+          <section className="rounded-xl border border-slate-800 bg-slate-900/60 px-3 py-2 md:col-span-2">
+            <h3 className="text-[11px] font-semibold text-slate-200">
+              Support tools
+            </h3>
+            <p className="mt-1 text-[11px] text-slate-400">
+              Use these actions when talking to support or engineers. It is safe to share the exported JSON.
+            </p>
+            <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px]">
+              <button
+                type="button"
+                onClick={handleCopyJson}
+                className="rounded-md border border-slate-700 bg-slate-900 px-3 py-1.5 text-[11px] text-slate-100 hover:bg-slate-800"
+              >
+                Copy JSON
+              </button>
+              <button
+                type="button"
+                onClick={handleDownloadJson}
+                className="rounded-md bg-slate-100 px-3 py-1.5 text-[11px] font-semibold text-slate-900 hover:bg-slate-200"
+              >
+                Download JSON
+              </button>
+              {copied && (
+                <span className="text-[10px] text-emerald-400">
+                  Copied to clipboard
+                </span>
+              )}
+            </div>
           </section>
         </div>
       </div>

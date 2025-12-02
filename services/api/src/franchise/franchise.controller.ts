@@ -1,8 +1,9 @@
-import { Controller, Get, Post, Body, Query, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Put, Post, Body, Query, UseGuards, Request, BadRequestException, Res } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
+import { Response } from 'express';
 import { CacheService } from '../common/cache.service';
 import {
   FranchiseService,
@@ -12,6 +13,22 @@ import {
   ProcurementSuggestion,
 } from './franchise.service';
 import { FranchiseOverviewService } from './franchise-overview.service';
+import { FranchiseAnalyticsService } from './franchise-analytics.service';
+import { FranchiseOverviewQueryDto, FranchiseOverviewResponseDto } from './dto/franchise-overview.dto';
+import { FranchiseRankingsQueryDto, FranchiseRankingsResponseDto, FranchiseRankingMetric } from './dto/franchise-rankings.dto';
+import {
+  FranchiseBudgetFilterDto,
+  FranchiseBudgetUpsertDto,
+  FranchiseBudgetDto,
+} from './dto/franchise-budgets.dto';
+import {
+  FranchiseBudgetVarianceQueryDto,
+  FranchiseBudgetVarianceResponseDto,
+} from './dto/franchise-budgets-variance.dto';
+import {
+  FranchiseForecastQueryDto,
+  FranchiseForecastResponseDto,
+} from './dto/franchise-forecast.dto';
 
 interface RequestWithUser {
   user: {
@@ -38,9 +55,53 @@ export class FranchiseController {
   constructor(
     private franchiseService: FranchiseService,
     private franchiseOverviewService: FranchiseOverviewService,
+    private franchiseAnalyticsService: FranchiseAnalyticsService,
     private cacheService: CacheService,
   ) {}
 
+  // E22-S1: New franchise analytics endpoints (date range-based)
+  @ApiOperation({
+    summary: 'Franchise overview with date range',
+    description: 'Per-branch KPIs and totals for specified date range (E22-S1)',
+  })
+  @Get('analytics/overview')
+  @Roles('L4', 'L5')  // Manager and Owner
+  async getAnalyticsOverview(
+    @Request() req: RequestWithUser,
+    @Query() query: FranchiseOverviewQueryDto,
+  ): Promise<FranchiseOverviewResponseDto> {
+    return this.franchiseAnalyticsService.getOverviewForOrg(req.user.orgId, query);
+  }
+
+  @ApiOperation({
+    summary: 'Franchise branch rankings',
+    description: 'Ranked branches by selected metric for specified date range (E22-S1)',
+  })
+  @Get('analytics/rankings')
+  @Roles('L4', 'L5')  // Manager and Owner
+  async getAnalyticsRankings(
+    @Request() req: RequestWithUser,
+    @Query() query: FranchiseRankingsQueryDto,
+  ): Promise<FranchiseRankingsResponseDto> {
+    // Validate supported metrics (E22-S1: sales/margin; E22-S2: waste/shrinkage/staff)
+    const supportedMetrics: FranchiseRankingMetric[] = [
+      FranchiseRankingMetric.NET_SALES,
+      FranchiseRankingMetric.MARGIN_PERCENT,
+      FranchiseRankingMetric.WASTE_PERCENT,
+      FranchiseRankingMetric.SHRINKAGE_PERCENT,
+      FranchiseRankingMetric.STAFF_KPI_SCORE,
+    ];
+
+    if (!supportedMetrics.includes(query.metric)) {
+      throw new BadRequestException(
+        `Unsupported ranking metric: ${query.metric}. Supported metrics: ${supportedMetrics.join(', ')}`,
+      );
+    }
+
+    return this.franchiseAnalyticsService.getRankingsForOrg(req.user.orgId, query);
+  }
+
+  // Legacy endpoints (period-based) - kept for backward compatibility
   @ApiOperation({
     summary: 'Franchise overview',
     description: 'KPIs and aggregates for a given org/period',
@@ -278,5 +339,196 @@ export class FranchiseController {
       toDate,
     );
     return summary.branches;
+  }
+
+  // E22-S3: Franchise budgets endpoints
+
+  @ApiOperation({
+    summary: 'Get franchise budgets',
+    description: 'Retrieve branch budgets with optional filters by year, month, and branch IDs',
+  })
+  @Get('budgets')
+  @Roles('L4', 'L5', 'ACCOUNTANT', 'FRANCHISE_OWNER')
+  async getBudgets(
+    @Request() req: RequestWithUser,
+    @Query() query: FranchiseBudgetFilterDto,
+  ): Promise<FranchiseBudgetDto[]> {
+    const orgId = req.user?.orgId;
+    if (!orgId) {
+      throw new BadRequestException('Missing org context');
+    }
+    return this.franchiseAnalyticsService.getBudgetsForOrg(orgId, query);
+  }
+
+  @ApiOperation({
+    summary: 'Bulk upsert franchise budgets',
+    description: 'Create or update multiple branch budgets in a single request (idempotent)',
+  })
+  @Put('budgets')
+  @Roles('L5', 'ACCOUNTANT', 'FRANCHISE_OWNER')
+  async upsertBudgets(
+    @Request() req: RequestWithUser,
+    @Body() body: FranchiseBudgetUpsertDto,
+  ): Promise<{ updated: number }> {
+    const orgId = req.user?.orgId;
+    if (!orgId) {
+      throw new BadRequestException('Missing org context');
+    }
+
+    await this.franchiseAnalyticsService.upsertBudgetsForOrg(orgId, body);
+    return { updated: body.items.length };
+  }
+
+  @ApiOperation({
+    summary: 'Get budget vs actual variance',
+    description: 'Compare budgeted vs actual net sales for a specific month',
+  })
+  @Get('budgets/variance')
+  @Roles('L4', 'L5', 'ACCOUNTANT', 'FRANCHISE_OWNER')
+  async getBudgetVariance(
+    @Request() req: RequestWithUser,
+    @Query() query: FranchiseBudgetVarianceQueryDto,
+  ): Promise<FranchiseBudgetVarianceResponseDto> {
+    const orgId = req.user?.orgId;
+    if (!orgId) {
+      throw new BadRequestException('Missing org context');
+    }
+    return this.franchiseAnalyticsService.getBudgetVarianceForOrg(orgId, query);
+  }
+
+  @ApiOperation({
+    summary: 'Get franchise sales forecast',
+    description: 'Predict net sales per branch for a target month based on historical weekday averages',
+  })
+  @Get('forecast')
+  @Roles('L4', 'L5', 'ACCOUNTANT', 'FRANCHISE_OWNER')
+  async getForecast(
+    @Request() req: RequestWithUser,
+    @Query() query: FranchiseForecastQueryDto,
+  ): Promise<FranchiseForecastResponseDto> {
+    const orgId = req.user?.orgId;
+    if (!orgId) {
+      throw new BadRequestException('Missing org context');
+    }
+    return this.franchiseAnalyticsService.getForecastForOrg(orgId, query);
+  }
+
+  // E22-S6: CSV Export Endpoints
+
+  @ApiOperation({
+    summary: 'Export franchise overview as CSV',
+    description: 'Download franchise overview KPIs in CSV format for Excel/Sheets',
+  })
+  @Get('export/overview.csv')
+  @Roles('OWNER', 'MANAGER', 'ACCOUNTANT', 'FRANCHISE_OWNER')
+  async exportOverviewCsv(
+    @Request() req: RequestWithUser,
+    @Query() query: FranchiseOverviewQueryDto,
+    @Res() res: Response,
+  ): Promise<void> {
+    const orgId = req.user?.orgId;
+    if (!orgId) {
+      throw new BadRequestException('Missing org context');
+    }
+
+    const csv = await this.franchiseAnalyticsService.getOverviewCsvForOrg(
+      orgId,
+      query,
+    );
+
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader(
+      'Content-Disposition',
+      'attachment; filename="franchise-overview.csv"',
+    );
+    res.send(csv);
+  }
+
+  @ApiOperation({
+    summary: 'Export franchise rankings as CSV',
+    description: 'Download franchise rankings by metric in CSV format',
+  })
+  @Get('export/rankings.csv')
+  @Roles('OWNER', 'MANAGER', 'ACCOUNTANT', 'FRANCHISE_OWNER')
+  async exportRankingsCsv(
+    @Request() req: RequestWithUser,
+    @Query() query: FranchiseRankingsQueryDto,
+    @Res() res: Response,
+  ): Promise<void> {
+    const orgId = req.user?.orgId;
+    if (!orgId) {
+      throw new BadRequestException('Missing org context');
+    }
+
+    const csv = await this.franchiseAnalyticsService.getRankingsCsvForOrg(
+      orgId,
+      query,
+    );
+
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader(
+      'Content-Disposition',
+      'attachment; filename="franchise-rankings.csv"',
+    );
+    res.send(csv);
+  }
+
+  @ApiOperation({
+    summary: 'Export franchise budgets as CSV',
+    description: 'Download franchise budgets in CSV format',
+  })
+  @Get('export/budgets.csv')
+  @Roles('OWNER', 'ACCOUNTANT', 'FRANCHISE_OWNER')
+  async exportBudgetsCsv(
+    @Request() req: RequestWithUser,
+    @Query() query: FranchiseBudgetFilterDto,
+    @Res() res: Response,
+  ): Promise<void> {
+    const orgId = req.user?.orgId;
+    if (!orgId) {
+      throw new BadRequestException('Missing org context');
+    }
+
+    const csv = await this.franchiseAnalyticsService.getBudgetsCsvForOrg(
+      orgId,
+      query,
+    );
+
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader(
+      'Content-Disposition',
+      'attachment; filename="franchise-budgets.csv"',
+    );
+    res.send(csv);
+  }
+
+  @ApiOperation({
+    summary: 'Export franchise budget variance as CSV',
+    description: 'Download franchise budget vs actual variance analysis in CSV format',
+  })
+  @Get('export/budgets-variance.csv')
+  @Roles('OWNER', 'MANAGER', 'ACCOUNTANT', 'FRANCHISE_OWNER')
+  async exportBudgetVarianceCsv(
+    @Request() req: RequestWithUser,
+    @Query() query: FranchiseBudgetVarianceQueryDto,
+    @Res() res: Response,
+  ): Promise<void> {
+    const orgId = req.user?.orgId;
+    if (!orgId) {
+      throw new BadRequestException('Missing org context');
+    }
+
+    const csv =
+      await this.franchiseAnalyticsService.getBudgetVarianceCsvForOrg(
+        orgId,
+        query,
+      );
+
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader(
+      'Content-Disposition',
+      'attachment; filename="franchise-budgets-variance.csv"',
+    );
+    res.send(csv);
   }
 }

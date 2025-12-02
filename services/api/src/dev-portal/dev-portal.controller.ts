@@ -5,11 +5,14 @@ import {
   Body,
   UseGuards,
   HttpCode,
+  Query,
 } from '@nestjs/common';
+import { ApiOkResponse, ApiQuery } from '@nestjs/swagger';
 import { DevPortalService } from './dev-portal.service';
 import { DevAdminGuard } from './guards/dev-admin.guard';
 import { SuperDevGuard } from './guards/super-dev.guard';
 import { PlanRateLimiterGuard } from '../common/plan-rate-limiter.guard';
+import { DevUsageSummaryDto } from './dto/dev-usage.dto';
 
 /**
  * Developer Portal Controller
@@ -74,5 +77,29 @@ export class DevPortalController {
       body.email,
       body.isSuper,
     );
+  }
+
+  /**
+   * Get API usage summary for developer account
+   * 
+   * NOTE: This endpoint is for developer portal analytics.
+   * Auth: Currently uses DevAdminGuard with x-org-id header.
+   * TODO: Replace with proper org session auth when full dev portal backend is implemented.
+   * 
+   * @param orgId - Organization ID from x-org-id header (temp auth mechanism)
+   * @param range - Time range: '24h' or '7d'
+   */
+  @Get('usage')
+  @ApiOkResponse({ type: DevUsageSummaryDto })
+  @ApiQuery({ name: 'range', enum: ['24h', '7d'], required: false })
+  async getUsage(
+    @Query('range') range?: '24h' | '7d',
+  ): Promise<DevUsageSummaryDto> {
+    // TODO: Extract orgId from authenticated session/user context
+    // For now, use a mock org ID or extract from request headers
+    // When proper dev portal auth is implemented, use @CurrentOrg() decorator
+    const orgId = 'demo-org-id'; // Placeholder - replace with actual org context
+    
+    return this.devPortalService.getUsageSummaryForOrg(orgId, range ?? '24h');
   }
 }

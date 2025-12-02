@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
-import { AppModule } from '../src/app.module';
+import { E2eAppModule } from './e2e-app.module';
 import { PrismaService } from '../src/prisma.service';
 
 describe('Auth (e2e)', () => {
@@ -10,7 +10,7 @@ describe('Auth (e2e)', () => {
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
+      imports: [E2eAppModule],
     }).compile();
 
     app = moduleFixture.createNestApplication();

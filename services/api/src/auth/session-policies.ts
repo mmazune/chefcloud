@@ -4,23 +4,11 @@
  * Defines idle timeout, max lifetime, and other policies per platform.
  */
 
-export enum SessionPlatform {
-  WEB_BACKOFFICE = 'WEB_BACKOFFICE',
-  POS_DESKTOP = 'POS_DESKTOP',
-  MOBILE_APP = 'MOBILE_APP',
-  KDS_SCREEN = 'KDS_SCREEN',
-  DEV_PORTAL = 'DEV_PORTAL',
-  OTHER = 'OTHER',
-}
+// Import Prisma-generated enums to ensure type compatibility
+import { SessionPlatform, SessionSource } from '@chefcloud/db';
 
-export enum SessionSource {
-  PASSWORD = 'PASSWORD',
-  PIN = 'PIN',
-  MSR_CARD = 'MSR_CARD',
-  API_KEY = 'API_KEY',
-  SSO = 'SSO',
-  WEBAUTHN = 'WEBAUTHN',
-}
+// Re-export for convenience
+export { SessionPlatform, SessionSource };
 
 export interface SessionPolicy {
   idleTimeoutMinutes: number; // Max inactivity before auto-logout
