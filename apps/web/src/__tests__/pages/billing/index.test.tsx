@@ -1,5 +1,5 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import BillingPage from '../index';
+import BillingPage from '../../../pages/billing/index';
 import { useBillingOverview } from '@/hooks/useBillingOverview';
 
 // Mock the hook
