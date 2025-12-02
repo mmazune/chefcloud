@@ -17,7 +17,6 @@ import {
   DevWebhookDeliveryDto,
   DevWebhookDeliveryStatus,
   DevUsageSummary,
-  DevUsageRange,
 } from '@/types/devPortal';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
@@ -164,12 +163,10 @@ export async function retryDevWebhookDelivery(
   return handleJson<DevWebhookDeliveryDto>(res);
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// Usage analytics endpoints for E23-DEVPORTAL-FE-S5
-// ═══════════════════════════════════════════════════════════════════════════
-
+// E23-DEVPORTAL-S5: API Usage & Error Analytics
+// E23-DEVPORTAL-S5: API Usage & Error Analytics
 export async function fetchDevUsageSummary(
-  range: DevUsageRange = '24h',
+  range: '24h' | '7d' = '24h',
 ): Promise<DevUsageSummary> {
   const params = new URLSearchParams();
   params.set('range', range);

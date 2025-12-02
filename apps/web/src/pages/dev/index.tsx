@@ -3,7 +3,6 @@
  * E23-DEVPORTAL-FE-S1: API Keys management interface
  * E23-DEVPORTAL-FE-S2: Webhooks management interface
  * E23-DEVPORTAL-FE-S4: Docs & quickstart tab
- * E23-DEVPORTAL-FE-S5: Usage & error analytics tab
  */
 
 import type { NextPage } from 'next';
@@ -13,10 +12,9 @@ import { useDevApiKeys } from '@/hooks/useDevApiKeys';
 import { DevKeysPanel } from '@/components/dev/DevKeysPanel';
 import { DevWebhooksPanel } from '@/components/dev/DevWebhooksPanel';
 import { DevDocsQuickstartTab } from '@/components/dev/docs/DevDocsQuickstartTab';
-import { DevUsageTab } from '@/components/dev/DevUsageTab';
 
 const DevPortalPage: NextPage = () => {
-  const [activeTab, setActiveTab] = useState<'keys' | 'webhooks' | 'docs' | 'usage'>('keys');
+  const [activeTab, setActiveTab] = useState<'keys' | 'webhooks' | 'docs'>('keys');
   const { keys, isLoading, error, reload } = useDevApiKeys();
 
   return (
@@ -76,17 +74,6 @@ const DevPortalPage: NextPage = () => {
             >
               Docs &amp; quickstart
             </button>
-            <button
-              type="button"
-              className={`border-b-2 pb-2 ${
-                activeTab === 'usage'
-                  ? 'border-emerald-400 text-slate-100'
-                  : 'border-transparent text-slate-500 hover:text-slate-300'
-              }`}
-              onClick={() => setActiveTab('usage')}
-            >
-              Usage
-            </button>
           </nav>
         </div>
 
@@ -102,8 +89,6 @@ const DevPortalPage: NextPage = () => {
         {activeTab === 'webhooks' && <DevWebhooksPanel />}
 
         {activeTab === 'docs' && <DevDocsQuickstartTab />}
-
-        {activeTab === 'usage' && <DevUsageTab />}
       </div>
     </div>
   );

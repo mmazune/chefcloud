@@ -101,10 +101,7 @@ export interface DevWebhookDeliveryListResponseDto {
   deliveries: DevWebhookDeliveryDto[];
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// Usage analytics types for E23-DEVPORTAL-FE-S5
-// ═══════════════════════════════════════════════════════════════════════════
-
+// E23-DEVPORTAL-S5: API Usage & Error Analytics
 export type DevUsageRange = '24h' | '7d';
 
 export interface DevUsageTimeseriesPoint {
