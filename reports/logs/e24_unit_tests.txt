@@ -1,0 +1,23 @@
+
+> @chefcloud/api@0.1.0 test /workspaces/chefcloud/services/api
+> jest "src/billing/billing.service.spec.ts"
+
+PASS src/billing/billing.service.spec.ts
+  BillingService
+    getSubscription
+      ✓ should return subscription details (13 ms)
+      ✓ should throw NotFoundException if no subscription exists (11 ms)
+    requestPlanChange
+      ✓ should log plan change request (3 ms)
+      ✓ should throw NotFoundException for inactive plan (2 ms)
+      ✓ should throw NotFoundException for non-existent plan (2 ms)
+      ✓ should throw NotFoundException if org has no subscription (2 ms)
+    requestCancellation
+      ✓ should log cancellation request (3 ms)
+      ✓ should throw NotFoundException if no subscription exists (1 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       8 passed, 8 total
+Snapshots:   0 total
+Time:        2.099 s
+Ran all test suites matching /src\/billing\/billing.service.spec.ts/i.

@@ -1,0 +1,993 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="jest tests" tests="125" failures="24" errors="0" time="6.229">
+  <testsuite name="Auth (Slice E2E) — Deterministic" errors="0" failures="0" skipped="0" timestamp="2025-11-13T11:18:43" time="3.1" tests="20">
+    <testcase classname="Auth (Slice E2E) — Deterministic › POST /auth/login returns 200 with access_token on valid credentials" name="Auth (Slice E2E) — Deterministic › POST /auth/login returns 200 with access_token on valid credentials" time="0.075">
+    </testcase>
+    <testcase classname="Auth (Slice E2E) — Deterministic › POST /auth/login returns 401 on invalid credentials" name="Auth (Slice E2E) — Deterministic › POST /auth/login returns 401 on invalid credentials" time="0.025">
+    </testcase>
+    <testcase classname="Auth (Slice E2E) — Deterministic › POST /auth/login returns 400 on invalid email format" name="Auth (Slice E2E) — Deterministic › POST /auth/login returns 400 on invalid email format" time="0.005">
+    </testcase>
+    <testcase classname="Auth (Slice E2E) — Deterministic › POST /auth/login returns 400 on missing password" name="Auth (Slice E2E) — Deterministic › POST /auth/login returns 400 on missing password" time="0.004">
+    </testcase>
+    <testcase classname="Auth (Slice E2E) — Deterministic › POST /auth/pin-login returns 200 with access_token on valid PIN" name="Auth (Slice E2E) — Deterministic › POST /auth/pin-login returns 200 with access_token on valid PIN" time="0.005">
+    </testcase>
+    <testcase classname="Auth (Slice E2E) — Deterministic › POST /auth/pin-login returns 401 on invalid PIN" name="Auth (Slice E2E) — Deterministic › POST /auth/pin-login returns 401 on invalid PIN" time="0.004">
+    </testcase>
+    <testcase classname="Auth (Slice E2E) — Deterministic › POST /auth/msr-swipe returns 200 with access_token on valid badge" name="Auth (Slice E2E) — Deterministic › POST /auth/msr-swipe returns 200 with access_token on valid badge" time="0.005">
+    </testcase>
+    <testcase classname="Auth (Slice E2E) — Deterministic › POST /auth/msr-swipe returns 404 on unknown badge" name="Auth (Slice E2E) — Deterministic › POST /auth/msr-swipe returns 404 on unknown badge" time="0.004">
+    </testcase>
+    <testcase classname="Auth (Slice E2E) — Deterministic › POST /auth/enroll-badge returns 200 on successful badge enrollment (L4+ role)" name="Auth (Slice E2E) — Deterministic › POST /auth/enroll-badge returns 200 on successful badge enrollment (L4+ role)" time="0.004">
+    </testcase>
+    <testcase classname="Auth (Slice E2E) — Deterministic › GET /me returns 401 without authorization header" name="Auth (Slice E2E) — Deterministic › GET /me returns 401 without authorization header" time="0.004">
+    </testcase>
+    <testcase classname="Auth (Slice E2E) — Deterministic › Rate limiting handles burst requests to /auth/login without crashing" name="Auth (Slice E2E) — Deterministic › Rate limiting handles burst requests to /auth/login without crashing" time="0.016">
+    </testcase>
+    <testcase classname="Auth (Slice E2E) — Deterministic › Login methods supports email/password login" name="Auth (Slice E2E) — Deterministic › Login methods supports email/password login" time="0.003">
+    </testcase>
+    <testcase classname="Auth (Slice E2E) — Deterministic › Login methods supports PIN login" name="Auth (Slice E2E) — Deterministic › Login methods supports PIN login" time="0.002">
+    </testcase>
+    <testcase classname="Auth (Slice E2E) — Deterministic › Login methods supports badge swipe login" name="Auth (Slice E2E) — Deterministic › Login methods supports badge swipe login" time="0.002">
+    </testcase>
+    <testcase classname="Auth (Slice E2E) — Deterministic › Login methods returns consistent user structure across all auth methods" name="Auth (Slice E2E) — Deterministic › Login methods returns consistent user structure across all auth methods" time="0.002">
+    </testcase>
+    <testcase classname="Auth (Slice E2E) — Deterministic › Endpoint availability POST /auth/login is available" name="Auth (Slice E2E) — Deterministic › Endpoint availability POST /auth/login is available" time="0.004">
+    </testcase>
+    <testcase classname="Auth (Slice E2E) — Deterministic › Endpoint availability POST /auth/pin-login is available" name="Auth (Slice E2E) — Deterministic › Endpoint availability POST /auth/pin-login is available" time="0.002">
+    </testcase>
+    <testcase classname="Auth (Slice E2E) — Deterministic › Endpoint availability POST /auth/msr-swipe is available" name="Auth (Slice E2E) — Deterministic › Endpoint availability POST /auth/msr-swipe is available" time="0.002">
+    </testcase>
+    <testcase classname="Auth (Slice E2E) — Deterministic › Endpoint availability POST /auth/enroll-badge is available" name="Auth (Slice E2E) — Deterministic › Endpoint availability POST /auth/enroll-badge is available" time="0.003">
+    </testcase>
+    <testcase classname="Auth (Slice E2E) — Deterministic › Endpoint availability GET /me is available (requires auth)" name="Auth (Slice E2E) — Deterministic › Endpoint availability GET /me is available (requires auth)" time="0.008">
+    </testcase>
+  </testsuite>
+  <testsuite name="Orders (Slice E2E)" errors="0" failures="0" skipped="0" timestamp="2025-11-13T11:18:43" time="3.03" tests="14">
+    <testcase classname="Orders (Slice E2E) POST /pos/orders -&gt; 401 without token" name="Orders (Slice E2E) POST /pos/orders -&gt; 401 without token" time="0.054">
+    </testcase>
+    <testcase classname="Orders (Slice E2E) POST /pos/orders -&gt; 201 with token (creates open order)" name="Orders (Slice E2E) POST /pos/orders -&gt; 201 with token (creates open order)" time="0.033">
+    </testcase>
+    <testcase classname="Orders (Slice E2E) POST /pos/orders/:id/send-to-kitchen -&gt; 401 without token" name="Orders (Slice E2E) POST /pos/orders/:id/send-to-kitchen -&gt; 401 without token" time="0.005">
+    </testcase>
+    <testcase classname="Orders (Slice E2E) POST /pos/orders/:id/modify -&gt; 401 without token" name="Orders (Slice E2E) POST /pos/orders/:id/modify -&gt; 401 without token" time="0.004">
+    </testcase>
+    <testcase classname="Orders (Slice E2E) POST /pos/orders/:id/send-to-kitchen -&gt; 200/201 (sends to kitchen)" name="Orders (Slice E2E) POST /pos/orders/:id/send-to-kitchen -&gt; 200/201 (sends to kitchen)" time="0.004">
+    </testcase>
+    <testcase classname="Orders (Slice E2E) POST /pos/orders/:id/modify -&gt; 200 (modifies order)" name="Orders (Slice E2E) POST /pos/orders/:id/modify -&gt; 200 (modifies order)" time="0.005">
+    </testcase>
+    <testcase classname="Orders (Slice E2E) POST /pos/orders/:id/void -&gt; 200 (voids order)" name="Orders (Slice E2E) POST /pos/orders/:id/void -&gt; 200 (voids order)" time="0.004">
+    </testcase>
+    <testcase classname="Orders (Slice E2E) POST /pos/orders/:id/close -&gt; 200 (closes order)" name="Orders (Slice E2E) POST /pos/orders/:id/close -&gt; 200 (closes order)" time="0.005">
+    </testcase>
+    <testcase classname="Orders (Slice E2E) POST /pos/orders/:id/discount -&gt; 200 (applies discount)" name="Orders (Slice E2E) POST /pos/orders/:id/discount -&gt; 200 (applies discount)" time="0.005">
+    </testcase>
+    <testcase classname="Orders (Slice E2E) POST /pos/orders/:id/post-close-void -&gt; 200 (voids closed order)" name="Orders (Slice E2E) POST /pos/orders/:id/post-close-void -&gt; 200 (voids closed order)" time="0.004">
+    </testcase>
+    <testcase classname="Orders (Slice E2E) POST /pos/orders -&gt; 400/422 (bad payload)" name="Orders (Slice E2E) POST /pos/orders -&gt; 400/422 (bad payload)" time="0.004">
+    </testcase>
+    <testcase classname="Orders (Slice E2E) POST /pos/orders/invalid-id/send-to-kitchen -&gt; 404/400 (invalid order id)" name="Orders (Slice E2E) POST /pos/orders/invalid-id/send-to-kitchen -&gt; 404/400 (invalid order id)" time="0.003">
+    </testcase>
+    <testcase classname="Orders (Slice E2E) POST /pos/orders/ord_001/modify -&gt; 400/422 (bad modify payload)" name="Orders (Slice E2E) POST /pos/orders/ord_001/modify -&gt; 400/422 (bad modify payload)" time="0.003">
+    </testcase>
+    <testcase classname="Orders (Slice E2E) Rate limiting produces &gt;= one 429 on /pos/orders" name="Orders (Slice E2E) Rate limiting produces &gt;= one 429 on /pos/orders" time="0.018">
+    </testcase>
+  </testsuite>
+  <testsuite name="KDS (Slice E2E)" errors="0" failures="0" skipped="0" timestamp="2025-11-13T11:18:45" time="0.763" tests="9">
+    <testcase classname="KDS (Slice E2E) GET /kds-test/tickets without token -&gt; 200 (test controller)" name="KDS (Slice E2E) GET /kds-test/tickets without token -&gt; 200 (test controller)" time="0.059">
+    </testcase>
+    <testcase classname="KDS (Slice E2E) GET /kds-test/tickets -&gt; 200 with token" name="KDS (Slice E2E) GET /kds-test/tickets -&gt; 200 with token" time="0.035">
+    </testcase>
+    <testcase classname="KDS (Slice E2E) GET /kds-test/tickets/tkt-001 -&gt; 200" name="KDS (Slice E2E) GET /kds-test/tickets/tkt-001 -&gt; 200" time="0.005">
+    </testcase>
+    <testcase classname="KDS (Slice E2E) GET /kds-test/tickets/tkt-missing -&gt; 404" name="KDS (Slice E2E) GET /kds-test/tickets/tkt-missing -&gt; 404" time="0.004">
+    </testcase>
+    <testcase classname="KDS (Slice E2E) POST /kds-test/tickets/tkt-001/ack -&gt; 200 (ACK)" name="KDS (Slice E2E) POST /kds-test/tickets/tkt-001/ack -&gt; 200 (ACK)" time="0.005">
+    </testcase>
+    <testcase classname="KDS (Slice E2E) POST /kds-test/tickets/tkt-001/bump -&gt; 200 (BUMPED)" name="KDS (Slice E2E) POST /kds-test/tickets/tkt-001/bump -&gt; 200 (BUMPED)" time="0.004">
+    </testcase>
+    <testcase classname="KDS (Slice E2E) POST /kds-test/tickets/tkt-001/expo -&gt; 200 (EXPO)" name="KDS (Slice E2E) POST /kds-test/tickets/tkt-001/expo -&gt; 200 (EXPO)" time="0.003">
+    </testcase>
+    <testcase classname="KDS (Slice E2E) POST /kds-test/screens/scr-001/heartbeat -&gt; 200" name="KDS (Slice E2E) POST /kds-test/screens/scr-001/heartbeat -&gt; 200" time="0.014">
+    </testcase>
+    <testcase classname="KDS (Slice E2E) Rate limiting produces &gt;= one 429 on /kds-test/tickets" name="KDS (Slice E2E) Rate limiting produces &gt;= one 429 on /kds-test/tickets" time="0.021">
+    </testcase>
+  </testsuite>
+  <testsuite name="Purchasing (Slice E2E) — Deterministic" errors="0" failures="10" skipped="0" timestamp="2025-11-13T11:18:46" time="0.639" tests="10">
+    <testcase classname="Purchasing (Slice E2E) — Deterministic › Authentication &amp; Authorization POST /purchasing/po should return 401 if no authorization token is provided" name="Purchasing (Slice E2E) — Deterministic › Authentication &amp; Authorization POST /purchasing/po should return 401 if no authorization token is provided" time="0.001">
+      <failure>Error: Nest can&apos;t resolve dependencies of the PurchasingService (PrismaService, ?). Please make sure that the argument CacheInvalidationService at index [1] is available in the PurchasingModule context.
+
+Potential solutions:
+- Is PurchasingModule a valid NestJS module?
+- If CacheInvalidationService is a provider, is it part of the current PurchasingModule?
+- If CacheInvalidationService is exported from a separate @Module, is that module imported within PurchasingModule?
+  @Module({
+    imports: [ /* the Module containing CacheInvalidationService */ ]
+  })
+
+    at TestingInjector.lookupComponentInParentModules (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:262:19)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at TestingInjector.resolveComponentInstance (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:215:33)
+    at TestingInjector.resolveComponentInstance (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-injector.js:19:45)
+    at resolveParam (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:129:38)
+    at async Promise.all (index 1)
+    at TestingInjector.resolveConstructorParams (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:144:27)
+    at TestingInjector.loadInstance (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:70:13)
+    at TestingInjector.loadProvider (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:98:9)
+    at /workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:56:13
+    at async Promise.all (index 3)
+    at TestingInstanceLoader.createInstancesOfProviders (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+    at /workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:40:13
+    at async Promise.all (index 12)
+    at TestingInstanceLoader.createInstances (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+    at TestingInstanceLoader.createInstancesOfDependencies (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+    at TestingInstanceLoader.createInstancesOfDependencies (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+    at TestingModuleBuilder.createInstancesOfDependencies (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+    at TestingModuleBuilder.compile (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+    at Object.&lt;anonymous&gt; (/workspaces/chefcloud/services/api/test/e2e/purchasing.slice.e2e-spec.ts:22:20)</failure>
+    </testcase>
+    <testcase classname="Purchasing (Slice E2E) — Deterministic › Authentication &amp; Authorization POST /purchasing/po/:id/place should return 401 if no authorization token is provided" name="Purchasing (Slice E2E) — Deterministic › Authentication &amp; Authorization POST /purchasing/po/:id/place should return 401 if no authorization token is provided" time="0.001">
+      <failure>Error: Nest can&apos;t resolve dependencies of the PurchasingService (PrismaService, ?). Please make sure that the argument CacheInvalidationService at index [1] is available in the PurchasingModule context.
+
+Potential solutions:
+- Is PurchasingModule a valid NestJS module?
+- If CacheInvalidationService is a provider, is it part of the current PurchasingModule?
+- If CacheInvalidationService is exported from a separate @Module, is that module imported within PurchasingModule?
+  @Module({
+    imports: [ /* the Module containing CacheInvalidationService */ ]
+  })
+
+    at TestingInjector.lookupComponentInParentModules (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:262:19)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at TestingInjector.resolveComponentInstance (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:215:33)
+    at TestingInjector.resolveComponentInstance (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-injector.js:19:45)
+    at resolveParam (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:129:38)
+    at async Promise.all (index 1)
+    at TestingInjector.resolveConstructorParams (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:144:27)
+    at TestingInjector.loadInstance (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:70:13)
+    at TestingInjector.loadProvider (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:98:9)
+    at /workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:56:13
+    at async Promise.all (index 3)
+    at TestingInstanceLoader.createInstancesOfProviders (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+    at /workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:40:13
+    at async Promise.all (index 12)
+    at TestingInstanceLoader.createInstances (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+    at TestingInstanceLoader.createInstancesOfDependencies (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+    at TestingInstanceLoader.createInstancesOfDependencies (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+    at TestingModuleBuilder.createInstancesOfDependencies (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+    at TestingModuleBuilder.compile (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+    at Object.&lt;anonymous&gt; (/workspaces/chefcloud/services/api/test/e2e/purchasing.slice.e2e-spec.ts:22:20)</failure>
+    </testcase>
+    <testcase classname="Purchasing (Slice E2E) — Deterministic › Authentication &amp; Authorization POST /purchasing/po/:id/receive should return 401 if no authorization token is provided" name="Purchasing (Slice E2E) — Deterministic › Authentication &amp; Authorization POST /purchasing/po/:id/receive should return 401 if no authorization token is provided" time="0">
+      <failure>Error: Nest can&apos;t resolve dependencies of the PurchasingService (PrismaService, ?). Please make sure that the argument CacheInvalidationService at index [1] is available in the PurchasingModule context.
+
+Potential solutions:
+- Is PurchasingModule a valid NestJS module?
+- If CacheInvalidationService is a provider, is it part of the current PurchasingModule?
+- If CacheInvalidationService is exported from a separate @Module, is that module imported within PurchasingModule?
+  @Module({
+    imports: [ /* the Module containing CacheInvalidationService */ ]
+  })
+
+    at TestingInjector.lookupComponentInParentModules (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:262:19)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at TestingInjector.resolveComponentInstance (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:215:33)
+    at TestingInjector.resolveComponentInstance (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-injector.js:19:45)
+    at resolveParam (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:129:38)
+    at async Promise.all (index 1)
+    at TestingInjector.resolveConstructorParams (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:144:27)
+    at TestingInjector.loadInstance (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:70:13)
+    at TestingInjector.loadProvider (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:98:9)
+    at /workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:56:13
+    at async Promise.all (index 3)
+    at TestingInstanceLoader.createInstancesOfProviders (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+    at /workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:40:13
+    at async Promise.all (index 12)
+    at TestingInstanceLoader.createInstances (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+    at TestingInstanceLoader.createInstancesOfDependencies (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+    at TestingInstanceLoader.createInstancesOfDependencies (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+    at TestingModuleBuilder.createInstancesOfDependencies (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+    at TestingModuleBuilder.compile (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+    at Object.&lt;anonymous&gt; (/workspaces/chefcloud/services/api/test/e2e/purchasing.slice.e2e-spec.ts:22:20)</failure>
+    </testcase>
+    <testcase classname="Purchasing (Slice E2E) — Deterministic › Rate Limiting Rate limiting produces &gt;= one 429 deterministically" name="Purchasing (Slice E2E) — Deterministic › Rate Limiting Rate limiting produces &gt;= one 429 deterministically" time="0">
+      <failure>Error: Nest can&apos;t resolve dependencies of the PurchasingService (PrismaService, ?). Please make sure that the argument CacheInvalidationService at index [1] is available in the PurchasingModule context.
+
+Potential solutions:
+- Is PurchasingModule a valid NestJS module?
+- If CacheInvalidationService is a provider, is it part of the current PurchasingModule?
+- If CacheInvalidationService is exported from a separate @Module, is that module imported within PurchasingModule?
+  @Module({
+    imports: [ /* the Module containing CacheInvalidationService */ ]
+  })
+
+    at TestingInjector.lookupComponentInParentModules (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:262:19)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at TestingInjector.resolveComponentInstance (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:215:33)
+    at TestingInjector.resolveComponentInstance (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-injector.js:19:45)
+    at resolveParam (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:129:38)
+    at async Promise.all (index 1)
+    at TestingInjector.resolveConstructorParams (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:144:27)
+    at TestingInjector.loadInstance (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:70:13)
+    at TestingInjector.loadProvider (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:98:9)
+    at /workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:56:13
+    at async Promise.all (index 3)
+    at TestingInstanceLoader.createInstancesOfProviders (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+    at /workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:40:13
+    at async Promise.all (index 12)
+    at TestingInstanceLoader.createInstances (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+    at TestingInstanceLoader.createInstancesOfDependencies (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+    at TestingInstanceLoader.createInstancesOfDependencies (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+    at TestingModuleBuilder.createInstancesOfDependencies (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+    at TestingModuleBuilder.compile (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+    at Object.&lt;anonymous&gt; (/workspaces/chefcloud/services/api/test/e2e/purchasing.slice.e2e-spec.ts:22:20)</failure>
+    </testcase>
+    <testcase classname="Purchasing (Slice E2E) — Deterministic › Basic Functionality (without auth) should bootstrap successfully without metatype errors" name="Purchasing (Slice E2E) — Deterministic › Basic Functionality (without auth) should bootstrap successfully without metatype errors" time="0">
+      <failure>Error: Nest can&apos;t resolve dependencies of the PurchasingService (PrismaService, ?). Please make sure that the argument CacheInvalidationService at index [1] is available in the PurchasingModule context.
+
+Potential solutions:
+- Is PurchasingModule a valid NestJS module?
+- If CacheInvalidationService is a provider, is it part of the current PurchasingModule?
+- If CacheInvalidationService is exported from a separate @Module, is that module imported within PurchasingModule?
+  @Module({
+    imports: [ /* the Module containing CacheInvalidationService */ ]
+  })
+
+    at TestingInjector.lookupComponentInParentModules (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:262:19)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at TestingInjector.resolveComponentInstance (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:215:33)
+    at TestingInjector.resolveComponentInstance (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-injector.js:19:45)
+    at resolveParam (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:129:38)
+    at async Promise.all (index 1)
+    at TestingInjector.resolveConstructorParams (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:144:27)
+    at TestingInjector.loadInstance (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:70:13)
+    at TestingInjector.loadProvider (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:98:9)
+    at /workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:56:13
+    at async Promise.all (index 3)
+    at TestingInstanceLoader.createInstancesOfProviders (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+    at /workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:40:13
+    at async Promise.all (index 12)
+    at TestingInstanceLoader.createInstances (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+    at TestingInstanceLoader.createInstancesOfDependencies (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+    at TestingInstanceLoader.createInstancesOfDependencies (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+    at TestingModuleBuilder.createInstancesOfDependencies (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+    at TestingModuleBuilder.compile (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+    at Object.&lt;anonymous&gt; (/workspaces/chefcloud/services/api/test/e2e/purchasing.slice.e2e-spec.ts:22:20)</failure>
+    </testcase>
+    <testcase classname="Purchasing (Slice E2E) — Deterministic › Basic Functionality (without auth) POST /purchasing/po should validate request body" name="Purchasing (Slice E2E) — Deterministic › Basic Functionality (without auth) POST /purchasing/po should validate request body" time="0">
+      <failure>Error: Nest can&apos;t resolve dependencies of the PurchasingService (PrismaService, ?). Please make sure that the argument CacheInvalidationService at index [1] is available in the PurchasingModule context.
+
+Potential solutions:
+- Is PurchasingModule a valid NestJS module?
+- If CacheInvalidationService is a provider, is it part of the current PurchasingModule?
+- If CacheInvalidationService is exported from a separate @Module, is that module imported within PurchasingModule?
+  @Module({
+    imports: [ /* the Module containing CacheInvalidationService */ ]
+  })
+
+    at TestingInjector.lookupComponentInParentModules (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:262:19)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at TestingInjector.resolveComponentInstance (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:215:33)
+    at TestingInjector.resolveComponentInstance (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-injector.js:19:45)
+    at resolveParam (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:129:38)
+    at async Promise.all (index 1)
+    at TestingInjector.resolveConstructorParams (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:144:27)
+    at TestingInjector.loadInstance (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:70:13)
+    at TestingInjector.loadProvider (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:98:9)
+    at /workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:56:13
+    at async Promise.all (index 3)
+    at TestingInstanceLoader.createInstancesOfProviders (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+    at /workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:40:13
+    at async Promise.all (index 12)
+    at TestingInstanceLoader.createInstances (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+    at TestingInstanceLoader.createInstancesOfDependencies (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+    at TestingInstanceLoader.createInstancesOfDependencies (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+    at TestingModuleBuilder.createInstancesOfDependencies (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+    at TestingModuleBuilder.compile (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+    at Object.&lt;anonymous&gt; (/workspaces/chefcloud/services/api/test/e2e/purchasing.slice.e2e-spec.ts:22:20)</failure>
+    </testcase>
+    <testcase classname="Purchasing (Slice E2E) — Deterministic › Basic Functionality (without auth) POST /purchasing/po/:id/place should handle invalid ID gracefully" name="Purchasing (Slice E2E) — Deterministic › Basic Functionality (without auth) POST /purchasing/po/:id/place should handle invalid ID gracefully" time="0">
+      <failure>Error: Nest can&apos;t resolve dependencies of the PurchasingService (PrismaService, ?). Please make sure that the argument CacheInvalidationService at index [1] is available in the PurchasingModule context.
+
+Potential solutions:
+- Is PurchasingModule a valid NestJS module?
+- If CacheInvalidationService is a provider, is it part of the current PurchasingModule?
+- If CacheInvalidationService is exported from a separate @Module, is that module imported within PurchasingModule?
+  @Module({
+    imports: [ /* the Module containing CacheInvalidationService */ ]
+  })
+
+    at TestingInjector.lookupComponentInParentModules (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:262:19)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at TestingInjector.resolveComponentInstance (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:215:33)
+    at TestingInjector.resolveComponentInstance (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-injector.js:19:45)
+    at resolveParam (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:129:38)
+    at async Promise.all (index 1)
+    at TestingInjector.resolveConstructorParams (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:144:27)
+    at TestingInjector.loadInstance (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:70:13)
+    at TestingInjector.loadProvider (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:98:9)
+    at /workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:56:13
+    at async Promise.all (index 3)
+    at TestingInstanceLoader.createInstancesOfProviders (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+    at /workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:40:13
+    at async Promise.all (index 12)
+    at TestingInstanceLoader.createInstances (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+    at TestingInstanceLoader.createInstancesOfDependencies (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+    at TestingInstanceLoader.createInstancesOfDependencies (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+    at TestingModuleBuilder.createInstancesOfDependencies (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+    at TestingModuleBuilder.compile (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+    at Object.&lt;anonymous&gt; (/workspaces/chefcloud/services/api/test/e2e/purchasing.slice.e2e-spec.ts:22:20)</failure>
+    </testcase>
+    <testcase classname="Purchasing (Slice E2E) — Deterministic › Endpoint Availability POST /purchasing/po endpoint exists" name="Purchasing (Slice E2E) — Deterministic › Endpoint Availability POST /purchasing/po endpoint exists" time="0">
+      <failure>Error: Nest can&apos;t resolve dependencies of the PurchasingService (PrismaService, ?). Please make sure that the argument CacheInvalidationService at index [1] is available in the PurchasingModule context.
+
+Potential solutions:
+- Is PurchasingModule a valid NestJS module?
+- If CacheInvalidationService is a provider, is it part of the current PurchasingModule?
+- If CacheInvalidationService is exported from a separate @Module, is that module imported within PurchasingModule?
+  @Module({
+    imports: [ /* the Module containing CacheInvalidationService */ ]
+  })
+
+    at TestingInjector.lookupComponentInParentModules (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:262:19)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at TestingInjector.resolveComponentInstance (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:215:33)
+    at TestingInjector.resolveComponentInstance (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-injector.js:19:45)
+    at resolveParam (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:129:38)
+    at async Promise.all (index 1)
+    at TestingInjector.resolveConstructorParams (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:144:27)
+    at TestingInjector.loadInstance (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:70:13)
+    at TestingInjector.loadProvider (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:98:9)
+    at /workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:56:13
+    at async Promise.all (index 3)
+    at TestingInstanceLoader.createInstancesOfProviders (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+    at /workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:40:13
+    at async Promise.all (index 12)
+    at TestingInstanceLoader.createInstances (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+    at TestingInstanceLoader.createInstancesOfDependencies (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+    at TestingInstanceLoader.createInstancesOfDependencies (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+    at TestingModuleBuilder.createInstancesOfDependencies (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+    at TestingModuleBuilder.compile (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+    at Object.&lt;anonymous&gt; (/workspaces/chefcloud/services/api/test/e2e/purchasing.slice.e2e-spec.ts:22:20)</failure>
+    </testcase>
+    <testcase classname="Purchasing (Slice E2E) — Deterministic › Endpoint Availability POST /purchasing/po/:id/place endpoint exists" name="Purchasing (Slice E2E) — Deterministic › Endpoint Availability POST /purchasing/po/:id/place endpoint exists" time="0">
+      <failure>Error: Nest can&apos;t resolve dependencies of the PurchasingService (PrismaService, ?). Please make sure that the argument CacheInvalidationService at index [1] is available in the PurchasingModule context.
+
+Potential solutions:
+- Is PurchasingModule a valid NestJS module?
+- If CacheInvalidationService is a provider, is it part of the current PurchasingModule?
+- If CacheInvalidationService is exported from a separate @Module, is that module imported within PurchasingModule?
+  @Module({
+    imports: [ /* the Module containing CacheInvalidationService */ ]
+  })
+
+    at TestingInjector.lookupComponentInParentModules (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:262:19)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at TestingInjector.resolveComponentInstance (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:215:33)
+    at TestingInjector.resolveComponentInstance (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-injector.js:19:45)
+    at resolveParam (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:129:38)
+    at async Promise.all (index 1)
+    at TestingInjector.resolveConstructorParams (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:144:27)
+    at TestingInjector.loadInstance (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:70:13)
+    at TestingInjector.loadProvider (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:98:9)
+    at /workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:56:13
+    at async Promise.all (index 3)
+    at TestingInstanceLoader.createInstancesOfProviders (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+    at /workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:40:13
+    at async Promise.all (index 12)
+    at TestingInstanceLoader.createInstances (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+    at TestingInstanceLoader.createInstancesOfDependencies (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+    at TestingInstanceLoader.createInstancesOfDependencies (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+    at TestingModuleBuilder.createInstancesOfDependencies (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+    at TestingModuleBuilder.compile (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+    at Object.&lt;anonymous&gt; (/workspaces/chefcloud/services/api/test/e2e/purchasing.slice.e2e-spec.ts:22:20)</failure>
+    </testcase>
+    <testcase classname="Purchasing (Slice E2E) — Deterministic › Endpoint Availability POST /purchasing/po/:id/receive endpoint exists" name="Purchasing (Slice E2E) — Deterministic › Endpoint Availability POST /purchasing/po/:id/receive endpoint exists" time="0">
+      <failure>Error: Nest can&apos;t resolve dependencies of the PurchasingService (PrismaService, ?). Please make sure that the argument CacheInvalidationService at index [1] is available in the PurchasingModule context.
+
+Potential solutions:
+- Is PurchasingModule a valid NestJS module?
+- If CacheInvalidationService is a provider, is it part of the current PurchasingModule?
+- If CacheInvalidationService is exported from a separate @Module, is that module imported within PurchasingModule?
+  @Module({
+    imports: [ /* the Module containing CacheInvalidationService */ ]
+  })
+
+    at TestingInjector.lookupComponentInParentModules (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:262:19)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at TestingInjector.resolveComponentInstance (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:215:33)
+    at TestingInjector.resolveComponentInstance (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-injector.js:19:45)
+    at resolveParam (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:129:38)
+    at async Promise.all (index 1)
+    at TestingInjector.resolveConstructorParams (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:144:27)
+    at TestingInjector.loadInstance (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:70:13)
+    at TestingInjector.loadProvider (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:98:9)
+    at /workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:56:13
+    at async Promise.all (index 3)
+    at TestingInstanceLoader.createInstancesOfProviders (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+    at /workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:40:13
+    at async Promise.all (index 12)
+    at TestingInstanceLoader.createInstances (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+    at TestingInstanceLoader.createInstancesOfDependencies (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+    at TestingInstanceLoader.createInstancesOfDependencies (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+    at TestingModuleBuilder.createInstancesOfDependencies (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+    at TestingModuleBuilder.compile (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+    at Object.&lt;anonymous&gt; (/workspaces/chefcloud/services/api/test/e2e/purchasing.slice.e2e-spec.ts:22:20)</failure>
+    </testcase>
+  </testsuite>
+  <testsuite name="Inventory (Slice E2E) — Deterministic" errors="0" failures="14" skipped="0" timestamp="2025-11-13T11:18:46" time="0.762" tests="14">
+    <testcase classname="Inventory (Slice E2E) — Deterministic › Authentication &amp; Authorization GET /inventory/items should return 401 if no authorization token is provided" name="Inventory (Slice E2E) — Deterministic › Authentication &amp; Authorization GET /inventory/items should return 401 if no authorization token is provided" time="0.001">
+      <failure>Error: Nest can&apos;t resolve dependencies of the SseRateLimiterGuard (?). Please make sure that the argument MetricsService at index [0] is available in the KpisModule context.
+
+Potential solutions:
+- Is KpisModule a valid NestJS module?
+- If MetricsService is a provider, is it part of the current KpisModule?
+- If MetricsService is exported from a separate @Module, is that module imported within KpisModule?
+  @Module({
+    imports: [ /* the Module containing MetricsService */ ]
+  })
+
+    at TestingInjector.lookupComponentInParentModules (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:262:19)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at TestingInjector.resolveComponentInstance (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:215:33)
+    at TestingInjector.resolveComponentInstance (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-injector.js:19:45)
+    at resolveParam (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:129:38)
+    at async Promise.all (index 0)
+    at TestingInjector.resolveConstructorParams (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:144:27)
+    at TestingInjector.loadInstance (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:70:13)
+    at TestingInjector.loadProvider (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:98:9)
+    at /workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:56:13
+    at async Promise.all (index 5)
+    at TestingInstanceLoader.createInstancesOfProviders (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+    at /workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:40:13
+    at async Promise.all (index 13)
+    at TestingInstanceLoader.createInstances (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+    at TestingInstanceLoader.createInstancesOfDependencies (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+    at TestingInstanceLoader.createInstancesOfDependencies (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+    at TestingModuleBuilder.createInstancesOfDependencies (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+    at TestingModuleBuilder.compile (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+    at Object.&lt;anonymous&gt; (/workspaces/chefcloud/services/api/test/e2e/inventory.slice.e2e-spec.ts:22:20)</failure>
+    </testcase>
+    <testcase classname="Inventory (Slice E2E) — Deterministic › Authentication &amp; Authorization POST /inventory/items should return 401 if no authorization token is provided" name="Inventory (Slice E2E) — Deterministic › Authentication &amp; Authorization POST /inventory/items should return 401 if no authorization token is provided" time="0">
+      <failure>Error: Nest can&apos;t resolve dependencies of the SseRateLimiterGuard (?). Please make sure that the argument MetricsService at index [0] is available in the KpisModule context.
+
+Potential solutions:
+- Is KpisModule a valid NestJS module?
+- If MetricsService is a provider, is it part of the current KpisModule?
+- If MetricsService is exported from a separate @Module, is that module imported within KpisModule?
+  @Module({
+    imports: [ /* the Module containing MetricsService */ ]
+  })
+
+    at TestingInjector.lookupComponentInParentModules (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:262:19)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at TestingInjector.resolveComponentInstance (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:215:33)
+    at TestingInjector.resolveComponentInstance (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-injector.js:19:45)
+    at resolveParam (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:129:38)
+    at async Promise.all (index 0)
+    at TestingInjector.resolveConstructorParams (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:144:27)
+    at TestingInjector.loadInstance (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:70:13)
+    at TestingInjector.loadProvider (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:98:9)
+    at /workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:56:13
+    at async Promise.all (index 5)
+    at TestingInstanceLoader.createInstancesOfProviders (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+    at /workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:40:13
+    at async Promise.all (index 13)
+    at TestingInstanceLoader.createInstances (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+    at TestingInstanceLoader.createInstancesOfDependencies (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+    at TestingInstanceLoader.createInstancesOfDependencies (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+    at TestingModuleBuilder.createInstancesOfDependencies (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+    at TestingModuleBuilder.compile (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+    at Object.&lt;anonymous&gt; (/workspaces/chefcloud/services/api/test/e2e/inventory.slice.e2e-spec.ts:22:20)</failure>
+    </testcase>
+    <testcase classname="Inventory (Slice E2E) — Deterministic › Authentication &amp; Authorization POST /inventory/adjustments should return 401 if no authorization token is provided" name="Inventory (Slice E2E) — Deterministic › Authentication &amp; Authorization POST /inventory/adjustments should return 401 if no authorization token is provided" time="0">
+      <failure>Error: Nest can&apos;t resolve dependencies of the SseRateLimiterGuard (?). Please make sure that the argument MetricsService at index [0] is available in the KpisModule context.
+
+Potential solutions:
+- Is KpisModule a valid NestJS module?
+- If MetricsService is a provider, is it part of the current KpisModule?
+- If MetricsService is exported from a separate @Module, is that module imported within KpisModule?
+  @Module({
+    imports: [ /* the Module containing MetricsService */ ]
+  })
+
+    at TestingInjector.lookupComponentInParentModules (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:262:19)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at TestingInjector.resolveComponentInstance (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:215:33)
+    at TestingInjector.resolveComponentInstance (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-injector.js:19:45)
+    at resolveParam (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:129:38)
+    at async Promise.all (index 0)
+    at TestingInjector.resolveConstructorParams (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:144:27)
+    at TestingInjector.loadInstance (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:70:13)
+    at TestingInjector.loadProvider (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:98:9)
+    at /workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:56:13
+    at async Promise.all (index 5)
+    at TestingInstanceLoader.createInstancesOfProviders (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+    at /workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:40:13
+    at async Promise.all (index 13)
+    at TestingInstanceLoader.createInstances (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+    at TestingInstanceLoader.createInstancesOfDependencies (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+    at TestingInstanceLoader.createInstancesOfDependencies (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+    at TestingModuleBuilder.createInstancesOfDependencies (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+    at TestingModuleBuilder.compile (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+    at Object.&lt;anonymous&gt; (/workspaces/chefcloud/services/api/test/e2e/inventory.slice.e2e-spec.ts:22:20)</failure>
+    </testcase>
+    <testcase classname="Inventory (Slice E2E) — Deterministic › Authentication &amp; Authorization POST /inventory/wastage should return 401 if no authorization token is provided" name="Inventory (Slice E2E) — Deterministic › Authentication &amp; Authorization POST /inventory/wastage should return 401 if no authorization token is provided" time="0">
+      <failure>Error: Nest can&apos;t resolve dependencies of the SseRateLimiterGuard (?). Please make sure that the argument MetricsService at index [0] is available in the KpisModule context.
+
+Potential solutions:
+- Is KpisModule a valid NestJS module?
+- If MetricsService is a provider, is it part of the current KpisModule?
+- If MetricsService is exported from a separate @Module, is that module imported within KpisModule?
+  @Module({
+    imports: [ /* the Module containing MetricsService */ ]
+  })
+
+    at TestingInjector.lookupComponentInParentModules (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:262:19)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at TestingInjector.resolveComponentInstance (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:215:33)
+    at TestingInjector.resolveComponentInstance (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-injector.js:19:45)
+    at resolveParam (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:129:38)
+    at async Promise.all (index 0)
+    at TestingInjector.resolveConstructorParams (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:144:27)
+    at TestingInjector.loadInstance (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:70:13)
+    at TestingInjector.loadProvider (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:98:9)
+    at /workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:56:13
+    at async Promise.all (index 5)
+    at TestingInstanceLoader.createInstancesOfProviders (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+    at /workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:40:13
+    at async Promise.all (index 13)
+    at TestingInstanceLoader.createInstances (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+    at TestingInstanceLoader.createInstancesOfDependencies (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+    at TestingInstanceLoader.createInstancesOfDependencies (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+    at TestingModuleBuilder.createInstancesOfDependencies (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+    at TestingModuleBuilder.compile (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+    at Object.&lt;anonymous&gt; (/workspaces/chefcloud/services/api/test/e2e/inventory.slice.e2e-spec.ts:22:20)</failure>
+    </testcase>
+    <testcase classname="Inventory (Slice E2E) — Deterministic › Rate Limiting Rate limiting produces &gt;= one 429 deterministically" name="Inventory (Slice E2E) — Deterministic › Rate Limiting Rate limiting produces &gt;= one 429 deterministically" time="0">
+      <failure>Error: Nest can&apos;t resolve dependencies of the SseRateLimiterGuard (?). Please make sure that the argument MetricsService at index [0] is available in the KpisModule context.
+
+Potential solutions:
+- Is KpisModule a valid NestJS module?
+- If MetricsService is a provider, is it part of the current KpisModule?
+- If MetricsService is exported from a separate @Module, is that module imported within KpisModule?
+  @Module({
+    imports: [ /* the Module containing MetricsService */ ]
+  })
+
+    at TestingInjector.lookupComponentInParentModules (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:262:19)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at TestingInjector.resolveComponentInstance (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:215:33)
+    at TestingInjector.resolveComponentInstance (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-injector.js:19:45)
+    at resolveParam (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:129:38)
+    at async Promise.all (index 0)
+    at TestingInjector.resolveConstructorParams (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:144:27)
+    at TestingInjector.loadInstance (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:70:13)
+    at TestingInjector.loadProvider (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:98:9)
+    at /workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:56:13
+    at async Promise.all (index 5)
+    at TestingInstanceLoader.createInstancesOfProviders (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+    at /workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:40:13
+    at async Promise.all (index 13)
+    at TestingInstanceLoader.createInstances (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+    at TestingInstanceLoader.createInstancesOfDependencies (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+    at TestingInstanceLoader.createInstancesOfDependencies (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+    at TestingModuleBuilder.createInstancesOfDependencies (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+    at TestingModuleBuilder.compile (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+    at Object.&lt;anonymous&gt; (/workspaces/chefcloud/services/api/test/e2e/inventory.slice.e2e-spec.ts:22:20)</failure>
+    </testcase>
+    <testcase classname="Inventory (Slice E2E) — Deterministic › Basic Functionality (without auth) should bootstrap successfully without metatype errors" name="Inventory (Slice E2E) — Deterministic › Basic Functionality (without auth) should bootstrap successfully without metatype errors" time="0.001">
+      <failure>Error: Nest can&apos;t resolve dependencies of the SseRateLimiterGuard (?). Please make sure that the argument MetricsService at index [0] is available in the KpisModule context.
+
+Potential solutions:
+- Is KpisModule a valid NestJS module?
+- If MetricsService is a provider, is it part of the current KpisModule?
+- If MetricsService is exported from a separate @Module, is that module imported within KpisModule?
+  @Module({
+    imports: [ /* the Module containing MetricsService */ ]
+  })
+
+    at TestingInjector.lookupComponentInParentModules (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:262:19)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at TestingInjector.resolveComponentInstance (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:215:33)
+    at TestingInjector.resolveComponentInstance (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-injector.js:19:45)
+    at resolveParam (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:129:38)
+    at async Promise.all (index 0)
+    at TestingInjector.resolveConstructorParams (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:144:27)
+    at TestingInjector.loadInstance (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:70:13)
+    at TestingInjector.loadProvider (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:98:9)
+    at /workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:56:13
+    at async Promise.all (index 5)
+    at TestingInstanceLoader.createInstancesOfProviders (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+    at /workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:40:13
+    at async Promise.all (index 13)
+    at TestingInstanceLoader.createInstances (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+    at TestingInstanceLoader.createInstancesOfDependencies (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+    at TestingInstanceLoader.createInstancesOfDependencies (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+    at TestingModuleBuilder.createInstancesOfDependencies (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+    at TestingModuleBuilder.compile (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+    at Object.&lt;anonymous&gt; (/workspaces/chefcloud/services/api/test/e2e/inventory.slice.e2e-spec.ts:22:20)</failure>
+    </testcase>
+    <testcase classname="Inventory (Slice E2E) — Deterministic › Basic Functionality (without auth) GET /inventory/items should exist (not 404)" name="Inventory (Slice E2E) — Deterministic › Basic Functionality (without auth) GET /inventory/items should exist (not 404)" time="0">
+      <failure>Error: Nest can&apos;t resolve dependencies of the SseRateLimiterGuard (?). Please make sure that the argument MetricsService at index [0] is available in the KpisModule context.
+
+Potential solutions:
+- Is KpisModule a valid NestJS module?
+- If MetricsService is a provider, is it part of the current KpisModule?
+- If MetricsService is exported from a separate @Module, is that module imported within KpisModule?
+  @Module({
+    imports: [ /* the Module containing MetricsService */ ]
+  })
+
+    at TestingInjector.lookupComponentInParentModules (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:262:19)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at TestingInjector.resolveComponentInstance (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:215:33)
+    at TestingInjector.resolveComponentInstance (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-injector.js:19:45)
+    at resolveParam (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:129:38)
+    at async Promise.all (index 0)
+    at TestingInjector.resolveConstructorParams (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:144:27)
+    at TestingInjector.loadInstance (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:70:13)
+    at TestingInjector.loadProvider (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:98:9)
+    at /workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:56:13
+    at async Promise.all (index 5)
+    at TestingInstanceLoader.createInstancesOfProviders (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+    at /workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:40:13
+    at async Promise.all (index 13)
+    at TestingInstanceLoader.createInstances (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+    at TestingInstanceLoader.createInstancesOfDependencies (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+    at TestingInstanceLoader.createInstancesOfDependencies (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+    at TestingModuleBuilder.createInstancesOfDependencies (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+    at TestingModuleBuilder.compile (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+    at Object.&lt;anonymous&gt; (/workspaces/chefcloud/services/api/test/e2e/inventory.slice.e2e-spec.ts:22:20)</failure>
+    </testcase>
+    <testcase classname="Inventory (Slice E2E) — Deterministic › Basic Functionality (without auth) POST /inventory/items should validate request body" name="Inventory (Slice E2E) — Deterministic › Basic Functionality (without auth) POST /inventory/items should validate request body" time="0">
+      <failure>Error: Nest can&apos;t resolve dependencies of the SseRateLimiterGuard (?). Please make sure that the argument MetricsService at index [0] is available in the KpisModule context.
+
+Potential solutions:
+- Is KpisModule a valid NestJS module?
+- If MetricsService is a provider, is it part of the current KpisModule?
+- If MetricsService is exported from a separate @Module, is that module imported within KpisModule?
+  @Module({
+    imports: [ /* the Module containing MetricsService */ ]
+  })
+
+    at TestingInjector.lookupComponentInParentModules (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:262:19)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at TestingInjector.resolveComponentInstance (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:215:33)
+    at TestingInjector.resolveComponentInstance (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-injector.js:19:45)
+    at resolveParam (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:129:38)
+    at async Promise.all (index 0)
+    at TestingInjector.resolveConstructorParams (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:144:27)
+    at TestingInjector.loadInstance (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:70:13)
+    at TestingInjector.loadProvider (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:98:9)
+    at /workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:56:13
+    at async Promise.all (index 5)
+    at TestingInstanceLoader.createInstancesOfProviders (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+    at /workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:40:13
+    at async Promise.all (index 13)
+    at TestingInstanceLoader.createInstances (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+    at TestingInstanceLoader.createInstancesOfDependencies (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+    at TestingInstanceLoader.createInstancesOfDependencies (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+    at TestingModuleBuilder.createInstancesOfDependencies (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+    at TestingModuleBuilder.compile (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+    at Object.&lt;anonymous&gt; (/workspaces/chefcloud/services/api/test/e2e/inventory.slice.e2e-spec.ts:22:20)</failure>
+    </testcase>
+    <testcase classname="Inventory (Slice E2E) — Deterministic › Basic Functionality (without auth) POST /inventory/adjustments should validate request body" name="Inventory (Slice E2E) — Deterministic › Basic Functionality (without auth) POST /inventory/adjustments should validate request body" time="0">
+      <failure>Error: Nest can&apos;t resolve dependencies of the SseRateLimiterGuard (?). Please make sure that the argument MetricsService at index [0] is available in the KpisModule context.
+
+Potential solutions:
+- Is KpisModule a valid NestJS module?
+- If MetricsService is a provider, is it part of the current KpisModule?
+- If MetricsService is exported from a separate @Module, is that module imported within KpisModule?
+  @Module({
+    imports: [ /* the Module containing MetricsService */ ]
+  })
+
+    at TestingInjector.lookupComponentInParentModules (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:262:19)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at TestingInjector.resolveComponentInstance (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:215:33)
+    at TestingInjector.resolveComponentInstance (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-injector.js:19:45)
+    at resolveParam (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:129:38)
+    at async Promise.all (index 0)
+    at TestingInjector.resolveConstructorParams (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:144:27)
+    at TestingInjector.loadInstance (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:70:13)
+    at TestingInjector.loadProvider (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:98:9)
+    at /workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:56:13
+    at async Promise.all (index 5)
+    at TestingInstanceLoader.createInstancesOfProviders (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+    at /workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:40:13
+    at async Promise.all (index 13)
+    at TestingInstanceLoader.createInstances (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+    at TestingInstanceLoader.createInstancesOfDependencies (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+    at TestingInstanceLoader.createInstancesOfDependencies (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+    at TestingModuleBuilder.createInstancesOfDependencies (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+    at TestingModuleBuilder.compile (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+    at Object.&lt;anonymous&gt; (/workspaces/chefcloud/services/api/test/e2e/inventory.slice.e2e-spec.ts:22:20)</failure>
+    </testcase>
+    <testcase classname="Inventory (Slice E2E) — Deterministic › Endpoint Availability GET /inventory/items endpoint exists" name="Inventory (Slice E2E) — Deterministic › Endpoint Availability GET /inventory/items endpoint exists" time="0">
+      <failure>Error: Nest can&apos;t resolve dependencies of the SseRateLimiterGuard (?). Please make sure that the argument MetricsService at index [0] is available in the KpisModule context.
+
+Potential solutions:
+- Is KpisModule a valid NestJS module?
+- If MetricsService is a provider, is it part of the current KpisModule?
+- If MetricsService is exported from a separate @Module, is that module imported within KpisModule?
+  @Module({
+    imports: [ /* the Module containing MetricsService */ ]
+  })
+
+    at TestingInjector.lookupComponentInParentModules (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:262:19)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at TestingInjector.resolveComponentInstance (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:215:33)
+    at TestingInjector.resolveComponentInstance (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-injector.js:19:45)
+    at resolveParam (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:129:38)
+    at async Promise.all (index 0)
+    at TestingInjector.resolveConstructorParams (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:144:27)
+    at TestingInjector.loadInstance (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:70:13)
+    at TestingInjector.loadProvider (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:98:9)
+    at /workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:56:13
+    at async Promise.all (index 5)
+    at TestingInstanceLoader.createInstancesOfProviders (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+    at /workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:40:13
+    at async Promise.all (index 13)
+    at TestingInstanceLoader.createInstances (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+    at TestingInstanceLoader.createInstancesOfDependencies (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+    at TestingInstanceLoader.createInstancesOfDependencies (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+    at TestingModuleBuilder.createInstancesOfDependencies (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+    at TestingModuleBuilder.compile (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+    at Object.&lt;anonymous&gt; (/workspaces/chefcloud/services/api/test/e2e/inventory.slice.e2e-spec.ts:22:20)</failure>
+    </testcase>
+    <testcase classname="Inventory (Slice E2E) — Deterministic › Endpoint Availability POST /inventory/items endpoint exists" name="Inventory (Slice E2E) — Deterministic › Endpoint Availability POST /inventory/items endpoint exists" time="0">
+      <failure>Error: Nest can&apos;t resolve dependencies of the SseRateLimiterGuard (?). Please make sure that the argument MetricsService at index [0] is available in the KpisModule context.
+
+Potential solutions:
+- Is KpisModule a valid NestJS module?
+- If MetricsService is a provider, is it part of the current KpisModule?
+- If MetricsService is exported from a separate @Module, is that module imported within KpisModule?
+  @Module({
+    imports: [ /* the Module containing MetricsService */ ]
+  })
+
+    at TestingInjector.lookupComponentInParentModules (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:262:19)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at TestingInjector.resolveComponentInstance (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:215:33)
+    at TestingInjector.resolveComponentInstance (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-injector.js:19:45)
+    at resolveParam (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:129:38)
+    at async Promise.all (index 0)
+    at TestingInjector.resolveConstructorParams (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:144:27)
+    at TestingInjector.loadInstance (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:70:13)
+    at TestingInjector.loadProvider (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:98:9)
+    at /workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:56:13
+    at async Promise.all (index 5)
+    at TestingInstanceLoader.createInstancesOfProviders (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+    at /workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:40:13
+    at async Promise.all (index 13)
+    at TestingInstanceLoader.createInstances (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+    at TestingInstanceLoader.createInstancesOfDependencies (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+    at TestingInstanceLoader.createInstancesOfDependencies (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+    at TestingModuleBuilder.createInstancesOfDependencies (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+    at TestingModuleBuilder.compile (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+    at Object.&lt;anonymous&gt; (/workspaces/chefcloud/services/api/test/e2e/inventory.slice.e2e-spec.ts:22:20)</failure>
+    </testcase>
+    <testcase classname="Inventory (Slice E2E) — Deterministic › Endpoint Availability GET /inventory/levels endpoint exists" name="Inventory (Slice E2E) — Deterministic › Endpoint Availability GET /inventory/levels endpoint exists" time="0">
+      <failure>Error: Nest can&apos;t resolve dependencies of the SseRateLimiterGuard (?). Please make sure that the argument MetricsService at index [0] is available in the KpisModule context.
+
+Potential solutions:
+- Is KpisModule a valid NestJS module?
+- If MetricsService is a provider, is it part of the current KpisModule?
+- If MetricsService is exported from a separate @Module, is that module imported within KpisModule?
+  @Module({
+    imports: [ /* the Module containing MetricsService */ ]
+  })
+
+    at TestingInjector.lookupComponentInParentModules (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:262:19)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at TestingInjector.resolveComponentInstance (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:215:33)
+    at TestingInjector.resolveComponentInstance (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-injector.js:19:45)
+    at resolveParam (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:129:38)
+    at async Promise.all (index 0)
+    at TestingInjector.resolveConstructorParams (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:144:27)
+    at TestingInjector.loadInstance (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:70:13)
+    at TestingInjector.loadProvider (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:98:9)
+    at /workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:56:13
+    at async Promise.all (index 5)
+    at TestingInstanceLoader.createInstancesOfProviders (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+    at /workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:40:13
+    at async Promise.all (index 13)
+    at TestingInstanceLoader.createInstances (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+    at TestingInstanceLoader.createInstancesOfDependencies (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+    at TestingInstanceLoader.createInstancesOfDependencies (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+    at TestingModuleBuilder.createInstancesOfDependencies (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+    at TestingModuleBuilder.compile (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+    at Object.&lt;anonymous&gt; (/workspaces/chefcloud/services/api/test/e2e/inventory.slice.e2e-spec.ts:22:20)</failure>
+    </testcase>
+    <testcase classname="Inventory (Slice E2E) — Deterministic › Endpoint Availability POST /inventory/adjustments endpoint exists" name="Inventory (Slice E2E) — Deterministic › Endpoint Availability POST /inventory/adjustments endpoint exists" time="0">
+      <failure>Error: Nest can&apos;t resolve dependencies of the SseRateLimiterGuard (?). Please make sure that the argument MetricsService at index [0] is available in the KpisModule context.
+
+Potential solutions:
+- Is KpisModule a valid NestJS module?
+- If MetricsService is a provider, is it part of the current KpisModule?
+- If MetricsService is exported from a separate @Module, is that module imported within KpisModule?
+  @Module({
+    imports: [ /* the Module containing MetricsService */ ]
+  })
+
+    at TestingInjector.lookupComponentInParentModules (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:262:19)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at TestingInjector.resolveComponentInstance (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:215:33)
+    at TestingInjector.resolveComponentInstance (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-injector.js:19:45)
+    at resolveParam (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:129:38)
+    at async Promise.all (index 0)
+    at TestingInjector.resolveConstructorParams (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:144:27)
+    at TestingInjector.loadInstance (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:70:13)
+    at TestingInjector.loadProvider (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:98:9)
+    at /workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:56:13
+    at async Promise.all (index 5)
+    at TestingInstanceLoader.createInstancesOfProviders (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+    at /workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:40:13
+    at async Promise.all (index 13)
+    at TestingInstanceLoader.createInstances (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+    at TestingInstanceLoader.createInstancesOfDependencies (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+    at TestingInstanceLoader.createInstancesOfDependencies (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+    at TestingModuleBuilder.createInstancesOfDependencies (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+    at TestingModuleBuilder.compile (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+    at Object.&lt;anonymous&gt; (/workspaces/chefcloud/services/api/test/e2e/inventory.slice.e2e-spec.ts:22:20)</failure>
+    </testcase>
+    <testcase classname="Inventory (Slice E2E) — Deterministic › Endpoint Availability POST /inventory/wastage endpoint exists" name="Inventory (Slice E2E) — Deterministic › Endpoint Availability POST /inventory/wastage endpoint exists" time="0">
+      <failure>Error: Nest can&apos;t resolve dependencies of the SseRateLimiterGuard (?). Please make sure that the argument MetricsService at index [0] is available in the KpisModule context.
+
+Potential solutions:
+- Is KpisModule a valid NestJS module?
+- If MetricsService is a provider, is it part of the current KpisModule?
+- If MetricsService is exported from a separate @Module, is that module imported within KpisModule?
+  @Module({
+    imports: [ /* the Module containing MetricsService */ ]
+  })
+
+    at TestingInjector.lookupComponentInParentModules (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:262:19)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at TestingInjector.resolveComponentInstance (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:215:33)
+    at TestingInjector.resolveComponentInstance (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-injector.js:19:45)
+    at resolveParam (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:129:38)
+    at async Promise.all (index 0)
+    at TestingInjector.resolveConstructorParams (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:144:27)
+    at TestingInjector.loadInstance (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:70:13)
+    at TestingInjector.loadProvider (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:98:9)
+    at /workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:56:13
+    at async Promise.all (index 5)
+    at TestingInstanceLoader.createInstancesOfProviders (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+    at /workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:40:13
+    at async Promise.all (index 13)
+    at TestingInstanceLoader.createInstances (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+    at TestingInstanceLoader.createInstancesOfDependencies (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+    at TestingInstanceLoader.createInstancesOfDependencies (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+    at TestingModuleBuilder.createInstancesOfDependencies (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+    at TestingModuleBuilder.compile (/workspaces/chefcloud/node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+    at Object.&lt;anonymous&gt; (/workspaces/chefcloud/services/api/test/e2e/inventory.slice.e2e-spec.ts:22:20)</failure>
+    </testcase>
+  </testsuite>
+  <testsuite name="Billing (Slice E2E) — Deterministic" errors="0" failures="0" skipped="0" timestamp="2025-11-13T11:18:46" time="0.658" tests="11">
+    <testcase classname="Billing (Slice E2E) — Deterministic › Authentication &amp; Authorization POST /billing/plan/change should return 401 if no authorization token is provided" name="Billing (Slice E2E) — Deterministic › Authentication &amp; Authorization POST /billing/plan/change should return 401 if no authorization token is provided" time="0.03">
+    </testcase>
+    <testcase classname="Billing (Slice E2E) — Deterministic › Authentication &amp; Authorization POST /billing/cancel should return 401 if no authorization token is provided" name="Billing (Slice E2E) — Deterministic › Authentication &amp; Authorization POST /billing/cancel should return 401 if no authorization token is provided" time="0.003">
+    </testcase>
+    <testcase classname="Billing (Slice E2E) — Deterministic › Authentication &amp; Authorization GET /billing/subscription should return 401 if no authorization token is provided" name="Billing (Slice E2E) — Deterministic › Authentication &amp; Authorization GET /billing/subscription should return 401 if no authorization token is provided" time="0.018">
+    </testcase>
+    <testcase classname="Billing (Slice E2E) — Deterministic › Rate Limiting Rate limiting produces &gt;= one 429 deterministically" name="Billing (Slice E2E) — Deterministic › Rate Limiting Rate limiting produces &gt;= one 429 deterministically" time="0.059">
+    </testcase>
+    <testcase classname="Billing (Slice E2E) — Deterministic › Basic Functionality (without auth) should bootstrap successfully without metatype errors" name="Billing (Slice E2E) — Deterministic › Basic Functionality (without auth) should bootstrap successfully without metatype errors" time="0.003">
+    </testcase>
+    <testcase classname="Billing (Slice E2E) — Deterministic › Basic Functionality (without auth) should have billing controller mounted at /billing" name="Billing (Slice E2E) — Deterministic › Basic Functionality (without auth) should have billing controller mounted at /billing" time="0.002">
+    </testcase>
+    <testcase classname="Billing (Slice E2E) — Deterministic › Basic Functionality (without auth) POST /billing/plan/change should validate request body" name="Billing (Slice E2E) — Deterministic › Basic Functionality (without auth) POST /billing/plan/change should validate request body" time="0.006">
+    </testcase>
+    <testcase classname="Billing (Slice E2E) — Deterministic › Basic Functionality (without auth) POST /billing/cancel should be idempotent" name="Billing (Slice E2E) — Deterministic › Basic Functionality (without auth) POST /billing/cancel should be idempotent" time="0.004">
+    </testcase>
+    <testcase classname="Billing (Slice E2E) — Deterministic › Endpoint Availability GET /billing/subscription endpoint exists" name="Billing (Slice E2E) — Deterministic › Endpoint Availability GET /billing/subscription endpoint exists" time="0.002">
+    </testcase>
+    <testcase classname="Billing (Slice E2E) — Deterministic › Endpoint Availability POST /billing/plan/change endpoint exists" name="Billing (Slice E2E) — Deterministic › Endpoint Availability POST /billing/plan/change endpoint exists" time="0.002">
+    </testcase>
+    <testcase classname="Billing (Slice E2E) — Deterministic › Endpoint Availability POST /billing/cancel endpoint exists" name="Billing (Slice E2E) — Deterministic › Endpoint Availability POST /billing/cancel endpoint exists" time="0.002">
+    </testcase>
+  </testsuite>
+  <testsuite name="Payments (Slice E2E)" errors="0" failures="0" skipped="0" timestamp="2025-11-13T11:18:47" time="0.516" tests="14">
+    <testcase classname="Payments (Slice E2E) GET /payments -&gt; 401 without token" name="Payments (Slice E2E) GET /payments -&gt; 401 without token" time="0.022">
+    </testcase>
+    <testcase classname="Payments (Slice E2E) GET /payments -&gt; 200 with token (lists payments)" name="Payments (Slice E2E) GET /payments -&gt; 200 with token (lists payments)" time="0.004">
+    </testcase>
+    <testcase classname="Payments (Slice E2E) GET /payments/pay_001 -&gt; 200" name="Payments (Slice E2E) GET /payments/pay_001 -&gt; 200" time="0.023">
+    </testcase>
+    <testcase classname="Payments (Slice E2E) GET /payments/pay_missing -&gt; 404/400 (invalid id)" name="Payments (Slice E2E) GET /payments/pay_missing -&gt; 404/400 (invalid id)" time="0.003">
+    </testcase>
+    <testcase classname="Payments (Slice E2E) POST /payments -&gt; 201 (create payment)" name="Payments (Slice E2E) POST /payments -&gt; 201 (create payment)" time="0.006">
+    </testcase>
+    <testcase classname="Payments (Slice E2E) POST /payments -&gt; 400/422 (invalid payload)" name="Payments (Slice E2E) POST /payments -&gt; 400/422 (invalid payload)" time="0.003">
+    </testcase>
+    <testcase classname="Payments (Slice E2E) POST /payments/pay_001/capture -&gt; 200" name="Payments (Slice E2E) POST /payments/pay_001/capture -&gt; 200" time="0.003">
+    </testcase>
+    <testcase classname="Payments (Slice E2E) POST /payments/pay_001/refund -&gt; 201" name="Payments (Slice E2E) POST /payments/pay_001/refund -&gt; 201" time="0.003">
+    </testcase>
+    <testcase classname="Payments (Slice E2E) POST /payments/intents -&gt; 201 (create intent)" name="Payments (Slice E2E) POST /payments/intents -&gt; 201 (create intent)" time="0.003">
+    </testcase>
+    <testcase classname="Payments (Slice E2E) POST /payments/intents/pi_001/cancel -&gt; 200" name="Payments (Slice E2E) POST /payments/intents/pi_001/cancel -&gt; 200" time="0.002">
+    </testcase>
+    <testcase classname="Payments (Slice E2E) POST /payments-test-webhook/gateway -&gt; 200 (valid HMAC)" name="Payments (Slice E2E) POST /payments-test-webhook/gateway -&gt; 200 (valid HMAC)" time="0.004">
+    </testcase>
+    <testcase classname="Payments (Slice E2E) POST /payments-test-webhook/gateway -&gt; 200 { ok:false } (bad HMAC)" name="Payments (Slice E2E) POST /payments-test-webhook/gateway -&gt; 200 { ok:false } (bad HMAC)" time="0.003">
+    </testcase>
+    <testcase classname="Payments (Slice E2E) POST /payments-test-webhook/gateway -&gt; 200 { ok:false } (missing signature)" name="Payments (Slice E2E) POST /payments-test-webhook/gateway -&gt; 200 { ok:false } (missing signature)" time="0.003">
+    </testcase>
+    <testcase classname="Payments (Slice E2E) Rate limiting produces &gt;= one 429 on /payments" name="Payments (Slice E2E) Rate limiting produces &gt;= one 429 on /payments" time="0.01">
+    </testcase>
+  </testsuite>
+  <testsuite name="Reservations (Slice E2E)" errors="0" failures="0" skipped="0" timestamp="2025-11-13T11:18:47" time="0.59" tests="13">
+    <testcase classname="Reservations (Slice E2E) GET /reservations -&gt; 401 without token" name="Reservations (Slice E2E) GET /reservations -&gt; 401 without token" time="0.031">
+    </testcase>
+    <testcase classname="Reservations (Slice E2E) GET /reservations -&gt; 200 with token" name="Reservations (Slice E2E) GET /reservations -&gt; 200 with token" time="0.004">
+    </testcase>
+    <testcase classname="Reservations (Slice E2E) POST /reservations -&gt; 201 (create booking)" name="Reservations (Slice E2E) POST /reservations -&gt; 201 (create booking)" time="0.022">
+    </testcase>
+    <testcase classname="Reservations (Slice E2E) POST /reservations -&gt; 400/422 (invalid payload)" name="Reservations (Slice E2E) POST /reservations -&gt; 400/422 (invalid payload)" time="0.003">
+    </testcase>
+    <testcase classname="Reservations (Slice E2E) POST /reservations/:id/confirm -&gt; 200" name="Reservations (Slice E2E) POST /reservations/:id/confirm -&gt; 200" time="0.003">
+    </testcase>
+    <testcase classname="Reservations (Slice E2E) POST /reservations/:id/cancel -&gt; 200" name="Reservations (Slice E2E) POST /reservations/:id/cancel -&gt; 200" time="0.002">
+    </testcase>
+    <testcase classname="Reservations (Slice E2E) POST /reservations/:id/seat -&gt; 200" name="Reservations (Slice E2E) POST /reservations/:id/seat -&gt; 200" time="0.002">
+    </testcase>
+    <testcase classname="Reservations (Slice E2E) GET /reservations?status=CONFIRMED -&gt; 200" name="Reservations (Slice E2E) GET /reservations?status=CONFIRMED -&gt; 200" time="0.003">
+    </testcase>
+    <testcase classname="Reservations (Slice E2E) GET /reservations?from=2025-11-13&amp;to=2025-11-14 -&gt; 200" name="Reservations (Slice E2E) GET /reservations?from=2025-11-13&amp;to=2025-11-14 -&gt; 200" time="0.002">
+    </testcase>
+    <testcase classname="Reservations (Slice E2E) GET /reservations/summary?from=2025-11-01&amp;to=2025-11-30 -&gt; 200" name="Reservations (Slice E2E) GET /reservations/summary?from=2025-11-01&amp;to=2025-11-30 -&gt; 200" time="0.004">
+    </testcase>
+    <testcase classname="Reservations (Slice E2E) GET /reservations-test/availability?date=2025-11-13&amp;party=2 -&gt; 200" name="Reservations (Slice E2E) GET /reservations-test/availability?date=2025-11-13&amp;party=2 -&gt; 200" time="0.003">
+    </testcase>
+    <testcase classname="Reservations (Slice E2E) GET /reservations-test/availability?date=2025-11-13&amp;party=6 -&gt; 200 (fewer slots)" name="Reservations (Slice E2E) GET /reservations-test/availability?date=2025-11-13&amp;party=6 -&gt; 200 (fewer slots)" time="0.003">
+    </testcase>
+    <testcase classname="Reservations (Slice E2E) Rate limiting produces &gt;= one 429 on /reservations" name="Reservations (Slice E2E) Rate limiting produces &gt;= one 429 on /reservations" time="0.03">
+    </testcase>
+  </testsuite>
+  <testsuite name="Dev-Portal (Slice E2E) — Plan-aware limits + HMAC" errors="0" failures="0" skipped="0" timestamp="2025-11-13T11:18:47" time="0.435" tests="11">
+    <testcase classname="Dev-Portal (Slice E2E) — Plan-aware limits + HMAC GET /dev/keys without token -&gt; 200 (test controller)" name="Dev-Portal (Slice E2E) — Plan-aware limits + HMAC GET /dev/keys without token -&gt; 200 (test controller)" time="0.012">
+    </testcase>
+    <testcase classname="Dev-Portal (Slice E2E) — Plan-aware limits + HMAC GET /dev/keys -&gt; 200 with token" name="Dev-Portal (Slice E2E) — Plan-aware limits + HMAC GET /dev/keys -&gt; 200 with token" time="0.004">
+    </testcase>
+    <testcase classname="Dev-Portal (Slice E2E) — Plan-aware limits + HMAC POST /dev/keys -&gt; 201 (create)" name="Dev-Portal (Slice E2E) — Plan-aware limits + HMAC POST /dev/keys -&gt; 201 (create)" time="0.018">
+    </testcase>
+    <testcase classname="Dev-Portal (Slice E2E) — Plan-aware limits + HMAC POST /dev/keys -&gt; 400 (invalid payload)" name="Dev-Portal (Slice E2E) — Plan-aware limits + HMAC POST /dev/keys -&gt; 400 (invalid payload)" time="0.002">
+    </testcase>
+    <testcase classname="Dev-Portal (Slice E2E) — Plan-aware limits + HMAC POST /dev/keys/key_1/revoke -&gt; 200" name="Dev-Portal (Slice E2E) — Plan-aware limits + HMAC POST /dev/keys/key_1/revoke -&gt; 200" time="0.003">
+    </testcase>
+    <testcase classname="Dev-Portal (Slice E2E) — Plan-aware limits + HMAC Plan-aware limit hits 429 for free but not for pro (same burst)" name="Dev-Portal (Slice E2E) — Plan-aware limits + HMAC Plan-aware limit hits 429 for free but not for pro (same burst)" time="0.02">
+    </testcase>
+    <testcase classname="Dev-Portal (Slice E2E) — Plan-aware limits + HMAC POST /dev-webhook/events -&gt; 200 { ok:true } (valid HMAC)" name="Dev-Portal (Slice E2E) — Plan-aware limits + HMAC POST /dev-webhook/events -&gt; 200 { ok:true } (valid HMAC)" time="0.004">
+    </testcase>
+    <testcase classname="Dev-Portal (Slice E2E) — Plan-aware limits + HMAC POST /dev-webhook/events -&gt; 200 { ok:false } (bad HMAC)" name="Dev-Portal (Slice E2E) — Plan-aware limits + HMAC POST /dev-webhook/events -&gt; 200 { ok:false } (bad HMAC)" time="0.002">
+    </testcase>
+    <testcase classname="Dev-Portal (Slice E2E) — Plan-aware limits + HMAC POST /dev-webhook/events -&gt; 200 { ok:false } (missing signature)" name="Dev-Portal (Slice E2E) — Plan-aware limits + HMAC POST /dev-webhook/events -&gt; 200 { ok:false } (missing signature)" time="0.002">
+    </testcase>
+    <testcase classname="Dev-Portal (Slice E2E) — Plan-aware limits + HMAC GET /dev/keys returns multiple keys with plan info" name="Dev-Portal (Slice E2E) — Plan-aware limits + HMAC GET /dev/keys returns multiple keys with plan info" time="0.002">
+    </testcase>
+    <testcase classname="Dev-Portal (Slice E2E) — Plan-aware limits + HMAC POST /dev/keys with pro plan -&gt; 201" name="Dev-Portal (Slice E2E) — Plan-aware limits + HMAC POST /dev/keys with pro plan -&gt; 201" time="0.002">
+    </testcase>
+  </testsuite>
+  <testsuite name="Franchise (Slice E2E)" errors="0" failures="0" skipped="0" timestamp="2025-11-13T11:18:47" time="0.399" tests="9">
+    <testcase classname="Franchise (Slice E2E) GET /franchise/overview -&gt; 401 without token" name="Franchise (Slice E2E) GET /franchise/overview -&gt; 401 without token" time="0.019">
+    </testcase>
+    <testcase classname="Franchise (Slice E2E) GET /franchise/overview -&gt; 200" name="Franchise (Slice E2E) GET /franchise/overview -&gt; 200" time="0.003">
+    </testcase>
+    <testcase classname="Franchise (Slice E2E) GET /franchise/rankings -&gt; 200" name="Franchise (Slice E2E) GET /franchise/rankings -&gt; 200" time="0.01">
+    </testcase>
+    <testcase classname="Franchise (Slice E2E) GET /franchise/budgets -&gt; 200" name="Franchise (Slice E2E) GET /franchise/budgets -&gt; 200" time="0.002">
+    </testcase>
+    <testcase classname="Franchise (Slice E2E) Two reads of /franchise/overview return consistent payload shape" name="Franchise (Slice E2E) Two reads of /franchise/overview return consistent payload shape" time="0.003">
+    </testcase>
+    <testcase classname="Franchise (Slice E2E) POST /franchise-test/invalidate -&gt; { ok:true }" name="Franchise (Slice E2E) POST /franchise-test/invalidate -&gt; { ok:true }" time="0.002">
+    </testcase>
+    <testcase classname="Franchise (Slice E2E) GET /franchise/overview after invalidation -&gt; 200" name="Franchise (Slice E2E) GET /franchise/overview after invalidation -&gt; 200" time="0.002">
+    </testcase>
+    <testcase classname="Franchise (Slice E2E) GET /franchise/forecast/items -&gt; 200" name="Franchise (Slice E2E) GET /franchise/forecast/items -&gt; 200" time="0.002">
+    </testcase>
+    <testcase classname="Franchise (Slice E2E) Rate limiting produces &gt;= one 429 on /franchise/overview" name="Franchise (Slice E2E) Rate limiting produces &gt;= one 429 on /franchise/overview" time="0.01">
+    </testcase>
+  </testsuite>
+</testsuites>

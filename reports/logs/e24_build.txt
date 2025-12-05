@@ -1,0 +1,114 @@
+
+> chefcloud@0.1.0 build /workspaces/chefcloud
+> turbo run build
+
+• Packages in scope: @chefcloud/api, @chefcloud/auth, @chefcloud/contracts, @chefcloud/db, @chefcloud/desktop, @chefcloud/mobile, @chefcloud/printer, @chefcloud/sync, @chefcloud/ui, @chefcloud/web, @chefcloud/worker
+• Running build in 11 packages
+• Remote caching disabled
+@chefcloud/db:build: cache miss, executing 4e4d18e7b5da0d72
+@chefcloud/printer:build: cache hit, replaying logs 8cdc5a502d48a23e
+@chefcloud/printer:build: 
+@chefcloud/printer:build: > @chefcloud/printer@0.1.0 build /workspaces/chefcloud/packages/printer
+@chefcloud/printer:build: > tsc
+@chefcloud/printer:build: 
+@chefcloud/ui:build: cache hit, replaying logs 177a89bb7b4abfbb
+@chefcloud/ui:build: 
+@chefcloud/ui:build: > @chefcloud/ui@0.1.0 build /workspaces/chefcloud/packages/ui
+@chefcloud/ui:build: > tsc
+@chefcloud/ui:build: 
+@chefcloud/auth:build: cache hit, replaying logs 19c0532ae866c6e5
+@chefcloud/auth:build: 
+@chefcloud/auth:build: > @chefcloud/auth@0.1.0 build /workspaces/chefcloud/packages/auth
+@chefcloud/auth:build: > tsc
+@chefcloud/auth:build: 
+@chefcloud/contracts:build: cache hit, replaying logs 5e4527e6a23dbf57
+@chefcloud/contracts:build: 
+@chefcloud/contracts:build: > @chefcloud/contracts@0.1.0 build /workspaces/chefcloud/packages/contracts
+@chefcloud/contracts:build: > tsc
+@chefcloud/contracts:build: 
+@chefcloud/mobile:build: cache hit, replaying logs 07f2b0f5c4c2ff61
+@chefcloud/mobile:build: 
+@chefcloud/mobile:build: > @chefcloud/mobile@0.1.0 build /workspaces/chefcloud/apps/mobile
+@chefcloud/mobile:build: > echo 'Mobile build via EAS'
+@chefcloud/mobile:build: 
+@chefcloud/mobile:build: Mobile build via EAS
+@chefcloud/web:build: cache hit, replaying logs 96e674c2b00802a0
+@chefcloud/web:build: 
+@chefcloud/web:build: > @chefcloud/web@0.1.0 build /workspaces/chefcloud/apps/web
+@chefcloud/web:build: > next build
+@chefcloud/web:build: 
+@chefcloud/web:build:    ▲ Next.js 14.1.0
+@chefcloud/web:build: 
+@chefcloud/web:build:    Linting and checking validity of types ...
+@chefcloud/web:build:  ⚠ TypeScript project references are not fully supported. Attempting to build in incremental mode.
+@chefcloud/web:build:    Creating an optimized production build ...
+@chefcloud/web:build:  ✓ Compiled successfully
+@chefcloud/web:build:    Collecting page data ...
+@chefcloud/web:build:    Generating static pages (0/4) ...
+@chefcloud/web:build: @chefcloud/web:build:    Generating static pages (1/4) 
+@chefcloud/web:build: @chefcloud/web:build:    Generating static pages (2/4) 
+@chefcloud/web:build: @chefcloud/web:build:    Generating static pages (3/4) 
+@chefcloud/web:build: @chefcloud/web:build:  ✓ Generating static pages (4/4) 
+@chefcloud/web:build:    Finalizing page optimization ...
+@chefcloud/web:build:    Collecting build traces ...
+@chefcloud/web:build: 
+@chefcloud/web:build: Route (pages)                             Size     First Load JS
+@chefcloud/web:build: ┌ ○ /                                     472 B          78.5 kB
+@chefcloud/web:build: ├   /_app                                 0 B              78 kB
+@chefcloud/web:build: ├ ○ /404                                  180 B          78.2 kB
+@chefcloud/web:build: ├ λ /api/health                           0 B              78 kB
+@chefcloud/web:build: ├ λ /api/version                          0 B              78 kB
+@chefcloud/web:build: └ ○ /security                             4.85 kB        82.9 kB
+@chefcloud/web:build: + First Load JS shared by all             78.1 kB
+@chefcloud/web:build:   ├ chunks/framework-065429c4fd4dac58.js  45.2 kB
+@chefcloud/web:build:   ├ chunks/main-0dc674210e1ee161.js       31.8 kB
+@chefcloud/web:build:   └ other shared chunks (total)           1.18 kB
+@chefcloud/web:build: 
+@chefcloud/web:build: ○  (Static)   prerendered as static content
+@chefcloud/web:build: λ  (Dynamic)  server-rendered on demand using Node.js
+@chefcloud/web:build: 
+@chefcloud/db:build: 
+@chefcloud/db:build: > @chefcloud/db@0.1.0 build /workspaces/chefcloud/packages/db
+@chefcloud/db:build: > tsc
+@chefcloud/db:build: 
+@chefcloud/worker:build: cache miss, executing b851cf6aa8bb194f
+@chefcloud/api:build: cache miss, executing 994135acb91d3e65
+@chefcloud/sync:build: cache miss, executing 9a84a28175e9efe9
+@chefcloud/sync:build: 
+@chefcloud/sync:build: > @chefcloud/sync@0.1.0 build /workspaces/chefcloud/services/sync
+@chefcloud/sync:build: > tsc
+@chefcloud/sync:build: 
+@chefcloud/api:build: 
+@chefcloud/api:build: > @chefcloud/api@0.1.0 build /workspaces/chefcloud/services/api
+@chefcloud/api:build: > nest build
+@chefcloud/api:build: 
+@chefcloud/worker:build: 
+@chefcloud/worker:build: > @chefcloud/worker@0.1.0 build /workspaces/chefcloud/services/worker
+@chefcloud/worker:build: > tsc
+@chefcloud/worker:build: 
+@chefcloud/desktop:build: cache hit, replaying logs 677616793cd5b5b8
+@chefcloud/desktop:build: 
+@chefcloud/desktop:build: > @chefcloud/desktop@0.1.0 build /workspaces/chefcloud/apps/desktop
+@chefcloud/desktop:build: > tsc && vite build
+@chefcloud/desktop:build: 
+@chefcloud/desktop:build: vite v5.4.21 building for production...
+@chefcloud/desktop:build: transforming...
+@chefcloud/desktop:build: [plugin:vite:resolve] [plugin vite:resolve] Module "fs" has been externalized for browser compatibility, imported by "/workspaces/chefcloud/node_modules/.pnpm/better-sqlite3@12.4.1/node_modules/better-sqlite3/lib/database.js". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+@chefcloud/desktop:build: [plugin:vite:resolve] [plugin vite:resolve] Module "path" has been externalized for browser compatibility, imported by "/workspaces/chefcloud/node_modules/.pnpm/better-sqlite3@12.4.1/node_modules/better-sqlite3/lib/database.js". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+@chefcloud/desktop:build: [plugin:vite:resolve] [plugin vite:resolve] Module "fs" has been externalized for browser compatibility, imported by "/workspaces/chefcloud/node_modules/.pnpm/better-sqlite3@12.4.1/node_modules/better-sqlite3/lib/methods/backup.js". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+@chefcloud/desktop:build: [plugin:vite:resolve] [plugin vite:resolve] Module "path" has been externalized for browser compatibility, imported by "/workspaces/chefcloud/node_modules/.pnpm/better-sqlite3@12.4.1/node_modules/better-sqlite3/lib/methods/backup.js". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+@chefcloud/desktop:build: [plugin:vite:resolve] [plugin vite:resolve] Module "fs" has been externalized for browser compatibility, imported by "/workspaces/chefcloud/node_modules/.pnpm/bindings@1.5.0/node_modules/bindings/bindings.js". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+@chefcloud/desktop:build: [plugin:vite:resolve] [plugin vite:resolve] Module "path" has been externalized for browser compatibility, imported by "/workspaces/chefcloud/node_modules/.pnpm/bindings@1.5.0/node_modules/bindings/bindings.js". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+@chefcloud/desktop:build: [plugin:vite:resolve] [plugin vite:resolve] Module "path" has been externalized for browser compatibility, imported by "/workspaces/chefcloud/node_modules/.pnpm/file-uri-to-path@1.0.0/node_modules/file-uri-to-path/index.js". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+@chefcloud/desktop:build: ✓ 133 modules transformed.
+@chefcloud/desktop:build: rendering chunks...
+@chefcloud/desktop:build: computing gzip size...
+@chefcloud/desktop:build: dist/index.html                   0.46 kB │ gzip:  0.30 kB
+@chefcloud/desktop:build: dist/assets/index-tRni5Z4m.css    1.88 kB │ gzip:  0.86 kB
+@chefcloud/desktop:build: dist/assets/index-C_vERwsL.js   205.73 kB │ gzip: 66.95 kB
+@chefcloud/desktop:build: ✓ built in 4.30s
+
+ Tasks:    11 successful, 11 total
+Cached:    7 cached, 11 total
+  Time:    26.95s 
+

@@ -6,6 +6,9 @@ import {
   UseGuards,
   HttpCode,
   Query,
+  Param,
+  Headers,
+  HttpStatus,
 } from '@nestjs/common';
 import { ApiOkResponse, ApiQuery } from '@nestjs/swagger';
 import { DevPortalService } from './dev-portal.service';
@@ -17,11 +20,10 @@ import { DevUsageSummaryDto } from './dto/dev-usage.dto';
 /**
  * Developer Portal Controller
  * 
- * Manages organizations, subscriptions, and plans for internal dev/admin use.
+ * Manages organizations, subscriptions, plans, API keys, and webhooks for internal dev/admin use.
  * Mutation endpoints are protected by plan-aware rate limiting.
  */
 @Controller('dev')
-@UseGuards(DevAdminGuard)
 export class DevPortalController {
   constructor(private devPortalService: DevPortalService) {}
 
@@ -31,7 +33,7 @@ export class DevPortalController {
    */
   @Post('orgs')
   @HttpCode(201)
-  @UseGuards(PlanRateLimiterGuard)
+  @UseGuards(DevAdminGuard, PlanRateLimiterGuard)
   async createOrg(
     @Body()
     body: {
@@ -44,6 +46,7 @@ export class DevPortalController {
   }
 
   @Get('subscriptions')
+  @UseGuards(DevAdminGuard)
   async listSubscriptions() {
     return this.devPortalService.listSubscriptions();
   }
@@ -101,5 +104,48 @@ export class DevPortalController {
     const orgId = 'demo-org-id'; // Placeholder - replace with actual org context
     
     return this.devPortalService.getUsageSummaryForOrg(orgId, range ?? '24h');
+  }
+
+  /**
+   * List all API keys
+   */
+  @Get('keys')
+  @UseGuards(DevAdminGuard)
+  async listKeys() {
+    return this.devPortalService.listKeys();
+  }
+
+  /**
+   * Create new API key
+   * Protected by plan-aware rate limiting
+   */
+  @Post('keys')
+  @HttpCode(HttpStatus.CREATED)
+  @UseGuards(DevAdminGuard, PlanRateLimiterGuard)
+  async createKey(@Body() body: any) {
+    if (!body?.label) {
+      return { statusCode: 400, message: 'label is required' };
+    }
+    return this.devPortalService.createKey(body.label, body.plan ?? 'free');
+  }
+
+  /**
+   * Revoke API key (soft delete)
+   */
+  @Post('keys/:id/revoke')
+  @UseGuards(DevAdminGuard)
+  async revokeKey(@Param('id') id: string) {
+    return this.devPortalService.revokeKey(id);
+  }
+
+  /**
+   * Webhook event validation
+   * Verifies HMAC signature
+   * Public endpoint (no DevAdmin guard required)
+   */
+  @Post('webhook/events')
+  @HttpCode(200)
+  async webhook(@Body() body: any, @Headers('x-signature') sig?: string) {
+    return this.devPortalService.handleWebhook(body, sig);
   }
 }

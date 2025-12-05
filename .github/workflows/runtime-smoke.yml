@@ -1,0 +1,50 @@
+name: Runtime Smoke (API)
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install
+        run: pnpm -w install
+
+      - name: Build
+        run: pnpm -w -r build
+
+      - name: Run runtime smoke
+        working-directory: services/api
+        env:
+          PORT: 3030
+          METRICS_ENABLED: 1
+          DOCS_ENABLED: 0
+          ERROR_INCLUDE_STACKS: 0
+          CORS_ORIGINS: "*"
+        run: pnpm smoke:runtime
+
+      - name: Upload smoke artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: runtime-smoke-artifacts
+          path: |
+            reports/smoke/**

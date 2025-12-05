@@ -1,0 +1,7 @@
+{
+  "testEnvironment": "node",
+  "rootDir": "../../",
+  "testMatch": ["<rootDir>/services/api/test/blackbox/**/*.blackbox.e2e-spec.ts"],
+  "transform": { "^.+\\.(t|j)s$": "ts-jest" },
+  "moduleFileExtensions": ["ts", "js", "json"]
+}

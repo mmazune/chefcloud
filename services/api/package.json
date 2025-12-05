@@ -1,7 +1,7 @@
 {
   "name": "@chefcloud/api",
-  "version": "0.1.0",
-  "private": true,
+  "version": "1.0.0-rc.1",
+  "private": false,
   "scripts": {
     "build": "nest build",
     "build:e2e": "tsc -p tsconfig.build.e2e.json",
@@ -22,6 +22,9 @@
     "test:e2e-blackbox": "jest --config ./jest-e2e-blackbox.json",
     "e2e:slice": "jest --config ./jest-e2e-slice.json",
     "e2e:slice:ci": "rimraf ../../reports/junit ../../reports/coverage/e2e-slice && pnpm -s e2e:slice",
+    "e2e:slice:view": "xdg-open reports/coverage/e2e-slice/lcov-report/index.html || open reports/coverage/e2e-slice/lcov-report/index.html",
+    "smoke:runtime": "bash ../../tools/smoke_runtime.sh",
+    "build:api": "pnpm -w -r build",
     "demo:reset:tapas": "npx tsx prisma/reset-tapas-demo.ts"
   },
   "dependencies": {

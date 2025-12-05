@@ -101,6 +101,13 @@ export class PlanRateLimiterGuard implements CanActivate {
   }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
+    // ---- E2E test bypass (OFF by default in prod) ----
+    if (process.env.E2E_ADMIN_BYPASS === '1') {
+      const request = context.switchToHttp().getRequest();
+      const auth = (request?.headers?.['authorization'] ?? '').toString().trim();
+      return auth === 'Bearer TEST_TOKEN';
+    }
+    
     const request = context.switchToHttp().getRequest();
     
     const startTime = Date.now();

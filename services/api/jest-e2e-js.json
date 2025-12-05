@@ -1,0 +1,7 @@
+{
+  "testEnvironment": "node",
+  "rootDir": "./",
+  "testMatch": ["<rootDir>/dist/test/**/*.e2e-spec.js"],
+  "setupFiles": ["<rootDir>/dist/test/e2e/jest-setup-e2e.js"],
+  "moduleFileExtensions": ["js", "json"]
+}
