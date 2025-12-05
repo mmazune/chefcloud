@@ -167,6 +167,32 @@ See [CHEFCLOUD_BLUEPRINT.md](./docs/CHEFCLOUD_BLUEPRINT.md) for full roadmap.
 - `GET /api/health` - Web app health
 - `GET /api/version` - Version information
 
+## Deployment
+
+### Production Deployment (Railway + Vercel)
+
+**Quick Start**: See [DEPLOY_QUICK.md](./DEPLOY_QUICK.md) for fast-track 5-step deployment.
+
+**Full Guide**: See [DEPLOYMENT.md](./DEPLOYMENT.md) for comprehensive step-by-step instructions.
+
+**What You'll Get**:
+- ✅ Railway: API + PostgreSQL + Worker
+- ✅ Vercel: Next.js Web Frontend
+- ✅ Tapas Demo: Pre-seeded with 30 days of data
+- ✅ 9 Demo Users: All roles ready to test
+- ✅ Production-Ready: HTTPS, CORS, security headers
+
+**Deploy Checklist**:
+```bash
+# 1. Railway PostgreSQL + API
+# 2. Run migrations & seed Tapas demo
+# 3. Vercel Web deployment
+# 4. Update CORS configuration
+# 5. Test login with owner@tapas.demo
+```
+
+See deployment guides for Railway configuration, environment variables, and troubleshooting.
+
 ## Contributing
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md) for contribution guidelines.
