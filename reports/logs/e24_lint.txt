@@ -1,0 +1,68 @@
+
+> chefcloud@0.1.0 lint /workspaces/chefcloud
+> turbo run lint
+
+• Packages in scope: @chefcloud/api, @chefcloud/auth, @chefcloud/contracts, @chefcloud/db, @chefcloud/desktop, @chefcloud/mobile, @chefcloud/printer, @chefcloud/sync, @chefcloud/ui, @chefcloud/web, @chefcloud/worker
+• Running lint in 11 packages
+• Remote caching disabled
+@chefcloud/mobile:lint: cache miss, executing bbb59adceed4b3f8
+@chefcloud/db:lint: cache miss, executing d8a6f2c8343b7667
+@chefcloud/worker:lint: cache miss, executing 3f94430bd8157ac8
+@chefcloud/printer:lint: cache miss, executing bf5ad66fa5844563
+@chefcloud/ui:lint: cache miss, executing 6253d48cf783da3c
+@chefcloud/desktop:lint: cache miss, executing b20e15c3f08b5287
+@chefcloud/sync:lint: cache miss, executing 28b2edf79d7ca9b6
+@chefcloud/web:lint: cache miss, executing d16d8fdb3fbb54b2
+@chefcloud/auth:lint: cache miss, executing 96e649e64110a227
+@chefcloud/api:lint: cache miss, executing c5bb27fea06597a9
+@chefcloud/sync:lint: 
+@chefcloud/sync:lint: > @chefcloud/sync@0.1.0 lint /workspaces/chefcloud/services/sync
+@chefcloud/sync:lint: > eslint . --ext .ts
+@chefcloud/sync:lint: 
+@chefcloud/mobile:lint: 
+@chefcloud/mobile:lint: > @chefcloud/mobile@0.1.0 lint /workspaces/chefcloud/apps/mobile
+@chefcloud/mobile:lint: > eslint . --ext .ts,.tsx
+@chefcloud/mobile:lint: 
+@chefcloud/web:lint: 
+@chefcloud/web:lint: > @chefcloud/web@0.1.0 lint /workspaces/chefcloud/apps/web
+@chefcloud/web:lint: > next lint
+@chefcloud/web:lint: 
+@chefcloud/worker:lint: 
+@chefcloud/worker:lint: > @chefcloud/worker@0.1.0 lint /workspaces/chefcloud/services/worker
+@chefcloud/worker:lint: > eslint . --ext .ts
+@chefcloud/worker:lint: 
+@chefcloud/printer:lint: 
+@chefcloud/printer:lint: > @chefcloud/printer@0.1.0 lint /workspaces/chefcloud/packages/printer
+@chefcloud/printer:lint: > eslint . --ext .ts
+@chefcloud/printer:lint: 
+@chefcloud/db:lint: 
+@chefcloud/db:lint: > @chefcloud/db@0.1.0 lint /workspaces/chefcloud/packages/db
+@chefcloud/db:lint: > eslint . --ext .ts
+@chefcloud/db:lint: 
+@chefcloud/ui:lint: 
+@chefcloud/ui:lint: > @chefcloud/ui@0.1.0 lint /workspaces/chefcloud/packages/ui
+@chefcloud/ui:lint: > eslint . --ext .ts,.tsx
+@chefcloud/ui:lint: 
+@chefcloud/auth:lint: 
+@chefcloud/auth:lint: > @chefcloud/auth@0.1.0 lint /workspaces/chefcloud/packages/auth
+@chefcloud/auth:lint: > eslint . --ext .ts
+@chefcloud/auth:lint: 
+@chefcloud/desktop:lint: 
+@chefcloud/desktop:lint: > @chefcloud/desktop@0.1.0 lint /workspaces/chefcloud/apps/desktop
+@chefcloud/desktop:lint: > eslint . --ext ts,tsx
+@chefcloud/desktop:lint: 
+@chefcloud/api:lint: 
+@chefcloud/api:lint: > @chefcloud/api@0.1.0 lint /workspaces/chefcloud/services/api
+@chefcloud/api:lint: > eslint "{src,apps,libs,test}/**/*.ts" --fix
+@chefcloud/api:lint: 
+@chefcloud/contracts:lint: cache miss, executing a2c2ee3b1485d330
+@chefcloud/contracts:lint: 
+@chefcloud/contracts:lint: > @chefcloud/contracts@0.1.0 lint /workspaces/chefcloud/packages/contracts
+@chefcloud/contracts:lint: > eslint . --ext .ts
+@chefcloud/contracts:lint: 
+@chefcloud/web:lint: ✔ No ESLint warnings or errors
+
+ Tasks:    11 successful, 11 total
+Cached:    0 cached, 11 total
+  Time:    11.208s 
+

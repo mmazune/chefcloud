@@ -19,36 +19,87 @@ export class PrismaStub implements OnModuleInit, OnModuleDestroy {
   // Billing-related models
   subscriptionPlan = {
     findMany: jest.fn().mockResolvedValue([
-      { id: 'free', name: 'Free', priceUsd: 0, code: 'FREE' },
-      { id: 'pro', name: 'Pro', priceUsd: 49.99, code: 'PRO' },
-      { id: 'enterprise', name: 'Enterprise', priceUsd: 199.99, code: 'ENTERPRISE' },
+      { id: 'free', name: 'Free', priceUsd: 0, code: 'FREE', isActive: true },
+      { id: 'pro', name: 'Pro', priceUsd: 49.99, code: 'PRO', isActive: true },
+      { id: 'enterprise', name: 'Enterprise', priceUsd: 199.99, code: 'ENTERPRISE', isActive: true },
+      { id: 'inactive_plan', name: 'Inactive', priceUsd: 0, code: 'INACTIVE', isActive: false },
     ]),
     findUnique: jest.fn((args) => {
       const plans = [
-        { id: 'free', name: 'Free', priceUsd: 0, code: 'FREE' },
-        { id: 'pro', name: 'Pro', priceUsd: 49.99, code: 'PRO' },
+        { id: 'free', name: 'Free', priceUsd: 0, code: 'FREE', isActive: true },
+        { id: 'pro', name: 'Pro', priceUsd: 49.99, code: 'PRO', isActive: true },
+        { id: 'inactive_plan', name: 'Inactive', priceUsd: 0, code: 'INACTIVE', isActive: false },
       ];
       return Promise.resolve(plans.find((p) => p.id === args.where?.id || p.code === args.where?.code));
     }),
+    upsert: jest.fn().mockImplementation(async ({ where, create, update }: any) => ({
+      id: create?.code ?? update?.code ?? where?.code ?? 'plan_new',
+      code: create?.code ?? update?.code ?? where?.code ?? 'NEW',
+      name: update?.name ?? create?.name ?? 'New Plan',
+      priceUGX: update?.priceUGX ?? create?.priceUGX ?? 0,
+      features: update?.features ?? create?.features ?? {},
+      isActive: update?.isActive ?? create?.isActive ?? true,
+      updatedAt: new Date(),
+    })),
   };
 
   orgSubscription = {
     findFirst: jest.fn().mockResolvedValue({
       id: 'sub_1',
       orgId: 'org_1',
+      planId: 'free',
       planCode: 'FREE',
       status: 'ACTIVE',
       startDate: new Date('2024-01-01'),
+      nextRenewalAt: new Date('2024-02-01'),
     }),
-    findMany: jest.fn().mockResolvedValue([
-      {
-        id: 'sub_1',
-        orgId: 'org_1',
-        planCode: 'FREE',
-        status: 'ACTIVE',
-        startDate: new Date('2024-01-01'),
-      },
-    ]),
+    findMany: jest.fn().mockImplementation(async ({ include }: any) => {
+      const baseSubs = [
+        {
+          id: 'sub_1',
+          orgId: 'org_1',
+          planId: 'free',
+          planCode: 'FREE',
+          status: 'ACTIVE',
+          startDate: new Date('2024-01-01'),
+          nextRenewalAt: new Date('2024-02-01'),
+        },
+        {
+          id: 'sub_2',
+          orgId: 'org_2',
+          planId: 'pro',
+          planCode: 'PRO',
+          status: 'ACTIVE',
+          startDate: new Date('2024-01-15'),
+          nextRenewalAt: new Date('2024-02-15'),
+        },
+      ];
+
+      // Add includes if requested
+      if (include?.org || include?.plan) {
+        return baseSubs.map((sub) => ({
+          ...sub,
+          ...(include.org && {
+            org: { id: sub.orgId, name: sub.orgId === 'org_1' ? 'Test Restaurant' : 'Another Org', slug: sub.orgId },
+          }),
+          ...(include.plan && {
+            plan: { code: sub.planCode, name: sub.planCode === 'FREE' ? 'Free' : 'Pro' },
+          }),
+        }));
+      }
+
+      return baseSubs;
+    }),
+    create: jest.fn().mockImplementation(async ({ data }: any) => ({
+      id: 'sub_new',
+      orgId: data?.orgId ?? 'org_new',
+      planId: data?.planId ?? 'free',
+      planCode: data?.planCode ?? 'FREE',
+      status: data?.status ?? 'ACTIVE',
+      startDate: new Date(),
+      nextRenewalAt: data?.nextRenewalAt ?? new Date(),
+      createdAt: new Date(),
+    })),
   };
 
   subscriptionEvent = {
@@ -526,6 +577,97 @@ export class PrismaStub implements OnModuleInit, OnModuleDestroy {
       if (where?.id === 'key_1') return { id: 'key_1', orgId: 'org_1', label: 'build bot', last4: 'ABCD', active: true, plan: 'free', createdAt: new Date() };
       if (where?.id === 'key_2') return { id: 'key_2', orgId: 'org_1', label: 'kitchen svc', last4: 'EFGH', active: true, plan: 'pro', createdAt: new Date() };
       return null;
+    }),
+  };
+
+  // --- Dev-Portal Production: Org & Subscription Management ---
+  org = {
+    create: jest.fn().mockImplementation(async ({ data }: any) => ({
+      id: 'org_new',
+      name: data?.name ?? 'New Org',
+      slug: data?.slug ?? 'new-org',
+      createdAt: new Date(),
+    })),
+    findMany: jest.fn().mockResolvedValue([
+      { id: 'org_1', name: 'Test Restaurant', slug: 'test-restaurant', createdAt: new Date() },
+    ]),
+    findUnique: jest.fn().mockImplementation(async ({ where }: any) => {
+      if (where?.id === 'org_1') return { id: 'org_1', name: 'Test Restaurant', slug: 'test-restaurant', createdAt: new Date() };
+      return null;
+    }),
+  };
+
+  orgSettings = {
+    create: jest.fn().mockImplementation(async ({ data }: any) => ({
+      id: 'settings_new',
+      orgId: data?.orgId ?? 'org_new',
+      createdAt: new Date(),
+    })),
+  };
+
+  branch = {
+    create: jest.fn().mockImplementation(async ({ data }: any) => ({
+      id: 'branch_new',
+      orgId: data?.orgId ?? 'org_new',
+      name: data?.name ?? 'Main Branch',
+      address: data?.address ?? 'TBD',
+      timezone: data?.timezone ?? 'Africa/Kampala',
+      createdAt: new Date(),
+    })),
+    findMany: jest.fn().mockResolvedValue([
+      { id: 'branch_1', orgId: 'org_1', name: 'Main Branch', address: '123 Main St', timezone: 'Africa/Kampala', createdAt: new Date() },
+    ]),
+  };
+
+  user = {
+    create: jest.fn().mockImplementation(async ({ data }: any) => ({
+      id: 'user_new',
+      email: data?.email ?? 'owner@example.com',
+      passwordHash: data?.passwordHash ?? 'hashed',
+      firstName: data?.firstName ?? 'Owner',
+      lastName: data?.lastName ?? 'Account',
+      roleLevel: data?.roleLevel ?? 'L5',
+      orgId: data?.orgId ?? 'org_new',
+      branchId: data?.branchId ?? 'branch_new',
+      createdAt: new Date(),
+    })),
+  };
+
+  devAdmin = {
+    upsert: jest.fn().mockImplementation(async ({ where, create, update }: any) => ({
+      id: 'devadmin_new',
+      email: where?.email ?? create?.email ?? 'dev@chefcloud.local',
+      isSuper: update?.isSuper ?? create?.isSuper ?? false,
+      createdAt: new Date(),
+    })),
+    findUnique: jest.fn().mockImplementation(async ({ where }: any) => {
+      // Return valid dev admins for test
+      if (where?.email === 'dev1@chefcloud.local') {
+        return { id: 'devadmin_1', email: 'dev1@chefcloud.local', isSuper: false, createdAt: new Date() };
+      }
+      if (where?.email === 'superdev@chefcloud.local') {
+        return { id: 'devadmin_super', email: 'superdev@chefcloud.local', isSuper: true, createdAt: new Date() };
+      }
+      if (where?.email === 'lastsuperdev@chefcloud.local') {
+        return { id: 'devadmin_last', email: 'lastsuperdev@chefcloud.local', isSuper: true, createdAt: new Date() };
+      }
+      if (where?.email === 'regulardev@chefcloud.local') {
+        return { id: 'devadmin_regular', email: 'regulardev@chefcloud.local', isSuper: false, createdAt: new Date() };
+      }
+      return null;
+    }),
+    delete: jest.fn().mockImplementation(async ({ where }: any) => ({
+      id: 'devadmin_deleted',
+      email: where?.email ?? 'deleted@chefcloud.local',
+      isSuper: false,
+      deletedAt: new Date(),
+    })),
+    count: jest.fn().mockImplementation(async ({ where }: any) => {
+      // Return count of super devs (simulate minimum 2 constraint)
+      if (where?.isSuper === true) {
+        return 2; // Minimum to prevent deletion of last super dev
+      }
+      return 5;
     }),
   };
 

@@ -21,7 +21,6 @@ import { PlanRateLimiterGuard } from '../common/plan-rate-limiter.guard';
  * Mutation endpoints are protected by plan-aware rate limiting.
  */
 @Controller('dev')
-@UseGuards(DevAdminGuard)
 export class DevPortalController {
   constructor(private devPortalService: DevPortalService) {}
 
@@ -31,7 +30,7 @@ export class DevPortalController {
    */
   @Post('orgs')
   @HttpCode(201)
-  @UseGuards(PlanRateLimiterGuard)
+  @UseGuards(DevAdminGuard, PlanRateLimiterGuard)
   async createOrg(
     @Body()
     body: {
@@ -44,6 +43,7 @@ export class DevPortalController {
   }
 
   @Get('subscriptions')
+  @UseGuards(DevAdminGuard)
   async listSubscriptions() {
     return this.devPortalService.listSubscriptions();
   }
@@ -83,6 +83,7 @@ export class DevPortalController {
    * List all API keys
    */
   @Get('keys')
+  @UseGuards(DevAdminGuard)
   async listKeys() {
     return this.devPortalService.listKeys();
   }
@@ -93,7 +94,7 @@ export class DevPortalController {
    */
   @Post('keys')
   @HttpCode(HttpStatus.CREATED)
-  @UseGuards(PlanRateLimiterGuard)
+  @UseGuards(DevAdminGuard, PlanRateLimiterGuard)
   async createKey(@Body() body: any) {
     if (!body?.label) {
       return { statusCode: 400, message: 'label is required' };
@@ -105,6 +106,7 @@ export class DevPortalController {
    * Revoke API key (soft delete)
    */
   @Post('keys/:id/revoke')
+  @UseGuards(DevAdminGuard)
   async revokeKey(@Param('id') id: string) {
     return this.devPortalService.revokeKey(id);
   }

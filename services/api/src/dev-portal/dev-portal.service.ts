@@ -1,11 +1,15 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import * as argon2 from 'argon2';
-import * as crypto from 'crypto';
+import { DevPortalKeyRepo } from './ports/devportal.port';
+import { verifySignature } from '../shared/security/hmac';
 
 @Injectable()
 export class DevPortalService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private readonly keyRepo: DevPortalKeyRepo,
+  ) {}
 
   async createOrg(data: {
     ownerEmail: string;
@@ -168,27 +172,21 @@ export class DevPortalService {
    * List all developer API keys
    */
   async listKeys() {
-    // @ts-expect-error - developerApiKey model will be added to Prisma schema in future PR
-    return this.prisma.developerApiKey.findMany({});
+    return this.keyRepo.findMany();
   }
 
   /**
    * Create new developer API key
    */
   async createKey(label: string, plan: 'free' | 'pro' = 'free') {
-    // @ts-expect-error - developerApiKey model will be added to Prisma schema in future PR
-    return this.prisma.developerApiKey.create({ data: { label, plan } });
+    return this.keyRepo.create({ label, plan });
   }
 
   /**
    * Revoke API key (soft delete)
    */
   async revokeKey(id: string) {
-    // @ts-expect-error - developerApiKey model will be added to Prisma schema in future PR
-    return this.prisma.developerApiKey.update({
-      where: { id },
-      data: { active: false },
-    });
+    return this.keyRepo.update({ id, active: false });
   }
 
   /**
@@ -197,29 +195,12 @@ export class DevPortalService {
   handleWebhook(body: any, sig?: string) {
     const secret = process.env.WH_SECRET || '';
     const raw = JSON.stringify(body ?? {});
-    const ok = !!sig && this.verifySignature(raw, secret, sig);
+    const ok = !!sig && verifySignature(raw, secret, sig);
+    
     if (!ok) {
       return { ok: false, reason: sig ? 'bad_signature' : 'missing_signature' };
     }
+    
     return { ok: true, type: body?.type ?? 'dev.event', id: body?.id ?? 'evt' };
-  }
-
-  /**
-   * Verify HMAC signature (timing-safe)
-   */
-  private verifySignature(bodyRaw: string, secret: string, sigHex: string): boolean {
-    const expected = crypto
-      .createHmac('sha256', secret)
-      .update(bodyRaw, 'utf8')
-      .digest('hex');
-    
-    if (expected.length !== sigHex.length) {
-      return false;
-    }
-    
-    return crypto.timingSafeEqual(
-      Buffer.from(expected),
-      Buffer.from(sigHex)
-    );
   }
 }

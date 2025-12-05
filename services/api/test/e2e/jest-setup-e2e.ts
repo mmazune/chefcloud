@@ -19,6 +19,7 @@ process.env.PLAN_RATE_LIMIT = '5';
 
 // Webhook secret for HMAC tests
 process.env.WH_SECRET = 'whsec_test_123';
+process.env.WH_SKEW_SEC = '300'; // 5 minutes skew window for replay protection
 
 // Plan-aware throttling knobs used by Dev-Portal test module
 process.env.PLAN_LIMIT_FREE = '5';   // requests per 30s window

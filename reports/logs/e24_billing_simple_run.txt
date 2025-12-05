@@ -1,0 +1,471 @@
+
+> @chefcloud/api@0.1.0 test:e2e /workspaces/chefcloud/services/api
+> jest --config ./test/jest-e2e.json "billing-simple.e2e-spec.ts"
+
+✓ E2E environment loaded
+  DATABASE_URL: postgresql://postgres:***@localhost:5432/chefcloud_test
+FAIL test/billing-simple.e2e-spec.ts
+  Billing E2E (E24 - Auth, Authz, Rate Limiting)
+    GET /billing/subscription
+      ✕ should return 401 if no authorization token is provided (11 ms)
+      ✕ should return 200 and subscription details with valid L5 token (2 ms)
+    POST /billing/plan/change
+      ✕ should return 401 if no authorization token is provided (1 ms)
+      ✕ should return 403 if user is not L5 (manager attempting)
+      ✕ should return 200 or 404 with valid L5 token (1 ms)
+      ✕ should return 404 for unknown plan code
+      ✕ should rate limit after burst requests (expect at least one 429)
+    POST /billing/cancel
+      ✕ should return 401 if no authorization token is provided
+      ✕ should return 403 if user is not L5 (manager attempting)
+      ✕ should return 200 or 404 with valid L5 token
+      ✕ should be idempotent (canceling twice should succeed)
+
+  ● Billing E2E (E24 - Auth, Authz, Rate Limiting) › GET /billing/subscription › should return 401 if no authorization token is provided
+
+    Nest can't resolve dependencies of the SseRateLimiterGuard (?). Please make sure that the argument MetricsService at index [0] is available in the KpisModule context.
+
+    Potential solutions:
+    - Is KpisModule a valid NestJS module?
+    - If MetricsService is a provider, is it part of the current KpisModule?
+    - If MetricsService is exported from a separate @Module, is that module imported within KpisModule?
+      @Module({
+        imports: [ /* the Module containing MetricsService */ ]
+      })
+
+      25 |
+      26 |   beforeAll(async () => {
+    > 27 |     const moduleFixture: TestingModule = await Test.createTestingModule({
+         |                                          ^
+      28 |       imports: [AppModule],
+      29 |     })
+      30 |       .overrideProvider(MetricsService)
+
+      at TestingInjector.lookupComponentInParentModules (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:262:19)
+      at TestingInjector.resolveComponentInstance (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:215:33)
+      at TestingInjector.resolveComponentInstance (../../../node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-injector.js:19:45)
+      at resolveParam (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:129:38)
+          at async Promise.all (index 0)
+      at TestingInjector.resolveConstructorParams (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:144:27)
+      at TestingInjector.loadInstance (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:70:13)
+      at TestingInjector.loadProvider (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:98:9)
+      at ../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:56:13
+          at async Promise.all (index 5)
+      at TestingInstanceLoader.createInstancesOfProviders (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+      at ../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:40:13
+          at async Promise.all (index 20)
+      at TestingInstanceLoader.createInstances (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+      at TestingInstanceLoader.createInstancesOfDependencies (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+      at TestingInstanceLoader.createInstancesOfDependencies (../../../node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+      at TestingModuleBuilder.createInstancesOfDependencies (../../../node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+      at TestingModuleBuilder.compile (../../../node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+      at Object.<anonymous> (billing-simple.e2e-spec.ts:27:42)
+
+  ● Billing E2E (E24 - Auth, Authz, Rate Limiting) › GET /billing/subscription › should return 200 and subscription details with valid L5 token
+
+    Nest can't resolve dependencies of the SseRateLimiterGuard (?). Please make sure that the argument MetricsService at index [0] is available in the KpisModule context.
+
+    Potential solutions:
+    - Is KpisModule a valid NestJS module?
+    - If MetricsService is a provider, is it part of the current KpisModule?
+    - If MetricsService is exported from a separate @Module, is that module imported within KpisModule?
+      @Module({
+        imports: [ /* the Module containing MetricsService */ ]
+      })
+
+      25 |
+      26 |   beforeAll(async () => {
+    > 27 |     const moduleFixture: TestingModule = await Test.createTestingModule({
+         |                                          ^
+      28 |       imports: [AppModule],
+      29 |     })
+      30 |       .overrideProvider(MetricsService)
+
+      at TestingInjector.lookupComponentInParentModules (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:262:19)
+      at TestingInjector.resolveComponentInstance (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:215:33)
+      at TestingInjector.resolveComponentInstance (../../../node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-injector.js:19:45)
+      at resolveParam (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:129:38)
+          at async Promise.all (index 0)
+      at TestingInjector.resolveConstructorParams (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:144:27)
+      at TestingInjector.loadInstance (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:70:13)
+      at TestingInjector.loadProvider (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:98:9)
+      at ../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:56:13
+          at async Promise.all (index 5)
+      at TestingInstanceLoader.createInstancesOfProviders (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+      at ../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:40:13
+          at async Promise.all (index 20)
+      at TestingInstanceLoader.createInstances (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+      at TestingInstanceLoader.createInstancesOfDependencies (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+      at TestingInstanceLoader.createInstancesOfDependencies (../../../node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+      at TestingModuleBuilder.createInstancesOfDependencies (../../../node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+      at TestingModuleBuilder.compile (../../../node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+      at Object.<anonymous> (billing-simple.e2e-spec.ts:27:42)
+
+  ● Billing E2E (E24 - Auth, Authz, Rate Limiting) › POST /billing/plan/change › should return 401 if no authorization token is provided
+
+    Nest can't resolve dependencies of the SseRateLimiterGuard (?). Please make sure that the argument MetricsService at index [0] is available in the KpisModule context.
+
+    Potential solutions:
+    - Is KpisModule a valid NestJS module?
+    - If MetricsService is a provider, is it part of the current KpisModule?
+    - If MetricsService is exported from a separate @Module, is that module imported within KpisModule?
+      @Module({
+        imports: [ /* the Module containing MetricsService */ ]
+      })
+
+      25 |
+      26 |   beforeAll(async () => {
+    > 27 |     const moduleFixture: TestingModule = await Test.createTestingModule({
+         |                                          ^
+      28 |       imports: [AppModule],
+      29 |     })
+      30 |       .overrideProvider(MetricsService)
+
+      at TestingInjector.lookupComponentInParentModules (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:262:19)
+      at TestingInjector.resolveComponentInstance (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:215:33)
+      at TestingInjector.resolveComponentInstance (../../../node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-injector.js:19:45)
+      at resolveParam (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:129:38)
+          at async Promise.all (index 0)
+      at TestingInjector.resolveConstructorParams (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:144:27)
+      at TestingInjector.loadInstance (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:70:13)
+      at TestingInjector.loadProvider (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:98:9)
+      at ../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:56:13
+          at async Promise.all (index 5)
+      at TestingInstanceLoader.createInstancesOfProviders (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+      at ../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:40:13
+          at async Promise.all (index 20)
+      at TestingInstanceLoader.createInstances (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+      at TestingInstanceLoader.createInstancesOfDependencies (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+      at TestingInstanceLoader.createInstancesOfDependencies (../../../node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+      at TestingModuleBuilder.createInstancesOfDependencies (../../../node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+      at TestingModuleBuilder.compile (../../../node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+      at Object.<anonymous> (billing-simple.e2e-spec.ts:27:42)
+
+  ● Billing E2E (E24 - Auth, Authz, Rate Limiting) › POST /billing/plan/change › should return 403 if user is not L5 (manager attempting)
+
+    Nest can't resolve dependencies of the SseRateLimiterGuard (?). Please make sure that the argument MetricsService at index [0] is available in the KpisModule context.
+
+    Potential solutions:
+    - Is KpisModule a valid NestJS module?
+    - If MetricsService is a provider, is it part of the current KpisModule?
+    - If MetricsService is exported from a separate @Module, is that module imported within KpisModule?
+      @Module({
+        imports: [ /* the Module containing MetricsService */ ]
+      })
+
+      25 |
+      26 |   beforeAll(async () => {
+    > 27 |     const moduleFixture: TestingModule = await Test.createTestingModule({
+         |                                          ^
+      28 |       imports: [AppModule],
+      29 |     })
+      30 |       .overrideProvider(MetricsService)
+
+      at TestingInjector.lookupComponentInParentModules (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:262:19)
+      at TestingInjector.resolveComponentInstance (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:215:33)
+      at TestingInjector.resolveComponentInstance (../../../node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-injector.js:19:45)
+      at resolveParam (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:129:38)
+          at async Promise.all (index 0)
+      at TestingInjector.resolveConstructorParams (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:144:27)
+      at TestingInjector.loadInstance (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:70:13)
+      at TestingInjector.loadProvider (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:98:9)
+      at ../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:56:13
+          at async Promise.all (index 5)
+      at TestingInstanceLoader.createInstancesOfProviders (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+      at ../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:40:13
+          at async Promise.all (index 20)
+      at TestingInstanceLoader.createInstances (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+      at TestingInstanceLoader.createInstancesOfDependencies (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+      at TestingInstanceLoader.createInstancesOfDependencies (../../../node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+      at TestingModuleBuilder.createInstancesOfDependencies (../../../node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+      at TestingModuleBuilder.compile (../../../node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+      at Object.<anonymous> (billing-simple.e2e-spec.ts:27:42)
+
+  ● Billing E2E (E24 - Auth, Authz, Rate Limiting) › POST /billing/plan/change › should return 200 or 404 with valid L5 token
+
+    Nest can't resolve dependencies of the SseRateLimiterGuard (?). Please make sure that the argument MetricsService at index [0] is available in the KpisModule context.
+
+    Potential solutions:
+    - Is KpisModule a valid NestJS module?
+    - If MetricsService is a provider, is it part of the current KpisModule?
+    - If MetricsService is exported from a separate @Module, is that module imported within KpisModule?
+      @Module({
+        imports: [ /* the Module containing MetricsService */ ]
+      })
+
+      25 |
+      26 |   beforeAll(async () => {
+    > 27 |     const moduleFixture: TestingModule = await Test.createTestingModule({
+         |                                          ^
+      28 |       imports: [AppModule],
+      29 |     })
+      30 |       .overrideProvider(MetricsService)
+
+      at TestingInjector.lookupComponentInParentModules (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:262:19)
+      at TestingInjector.resolveComponentInstance (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:215:33)
+      at TestingInjector.resolveComponentInstance (../../../node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-injector.js:19:45)
+      at resolveParam (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:129:38)
+          at async Promise.all (index 0)
+      at TestingInjector.resolveConstructorParams (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:144:27)
+      at TestingInjector.loadInstance (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:70:13)
+      at TestingInjector.loadProvider (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:98:9)
+      at ../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:56:13
+          at async Promise.all (index 5)
+      at TestingInstanceLoader.createInstancesOfProviders (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+      at ../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:40:13
+          at async Promise.all (index 20)
+      at TestingInstanceLoader.createInstances (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+      at TestingInstanceLoader.createInstancesOfDependencies (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+      at TestingInstanceLoader.createInstancesOfDependencies (../../../node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+      at TestingModuleBuilder.createInstancesOfDependencies (../../../node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+      at TestingModuleBuilder.compile (../../../node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+      at Object.<anonymous> (billing-simple.e2e-spec.ts:27:42)
+
+  ● Billing E2E (E24 - Auth, Authz, Rate Limiting) › POST /billing/plan/change › should return 404 for unknown plan code
+
+    Nest can't resolve dependencies of the SseRateLimiterGuard (?). Please make sure that the argument MetricsService at index [0] is available in the KpisModule context.
+
+    Potential solutions:
+    - Is KpisModule a valid NestJS module?
+    - If MetricsService is a provider, is it part of the current KpisModule?
+    - If MetricsService is exported from a separate @Module, is that module imported within KpisModule?
+      @Module({
+        imports: [ /* the Module containing MetricsService */ ]
+      })
+
+      25 |
+      26 |   beforeAll(async () => {
+    > 27 |     const moduleFixture: TestingModule = await Test.createTestingModule({
+         |                                          ^
+      28 |       imports: [AppModule],
+      29 |     })
+      30 |       .overrideProvider(MetricsService)
+
+      at TestingInjector.lookupComponentInParentModules (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:262:19)
+      at TestingInjector.resolveComponentInstance (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:215:33)
+      at TestingInjector.resolveComponentInstance (../../../node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-injector.js:19:45)
+      at resolveParam (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:129:38)
+          at async Promise.all (index 0)
+      at TestingInjector.resolveConstructorParams (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:144:27)
+      at TestingInjector.loadInstance (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:70:13)
+      at TestingInjector.loadProvider (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:98:9)
+      at ../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:56:13
+          at async Promise.all (index 5)
+      at TestingInstanceLoader.createInstancesOfProviders (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+      at ../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:40:13
+          at async Promise.all (index 20)
+      at TestingInstanceLoader.createInstances (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+      at TestingInstanceLoader.createInstancesOfDependencies (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+      at TestingInstanceLoader.createInstancesOfDependencies (../../../node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+      at TestingModuleBuilder.createInstancesOfDependencies (../../../node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+      at TestingModuleBuilder.compile (../../../node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+      at Object.<anonymous> (billing-simple.e2e-spec.ts:27:42)
+
+  ● Billing E2E (E24 - Auth, Authz, Rate Limiting) › POST /billing/plan/change › should rate limit after burst requests (expect at least one 429)
+
+    Nest can't resolve dependencies of the SseRateLimiterGuard (?). Please make sure that the argument MetricsService at index [0] is available in the KpisModule context.
+
+    Potential solutions:
+    - Is KpisModule a valid NestJS module?
+    - If MetricsService is a provider, is it part of the current KpisModule?
+    - If MetricsService is exported from a separate @Module, is that module imported within KpisModule?
+      @Module({
+        imports: [ /* the Module containing MetricsService */ ]
+      })
+
+      25 |
+      26 |   beforeAll(async () => {
+    > 27 |     const moduleFixture: TestingModule = await Test.createTestingModule({
+         |                                          ^
+      28 |       imports: [AppModule],
+      29 |     })
+      30 |       .overrideProvider(MetricsService)
+
+      at TestingInjector.lookupComponentInParentModules (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:262:19)
+      at TestingInjector.resolveComponentInstance (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:215:33)
+      at TestingInjector.resolveComponentInstance (../../../node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-injector.js:19:45)
+      at resolveParam (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:129:38)
+          at async Promise.all (index 0)
+      at TestingInjector.resolveConstructorParams (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:144:27)
+      at TestingInjector.loadInstance (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:70:13)
+      at TestingInjector.loadProvider (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:98:9)
+      at ../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:56:13
+          at async Promise.all (index 5)
+      at TestingInstanceLoader.createInstancesOfProviders (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+      at ../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:40:13
+          at async Promise.all (index 20)
+      at TestingInstanceLoader.createInstances (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+      at TestingInstanceLoader.createInstancesOfDependencies (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+      at TestingInstanceLoader.createInstancesOfDependencies (../../../node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+      at TestingModuleBuilder.createInstancesOfDependencies (../../../node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+      at TestingModuleBuilder.compile (../../../node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+      at Object.<anonymous> (billing-simple.e2e-spec.ts:27:42)
+
+  ● Billing E2E (E24 - Auth, Authz, Rate Limiting) › POST /billing/cancel › should return 401 if no authorization token is provided
+
+    Nest can't resolve dependencies of the SseRateLimiterGuard (?). Please make sure that the argument MetricsService at index [0] is available in the KpisModule context.
+
+    Potential solutions:
+    - Is KpisModule a valid NestJS module?
+    - If MetricsService is a provider, is it part of the current KpisModule?
+    - If MetricsService is exported from a separate @Module, is that module imported within KpisModule?
+      @Module({
+        imports: [ /* the Module containing MetricsService */ ]
+      })
+
+      25 |
+      26 |   beforeAll(async () => {
+    > 27 |     const moduleFixture: TestingModule = await Test.createTestingModule({
+         |                                          ^
+      28 |       imports: [AppModule],
+      29 |     })
+      30 |       .overrideProvider(MetricsService)
+
+      at TestingInjector.lookupComponentInParentModules (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:262:19)
+      at TestingInjector.resolveComponentInstance (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:215:33)
+      at TestingInjector.resolveComponentInstance (../../../node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-injector.js:19:45)
+      at resolveParam (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:129:38)
+          at async Promise.all (index 0)
+      at TestingInjector.resolveConstructorParams (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:144:27)
+      at TestingInjector.loadInstance (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:70:13)
+      at TestingInjector.loadProvider (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:98:9)
+      at ../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:56:13
+          at async Promise.all (index 5)
+      at TestingInstanceLoader.createInstancesOfProviders (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+      at ../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:40:13
+          at async Promise.all (index 20)
+      at TestingInstanceLoader.createInstances (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+      at TestingInstanceLoader.createInstancesOfDependencies (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+      at TestingInstanceLoader.createInstancesOfDependencies (../../../node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+      at TestingModuleBuilder.createInstancesOfDependencies (../../../node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+      at TestingModuleBuilder.compile (../../../node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+      at Object.<anonymous> (billing-simple.e2e-spec.ts:27:42)
+
+  ● Billing E2E (E24 - Auth, Authz, Rate Limiting) › POST /billing/cancel › should return 403 if user is not L5 (manager attempting)
+
+    Nest can't resolve dependencies of the SseRateLimiterGuard (?). Please make sure that the argument MetricsService at index [0] is available in the KpisModule context.
+
+    Potential solutions:
+    - Is KpisModule a valid NestJS module?
+    - If MetricsService is a provider, is it part of the current KpisModule?
+    - If MetricsService is exported from a separate @Module, is that module imported within KpisModule?
+      @Module({
+        imports: [ /* the Module containing MetricsService */ ]
+      })
+
+      25 |
+      26 |   beforeAll(async () => {
+    > 27 |     const moduleFixture: TestingModule = await Test.createTestingModule({
+         |                                          ^
+      28 |       imports: [AppModule],
+      29 |     })
+      30 |       .overrideProvider(MetricsService)
+
+      at TestingInjector.lookupComponentInParentModules (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:262:19)
+      at TestingInjector.resolveComponentInstance (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:215:33)
+      at TestingInjector.resolveComponentInstance (../../../node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-injector.js:19:45)
+      at resolveParam (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:129:38)
+          at async Promise.all (index 0)
+      at TestingInjector.resolveConstructorParams (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:144:27)
+      at TestingInjector.loadInstance (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:70:13)
+      at TestingInjector.loadProvider (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:98:9)
+      at ../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:56:13
+          at async Promise.all (index 5)
+      at TestingInstanceLoader.createInstancesOfProviders (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+      at ../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:40:13
+          at async Promise.all (index 20)
+      at TestingInstanceLoader.createInstances (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+      at TestingInstanceLoader.createInstancesOfDependencies (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+      at TestingInstanceLoader.createInstancesOfDependencies (../../../node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+      at TestingModuleBuilder.createInstancesOfDependencies (../../../node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+      at TestingModuleBuilder.compile (../../../node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+      at Object.<anonymous> (billing-simple.e2e-spec.ts:27:42)
+
+  ● Billing E2E (E24 - Auth, Authz, Rate Limiting) › POST /billing/cancel › should return 200 or 404 with valid L5 token
+
+    Nest can't resolve dependencies of the SseRateLimiterGuard (?). Please make sure that the argument MetricsService at index [0] is available in the KpisModule context.
+
+    Potential solutions:
+    - Is KpisModule a valid NestJS module?
+    - If MetricsService is a provider, is it part of the current KpisModule?
+    - If MetricsService is exported from a separate @Module, is that module imported within KpisModule?
+      @Module({
+        imports: [ /* the Module containing MetricsService */ ]
+      })
+
+      25 |
+      26 |   beforeAll(async () => {
+    > 27 |     const moduleFixture: TestingModule = await Test.createTestingModule({
+         |                                          ^
+      28 |       imports: [AppModule],
+      29 |     })
+      30 |       .overrideProvider(MetricsService)
+
+      at TestingInjector.lookupComponentInParentModules (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:262:19)
+      at TestingInjector.resolveComponentInstance (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:215:33)
+      at TestingInjector.resolveComponentInstance (../../../node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-injector.js:19:45)
+      at resolveParam (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:129:38)
+          at async Promise.all (index 0)
+      at TestingInjector.resolveConstructorParams (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:144:27)
+      at TestingInjector.loadInstance (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:70:13)
+      at TestingInjector.loadProvider (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:98:9)
+      at ../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:56:13
+          at async Promise.all (index 5)
+      at TestingInstanceLoader.createInstancesOfProviders (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+      at ../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:40:13
+          at async Promise.all (index 20)
+      at TestingInstanceLoader.createInstances (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+      at TestingInstanceLoader.createInstancesOfDependencies (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+      at TestingInstanceLoader.createInstancesOfDependencies (../../../node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+      at TestingModuleBuilder.createInstancesOfDependencies (../../../node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+      at TestingModuleBuilder.compile (../../../node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+      at Object.<anonymous> (billing-simple.e2e-spec.ts:27:42)
+
+  ● Billing E2E (E24 - Auth, Authz, Rate Limiting) › POST /billing/cancel › should be idempotent (canceling twice should succeed)
+
+    Nest can't resolve dependencies of the SseRateLimiterGuard (?). Please make sure that the argument MetricsService at index [0] is available in the KpisModule context.
+
+    Potential solutions:
+    - Is KpisModule a valid NestJS module?
+    - If MetricsService is a provider, is it part of the current KpisModule?
+    - If MetricsService is exported from a separate @Module, is that module imported within KpisModule?
+      @Module({
+        imports: [ /* the Module containing MetricsService */ ]
+      })
+
+      25 |
+      26 |   beforeAll(async () => {
+    > 27 |     const moduleFixture: TestingModule = await Test.createTestingModule({
+         |                                          ^
+      28 |       imports: [AppModule],
+      29 |     })
+      30 |       .overrideProvider(MetricsService)
+
+      at TestingInjector.lookupComponentInParentModules (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:262:19)
+      at TestingInjector.resolveComponentInstance (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:215:33)
+      at TestingInjector.resolveComponentInstance (../../../node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-injector.js:19:45)
+      at resolveParam (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:129:38)
+          at async Promise.all (index 0)
+      at TestingInjector.resolveConstructorParams (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:144:27)
+      at TestingInjector.loadInstance (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:70:13)
+      at TestingInjector.loadProvider (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/injector.js:98:9)
+      at ../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:56:13
+          at async Promise.all (index 5)
+      at TestingInstanceLoader.createInstancesOfProviders (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+      at ../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:40:13
+          at async Promise.all (index 20)
+      at TestingInstanceLoader.createInstances (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+      at TestingInstanceLoader.createInstancesOfDependencies (../../../node_modules/.pnpm/@nestjs+core@10.4.20_@nestjs+common@10.4.20_@nestjs+platform-express@10.4.20_reflect-metadata@0.2.2_rxjs@7.8.2/node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+      at TestingInstanceLoader.createInstancesOfDependencies (../../../node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+      at TestingModuleBuilder.createInstancesOfDependencies (../../../node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+      at TestingModuleBuilder.compile (../../../node_modules/.pnpm/@nestjs+testing@10.4.20_@nestjs+common@10.4.20_@nestjs+core@10.4.20_@nestjs+platform-express@10.4.20/node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+      at Object.<anonymous> (billing-simple.e2e-spec.ts:27:42)
+
+Test Suites: 1 failed, 1 total
+Tests:       11 failed, 11 total
+Snapshots:   0 total
+Time:        1.65 s, estimated 2 s
+Ran all test suites matching /billing-simple.e2e-spec.ts/i.
+Jest did not exit one second after the test run has completed.
+
+'This usually means that there are asynchronous operations that weren't stopped in your tests. Consider running Jest with `--detectOpenHandles` to troubleshoot this issue.
