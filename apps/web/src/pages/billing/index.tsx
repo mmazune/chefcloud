@@ -3,13 +3,14 @@ import { useBillingOverview } from '@/hooks/useBillingOverview';
 import { BillingPlansGrid } from '@/components/billing/BillingPlansGrid';
 import { BillingCurrentPlanCard } from '@/components/billing/BillingCurrentPlanCard';
 import { BillingUsageCard } from '@/components/billing/BillingUsageCard';
+import { BillingStatusBanner } from '@/components/billing/BillingStatusBanner';
 
 const BillingPage: React.FC = () => {
   const { plans, subscription, usage, isLoading, error, reload } =
     useBillingOverview();
 
   return (
-    <main className="mx-auto max-w-6xl px-4 py-6">
+    <main id="main-content" role="main" className="mx-auto max-w-6xl px-4 py-6">
       <header className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-lg font-semibold text-slate-100">
@@ -29,6 +30,9 @@ const BillingPage: React.FC = () => {
           Refresh
         </button>
       </header>
+
+      {/* E24-BILLING-FE-S4: Status banner (renders nothing when subscription is null) */}
+      <BillingStatusBanner subscription={subscription} />
 
       {isLoading && (
         <div className="rounded-lg border border-slate-800 bg-slate-950/80 p-3 text-xs text-slate-400">

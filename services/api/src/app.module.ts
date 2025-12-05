@@ -55,10 +55,12 @@ import { LoggerMiddleware } from './logger.middleware';
 import { WriteBlockMiddleware } from './ops/write-block.middleware';
 import { RedisService } from './common/redis.service';
 import { WebhookVerificationGuard } from './common/webhook-verification.guard';
+import { DemoModule } from './common/demo/demo.module'; // M33-DEMO-S4
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    DemoModule, // M33-DEMO-S4: Global demo protection service
     ThrottlerModule.forRoot([
       {
         ttl: 60000, // 1 minute

@@ -21,7 +21,8 @@
     "test:e2e-slice": "jest --config ./jest-e2e-slice.json",
     "test:e2e-blackbox": "jest --config ./jest-e2e-blackbox.json",
     "e2e:slice": "jest --config ./jest-e2e-slice.json",
-    "e2e:slice:ci": "rimraf ../../reports/junit ../../reports/coverage/e2e-slice && pnpm -s e2e:slice"
+    "e2e:slice:ci": "rimraf ../../reports/junit ../../reports/coverage/e2e-slice && pnpm -s e2e:slice",
+    "demo:reset:tapas": "npx tsx prisma/reset-tapas-demo.ts"
   },
   "dependencies": {
     "@chefcloud/contracts": "workspace:*",

@@ -97,6 +97,61 @@ cd packages/db
 pnpm prisma migrate reset
 ```
 
+#### Tapas Demo Org Seed
+
+To create or refresh the Tapas Kampala demo tenant:
+
+```bash
+cd packages/db
+pnpm run db:migrate
+npx tsx ../../services/api/prisma/seed.ts
+```
+
+This will create:
+- **Tapas Kampala** demo org (`slug: tapas-demo`, `isDemo: true`)
+- **2 branches**: Kampala CBD (80 seats) and Kololo Rooftop (60 seats)
+- **10 demo users**: All use password `TapasDemo!123`
+  - `owner@tapas.demo` (L5 Owner)
+  - `manager@tapas.demo` (L4 Manager, PIN: 1234)
+  - `assistant@tapas.demo` (L3 Assistant Manager)
+  - `accountant@tapas.demo` (L4 Accountant)
+  - `chef@tapas.demo` (L2 Kitchen Lead)
+  - `stock@tapas.demo` (L3 Stock Manager)
+  - `waiter@tapas.demo` (L1 CBD Waiter)
+  - `waiter.kololo@tapas.demo` (L1 Kololo Waiter)
+  - `kds@tapas.demo` (L1 KDS Station)
+  - `dev@tapas.demo` (L5 Dev Integrator)
+- **40+ menu items** across 7 categories with UGX pricing
+- **Inventory items** with realistic COGS
+- **30 days of operational data** (November 2024): orders, KDS tickets, budgets, KPIs, feedback, reservations, and billing
+
+The seed is idempotent and can be re-run safely.
+
+#### Demo Protections & Reset (M33-DEMO-S4)
+
+**Environment Flags:**
+- `DEMO_PROTECT_WRITES=1` - Enables demo write protections
+- `DEMO_TAPAS_ORG_SLUG="tapas-demo"` - Identifies the protected demo org
+
+When `DEMO_PROTECT_WRITES=1`, the following operations are blocked for the Tapas demo org:
+- Billing: Plan changes, subscription cancellations
+- Dev Portal: API key creation/revocation, webhook subscriptions
+
+**Reset Tapas Demo Data:**
+To reset the Tapas demo to a clean state (e.g., before/after demos):
+
+```bash
+pnpm --filter @chefcloud/api demo:reset:tapas
+```
+
+This script:
+1. Finds the Tapas org by slug (`tapas-demo`)
+2. Deletes all dynamic/operational data (orders, payments, KDS, budgets, feedback, etc.)
+3. Preserves static data (org, branches, users, menu, inventory)
+4. Re-seeds 30 days of clean operational data
+
+**Safety:** Only operates on orgs with `isDemo=true` AND matching slug. Will not affect real customer data.
+
 ### 5. Build & Test
 
 ```bash

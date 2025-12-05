@@ -30,6 +30,23 @@ jest.mock('@/components/billing/BillingPlansGrid', () => ({
   ),
 }));
 
+jest.mock('@/components/billing/BillingStatusBanner', () => ({
+  BillingStatusBanner: ({ subscription }: any) => {
+    if (!subscription) return null;
+    return (
+      <aside data-testid="billing-status-banner" aria-label="Billing status">
+        {subscription.status === 'PAST_DUE' && (
+          <>
+            <div>Payment is past due</div>
+            <a href="/billing/payment">Update payment details</a>
+          </>
+        )}
+        {subscription.status === 'ACTIVE' && <div>Your subscription is active</div>}
+      </aside>
+    );
+  },
+}));
+
 const mockUseBillingOverview = useBillingOverview as jest.MockedFunction<typeof useBillingOverview>;
 
 describe('Billing Page', () => {
@@ -319,5 +336,62 @@ describe('Billing Page', () => {
     // Refresh button should still be available
     const refreshButton = screen.getByRole('button', { name: /refresh/i });
     expect(refreshButton).toBeInTheDocument();
+  });
+
+  // E24-BILLING-FE-S4: Billing status banner integration tests
+  describe('BillingStatusBanner integration', () => {
+    it('shows banner with past due warning when subscription status is PAST_DUE', () => {
+      const pastDueSubscription = {
+        ...mockSubscription,
+        status: 'PAST_DUE' as const,
+      };
+
+      mockUseBillingOverview.mockReturnValue({
+        plans: mockPlans,
+        subscription: pastDueSubscription,
+        usage: mockUsage,
+        isLoading: false,
+        error: null,
+        reload: jest.fn(),
+      });
+
+      render(<BillingPage />);
+
+      expect(screen.getByLabelText('Billing status')).toBeInTheDocument();
+      expect(screen.getByText(/Payment is past due/i)).toBeInTheDocument();
+      expect(screen.getByText(/Update payment details/i)).toBeInTheDocument();
+    });
+
+    it('does not show banner when subscription is null', () => {
+      mockUseBillingOverview.mockReturnValue({
+        plans: mockPlans,
+        subscription: null,
+        usage: mockUsage,
+        isLoading: false,
+        error: null,
+        reload: jest.fn(),
+      });
+
+      render(<BillingPage />);
+
+      expect(screen.queryByLabelText('Billing status')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('billing-status-banner')).not.toBeInTheDocument();
+    });
+
+    it('shows banner with active status when subscription is ACTIVE', () => {
+      mockUseBillingOverview.mockReturnValue({
+        plans: mockPlans,
+        subscription: mockSubscription, // status is ACTIVE
+        usage: mockUsage,
+        isLoading: false,
+        error: null,
+        reload: jest.fn(),
+      });
+
+      render(<BillingPage />);
+
+      expect(screen.getByLabelText('Billing status')).toBeInTheDocument();
+      expect(screen.getByText(/Your subscription is active/i)).toBeInTheDocument();
+    });
   });
 });

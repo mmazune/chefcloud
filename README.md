@@ -114,6 +114,49 @@ pnpm --filter @chefcloud/mobile start  # Expo
 
 See [CHEFCLOUD_BLUEPRINT.md](./docs/CHEFCLOUD_BLUEPRINT.md) for full roadmap.
 
+## Backend ↔ Frontend Parity (M34)
+
+**P0 parity is now fully implemented.** Every major backend feature area has at least one clear, discoverable UI entry point:
+
+### Backend Feature → UI Entry Points
+
+- **Auth & Sessions (M10)**
+  - UI: `/login`, AppShell session handling, idle timeout banner
+
+- **POS, Orders, KDS (M11–M13, M26–M29)**
+  - UI: `/pos` (POS Terminal), `/kds` (Kitchen Display), `/launch` (PWA/device role)
+
+- **Inventory, Wastage, Shrinkage**
+  - UI: `/inventory` (stock levels, wastage), Reports Hub → "Inventory & Stock", Analytics → franchise dashboards (waste/shrinkage metrics)
+
+- **Staff KPIs, Awards, Promotions (M19)**
+  - UI: `/staff/insights` (Staff Insights), `/staff` (Staff listing)
+
+- **Reservations & Events (M15)**
+  - UI: `/reservations` (Reservations vertical), POS integration for seating
+
+- **Feedback & NPS (M20)**
+  - UI: `/feedback` (Feedback & NPS vertical), Reports Hub → "Customer Feedback & NPS"
+
+- **Documents & Receipts (M18)**
+  - UI: `/documents` (Documents vertical), linked from Finance/HR contexts (planned P1 cross-links)
+
+- **Franchise Analytics (E22)**
+  - UI: `/analytics` (overview, rankings, budgets, variance, forecast), Reports Hub → multiple analytics-backed reports
+
+- **Dev Portal (E23)**
+  - UI: `/dev` (API keys, webhooks, logs, usage, docs)
+
+- **Billing (E24)**
+  - UI: `/billing` (plan, status, risk banners, feature gating)
+
+- **Reports & Digests (M24 + M34-FE-PARITY-S2)**
+  - UI: `/reports` (Reports Hub – Sales, Budgets & Variance, Waste & Shrinkage, Staff Insights, NPS, Inventory, Dev usage)
+  - UI: `/reports/budgets` (Finance Budgets & Variance)
+
+- **Diagnostics, Offline, PWA, Session Security (M27–M32)**
+  - UI: Diagnostics panel (from global shell), Offline/sync panel in POS/KDS/Inventory, `/launch` (device role selection & PWA), global idle timeout handling and cross-tab logout
+
 ## API Endpoints
 
 ### Services/API (NestJS)

@@ -8,6 +8,21 @@ import DevPortalPage from '@/pages/dev';
 import * as useDevApiKeysHook from '@/hooks/useDevApiKeys';
 
 jest.mock('@/hooks/useDevApiKeys');
+jest.mock('@/hooks/usePlanCapabilities', () => ({
+  usePlanCapabilities: () => ({
+    subscription: { planId: 'FRANCHISE_CORE' },
+    capabilities: {
+      canUseFranchiseAnalytics: true,
+      canUseDevPortal: true,
+      canUseKdsMultiStation: true,
+      canUseFranchiseExports: true,
+      canUseApiUsageAnalytics: true,
+    },
+    isLoading: false,
+    error: null,
+    reload: jest.fn(),
+  }),
+}));
 jest.mock('@/components/dev/DevKeysPanel', () => ({
   DevKeysPanel: jest.fn(() => <div data-testid="keys-panel">Keys Panel</div>),
 }));

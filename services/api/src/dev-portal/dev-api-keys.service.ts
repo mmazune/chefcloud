@@ -3,11 +3,13 @@ import {
   BadRequestException,
   NotFoundException,
   UnauthorizedException,
+  ForbiddenException, // M33-DEMO-S4
 } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { DevEnvironment, ApiKeyStatus } from '@chefcloud/db';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
+import { DemoProtectionService } from '../common/demo/demo-protection.service'; // M33-DEMO-S4
 
 export interface CreateDevApiKeyDto {
   orgId: string;
@@ -51,7 +53,10 @@ export interface DevApiKeyWithSecret {
  */
 @Injectable()
 export class DevApiKeysService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private demoProtection: DemoProtectionService, // M33-DEMO-S4
+  ) {}
 
   /**
    * Generate a secure API key with environment prefix
@@ -89,8 +94,18 @@ export class DevApiKeysService {
    *
    * Returns raw key ONCE - it will never be shown again
    * Stores only bcrypt hash in database
+   * M33-DEMO-S4: Blocked for demo orgs
    */
   async createKey(dto: CreateDevApiKeyDto, createdByUserId: string): Promise<DevApiKeyWithSecret> {
+    // M33-DEMO-S4: Block API key creation for demo orgs
+    const org = await this.prisma.client.org.findUnique({ where: { id: dto.orgId } });
+    if (this.demoProtection.isDemoWriteProtectedOrg(org)) {
+      throw new ForbiddenException({
+        code: this.demoProtection.getDemoProtectionErrorCode(),
+        message: this.demoProtection.getDemoProtectionErrorMessage('Creating API keys'),
+      });
+    }
+
     // Generate raw key with environment prefix
     const rawKey = this.generateApiKey(dto.environment);
 
@@ -125,11 +140,21 @@ export class DevApiKeysService {
   /**
    * Revoke API key
    * After revocation, key can no longer authenticate requests
+   * M33-DEMO-S4: Blocked for demo orgs
    */
   async revokeKey(
     id: string,
     orgId: string,
   ): Promise<{ id: string; status: ApiKeyStatus; revokedAt: Date }> {
+    // M33-DEMO-S4: Block API key revocation for demo orgs
+    const org = await this.prisma.client.org.findUnique({ where: { id: orgId } });
+    if (this.demoProtection.isDemoWriteProtectedOrg(org)) {
+      throw new ForbiddenException({
+        code: this.demoProtection.getDemoProtectionErrorCode(),
+        message: this.demoProtection.getDemoProtectionErrorMessage('Revoking API keys'),
+      });
+    }
+
     const key = await this.prisma.devApiKey.findUnique({
       where: { id },
     });

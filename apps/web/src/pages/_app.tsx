@@ -6,6 +6,8 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { useState } from 'react';
 import { useRouter } from 'next/router';
 import { AppErrorBoundary, type ErrorBoundaryContext } from '@/components/common/AppErrorBoundary';
+import { SkipToContentLink } from '@/components/common/SkipToContentLink';
+import { SessionIdleManager } from '@/components/auth/SessionIdleManager';
 
 export default function App({ Component, pageProps }: AppProps) {
   const router = useRouter();
@@ -30,7 +32,12 @@ export default function App({ Component, pageProps }: AppProps) {
     <AppErrorBoundary context={context}>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <Component {...pageProps} />
+          {/* M31-A11Y-S2: Global skip link for keyboard navigation */}
+          <SkipToContentLink />
+          {/* M32-SEC-S1: Global idle session timeout */}
+          <SessionIdleManager>
+            <Component {...pageProps} />
+          </SessionIdleManager>
           {process.env.NODE_ENV === 'development' && <ReactQueryDevtools />}
         </AuthProvider>
       </QueryClientProvider>

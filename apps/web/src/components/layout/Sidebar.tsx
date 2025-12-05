@@ -22,6 +22,7 @@ interface NavItem {
   icon: React.ReactNode;
 }
 
+// M34-FE-PARITY-S2: Added Staff Insights entry
 const navigationItems: NavItem[] = [
   { label: 'Dashboard', href: '/dashboard', icon: <LayoutDashboard className="h-5 w-5" /> },
   { label: 'POS', href: '/pos', icon: <ShoppingCart className="h-5 w-5" /> },
@@ -59,11 +60,12 @@ export function Sidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 space-y-1 p-4">
+      <nav aria-label="Primary" className="flex-1 space-y-1 p-4">
         {navigationItems.map((item) => (
           <Link
             key={item.href}
             href={item.href}
+            aria-current={isActive(item.href) ? 'page' : undefined}
             className={cn(
               'flex items-center space-x-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
               isActive(item.href)

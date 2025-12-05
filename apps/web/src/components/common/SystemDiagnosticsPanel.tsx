@@ -11,6 +11,8 @@ import { usePosCachedMenu } from '@/hooks/usePosCachedMenu';
 import { usePosCachedOpenOrders } from '@/hooks/usePosCachedOpenOrders';
 import { useKioskMode } from '@/hooks/useKioskMode';
 import { useLastErrorRecord } from '@/hooks/useLastErrorRecord';
+import { usePlanCapabilities } from '@/hooks/usePlanCapabilities';
+import { isSubscriptionInRiskState } from '@/lib/billingStatusHelpers';
 import { formatAgeMs, formatBytes, type DiagnosticsSnapshot, serializeDiagnosticsSnapshot } from '@/lib/diagnostics';
 
 export interface SystemDiagnosticsPanelProps {
@@ -34,6 +36,7 @@ export function SystemDiagnosticsPanel(props: SystemDiagnosticsPanelProps) {
     usePosCachedOpenOrders();
   const kiosk = useKioskMode();
   const { lastError, clear: clearLastError } = useLastErrorRecord();
+  const { subscription } = usePlanCapabilities();
 
   const [copied, setCopied] = React.useState(false);
 
@@ -46,7 +49,17 @@ export function SystemDiagnosticsPanel(props: SystemDiagnosticsPanelProps) {
 
   const now = new Date();
 
-  const snapshot: DiagnosticsSnapshot = React.useMemo(() => ({
+  const snapshot: DiagnosticsSnapshot = React.useMemo(() => {
+    const billingSnapshot =
+      subscription != null
+        ? {
+            status: subscription.status ?? null,
+            planId: (subscription as any).planId ?? null,
+            isRiskState: isSubscriptionInRiskState(subscription),
+          }
+        : null;
+
+    return {
     appVersion: APP_VERSION,
     context,
 
@@ -111,7 +124,10 @@ export function SystemDiagnosticsPanel(props: SystemDiagnosticsPanelProps) {
       message: lastError?.message ?? null,
       timestampIso: lastError?.timestampIso ?? null,
     },
-  }), [
+
+    billing: billingSnapshot,
+  };
+  }, [
     context,
     isRoleLoaded,
     role,
@@ -131,6 +147,7 @@ export function SystemDiagnosticsPanel(props: SystemDiagnosticsPanelProps) {
     usage,
     quota,
     lastError,
+    subscription,
   ]);
 
   const handleCopyJson = React.useCallback(async () => {
@@ -334,6 +351,36 @@ export function SystemDiagnosticsPanel(props: SystemDiagnosticsPanelProps) {
                     : 'No recent crash recorded'
                 }
               />
+            </dl>
+            <dl className="mt-2 space-y-1 text-[11px] text-slate-300">
+              <div className="flex flex-col">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-slate-400">Billing & plan</span>
+                  <span className="font-mono text-[11px] text-slate-100 truncate">
+                    {subscription ? (
+                      <>
+                        <span className="font-mono">
+                          {subscription.status ?? 'UNKNOWN'}
+                        </span>
+                        {(subscription as any).planId && (
+                          <span className="ml-2 text-slate-400">
+                            (plan: {(subscription as any).planId})
+                          </span>
+                        )}
+                        {isSubscriptionInRiskState(subscription) && (
+                          <span className="ml-2 rounded-sm bg-rose-900/60 px-1 py-0.5 text-[10px] text-rose-100">
+                            at risk
+                          </span>
+                        )}
+                      </>
+                    ) : (
+                      <span className="text-slate-500">
+                        Not available (billing service unreachable or not loaded)
+                      </span>
+                    )}
+                  </span>
+                </div>
+              </div>
             </dl>
             {lastError && (
               <div className="mt-2 flex justify-end">

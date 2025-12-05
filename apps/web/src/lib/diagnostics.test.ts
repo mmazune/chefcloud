@@ -58,12 +58,68 @@ describe('diagnostics helpers', () => {
         message: 'Test error',
         timestampIso: '2025-01-01T00:00:00.000Z',
       },
+      billing: {
+        status: 'PAST_DUE',
+        planId: 'FRANCHISE_CORE',
+        isRiskState: true,
+      },
     });
 
     expect(json).toContain('"appVersion": "test"');
     expect(json).toContain('"context": "POS"');
     expect(json).toContain('"lastError"');
     expect(json).toContain('"Test error"');
+    expect(json).toContain('"billing"');
+    expect(json).toContain('"PAST_DUE"');
+    expect(json).toContain('"FRANCHISE_CORE"');
     expect(json.split('\n').length).toBeGreaterThan(5);
+  });
+
+  test('serializeDiagnosticsSnapshot handles null billing', () => {
+    const json = serializeDiagnosticsSnapshot({
+      appVersion: 'test',
+      context: 'KDS',
+      timestampIso: '2025-01-01T00:00:00.000Z',
+      deviceRole: 'KDS',
+      online: true,
+      kiosk: { supported: false, active: false },
+      offlineQueue: {
+        queuedCount: 0,
+        failedCount: 0,
+        conflictCount: 0,
+        historyCount: 0,
+      },
+      cache: {
+        menuItemsCount: 0,
+        menuStale: false,
+        menuAgeMs: null,
+        openOrdersCount: 0,
+        openOrdersStale: false,
+        openOrdersAgeMs: null,
+      },
+      storage: {
+        usageBytes: null,
+        quotaBytes: null,
+      },
+      environment: {
+        userAgent: null,
+        platform: null,
+        serviceWorkerSupported: false,
+        language: null,
+        locationHref: null,
+        screen: { width: null, height: null },
+        nodeEnv: null,
+        apiBaseUrl: null,
+      },
+      lastError: {
+        hasError: false,
+        context: null,
+        message: null,
+        timestampIso: null,
+      },
+      billing: null,
+    });
+
+    expect(json).toContain('"billing": null');
   });
 });

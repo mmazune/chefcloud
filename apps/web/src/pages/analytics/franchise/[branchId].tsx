@@ -6,6 +6,9 @@
 import { useRouter } from 'next/router';
 import React, { useState } from 'react';
 import { NextPage } from 'next';
+import { usePlanCapabilities } from '@/hooks/usePlanCapabilities';
+import { BillingUpsellGate } from '@/components/billing/BillingUpsellGate';
+import { BillingInlineRiskBanner } from '@/components/billing/BillingInlineRiskBanner';
 import { useFranchiseBranchKpis } from '@/hooks/useFranchiseBranchKpis';
 import { useFranchiseBranchMultiMonthSeries } from '@/hooks/useFranchiseBranchMultiMonthSeries';
 import { FranchiseBranchHeader } from '@/components/analytics/franchise/FranchiseBranchHeader';
@@ -20,6 +23,9 @@ const FranchiseBranchPage: NextPage = () => {
   const [month, setMonth] = useState(now.getMonth() + 1);
 
   const currency = 'UGX'; // later: derive from org settings
+
+  // E24-BILLING-FE-S3: Plan capabilities for franchise analytics gating
+  const { subscription, capabilities, isLoading: isLoadingPlan } = usePlanCapabilities();
 
   // Always call hooks - they can't be called conditionally
   const { branch, isLoading: isKpiLoading } = useFranchiseBranchKpis({
@@ -39,6 +45,30 @@ const FranchiseBranchPage: NextPage = () => {
 
   if (!branchId) {
     return null;
+  }
+
+  // E24-BILLING-FE-S3: Gate franchise branch analytics
+  if (isLoadingPlan) {
+    return (
+      <div className="min-h-screen bg-slate-950 p-6">
+        <div className="mx-auto max-w-7xl">
+          <p className="text-slate-400">Checking your plan permissions…</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!capabilities.canUseFranchiseAnalytics) {
+    return (
+      <div className="min-h-screen bg-slate-950 p-6">
+        <div className="mx-auto max-w-7xl">
+          <BillingUpsellGate
+            featureLabel="Franchise branch analytics"
+            requiredPlanHint="Franchise Core or higher"
+          />
+        </div>
+      </div>
+    );
   }
 
   const handlePrevMonth = () => {
@@ -69,6 +99,12 @@ const FranchiseBranchPage: NextPage = () => {
         >
           ← Back to analytics
         </button>
+
+        {/* E24-BILLING-FE-S5: Billing risk warning for franchise branch analytics */}
+        <BillingInlineRiskBanner
+          subscription={subscription}
+          contextLabel="Franchise branch analytics"
+        />
 
         {isKpiLoading && !branch ? (
           <div className="rounded-lg border border-slate-800 p-4 text-sm text-slate-400">

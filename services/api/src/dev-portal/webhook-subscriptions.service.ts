@@ -3,9 +3,11 @@ import {
   BadRequestException,
   NotFoundException,
   UnauthorizedException,
+  ForbiddenException, // M33-DEMO-S4
 } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import * as crypto from 'crypto';
+import { DemoProtectionService } from '../common/demo/demo-protection.service'; // M33-DEMO-S4
 
 export interface CreateWebhookSubscriptionDto {
   orgId: string;
@@ -25,7 +27,10 @@ export interface CreateWebhookSubscriptionDto {
  */
 @Injectable()
 export class WebhookSubscriptionsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private demoProtection: DemoProtectionService, // M33-DEMO-S4
+  ) {}
 
   /**
    * Generate cryptographically secure HMAC secret
@@ -74,8 +79,18 @@ export class WebhookSubscriptionsService {
   /**
    * Create webhook subscription
    * Returns subscription with secret (shown once)
+   * M33-DEMO-S4: Blocked for demo orgs
    */
   async createSubscription(dto: CreateWebhookSubscriptionDto, createdByUserId: string) {
+    // M33-DEMO-S4: Block webhook creation for demo orgs
+    const org = await this.prisma.client.org.findUnique({ where: { id: dto.orgId } });
+    if (this.demoProtection.isDemoWriteProtectedOrg(org)) {
+      throw new ForbiddenException({
+        code: this.demoProtection.getDemoProtectionErrorCode(),
+        message: this.demoProtection.getDemoProtectionErrorMessage('Creating webhooks'),
+      });
+    }
+
     // Validate inputs
     this.validateUrl(dto.url);
     this.validateEventTypes(dto.eventTypes);
@@ -173,8 +188,18 @@ export class WebhookSubscriptionsService {
   /**
    * Disable webhook subscription
    * Stops sending webhooks to this URL
+   * M33-DEMO-S4: Blocked for demo orgs
    */
   async disableSubscription(id: string, orgId: string) {
+    // M33-DEMO-S4: Block webhook deletion for demo orgs
+    const org = await this.prisma.client.org.findUnique({ where: { id: orgId } });
+    if (this.demoProtection.isDemoWriteProtectedOrg(org)) {
+      throw new ForbiddenException({
+        code: this.demoProtection.getDemoProtectionErrorCode(),
+        message: this.demoProtection.getDemoProtectionErrorMessage('Disabling webhooks'),
+      });
+    }
+
     const subscription = await this.prisma.webhookSubscription.findUnique({
       where: { id },
     });

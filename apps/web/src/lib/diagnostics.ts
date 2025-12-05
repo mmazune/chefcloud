@@ -1,5 +1,7 @@
 // apps/web/src/lib/diagnostics.ts
 
+import { BillingSubscriptionStatus } from '@/types/billing';
+
 export function formatBytes(value: number | null | undefined): string {
   if (!value || value <= 0) return '0 KB';
   const kb = value / 1024;
@@ -18,6 +20,12 @@ export function formatAgeMs(ageMs: number | null | undefined): string {
   const minutes = totalMinutes % 60;
   if (minutes === 0) return `${hours}h`;
   return `${hours}h ${minutes}m`;
+}
+
+export interface BillingSnapshot {
+  status: BillingSubscriptionStatus | null;
+  planId: string | null;
+  isRiskState: boolean;
 }
 
 export interface DiagnosticsSnapshot {
@@ -74,6 +82,8 @@ export interface DiagnosticsSnapshot {
     message: string | null;
     timestampIso: string | null;
   };
+
+  billing: BillingSnapshot | null;
 }
 
 export function serializeDiagnosticsSnapshot(snapshot: DiagnosticsSnapshot): string {

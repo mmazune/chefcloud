@@ -23,7 +23,7 @@ export function AppShell({ children }: AppShellProps) {
           <Topbar />
 
           {/* Page Content */}
-          <main className="flex-1 overflow-y-auto p-6">
+          <main id="main-content" role="main" className="flex-1 overflow-y-auto p-6">
             <div className="mx-auto max-w-7xl">{children}</div>
           </main>
         </div>

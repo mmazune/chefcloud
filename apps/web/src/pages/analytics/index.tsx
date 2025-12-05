@@ -17,6 +17,9 @@ import {
   Legend,
 } from 'recharts';
 import { TrendingUp, DollarSign, ShoppingCart, Users } from 'lucide-react';
+import { usePlanCapabilities } from '@/hooks/usePlanCapabilities';
+import { BillingUpsellGate } from '@/components/billing/BillingUpsellGate';
+import { BillingInlineRiskBanner } from '@/components/billing/BillingInlineRiskBanner';
 import { useFranchiseBudgetVariance } from '@/hooks/useFranchiseBudgetVariance';
 import { useFranchiseForecast } from '@/hooks/useFranchiseForecast';
 import { useFranchiseMultiMonthSeries } from '@/hooks/useFranchiseMultiMonthSeries';
@@ -120,6 +123,9 @@ interface RiskEvent {
 }
 
 export default function AnalyticsPage() {
+  // E24-BILLING-FE-S3: Plan capabilities for franchise analytics gating
+  const { subscription, capabilities, isLoading: isLoadingPlan } = usePlanCapabilities();
+
   // View toggle state
   const [view, setView] = useState<'overview' | 'branches' | 'financial' | 'risk' | 'franchise'>('overview');
 
@@ -347,32 +353,57 @@ export default function AnalyticsPage() {
       />
 
       {/* View Toggle */}
-      <div className="mb-4 flex gap-2">
+      <div role="tablist" aria-label="Analytics sections" className="mb-4 flex gap-2">
         <Button
+          role="tab"
+          id="analytics-tab-overview"
+          aria-selected={view === 'overview'}
+          aria-controls="analytics-tabpanel-overview"
+          tabIndex={view === 'overview' ? 0 : -1}
           variant={view === 'overview' ? 'default' : 'outline'}
           onClick={() => setView('overview')}
         >
           Overview
         </Button>
         <Button
+          role="tab"
+          id="analytics-tab-branches"
+          aria-selected={view === 'branches'}
+          aria-controls="analytics-tabpanel-branches"
+          tabIndex={view === 'branches' ? 0 : -1}
           variant={view === 'branches' ? 'default' : 'outline'}
           onClick={() => setView('branches')}
         >
           By Branch
         </Button>
         <Button
+          role="tab"
+          id="analytics-tab-financial"
+          aria-selected={view === 'financial'}
+          aria-controls="analytics-tabpanel-financial"
+          tabIndex={view === 'financial' ? 0 : -1}
           variant={view === 'financial' ? 'default' : 'outline'}
           onClick={() => setView('financial')}
         >
           Financial
         </Button>
         <Button
+          role="tab"
+          id="analytics-tab-risk"
+          aria-selected={view === 'risk'}
+          aria-controls="analytics-tabpanel-risk"
+          tabIndex={view === 'risk' ? 0 : -1}
           variant={view === 'risk' ? 'default' : 'outline'}
           onClick={() => setView('risk')}
         >
           Risk
         </Button>
         <Button
+          role="tab"
+          id="analytics-tab-franchise"
+          aria-selected={view === 'franchise'}
+          aria-controls="analytics-tabpanel-franchise"
+          tabIndex={view === 'franchise' ? 0 : -1}
           variant={view === 'franchise' ? 'default' : 'outline'}
           onClick={() => setView('franchise')}
         >
@@ -512,7 +543,11 @@ export default function AnalyticsPage() {
       </div>
 
       {view === 'overview' && (
-        <>
+        <div
+          role="tabpanel"
+          id="analytics-tabpanel-overview"
+          aria-labelledby="analytics-tab-overview"
+        >
           {/* Sales Trend Chart */}
           <Card className="mb-6">
             <div className="p-4 border-b">
@@ -659,11 +694,15 @@ export default function AnalyticsPage() {
           </div>
         </Card>
       </div>
-        </>
+        </div>
       )}
 
       {view === 'branches' && (
-        <>
+        <div
+          role="tabpanel"
+          id="analytics-tabpanel-branches"
+          aria-labelledby="analytics-tab-branches"
+        >
           {/* Branch Summary Cards */}
           <div className="grid gap-4 md:grid-cols-4 mb-6">
             <Card className="p-4">
@@ -799,11 +838,15 @@ export default function AnalyticsPage() {
               )}
             </div>
           </Card>
-        </>
+        </div>
       )}
 
       {view === 'financial' && (
-        <>
+        <div
+          role="tabpanel"
+          id="analytics-tabpanel-financial"
+          aria-labelledby="analytics-tab-financial"
+        >
           {/* Financial Summary Cards */}
           <div className="grid gap-4 md:grid-cols-4 mb-6">
             <Card className="p-4">
@@ -927,11 +970,15 @@ export default function AnalyticsPage() {
               )}
             </div>
           </Card>
-        </>
+        </div>
       )}
 
       {view === 'risk' && (
-        <>
+        <div
+          role="tabpanel"
+          id="analytics-tabpanel-risk"
+          aria-labelledby="analytics-tab-risk"
+        >
           {/* Risk Summary Cards */}
           <div className="grid gap-4 md:grid-cols-4 mb-6">
             <Card className="p-4">
@@ -1121,7 +1168,7 @@ export default function AnalyticsPage() {
               )}
             </div>
           </Card>
-        </>
+        </div>
       )}
 
       {view === 'risk' && (
@@ -1338,9 +1385,31 @@ export default function AnalyticsPage() {
 
       {/* Franchise Analytics View (E22-FRANCHISE-FE-S1) */}
       {view === 'franchise' && (
-        <>
-          {/* Month/Year Selector */}
-          <Card className="p-4 mb-6">
+        <div
+          role="tabpanel"
+          id="analytics-tabpanel-franchise"
+          aria-labelledby="analytics-tab-franchise"
+        >
+          {/* E24-BILLING-FE-S3: Plan gating for franchise analytics */}
+          {isLoadingPlan ? (
+            <Card className="p-6">
+              <p className="text-slate-400">Checking your plan permissions…</p>
+            </Card>
+          ) : !capabilities.canUseFranchiseAnalytics ? (
+            <BillingUpsellGate
+              featureLabel="Franchise analytics"
+              requiredPlanHint="Franchise Core or higher"
+            />
+          ) : (
+            <>
+              {/* E24-BILLING-FE-S5: Billing risk warning for franchise analytics */}
+              <BillingInlineRiskBanner
+                subscription={subscription}
+                contextLabel="Franchise analytics"
+              />
+
+              {/* Month/Year Selector */}
+              <Card className="p-4 mb-6">
             <div className="space-y-4">
               <div className="grid gap-4 md:grid-cols-3">
                 <div>
@@ -1503,7 +1572,9 @@ export default function AnalyticsPage() {
               </div>
             )}
           </div>
-        </>
+            </>
+          )}
+        </div>
       )}
     </AppShell>
   );

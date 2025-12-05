@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '../ui/button';
 import { Moon, Sun, User, LogOut, ChevronDown } from 'lucide-react';
+import { broadcastSessionEvent } from '@/lib/sessionBroadcast';
 
 export function Topbar() {
   const { user, logout } = useAuth();
@@ -18,6 +19,9 @@ export function Topbar() {
   };
 
   const handleLogout = async () => {
+    // M32-SEC-S3: broadcast logout to other tabs
+    broadcastSessionEvent('logout');
+
     await logout();
   };
 

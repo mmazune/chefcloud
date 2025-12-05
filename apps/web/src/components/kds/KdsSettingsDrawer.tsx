@@ -5,6 +5,7 @@
 
 import React from 'react';
 import { useKdsPreferences } from '@/hooks/useKdsPreferences';
+import { useDialogFocus } from '@/hooks/useDialogFocus';
 
 interface KdsSettingsDrawerProps {
   isOpen: boolean;
@@ -15,6 +16,7 @@ interface KdsSettingsDrawerProps {
 
 export function KdsSettingsDrawer(props: KdsSettingsDrawerProps) {
   const { isOpen, onClose, isRealtimeConnected } = props;
+  const drawerRef = useDialogFocus<HTMLElement>({ isOpen, onClose });
   const { prefs, isLoaded, updatePrefs, resetPrefs } = useKdsPreferences();
 
   if (!isOpen) return null;
@@ -64,10 +66,17 @@ export function KdsSettingsDrawer(props: KdsSettingsDrawerProps) {
   return (
     <div className="fixed inset-0 z-50 flex">
       <div className="flex-1 bg-black/30" onClick={onClose} aria-hidden="true" />
-      <aside className="w-full max-w-md bg-slate-950 text-slate-100 border-l border-slate-800 flex flex-col">
+      <aside
+        ref={drawerRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="kds-settings-title"
+        tabIndex={-1}
+        className="w-full max-w-md bg-slate-950 text-slate-100 border-l border-slate-800 flex flex-col"
+      >
         <header className="flex items-center justify-between px-4 py-3 border-b border-slate-800">
           <div>
-            <h2 className="text-sm font-semibold">KDS Settings</h2>
+            <h2 id="kds-settings-title" className="text-sm font-semibold">KDS Settings</h2>
             <p className="text-[11px] text-slate-400">
               Device-specific preferences for this screen.
             </p>
@@ -75,6 +84,7 @@ export function KdsSettingsDrawer(props: KdsSettingsDrawerProps) {
           <button
             type="button"
             onClick={onClose}
+            aria-label="Close settings"
             className="text-[11px] text-slate-400 hover:text-slate-100"
           >
             Close
