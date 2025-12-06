@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { WaiterMetricsService } from '../staff/waiter-metrics.service';
 import { WaiterMetrics } from '../staff/dto/waiter-metrics.dto';
@@ -12,6 +12,7 @@ import { WaiterMetrics } from '../staff/dto/waiter-metrics.dto';
 export class AntiTheftService {
   constructor(
     private readonly prisma: PrismaService,
+    @Inject(forwardRef(() => WaiterMetricsService))
     private readonly waiterMetrics: WaiterMetricsService,
   ) {}
 

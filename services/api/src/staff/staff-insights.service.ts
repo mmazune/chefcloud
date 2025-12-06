@@ -9,7 +9,7 @@
  * Design: Composition over modification - orchestrates existing services without changing them.
  */
 
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Inject, forwardRef } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { WaiterMetricsService } from './waiter-metrics.service';
 // import { AttendanceService } from '../hr/attendance.service'; // Unused for now
@@ -47,6 +47,7 @@ export class StaffInsightsService {
     private readonly prisma: PrismaService,
     private readonly waiterMetrics: WaiterMetricsService,
     // private readonly attendance: AttendanceService, // Unused for now
+    @Inject(forwardRef(() => AntiTheftService))
     private readonly antiTheft: AntiTheftService,
   ) {}
 
