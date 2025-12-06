@@ -13,7 +13,7 @@ Copy: Internal Database URL
 ```
 New + → Web Service → GitHub: mmazune/chefcloud
 Root: services/api
-Build: npm install -g pnpm && pnpm install && pnpm --filter @chefcloud/api build
+Build: npm install -g pnpm && pnpm install && pnpm --filter @chefcloud/db build && pnpm --filter @chefcloud/api build
 Start: pnpm --filter @chefcloud/api start:prod
 
 Env:

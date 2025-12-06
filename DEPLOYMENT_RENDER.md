@@ -31,7 +31,7 @@
 3. Configure:
    - Name: `chefcloud-api`
    - Root Directory: `services/api`
-   - Build: `npm install -g pnpm && pnpm install && pnpm --filter @chefcloud/api build`
+   - Build: `npm install -g pnpm && pnpm install && pnpm --filter @chefcloud/db build && pnpm --filter @chefcloud/api build`
    - Start: `pnpm --filter @chefcloud/api start:prod`
 
 4. **Environment Variables**:
