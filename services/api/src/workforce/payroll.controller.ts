@@ -43,14 +43,12 @@ export class PayrollController {
     return runs.map((run) => ({
       id: run.id,
       orgId: run.orgId,
-      branchId: run.branchId,
       periodStart: run.periodStart,
       periodEnd: run.periodEnd,
       status: run.status,
-      totalGross: Number(run.totalGross || 0),
-      totalNet: Number(run.totalNet || 0),
       createdAt: run.createdAt,
       slipCount: run._count.slips,
+      // TODO: Calculate totalGross/totalNet from slips aggregation if needed
     }));
   }
 

@@ -198,7 +198,7 @@ export class AttendanceController {
       attendanceWhere.branchId = branchId;
     }
 
-    const records = await this.attendanceService['prisma'].client.attendance.findMany({
+    const records = await this.attendanceService['prisma'].attendanceRecord.findMany({
       where: attendanceWhere,
     });
 

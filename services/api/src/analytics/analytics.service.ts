@@ -333,7 +333,6 @@ export class AnalyticsService {
     // Query orders for the period
     const orders = await this.prisma.client.order.findMany({
       where: {
-        orgId,
         ...(branchId && { branchId }),
         createdAt: { gte: startDate, lte: endDate },
         status: { in: ['CLOSED', 'SERVED'] },

@@ -376,7 +376,8 @@ export class DocumentsService {
     const document = await this.findOne(documentId, orgId, userId, userRole);
 
     // Only L4+ can delete documents
-    if (![RoleLevel.L4, RoleLevel.L5].includes(userRole)) {
+    const allowedRoles: RoleLevel[] = [RoleLevel.L4, RoleLevel.L5];
+    if (!allowedRoles.includes(userRole)) {
       throw new ForbiddenException('Only managers can delete documents');
     }
 

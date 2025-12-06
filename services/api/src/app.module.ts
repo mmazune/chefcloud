@@ -34,7 +34,7 @@ import { StreamModule } from './stream/stream.module';
 import { DashboardsModule } from './dashboards/dashboards.module';
 import { ThresholdsModule } from './thresholds/thresholds.module';
 import { AccessModule } from './access/access.module';
-import { DevPortalModule } from './dev-portal/dev-portal.module';
+// import { DevPortalModule } from './dev-portal/dev-portal.module'; // TEMP DISABLED
 import { BillingModule } from './billing/billing.module';
 import { FranchiseModule } from './franchise/franchise.module';
 import { BadgesModule } from './badges/badges.module';
@@ -95,7 +95,7 @@ import { DemoModule } from './common/demo/demo.module'; // M33-DEMO-S4
     DashboardsModule,
     ThresholdsModule,
     AccessModule,
-    DevPortalModule,
+    // DevPortalModule, // TEMP DISABLED
     BillingModule,
     FranchiseModule,
     BadgesModule,

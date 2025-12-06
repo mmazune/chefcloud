@@ -221,7 +221,35 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
     return prisma.document;
   }
 
-  get posting(): typeof prisma.posting {
-    return prisma.posting;
+  get stockBatch(): typeof prisma.stockBatch {
+    return prisma.stockBatch;
+  }
+
+  get payRun(): typeof prisma.payRun {
+    return prisma.payRun;
+  }
+
+  get paySlip(): typeof prisma.paySlip {
+    return prisma.paySlip;
+  }
+
+  get bankStatement(): typeof prisma.bankStatement {
+    return prisma.bankStatement;
+  }
+
+  get employmentContract(): typeof prisma.employmentContract {
+    return prisma.employmentContract;
+  }
+
+  get serviceProvider(): typeof prisma.serviceProvider {
+    return prisma.serviceProvider;
+  }
+
+  get purchaseOrder(): typeof prisma.purchaseOrder {
+    return prisma.purchaseOrder;
+  }
+
+  get goodsReceipt(): typeof prisma.goodsReceipt {
+    return prisma.goodsReceipt;
   }
 }

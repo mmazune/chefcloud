@@ -221,7 +221,7 @@ export class FranchiseController {
   @ApiQuery({ name: 'period', required: true, type: String })
   @Get('budgets')
   @Roles('L5')
-  async getBudgets(@Request() req: RequestWithUser, @Query('period') period: string) {
+  async getBudgetsLegacy(@Request() req: RequestWithUser, @Query('period') period: string) {
     if (!period || !/^\d{4}-\d{2}$/.test(period)) {
       return { error: 'Invalid period format. Use YYYY-MM' };
     }

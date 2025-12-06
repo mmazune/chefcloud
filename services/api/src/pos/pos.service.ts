@@ -1027,7 +1027,7 @@ export class PosService {
 
     return orders.map((order) => ({
       id: order.id,
-      tableName: order.table?.name || null,
+      tableName: order.table?.label || null,
       tabName: order.serviceType === 'TAKEAWAY' ? 'Takeaway' : null,
       status: order.status,
       subtotal: Number(order.subtotal),
@@ -1044,7 +1044,7 @@ export class PosService {
       where: { id: orderId, branchId },
       include: {
         table: true,
-        items: {
+        orderItems: {
           include: {
             menuItem: true,
           },
@@ -1057,14 +1057,12 @@ export class PosService {
       throw new NotFoundException('Order not found');
     }
 
-    const items = order.items.map((item) => ({
+    const items = order.orderItems.map((item) => ({
       id: item.id,
       name: item.menuItem?.name || 'Unknown',
-      sku: item.menuItem?.sku || null,
       quantity: item.quantity,
       unitPrice: Number(item.price),
       total: Number(item.subtotal),
-      status: item.status || 'PENDING',
     }));
 
     const payments = order.payments.map((payment) => ({
@@ -1075,7 +1073,7 @@ export class PosService {
 
     return {
       id: order.id,
-      tableName: order.table?.name || null,
+      tableName: order.table?.label || null,
       tabName: order.serviceType === 'TAKEAWAY' ? 'Takeaway' : null,
       status: order.status,
       items,

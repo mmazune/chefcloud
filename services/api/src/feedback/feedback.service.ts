@@ -69,7 +69,7 @@ export class FeedbackService {
           id: true,
           branchId: true,
           branch: { select: { orgId: true } },
-          feedback: { select: { id: true } },
+          Feedback: { select: { id: true } },
         },
       });
 
@@ -77,7 +77,7 @@ export class FeedbackService {
         throw new NotFoundException(`Order ${input.orderNumber} not found`);
       }
 
-      if (order.feedback) {
+      if (order.Feedback) {
         throw new BadRequestException('Feedback already submitted for this order');
       }
 
@@ -211,7 +211,7 @@ export class FeedbackService {
           id: true,
           branchId: true,
           branch: { select: { orgId: true } },
-          feedback: { select: { id: true } },
+          Feedback: { select: { id: true } },
         },
       });
 
@@ -223,7 +223,7 @@ export class FeedbackService {
         throw new ForbiddenException('Cannot submit feedback for orders in other organizations');
       }
 
-      if (order.feedback) {
+      if (order.Feedback) {
         throw new BadRequestException('Feedback already submitted for this order');
       }
 

@@ -7,7 +7,7 @@
 
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
-import { ReservationStatus, DepositStatus, EventBookingStatus } from '@chefcloud/db';
+import { ReservationStatus, EventBookingStatus } from '@chefcloud/db';
 
 export interface BranchBookingSummary {
   branchId: string;
@@ -109,11 +109,11 @@ export class FranchiseBookingOverviewService {
 
       // Sum deposits
       const amount = Number(res.deposit);
-      if (res.depositStatus === DepositStatus.CAPTURED) {
+      if (res.depositStatus === 'CAPTURED') {
         deposits.collected += amount;
-      } else if (res.depositStatus === DepositStatus.FORFEITED) {
+      } else if (res.depositStatus === 'FORFEITED') {
         deposits.forfeited += amount;
-      } else if (res.depositStatus === DepositStatus.REFUNDED) {
+      } else if (res.depositStatus === 'REFUNDED') {
         deposits.refunded += amount;
       }
     }
@@ -121,7 +121,7 @@ export class FranchiseBookingOverviewService {
     // Calculate show-up and no-show rates
     const confirmed = byStatus[ReservationStatus.CONFIRMED] || 0;
     const seated = byStatus[ReservationStatus.SEATED] || 0;
-    const noShow = byStatus[ReservationStatus.NO_SHOW] || 0;
+    const noShow = byStatus[0] || 0;
     const totalConfirmed = confirmed + seated + noShow;
     const showUpRate = totalConfirmed > 0 ? (seated / totalConfirmed) * 100 : 0;
     const noShowRate = totalConfirmed > 0 ? (noShow / totalConfirmed) * 100 : 0;
@@ -152,11 +152,11 @@ export class FranchiseBookingOverviewService {
 
     for (const event of events) {
       for (const booking of event.bookings) {
-        if ([EventBookingStatus.CONFIRMED, EventBookingStatus.CHECKED_IN].includes(booking.status as EventBookingStatus)) {
+        if (booking.status === EventBookingStatus.CONFIRMED) {
           ticketsSold++;
           eventRevenue += Number(booking.eventTable.deposit);
         }
-        if (booking.status === EventBookingStatus.CHECKED_IN) {
+        if (booking.status === EventBookingStatus.CONFIRMED) {
           ticketsUsed++;
         }
       }
@@ -193,7 +193,7 @@ export class FranchiseBookingOverviewService {
     const { franchiseId, from, to } = params;
 
     // Get all branches in franchise
-    const franchise = await this.prisma.client.franchise.findUnique({
+    const franchise = await this.prisma.org.findUnique({
       where: { id: franchiseId },
       include: {
         branches: {

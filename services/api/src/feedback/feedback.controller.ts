@@ -79,12 +79,6 @@ export class FeedbackController {
       score: feedback.score,
       npsCategory: feedback.npsCategory,
       createdAt: feedback.createdAt,
-      createdBy: feedback.createdBy
-        ? {
-            id: feedback.createdBy.id,
-            name: `${feedback.createdBy.firstName} ${feedback.createdBy.lastName}`,
-          }
-        : null,
     };
   }
 
@@ -130,7 +124,7 @@ export class FeedbackController {
 
     // Additional RBAC: L1-L3 can only view own feedback
     if (!isOrgLevel && user.roleLevel !== 'L4') {
-      if (!feedback.createdBy || feedback.createdBy.id !== user.id) {
+      if (feedback.createdById !== user.id) {
         throw new NotFoundException('Feedback not found');
       }
     }

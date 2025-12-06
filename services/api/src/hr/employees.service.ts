@@ -69,7 +69,7 @@ export class EmployeesService {
             take: 1,
             select: {
               salaryType: true,
-              salaryAmount: true,
+              baseSalary: true,
             },
           },
         },
@@ -92,7 +92,7 @@ export class EmployeesService {
         branchId: emp.branchId,
         roleLevel: emp.user?.roleLevel || null,
         salaryType: contract?.salaryType || null,
-        baseSalaryAmount: contract?.salaryAmount ? Number(contract.salaryAmount) : null,
+        baseSalaryAmount: contract?.baseSalary ? Number(contract.baseSalary) : null,
         isActive: emp.status === 'ACTIVE',
         hiredAt: emp.hiredAt.toISOString(),
         createdAt: emp.createdAt.toISOString(),
@@ -120,7 +120,6 @@ export class EmployeesService {
         user: {
           select: {
             email: true,
-            phone: true,
             roleLevel: true,
           },
         },
@@ -158,12 +157,12 @@ export class EmployeesService {
       firstName: employee.firstName,
       lastName: employee.lastName,
       email: employee.user?.email || null,
-      phone: employee.user?.phone || null,
+      phone: null, // TODO: Phone field doesn't exist in User model
       position: employee.position,
       branchId: employee.branchId,
       roleLevel: employee.user?.roleLevel || null,
       salaryType: contract?.salaryType || null,
-      baseSalaryAmount: contract?.salaryAmount ? Number(contract.salaryAmount) : null,
+      baseSalaryAmount: contract?.baseSalary ? Number(contract.baseSalary) : null,
       isActive: employee.status === 'ACTIVE',
       hiredAt: employee.hiredAt.toISOString(),
       terminatedAt: employee.terminatedAt?.toISOString() || null,
@@ -197,13 +196,12 @@ export class EmployeesService {
         const newUser = await this.prisma.user.create({
           data: {
             email: dto.email,
-            phone: dto.phone,
             firstName: dto.firstName,
             lastName: dto.lastName,
             orgId,
             branchId: dto.branchId,
             roleLevel: 'L1', // Default to L1, can be changed later
-            password: '', // Temporary, user must reset
+            passwordHash: null, // Temporary, user must reset
           },
         });
         userId = newUser.id;
@@ -240,7 +238,7 @@ export class EmployeesService {
           employeeId: employee.id,
           orgId,
           salaryType: dto.salaryType,
-          salaryAmount: dto.baseSalaryAmount,
+          baseSalary: dto.baseSalaryAmount,
           startDate: new Date(),
           endDate: null,
         },
@@ -328,7 +326,7 @@ export class EmployeesService {
           employeeId: employee.id,
           orgId,
           salaryType: dto.salaryType,
-          salaryAmount: dto.baseSalaryAmount,
+          baseSalary: dto.baseSalaryAmount,
           startDate: new Date(),
           endDate: null,
         },

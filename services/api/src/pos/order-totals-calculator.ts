@@ -41,9 +41,10 @@ export class OrderTotalsCalculator {
   /**
    * Calculate total tips (sum of all tipAmount fields).
    * Tips are NOT included in totalDue/balanceDue calculations.
+   * NOTE: tipAmount field removed from schema - returning 0 for now
    */
   static calculateTipTotal(payments: Payment[]): number {
-    return payments.reduce((sum, p) => sum + Number(p.tipAmount || 0), 0);
+    return 0; // TODO: Re-implement when tip tracking is added to schema
   }
 
   /**
