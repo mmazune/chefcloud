@@ -1,7 +1,7 @@
 # ChefCloud V1 Cloud Deployment Guide
 
 **Goal**: Deploy a fully working, hosted ChefCloud instance with:
-- **Railway**: API + PostgreSQL + Worker
+- **Render/Railway**: API + PostgreSQL + Worker
 - **Vercel**: Web frontend (Next.js)
 - **Tapas Demo**: Pre-seeded with 30 days of realistic data
 
@@ -9,10 +9,55 @@
 
 ## Prerequisites
 
-- [x] Clean builds passing (api, web, worker)
+- [x] Clean builds passing (api, web, worker) ✅ **VERIFIED - 0 TypeScript errors**
 - [x] Latest code pushed to GitHub
-- [x] Railway account with project created
+- [x] Render/Railway account with project created
 - [x] Vercel account linked to GitHub repo
+
+---
+
+## Build & Start Commands
+
+### API Service (@chefcloud/api)
+
+**Build Command:**
+```bash
+pnpm install --frozen-lockfile && pnpm --filter @chefcloud/api build
+```
+
+**Start Command:**
+```bash
+pnpm --filter @chefcloud/api start:prod
+```
+
+**Environment Variables Required:**
+```env
+DATABASE_URL=postgresql://user:password@host:5432/dbname
+NODE_ENV=production
+PORT=8080
+JWT_SECRET=<your-secret-key>
+EFRIS_BASE_URL=https://efris.ura.go.ug/ws
+EFRIS_ENABLED=false
+```
+
+### Worker Service (@chefcloud/worker)
+
+**Build Command:**
+```bash
+pnpm install --frozen-lockfile && pnpm --filter @chefcloud/worker build
+```
+
+**Start Command:**
+```bash
+pnpm --filter @chefcloud/worker start:prod
+```
+
+**Environment Variables Required:**
+```env
+DATABASE_URL=postgresql://user:password@host:5432/dbname
+REDIS_URL=redis://default:password@host:6379
+NODE_ENV=production
+```
 
 ---
 
@@ -24,30 +69,219 @@ git status                 # Should show clean
 git log --oneline -1       # Verify latest commit
 ```
 
-**Expected**: Working tree clean, latest commit is the merge with dev-portal work.
+**Expected**: Working tree clean, latest commit includes schema alignment fixes.
 
 ---
 
-## Step 2: Railway - Database & API
+## Step 2: Render - Database & API
 
 ### 2.1 Create PostgreSQL Database
 
-1. Go to [Railway Dashboard](https://railway.app/dashboard)
-2. Select your ChefCloud project (or create new)
-3. Click **New** → **Database** → **PostgreSQL**
-4. Once created, click the database service
-5. Go to **Variables** tab
-6. Copy the `DATABASE_URL` connection string
+1. Go to [Render Dashboard](https://dashboard.render.com)
+2. Click **New** → **PostgreSQL**
+3. Configure database:
+   - Name: `chefcloud-db`
+   - Region: Oregon (US West) or closest to your users
+   - PostgreSQL Version: 15
+   - Plan: Free or Starter
+4. Click **Create Database**
+5. Once created, copy the **Internal Database URL** from the database info page
 
 **Example format**:
 ```
-postgresql://postgres:password@containers-us-west-123.railway.app:6543/railway
+postgresql://chefcloud_db_user:password@dpg-xxx.oregon-postgres.render.com/chefcloud_db
 ```
 
 ### 2.2 Configure API Service
 
-#### Create API Service (if not exists)
-1. In Railway project, click **New** → **GitHub Repo**
+#### Create API Service
+1. In Render dashboard, click **New** → **Web Service**
+2. Connect your GitHub repository: `mmazune/chefcloud`
+3. Configure service:
+   - **Name**: `chefcloud-api`
+   - **Region**: Oregon (US West) - same as database
+   - **Branch**: `main`
+   - **Root Directory**: Leave empty (monorepo will be detected)
+   - **Build Command**: `pnpm install --frozen-lockfile && pnpm --filter @chefcloud/api build`
+   - **Start Command**: `pnpm --filter @chefcloud/api start:prod`
+   - **Plan**: Free or Starter
+
+4. **Environment Variables** - Add these in the Environment tab:
+   ```env
+   DATABASE_URL=<paste-internal-database-url>
+   NODE_ENV=production
+   PORT=10000
+   JWT_SECRET=<generate-random-secret>
+   EFRIS_BASE_URL=https://efris.ura.go.ug/ws
+   EFRIS_ENABLED=false
+   CORS_ORIGIN=*
+   ```
+
+5. Click **Create Web Service**
+
+#### Run Database Migrations
+
+After API deploys successfully:
+
+1. Go to API service → **Shell** tab
+2. Run migrations:
+   ```bash
+   cd services/api
+   npx prisma migrate deploy
+   ```
+
+3. (Optional) Seed demo data:
+   ```bash
+   cd services/api
+   npm run seed
+   ```
+
+---
+
+## Step 3: Worker Service (Optional)
+
+### 3.1 Setup Redis (if using worker)
+
+1. Create Redis instance on [Upstash](https://upstash.com) or [Redis Cloud](https://redis.com/try-free/)
+2. Copy Redis connection URL
+
+### 3.2 Create Worker Service
+
+1. In Render dashboard, click **New** → **Background Worker**
+2. Connect same GitHub repository
+3. Configure:
+   - **Name**: `chefcloud-worker`
+   - **Build Command**: `pnpm install --frozen-lockfile && pnpm --filter @chefcloud/worker build`
+   - **Start Command**: `pnpm --filter @chefcloud/worker start:prod`
+
+4. **Environment Variables**:
+   ```env
+   DATABASE_URL=<same-as-api>
+   REDIS_URL=<redis-connection-url>
+   NODE_ENV=production
+   ```
+
+---
+
+## Step 4: Vercel - Web Frontend
+
+### 4.1 Deploy to Vercel
+
+1. Go to [Vercel Dashboard](https://vercel.com/dashboard)
+2. Click **Add New** → **Project**
+3. Import `mmazune/chefcloud` repository
+4. Configure:
+   - **Framework Preset**: Next.js
+   - **Root Directory**: `apps/web`
+   - **Build Command**: `cd ../.. && pnpm install --frozen-lockfile && pnpm --filter @chefcloud/web build`
+   - **Output Directory**: `.next`
+
+5. **Environment Variables**:
+   ```env
+   NEXT_PUBLIC_API_URL=https://chefcloud-api.onrender.com
+   NODE_ENV=production
+   ```
+
+6. Click **Deploy**
+
+---
+
+## Step 5: Test Deployment
+
+### 5.1 Test API Health
+
+```bash
+curl https://chefcloud-api.onrender.com/health
+```
+
+**Expected**: `{"status":"ok","timestamp":"..."}`
+
+### 5.2 Test Web App
+
+1. Visit your Vercel URL (e.g., `chefcloud-web.vercel.app`)
+2. Login page should load
+3. API connectivity indicator should show green
+
+### 5.3 Test End-to-End
+
+1. Create test org/branch via API or seed
+2. Login to web app
+3. Navigate through modules
+4. Verify data loads correctly
+
+---
+
+## Troubleshooting
+
+### Build Fails
+
+**Issue**: `pnpm: command not found`
+**Fix**: Render should auto-detect pnpm. If not, add to build command:
+```bash
+npm install -g pnpm && pnpm install --frozen-lockfile && pnpm --filter @chefcloud/api build
+```
+
+**Issue**: TypeScript errors during build
+**Fix**: Verify locally first with `pnpm --filter @chefcloud/api build`
+
+### Database Connection Fails
+
+**Issue**: `ECONNREFUSED` or connection timeout
+**Fix**: 
+1. Verify DATABASE_URL uses **Internal Database URL** from Render (not external)
+2. Check database is in same region as API service
+
+### Migrations Fail
+
+**Issue**: `Schema drift detected`
+**Fix**: 
+```bash
+cd services/api
+npx prisma migrate reset --force
+npx prisma migrate deploy
+```
+
+---
+
+## Maintenance
+
+### Update Deployment
+
+```bash
+git push origin main  # Auto-deploys to Render & Vercel
+```
+
+### View Logs
+
+- **Render**: Service → Logs tab
+- **Vercel**: Deployment → Runtime Logs
+
+### Database Backups
+
+Render provides automatic daily backups on paid plans. For free tier:
+```bash
+pg_dump $DATABASE_URL > backup.sql
+```
+
+---
+
+## Production Checklist
+
+Before going live:
+
+- [ ] Change JWT_SECRET to strong random value
+- [ ] Set CORS_ORIGIN to actual frontend domain
+- [ ] Enable SSL/HTTPS (Render provides free)
+- [ ] Configure custom domain
+- [ ] Set up monitoring (Render built-in)
+- [ ] Enable database backups
+- [ ] Review and limit API rate limiting
+- [ ] Set up error tracking (Sentry, etc.)
+
+---
+
+**Deployment Status**: ✅ API builds cleanly with 0 errors
+**Last Updated**: December 6, 2025
 2. Select `mmazune/chefcloud` repository
 3. Name it `chefcloud-api`
 
