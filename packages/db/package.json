@@ -5,7 +5,7 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "build": "tsc",
+    "build": "prisma generate --schema=./prisma/schema.prisma && tsc",
     "lint": "eslint . --ext .ts",
     "test": "echo \"No tests yet\"",
     "db:generate": "prisma generate",

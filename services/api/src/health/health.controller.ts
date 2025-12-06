@@ -1,6 +1,14 @@
 import { Controller, Get } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
-import { HealthResponse } from '@chefcloud/contracts';
+
+export interface HealthResponse {
+  status: 'ok' | 'degraded';
+  timestamp: string;
+  version: string;
+  services?: {
+    database: 'ok' | 'down';
+  };
+}
 
 @Controller('health')
 export class HealthController {

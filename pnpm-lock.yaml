@@ -335,9 +335,6 @@ importers:
 
   services/api:
     dependencies:
-      '@chefcloud/contracts':
-        specifier: workspace:*
-        version: link:../../packages/contracts
       '@chefcloud/db':
         specifier: workspace:*
         version: link:../../packages/db
