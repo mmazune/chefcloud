@@ -3,14 +3,15 @@ import { Injectable, forwardRef, Inject } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { EventBusService } from '../events/event-bus.service';
 import { KdsTicketDto, SlaState, UpdateKdsSlaConfigDto } from './dto/kds-ticket.dto';
+import { KdsGateway } from './kds.gateway';
 
 @Injectable()
 export class KdsService {
   constructor(
     private prisma: PrismaService,
     private eventBus: EventBusService,
-    @Inject(forwardRef(() => import('./kds.gateway').then((m) => m.KdsGateway)))
-    private kdsGateway?: any, // Use lazy injection to avoid circular dependency
+    @Inject(forwardRef(() => KdsGateway))
+    private kdsGateway?: KdsGateway,
   ) {}
 
   /**

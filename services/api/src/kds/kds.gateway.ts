@@ -14,7 +14,7 @@ import {
   OnGatewayDisconnect,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, forwardRef, Inject } from '@nestjs/common';
 import { KdsService } from './kds.service';
 import { KdsTicketDto } from './dto/kds-ticket.dto';
 
@@ -31,7 +31,7 @@ export class KdsGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   private readonly logger = new Logger(KdsGateway.name);
 
-  constructor(private readonly kdsService: KdsService) {}
+  constructor(@Inject(forwardRef(() => KdsService)) private readonly kdsService: KdsService) {}
 
   async handleConnection(client: Socket): Promise<void> {
     this.logger.debug(`KDS client connected: ${client.id}`);
