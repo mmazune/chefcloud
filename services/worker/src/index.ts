@@ -1,5 +1,4 @@
 import { Worker, Queue, Job } from 'bullmq';
-import Redis from 'ioredis';
 import { PrismaClient } from '@chefcloud/db';
 import { pushToEfris, calculateBackoffDelay } from './efris-client';
 import {
@@ -13,15 +12,13 @@ import { logger } from './logger';
 import { generateShiftEndReport } from './report-helpers';
 import { generateShiftEndCSV } from './csv-helpers';
 import { generateShiftEndPDF } from './pdf-helpers';
+import { createRedisConnection } from './redis.config';
 
 // Initialize telemetry before anything else
 initTelemetry();
 
-const connection = new Redis({
-  host: process.env.REDIS_HOST || 'localhost',
-  port: parseInt(process.env.REDIS_PORT || '6379', 10),
-  maxRetriesPerRequest: null,
-});
+// Use centralized Redis configuration
+const connection = createRedisConnection();
 
 const prisma = new PrismaClient();
 

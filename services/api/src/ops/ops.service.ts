@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import Redis from 'ioredis';
+import { createRedisClient } from '../config/redis.config';
 import { logBuffer, logger } from '../logger';
 import * as argon2 from 'argon2';
 import * as crypto from 'crypto';
@@ -63,11 +64,8 @@ export class OpsService {
   private redis: Redis;
 
   constructor(private prisma: PrismaService) {
-    this.redis = new Redis({
-      host: process.env.REDIS_HOST || 'localhost',
-      port: parseInt(process.env.REDIS_PORT || '6379'),
-      maxRetriesPerRequest: 1,
-    });
+    // Use centralized Redis configuration
+    this.redis = createRedisClient();
   }
 
   async getHealthStatus() {

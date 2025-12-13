@@ -2,7 +2,7 @@ import { Controller, Post, Param } from '@nestjs/common';
 import { EfrisService } from './efris.service';
 import { Queue } from 'bullmq';
 import { ConfigService } from '@nestjs/config';
-import Redis from 'ioredis';
+import { getRedisConnectionOptions } from '../config/redis.config';
 
 @Controller('fiscal')
 export class EfrisController {
@@ -12,13 +12,10 @@ export class EfrisController {
     private readonly efrisService: EfrisService,
     private readonly config: ConfigService,
   ) {
-    const connection = new Redis({
-      host: this.config.get('REDIS_HOST', 'localhost'),
-      port: parseInt(this.config.get('REDIS_PORT', '6379'), 10),
-      maxRetriesPerRequest: null,
+    // Use centralized Redis configuration for BullMQ queue
+    this.efrisQueue = new Queue('efris', {
+      connection: getRedisConnectionOptions(),
     });
-
-    this.efrisQueue = new Queue('efris', { connection });
   }
 
   @Post('push/:orderId')

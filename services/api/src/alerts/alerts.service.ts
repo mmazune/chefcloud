@@ -3,7 +3,7 @@ import { PrismaService } from '../prisma.service';
 import { CreateChannelDto, CreateScheduleDto } from './alerts.dto';
 import { Queue } from 'bullmq';
 import { ConfigService } from '@nestjs/config';
-import Redis from 'ioredis';
+import { getRedisConnectionOptions } from '../config/redis.config';
 import * as nodemailer from 'nodemailer';
 
 @Injectable()
@@ -16,13 +16,10 @@ export class AlertsService {
     private readonly prisma: PrismaService,
     private readonly config: ConfigService,
   ) {
-    const connection = new Redis({
-      host: this.config.get('REDIS_HOST', 'localhost'),
-      port: parseInt(this.config.get('REDIS_PORT', '6379'), 10),
-      maxRetriesPerRequest: null,
+    // Use centralized Redis configuration for BullMQ queue
+    this.alertsQueue = new Queue('alerts', {
+      connection: getRedisConnectionOptions(),
     });
-
-    this.alertsQueue = new Queue('alerts', { connection });
 
     // Initialize SMTP transport
     const smtpHost = this.config.get<string>('SMTP_HOST', 'localhost');
