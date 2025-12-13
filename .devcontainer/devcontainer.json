@@ -28,6 +28,10 @@
       "label": "Desktop (Tauri)"
     }
   },
+  "containerEnv": {
+    "REDIS_URL": "redis://redis:6379",
+    "CODESPACES": "true"
+  },
   "postCreateCommand": "pnpm install",
   "postStartCommand": "cd infra/docker && docker-compose up -d",
   "customizations": {
