@@ -3,7 +3,20 @@ import Redis from 'ioredis';
 
 /**
  * Shared Redis service for the application
- * Provides Redis connection with fallback to in-memory storage for local dev
+ * 
+ * Configuration priority (uses first available):
+ * 1. REDIS_URL - Full connection URL (e.g., redis://user:pass@host:port)
+ * 2. UPSTASH_REDIS_URL - Upstash Redis URL (for managed Redis)
+ * 3. REDIS_HOST + REDIS_PORT - Legacy host/port config
+ * 
+ * For production (NODE_ENV=production):
+ * - REDIS_URL or UPSTASH_REDIS_URL must be set
+ * - Will NOT fall back to localhost
+ * 
+ * For development/Codespaces:
+ * - Falls back to redis://redis:6379 (docker-compose service name)
+ * - Or redis://localhost:6379 for local dev without docker
+ * - Also provides in-memory fallback if Redis is unavailable
  */
 @Injectable()
 export class RedisService {
@@ -19,35 +32,106 @@ export class RedisService {
 
   private initRedis() {
     try {
-      const host = process.env.REDIS_HOST;
-      const port = process.env.REDIS_PORT;
+      // Get Redis URL from environment (priority order)
+      const redisUrl =
+        process.env.REDIS_URL ||
+        process.env.UPSTASH_REDIS_URL ||
+        this.getLegacyRedisUrl();
 
-      if (host && port) {
-        this.redis = new Redis({
-          host,
-          port: parseInt(port, 10),
+      // In production, Redis URL is required
+      if (!redisUrl && process.env.NODE_ENV === 'production') {
+        const error = new Error(
+          'REDIS_URL or UPSTASH_REDIS_URL must be set in production environment. ' +
+          'Cannot fall back to localhost in production.',
+        );
+        this.logger.error(error.message);
+        throw error;
+      }
+
+      // Get fallback URL for development
+      const fallbackUrl = this.getDevFallbackUrl();
+      const connectionUrl = redisUrl || fallbackUrl;
+
+      if (!redisUrl) {
+        this.logger.log(`Redis not configured, using fallback: ${fallbackUrl}`);
+      }
+
+      if (connectionUrl) {
+        this.redis = new Redis(connectionUrl, {
           maxRetriesPerRequest: 3,
+          enableReadyCheck: true,
           retryStrategy: (times: number) => {
             if (times > 3) {
-              this.logger.warn('Redis connection failed, falling back to in-memory');
+              this.logger.warn('Redis connection failed after 3 retries, falling back to in-memory');
               return null; // Stop retrying
             }
             return Math.min(times * 100, 3000);
           },
+          lazyConnect: false,
         });
 
         this.redis.on('connect', () => {
-          this.logger.log('Redis connected');
+          this.logger.log(`Redis connected to ${this.sanitizeUrl(connectionUrl)}`);
+        });
+
+        this.redis.on('ready', () => {
+          this.logger.log('Redis client ready');
         });
 
         this.redis.on('error', (err) => {
           this.logger.warn(`Redis error: ${err.message}, using in-memory fallback`);
+        });
+
+        this.redis.on('close', () => {
+          this.logger.warn('Redis connection closed');
         });
       } else {
         this.logger.log('Redis not configured, using in-memory storage');
       }
     } catch (error) {
       this.logger.warn(`Failed to initialize Redis: ${(error as Error).message}`);
+      if (process.env.NODE_ENV === 'production') {
+        throw error; // Fail fast in production
+      }
+    }
+  }
+
+  /**
+   * Build Redis URL from legacy REDIS_HOST and REDIS_PORT env vars
+   */
+  private getLegacyRedisUrl(): string | null {
+    const host = process.env.REDIS_HOST;
+    const port = process.env.REDIS_PORT;
+
+    if (host && port) {
+      return `redis://${host}:${port}`;
+    }
+    return null;
+  }
+
+  /**
+   * Get development fallback URL
+   * Tries docker-compose service name first, then localhost
+   */
+  private getDevFallbackUrl(): string {
+    // In Codespaces/docker-compose, Redis service is named 'redis'
+    // In local dev without docker, use localhost
+    const isInContainer = process.env.REMOTE_CONTAINERS === 'true' || process.env.CODESPACES === 'true';
+    return isInContainer ? 'redis://redis:6379' : 'redis://localhost:6379';
+  }
+
+  /**
+   * Sanitize URL for logging (hide password if present)
+   */
+  private sanitizeUrl(url: string): string {
+    try {
+      const parsed = new URL(url);
+      if (parsed.password) {
+        parsed.password = '***';
+      }
+      return parsed.toString();
+    } catch {
+      return url.replace(/:\/\/[^:]+:[^@]+@/, '://***:***@');
     }
   }
 
