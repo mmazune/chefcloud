@@ -15,7 +15,7 @@ interface RequestWithUser extends Request {
 }
 
 @Controller('promotions')
-@UseGuards(AuthGuard, RolesGuard)
+@UseGuards(AuthGuard('jwt'), RolesGuard)
 export class PromotionsController {
   constructor(private promotionsService: PromotionsService) {}
 
