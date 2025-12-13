@@ -6,6 +6,7 @@ import {
   HttpStatus,
   Logger,
   OnModuleDestroy,
+  Optional,
 } from '@nestjs/common';
 import { Request } from 'express';
 import { MetricsService } from '../observability/metrics.service';
@@ -36,7 +37,7 @@ export class SseRateLimiterGuard implements CanActivate, OnModuleDestroy {
   private readonly activeConnectionsByUser = new Map<string, number>();
   private cleanupInterval?: NodeJS.Timeout;
 
-  constructor(private readonly metrics: MetricsService) {
+  constructor(@Optional() private readonly metrics: MetricsService) {
     // Cleanup old entries every 5 minutes
     this.cleanupInterval = setInterval(() => this.cleanup(), 5 * 60 * 1000);
 

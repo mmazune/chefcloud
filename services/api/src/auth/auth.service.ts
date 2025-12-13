@@ -3,16 +3,16 @@ import {
   UnauthorizedException,
   NotFoundException,
   BadRequestException,
-  Inject,
-  forwardRef,
-  Optional,
+  // Inject,
+  // forwardRef,
+  // Optional,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma.service';
 import { AuthHelpers } from './auth.helpers';
 import { LoginDto, PinLoginDto, MsrSwipeDto, AuthResponse, SessionPlatform } from './dto/auth.dto';
 import { JwtPayload } from './jwt.strategy';
-import { WorkforceService } from '../workforce/workforce.service';
+// import { WorkforceService } from '../workforce/workforce.service'; // Removed: circular dependency fix M30-OPS-S5
 import { SessionInvalidationService } from './session-invalidation.service';
 import { SessionsService } from './sessions.service';
 import { MsrCardService } from './msr-card.service';
@@ -46,9 +46,9 @@ export class AuthService {
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
-    @Optional()
-    @Inject(forwardRef(() => WorkforceService))
-    private workforceService: WorkforceService,
+    // @Optional()
+    // @Inject(forwardRef(() => WorkforceService))
+    // private workforceService: WorkforceService, // REMOVED: WorkforceModule not imported (circular dependency fix M30-OPS-S5)
     private sessionInvalidation: SessionInvalidationService,
     private sessionsService: SessionsService, // M10: Session lifecycle management
     private msrCardService: MsrCardService, // M10: MSR card management
@@ -392,10 +392,10 @@ export class AuthService {
    * E43-s1: Auto-clock-in on MSR/Passkey login if enabled
    */
   private async autoClockIn(
-    userId: string,
+    _userId: string,
     orgId: string,
-    branchId: string | null,
-    method: 'MSR' | 'PASSKEY',
+    _branchId: string | null,
+    _method: 'MSR' | 'PASSKEY',
   ): Promise<void> {
     try {
       // Check if auto-clock-in is enabled
@@ -406,20 +406,21 @@ export class AuthService {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const autoClockInOnMsr = (settings?.attendance as any)?.autoClockInOnMsr ?? false;
 
-      if (!autoClockInOnMsr || !this.workforceService) {
-        return;
+      if (!autoClockInOnMsr) {
+        return; // WorkforceService not available (circular dependency fix M30-OPS-S5)
       }
 
       // Clock in via WorkforceService (only if available)
-      await this.workforceService.clockIn({
-        orgId,
-        branchId: branchId || 'default',
-        userId,
-        method,
-      });
+      // DISABLED: WorkforceModule not imported to break circular dependency
+      // await this.workforceService.clockIn({
+      //   orgId,
+      //   branchId: branchId || 'default',
+      //   userId,
+      //   method,
+      // });
     } catch (error) {
       // Don't fail auth if clock-in fails (e.g., already clocked in)
-      console.log(`Auto-clock-in skipped for user ${userId}:`, (error as Error).message);
+      console.log(`Auto-clock-in skipped for user ${_userId}:`, (error as Error).message);
     }
   }
 }

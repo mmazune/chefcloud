@@ -56,11 +56,14 @@ import { WriteBlockMiddleware } from './ops/write-block.middleware';
 import { RedisService } from './common/redis.service';
 import { WebhookVerificationGuard } from './common/webhook-verification.guard';
 import { DemoModule } from './common/demo/demo.module'; // M33-DEMO-S4
+import { CacheModule } from './common/cache.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    ObservabilityModule, // Global metrics - MUST BE FIRST for other global modules
     DemoModule, // M33-DEMO-S4: Global demo protection service
+    CacheModule, // Global cache services
     ThrottlerModule.forRoot([
       {
         ttl: 60000, // 1 minute
@@ -83,11 +86,11 @@ import { DemoModule } from './common/demo/demo.module'; // M33-DEMO-S4
     InventoryModule,
     PurchasingModule,
     WebAuthnModule,
-    PaymentsModule,
+    PaymentsModule, // Needed by WebhooksController
     EfrisModule,
     AlertsModule,
     ReservationsModule,
-    OpsModule,
+    OpsModule, // Needed by WriteBlockMiddleware
     SupportModule,
     HardwareModule,
     OwnerModule,
@@ -108,7 +111,6 @@ import { DemoModule } from './common/demo/demo.module'; // M33-DEMO-S4
     SettingsModule,
     BookingsModule,
     WorkforceModule,
-    ObservabilityModule,
     MetaModule,
     DocumentsModule, // M18
     FeedbackModule, // M20

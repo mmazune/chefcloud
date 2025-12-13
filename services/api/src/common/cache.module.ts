@@ -2,7 +2,7 @@ import { Module, Global } from '@nestjs/common';
 import { CacheService } from './cache.service';
 import { CacheInvalidationService } from './cache-invalidation.service';
 import { RedisService } from './redis.service';
-import { ObservabilityModule } from '../observability/observability.module';
+// import { ObservabilityModule } from '../observability/observability.module'; // Not needed - ObservabilityModule is @Global()
 
 /**
  * Cache Module
@@ -11,7 +11,7 @@ import { ObservabilityModule } from '../observability/observability.module';
  */
 @Global()
 @Module({
-  imports: [ObservabilityModule],
+  imports: [], // ObservabilityModule not needed - it's @Global()
   providers: [RedisService, CacheService, CacheInvalidationService],
   exports: [RedisService, CacheService, CacheInvalidationService],
 })

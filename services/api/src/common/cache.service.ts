@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Optional } from '@nestjs/common';
 import { RedisService } from './redis.service';
 import { MetricsService } from '../observability/metrics.service';
 
@@ -32,7 +32,7 @@ export class CacheService {
 
   constructor(
     private readonly redis: RedisService,
-    private readonly metrics: MetricsService,
+    @Optional() private readonly metrics: MetricsService,
   ) {
     // Cleanup expired entries every 5 minutes
     this.cleanupInterval = setInterval(() => this.cleanupMemory(), 5 * 60 * 1000);

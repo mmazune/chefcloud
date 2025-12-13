@@ -5,6 +5,7 @@ import {
   HttpException,
   HttpStatus,
   Logger,
+  Optional,
 } from '@nestjs/common';
 import { createHmac, timingSafeEqual } from 'crypto';
 import { RedisService } from './redis.service';
@@ -57,7 +58,7 @@ export class WebhookVerificationGuard implements CanActivate {
 
   constructor(
     private readonly redis: RedisService,
-    private readonly metrics: MetricsService,
+    @Optional() private readonly metrics: MetricsService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {

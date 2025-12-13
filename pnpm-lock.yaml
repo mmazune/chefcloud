@@ -525,6 +525,9 @@ importers:
       jest-junit:
         specifier: ^16.0.0
         version: 16.0.0
+      madge:
+        specifier: ^8.0.0
+        version: 8.0.0(typescript@5.9.3)
       pg:
         specifier: ^8.16.3
         version: 8.16.3
@@ -9574,7 +9577,7 @@ packages:
   /@vitest/snapshot@1.6.1:
     resolution: {integrity: sha512-WvidQuWAzU2p95u8GAKlRMqMyN1yOJkGHnx3M1PL9Raf7AQ1kwLKg04ADlCa3+OXUZE7BceOhVZiuWAbzCKcUQ==}
     dependencies:
-      magic-string: 0.30.8
+      magic-string: 0.30.21
       pathe: 1.1.2
       pretty-format: 29.7.0
     dev: true
