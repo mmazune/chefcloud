@@ -57,10 +57,12 @@ import { RedisService } from './common/redis.service';
 import { WebhookVerificationGuard } from './common/webhook-verification.guard';
 import { DemoModule } from './common/demo/demo.module'; // M33-DEMO-S4
 import { CacheModule } from './common/cache.module';
+import { PrismaModule } from './prisma.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    PrismaModule, // Global PrismaService - FIRST to avoid conflicts
     ObservabilityModule, // Global metrics - MUST BE FIRST for other global modules
     DemoModule, // M33-DEMO-S4: Global demo protection service
     CacheModule, // Global cache services
@@ -117,7 +119,7 @@ import { CacheModule } from './common/cache.module';
   ],
   controllers: [HealthController, WebhooksController],
   providers: [
-    PrismaService,
+    // PrismaService now provided by global PrismaModule
     RedisService,
     WebhookVerificationGuard,
     {
