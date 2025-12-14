@@ -10,6 +10,7 @@ export const apiClient: AxiosInstance = axios.create({
   baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
+    'X-Client-Platform': 'web',
   },
   withCredentials: true, // Include cookies in requests
 });

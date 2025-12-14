@@ -65,11 +65,11 @@ export function usePosCachedOpenOrders(): UsePosCachedOpenOrdersResult {
       }
 
       try {
-        const resp = await fetch('/api/pos/orders?status=OPEN', {
+        const resp = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/pos/orders?status=OPEN`, {
           headers: {
             'Accept': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
           },
+          credentials: 'include',
         });
 
         if (!resp.ok) {

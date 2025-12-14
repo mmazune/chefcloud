@@ -65,8 +65,9 @@ export function useInventoryCachedOverview(): UseInventoryCachedOverviewResult {
 
       try {
         // NOTE: adjust this endpoint to your real inventory overview API
-        const resp = await fetch('/api/inventory', {
+        const resp = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/inventory`, {
           headers: { Accept: 'application/json' },
+          credentials: 'include',
         });
 
         if (!resp.ok) {

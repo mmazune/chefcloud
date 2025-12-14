@@ -5,7 +5,7 @@ import { EfrisController } from './efris.controller';
 import { PrismaService } from '../prisma.service';
 
 @Module({
-  imports: [ConfigModule],
+  imports: [], // ConfigModule is global
   controllers: [EfrisController],
   providers: [EfrisService, PrismaService],
   exports: [EfrisService],

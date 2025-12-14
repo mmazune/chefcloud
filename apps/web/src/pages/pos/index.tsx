@@ -27,6 +27,8 @@ import { PosTabNameDialog } from '@/components/pos/PosTabNameDialog';
 import { SystemDiagnosticsPanel } from '@/components/common/SystemDiagnosticsPanel';
 import { DiagnosticsToggleButton } from '@/components/common/DiagnosticsToggleButton';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+
 interface Order {
   id: string;
   tableName: string | null;
@@ -153,8 +155,8 @@ export default function PosPage() {
     queryKey: ['pos-order', selectedOrderId],
     queryFn: async () => {
       if (!selectedOrderId) return null;
-      const res = await fetch(`/api/pos/orders/${selectedOrderId}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      const res = await fetch(`${API_URL}/pos/orders/${selectedOrderId}`, {
+        credentials: 'include',
       });
       if (!res.ok) throw new Error('Failed to fetch order');
       return res.json() as Promise<OrderDetail>;
@@ -165,7 +167,8 @@ export default function PosPage() {
   // M27-S1: Create new order with offline support
   const createOrderMutation = useMutation({
     mutationFn: async () => {
-      const url = '/api/pos/orders';
+      const url = `${API_URL}/pos/orders`;
+      const relativeUrl = '/pos/orders';
       const idempotencyKey = generateIdempotencyKey('pos-create');
       const body = {
         serviceType: 'DINE_IN',
@@ -174,7 +177,7 @@ export default function PosPage() {
 
       if (!isOnline) {
         addToQueue({
-          url,
+          url: relativeUrl,
           method: 'POST',
           body,
           idempotencyKey,
@@ -187,9 +190,9 @@ export default function PosPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
           'X-Idempotency-Key': idempotencyKey,
         },
+        credentials: 'include',
         body: JSON.stringify(body),
       });
       if (!res.ok) throw new Error('Failed to create order');
@@ -204,12 +207,13 @@ export default function PosPage() {
   // M27-S1: Send to kitchen with offline support
   const sendToKitchenMutation = useMutation({
     mutationFn: async (orderId: string) => {
-      const url = `/api/pos/orders/${orderId}/send-to-kitchen`;
+      const url = `${API_URL}/pos/orders/${orderId}/send-to-kitchen`;
+      const relativeUrl = `/pos/orders/${orderId}/send-to-kitchen`;
       const idempotencyKey = generateIdempotencyKey(`pos-send-${orderId}`);
 
       if (!isOnline) {
         addToQueue({
-          url,
+          url: relativeUrl,
           method: 'POST',
           body: {},
           idempotencyKey,
@@ -220,9 +224,9 @@ export default function PosPage() {
       const res = await fetch(url, {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
           'X-Idempotency-Key': idempotencyKey,
         },
+        credentials: 'include',
       });
       if (!res.ok) throw new Error('Failed to send to kitchen');
       return res.json();
@@ -236,13 +240,14 @@ export default function PosPage() {
   // M27-S1: Close order (payment) with offline support
   const closeOrderMutation = useMutation({
     mutationFn: async ({ orderId, amount }: { orderId: string; amount: number }) => {
-      const url = `/api/pos/orders/${orderId}/close`;
+      const url = `${API_URL}/pos/orders/${orderId}/close`;
+      const relativeUrl = `/pos/orders/${orderId}/close`;
       const idempotencyKey = generateIdempotencyKey(`pos-close-${orderId}`);
       const body = { amount, timestamp: new Date().toISOString() };
 
       if (!isOnline) {
         addToQueue({
-          url,
+          url: relativeUrl,
           method: 'POST',
           body,
           idempotencyKey,
@@ -254,9 +259,9 @@ export default function PosPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
           'X-Idempotency-Key': idempotencyKey,
         },
+        credentials: 'include',
         body: JSON.stringify(body),
       });
       if (!res.ok) throw new Error('Failed to close order');
@@ -273,13 +278,14 @@ export default function PosPage() {
   // M27-S1: Void order with offline support
   const voidOrderMutation = useMutation({
     mutationFn: async ({ orderId, reason }: { orderId: string; reason: string }) => {
-      const url = `/api/pos/orders/${orderId}/void`;
+      const url = `${API_URL}/pos/orders/${orderId}/void`;
+      const relativeUrl = `/pos/orders/${orderId}/void`;
       const idempotencyKey = generateIdempotencyKey(`pos-void-${orderId}`);
       const body = { reason };
 
       if (!isOnline) {
         addToQueue({
-          url,
+          url: relativeUrl,
           method: 'POST',
           body,
           idempotencyKey,
@@ -291,9 +297,9 @@ export default function PosPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
           'X-Idempotency-Key': idempotencyKey,
         },
+        credentials: 'include',
         body: JSON.stringify(body),
       });
       if (!res.ok) throw new Error('Failed to void order');
@@ -354,7 +360,8 @@ export default function PosPage() {
   // M26-S2/M27-S1: Add items to order mutation with offline support
   const addItemsMutation = useMutation({
     mutationFn: async (payload: { orderId: string; itemId: string }) => {
-      const url = `/api/pos/orders/${payload.orderId}/modify`;
+      const url = `${API_URL}/pos/orders/${payload.orderId}/modify`;
+      const relativeUrl = `/pos/orders/${payload.orderId}/modify`;
       const idempotencyKey = generateIdempotencyKey(
         `pos-add-${payload.orderId}-${payload.itemId}`
       );
@@ -369,7 +376,7 @@ export default function PosPage() {
 
       if (!isOnline) {
         addToQueue({
-          url,
+          url: relativeUrl,
           method: 'POST',
           body,
           idempotencyKey,
@@ -381,9 +388,9 @@ export default function PosPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
           'X-Idempotency-Key': idempotencyKey,
         },
+        credentials: 'include',
         body: JSON.stringify(body),
       });
       if (!res.ok) {
@@ -405,7 +412,8 @@ export default function PosPage() {
       quantity?: number;
       notes?: string;
     }) => {
-      const url = `/api/pos/orders/${payload.orderId}/modify`;
+      const url = `${API_URL}/pos/orders/${payload.orderId}/modify`;
+      const relativeUrl = `/pos/orders/${payload.orderId}/modify`;
       const idempotencyKey = generateIdempotencyKey(
         `pos-update-${payload.orderId}-${payload.itemId}`
       );
@@ -426,7 +434,7 @@ export default function PosPage() {
 
       if (!isOnline) {
         addToQueue({
-          url,
+          url: relativeUrl,
           method: 'POST',
           body,
           idempotencyKey,
@@ -438,9 +446,9 @@ export default function PosPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
           'X-Idempotency-Key': idempotencyKey,
         },
+        credentials: 'include',
         body: JSON.stringify(body),
       });
       if (!res.ok) {
@@ -633,13 +641,14 @@ export default function PosPage() {
 
     // Update tab name via offline queue
     const orderId = tabNameDialogTarget;
-    const url = `/api/pos/orders/${orderId}/tab-name`;
+    const url = `${API_URL}/pos/orders/${orderId}/tab-name`;
+    const relativeUrl = `/pos/orders/${orderId}/tab-name`;
     const idempotencyKey = generateIdempotencyKey(`pos-update-tab-${orderId}`);
     const body = { tabName };
 
     if (!isOnline) {
       addToQueue({
-        url,
+        url: relativeUrl,
         method: 'PATCH',
         body,
         idempotencyKey,
@@ -651,9 +660,9 @@ export default function PosPage() {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
           'X-Idempotency-Key': idempotencyKey,
         },
+        credentials: 'include',
         body: JSON.stringify(body),
       })
         .then(res => {
@@ -684,7 +693,8 @@ export default function PosPage() {
       alert('Modifier editing not yet implemented. Please add as new item.');
     } else {
       // Adding new item with modifiers
-      const url = `/api/pos/orders/${orderId}/items`;
+      const url = `${API_URL}/pos/orders/${orderId}/items`;
+      const relativeUrl = `/pos/orders/${orderId}/items`;
       const idempotencyKey = generateIdempotencyKey(`pos-add-item-${orderId}-${item.id}`);
 
       const body = {
@@ -699,7 +709,7 @@ export default function PosPage() {
 
       if (!isOnline) {
         addToQueue({
-          url,
+          url: relativeUrl,
           method: 'POST',
           body,
           idempotencyKey,
@@ -709,9 +719,9 @@ export default function PosPage() {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
             'X-Idempotency-Key': idempotencyKey,
           },
+          credentials: 'include',
           body: JSON.stringify(body),
         })
           .then(res => {
@@ -735,13 +745,14 @@ export default function PosPage() {
   const handleSubmitSplit = async (orderId: string, payload: PosSplitPaymentsDto) => {
     setIsSplitSubmitting(true);
     try {
-      const url = `/api/pos/orders/${orderId}/split-payments`;
+      const url = `${API_URL}/pos/orders/${orderId}/split-payments`;
+      const relativeUrl = `/pos/orders/${orderId}/split-payments`;
       const idempotencyKey = generateIdempotencyKey(`pos-split-${orderId}`);
 
       if (!isOnline) {
         // Queue for background sync using existing offlineQueue infra
         addToQueue({
-          url,
+          url: relativeUrl,
           method: 'POST',
           body: payload,
           idempotencyKey,
@@ -757,9 +768,9 @@ export default function PosPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
           'X-Idempotency-Key': idempotencyKey,
         },
+        credentials: 'include',
         body: JSON.stringify(payload),
       });
 

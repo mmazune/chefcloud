@@ -14,7 +14,7 @@ import { CommonModule } from '../common/common.module';
 @Module({
   imports: [
     EfrisModule,
-    ConfigModule,
+    // ConfigModule is global
     EventsModule,
     InventoryModule,
     KpisModule,

@@ -8,7 +8,7 @@ import { PrismaService } from '../prisma.service';
 import { AccountingModule } from '../accounting/accounting.module';
 
 @Module({
-  imports: [ConfigModule, AccountingModule],
+  imports: [AccountingModule], // ConfigModule is global
   controllers: [PaymentsController],
   providers: [PaymentsService, MtnSandboxAdapter, AirtelSandboxAdapter, PrismaService],
   exports: [PaymentsService],

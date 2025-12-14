@@ -151,11 +151,12 @@ async function checkOrderConflict(
   }
 
   try {
-    const resp = await fetch(`/api/pos/orders/${orderId}`, {
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+    const resp = await fetch(`${API_URL}/pos/orders/${orderId}`, {
       headers: { 
         'Accept': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
       },
+      credentials: 'include',
     });
 
     if (!resp.ok) {

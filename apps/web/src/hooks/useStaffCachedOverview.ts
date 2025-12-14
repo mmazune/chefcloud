@@ -64,8 +64,9 @@ export function useStaffCachedOverview(): UseStaffCachedOverviewResult {
 
       try {
         // NOTE: adjust this endpoint to your real staff overview API
-        const resp = await fetch('/api/hr/staff', {
+        const resp = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/hr/staff`, {
           headers: { Accept: 'application/json' },
+          credentials: 'include',
         });
 
         if (!resp.ok) {

@@ -69,11 +69,11 @@ export function usePosCachedMenu(): UsePosCachedMenuResult {
       }
 
       try {
-        const resp = await fetch('/api/menu/items', {
+        const resp = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/menu/items`, {
           headers: {
             'Accept': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
           },
+          credentials: 'include',
         });
 
         if (!resp.ok) {

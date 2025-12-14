@@ -5,7 +5,7 @@ import { AlertsService } from './alerts.service';
 import { PrismaService } from '../prisma.service';
 
 @Module({
-  imports: [ConfigModule],
+  imports: [], // ConfigModule is global
   controllers: [AlertsController],
   providers: [AlertsService, PrismaService],
   exports: [AlertsService],

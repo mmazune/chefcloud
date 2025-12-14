@@ -8,7 +8,7 @@ import { PrismaService } from '../prisma.service';
 @Module({
   imports: [
     JwtModule.registerAsync({
-      imports: [ConfigModule],
+      imports: [], // ConfigModule is global
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
         secret: config.get('JWT_SECRET') || 'dev-secret-change-in-production',

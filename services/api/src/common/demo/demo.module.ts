@@ -10,7 +10,7 @@ import { DemoProtectionService } from './demo-protection.service';
 
 @Global()
 @Module({
-  imports: [ConfigModule],
+  imports: [], // ConfigModule is global
   providers: [DemoProtectionService],
   exports: [DemoProtectionService],
 })

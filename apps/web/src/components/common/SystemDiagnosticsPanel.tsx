@@ -114,7 +114,7 @@ export function SystemDiagnosticsPanel(props: SystemDiagnosticsPanelProps) {
       nodeEnv: typeof process !== 'undefined' ? process.env.NODE_ENV ?? null : null,
       apiBaseUrl:
         typeof process !== 'undefined'
-          ? process.env.NEXT_PUBLIC_API_BASE_URL ?? null
+          ? process.env.NEXT_PUBLIC_API_URL ?? null
           : null,
     },
 

@@ -80,11 +80,11 @@ export function useKdsOrders(options: UseKdsOrdersOptions = {}): UseKdsOrdersRes
       if (!navigator.onLine) return;
 
       try {
-        const resp = await fetch('/api/kds/orders', {
-          headers: { 
+        const resp = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/kds/orders`, {
+          headers: {
             Accept: 'application/json',
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
           },
+          credentials: 'include',
         });
 
         if (!resp.ok) {

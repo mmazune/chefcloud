@@ -10,7 +10,7 @@ import { PlanRateLimiterGuard } from '../common/plan-rate-limiter.guard';
 @Module({
   imports: [
     JwtModule.registerAsync({
-      imports: [ConfigModule],
+      imports: [], // ConfigModule is global
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
         secret: config.get('JWT_SECRET'),
