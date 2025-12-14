@@ -323,6 +323,24 @@ export class RedisService {
     this.logger.debug(`Pub/sub not available in in-memory mode (channel: ${channel})`);
   }
 
+  /**
+   * Check if Redis is healthy (for health checks)
+   * Returns true if Redis is connected, false if using in-memory fallback
+   */
+  async isHealthy(): Promise<boolean> {
+    if (!this.redis) {
+      return false; // Using in-memory fallback
+    }
+
+    try {
+      const result = await this.redis.ping();
+      return result === 'PONG';
+    } catch (error) {
+      this.logger.warn(`Redis health check failed: ${(error as Error).message}`);
+      return false;
+    }
+  }
+
   onModuleDestroy() {
     if (this.cleanupInterval) {
       clearInterval(this.cleanupInterval);
