@@ -1,4 +1,5 @@
 import { Controller, Get } from '@nestjs/common';
+import { SkipThrottle } from '@nestjs/throttler';
 import { PrismaService } from '../prisma.service';
 import { RedisService } from '../common/redis.service';
 
@@ -13,6 +14,7 @@ export interface HealthResponse {
   };
 }
 
+@SkipThrottle()
 @Controller('api/health')
 export class HealthController {
   constructor(
@@ -20,6 +22,7 @@ export class HealthController {
     private redis: RedisService,
   ) {}
 
+  @SkipThrottle()
   @Get()
   async check(): Promise<HealthResponse> {
     let dbStatus: 'ok' | 'down' = 'ok';
