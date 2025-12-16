@@ -50,8 +50,16 @@ export interface PinLoginCredentials {
  * Login response from API
  */
 export interface LoginResponse {
-  token: string;
-  user: AuthUser;
+  access_token: string;
+  user: {
+    id: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    roleLevel: RoleLevel;
+    orgId: string;
+    branchId?: string;
+  };
 }
 
 /**
@@ -97,9 +105,24 @@ export function isAuthenticated(): boolean {
  */
 export async function login(credentials: LoginCredentials): Promise<AuthUser> {
   const response = await apiClient.post<LoginResponse>('/auth/login', credentials);
-  const { token, user } = response.data;
-  setAuthToken(token);
-  return user;
+  const { access_token, user } = response.data;
+  setAuthToken(access_token);
+  
+  // Transform backend user format to frontend AuthUser format
+  return {
+    id: user.id,
+    email: user.email,
+    displayName: `${user.firstName} ${user.lastName}`,
+    roleLevel: user.roleLevel,
+    org: {
+      id: user.orgId,
+      name: '', // Will be populated by getCurrentUser
+    },
+    branch: user.branchId ? {
+      id: user.branchId,
+      name: '', // Will be populated by getCurrentUser
+    } : undefined,
+  };
 }
 
 /**
@@ -107,9 +130,24 @@ export async function login(credentials: LoginCredentials): Promise<AuthUser> {
  */
 export async function pinLogin(credentials: PinLoginCredentials): Promise<AuthUser> {
   const response = await apiClient.post<LoginResponse>('/auth/pin-login', credentials);
-  const { token, user } = response.data;
-  setAuthToken(token);
-  return user;
+  const { access_token, user } = response.data;
+  setAuthToken(access_token);
+  
+  // Transform backend user format to frontend AuthUser format
+  return {
+    id: user.id,
+    email: user.email,
+    displayName: `${user.firstName} ${user.lastName}`,
+    roleLevel: user.roleLevel,
+    org: {
+      id: user.orgId,
+      name: '', // Will be populated by getCurrentUser
+    },
+    branch: user.branchId ? {
+      id: user.branchId,
+      name: '', // Will be populated by getCurrentUser
+    } : undefined,
+  };
 }
 
 /**
@@ -129,8 +167,23 @@ export async function logout(): Promise<void> {
  * Get current user information
  */
 export async function getCurrentUser(): Promise<AuthUser> {
-  const response = await apiClient.get<AuthUser>('/auth/me');
-  return response.data;
+  const response = await apiClient.get('/me');
+  const data = response.data;
+  
+  return {
+    id: data.id,
+    email: data.email,
+    displayName: `${data.firstName} ${data.lastName}`,
+    roleLevel: data.roleLevel,
+    org: {
+      id: data.org.id,
+      name: data.org.name,
+    },
+    branch: data.branch ? {
+      id: data.branch.id,
+      name: data.branch.name,
+    } : undefined,
+  };
 }
 
 /**

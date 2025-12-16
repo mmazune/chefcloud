@@ -17,8 +17,9 @@ export default function App({ Component, pageProps }: AppProps) {
       new QueryClient({
         defaultOptions: {
           queries: {
-            staleTime: 60 * 1000, // 1 minute
+            staleTime: 5 * 60 * 1000, // 5 minutes - reduced refetching for better performance
             refetchOnWindowFocus: false,
+            retry: 1, // Reduce retries for faster failures
           },
         },
       })

@@ -40,8 +40,17 @@ apiClient.interceptors.response.use(
     if (error.response?.status === 401) {
       // Token expired or invalid - redirect to login
       Cookies.remove('auth_token');
-      if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/login')) {
-        window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname)}`;
+      
+      // Avoid redirect loop if already on login page or public endpoints
+      if (typeof window !== 'undefined') {
+        const currentPath = window.location.pathname;
+        const isPublicPath = currentPath === '/login' || 
+                           currentPath.startsWith('/public/') ||
+                           currentPath === '/';
+        
+        if (!isPublicPath) {
+          window.location.href = `/login?redirect=${encodeURIComponent(currentPath)}`;
+        }
       }
     }
     return Promise.reject(error);
