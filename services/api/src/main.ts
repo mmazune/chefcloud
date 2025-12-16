@@ -47,14 +47,53 @@ async function bootstrap() {
   // Security: Helmet
   app.use(helmet());
 
-  // Security: CORS with allowlist
-  const corsAllowlist = process.env.CORS_ALLOWLIST
-    ? process.env.CORS_ALLOWLIST.split(',').map((origin) => origin.trim())
-    : ['http://localhost:3000', 'http://localhost:5173'];
+  // Security: Trust proxy for Render.com (enables correct IP detection)
+  const expressApp = app.getHttpAdapter().getInstance();
+  expressApp.set('trust proxy', 1);
+
+  // Security: CORS with allowlist - support multiple env var names
+  const rawOrigins =
+    process.env.CORS_ORIGINS ||
+    process.env.CORS_ORIGIN ||
+    process.env.cors_origin ||
+    process.env.CORS_ALLOWLIST ||
+    'http://localhost:3000,http://localhost:5173';
+
+  const allowedOrigins = rawOrigins
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter((origin) => origin.length > 0);
+
+  console.log(
+    `[BOOTSTRAP] CORS enabled for ${allowedOrigins.length} origin(s): ${allowedOrigins.join(', ')}`,
+  );
 
   app.enableCors({
-    origin: corsAllowlist,
+    origin: (origin, callback) => {
+      // Allow server-to-server requests (no Origin header)
+      if (!origin) {
+        return callback(null, true);
+      }
+
+      // Allow if origin is in allowedOrigins
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      // Deny - but don't crash, just log
+      console.warn(`[CORS] Blocked origin: ${origin}`);
+      return callback(null, false);
+    },
     credentials: true,
+    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'X-Requested-With',
+      'X-Idempotency-Key',
+      'X-Client-Platform',
+      'Accept',
+    ],
   });
 
   app.useGlobalPipes(
@@ -79,7 +118,7 @@ async function bootstrap() {
   console.log(`[BOOTSTRAP] Binding to 0.0.0.0:${port}...`);
   await app.listen(port, '0.0.0.0');
   logger.info(`🚀 ChefCloud API running on http://0.0.0.0:${port}`);
-  logger.info(`CORS allowlist: ${corsAllowlist.join(', ')}`);
+  logger.info(`CORS allowlist: ${allowedOrigins.join(', ')}`);
   console.log(`[BOOTSTRAP] Server started successfully`);
 }
 
