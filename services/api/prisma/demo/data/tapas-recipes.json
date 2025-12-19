@@ -1,0 +1,4300 @@
+[
+  {
+    "menuSku": "TAP-FOOD-0001",
+    "menuName": "Full English Breakfast",
+    "ingredients": [
+      {
+        "inventorySku": "INV-CHKN-0004",
+        "name": "Eggs",
+        "qty": 2,
+        "unit": "PCS",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-PORK-0006",
+        "name": "Pork Sausage",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-PORK-0001",
+        "name": "Bacon",
+        "qty": 60,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-SAUC-0006",
+        "name": "Baked Beans",
+        "qty": 80,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0005",
+        "name": "Mushrooms",
+        "qty": 40,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-BAKF-0001",
+        "name": "Toast",
+        "qty": 2,
+        "unit": "SLICES",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0002",
+        "name": "Tomato",
+        "qty": 50,
+        "unit": "G",
+        "note": "Grilled"
+      },
+      {
+        "inventorySku": "INV-VEGT-0006",
+        "name": "Potato",
+        "qty": 100,
+        "unit": "G",
+        "note": "Wedges"
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-FOOD-0002",
+    "menuName": "Healthy Breakfast",
+    "ingredients": [
+      {
+        "inventorySku": "INV-DARY-0008",
+        "name": "Vanilla Yoghurt",
+        "qty": 200,
+        "unit": "ML",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-CERE-0004",
+        "name": "Muesli",
+        "qty": 50,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-FRUT-0005",
+        "name": "Mixed Fruit",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-SALT-0004",
+        "name": "Honey",
+        "qty": 15,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-FOOD-0003",
+    "menuName": "Skillet Breakfast",
+    "ingredients": [
+      {
+        "inventorySku": "INV-CHKN-0004",
+        "name": "Eggs",
+        "qty": 2,
+        "unit": "PCS",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-PORK-0006",
+        "name": "Sausage",
+        "qty": 80,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-BAKF-0001",
+        "name": "Toast",
+        "qty": 2,
+        "unit": "SLICES",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0002",
+        "name": "Tomato",
+        "qty": 40,
+        "unit": "G",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": true
+  },
+  {
+    "menuSku": "TAP-FOOD-0004",
+    "menuName": "Avocado on Toast",
+    "ingredients": [
+      {
+        "inventorySku": "INV-BAKF-0001",
+        "name": "Bread",
+        "qty": 100,
+        "unit": "G",
+        "note": "Toasted"
+      },
+      {
+        "inventorySku": "INV-VEGT-0007",
+        "name": "Avocado",
+        "qty": 1,
+        "unit": "PCS",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-CHKN-0004",
+        "name": "Eggs",
+        "qty": 2,
+        "unit": "PCS",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0002",
+        "name": "Tomato",
+        "qty": 30,
+        "unit": "G",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-FOOD-0005",
+    "menuName": "Fluffy Pancakes",
+    "ingredients": [
+      {
+        "inventorySku": "INV-BAKF-0002",
+        "name": "Flour",
+        "qty": 120,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-CHKN-0004",
+        "name": "Eggs",
+        "qty": 1,
+        "unit": "PCS",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-DARY-0006",
+        "name": "Milk",
+        "qty": 150,
+        "unit": "ML",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-SYRP-0002",
+        "name": "Pancake Syrup",
+        "qty": 30,
+        "unit": "ML",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-FRUT-0002",
+        "name": "Banana",
+        "qty": 1,
+        "unit": "PCS",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-SALT-0004",
+        "name": "Honey",
+        "qty": 10,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-FOOD-0006",
+    "menuName": "Mixed Fruit Salad",
+    "ingredients": [
+      {
+        "inventorySku": "INV-FRUT-0005",
+        "name": "Pineapple",
+        "qty": 80,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-FRUT-0007",
+        "name": "Watermelon",
+        "qty": 80,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-FRUT-0008",
+        "name": "Mango",
+        "qty": 60,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-FRUT-0002",
+        "name": "Banana",
+        "qty": 1,
+        "unit": "PCS",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-FRUT-0003",
+        "name": "Lemon Juice",
+        "qty": 10,
+        "unit": "ML",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-SALT-0004",
+        "name": "Honey",
+        "qty": 15,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-FOOD-0007",
+    "menuName": "Chicken Spring Rolls",
+    "ingredients": [
+      {
+        "inventorySku": "INV-MEAT-0003",
+        "name": "Protein",
+        "qty": 150,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0006",
+        "name": "Vegetables",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-CERE-0001",
+        "name": "Starch",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": true
+  },
+  {
+    "menuSku": "TAP-FOOD-0008",
+    "menuName": "Chicken Satay",
+    "ingredients": [
+      {
+        "inventorySku": "INV-MEAT-0003",
+        "name": "Protein",
+        "qty": 150,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0006",
+        "name": "Vegetables",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-CERE-0001",
+        "name": "Starch",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": true
+  },
+  {
+    "menuSku": "TAP-FOOD-0009",
+    "menuName": "Buffalo Wings",
+    "ingredients": [
+      {
+        "inventorySku": "INV-CHKN-0002",
+        "name": "Chicken Wings",
+        "qty": 250,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-SAUC-0001",
+        "name": "BBQ Sauce",
+        "qty": 30,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-SPCE-0001",
+        "name": "Spices",
+        "qty": 5,
+        "unit": "G",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-FOOD-0010",
+    "menuName": "BBQ Wings",
+    "ingredients": [
+      {
+        "inventorySku": "INV-CHKN-0002",
+        "name": "Chicken Wings",
+        "qty": 250,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-SAUC-0001",
+        "name": "BBQ Sauce",
+        "qty": 30,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-SPCE-0001",
+        "name": "Spices",
+        "qty": 5,
+        "unit": "G",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-FOOD-0011",
+    "menuName": "Chicken Lollipops",
+    "ingredients": [
+      {
+        "inventorySku": "INV-MEAT-0003",
+        "name": "Protein",
+        "qty": 150,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0006",
+        "name": "Vegetables",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-CERE-0001",
+        "name": "Starch",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": true
+  },
+  {
+    "menuSku": "TAP-FOOD-0012",
+    "menuName": "Chicken Skewers",
+    "ingredients": [
+      {
+        "inventorySku": "INV-MEAT-0003",
+        "name": "Protein",
+        "qty": 150,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0006",
+        "name": "Vegetables",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-CERE-0001",
+        "name": "Starch",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": true
+  },
+  {
+    "menuSku": "TAP-FOOD-0013",
+    "menuName": "Pork Riblets",
+    "ingredients": [
+      {
+        "inventorySku": "INV-MEAT-0003",
+        "name": "Protein",
+        "qty": 150,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0006",
+        "name": "Vegetables",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-CERE-0001",
+        "name": "Starch",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": true
+  },
+  {
+    "menuSku": "TAP-FOOD-0014",
+    "menuName": "Pork Skewers",
+    "ingredients": [
+      {
+        "inventorySku": "INV-MEAT-0003",
+        "name": "Protein",
+        "qty": 150,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0006",
+        "name": "Vegetables",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-CERE-0001",
+        "name": "Starch",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": true
+  },
+  {
+    "menuSku": "TAP-FOOD-0015",
+    "menuName": "Meatballs",
+    "ingredients": [
+      {
+        "inventorySku": "INV-MEAT-0003",
+        "name": "Protein",
+        "qty": 150,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0006",
+        "name": "Vegetables",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-CERE-0001",
+        "name": "Starch",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": true
+  },
+  {
+    "menuSku": "TAP-FOOD-0016",
+    "menuName": "Beef Skewers",
+    "ingredients": [
+      {
+        "inventorySku": "INV-MEAT-0003",
+        "name": "Protein",
+        "qty": 150,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0006",
+        "name": "Vegetables",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-CERE-0001",
+        "name": "Starch",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": true
+  },
+  {
+    "menuSku": "TAP-FOOD-0017",
+    "menuName": "Tacos",
+    "ingredients": [
+      {
+        "inventorySku": "INV-MEAT-0003",
+        "name": "Protein",
+        "qty": 150,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0006",
+        "name": "Vegetables",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-CERE-0001",
+        "name": "Starch",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": true
+  },
+  {
+    "menuSku": "TAP-FOOD-0018",
+    "menuName": "Beef Sliders",
+    "ingredients": [
+      {
+        "inventorySku": "INV-MEAT-0003",
+        "name": "Protein",
+        "qty": 150,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0006",
+        "name": "Vegetables",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-CERE-0001",
+        "name": "Starch",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": true
+  },
+  {
+    "menuSku": "TAP-FOOD-0019",
+    "menuName": "Chicken Sliders",
+    "ingredients": [
+      {
+        "inventorySku": "INV-MEAT-0003",
+        "name": "Protein",
+        "qty": 150,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0006",
+        "name": "Vegetables",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-CERE-0001",
+        "name": "Starch",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": true
+  },
+  {
+    "menuSku": "TAP-FOOD-0020",
+    "menuName": "Tuna Fish Bruschetta",
+    "ingredients": [
+      {
+        "inventorySku": "INV-FISH-0001",
+        "name": "Fish Fillet",
+        "qty": 200,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0006",
+        "name": "Potato",
+        "qty": 150,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0001",
+        "name": "Lettuce",
+        "qty": 30,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-FRUT-0003",
+        "name": "Lemon",
+        "qty": 20,
+        "unit": "G",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-FOOD-0021",
+    "menuName": "Tilapia Bites",
+    "ingredients": [
+      {
+        "inventorySku": "INV-FISH-0001",
+        "name": "Fish Fillet",
+        "qty": 200,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0006",
+        "name": "Potato",
+        "qty": 150,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0001",
+        "name": "Lettuce",
+        "qty": 30,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-FRUT-0003",
+        "name": "Lemon",
+        "qty": 20,
+        "unit": "G",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-FOOD-0022",
+    "menuName": "Cauliflower Nuggets",
+    "ingredients": [
+      {
+        "inventorySku": "INV-MEAT-0003",
+        "name": "Protein",
+        "qty": 150,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0006",
+        "name": "Vegetables",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-CERE-0001",
+        "name": "Starch",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": true
+  },
+  {
+    "menuSku": "TAP-FOOD-0023",
+    "menuName": "Corn Ribs",
+    "ingredients": [
+      {
+        "inventorySku": "INV-MEAT-0003",
+        "name": "Protein",
+        "qty": 150,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0006",
+        "name": "Vegetables",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-CERE-0001",
+        "name": "Starch",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": true
+  },
+  {
+    "menuSku": "TAP-FOOD-0024",
+    "menuName": "Black Bean Ragu",
+    "ingredients": [
+      {
+        "inventorySku": "INV-MEAT-0003",
+        "name": "Protein",
+        "qty": 150,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0006",
+        "name": "Vegetables",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-CERE-0001",
+        "name": "Starch",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": true
+  },
+  {
+    "menuSku": "TAP-FOOD-0025",
+    "menuName": "Spring Rolls",
+    "ingredients": [
+      {
+        "inventorySku": "INV-MEAT-0003",
+        "name": "Protein",
+        "qty": 150,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0006",
+        "name": "Vegetables",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-CERE-0001",
+        "name": "Starch",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": true
+  },
+  {
+    "menuSku": "TAP-FOOD-0026",
+    "menuName": "Tapas Classic Beef Burger",
+    "ingredients": [
+      {
+        "inventorySku": "INV-MEAT-0003",
+        "name": "Patty",
+        "qty": 150,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-BAKF-0001",
+        "name": "Burger Bun",
+        "qty": 1,
+        "unit": "PCS",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-DARY-0001",
+        "name": "Cheese",
+        "qty": 30,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0001",
+        "name": "Lettuce",
+        "qty": 20,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0002",
+        "name": "Tomato",
+        "qty": 30,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0003",
+        "name": "Onion",
+        "qty": 20,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0006",
+        "name": "Fries",
+        "qty": 150,
+        "unit": "G",
+        "note": "Side"
+      },
+      {
+        "inventorySku": "INV-SAUC-0008",
+        "name": "Mayo",
+        "qty": 15,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-SAUC-0007",
+        "name": "Ketchup",
+        "qty": 15,
+        "unit": "G",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-FOOD-0027",
+    "menuName": "Happy Chicken Burger",
+    "ingredients": [
+      {
+        "inventorySku": "INV-CHKN-0001",
+        "name": "Patty",
+        "qty": 150,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-BAKF-0001",
+        "name": "Burger Bun",
+        "qty": 1,
+        "unit": "PCS",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-DARY-0001",
+        "name": "Cheese",
+        "qty": 30,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0001",
+        "name": "Lettuce",
+        "qty": 20,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0002",
+        "name": "Tomato",
+        "qty": 30,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0003",
+        "name": "Onion",
+        "qty": 20,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0006",
+        "name": "Fries",
+        "qty": 150,
+        "unit": "G",
+        "note": "Side"
+      },
+      {
+        "inventorySku": "INV-SAUC-0008",
+        "name": "Mayo",
+        "qty": 15,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-SAUC-0007",
+        "name": "Ketchup",
+        "qty": 15,
+        "unit": "G",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-FOOD-0028",
+    "menuName": "Chicken Schnitzel Sandwich",
+    "ingredients": [
+      {
+        "inventorySku": "INV-MEAT-0003",
+        "name": "Protein",
+        "qty": 150,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0006",
+        "name": "Vegetables",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-CERE-0001",
+        "name": "Starch",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": true
+  },
+  {
+    "menuSku": "TAP-FOOD-0029",
+    "menuName": "Cheesy Steak Sandwich",
+    "ingredients": [
+      {
+        "inventorySku": "INV-MEAT-0003",
+        "name": "Protein",
+        "qty": 150,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0006",
+        "name": "Vegetables",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-CERE-0001",
+        "name": "Starch",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": true
+  },
+  {
+    "menuSku": "TAP-FOOD-0030",
+    "menuName": "Classic Ham and Cheese Sandwich",
+    "ingredients": [
+      {
+        "inventorySku": "INV-MEAT-0003",
+        "name": "Protein",
+        "qty": 150,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0006",
+        "name": "Vegetables",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-CERE-0001",
+        "name": "Starch",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": true
+  },
+  {
+    "menuSku": "TAP-FOOD-0031",
+    "menuName": "Ham and Cheese Roll Ups",
+    "ingredients": [
+      {
+        "inventorySku": "INV-MEAT-0003",
+        "name": "Protein",
+        "qty": 150,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0006",
+        "name": "Vegetables",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-CERE-0001",
+        "name": "Starch",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": true
+  },
+  {
+    "menuSku": "TAP-FOOD-0032",
+    "menuName": "Roast Beef Roll Ups",
+    "ingredients": [
+      {
+        "inventorySku": "INV-MEAT-0003",
+        "name": "Protein",
+        "qty": 150,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0006",
+        "name": "Vegetables",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-CERE-0001",
+        "name": "Starch",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": true
+  },
+  {
+    "menuSku": "TAP-FOOD-0033",
+    "menuName": "Buffalo Chicken Rollies",
+    "ingredients": [
+      {
+        "inventorySku": "INV-MEAT-0003",
+        "name": "Protein",
+        "qty": 150,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0006",
+        "name": "Vegetables",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-CERE-0001",
+        "name": "Starch",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": true
+  },
+  {
+    "menuSku": "TAP-FOOD-0034",
+    "menuName": "Tapas Caesar Salad",
+    "ingredients": [
+      {
+        "inventorySku": "INV-VEGT-0001",
+        "name": "Lettuce",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0002",
+        "name": "Tomato",
+        "qty": 60,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0008",
+        "name": "Cucumber",
+        "qty": 50,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0003",
+        "name": "Onion",
+        "qty": 20,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-OILS-0001",
+        "name": "Olive Oil",
+        "qty": 15,
+        "unit": "ML",
+        "note": "Dressing"
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-FOOD-0035",
+    "menuName": "Tapas Special Salad",
+    "ingredients": [
+      {
+        "inventorySku": "INV-VEGT-0001",
+        "name": "Lettuce",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0002",
+        "name": "Tomato",
+        "qty": 60,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0008",
+        "name": "Cucumber",
+        "qty": 50,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0003",
+        "name": "Onion",
+        "qty": 20,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-OILS-0001",
+        "name": "Olive Oil",
+        "qty": 15,
+        "unit": "ML",
+        "note": "Dressing"
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-FOOD-0036",
+    "menuName": "Garlicky Chicken Flat Bread",
+    "ingredients": [
+      {
+        "inventorySku": "INV-MEAT-0003",
+        "name": "Protein",
+        "qty": 150,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0006",
+        "name": "Vegetables",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-CERE-0001",
+        "name": "Starch",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": true
+  },
+  {
+    "menuSku": "TAP-FOOD-0037",
+    "menuName": "Bacon Mozzarella Flat Bread",
+    "ingredients": [
+      {
+        "inventorySku": "INV-MEAT-0003",
+        "name": "Protein",
+        "qty": 150,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0006",
+        "name": "Vegetables",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-CERE-0001",
+        "name": "Starch",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": true
+  },
+  {
+    "menuSku": "TAP-FOOD-0038",
+    "menuName": "Curry Base Vegetarian Flat Bread",
+    "ingredients": [
+      {
+        "inventorySku": "INV-MEAT-0003",
+        "name": "Protein",
+        "qty": 150,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0006",
+        "name": "Vegetables",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-CERE-0001",
+        "name": "Starch",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": true
+  },
+  {
+    "menuSku": "TAP-FOOD-0039",
+    "menuName": "Pesto Vegetarian Flat Bread",
+    "ingredients": [
+      {
+        "inventorySku": "INV-MEAT-0003",
+        "name": "Protein",
+        "qty": 150,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0006",
+        "name": "Vegetables",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-CERE-0001",
+        "name": "Starch",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": true
+  },
+  {
+    "menuSku": "TAP-FOOD-0040",
+    "menuName": "Rack of Pork Spare Ribs",
+    "ingredients": [
+      {
+        "inventorySku": "INV-MEAT-0003",
+        "name": "Protein",
+        "qty": 150,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0006",
+        "name": "Vegetables",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-CERE-0001",
+        "name": "Starch",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": true
+  },
+  {
+    "menuSku": "TAP-FOOD-0041",
+    "menuName": "Pork Chops",
+    "ingredients": [
+      {
+        "inventorySku": "INV-MEAT-0003",
+        "name": "Protein",
+        "qty": 150,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0006",
+        "name": "Vegetables",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-CERE-0001",
+        "name": "Starch",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": true
+  },
+  {
+    "menuSku": "TAP-FOOD-0042",
+    "menuName": "Half Roast Chicken",
+    "ingredients": [
+      {
+        "inventorySku": "INV-MEAT-0003",
+        "name": "Protein",
+        "qty": 150,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0006",
+        "name": "Vegetables",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-CERE-0001",
+        "name": "Starch",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": true
+  },
+  {
+    "menuSku": "TAP-FOOD-0043",
+    "menuName": "Pan Fried Fish",
+    "ingredients": [
+      {
+        "inventorySku": "INV-FISH-0001",
+        "name": "Fish Fillet",
+        "qty": 200,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0006",
+        "name": "Potato",
+        "qty": 150,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0001",
+        "name": "Lettuce",
+        "qty": 30,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-FRUT-0003",
+        "name": "Lemon",
+        "qty": 20,
+        "unit": "G",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-FOOD-0044",
+    "menuName": "Lemon Butter Tilapia",
+    "ingredients": [
+      {
+        "inventorySku": "INV-MEAT-0003",
+        "name": "Protein",
+        "qty": 150,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0006",
+        "name": "Vegetables",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-CERE-0001",
+        "name": "Starch",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": true
+  },
+  {
+    "menuSku": "TAP-FOOD-0045",
+    "menuName": "Flame Beef Filet",
+    "ingredients": [
+      {
+        "inventorySku": "INV-MEAT-0003",
+        "name": "Protein",
+        "qty": 150,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0006",
+        "name": "Vegetables",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-CERE-0001",
+        "name": "Starch",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": true
+  },
+  {
+    "menuSku": "TAP-FOOD-0046",
+    "menuName": "Chili Chicken",
+    "ingredients": [
+      {
+        "inventorySku": "INV-MEAT-0003",
+        "name": "Protein",
+        "qty": 150,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0006",
+        "name": "Vegetables",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-CERE-0001",
+        "name": "Starch",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": true
+  },
+  {
+    "menuSku": "TAP-FOOD-0047",
+    "menuName": "Beef Saut\u00e9",
+    "ingredients": [
+      {
+        "inventorySku": "INV-MEAT-0003",
+        "name": "Protein",
+        "qty": 150,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0006",
+        "name": "Vegetables",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-CERE-0001",
+        "name": "Starch",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": true
+  },
+  {
+    "menuSku": "TAP-FOOD-0048",
+    "menuName": "Mixed Grill Platter for Two",
+    "ingredients": [
+      {
+        "inventorySku": "INV-MEAT-0003",
+        "name": "Protein",
+        "qty": 150,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0006",
+        "name": "Vegetables",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-CERE-0001",
+        "name": "Starch",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": true
+  },
+  {
+    "menuSku": "TAP-FOOD-0049",
+    "menuName": "Chicken Curry",
+    "ingredients": [
+      {
+        "inventorySku": "INV-MEAT-0003",
+        "name": "Protein",
+        "qty": 150,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0006",
+        "name": "Vegetables",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-CERE-0001",
+        "name": "Starch",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": true
+  },
+  {
+    "menuSku": "TAP-FOOD-0050",
+    "menuName": "Tapas Massaman Beef Curry",
+    "ingredients": [
+      {
+        "inventorySku": "INV-MEAT-0003",
+        "name": "Protein",
+        "qty": 150,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0006",
+        "name": "Vegetables",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-CERE-0001",
+        "name": "Starch",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": true
+  },
+  {
+    "menuSku": "TAP-FOOD-0051",
+    "menuName": "Chicken Peanut Curry",
+    "ingredients": [
+      {
+        "inventorySku": "INV-MEAT-0003",
+        "name": "Protein",
+        "qty": 150,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0006",
+        "name": "Vegetables",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-CERE-0001",
+        "name": "Starch",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": true
+  },
+  {
+    "menuSku": "TAP-FOOD-0052",
+    "menuName": "Spaghetti Chicken Basil Pesto",
+    "ingredients": [
+      {
+        "inventorySku": "INV-CERE-0003",
+        "name": "Pasta",
+        "qty": 200,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-SAUC-0003",
+        "name": "Tomato Sauce",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-DARY-0004",
+        "name": "Parmesan",
+        "qty": 20,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0010",
+        "name": "Garlic",
+        "qty": 5,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-OILS-0001",
+        "name": "Olive Oil",
+        "qty": 10,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-FOOD-0053",
+    "menuName": "Spaghetti Bolognaise",
+    "ingredients": [
+      {
+        "inventorySku": "INV-CERE-0003",
+        "name": "Pasta",
+        "qty": 200,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-SAUC-0003",
+        "name": "Tomato Sauce",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-DARY-0004",
+        "name": "Parmesan",
+        "qty": 20,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0010",
+        "name": "Garlic",
+        "qty": 5,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-OILS-0001",
+        "name": "Olive Oil",
+        "qty": 10,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-FOOD-0054",
+    "menuName": "Beef Lasagna",
+    "ingredients": [
+      {
+        "inventorySku": "INV-CERE-0003",
+        "name": "Pasta",
+        "qty": 200,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-SAUC-0003",
+        "name": "Tomato Sauce",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-DARY-0004",
+        "name": "Parmesan",
+        "qty": 20,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0010",
+        "name": "Garlic",
+        "qty": 5,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-OILS-0001",
+        "name": "Olive Oil",
+        "qty": 10,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-FOOD-0055",
+    "menuName": "Vegetable Lasagna",
+    "ingredients": [
+      {
+        "inventorySku": "INV-CERE-0003",
+        "name": "Pasta",
+        "qty": 200,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-SAUC-0003",
+        "name": "Tomato Sauce",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-DARY-0004",
+        "name": "Parmesan",
+        "qty": 20,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0010",
+        "name": "Garlic",
+        "qty": 5,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-OILS-0001",
+        "name": "Olive Oil",
+        "qty": 10,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-FOOD-0056",
+    "menuName": "Mushroom Soup",
+    "ingredients": [
+      {
+        "inventorySku": "INV-MEAT-0003",
+        "name": "Protein",
+        "qty": 150,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0006",
+        "name": "Vegetables",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-CERE-0001",
+        "name": "Starch",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": true
+  },
+  {
+    "menuSku": "TAP-FOOD-0057",
+    "menuName": "Roast Pumpkin Soup",
+    "ingredients": [
+      {
+        "inventorySku": "INV-MEAT-0003",
+        "name": "Protein",
+        "qty": 150,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0006",
+        "name": "Vegetables",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-CERE-0001",
+        "name": "Starch",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": true
+  },
+  {
+    "menuSku": "TAP-FOOD-0058",
+    "menuName": "Clear Chicken Soup",
+    "ingredients": [
+      {
+        "inventorySku": "INV-MEAT-0003",
+        "name": "Protein",
+        "qty": 150,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0006",
+        "name": "Vegetables",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-CERE-0001",
+        "name": "Starch",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": true
+  },
+  {
+    "menuSku": "TAP-FOOD-0059",
+    "menuName": "Chips",
+    "ingredients": [
+      {
+        "inventorySku": "INV-MEAT-0003",
+        "name": "Protein",
+        "qty": 150,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0006",
+        "name": "Vegetables",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-CERE-0001",
+        "name": "Starch",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": true
+  },
+  {
+    "menuSku": "TAP-FOOD-0060",
+    "menuName": "Rice",
+    "ingredients": [
+      {
+        "inventorySku": "INV-MEAT-0003",
+        "name": "Protein",
+        "qty": 150,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0006",
+        "name": "Vegetables",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-CERE-0001",
+        "name": "Starch",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": true
+  },
+  {
+    "menuSku": "TAP-FOOD-0061",
+    "menuName": "Plantain",
+    "ingredients": [
+      {
+        "inventorySku": "INV-MEAT-0003",
+        "name": "Protein",
+        "qty": 150,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0006",
+        "name": "Vegetables",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-CERE-0001",
+        "name": "Starch",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": true
+  },
+  {
+    "menuSku": "TAP-FOOD-0062",
+    "menuName": "Bacon",
+    "ingredients": [
+      {
+        "inventorySku": "INV-MEAT-0003",
+        "name": "Protein",
+        "qty": 150,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0006",
+        "name": "Vegetables",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-CERE-0001",
+        "name": "Starch",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": true
+  },
+  {
+    "menuSku": "TAP-FOOD-0063",
+    "menuName": "Chicken Strips",
+    "ingredients": [
+      {
+        "inventorySku": "INV-MEAT-0003",
+        "name": "Protein",
+        "qty": 150,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0006",
+        "name": "Vegetables",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-CERE-0001",
+        "name": "Starch",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": true
+  },
+  {
+    "menuSku": "TAP-FOOD-0064",
+    "menuName": "Avocado",
+    "ingredients": [
+      {
+        "inventorySku": "INV-MEAT-0003",
+        "name": "Protein",
+        "qty": 150,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0006",
+        "name": "Vegetables",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-CERE-0001",
+        "name": "Starch",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": true
+  },
+  {
+    "menuSku": "TAP-FOOD-0065",
+    "menuName": "Creamy Spinach",
+    "ingredients": [
+      {
+        "inventorySku": "INV-MEAT-0003",
+        "name": "Protein",
+        "qty": 150,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0006",
+        "name": "Vegetables",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-CERE-0001",
+        "name": "Starch",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": true
+  },
+  {
+    "menuSku": "TAP-FOOD-0066",
+    "menuName": "Mayonnaise",
+    "ingredients": [
+      {
+        "inventorySku": "INV-MEAT-0003",
+        "name": "Protein",
+        "qty": 150,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0006",
+        "name": "Vegetables",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-CERE-0001",
+        "name": "Starch",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": true
+  },
+  {
+    "menuSku": "TAP-FOOD-0067",
+    "menuName": "Chocolate Brownie with Ice Cream",
+    "ingredients": [
+      {
+        "inventorySku": "INV-DARY-0011",
+        "name": "Ice Cream",
+        "qty": 150,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-SYRP-0001",
+        "name": "Chocolate Syrup",
+        "qty": 20,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-FOOD-0068",
+    "menuName": "Apple Rolls",
+    "ingredients": [
+      {
+        "inventorySku": "INV-BAKF-0002",
+        "name": "Flour",
+        "qty": 80,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-SALT-0003",
+        "name": "Sugar",
+        "qty": 60,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-CHKN-0004",
+        "name": "Eggs",
+        "qty": 1,
+        "unit": "PCS",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-DARY-0010",
+        "name": "Butter",
+        "qty": 40,
+        "unit": "G",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": true
+  },
+  {
+    "menuSku": "TAP-COCK-0001",
+    "menuName": "Classic Martini",
+    "ingredients": [
+      {
+        "inventorySku": "INV-GIN-0002",
+        "name": "Gin",
+        "qty": 60,
+        "unit": "ML",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0007",
+        "name": "Olives",
+        "qty": 2,
+        "unit": "PCS",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-COCK-0002",
+    "menuName": "Dirty Martini",
+    "ingredients": [
+      {
+        "inventorySku": "INV-VODK-0001",
+        "name": "Vodka",
+        "qty": 60,
+        "unit": "ML",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-OILS-0001",
+        "name": "Olive Brine",
+        "qty": 15,
+        "unit": "ML",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0007",
+        "name": "Olives",
+        "qty": 3,
+        "unit": "PCS",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-COCK-0003",
+    "menuName": "1926",
+    "ingredients": [
+      {
+        "inventorySku": "INV-VODK-0001",
+        "name": "Base Spirit",
+        "qty": 50,
+        "unit": "ML",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-FRUT-0003",
+        "name": "Citrus",
+        "qty": 20,
+        "unit": "ML",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-SALT-0003",
+        "name": "Sweetener",
+        "qty": 10,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": true
+  },
+  {
+    "menuSku": "TAP-COCK-0004",
+    "menuName": "21 Devils",
+    "ingredients": [
+      {
+        "inventorySku": "INV-VODK-0001",
+        "name": "Base Spirit",
+        "qty": 50,
+        "unit": "ML",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-FRUT-0003",
+        "name": "Citrus",
+        "qty": 20,
+        "unit": "ML",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-SALT-0003",
+        "name": "Sweetener",
+        "qty": 10,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": true
+  },
+  {
+    "menuSku": "TAP-COCK-0005",
+    "menuName": "Long Island Ice Tea",
+    "ingredients": [
+      {
+        "inventorySku": "INV-VODK-0001",
+        "name": "Vodka",
+        "qty": 15,
+        "unit": "ML",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-GIN-0001",
+        "name": "Gin",
+        "qty": 15,
+        "unit": "ML",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-RUM-0001",
+        "name": "Rum",
+        "qty": 15,
+        "unit": "ML",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-TEQL-0001",
+        "name": "Tequila",
+        "qty": 15,
+        "unit": "ML",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-SODA-0001",
+        "name": "Cola",
+        "qty": 100,
+        "unit": "ML",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-FRUT-0003",
+        "name": "Lemon",
+        "qty": 20,
+        "unit": "ML",
+        "note": "Juice"
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-COCK-0006",
+    "menuName": "Old Fashioned",
+    "ingredients": [
+      {
+        "inventorySku": "INV-WHSK-0002",
+        "name": "Bourbon",
+        "qty": 60,
+        "unit": "ML",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-MIXR-0001",
+        "name": "Bitters",
+        "qty": 3,
+        "unit": "ML",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-SALT-0003",
+        "name": "Sugar",
+        "qty": 5,
+        "unit": "G",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-COCK-0007",
+    "menuName": "Gin Sour",
+    "ingredients": [
+      {
+        "inventorySku": "INV-GIN-0002",
+        "name": "Base Spirit",
+        "qty": 50,
+        "unit": "ML",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-FRUT-0003",
+        "name": "Lemon Juice",
+        "qty": 25,
+        "unit": "ML",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-SALT-0003",
+        "name": "Sugar Syrup",
+        "qty": 15,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-COCK-0008",
+    "menuName": "Classic Whiskey Sour",
+    "ingredients": [
+      {
+        "inventorySku": "INV-WHSK-0001",
+        "name": "Base Spirit",
+        "qty": 50,
+        "unit": "ML",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-FRUT-0003",
+        "name": "Lemon Juice",
+        "qty": 25,
+        "unit": "ML",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-SALT-0003",
+        "name": "Sugar Syrup",
+        "qty": 15,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-COCK-0009",
+    "menuName": "Spiced Whiskey Sour",
+    "ingredients": [
+      {
+        "inventorySku": "INV-WHSK-0001",
+        "name": "Base Spirit",
+        "qty": 50,
+        "unit": "ML",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-FRUT-0003",
+        "name": "Lemon Juice",
+        "qty": 25,
+        "unit": "ML",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-SALT-0003",
+        "name": "Sugar Syrup",
+        "qty": 15,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-COCK-0010",
+    "menuName": "Sidecar",
+    "ingredients": [
+      {
+        "inventorySku": "INV-VODK-0001",
+        "name": "Base Spirit",
+        "qty": 50,
+        "unit": "ML",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-FRUT-0003",
+        "name": "Citrus",
+        "qty": 20,
+        "unit": "ML",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-SALT-0003",
+        "name": "Sweetener",
+        "qty": 10,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": true
+  },
+  {
+    "menuSku": "TAP-COCK-0011",
+    "menuName": "Classic Mojito",
+    "ingredients": [
+      {
+        "inventorySku": "INV-RUM-0002",
+        "name": "White Rum",
+        "qty": 50,
+        "unit": "ML",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0012",
+        "name": "Mint",
+        "qty": 10,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-FRUT-0004",
+        "name": "Lime",
+        "qty": 25,
+        "unit": "ML",
+        "note": "Juice"
+      },
+      {
+        "inventorySku": "INV-SALT-0003",
+        "name": "Sugar",
+        "qty": 10,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-SODA-0005",
+        "name": "Soda Water",
+        "qty": 100,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-COCK-0012",
+    "menuName": "French Mojito",
+    "ingredients": [
+      {
+        "inventorySku": "INV-RUM-0002",
+        "name": "White Rum",
+        "qty": 50,
+        "unit": "ML",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-VEGT-0012",
+        "name": "Mint",
+        "qty": 10,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-FRUT-0004",
+        "name": "Lime",
+        "qty": 25,
+        "unit": "ML",
+        "note": "Juice"
+      },
+      {
+        "inventorySku": "INV-SALT-0003",
+        "name": "Sugar",
+        "qty": 10,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-SODA-0005",
+        "name": "Soda Water",
+        "qty": 100,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-COCK-0013",
+    "menuName": "Cosmopolitan",
+    "ingredients": [
+      {
+        "inventorySku": "INV-VODK-0001",
+        "name": "Base Spirit",
+        "qty": 50,
+        "unit": "ML",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-FRUT-0003",
+        "name": "Citrus",
+        "qty": 20,
+        "unit": "ML",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-SALT-0003",
+        "name": "Sweetener",
+        "qty": 10,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": true
+  },
+  {
+    "menuSku": "TAP-COCK-0014",
+    "menuName": "Classic Margarita",
+    "ingredients": [
+      {
+        "inventorySku": "INV-TEQL-0002",
+        "name": "Tequila",
+        "qty": 50,
+        "unit": "ML",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-CREM-0004",
+        "name": "Cointreau",
+        "qty": 25,
+        "unit": "ML",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-FRUT-0004",
+        "name": "Lime Juice",
+        "qty": 25,
+        "unit": "ML",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-SALT-0001",
+        "name": "Salt",
+        "qty": 2,
+        "unit": "G",
+        "note": "Rim"
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-COCK-0015",
+    "menuName": "Spiced Margarita",
+    "ingredients": [
+      {
+        "inventorySku": "INV-TEQL-0002",
+        "name": "Tequila",
+        "qty": 50,
+        "unit": "ML",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-CREM-0004",
+        "name": "Cointreau",
+        "qty": 25,
+        "unit": "ML",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-FRUT-0004",
+        "name": "Lime Juice",
+        "qty": 25,
+        "unit": "ML",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-SALT-0001",
+        "name": "Salt",
+        "qty": 2,
+        "unit": "G",
+        "note": "Rim"
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-COCK-0016",
+    "menuName": "Blue Lagoon",
+    "ingredients": [
+      {
+        "inventorySku": "INV-VODK-0001",
+        "name": "Base Spirit",
+        "qty": 50,
+        "unit": "ML",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-FRUT-0003",
+        "name": "Citrus",
+        "qty": 20,
+        "unit": "ML",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-SALT-0003",
+        "name": "Sweetener",
+        "qty": 10,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": true
+  },
+  {
+    "menuSku": "TAP-COCK-0017",
+    "menuName": "Passion Gin Cooler",
+    "ingredients": [
+      {
+        "inventorySku": "INV-VODK-0001",
+        "name": "Base Spirit",
+        "qty": 50,
+        "unit": "ML",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-FRUT-0003",
+        "name": "Citrus",
+        "qty": 20,
+        "unit": "ML",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-SALT-0003",
+        "name": "Sweetener",
+        "qty": 10,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": true
+  },
+  {
+    "menuSku": "TAP-COCK-0018",
+    "menuName": "Queen of the South",
+    "ingredients": [
+      {
+        "inventorySku": "INV-VODK-0001",
+        "name": "Base Spirit",
+        "qty": 50,
+        "unit": "ML",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-FRUT-0003",
+        "name": "Citrus",
+        "qty": 20,
+        "unit": "ML",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-SALT-0003",
+        "name": "Sweetener",
+        "qty": 10,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": true
+  },
+  {
+    "menuSku": "TAP-COCK-0019",
+    "menuName": "Sangria",
+    "ingredients": [
+      {
+        "inventorySku": "INV-VODK-0001",
+        "name": "Base Spirit",
+        "qty": 50,
+        "unit": "ML",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-FRUT-0003",
+        "name": "Citrus",
+        "qty": 20,
+        "unit": "ML",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-SALT-0003",
+        "name": "Sweetener",
+        "qty": 10,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": true
+  },
+  {
+    "menuSku": "TAP-MKTL-0001",
+    "menuName": "The Fruity Wonder",
+    "ingredients": [
+      {
+        "inventorySku": "INV-FRUT-0005",
+        "name": "Fresh Fruit",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-JUCE-0001",
+        "name": "Juice",
+        "qty": 150,
+        "unit": "ML",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-SALT-0003",
+        "name": "Sugar",
+        "qty": 10,
+        "unit": "G",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": true
+  },
+  {
+    "menuSku": "TAP-MKTL-0002",
+    "menuName": "Basil Bliss",
+    "ingredients": [
+      {
+        "inventorySku": "INV-FRUT-0005",
+        "name": "Fresh Fruit",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-JUCE-0001",
+        "name": "Juice",
+        "qty": 150,
+        "unit": "ML",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-SALT-0003",
+        "name": "Sugar",
+        "qty": 10,
+        "unit": "G",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": true
+  },
+  {
+    "menuSku": "TAP-MKTL-0003",
+    "menuName": "Virgin Mojito",
+    "ingredients": [
+      {
+        "inventorySku": "INV-VEGT-0012",
+        "name": "Mint",
+        "qty": 10,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-FRUT-0004",
+        "name": "Lime Juice",
+        "qty": 30,
+        "unit": "ML",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-SALT-0003",
+        "name": "Sugar",
+        "qty": 15,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-SODA-0005",
+        "name": "Soda Water",
+        "qty": 200,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-MKTL-0004",
+    "menuName": "Sweet Limelight",
+    "ingredients": [
+      {
+        "inventorySku": "INV-FRUT-0005",
+        "name": "Fresh Fruit",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-JUCE-0001",
+        "name": "Juice",
+        "qty": 150,
+        "unit": "ML",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-SALT-0003",
+        "name": "Sugar",
+        "qty": 10,
+        "unit": "G",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": true
+  },
+  {
+    "menuSku": "TAP-DRK-0001",
+    "menuName": "Black Tea",
+    "ingredients": [
+      {
+        "inventorySku": "INV-COFF-0003",
+        "name": "Tea Bag",
+        "qty": 1,
+        "unit": "PCS",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-MINR-0001",
+        "name": "Hot Water",
+        "qty": 250,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-DRK-0002",
+    "menuName": "African Tea",
+    "ingredients": [
+      {
+        "inventorySku": "INV-COFF-0003",
+        "name": "Tea Bag",
+        "qty": 1,
+        "unit": "PCS",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-MINR-0001",
+        "name": "Hot Water",
+        "qty": 250,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-DRK-0003",
+    "menuName": "Dawa Tea",
+    "ingredients": [
+      {
+        "inventorySku": "INV-COFF-0003",
+        "name": "Tea Bag",
+        "qty": 1,
+        "unit": "PCS",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-MINR-0001",
+        "name": "Hot Water",
+        "qty": 250,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-DRK-0004",
+    "menuName": "Herbal Tea",
+    "ingredients": [
+      {
+        "inventorySku": "INV-COFF-0003",
+        "name": "Tea Bag",
+        "qty": 1,
+        "unit": "PCS",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-MINR-0001",
+        "name": "Hot Water",
+        "qty": 250,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-DRK-0005",
+    "menuName": "Black Coffee",
+    "ingredients": [
+      {
+        "inventorySku": "INV-COFF-0001",
+        "name": "Coffee Beans",
+        "qty": 18,
+        "unit": "G",
+        "note": "Double shot"
+      },
+      {
+        "inventorySku": "INV-MINR-0001",
+        "name": "Hot Water",
+        "qty": 150,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-DRK-0006",
+    "menuName": "African Coffee",
+    "ingredients": [
+      {
+        "inventorySku": "INV-COFF-0001",
+        "name": "Coffee Beans",
+        "qty": 18,
+        "unit": "G",
+        "note": "Double shot"
+      },
+      {
+        "inventorySku": "INV-MINR-0001",
+        "name": "Hot Water",
+        "qty": 150,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-DRK-0007",
+    "menuName": "Espresso Single",
+    "ingredients": [
+      {
+        "inventorySku": "INV-COFF-0001",
+        "name": "Coffee Beans",
+        "qty": 18,
+        "unit": "G",
+        "note": "Double shot"
+      },
+      {
+        "inventorySku": "INV-MINR-0001",
+        "name": "Hot Water",
+        "qty": 150,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-DRK-0008",
+    "menuName": "Espresso Double",
+    "ingredients": [
+      {
+        "inventorySku": "INV-COFF-0001",
+        "name": "Coffee Beans",
+        "qty": 18,
+        "unit": "G",
+        "note": "Double shot"
+      },
+      {
+        "inventorySku": "INV-MINR-0001",
+        "name": "Hot Water",
+        "qty": 150,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-DRK-0009",
+    "menuName": "Americano Single",
+    "ingredients": [
+      {
+        "inventorySku": "INV-COFF-0001",
+        "name": "Coffee Beans",
+        "qty": 18,
+        "unit": "G",
+        "note": "Double shot"
+      },
+      {
+        "inventorySku": "INV-MINR-0001",
+        "name": "Hot Water",
+        "qty": 150,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-DRK-0010",
+    "menuName": "Americano Double",
+    "ingredients": [
+      {
+        "inventorySku": "INV-COFF-0001",
+        "name": "Coffee Beans",
+        "qty": 18,
+        "unit": "G",
+        "note": "Double shot"
+      },
+      {
+        "inventorySku": "INV-MINR-0001",
+        "name": "Hot Water",
+        "qty": 150,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-DRK-0011",
+    "menuName": "Macchiato Single",
+    "ingredients": [
+      {
+        "inventorySku": "INV-COFF-0002",
+        "name": "Instant Coffee",
+        "qty": 5,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-MINR-0001",
+        "name": "Hot Water",
+        "qty": 200,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": true
+  },
+  {
+    "menuSku": "TAP-DRK-0012",
+    "menuName": "Macchiato Double",
+    "ingredients": [
+      {
+        "inventorySku": "INV-COFF-0002",
+        "name": "Instant Coffee",
+        "qty": 5,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-MINR-0001",
+        "name": "Hot Water",
+        "qty": 200,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": true
+  },
+  {
+    "menuSku": "TAP-DRK-0013",
+    "menuName": "Cappuccino Single",
+    "ingredients": [
+      {
+        "inventorySku": "INV-COFF-0001",
+        "name": "Coffee Beans",
+        "qty": 18,
+        "unit": "G",
+        "note": "Double shot"
+      },
+      {
+        "inventorySku": "INV-DARY-0006",
+        "name": "Milk",
+        "qty": 200,
+        "unit": "ML",
+        "note": "Steamed"
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-DRK-0014",
+    "menuName": "Cappuccino Double",
+    "ingredients": [
+      {
+        "inventorySku": "INV-COFF-0001",
+        "name": "Coffee Beans",
+        "qty": 18,
+        "unit": "G",
+        "note": "Double shot"
+      },
+      {
+        "inventorySku": "INV-DARY-0006",
+        "name": "Milk",
+        "qty": 200,
+        "unit": "ML",
+        "note": "Steamed"
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-DRK-0015",
+    "menuName": "Latte",
+    "ingredients": [
+      {
+        "inventorySku": "INV-COFF-0001",
+        "name": "Coffee Beans",
+        "qty": 18,
+        "unit": "G",
+        "note": "Double shot"
+      },
+      {
+        "inventorySku": "INV-DARY-0006",
+        "name": "Milk",
+        "qty": 200,
+        "unit": "ML",
+        "note": "Steamed"
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-DRK-0016",
+    "menuName": "Hot Chocolate",
+    "ingredients": [
+      {
+        "inventorySku": "INV-COFF-0004",
+        "name": "Drinking Chocolate",
+        "qty": 30,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-DARY-0006",
+        "name": "Milk",
+        "qty": 250,
+        "unit": "ML",
+        "note": "Hot"
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-DRK-0017",
+    "menuName": "Caf\u00e9 Mocha",
+    "ingredients": [
+      {
+        "inventorySku": "INV-COFF-0002",
+        "name": "Instant Coffee",
+        "qty": 5,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-MINR-0001",
+        "name": "Hot Water",
+        "qty": 200,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": true
+  },
+  {
+    "menuSku": "TAP-DRK-0018",
+    "menuName": "Iced Coffee",
+    "ingredients": [
+      {
+        "inventorySku": "INV-COFF-0001",
+        "name": "Coffee Beans",
+        "qty": 18,
+        "unit": "G",
+        "note": "Double shot"
+      },
+      {
+        "inventorySku": "INV-MINR-0001",
+        "name": "Hot Water",
+        "qty": 150,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-DRK-0019",
+    "menuName": "Iced Tea",
+    "ingredients": [
+      {
+        "inventorySku": "INV-COFF-0003",
+        "name": "Tea Bag",
+        "qty": 1,
+        "unit": "PCS",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-MINR-0001",
+        "name": "Hot Water",
+        "qty": 250,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-DRK-0020",
+    "menuName": "Iced Latte",
+    "ingredients": [
+      {
+        "inventorySku": "INV-COFF-0001",
+        "name": "Coffee Beans",
+        "qty": 18,
+        "unit": "G",
+        "note": "Double shot"
+      },
+      {
+        "inventorySku": "INV-DARY-0006",
+        "name": "Milk",
+        "qty": 200,
+        "unit": "ML",
+        "note": "Steamed"
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-DRK-0021",
+    "menuName": "Iced Mocha",
+    "ingredients": [
+      {
+        "inventorySku": "INV-COFF-0002",
+        "name": "Instant Coffee",
+        "qty": 5,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-MINR-0001",
+        "name": "Hot Water",
+        "qty": 200,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": true
+  },
+  {
+    "menuSku": "TAP-DRK-0022",
+    "menuName": "Iced Cappuccino",
+    "ingredients": [
+      {
+        "inventorySku": "INV-COFF-0001",
+        "name": "Coffee Beans",
+        "qty": 18,
+        "unit": "G",
+        "note": "Double shot"
+      },
+      {
+        "inventorySku": "INV-DARY-0006",
+        "name": "Milk",
+        "qty": 200,
+        "unit": "ML",
+        "note": "Steamed"
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-DRK-0023",
+    "menuName": "Water",
+    "ingredients": [
+      {
+        "inventorySku": "INV-MINR-0001",
+        "name": "Bottled Water",
+        "qty": 1,
+        "unit": "BTL",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-DRK-0024",
+    "menuName": "Soda",
+    "ingredients": [
+      {
+        "inventorySku": "INV-SODA-0001",
+        "name": "Soda",
+        "qty": 1,
+        "unit": "BTL",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-DRK-0025",
+    "menuName": "Red Bull",
+    "ingredients": [
+      {
+        "inventorySku": "INV-MINR-0002",
+        "name": "Red Bull",
+        "qty": 1,
+        "unit": "CAN",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-DRK-0026",
+    "menuName": "Plain Juice",
+    "ingredients": [
+      {
+        "inventorySku": "INV-FRUT-0005",
+        "name": "Fresh Fruit",
+        "qty": 300,
+        "unit": "G",
+        "note": "For juice"
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-DRK-0027",
+    "menuName": "Pineapple Juice",
+    "ingredients": [
+      {
+        "inventorySku": "INV-FRUT-0005",
+        "name": "Fresh Fruit",
+        "qty": 300,
+        "unit": "G",
+        "note": "For juice"
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-DRK-0028",
+    "menuName": "Passion Juice",
+    "ingredients": [
+      {
+        "inventorySku": "INV-FRUT-0006",
+        "name": "Fresh Fruit",
+        "qty": 300,
+        "unit": "G",
+        "note": "For juice"
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-DRK-0029",
+    "menuName": "Watermelon Juice",
+    "ingredients": [
+      {
+        "inventorySku": "INV-MINR-0001",
+        "name": "Bottled Water",
+        "qty": 1,
+        "unit": "BTL",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-DRK-0030",
+    "menuName": "Mango Juice",
+    "ingredients": [
+      {
+        "inventorySku": "INV-FRUT-0008",
+        "name": "Fresh Fruit",
+        "qty": 300,
+        "unit": "G",
+        "note": "For juice"
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-DRK-0031",
+    "menuName": "Cocktail Juice",
+    "ingredients": [
+      {
+        "inventorySku": "INV-FRUT-0005",
+        "name": "Fresh Fruit",
+        "qty": 300,
+        "unit": "G",
+        "note": "For juice"
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-DRK-0032",
+    "menuName": "Orange Juice",
+    "ingredients": [
+      {
+        "inventorySku": "INV-JUCE-0001",
+        "name": "Fresh Fruit",
+        "qty": 300,
+        "unit": "G",
+        "note": "For juice"
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-DRK-0033",
+    "menuName": "Milkshake",
+    "ingredients": [
+      {
+        "inventorySku": "INV-DARY-0006",
+        "name": "Milk",
+        "qty": 250,
+        "unit": "ML",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-DARY-0011",
+        "name": "Ice Cream",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-SYRP-0001",
+        "name": "Flavored Syrup",
+        "qty": 30,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-DRK-0034",
+    "menuName": "Smoothie",
+    "ingredients": [
+      {
+        "inventorySku": "INV-FRUT-0005",
+        "name": "Mixed Fruit",
+        "qty": 200,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-DARY-0007",
+        "name": "Yoghurt",
+        "qty": 100,
+        "unit": "ML",
+        "note": ""
+      },
+      {
+        "inventorySku": "INV-SALT-0004",
+        "name": "Honey",
+        "qty": 15,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-BEER-0001",
+    "menuName": "Local Beer",
+    "ingredients": [
+      {
+        "inventorySku": "INV-BEER-0001",
+        "name": "Nile Special",
+        "qty": 1,
+        "unit": "BTL",
+        "note": "Generic mapping"
+      }
+    ],
+    "needsConfirmation": true
+  },
+  {
+    "menuSku": "TAP-BEER-0002",
+    "menuName": "Imported Beer",
+    "ingredients": [
+      {
+        "inventorySku": "INV-BEER-0001",
+        "name": "Nile Special",
+        "qty": 1,
+        "unit": "BTL",
+        "note": "Generic mapping"
+      }
+    ],
+    "needsConfirmation": true
+  },
+  {
+    "menuSku": "TAP-BEER-0003",
+    "menuName": "Cider",
+    "ingredients": [
+      {
+        "inventorySku": "INV-BEER-0001",
+        "name": "Nile Special",
+        "qty": 1,
+        "unit": "BTL",
+        "note": "Generic mapping"
+      }
+    ],
+    "needsConfirmation": true
+  },
+  {
+    "menuSku": "TAP-BEER-0004",
+    "menuName": "Nile Special 1*20BTL*500MLS",
+    "ingredients": [
+      {
+        "inventorySku": "INV-BEER-0001",
+        "name": "Nile Special 1*20BTL*500MLS",
+        "qty": 1,
+        "unit": "BTL",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-BEER-0005",
+    "menuName": "Club Pilsner 1*20BTL*500MLS",
+    "ingredients": [
+      {
+        "inventorySku": "INV-BEER-0002",
+        "name": "Club Pilsner 1*20BTL*500MLS",
+        "qty": 1,
+        "unit": "BTL",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-BEER-0006",
+    "menuName": "Tusker Lager 1*25BTL*500MLS",
+    "ingredients": [
+      {
+        "inventorySku": "INV-BEER-0003",
+        "name": "Tusker Lager 1*25BTL*500MLS",
+        "qty": 1,
+        "unit": "BTL",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-BEER-0007",
+    "menuName": "Heineken 1*24*33cl",
+    "ingredients": [
+      {
+        "inventorySku": "INV-BEER-0004",
+        "name": "Heineken 1*24*33cl",
+        "qty": 1,
+        "unit": "BTL",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-BEER-0008",
+    "menuName": "Savanna Premium Cider 4*6*330ML",
+    "ingredients": [
+      {
+        "inventorySku": "INV-BEER-0005",
+        "name": "Savanna Premium Cider 4*6*330ML",
+        "qty": 1,
+        "unit": "BTL",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-WINE-0001",
+    "menuName": "Nederburg Cabernet Sauvignon 750Ml (Glass)",
+    "ingredients": [
+      {
+        "inventorySku": "INV-WINE-0001",
+        "name": "Nederburg Cabernet Sauvignon 750Ml",
+        "qty": 175,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-WINE-0002",
+    "menuName": "Nederburg Cabernet Sauvignon 750Ml (Bottle)",
+    "ingredients": [
+      {
+        "inventorySku": "INV-WINE-0001",
+        "name": "Nederburg Cabernet Sauvignon 750Ml",
+        "qty": 1,
+        "unit": "BTL",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-WINE-0003",
+    "menuName": "Jacob's Creek Merlot 750Ml (Glass)",
+    "ingredients": [
+      {
+        "inventorySku": "INV-WINE-0002",
+        "name": "Jacob's Creek Merlot 750Ml",
+        "qty": 175,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-WINE-0004",
+    "menuName": "Jacob's Creek Merlot 750Ml (Bottle)",
+    "ingredients": [
+      {
+        "inventorySku": "INV-WINE-0002",
+        "name": "Jacob's Creek Merlot 750Ml",
+        "qty": 1,
+        "unit": "BTL",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-WINE-0005",
+    "menuName": "Nederburg Sauvignon Blanc 750Ml (Glass)",
+    "ingredients": [
+      {
+        "inventorySku": "INV-WINE-0003",
+        "name": "Nederburg Sauvignon Blanc 750Ml",
+        "qty": 175,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-WINE-0006",
+    "menuName": "Nederburg Sauvignon Blanc 750Ml (Bottle)",
+    "ingredients": [
+      {
+        "inventorySku": "INV-WINE-0003",
+        "name": "Nederburg Sauvignon Blanc 750Ml",
+        "qty": 1,
+        "unit": "BTL",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-WINE-0007",
+    "menuName": "Jacob's Creek Chardonnay 750Ml (Glass)",
+    "ingredients": [
+      {
+        "inventorySku": "INV-WINE-0004",
+        "name": "Jacob's Creek Chardonnay 750Ml",
+        "qty": 175,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-WINE-0008",
+    "menuName": "Jacob's Creek Chardonnay 750Ml (Bottle)",
+    "ingredients": [
+      {
+        "inventorySku": "INV-WINE-0004",
+        "name": "Jacob's Creek Chardonnay 750Ml",
+        "qty": 1,
+        "unit": "BTL",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-WINE-0009",
+    "menuName": "Nederburg Rose 750Ml (Glass)",
+    "ingredients": [
+      {
+        "inventorySku": "INV-WINE-0005",
+        "name": "Nederburg Rose 750Ml",
+        "qty": 175,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-WINE-0010",
+    "menuName": "Nederburg Rose 750Ml (Bottle)",
+    "ingredients": [
+      {
+        "inventorySku": "INV-WINE-0005",
+        "name": "Nederburg Rose 750Ml",
+        "qty": 1,
+        "unit": "BTL",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-WINE-0011",
+    "menuName": "Moet & Chandon Champagne 750Ml (Glass)",
+    "ingredients": [
+      {
+        "inventorySku": "INV-WINE-0006",
+        "name": "Moet & Chandon Champagne 750Ml",
+        "qty": 175,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-WINE-0012",
+    "menuName": "Moet & Chandon Champagne 750Ml (Bottle)",
+    "ingredients": [
+      {
+        "inventorySku": "INV-WINE-0006",
+        "name": "Moet & Chandon Champagne 750Ml",
+        "qty": 1,
+        "unit": "BTL",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-SPRT-0001",
+    "menuName": "Smirnoff Red 750ML (Shot)",
+    "ingredients": [
+      {
+        "inventorySku": "INV-VODK-0001",
+        "name": "Smirnoff Red 750ML",
+        "qty": 35,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-SPRT-0002",
+    "menuName": "Absolut Vodka Citron 1Ltr (Shot)",
+    "ingredients": [
+      {
+        "inventorySku": "INV-VODK-0002",
+        "name": "Absolut Vodka Citron 1Ltr",
+        "qty": 35,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-SPRT-0003",
+    "menuName": "Absolut Vodka Vanilla 1Lt (Shot)",
+    "ingredients": [
+      {
+        "inventorySku": "INV-VODK-0003",
+        "name": "Absolut Vodka Vanilla 1Lt",
+        "qty": 35,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-SPRT-0004",
+    "menuName": "Absolut Vodka Raspberry 1Lt (Shot)",
+    "ingredients": [
+      {
+        "inventorySku": "INV-VODK-0004",
+        "name": "Absolut Vodka Raspberry 1Lt",
+        "qty": 35,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-SPRT-0005",
+    "menuName": "Grey Goose 1Lt (Shot)",
+    "ingredients": [
+      {
+        "inventorySku": "INV-VODK-0005",
+        "name": "Grey Goose 1Lt",
+        "qty": 35,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-SPRT-0006",
+    "menuName": "Ciroc Blue 1Lt (Shot)",
+    "ingredients": [
+      {
+        "inventorySku": "INV-VODK-0006",
+        "name": "Ciroc Blue 1Lt",
+        "qty": 35,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-SPRT-0007",
+    "menuName": "Gilbeys Gin 750ml (Shot)",
+    "ingredients": [
+      {
+        "inventorySku": "INV-GIN-0001",
+        "name": "Gilbeys Gin 750ml",
+        "qty": 35,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-SPRT-0008",
+    "menuName": "Gordons London Dry 750Ml (Shot)",
+    "ingredients": [
+      {
+        "inventorySku": "INV-GIN-0002",
+        "name": "Gordons London Dry 750Ml",
+        "qty": 35,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-SPRT-0009",
+    "menuName": "Beefeater 1Lt (Shot)",
+    "ingredients": [
+      {
+        "inventorySku": "INV-GIN-0003",
+        "name": "Beefeater 1Lt",
+        "qty": 35,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-SPRT-0010",
+    "menuName": "Bombay Sapphire 1Lt (Shot)",
+    "ingredients": [
+      {
+        "inventorySku": "INV-GIN-0004",
+        "name": "Bombay Sapphire 1Lt",
+        "qty": 35,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-SPRT-0011",
+    "menuName": "Hendrick's Gin 1Lt (Shot)",
+    "ingredients": [
+      {
+        "inventorySku": "INV-GIN-0005",
+        "name": "Hendrick's Gin 1Lt",
+        "qty": 35,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-SPRT-0012",
+    "menuName": "Tanqueray Gin 1lt (Shot)",
+    "ingredients": [
+      {
+        "inventorySku": "INV-GIN-0006",
+        "name": "Tanqueray Gin 1lt",
+        "qty": 35,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-SPRT-0013",
+    "menuName": "Bacardi Blanca 1Lt (Shot)",
+    "ingredients": [
+      {
+        "inventorySku": "INV-RUM-0001",
+        "name": "Bacardi Blanca 1Lt",
+        "qty": 35,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-SPRT-0014",
+    "menuName": "Havana Club White 1Lt (Shot)",
+    "ingredients": [
+      {
+        "inventorySku": "INV-RUM-0002",
+        "name": "Havana Club White 1Lt",
+        "qty": 35,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-SPRT-0015",
+    "menuName": "Captain Morgan Spiced Gold 1ltr (Shot)",
+    "ingredients": [
+      {
+        "inventorySku": "INV-RUM-0003",
+        "name": "Captain Morgan Spiced Gold 1ltr",
+        "qty": 35,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-SPRT-0016",
+    "menuName": "Malibu 1Lt (Shot)",
+    "ingredients": [
+      {
+        "inventorySku": "INV-RUM-0004",
+        "name": "Malibu 1Lt",
+        "qty": 35,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-SPRT-0017",
+    "menuName": "Olmeca Tequila Silver 1 Lt (Shot)",
+    "ingredients": [
+      {
+        "inventorySku": "INV-TEQL-0001",
+        "name": "Olmeca Tequila Silver 1 Lt",
+        "qty": 35,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-SPRT-0018",
+    "menuName": "Olmeca Tequila Gold 1Lt (Shot)",
+    "ingredients": [
+      {
+        "inventorySku": "INV-TEQL-0002",
+        "name": "Olmeca Tequila Gold 1Lt",
+        "qty": 35,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-SPRT-0019",
+    "menuName": "Jose Cuervo Silver 1L (Shot)",
+    "ingredients": [
+      {
+        "inventorySku": "INV-TEQL-0003",
+        "name": "Jose Cuervo Silver 1L",
+        "qty": 35,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-SPRT-0020",
+    "menuName": "Patron Silver 700ml (Shot)",
+    "ingredients": [
+      {
+        "inventorySku": "INV-TEQL-0004",
+        "name": "Patron Silver 700ml",
+        "qty": 35,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-SPRT-0021",
+    "menuName": "Jameson 1ltr (Shot)",
+    "ingredients": [
+      {
+        "inventorySku": "INV-WHSK-0001",
+        "name": "Jameson 1ltr",
+        "qty": 35,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-SPRT-0022",
+    "menuName": "Jack Daniels NO.7 1Lt (Shot)",
+    "ingredients": [
+      {
+        "inventorySku": "INV-WHSK-0002",
+        "name": "Jack Daniels NO.7 1Lt",
+        "qty": 35,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-SPRT-0023",
+    "menuName": "Jim Beam 1Lt (Shot)",
+    "ingredients": [
+      {
+        "inventorySku": "INV-WHSK-0003",
+        "name": "Jim Beam 1Lt",
+        "qty": 35,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-SPRT-0024",
+    "menuName": "Johnnie Walker Black Label 1Lt (Shot)",
+    "ingredients": [
+      {
+        "inventorySku": "INV-WHSK-0004",
+        "name": "Johnnie Walker Black Label 1Lt",
+        "qty": 35,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-SPRT-0025",
+    "menuName": "Chivas Regal 12yrs 1ltr (Shot)",
+    "ingredients": [
+      {
+        "inventorySku": "INV-WHSK-0005",
+        "name": "Chivas Regal 12yrs 1ltr",
+        "qty": 35,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-SPRT-0026",
+    "menuName": "Hennessy VS 700ML (Shot)",
+    "ingredients": [
+      {
+        "inventorySku": "INV-BRND-0001",
+        "name": "Hennessy VS 700ML",
+        "qty": 35,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-SPRT-0027",
+    "menuName": "Courvoisier VSOP 1Lt (Shot)",
+    "ingredients": [
+      {
+        "inventorySku": "INV-BRND-0002",
+        "name": "Courvoisier VSOP 1Lt",
+        "qty": 35,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-SPRT-0028",
+    "menuName": "Remy Martin VSOP 1L (Shot)",
+    "ingredients": [
+      {
+        "inventorySku": "INV-BRND-0003",
+        "name": "Remy Martin VSOP 1L",
+        "qty": 35,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-SPRT-0029",
+    "menuName": "Baileys 1Lt (Shot)",
+    "ingredients": [
+      {
+        "inventorySku": "INV-CREM-0001",
+        "name": "Baileys 1Lt",
+        "qty": 35,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-SPRT-0030",
+    "menuName": "Amarula 1Lt (Shot)",
+    "ingredients": [
+      {
+        "inventorySku": "INV-CREM-0002",
+        "name": "Amarula 1Lt",
+        "qty": 35,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-SPRT-0031",
+    "menuName": "Kahlua 1Lt (Shot)",
+    "ingredients": [
+      {
+        "inventorySku": "INV-CREM-0003",
+        "name": "Kahlua 1Lt",
+        "qty": 35,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-SPRT-0032",
+    "menuName": "Cointreau 1 Lt (Shot)",
+    "ingredients": [
+      {
+        "inventorySku": "INV-CREM-0004",
+        "name": "Cointreau 1 Lt",
+        "qty": 35,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "TAP-SPRT-0033",
+    "menuName": "Blue Curacau 750Ml (Shot)",
+    "ingredients": [
+      {
+        "inventorySku": "INV-CREM-0005",
+        "name": "Blue Curacau 750Ml",
+        "qty": 35,
+        "unit": "ML",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  }
+]

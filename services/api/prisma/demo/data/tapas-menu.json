@@ -1,0 +1,1849 @@
+{
+  "categories": [
+    {
+      "name": "Breakfast",
+      "description": "Morning favorites served until 11:30 AM",
+      "displayOrder": 1
+    },
+    {
+      "name": "Starters",
+      "description": "Small plates perfect for sharing",
+      "displayOrder": 2
+    },
+    {
+      "name": "Tacos & Sliders",
+      "description": "Mini favorites packed with flavor",
+      "displayOrder": 3
+    },
+    {
+      "name": "Fish",
+      "description": "Fresh seafood selections",
+      "displayOrder": 4
+    },
+    {
+      "name": "Vegetarian & Vegan",
+      "description": "Plant-based delights",
+      "displayOrder": 5
+    },
+    {
+      "name": "Burgers",
+      "description": "Juicy burgers served with fries or potato wedges and house salad",
+      "displayOrder": 6
+    },
+    {
+      "name": "Sandwiches",
+      "description": "All sandwiches served with fries or potato wedges and house salad",
+      "displayOrder": 7
+    },
+    {
+      "name": "Wraps & Roll Ups",
+      "description": "Rolled and wrapped favorites",
+      "displayOrder": 8
+    },
+    {
+      "name": "Salads",
+      "description": "Fresh greens served with garlic bread",
+      "displayOrder": 9
+    },
+    {
+      "name": "Flat Breads",
+      "description": "Thin crust creations",
+      "displayOrder": 10
+    },
+    {
+      "name": "Grills",
+      "description": "Served with choice of vegetable rice, Swahili rice, mashed potatoes, fries, potato wedges, spinach, or house salad",
+      "displayOrder": 11
+    },
+    {
+      "name": "Curries",
+      "description": "Spiced favorites served with rice and salad",
+      "displayOrder": 12
+    },
+    {
+      "name": "Pasta",
+      "description": "Italian classics served with garlic bread and salad",
+      "displayOrder": 13
+    },
+    {
+      "name": "Soups",
+      "description": "Warm bowls served with garlic bread",
+      "displayOrder": 14
+    },
+    {
+      "name": "Extras & Sides",
+      "description": "Additional accompaniments",
+      "displayOrder": 15
+    },
+    {
+      "name": "Desserts",
+      "description": "Sweet endings",
+      "displayOrder": 16
+    },
+    {
+      "name": "Cocktails",
+      "description": "Handcrafted cocktails",
+      "displayOrder": 17
+    },
+    {
+      "name": "Mocktails",
+      "description": "Non-alcoholic refreshments",
+      "displayOrder": 18
+    },
+    {
+      "name": "Hot Beverages",
+      "description": "Tea, coffee, and hot drinks",
+      "displayOrder": 19
+    },
+    {
+      "name": "Soft Drinks & Juices",
+      "description": "Refreshing non-alcoholic beverages",
+      "displayOrder": 20
+    },
+    {
+      "name": "Milkshakes & Smoothies",
+      "description": "Blended refreshments",
+      "displayOrder": 21
+    },
+    {
+      "name": "Beers & Ciders",
+      "description": "Local and imported selections",
+      "displayOrder": 22
+    },
+    {
+      "name": "Spirits - Vodka",
+      "description": "Premium vodka selections",
+      "displayOrder": 23
+    },
+    {
+      "name": "Spirits - Gin",
+      "description": "Premium gin selections",
+      "displayOrder": 24
+    },
+    {
+      "name": "Spirits - Tequila",
+      "description": "Premium tequila selections",
+      "displayOrder": 25
+    },
+    {
+      "name": "Spirits - Whiskey & Bourbon",
+      "description": "Blended whiskey, bourbon, and single malt selections",
+      "displayOrder": 26
+    },
+    {
+      "name": "Spirits - Rum",
+      "description": "Premium rum selections",
+      "displayOrder": 27
+    },
+    {
+      "name": "Spirits - Brandy & Cognac",
+      "description": "Premium brandy and cognac selections",
+      "displayOrder": 28
+    },
+    {
+      "name": "Spirits - Creams & Liqueurs",
+      "description": "Cream liqueurs and specialty spirits",
+      "displayOrder": 29
+    },
+    {
+      "name": "Wines - Champagne & Sparkling",
+      "description": "Celebration bubbles",
+      "displayOrder": 30
+    },
+    {
+      "name": "Wines - Red",
+      "description": "Red wine selections",
+      "displayOrder": 31
+    },
+    {
+      "name": "Wines - White",
+      "description": "White wine selections",
+      "displayOrder": 32
+    },
+    {
+      "name": "Wines - Ros\u00e9",
+      "description": "Ros\u00e9 wine selections",
+      "displayOrder": 33
+    }
+  ],
+  "items": [
+    {
+      "sku": "TAP-FOOD-0001",
+      "name": "Full English Breakfast",
+      "description": "Choice of 2 eggs, 2 sausages, baked beans, grilled mushrooms, toast, grilled tomato, bacon, roasted potato wedges",
+      "category": "Breakfast",
+      "itemType": "FOOD",
+      "station": "KITCHEN",
+      "price": 29000
+    },
+    {
+      "sku": "TAP-FOOD-0002",
+      "name": "Healthy Breakfast",
+      "description": "Vanilla yoghurt topped with fresh fruit dices and muesli. Served with honey",
+      "category": "Breakfast",
+      "itemType": "FOOD",
+      "station": "KITCHEN",
+      "price": 19000
+    },
+    {
+      "sku": "TAP-FOOD-0003",
+      "name": "Skillet Breakfast",
+      "description": "2 Eggs, 2 sausages, toast, grilled tomato and bacon",
+      "category": "Breakfast",
+      "itemType": "FOOD",
+      "station": "KITCHEN",
+      "price": 29000
+    },
+    {
+      "sku": "TAP-FOOD-0004",
+      "name": "Avocado on Toast",
+      "description": "Toasted multi grain bread, served with avocado slices, guacamole, and your choice of eggs",
+      "category": "Breakfast",
+      "itemType": "FOOD",
+      "station": "KITCHEN",
+      "price": 18000
+    },
+    {
+      "sku": "TAP-FOOD-0005",
+      "name": "Fluffy Pancakes",
+      "description": "Light and spongy pancakes, served with pancake syrup, honey and banana",
+      "category": "Breakfast",
+      "itemType": "FOOD",
+      "station": "KITCHEN",
+      "price": 18000
+    },
+    {
+      "sku": "TAP-FOOD-0006",
+      "name": "Mixed Fruit Salad",
+      "description": "A bowl of seasonal fruits, dressed with lemon juice and honey",
+      "category": "Breakfast",
+      "itemType": "FOOD",
+      "station": "KITCHEN",
+      "price": 18000
+    },
+    {
+      "sku": "TAP-FOOD-0007",
+      "name": "Chicken Spring Rolls",
+      "description": "Slightly fried minced chicken and vegetables rolled in pastry sheets and accompanied with sweet chilli sauce",
+      "category": "Starters",
+      "itemType": "FOOD",
+      "station": "KITCHEN",
+      "price": 23000
+    },
+    {
+      "sku": "TAP-FOOD-0008",
+      "name": "Chicken Satay",
+      "description": "Marinated chicken brochettes, grilled and coated with a creamy peanut butter sauce",
+      "category": "Starters",
+      "itemType": "FOOD",
+      "station": "KITCHEN",
+      "price": 25000
+    },
+    {
+      "sku": "TAP-FOOD-0009",
+      "name": "Buffalo Wings",
+      "description": "Baked chicken winglets served with creamy, tangy, hot sauce",
+      "category": "Starters",
+      "itemType": "FOOD",
+      "station": "KITCHEN",
+      "price": 28000
+    },
+    {
+      "sku": "TAP-FOOD-0010",
+      "name": "BBQ Wings",
+      "description": "Baked chicken winglets doused in our house BBQ",
+      "category": "Starters",
+      "itemType": "FOOD",
+      "station": "KITCHEN",
+      "price": 28000
+    },
+    {
+      "sku": "TAP-FOOD-0011",
+      "name": "Chicken Lollipops",
+      "description": "Seasoned chicken drummetes baked to perfection, served with home-made ranch dip",
+      "category": "Starters",
+      "itemType": "FOOD",
+      "station": "KITCHEN",
+      "price": 28000
+    },
+    {
+      "sku": "TAP-FOOD-0012",
+      "name": "Chicken Skewers",
+      "description": "Honey Garlic marinated chicken cooked on a griddle for a sweet smoky flavour and stacked on a skewer with grilled peppers and onions",
+      "category": "Starters",
+      "itemType": "FOOD",
+      "station": "KITCHEN",
+      "price": 25000
+    },
+    {
+      "sku": "TAP-FOOD-0013",
+      "name": "Pork Riblets",
+      "description": "Oven-braised pork riblets, flavoured with garlic hoisin sauce",
+      "category": "Starters",
+      "itemType": "FOOD",
+      "station": "KITCHEN",
+      "price": 28000
+    },
+    {
+      "sku": "TAP-FOOD-0014",
+      "name": "Pork Skewers",
+      "description": "Flavoursome Barbecue bite sized skewed pork grilled over medium heat",
+      "category": "Starters",
+      "itemType": "FOOD",
+      "station": "KITCHEN",
+      "price": 28000
+    },
+    {
+      "sku": "TAP-FOOD-0015",
+      "name": "Meatballs",
+      "description": "Mincemeat, onion, garlic, coriander, eggs and breadcrumbs rolled into balls, and baked. Served with Napolitano sauce",
+      "category": "Starters",
+      "itemType": "FOOD",
+      "station": "KITCHEN",
+      "price": 23000
+    },
+    {
+      "sku": "TAP-FOOD-0016",
+      "name": "Beef Skewers",
+      "description": "Partially slow cooked beef chunks stacked on skewers and grilled for a tender taste. Served with a side of our in-house sweet chilli sauce",
+      "category": "Starters",
+      "itemType": "FOOD",
+      "station": "KITCHEN",
+      "price": 30000
+    },
+    {
+      "sku": "TAP-FOOD-0017",
+      "name": "Tacos",
+      "description": "A choice of 3 mini flour tortillas filled with either chicken/fish/beef, avocado, tomato salsa, and sour cream",
+      "category": "Tacos & Sliders",
+      "itemType": "FOOD",
+      "station": "KITCHEN",
+      "price": 30000
+    },
+    {
+      "sku": "TAP-FOOD-0018",
+      "name": "Beef Sliders",
+      "description": "A choice of 2 beef juicy mini burgers, gherkins, tomato, lettuce, cheddar cheese, caramelized onions, and tapas special sauce",
+      "category": "Tacos & Sliders",
+      "itemType": "FOOD",
+      "station": "KITCHEN",
+      "price": 20000
+    },
+    {
+      "sku": "TAP-FOOD-0019",
+      "name": "Chicken Sliders",
+      "description": "A choice of 2 chicken juicy mini burgers, gherkins, tomato, lettuce, cheddar cheese, caramelized onions, and tapas special sauce",
+      "category": "Tacos & Sliders",
+      "itemType": "FOOD",
+      "station": "KITCHEN",
+      "price": 20000
+    },
+    {
+      "sku": "TAP-FOOD-0020",
+      "name": "Tuna Fish Bruschetta",
+      "description": "Tinned tuna flakes, tomato salsa and jalapeno pepper, served on a crispy garlic bread base",
+      "category": "Fish",
+      "itemType": "FOOD",
+      "station": "KITCHEN",
+      "price": 28000
+    },
+    {
+      "sku": "TAP-FOOD-0021",
+      "name": "Tilapia Bites",
+      "description": "Cubes of well-seasoned tilapia fillet, coated with corn starch-rice flour batter. Served lemon mayonnaise",
+      "category": "Fish",
+      "itemType": "FOOD",
+      "station": "KITCHEN",
+      "price": 27000
+    },
+    {
+      "sku": "TAP-FOOD-0022",
+      "name": "Cauliflower Nuggets",
+      "description": "Crumbed and oven-fried cauliflower florets, served with ranch sauce",
+      "category": "Vegetarian & Vegan",
+      "itemType": "FOOD",
+      "station": "KITCHEN",
+      "price": 18000
+    },
+    {
+      "sku": "TAP-FOOD-0023",
+      "name": "Corn Ribs",
+      "description": "Sweetcorn riblets with a dry-rub of Italian seasoning, fried and served with chilly mayonnaise",
+      "category": "Vegetarian & Vegan",
+      "itemType": "FOOD",
+      "station": "KITCHEN",
+      "price": 18000
+    },
+    {
+      "sku": "TAP-FOOD-0024",
+      "name": "Black Bean Ragu",
+      "description": "Slow cooked black bean stew, topped with avocado mash and sour cream. Served with corn crisps",
+      "category": "Vegetarian & Vegan",
+      "itemType": "FOOD",
+      "station": "KITCHEN",
+      "price": 18000
+    },
+    {
+      "sku": "TAP-FOOD-0025",
+      "name": "Spring Rolls",
+      "description": "Pastry sheet filled with spring vegetables, rolled and fried. Served with sweet and sour sauce",
+      "category": "Vegetarian & Vegan",
+      "itemType": "FOOD",
+      "station": "KITCHEN",
+      "price": 18000
+    },
+    {
+      "sku": "TAP-FOOD-0026",
+      "name": "Tapas Classic Beef Burger",
+      "description": "Minced beef patty with vegetables and seasoning. Served with toppings of cheese, gherkins, tomato, lettuce, caramelized onions on a freshly made burger bun. Served with fries or potato wedges and house salad",
+      "category": "Burgers",
+      "itemType": "FOOD",
+      "station": "KITCHEN",
+      "price": 35000
+    },
+    {
+      "sku": "TAP-FOOD-0027",
+      "name": "Happy Chicken Burger",
+      "description": "Chicken patty layered between grilled tomatoes, caramelized onions, crinkled lettuce, ranch sauce, topped with cheese and buttered grilled burger buns. Served with fries or potato wedges and house salad",
+      "category": "Burgers",
+      "itemType": "FOOD",
+      "station": "KITCHEN",
+      "price": 35000
+    },
+    {
+      "sku": "TAP-FOOD-0028",
+      "name": "Chicken Schnitzel Sandwich",
+      "description": "Breaded escalope of chicken between slices of a hoagie roll, filled with home-made mayo, lettuce and tomatoes. Served with fries or potato wedges and house salad",
+      "category": "Sandwiches",
+      "itemType": "FOOD",
+      "station": "KITCHEN",
+      "price": 30000
+    },
+    {
+      "sku": "TAP-FOOD-0029",
+      "name": "Cheesy Steak Sandwich",
+      "description": "Griddled steak slices, caramelized onions, gouda cheese, lettuce, tomatoes, and onion gravy, in a hoagie roll. Served with fries or potato wedges and house salad",
+      "category": "Sandwiches",
+      "itemType": "FOOD",
+      "station": "KITCHEN",
+      "price": 35000
+    },
+    {
+      "sku": "TAP-FOOD-0030",
+      "name": "Classic Ham and Cheese Sandwich",
+      "description": "Cooked ham, gouda cheese, iceberg lettuce, onions, tomatoes, jalapeno peppers, gherkins, honey mustard sauce, in a hoagie roll. Served with fries or potato wedges and house salad",
+      "category": "Sandwiches",
+      "itemType": "FOOD",
+      "station": "KITCHEN",
+      "price": 30000
+    },
+    {
+      "sku": "TAP-FOOD-0031",
+      "name": "Ham and Cheese Roll Ups",
+      "description": "Layers of Ham and cheese, sliced tomatoes, pickled cucumber and lettuce served with honey and mustard sauce",
+      "category": "Wraps & Roll Ups",
+      "itemType": "FOOD",
+      "station": "KITCHEN",
+      "price": 28000
+    },
+    {
+      "sku": "TAP-FOOD-0032",
+      "name": "Roast Beef Roll Ups",
+      "description": "Fun bite sized roast beef roll ups with cheese, sour cream, assorted vegetables served with espagnol sauce",
+      "category": "Wraps & Roll Ups",
+      "itemType": "FOOD",
+      "station": "KITCHEN",
+      "price": 30000
+    },
+    {
+      "sku": "TAP-FOOD-0033",
+      "name": "Buffalo Chicken Rollies",
+      "description": "Spicy chicken rolled between mediterenean peppers, shredded carrots, ranch sauce and served with a thousand island dip",
+      "category": "Wraps & Roll Ups",
+      "itemType": "FOOD",
+      "station": "KITCHEN",
+      "price": 35000
+    },
+    {
+      "sku": "TAP-FOOD-0034",
+      "name": "Tapas Caesar Salad",
+      "description": "Iceberg and romaine lettuce, roasted chicken strips, boiled eggs, crispy garlic croutons, cheese shavings and creamy home-made dressing. Served with garlic bread",
+      "category": "Salads",
+      "itemType": "FOOD",
+      "station": "KITCHEN",
+      "price": 28000
+    },
+    {
+      "sku": "TAP-FOOD-0035",
+      "name": "Tapas Special Salad",
+      "description": "A green salad of kale and iceberg, carrots, green apples, cucumber, cheddar shaving and honey mustard vinaigrette. Served with garlic bread",
+      "category": "Salads",
+      "itemType": "FOOD",
+      "station": "KITCHEN",
+      "price": 28000
+    },
+    {
+      "sku": "TAP-FOOD-0036",
+      "name": "Garlicky Chicken Flat Bread",
+      "description": "Mild marinara base, filled with cheese and garlicky chicken",
+      "category": "Flat Breads",
+      "itemType": "FOOD",
+      "station": "KITCHEN",
+      "price": 39000
+    },
+    {
+      "sku": "TAP-FOOD-0037",
+      "name": "Bacon Mozzarella Flat Bread",
+      "description": "Napolitano sauce, filled with mozzarella and bacon",
+      "category": "Flat Breads",
+      "itemType": "FOOD",
+      "station": "KITCHEN",
+      "price": 37000
+    },
+    {
+      "sku": "TAP-FOOD-0038",
+      "name": "Curry Base Vegetarian Flat Bread",
+      "description": "Spiced tomato base, filled with chick peas, sweetcorn, bell peppers, onions, coriander, and cheese",
+      "category": "Flat Breads",
+      "itemType": "FOOD",
+      "station": "KITCHEN",
+      "price": 36000
+    },
+    {
+      "sku": "TAP-FOOD-0039",
+      "name": "Pesto Vegetarian Flat Bread",
+      "description": "Basil, tomato sauce, roasted pesto vegetables, and cheese",
+      "category": "Flat Breads",
+      "itemType": "FOOD",
+      "station": "KITCHEN",
+      "price": 36000
+    },
+    {
+      "sku": "TAP-FOOD-0040",
+      "name": "Rack of Pork Spare Ribs",
+      "description": "Slow cooked pork rib roast, in a barbeque sauce, honey mustard sauce. Served with a side choice of vegetable rice, Swahili rice, mashed potatoes, fries, potato wedges, spinach, or house salad",
+      "category": "Grills",
+      "itemType": "FOOD",
+      "station": "KITCHEN",
+      "price": 42000
+    },
+    {
+      "sku": "TAP-FOOD-0041",
+      "name": "Pork Chops",
+      "description": "Grilled pork chops, with sweet and sour sauce. Served with a side choice of vegetable rice, Swahili rice, mashed potatoes, fries, potato wedges, spinach, or house salad",
+      "category": "Grills",
+      "itemType": "FOOD",
+      "station": "KITCHEN",
+      "price": 38000
+    },
+    {
+      "sku": "TAP-FOOD-0042",
+      "name": "Half Roast Chicken",
+      "description": "Oven roast 1/2 chicken glazed with sauce espagnole. Served with a side choice of vegetable rice, Swahili rice, mashed potatoes, fries, potato wedges, spinach, or house salad",
+      "category": "Grills",
+      "itemType": "FOOD",
+      "station": "KITCHEN",
+      "price": 42000
+    },
+    {
+      "sku": "TAP-FOOD-0043",
+      "name": "Pan Fried Fish",
+      "description": "Boneless fried tilapia fillet, coated with eggs and flour. Served with a creamy dill sauce. Served with a side choice of vegetable rice, Swahili rice, mashed potatoes, fries, potato wedges, spinach, or house salad",
+      "category": "Grills",
+      "itemType": "FOOD",
+      "station": "KITCHEN",
+      "price": 38000
+    },
+    {
+      "sku": "TAP-FOOD-0044",
+      "name": "Lemon Butter Tilapia",
+      "description": "Seasoned tilapia fillet baked in the oven with lemon butter. Served with a side choice of vegetable rice, Swahili rice, mashed potatoes, fries, potato wedges, spinach, or house salad",
+      "category": "Grills",
+      "itemType": "FOOD",
+      "station": "KITCHEN",
+      "price": 42000
+    },
+    {
+      "sku": "TAP-FOOD-0045",
+      "name": "Flame Beef Filet",
+      "description": "Tenderloins of beef medallions, grilled to your preference, with a creamy pepper sauce. Served with a side choice of vegetable rice, Swahili rice, mashed potatoes, fries, potato wedges, spinach, or house salad",
+      "category": "Grills",
+      "itemType": "FOOD",
+      "station": "KITCHEN",
+      "price": 42000
+    },
+    {
+      "sku": "TAP-FOOD-0046",
+      "name": "Chili Chicken",
+      "description": "Saut\u00e9ed chicken strips in a tangy, spicy, sweet chili sauce. Served with garlic bread. Served with a side choice of vegetable rice, Swahili rice, mashed potatoes, fries, potato wedges, spinach, or house salad",
+      "category": "Grills",
+      "itemType": "FOOD",
+      "station": "KITCHEN",
+      "price": 35000
+    },
+    {
+      "sku": "TAP-FOOD-0047",
+      "name": "Beef Saut\u00e9",
+      "description": "Sliced beef strips cooked in a tangy, sweet chilli sauce. Served with a side choice of vegetable rice, Swahili rice, mashed potatoes, fries, potato wedges, spinach, or house salad",
+      "category": "Grills",
+      "itemType": "FOOD",
+      "station": "KITCHEN",
+      "price": 35000
+    },
+    {
+      "sku": "TAP-FOOD-0048",
+      "name": "Mixed Grill Platter for Two",
+      "description": "2 buffalo wings, 2 chicken skewers, 2 pork skewers, 2 smoked spicy sausages, 4 meatballs, 2 spring rolls, served with potato wedges, mexican salsa, sweet tangy barbeque sauce and a thousand island dressing",
+      "category": "Grills",
+      "itemType": "FOOD",
+      "station": "KITCHEN",
+      "price": 80000
+    },
+    {
+      "sku": "TAP-FOOD-0049",
+      "name": "Chicken Curry",
+      "description": "Boneless Chicken cubes cooked in a creamy tomato/onion gravy with a mixture of ground spices served with a rice of your choice and a house salad",
+      "category": "Curries",
+      "itemType": "FOOD",
+      "station": "KITCHEN",
+      "price": 42000
+    },
+    {
+      "sku": "TAP-FOOD-0050",
+      "name": "Tapas Massaman Beef Curry",
+      "description": "Tenderloin of beef cubes cooked in a medium spiced, lemon grass, peanut butter and coconut sauce. Served with herbed rice and sweet corn and mango salsa",
+      "category": "Curries",
+      "itemType": "FOOD",
+      "station": "KITCHEN",
+      "price": 42000
+    },
+    {
+      "sku": "TAP-FOOD-0051",
+      "name": "Chicken Peanut Curry",
+      "description": "Grilled chicken cubes cooked in creamy peanut curry sauce",
+      "category": "Curries",
+      "itemType": "FOOD",
+      "station": "KITCHEN",
+      "price": 45000
+    },
+    {
+      "sku": "TAP-FOOD-0052",
+      "name": "Spaghetti Chicken Basil Pesto",
+      "description": "Italian penne pasta, strips of chicken, cooked in a creamy basil pesto sauce. Served with garlic bread and salad",
+      "category": "Pasta",
+      "itemType": "FOOD",
+      "station": "KITCHEN",
+      "price": 38000
+    },
+    {
+      "sku": "TAP-FOOD-0053",
+      "name": "Spaghetti Bolognaise",
+      "description": "Penne pasta cooked in a classic Italian ragu sauce. Served with garlic bread and salad",
+      "category": "Pasta",
+      "itemType": "FOOD",
+      "station": "KITCHEN",
+      "price": 38000
+    },
+    {
+      "sku": "TAP-FOOD-0054",
+      "name": "Beef Lasagna",
+      "description": "Home-made egg pasta sheets layered with Italian ragu, cheese, and baked to perfection. Served with garlic bread and salad",
+      "category": "Pasta",
+      "itemType": "FOOD",
+      "station": "KITCHEN",
+      "price": 40000
+    },
+    {
+      "sku": "TAP-FOOD-0055",
+      "name": "Vegetable Lasagna",
+      "description": "Roasted baby marrow, bell peppers, carrots, onions, pumpkin, and cheese. Layered in pasta sheets. Served with garlic bread and salad",
+      "category": "Pasta",
+      "itemType": "FOOD",
+      "station": "KITCHEN",
+      "price": 32000
+    },
+    {
+      "sku": "TAP-FOOD-0056",
+      "name": "Mushroom Soup",
+      "description": "Creamy mushroom soup. Served with garlic bread",
+      "category": "Soups",
+      "itemType": "FOOD",
+      "station": "KITCHEN",
+      "price": 15000
+    },
+    {
+      "sku": "TAP-FOOD-0057",
+      "name": "Roast Pumpkin Soup",
+      "description": "Flavoured with Cumin seeds. Served with garlic bread",
+      "category": "Soups",
+      "itemType": "FOOD",
+      "station": "KITCHEN",
+      "price": 15000
+    },
+    {
+      "sku": "TAP-FOOD-0058",
+      "name": "Clear Chicken Soup",
+      "description": "A rich chicken broth with Julienne of vegetables. Served with garlic bread",
+      "category": "Soups",
+      "itemType": "FOOD",
+      "station": "KITCHEN",
+      "price": 15000
+    },
+    {
+      "sku": "TAP-FOOD-0059",
+      "name": "Chips",
+      "description": "French fries",
+      "category": "Extras & Sides",
+      "itemType": "FOOD",
+      "station": "KITCHEN",
+      "price": 8000
+    },
+    {
+      "sku": "TAP-FOOD-0060",
+      "name": "Rice",
+      "description": "Steamed rice",
+      "category": "Extras & Sides",
+      "itemType": "FOOD",
+      "station": "KITCHEN",
+      "price": 8000
+    },
+    {
+      "sku": "TAP-FOOD-0061",
+      "name": "Plantain",
+      "description": "Fried plantain",
+      "category": "Extras & Sides",
+      "itemType": "FOOD",
+      "station": "KITCHEN",
+      "price": 8000
+    },
+    {
+      "sku": "TAP-FOOD-0062",
+      "name": "Bacon",
+      "description": "Extra bacon strips",
+      "category": "Extras & Sides",
+      "itemType": "FOOD",
+      "station": "KITCHEN",
+      "price": 8000
+    },
+    {
+      "sku": "TAP-FOOD-0063",
+      "name": "Chicken Strips",
+      "description": "Grilled chicken strips",
+      "category": "Extras & Sides",
+      "itemType": "FOOD",
+      "station": "KITCHEN",
+      "price": 8000
+    },
+    {
+      "sku": "TAP-FOOD-0064",
+      "name": "Avocado",
+      "description": "Fresh avocado slices",
+      "category": "Extras & Sides",
+      "itemType": "FOOD",
+      "station": "KITCHEN",
+      "price": 8000
+    },
+    {
+      "sku": "TAP-FOOD-0065",
+      "name": "Creamy Spinach",
+      "description": "Saut\u00e9ed spinach in cream",
+      "category": "Extras & Sides",
+      "itemType": "FOOD",
+      "station": "KITCHEN",
+      "price": 8000
+    },
+    {
+      "sku": "TAP-FOOD-0066",
+      "name": "Mayonnaise",
+      "description": "Side of mayo",
+      "category": "Extras & Sides",
+      "itemType": "FOOD",
+      "station": "KITCHEN",
+      "price": 2000
+    },
+    {
+      "sku": "TAP-FOOD-0067",
+      "name": "Chocolate Brownie with Ice Cream",
+      "description": "Baked chocolate brownie, served with a scoop of vanilla ice cream",
+      "category": "Desserts",
+      "itemType": "FOOD",
+      "station": "KITCHEN",
+      "price": 21000
+    },
+    {
+      "sku": "TAP-FOOD-0068",
+      "name": "Apple Rolls",
+      "description": "Baked pastry dough filled with green apples, raisins, cinnamon, and served with a scoop of ice cream",
+      "category": "Desserts",
+      "itemType": "FOOD",
+      "station": "KITCHEN",
+      "price": 21000
+    },
+    {
+      "sku": "TAP-COCK-0001",
+      "name": "Classic Martini",
+      "description": "Vodka/gin, dry vermouth, olive juice, and olives",
+      "category": "Cocktails",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 25000,
+      "metadata": {
+        "glassPrice": 25000,
+        "pitcherPrice": null
+      }
+    },
+    {
+      "sku": "TAP-COCK-0002",
+      "name": "Dirty Martini",
+      "description": "Gin/vodka, sweet vermouth, olive juice, and olives",
+      "category": "Cocktails",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 25000,
+      "metadata": {
+        "glassPrice": 25000,
+        "pitcherPrice": null
+      }
+    },
+    {
+      "sku": "TAP-COCK-0003",
+      "name": "1926",
+      "description": "Midori, pineapple juice, gin, fresh basil, lemon juice, and syrup",
+      "category": "Cocktails",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 25000,
+      "metadata": {
+        "glassPrice": 25000,
+        "pitcherPrice": null
+      }
+    },
+    {
+      "sku": "TAP-COCK-0004",
+      "name": "21 Devils",
+      "description": "Tequila, rum, vodka, gin, bourbon, brandy, lemon juice, syrup, lemon and coke",
+      "category": "Cocktails",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 35000,
+      "metadata": {
+        "glassPrice": 35000,
+        "pitcherPrice": null
+      }
+    },
+    {
+      "sku": "TAP-COCK-0005",
+      "name": "Long Island Ice Tea",
+      "description": "Vodka, gin, tequila silver, cointreau, rum, lemon, and beer/coke",
+      "category": "Cocktails",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 30000,
+      "metadata": {
+        "glassPrice": 30000,
+        "pitcherPrice": null
+      }
+    },
+    {
+      "sku": "TAP-COCK-0006",
+      "name": "Old Fashioned",
+      "description": "Whiskey, crystal sugar, and 2 dashes of angostura bitters",
+      "category": "Cocktails",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 25000,
+      "metadata": {
+        "glassPrice": 25000,
+        "pitcherPrice": null
+      }
+    },
+    {
+      "sku": "TAP-COCK-0007",
+      "name": "Gin Sour",
+      "description": "Gin, lemon juice, syrup, and 2 dashes angostura bitters",
+      "category": "Cocktails",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 25000,
+      "metadata": {
+        "glassPrice": 25000,
+        "pitcherPrice": null
+      }
+    },
+    {
+      "sku": "TAP-COCK-0008",
+      "name": "Classic Whiskey Sour",
+      "description": "Whiskey, lemon juice, syrup, and 2 dashes angostura bitters",
+      "category": "Cocktails",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 25000,
+      "metadata": {
+        "glassPrice": 25000,
+        "pitcherPrice": null
+      }
+    },
+    {
+      "sku": "TAP-COCK-0009",
+      "name": "Spiced Whiskey Sour",
+      "description": "Whiskey, lemon juice, syrup, and 2 dashes angostura bitters",
+      "category": "Cocktails",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 25000,
+      "metadata": {
+        "glassPrice": 25000,
+        "pitcherPrice": null
+      }
+    },
+    {
+      "sku": "TAP-COCK-0010",
+      "name": "Sidecar",
+      "description": "Brandy, cointreau, lemon juice, and syrup",
+      "category": "Cocktails",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 25000,
+      "metadata": {
+        "glassPrice": 25000,
+        "pitcherPrice": null
+      }
+    },
+    {
+      "sku": "TAP-COCK-0011",
+      "name": "Classic Mojito",
+      "description": "Bacardi, mint, lime, brown sugar, and soda water",
+      "category": "Cocktails",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 25000,
+      "metadata": {
+        "glassPrice": 25000,
+        "pitcherPrice": null
+      }
+    },
+    {
+      "sku": "TAP-COCK-0012",
+      "name": "French Mojito",
+      "description": "Bacardi, mint, lime, brown sugar, and soda water",
+      "category": "Cocktails",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 25000,
+      "metadata": {
+        "glassPrice": 25000,
+        "pitcherPrice": null
+      }
+    },
+    {
+      "sku": "TAP-COCK-0013",
+      "name": "Cosmopolitan",
+      "description": "Citrus vodka, cointreau, lemon juice, and cranberry juice",
+      "category": "Cocktails",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 25000,
+      "metadata": {
+        "glassPrice": 25000,
+        "pitcherPrice": null
+      }
+    },
+    {
+      "sku": "TAP-COCK-0014",
+      "name": "Classic Margarita",
+      "description": "Tequila silver, cointreau, and lemon juice",
+      "category": "Cocktails",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 25000,
+      "metadata": {
+        "glassPrice": 25000,
+        "pitcherPrice": null
+      }
+    },
+    {
+      "sku": "TAP-COCK-0015",
+      "name": "Spiced Margarita",
+      "description": "Tequila silver, cointreau, and lemon juice",
+      "category": "Cocktails",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 25000,
+      "metadata": {
+        "glassPrice": 25000,
+        "pitcherPrice": null
+      }
+    },
+    {
+      "sku": "TAP-COCK-0016",
+      "name": "Blue Lagoon",
+      "description": "Blue curacao, vodka, lemon, syrup, and soda water",
+      "category": "Cocktails",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 25000,
+      "metadata": {
+        "glassPrice": 25000,
+        "pitcherPrice": null
+      }
+    },
+    {
+      "sku": "TAP-COCK-0017",
+      "name": "Passion Gin Cooler",
+      "description": "Ug premium, ug passion, passion juice, lemon juice, and syrup",
+      "category": "Cocktails",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 25000,
+      "metadata": {
+        "glassPrice": 25000,
+        "pitcherPrice": null
+      }
+    },
+    {
+      "sku": "TAP-COCK-0018",
+      "name": "Queen of the South",
+      "description": "Baileys, chocolate tequila, espresso, and chocolate syrup",
+      "category": "Cocktails",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 25000,
+      "metadata": {
+        "glassPrice": 25000,
+        "pitcherPrice": null
+      }
+    },
+    {
+      "sku": "TAP-COCK-0019",
+      "name": "Sangria",
+      "description": "Brandy, citrus vodka, raspberry vodka, lemon juice, syrup, red/white wine, and chopped fruits",
+      "category": "Cocktails",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 25000,
+      "metadata": {
+        "glassPrice": 25000,
+        "pitcherPrice": 70000
+      }
+    },
+    {
+      "sku": "TAP-MKTL-0001",
+      "name": "The Fruity Wonder",
+      "description": "Orange juice, red grape juice, pineapple juice, lemon juice, sugar syrup, and krest",
+      "category": "Mocktails",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 20000
+    },
+    {
+      "sku": "TAP-MKTL-0002",
+      "name": "Basil Bliss",
+      "description": "Peppermint, Basil leaves, lemon juice, sugar syrup, and pineapple juice",
+      "category": "Mocktails",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 20000
+    },
+    {
+      "sku": "TAP-MKTL-0003",
+      "name": "Virgin Mojito",
+      "description": "Mint, lime wedges, orange juice/passion juice, brown sugar and sprite",
+      "category": "Mocktails",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 20000
+    },
+    {
+      "sku": "TAP-MKTL-0004",
+      "name": "Sweet Limelight",
+      "description": "Ginger juice, guava, lemon juice, honey and stoney",
+      "category": "Mocktails",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 20000
+    },
+    {
+      "sku": "TAP-DRK-0001",
+      "name": "Black Tea",
+      "description": "Freshly brewed black tea",
+      "category": "Hot Beverages",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 8000
+    },
+    {
+      "sku": "TAP-DRK-0002",
+      "name": "African Tea",
+      "description": "Traditional African spiced tea",
+      "category": "Hot Beverages",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 10000
+    },
+    {
+      "sku": "TAP-DRK-0003",
+      "name": "Dawa Tea",
+      "description": "Healing ginger and lemon tea",
+      "category": "Hot Beverages",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 12000
+    },
+    {
+      "sku": "TAP-DRK-0004",
+      "name": "Herbal Tea",
+      "description": "Selection of herbal teas",
+      "category": "Hot Beverages",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 12000
+    },
+    {
+      "sku": "TAP-DRK-0005",
+      "name": "Black Coffee",
+      "description": "Freshly brewed black coffee",
+      "category": "Hot Beverages",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 8000
+    },
+    {
+      "sku": "TAP-DRK-0006",
+      "name": "African Coffee",
+      "description": "Local African coffee blend",
+      "category": "Hot Beverages",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 10000
+    },
+    {
+      "sku": "TAP-DRK-0007",
+      "name": "Espresso Single",
+      "description": "Single shot espresso",
+      "category": "Hot Beverages",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 6000
+    },
+    {
+      "sku": "TAP-DRK-0008",
+      "name": "Espresso Double",
+      "description": "Double shot espresso",
+      "category": "Hot Beverages",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 9000
+    },
+    {
+      "sku": "TAP-DRK-0009",
+      "name": "Americano Single",
+      "description": "Single shot americano",
+      "category": "Hot Beverages",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 8000
+    },
+    {
+      "sku": "TAP-DRK-0010",
+      "name": "Americano Double",
+      "description": "Double shot americano",
+      "category": "Hot Beverages",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 12000
+    },
+    {
+      "sku": "TAP-DRK-0011",
+      "name": "Macchiato Single",
+      "description": "Single shot macchiato",
+      "category": "Hot Beverages",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 7000
+    },
+    {
+      "sku": "TAP-DRK-0012",
+      "name": "Macchiato Double",
+      "description": "Double shot macchiato",
+      "category": "Hot Beverages",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 9000
+    },
+    {
+      "sku": "TAP-DRK-0013",
+      "name": "Cappuccino Single",
+      "description": "Single shot cappuccino",
+      "category": "Hot Beverages",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 10000
+    },
+    {
+      "sku": "TAP-DRK-0014",
+      "name": "Cappuccino Double",
+      "description": "Double shot cappuccino",
+      "category": "Hot Beverages",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 10000
+    },
+    {
+      "sku": "TAP-DRK-0015",
+      "name": "Latte",
+      "description": "Smooth latte",
+      "category": "Hot Beverages",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 10000
+    },
+    {
+      "sku": "TAP-DRK-0016",
+      "name": "Hot Chocolate",
+      "description": "Rich hot chocolate",
+      "category": "Hot Beverages",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 10000
+    },
+    {
+      "sku": "TAP-DRK-0017",
+      "name": "Caf\u00e9 Mocha",
+      "description": "Coffee with chocolate",
+      "category": "Hot Beverages",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 13000
+    },
+    {
+      "sku": "TAP-DRK-0018",
+      "name": "Iced Coffee",
+      "description": "Cold brewed iced coffee",
+      "category": "Hot Beverages",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 13000
+    },
+    {
+      "sku": "TAP-DRK-0019",
+      "name": "Iced Tea",
+      "description": "Refreshing iced tea",
+      "category": "Hot Beverages",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 13000
+    },
+    {
+      "sku": "TAP-DRK-0020",
+      "name": "Iced Latte",
+      "description": "Cold latte",
+      "category": "Hot Beverages",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 13000
+    },
+    {
+      "sku": "TAP-DRK-0021",
+      "name": "Iced Mocha",
+      "description": "Cold mocha",
+      "category": "Hot Beverages",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 13000
+    },
+    {
+      "sku": "TAP-DRK-0022",
+      "name": "Iced Cappuccino",
+      "description": "Cold cappuccino",
+      "category": "Hot Beverages",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 13000
+    },
+    {
+      "sku": "TAP-DRK-0023",
+      "name": "Water",
+      "description": "Bottled water",
+      "category": "Soft Drinks & Juices",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 5000
+    },
+    {
+      "sku": "TAP-DRK-0024",
+      "name": "Soda",
+      "description": "Assorted sodas",
+      "category": "Soft Drinks & Juices",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 5000
+    },
+    {
+      "sku": "TAP-DRK-0025",
+      "name": "Red Bull",
+      "description": "Energy drink",
+      "category": "Soft Drinks & Juices",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 15000
+    },
+    {
+      "sku": "TAP-DRK-0026",
+      "name": "Plain Juice",
+      "description": "Freshly squeezed juice",
+      "category": "Soft Drinks & Juices",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 13000
+    },
+    {
+      "sku": "TAP-DRK-0027",
+      "name": "Pineapple Juice",
+      "description": "Fresh pineapple juice",
+      "category": "Soft Drinks & Juices",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 15000
+    },
+    {
+      "sku": "TAP-DRK-0028",
+      "name": "Passion Juice",
+      "description": "Fresh passion fruit juice",
+      "category": "Soft Drinks & Juices",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 15000
+    },
+    {
+      "sku": "TAP-DRK-0029",
+      "name": "Watermelon Juice",
+      "description": "Fresh watermelon juice",
+      "category": "Soft Drinks & Juices",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 15000
+    },
+    {
+      "sku": "TAP-DRK-0030",
+      "name": "Mango Juice",
+      "description": "Fresh mango juice",
+      "category": "Soft Drinks & Juices",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 15000
+    },
+    {
+      "sku": "TAP-DRK-0031",
+      "name": "Cocktail Juice",
+      "description": "Mixed fruit juice",
+      "category": "Soft Drinks & Juices",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 14000
+    },
+    {
+      "sku": "TAP-DRK-0032",
+      "name": "Orange Juice",
+      "description": "Fresh orange juice",
+      "category": "Soft Drinks & Juices",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 14000
+    },
+    {
+      "sku": "TAP-DRK-0033",
+      "name": "Milkshake",
+      "description": "Assorted flavors milkshake",
+      "category": "Milkshakes & Smoothies",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 18000
+    },
+    {
+      "sku": "TAP-DRK-0034",
+      "name": "Smoothie",
+      "description": "Fresh fruit smoothie",
+      "category": "Milkshakes & Smoothies",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 18000
+    },
+    {
+      "sku": "TAP-BEER-0001",
+      "name": "Local Beer",
+      "description": "Local beer selection",
+      "category": "Beers & Ciders",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 10000
+    },
+    {
+      "sku": "TAP-BEER-0002",
+      "name": "Imported Beer",
+      "description": "Imported beer selection",
+      "category": "Beers & Ciders",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 15000
+    },
+    {
+      "sku": "TAP-BEER-0003",
+      "name": "Cider",
+      "description": "Apple cider",
+      "category": "Beers & Ciders",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 15000
+    },
+    {
+      "sku": "TAP-BEER-0004",
+      "name": "Nile Special 1*20BTL*500MLS",
+      "description": "Nile Special 1*20BTL*500MLS - CRATE",
+      "category": "Beers & Ciders",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 218800
+    },
+    {
+      "sku": "TAP-BEER-0005",
+      "name": "Club Pilsner 1*20BTL*500MLS",
+      "description": "Club Pilsner 1*20BTL*500MLS - CRATE",
+      "category": "Beers & Ciders",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 204800
+    },
+    {
+      "sku": "TAP-BEER-0006",
+      "name": "Tusker Lager 1*25BTL*500MLS",
+      "description": "Tusker Lager 1*25BTL*500MLS - CRATE",
+      "category": "Beers & Ciders",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 231000
+    },
+    {
+      "sku": "TAP-BEER-0007",
+      "name": "Heineken 1*24*33cl",
+      "description": "Heineken 1*24*33cl - CARTON",
+      "category": "Beers & Ciders",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 563500
+    },
+    {
+      "sku": "TAP-BEER-0008",
+      "name": "Savanna Premium Cider 4*6*330ML",
+      "description": "Savanna Premium Cider 4*6*330ML - CARTON",
+      "category": "Beers & Ciders",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 588000
+    },
+    {
+      "sku": "TAP-WINE-0001",
+      "name": "Nederburg Cabernet Sauvignon 750Ml (Glass)",
+      "description": "175ml glass of Nederburg Cabernet Sauvignon 750Ml",
+      "category": "Wines - Red",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 50000
+    },
+    {
+      "sku": "TAP-WINE-0002",
+      "name": "Nederburg Cabernet Sauvignon 750Ml (Bottle)",
+      "description": "750ml bottle of Nederburg Cabernet Sauvignon 750Ml",
+      "category": "Wines - Red",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 175000
+    },
+    {
+      "sku": "TAP-WINE-0003",
+      "name": "Jacob's Creek Merlot 750Ml (Glass)",
+      "description": "175ml glass of Jacob's Creek Merlot 750Ml",
+      "category": "Wines - Red",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 40000
+    },
+    {
+      "sku": "TAP-WINE-0004",
+      "name": "Jacob's Creek Merlot 750Ml (Bottle)",
+      "description": "750ml bottle of Jacob's Creek Merlot 750Ml",
+      "category": "Wines - Red",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 140000
+    },
+    {
+      "sku": "TAP-WINE-0005",
+      "name": "Nederburg Sauvignon Blanc 750Ml (Glass)",
+      "description": "175ml glass of Nederburg Sauvignon Blanc 750Ml",
+      "category": "Wines - White",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 32000
+    },
+    {
+      "sku": "TAP-WINE-0006",
+      "name": "Nederburg Sauvignon Blanc 750Ml (Bottle)",
+      "description": "750ml bottle of Nederburg Sauvignon Blanc 750Ml",
+      "category": "Wines - White",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 112000
+    },
+    {
+      "sku": "TAP-WINE-0007",
+      "name": "Jacob's Creek Chardonnay 750Ml (Glass)",
+      "description": "175ml glass of Jacob's Creek Chardonnay 750Ml",
+      "category": "Wines - White",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 40000
+    },
+    {
+      "sku": "TAP-WINE-0008",
+      "name": "Jacob's Creek Chardonnay 750Ml (Bottle)",
+      "description": "750ml bottle of Jacob's Creek Chardonnay 750Ml",
+      "category": "Wines - White",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 140000
+    },
+    {
+      "sku": "TAP-WINE-0009",
+      "name": "Nederburg Rose 750Ml (Glass)",
+      "description": "175ml glass of Nederburg Rose 750Ml",
+      "category": "Wines - Ros\u00e9",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 50000
+    },
+    {
+      "sku": "TAP-WINE-0010",
+      "name": "Nederburg Rose 750Ml (Bottle)",
+      "description": "750ml bottle of Nederburg Rose 750Ml",
+      "category": "Wines - Ros\u00e9",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 175000
+    },
+    {
+      "sku": "TAP-WINE-0011",
+      "name": "Moet & Chandon Champagne 750Ml (Glass)",
+      "description": "175ml glass of Moet & Chandon Champagne 750Ml",
+      "category": "Wines - Champagne & Sparkling",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 245000
+    },
+    {
+      "sku": "TAP-WINE-0012",
+      "name": "Moet & Chandon Champagne 750Ml (Bottle)",
+      "description": "750ml bottle of Moet & Chandon Champagne 750Ml",
+      "category": "Wines - Champagne & Sparkling",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 858000
+    },
+    {
+      "sku": "TAP-SPRT-0001",
+      "name": "Smirnoff Red 750ML (Shot)",
+      "description": "35ml shot of Smirnoff Red 750ML",
+      "category": "Spirits - Vodka",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 5000
+    },
+    {
+      "sku": "TAP-SPRT-0002",
+      "name": "Absolut Vodka Citron 1Ltr (Shot)",
+      "description": "35ml shot of Absolut Vodka Citron 1Ltr",
+      "category": "Spirits - Vodka",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 16000
+    },
+    {
+      "sku": "TAP-SPRT-0003",
+      "name": "Absolut Vodka Vanilla 1Lt (Shot)",
+      "description": "35ml shot of Absolut Vodka Vanilla 1Lt",
+      "category": "Spirits - Vodka",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 16000
+    },
+    {
+      "sku": "TAP-SPRT-0004",
+      "name": "Absolut Vodka Raspberry 1Lt (Shot)",
+      "description": "35ml shot of Absolut Vodka Raspberry 1Lt",
+      "category": "Spirits - Vodka",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 16000
+    },
+    {
+      "sku": "TAP-SPRT-0005",
+      "name": "Grey Goose 1Lt (Shot)",
+      "description": "35ml shot of Grey Goose 1Lt",
+      "category": "Spirits - Vodka",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 28000
+    },
+    {
+      "sku": "TAP-SPRT-0006",
+      "name": "Ciroc Blue 1Lt (Shot)",
+      "description": "35ml shot of Ciroc Blue 1Lt",
+      "category": "Spirits - Vodka",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 26500
+    },
+    {
+      "sku": "TAP-SPRT-0007",
+      "name": "Gilbeys Gin 750ml (Shot)",
+      "description": "35ml shot of Gilbeys Gin 750ml",
+      "category": "Spirits - Gin",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 5000
+    },
+    {
+      "sku": "TAP-SPRT-0008",
+      "name": "Gordons London Dry 750Ml (Shot)",
+      "description": "35ml shot of Gordons London Dry 750Ml",
+      "category": "Spirits - Gin",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 8000
+    },
+    {
+      "sku": "TAP-SPRT-0009",
+      "name": "Beefeater 1Lt (Shot)",
+      "description": "35ml shot of Beefeater 1Lt",
+      "category": "Spirits - Gin",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 11500
+    },
+    {
+      "sku": "TAP-SPRT-0010",
+      "name": "Bombay Sapphire 1Lt (Shot)",
+      "description": "35ml shot of Bombay Sapphire 1Lt",
+      "category": "Spirits - Gin",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 18000
+    },
+    {
+      "sku": "TAP-SPRT-0011",
+      "name": "Hendrick's Gin 1Lt (Shot)",
+      "description": "35ml shot of Hendrick's Gin 1Lt",
+      "category": "Spirits - Gin",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 32500
+    },
+    {
+      "sku": "TAP-SPRT-0012",
+      "name": "Tanqueray Gin 1lt (Shot)",
+      "description": "35ml shot of Tanqueray Gin 1lt",
+      "category": "Spirits - Gin",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 14500
+    },
+    {
+      "sku": "TAP-SPRT-0013",
+      "name": "Bacardi Blanca 1Lt (Shot)",
+      "description": "35ml shot of Bacardi Blanca 1Lt",
+      "category": "Spirits - Rum",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 11500
+    },
+    {
+      "sku": "TAP-SPRT-0014",
+      "name": "Havana Club White 1Lt (Shot)",
+      "description": "35ml shot of Havana Club White 1Lt",
+      "category": "Spirits - Rum",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 14500
+    },
+    {
+      "sku": "TAP-SPRT-0015",
+      "name": "Captain Morgan Spiced Gold 1ltr (Shot)",
+      "description": "35ml shot of Captain Morgan Spiced Gold 1ltr",
+      "category": "Spirits - Rum",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 11500
+    },
+    {
+      "sku": "TAP-SPRT-0016",
+      "name": "Malibu 1Lt (Shot)",
+      "description": "35ml shot of Malibu 1Lt",
+      "category": "Spirits - Rum",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 16500
+    },
+    {
+      "sku": "TAP-SPRT-0017",
+      "name": "Olmeca Tequila Silver 1 Lt (Shot)",
+      "description": "35ml shot of Olmeca Tequila Silver 1 Lt",
+      "category": "Spirits - Tequila",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 22000
+    },
+    {
+      "sku": "TAP-SPRT-0018",
+      "name": "Olmeca Tequila Gold 1Lt (Shot)",
+      "description": "35ml shot of Olmeca Tequila Gold 1Lt",
+      "category": "Spirits - Tequila",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 22000
+    },
+    {
+      "sku": "TAP-SPRT-0019",
+      "name": "Jose Cuervo Silver 1L (Shot)",
+      "description": "35ml shot of Jose Cuervo Silver 1L",
+      "category": "Spirits - Tequila",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 17500
+    },
+    {
+      "sku": "TAP-SPRT-0020",
+      "name": "Patron Silver 700ml (Shot)",
+      "description": "35ml shot of Patron Silver 700ml",
+      "category": "Spirits - Tequila",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 37500
+    },
+    {
+      "sku": "TAP-SPRT-0021",
+      "name": "Jameson 1ltr (Shot)",
+      "description": "35ml shot of Jameson 1ltr",
+      "category": "Spirits - Whiskey & Bourbon",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 19500
+    },
+    {
+      "sku": "TAP-SPRT-0022",
+      "name": "Jack Daniels NO.7 1Lt (Shot)",
+      "description": "35ml shot of Jack Daniels NO.7 1Lt",
+      "category": "Spirits - Whiskey & Bourbon",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 22000
+    },
+    {
+      "sku": "TAP-SPRT-0023",
+      "name": "Jim Beam 1Lt (Shot)",
+      "description": "35ml shot of Jim Beam 1Lt",
+      "category": "Spirits - Whiskey & Bourbon",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 16000
+    },
+    {
+      "sku": "TAP-SPRT-0024",
+      "name": "Johnnie Walker Black Label 1Lt (Shot)",
+      "description": "35ml shot of Johnnie Walker Black Label 1Lt",
+      "category": "Spirits - Whiskey & Bourbon",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 26500
+    },
+    {
+      "sku": "TAP-SPRT-0025",
+      "name": "Chivas Regal 12yrs 1ltr (Shot)",
+      "description": "35ml shot of Chivas Regal 12yrs 1ltr",
+      "category": "Spirits - Whiskey & Bourbon",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 26500
+    },
+    {
+      "sku": "TAP-SPRT-0026",
+      "name": "Hennessy VS 700ML (Shot)",
+      "description": "35ml shot of Hennessy VS 700ML",
+      "category": "Spirits - Brandy & Cognac",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 42000
+    },
+    {
+      "sku": "TAP-SPRT-0027",
+      "name": "Courvoisier VSOP 1Lt (Shot)",
+      "description": "35ml shot of Courvoisier VSOP 1Lt",
+      "category": "Spirits - Brandy & Cognac",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 40500
+    },
+    {
+      "sku": "TAP-SPRT-0028",
+      "name": "Remy Martin VSOP 1L (Shot)",
+      "description": "35ml shot of Remy Martin VSOP 1L",
+      "category": "Spirits - Brandy & Cognac",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 56000
+    },
+    {
+      "sku": "TAP-SPRT-0029",
+      "name": "Baileys 1Lt (Shot)",
+      "description": "35ml shot of Baileys 1Lt",
+      "category": "Spirits - Creams & Liqueurs",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 14000
+    },
+    {
+      "sku": "TAP-SPRT-0030",
+      "name": "Amarula 1Lt (Shot)",
+      "description": "35ml shot of Amarula 1Lt",
+      "category": "Spirits - Creams & Liqueurs",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 13500
+    },
+    {
+      "sku": "TAP-SPRT-0031",
+      "name": "Kahlua 1Lt (Shot)",
+      "description": "35ml shot of Kahlua 1Lt",
+      "category": "Spirits - Creams & Liqueurs",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 16500
+    },
+    {
+      "sku": "TAP-SPRT-0032",
+      "name": "Cointreau 1 Lt (Shot)",
+      "description": "35ml shot of Cointreau 1 Lt",
+      "category": "Spirits - Creams & Liqueurs",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 25500
+    },
+    {
+      "sku": "TAP-SPRT-0033",
+      "name": "Blue Curacau 750Ml (Shot)",
+      "description": "35ml shot of Blue Curacau 750Ml",
+      "category": "Spirits - Creams & Liqueurs",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 13000
+    }
+  ]
+}

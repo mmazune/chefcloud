@@ -1,0 +1,786 @@
+{
+  "categories": [
+    {
+      "slug": "coffee",
+      "name": "Coffee",
+      "sortOrder": 1
+    },
+    {
+      "slug": "specialty-coffee",
+      "name": "Specialty Coffee",
+      "sortOrder": 2
+    },
+    {
+      "slug": "tea",
+      "name": "Tea & Infusions",
+      "sortOrder": 3
+    },
+    {
+      "slug": "breakfast",
+      "name": "Breakfast",
+      "sortOrder": 4
+    },
+    {
+      "slug": "pastries",
+      "name": "Pastries & Baked Goods",
+      "sortOrder": 5
+    },
+    {
+      "slug": "sandwiches",
+      "name": "Sandwiches & Wraps",
+      "sortOrder": 6
+    },
+    {
+      "slug": "salads",
+      "name": "Fresh Salads",
+      "sortOrder": 7
+    },
+    {
+      "slug": "mains",
+      "name": "Hot Meals",
+      "sortOrder": 8
+    },
+    {
+      "slug": "desserts",
+      "name": "Desserts",
+      "sortOrder": 9
+    },
+    {
+      "slug": "smoothies",
+      "name": "Smoothies & Shakes",
+      "sortOrder": 10
+    },
+    {
+      "slug": "fresh-juice",
+      "name": "Fresh Juices",
+      "sortOrder": 11
+    },
+    {
+      "slug": "cold-drinks",
+      "name": "Cold Drinks",
+      "sortOrder": 12
+    }
+  ],
+  "items": [
+    {
+      "sku": "CAF-COF-0001",
+      "name": "Espresso",
+      "description": "Single shot of pure coffee",
+      "category": "coffee",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 6000
+    },
+    {
+      "sku": "CAF-COF-0002",
+      "name": "Double Espresso",
+      "description": "Two shots of espresso",
+      "category": "coffee",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 8000
+    },
+    {
+      "sku": "CAF-COF-0003",
+      "name": "Americano",
+      "description": "Espresso with hot water",
+      "category": "coffee",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 8000
+    },
+    {
+      "sku": "CAF-COF-0004",
+      "name": "Cappuccino",
+      "description": "Espresso, steamed milk, foam",
+      "category": "coffee",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 10000
+    },
+    {
+      "sku": "CAF-COF-0005",
+      "name": "Latte",
+      "description": "Espresso with steamed milk",
+      "category": "coffee",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 12000
+    },
+    {
+      "sku": "CAF-COF-0006",
+      "name": "Flat White",
+      "description": "Espresso with microfoam milk",
+      "category": "coffee",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 12000
+    },
+    {
+      "sku": "CAF-COF-0007",
+      "name": "Macchiato",
+      "description": "Espresso marked with foam",
+      "category": "coffee",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 9000
+    },
+    {
+      "sku": "CAF-COF-0008",
+      "name": "Mocha",
+      "description": "Espresso, chocolate, steamed milk",
+      "category": "coffee",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 14000
+    },
+    {
+      "sku": "CAF-SPEC-0001",
+      "name": "Caramel Latte",
+      "description": "Latte with caramel syrup",
+      "category": "specialty-coffee",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 15000
+    },
+    {
+      "sku": "CAF-SPEC-0002",
+      "name": "Vanilla Latte",
+      "description": "Latte with vanilla syrup",
+      "category": "specialty-coffee",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 15000
+    },
+    {
+      "sku": "CAF-SPEC-0003",
+      "name": "Hazelnut Cappuccino",
+      "description": "Cappuccino with hazelnut",
+      "category": "specialty-coffee",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 14000
+    },
+    {
+      "sku": "CAF-SPEC-0004",
+      "name": "Iced Latte",
+      "description": "Chilled latte over ice",
+      "category": "specialty-coffee",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 14000
+    },
+    {
+      "sku": "CAF-SPEC-0005",
+      "name": "Iced Mocha",
+      "description": "Chilled mocha over ice",
+      "category": "specialty-coffee",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 16000
+    },
+    {
+      "sku": "CAF-SPEC-0006",
+      "name": "Affogato",
+      "description": "Espresso over vanilla ice cream",
+      "category": "specialty-coffee",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 18000
+    },
+    {
+      "sku": "CAF-TEA-0001",
+      "name": "English Breakfast Tea",
+      "description": "Classic black tea",
+      "category": "tea",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 7000
+    },
+    {
+      "sku": "CAF-TEA-0002",
+      "name": "Earl Grey",
+      "description": "Bergamot-infused black tea",
+      "category": "tea",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 7000
+    },
+    {
+      "sku": "CAF-TEA-0003",
+      "name": "Green Tea",
+      "description": "Light & refreshing",
+      "category": "tea",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 7000
+    },
+    {
+      "sku": "CAF-TEA-0004",
+      "name": "Chamomile Tea",
+      "description": "Calming herbal infusion",
+      "category": "tea",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 8000
+    },
+    {
+      "sku": "CAF-TEA-0005",
+      "name": "Peppermint Tea",
+      "description": "Refreshing mint infusion",
+      "category": "tea",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 8000
+    },
+    {
+      "sku": "CAF-TEA-0006",
+      "name": "Masala Chai",
+      "description": "Spiced Indian tea with milk",
+      "category": "tea",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 10000
+    },
+    {
+      "sku": "CAF-BRK-0001",
+      "name": "English Breakfast",
+      "description": "Eggs, sausage, bacon, beans, toast",
+      "category": "breakfast",
+      "itemType": "FOOD",
+      "station": "GRILL",
+      "price": 28000
+    },
+    {
+      "sku": "CAF-BRK-0002",
+      "name": "Pancakes (Stack of 3)",
+      "description": "Fluffy pancakes with syrup",
+      "category": "breakfast",
+      "itemType": "FOOD",
+      "station": "GRILL",
+      "price": 20000
+    },
+    {
+      "sku": "CAF-BRK-0003",
+      "name": "French Toast",
+      "description": "Cinnamon toast with berry compote",
+      "category": "breakfast",
+      "itemType": "FOOD",
+      "station": "GRILL",
+      "price": 22000
+    },
+    {
+      "sku": "CAF-BRK-0004",
+      "name": "Omelette (3 eggs)",
+      "description": "Choice of fillings: cheese, ham, mushroom",
+      "category": "breakfast",
+      "itemType": "FOOD",
+      "station": "GRILL",
+      "price": 18000
+    },
+    {
+      "sku": "CAF-BRK-0005",
+      "name": "Eggs Benedict",
+      "description": "Poached eggs, ham, hollandaise",
+      "category": "breakfast",
+      "itemType": "FOOD",
+      "station": "GRILL",
+      "price": 24000
+    },
+    {
+      "sku": "CAF-BRK-0006",
+      "name": "Avocado Toast",
+      "description": "Smashed avocado on sourdough",
+      "category": "breakfast",
+      "itemType": "FOOD",
+      "station": "OTHER",
+      "price": 22000
+    },
+    {
+      "sku": "CAF-BRK-0007",
+      "name": "Granola Bowl",
+      "description": "Granola, yogurt, honey, fruits",
+      "category": "breakfast",
+      "itemType": "FOOD",
+      "station": "OTHER",
+      "price": 18000
+    },
+    {
+      "sku": "CAF-BRK-0008",
+      "name": "Breakfast Burrito",
+      "description": "Scrambled eggs, cheese, salsa, wrap",
+      "category": "breakfast",
+      "itemType": "FOOD",
+      "station": "GRILL",
+      "price": 20000
+    },
+    {
+      "sku": "CAF-PAST-0001",
+      "name": "Croissant",
+      "description": "Buttery French pastry",
+      "category": "pastries",
+      "itemType": "FOOD",
+      "station": "OTHER",
+      "price": 8000
+    },
+    {
+      "sku": "CAF-PAST-0002",
+      "name": "Chocolate Croissant",
+      "description": "Pain au chocolat",
+      "category": "pastries",
+      "itemType": "FOOD",
+      "station": "OTHER",
+      "price": 10000
+    },
+    {
+      "sku": "CAF-PAST-0003",
+      "name": "Almond Croissant",
+      "description": "Croissant with almond cream",
+      "category": "pastries",
+      "itemType": "FOOD",
+      "station": "OTHER",
+      "price": 12000
+    },
+    {
+      "sku": "CAF-PAST-0004",
+      "name": "Cinnamon Roll",
+      "description": "Sweet spiral with icing",
+      "category": "pastries",
+      "itemType": "FOOD",
+      "station": "OTHER",
+      "price": 12000
+    },
+    {
+      "sku": "CAF-PAST-0005",
+      "name": "Blueberry Muffin",
+      "description": "Fresh blueberries in muffin",
+      "category": "pastries",
+      "itemType": "FOOD",
+      "station": "OTHER",
+      "price": 10000
+    },
+    {
+      "sku": "CAF-PAST-0006",
+      "name": "Chocolate Chip Muffin",
+      "description": "Classic chocolate chip",
+      "category": "pastries",
+      "itemType": "FOOD",
+      "station": "OTHER",
+      "price": 10000
+    },
+    {
+      "sku": "CAF-PAST-0007",
+      "name": "Banana Bread Slice",
+      "description": "Moist banana loaf",
+      "category": "pastries",
+      "itemType": "FOOD",
+      "station": "OTHER",
+      "price": 9000
+    },
+    {
+      "sku": "CAF-PAST-0008",
+      "name": "Scone with Jam & Cream",
+      "description": "Traditional English scone",
+      "category": "pastries",
+      "itemType": "FOOD",
+      "station": "OTHER",
+      "price": 11000
+    },
+    {
+      "sku": "CAF-SAND-0001",
+      "name": "Club Sandwich",
+      "description": "Chicken, bacon, lettuce, tomato",
+      "category": "sandwiches",
+      "itemType": "FOOD",
+      "station": "OTHER",
+      "price": 25000
+    },
+    {
+      "sku": "CAF-SAND-0002",
+      "name": "BLT Sandwich",
+      "description": "Bacon, lettuce, tomato, mayo",
+      "category": "sandwiches",
+      "itemType": "FOOD",
+      "station": "OTHER",
+      "price": 22000
+    },
+    {
+      "sku": "CAF-SAND-0003",
+      "name": "Tuna Melt",
+      "description": "Tuna salad with melted cheese",
+      "category": "sandwiches",
+      "itemType": "FOOD",
+      "station": "GRILL",
+      "price": 24000
+    },
+    {
+      "sku": "CAF-SAND-0004",
+      "name": "Grilled Chicken Panini",
+      "description": "Chicken, pesto, mozzarella",
+      "category": "sandwiches",
+      "itemType": "FOOD",
+      "station": "GRILL",
+      "price": 26000
+    },
+    {
+      "sku": "CAF-SAND-0005",
+      "name": "Vegetarian Wrap",
+      "description": "Grilled vegetables, hummus",
+      "category": "sandwiches",
+      "itemType": "FOOD",
+      "station": "OTHER",
+      "price": 20000
+    },
+    {
+      "sku": "CAF-SAND-0006",
+      "name": "Chicken Caesar Wrap",
+      "description": "Grilled chicken, Caesar dressing",
+      "category": "sandwiches",
+      "itemType": "FOOD",
+      "station": "OTHER",
+      "price": 24000
+    },
+    {
+      "sku": "CAF-SAND-0007",
+      "name": "Ham & Cheese Toastie",
+      "description": "Grilled ham & cheese sandwich",
+      "category": "sandwiches",
+      "itemType": "FOOD",
+      "station": "GRILL",
+      "price": 18000
+    },
+    {
+      "sku": "CAF-SAND-0008",
+      "name": "Caprese Sandwich",
+      "description": "Mozzarella, tomato, basil, pesto",
+      "category": "sandwiches",
+      "itemType": "FOOD",
+      "station": "OTHER",
+      "price": 22000
+    },
+    {
+      "sku": "CAF-SAL-0001",
+      "name": "Caesar Salad",
+      "description": "Romaine, parmesan, croutons",
+      "category": "salads",
+      "itemType": "FOOD",
+      "station": "OTHER",
+      "price": 22000
+    },
+    {
+      "sku": "CAF-SAL-0002",
+      "name": "Greek Salad",
+      "description": "Feta, olives, cucumber, tomato",
+      "category": "salads",
+      "itemType": "FOOD",
+      "station": "OTHER",
+      "price": 20000
+    },
+    {
+      "sku": "CAF-SAL-0003",
+      "name": "Quinoa Buddha Bowl",
+      "description": "Quinoa, avocado, chickpeas, tahini",
+      "category": "salads",
+      "itemType": "FOOD",
+      "station": "OTHER",
+      "price": 26000
+    },
+    {
+      "sku": "CAF-SAL-0004",
+      "name": "Grilled Chicken Salad",
+      "description": "Mixed greens, chicken, vinaigrette",
+      "category": "salads",
+      "itemType": "FOOD",
+      "station": "GRILL",
+      "price": 28000
+    },
+    {
+      "sku": "CAF-SAL-0005",
+      "name": "Cobb Salad",
+      "description": "Chicken, bacon, egg, avocado, cheese",
+      "category": "salads",
+      "itemType": "FOOD",
+      "station": "OTHER",
+      "price": 30000
+    },
+    {
+      "sku": "CAF-MAIN-0001",
+      "name": "Beef Burger with Fries",
+      "description": "Angus beef patty, cheese, lettuce",
+      "category": "mains",
+      "itemType": "FOOD",
+      "station": "GRILL",
+      "price": 32000
+    },
+    {
+      "sku": "CAF-MAIN-0002",
+      "name": "Chicken Burger with Fries",
+      "description": "Grilled chicken breast, mayo",
+      "category": "mains",
+      "itemType": "FOOD",
+      "station": "GRILL",
+      "price": 30000
+    },
+    {
+      "sku": "CAF-MAIN-0003",
+      "name": "Fish & Chips",
+      "description": "Battered fish with thick-cut fries",
+      "category": "mains",
+      "itemType": "FOOD",
+      "station": "FRYER",
+      "price": 35000
+    },
+    {
+      "sku": "CAF-MAIN-0004",
+      "name": "Chicken Alfredo Pasta",
+      "description": "Fettuccine in creamy sauce",
+      "category": "mains",
+      "itemType": "FOOD",
+      "station": "OTHER",
+      "price": 32000
+    },
+    {
+      "sku": "CAF-MAIN-0005",
+      "name": "Margherita Pizza",
+      "description": "Tomato, mozzarella, basil",
+      "category": "mains",
+      "itemType": "FOOD",
+      "station": "OTHER",
+      "price": 28000
+    },
+    {
+      "sku": "CAF-MAIN-0006",
+      "name": "Pepperoni Pizza",
+      "description": "Tomato, mozzarella, pepperoni",
+      "category": "mains",
+      "itemType": "FOOD",
+      "station": "OTHER",
+      "price": 32000
+    },
+    {
+      "sku": "CAF-MAIN-0007",
+      "name": "Chicken Quesadilla",
+      "description": "Chicken, cheese, peppers in tortilla",
+      "category": "mains",
+      "itemType": "FOOD",
+      "station": "GRILL",
+      "price": 26000
+    },
+    {
+      "sku": "CAF-MAIN-0008",
+      "name": "Lasagna",
+      "description": "Beef lasagna with garlic bread",
+      "category": "mains",
+      "itemType": "FOOD",
+      "station": "OTHER",
+      "price": 34000
+    },
+    {
+      "sku": "CAF-DESS-0001",
+      "name": "Chocolate Brownie",
+      "description": "Warm brownie with ice cream",
+      "category": "desserts",
+      "itemType": "FOOD",
+      "station": "OTHER",
+      "price": 16000
+    },
+    {
+      "sku": "CAF-DESS-0002",
+      "name": "New York Cheesecake",
+      "description": "Classic cheesecake, berry sauce",
+      "category": "desserts",
+      "itemType": "FOOD",
+      "station": "OTHER",
+      "price": 18000
+    },
+    {
+      "sku": "CAF-DESS-0003",
+      "name": "Tiramisu",
+      "description": "Italian coffee dessert",
+      "category": "desserts",
+      "itemType": "FOOD",
+      "station": "OTHER",
+      "price": 20000
+    },
+    {
+      "sku": "CAF-DESS-0004",
+      "name": "Apple Pie",
+      "description": "Warm apple pie with vanilla ice cream",
+      "category": "desserts",
+      "itemType": "FOOD",
+      "station": "OTHER",
+      "price": 17000
+    },
+    {
+      "sku": "CAF-DESS-0005",
+      "name": "Carrot Cake",
+      "description": "Moist cake with cream cheese frosting",
+      "category": "desserts",
+      "itemType": "FOOD",
+      "station": "OTHER",
+      "price": 16000
+    },
+    {
+      "sku": "CAF-DESS-0006",
+      "name": "Ice Cream Sundae",
+      "description": "3 scoops with toppings",
+      "category": "desserts",
+      "itemType": "FOOD",
+      "station": "OTHER",
+      "price": 15000
+    },
+    {
+      "sku": "CAF-SMTH-0001",
+      "name": "Berry Blast Smoothie",
+      "description": "Mixed berries, yogurt, honey",
+      "category": "smoothies",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 16000
+    },
+    {
+      "sku": "CAF-SMTH-0002",
+      "name": "Mango Passion Smoothie",
+      "description": "Mango, passion fruit, yogurt",
+      "category": "smoothies",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 16000
+    },
+    {
+      "sku": "CAF-SMTH-0003",
+      "name": "Green Detox Smoothie",
+      "description": "Spinach, apple, banana, ginger",
+      "category": "smoothies",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 18000
+    },
+    {
+      "sku": "CAF-SMTH-0004",
+      "name": "Peanut Butter Banana Shake",
+      "description": "Banana, peanut butter, milk",
+      "category": "smoothies",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 17000
+    },
+    {
+      "sku": "CAF-SMTH-0005",
+      "name": "Chocolate Protein Shake",
+      "description": "Chocolate, protein powder, milk",
+      "category": "smoothies",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 19000
+    },
+    {
+      "sku": "CAF-JCE-0001",
+      "name": "Fresh Orange Juice",
+      "description": "Freshly squeezed oranges",
+      "category": "fresh-juice",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 12000
+    },
+    {
+      "sku": "CAF-JCE-0002",
+      "name": "Passion Fruit Juice",
+      "description": "Pure passion fruit",
+      "category": "fresh-juice",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 10000
+    },
+    {
+      "sku": "CAF-JCE-0003",
+      "name": "Pineapple Juice",
+      "description": "Fresh pineapple",
+      "category": "fresh-juice",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 10000
+    },
+    {
+      "sku": "CAF-JCE-0004",
+      "name": "Watermelon Juice",
+      "description": "Fresh watermelon",
+      "category": "fresh-juice",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 10000
+    },
+    {
+      "sku": "CAF-JCE-0005",
+      "name": "Carrot Juice",
+      "description": "Fresh carrots",
+      "category": "fresh-juice",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 11000
+    },
+    {
+      "sku": "CAF-JCE-0006",
+      "name": "Mixed Fruit Juice",
+      "description": "Orange, pineapple, passion",
+      "category": "fresh-juice",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 14000
+    },
+    {
+      "sku": "CAF-COLD-0001",
+      "name": "Coca-Cola (330ml)",
+      "description": "Classic Coke",
+      "category": "cold-drinks",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 4000
+    },
+    {
+      "sku": "CAF-COLD-0002",
+      "name": "Fanta Orange (330ml)",
+      "description": "Orange soda",
+      "category": "cold-drinks",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 4000
+    },
+    {
+      "sku": "CAF-COLD-0003",
+      "name": "Sprite (330ml)",
+      "description": "Lemon-lime soda",
+      "category": "cold-drinks",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 4000
+    },
+    {
+      "sku": "CAF-COLD-0004",
+      "name": "Mineral Water (500ml)",
+      "description": "Still or sparkling",
+      "category": "cold-drinks",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 3000
+    },
+    {
+      "sku": "CAF-COLD-0005",
+      "name": "Iced Tea (Lemon)",
+      "description": "Chilled lemon tea",
+      "category": "cold-drinks",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 8000
+    },
+    {
+      "sku": "CAF-COLD-0006",
+      "name": "Iced Tea (Peach)",
+      "description": "Chilled peach tea",
+      "category": "cold-drinks",
+      "itemType": "DRINK",
+      "station": "BAR",
+      "price": 8000
+    }
+  ]
+}

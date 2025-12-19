@@ -46,3 +46,6 @@ pnpm-debug.log*
 
 # OS
 Thumbs.db
+
+# Demo assets (menus/inventory)
+demo_assets/

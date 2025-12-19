@@ -1,0 +1,775 @@
+{
+  "comment": "Cafesserie Inventory - Deterministic items for coffee shop operations",
+  "items": [
+    {
+      "sku": "CAF-INV-COFF-0001",
+      "name": "Espresso Coffee Beans (Arabica)",
+      "category": "Coffee",
+      "unit": "KG",
+      "unitCost": 45000,
+      "reorderLevel": 2,
+      "reorderQty": 5,
+      "initialStock": 10
+    },
+    {
+      "sku": "CAF-INV-COFF-0002",
+      "name": "Decaf Coffee Beans",
+      "category": "Coffee",
+      "unit": "KG",
+      "unitCost": 48000,
+      "reorderLevel": 1,
+      "reorderQty": 2,
+      "initialStock": 3
+    },
+    {
+      "sku": "CAF-INV-DARY-0001",
+      "name": "Whole Milk",
+      "category": "Dairy",
+      "unit": "LTR",
+      "unitCost": 3500,
+      "reorderLevel": 10,
+      "reorderQty": 30,
+      "initialStock": 40
+    },
+    {
+      "sku": "CAF-INV-DARY-0002",
+      "name": "Almond Milk",
+      "category": "Dairy",
+      "unit": "LTR",
+      "unitCost": 8000,
+      "reorderLevel": 5,
+      "reorderQty": 10,
+      "initialStock": 12
+    },
+    {
+      "sku": "CAF-INV-DARY-0003",
+      "name": "Oat Milk",
+      "category": "Dairy",
+      "unit": "LTR",
+      "unitCost": 9000,
+      "reorderLevel": 3,
+      "reorderQty": 8,
+      "initialStock": 8
+    },
+    {
+      "sku": "CAF-INV-DARY-0004",
+      "name": "Heavy Cream",
+      "category": "Dairy",
+      "unit": "LTR",
+      "unitCost": 12000,
+      "reorderLevel": 3,
+      "reorderQty": 5,
+      "initialStock": 6
+    },
+    {
+      "sku": "CAF-INV-DARY-0005",
+      "name": "Butter (Unsalted)",
+      "category": "Dairy",
+      "unit": "KG",
+      "unitCost": 16000,
+      "reorderLevel": 2,
+      "reorderQty": 5,
+      "initialStock": 5
+    },
+    {
+      "sku": "CAF-INV-DARY-0006",
+      "name": "Cream Cheese",
+      "category": "Dairy",
+      "unit": "KG",
+      "unitCost": 18000,
+      "reorderLevel": 2,
+      "reorderQty": 3,
+      "initialStock": 4
+    },
+    {
+      "sku": "CAF-INV-DARY-0007",
+      "name": "Cheddar Cheese",
+      "category": "Dairy",
+      "unit": "KG",
+      "unitCost": 22000,
+      "reorderLevel": 1,
+      "reorderQty": 2,
+      "initialStock": 2
+    },
+    {
+      "sku": "CAF-INV-DARY-0008",
+      "name": "Mozzarella Cheese",
+      "category": "Dairy",
+      "unit": "KG",
+      "unitCost": 20000,
+      "reorderLevel": 1,
+      "reorderQty": 2,
+      "initialStock": 2
+    },
+    {
+      "sku": "CAF-INV-DARY-0009",
+      "name": "Vanilla Ice Cream",
+      "category": "Dairy",
+      "unit": "LTR",
+      "unitCost": 15000,
+      "reorderLevel": 2,
+      "reorderQty": 4,
+      "initialStock": 5
+    },
+    {
+      "sku": "CAF-INV-DARY-0010",
+      "name": "Yoghurt (Plain)",
+      "category": "Dairy",
+      "unit": "KG",
+      "unitCost": 6000,
+      "reorderLevel": 3,
+      "reorderQty": 5,
+      "initialStock": 6
+    },
+    {
+      "sku": "CAF-INV-DARY-0011",
+      "name": "Eggs (Fresh)",
+      "category": "Dairy",
+      "unit": "TRAY",
+      "unitCost": 13000,
+      "reorderLevel": 3,
+      "reorderQty": 5,
+      "initialStock": 8
+    },
+    {
+      "sku": "CAF-INV-SYRP-0001",
+      "name": "Vanilla Syrup",
+      "category": "Syrups",
+      "unit": "BTL",
+      "unitCost": 12000,
+      "reorderLevel": 2,
+      "reorderQty": 6,
+      "initialStock": 6
+    },
+    {
+      "sku": "CAF-INV-SYRP-0002",
+      "name": "Caramel Syrup",
+      "category": "Syrups",
+      "unit": "BTL",
+      "unitCost": 12000,
+      "reorderLevel": 2,
+      "reorderQty": 6,
+      "initialStock": 6
+    },
+    {
+      "sku": "CAF-INV-SYRP-0003",
+      "name": "Hazelnut Syrup",
+      "category": "Syrups",
+      "unit": "BTL",
+      "unitCost": 13000,
+      "reorderLevel": 1,
+      "reorderQty": 4,
+      "initialStock": 4
+    },
+    {
+      "sku": "CAF-INV-SYRP-0004",
+      "name": "Chocolate Syrup",
+      "category": "Syrups",
+      "unit": "BTL",
+      "unitCost": 11000,
+      "reorderLevel": 2,
+      "reorderQty": 5,
+      "initialStock": 5
+    },
+    {
+      "sku": "CAF-INV-SYRP-0005",
+      "name": "Mint Syrup",
+      "category": "Syrups",
+      "unit": "BTL",
+      "unitCost": 12000,
+      "reorderLevel": 1,
+      "reorderQty": 3,
+      "initialStock": 3
+    },
+    {
+      "sku": "CAF-INV-SYRP-0006",
+      "name": "Honey (Pure)",
+      "category": "Syrups",
+      "unit": "KG",
+      "unitCost": 25000,
+      "reorderLevel": 1,
+      "reorderQty": 2,
+      "initialStock": 3
+    },
+    {
+      "sku": "CAF-INV-TEA-0001",
+      "name": "English Breakfast Tea Bags",
+      "category": "Tea",
+      "unit": "BOX",
+      "unitCost": 8000,
+      "reorderLevel": 2,
+      "reorderQty": 5,
+      "initialStock": 6
+    },
+    {
+      "sku": "CAF-INV-TEA-0002",
+      "name": "Earl Grey Tea Bags",
+      "category": "Tea",
+      "unit": "BOX",
+      "unitCost": 9000,
+      "reorderLevel": 2,
+      "reorderQty": 5,
+      "initialStock": 5
+    },
+    {
+      "sku": "CAF-INV-TEA-0003",
+      "name": "Green Tea Bags",
+      "category": "Tea",
+      "unit": "BOX",
+      "unitCost": 9500,
+      "reorderLevel": 2,
+      "reorderQty": 5,
+      "initialStock": 5
+    },
+    {
+      "sku": "CAF-INV-TEA-0004",
+      "name": "Chamomile Tea Bags",
+      "category": "Tea",
+      "unit": "BOX",
+      "unitCost": 10000,
+      "reorderLevel": 1,
+      "reorderQty": 3,
+      "initialStock": 4
+    },
+    {
+      "sku": "CAF-INV-TEA-0005",
+      "name": "Peppermint Tea Bags",
+      "category": "Tea",
+      "unit": "BOX",
+      "unitCost": 9000,
+      "reorderLevel": 1,
+      "reorderQty": 3,
+      "initialStock": 3
+    },
+    {
+      "sku": "CAF-INV-BAKF-0001",
+      "name": "All-Purpose Flour",
+      "category": "Baking",
+      "unit": "KG",
+      "unitCost": 3000,
+      "reorderLevel": 10,
+      "reorderQty": 25,
+      "initialStock": 30
+    },
+    {
+      "sku": "CAF-INV-BAKF-0002",
+      "name": "Sugar (White)",
+      "category": "Baking",
+      "unit": "KG",
+      "unitCost": 3500,
+      "reorderLevel": 10,
+      "reorderQty": 20,
+      "initialStock": 25
+    },
+    {
+      "sku": "CAF-INV-BAKF-0003",
+      "name": "Brown Sugar",
+      "category": "Baking",
+      "unit": "KG",
+      "unitCost": 4000,
+      "reorderLevel": 5,
+      "reorderQty": 10,
+      "initialStock": 12
+    },
+    {
+      "sku": "CAF-INV-BAKF-0004",
+      "name": "Baking Powder",
+      "category": "Baking",
+      "unit": "KG",
+      "unitCost": 5000,
+      "reorderLevel": 2,
+      "reorderQty": 5,
+      "initialStock": 5
+    },
+    {
+      "sku": "CAF-INV-BAKF-0005",
+      "name": "Cocoa Powder",
+      "category": "Baking",
+      "unit": "KG",
+      "unitCost": 15000,
+      "reorderLevel": 1,
+      "reorderQty": 3,
+      "initialStock": 3
+    },
+    {
+      "sku": "CAF-INV-BAKF-0006",
+      "name": "Chocolate Chips",
+      "category": "Baking",
+      "unit": "KG",
+      "unitCost": 18000,
+      "reorderLevel": 2,
+      "reorderQty": 5,
+      "initialStock": 5
+    },
+    {
+      "sku": "CAF-INV-BAKF-0007",
+      "name": "Vanilla Extract",
+      "category": "Baking",
+      "unit": "BTL",
+      "unitCost": 8000,
+      "reorderLevel": 1,
+      "reorderQty": 2,
+      "initialStock": 3
+    },
+    {
+      "sku": "CAF-INV-BAKF-0008",
+      "name": "Cinnamon Powder",
+      "category": "Baking",
+      "unit": "KG",
+      "unitCost": 12000,
+      "reorderLevel": 1,
+      "reorderQty": 2,
+      "initialStock": 2
+    },
+    {
+      "sku": "CAF-INV-BRED-0001",
+      "name": "White Bread Loaf",
+      "category": "Bread",
+      "unit": "PC",
+      "unitCost": 4000,
+      "reorderLevel": 10,
+      "reorderQty": 20,
+      "initialStock": 25
+    },
+    {
+      "sku": "CAF-INV-BRED-0002",
+      "name": "Whole Wheat Bread",
+      "category": "Bread",
+      "unit": "PC",
+      "unitCost": 4500,
+      "reorderLevel": 8,
+      "reorderQty": 15,
+      "initialStock": 20
+    },
+    {
+      "sku": "CAF-INV-BRED-0003",
+      "name": "Croissants (Frozen)",
+      "category": "Bread",
+      "unit": "PC",
+      "unitCost": 2000,
+      "reorderLevel": 20,
+      "reorderQty": 50,
+      "initialStock": 60
+    },
+    {
+      "sku": "CAF-INV-BRED-0004",
+      "name": "Bagels",
+      "category": "Bread",
+      "unit": "PC",
+      "unitCost": 1500,
+      "reorderLevel": 15,
+      "reorderQty": 30,
+      "initialStock": 40
+    },
+    {
+      "sku": "CAF-INV-BRED-0005",
+      "name": "Muffin Mix",
+      "category": "Bread",
+      "unit": "KG",
+      "unitCost": 8000,
+      "reorderLevel": 3,
+      "reorderQty": 5,
+      "initialStock": 6
+    },
+    {
+      "sku": "CAF-INV-BRED-0006",
+      "name": "Scone Mix",
+      "category": "Bread",
+      "unit": "KG",
+      "unitCost": 7500,
+      "reorderLevel": 2,
+      "reorderQty": 4,
+      "initialStock": 5
+    },
+    {
+      "sku": "CAF-INV-PROD-0001",
+      "name": "Tomatoes",
+      "category": "Produce",
+      "unit": "KG",
+      "unitCost": 3000,
+      "reorderLevel": 5,
+      "reorderQty": 10,
+      "initialStock": 12
+    },
+    {
+      "sku": "CAF-INV-PROD-0002",
+      "name": "Lettuce",
+      "category": "Produce",
+      "unit": "PC",
+      "unitCost": 2500,
+      "reorderLevel": 5,
+      "reorderQty": 10,
+      "initialStock": 15
+    },
+    {
+      "sku": "CAF-INV-PROD-0003",
+      "name": "Cucumber",
+      "category": "Produce",
+      "unit": "KG",
+      "unitCost": 3000,
+      "reorderLevel": 3,
+      "reorderQty": 8,
+      "initialStock": 10
+    },
+    {
+      "sku": "CAF-INV-PROD-0004",
+      "name": "Avocado",
+      "category": "Produce",
+      "unit": "PC",
+      "unitCost": 1500,
+      "reorderLevel": 10,
+      "reorderQty": 20,
+      "initialStock": 25
+    },
+    {
+      "sku": "CAF-INV-PROD-0005",
+      "name": "Spinach",
+      "category": "Produce",
+      "unit": "KG",
+      "unitCost": 4000,
+      "reorderLevel": 3,
+      "reorderQty": 6,
+      "initialStock": 8
+    },
+    {
+      "sku": "CAF-INV-PROD-0006",
+      "name": "Carrots",
+      "category": "Produce",
+      "unit": "KG",
+      "unitCost": 2500,
+      "reorderLevel": 3,
+      "reorderQty": 8,
+      "initialStock": 10
+    },
+    {
+      "sku": "CAF-INV-PROD-0007",
+      "name": "Onions",
+      "category": "Produce",
+      "unit": "KG",
+      "unitCost": 2000,
+      "reorderLevel": 5,
+      "reorderQty": 10,
+      "initialStock": 15
+    },
+    {
+      "sku": "CAF-INV-FRUT-0001",
+      "name": "Bananas",
+      "category": "Fruits",
+      "unit": "KG",
+      "unitCost": 3000,
+      "reorderLevel": 5,
+      "reorderQty": 10,
+      "initialStock": 15
+    },
+    {
+      "sku": "CAF-INV-FRUT-0002",
+      "name": "Strawberries",
+      "category": "Fruits",
+      "unit": "KG",
+      "unitCost": 12000,
+      "reorderLevel": 2,
+      "reorderQty": 5,
+      "initialStock": 6
+    },
+    {
+      "sku": "CAF-INV-FRUT-0003",
+      "name": "Blueberries",
+      "category": "Fruits",
+      "unit": "KG",
+      "unitCost": 15000,
+      "reorderLevel": 1,
+      "reorderQty": 3,
+      "initialStock": 4
+    },
+    {
+      "sku": "CAF-INV-FRUT-0004",
+      "name": "Oranges",
+      "category": "Fruits",
+      "unit": "KG",
+      "unitCost": 4000,
+      "reorderLevel": 5,
+      "reorderQty": 10,
+      "initialStock": 12
+    },
+    {
+      "sku": "CAF-INV-FRUT-0005",
+      "name": "Apples",
+      "category": "Fruits",
+      "unit": "KG",
+      "unitCost": 5000,
+      "reorderLevel": 3,
+      "reorderQty": 8,
+      "initialStock": 10
+    },
+    {
+      "sku": "CAF-INV-FRUT-0006",
+      "name": "Pineapple",
+      "category": "Fruits",
+      "unit": "PC",
+      "unitCost": 3500,
+      "reorderLevel": 3,
+      "reorderQty": 8,
+      "initialStock": 10
+    },
+    {
+      "sku": "CAF-INV-FRUT-0007",
+      "name": "Mango",
+      "category": "Fruits",
+      "unit": "KG",
+      "unitCost": 6000,
+      "reorderLevel": 2,
+      "reorderQty": 5,
+      "initialStock": 6
+    },
+    {
+      "sku": "CAF-INV-FRUT-0008",
+      "name": "Watermelon",
+      "category": "Fruits",
+      "unit": "PC",
+      "unitCost": 5000,
+      "reorderLevel": 2,
+      "reorderQty": 5,
+      "initialStock": 5
+    },
+    {
+      "sku": "CAF-INV-FRUT-0009",
+      "name": "Lemon",
+      "category": "Fruits",
+      "unit": "KG",
+      "unitCost": 3500,
+      "reorderLevel": 3,
+      "reorderQty": 5,
+      "initialStock": 8
+    },
+    {
+      "sku": "CAF-INV-PROT-0001",
+      "name": "Chicken Breast",
+      "category": "Proteins",
+      "unit": "KG",
+      "unitCost": 18000,
+      "reorderLevel": 3,
+      "reorderQty": 8,
+      "initialStock": 10
+    },
+    {
+      "sku": "CAF-INV-PROT-0002",
+      "name": "Ham (Sliced)",
+      "category": "Proteins",
+      "unit": "KG",
+      "unitCost": 25000,
+      "reorderLevel": 2,
+      "reorderQty": 5,
+      "initialStock": 6
+    },
+    {
+      "sku": "CAF-INV-PROT-0003",
+      "name": "Bacon",
+      "category": "Proteins",
+      "unit": "KG",
+      "unitCost": 28000,
+      "reorderLevel": 2,
+      "reorderQty": 5,
+      "initialStock": 6
+    },
+    {
+      "sku": "CAF-INV-PROT-0004",
+      "name": "Tuna (Canned)",
+      "category": "Proteins",
+      "unit": "TIN",
+      "unitCost": 8000,
+      "reorderLevel": 5,
+      "reorderQty": 12,
+      "initialStock": 15
+    },
+    {
+      "sku": "CAF-INV-PROT-0005",
+      "name": "Smoked Salmon",
+      "category": "Proteins",
+      "unit": "KG",
+      "unitCost": 45000,
+      "reorderLevel": 1,
+      "reorderQty": 2,
+      "initialStock": 2
+    },
+    {
+      "sku": "CAF-INV-COND-0001",
+      "name": "Mayonnaise",
+      "category": "Condiments",
+      "unit": "KG",
+      "unitCost": 8000,
+      "reorderLevel": 2,
+      "reorderQty": 5,
+      "initialStock": 6
+    },
+    {
+      "sku": "CAF-INV-COND-0002",
+      "name": "Mustard",
+      "category": "Condiments",
+      "unit": "KG",
+      "unitCost": 7000,
+      "reorderLevel": 2,
+      "reorderQty": 4,
+      "initialStock": 5
+    },
+    {
+      "sku": "CAF-INV-COND-0003",
+      "name": "Olive Oil",
+      "category": "Condiments",
+      "unit": "LTR",
+      "unitCost": 18000,
+      "reorderLevel": 2,
+      "reorderQty": 4,
+      "initialStock": 5
+    },
+    {
+      "sku": "CAF-INV-COND-0004",
+      "name": "Balsamic Vinegar",
+      "category": "Condiments",
+      "unit": "BTL",
+      "unitCost": 12000,
+      "reorderLevel": 1,
+      "reorderQty": 3,
+      "initialStock": 3
+    },
+    {
+      "sku": "CAF-INV-COND-0005",
+      "name": "Pesto Sauce",
+      "category": "Condiments",
+      "unit": "JAR",
+      "unitCost": 15000,
+      "reorderLevel": 1,
+      "reorderQty": 3,
+      "initialStock": 3
+    },
+    {
+      "sku": "CAF-INV-COND-0006",
+      "name": "Salt",
+      "category": "Condiments",
+      "unit": "KG",
+      "unitCost": 1000,
+      "reorderLevel": 3,
+      "reorderQty": 5,
+      "initialStock": 8
+    },
+    {
+      "sku": "CAF-INV-COND-0007",
+      "name": "Black Pepper",
+      "category": "Condiments",
+      "unit": "KG",
+      "unitCost": 20000,
+      "reorderLevel": 1,
+      "reorderQty": 2,
+      "initialStock": 2
+    },
+    {
+      "sku": "CAF-INV-BEV-0001",
+      "name": "Coca Cola (Bottles)",
+      "category": "Beverages",
+      "unit": "CRATE",
+      "unitCost": 18000,
+      "reorderLevel": 2,
+      "reorderQty": 5,
+      "initialStock": 8
+    },
+    {
+      "sku": "CAF-INV-BEV-0002",
+      "name": "Sprite (Bottles)",
+      "category": "Beverages",
+      "unit": "CRATE",
+      "unitCost": 18000,
+      "reorderLevel": 2,
+      "reorderQty": 5,
+      "initialStock": 6
+    },
+    {
+      "sku": "CAF-INV-BEV-0003",
+      "name": "Fanta (Bottles)",
+      "category": "Beverages",
+      "unit": "CRATE",
+      "unitCost": 18000,
+      "reorderLevel": 1,
+      "reorderQty": 3,
+      "initialStock": 4
+    },
+    {
+      "sku": "CAF-INV-BEV-0004",
+      "name": "Bottled Water",
+      "category": "Beverages",
+      "unit": "CRATE",
+      "unitCost": 12000,
+      "reorderLevel": 3,
+      "reorderQty": 8,
+      "initialStock": 10
+    },
+    {
+      "sku": "CAF-INV-BEV-0005",
+      "name": "Orange Juice (Carton)",
+      "category": "Beverages",
+      "unit": "LTR",
+      "unitCost": 8000,
+      "reorderLevel": 3,
+      "reorderQty": 8,
+      "initialStock": 10
+    },
+    {
+      "sku": "CAF-INV-BEV-0006",
+      "name": "Apple Juice (Carton)",
+      "category": "Beverages",
+      "unit": "LTR",
+      "unitCost": 8000,
+      "reorderLevel": 2,
+      "reorderQty": 6,
+      "initialStock": 8
+    },
+    {
+      "sku": "CAF-INV-PKG-0001",
+      "name": "Takeaway Coffee Cups (8oz)",
+      "category": "Packaging",
+      "unit": "PACK",
+      "unitCost": 15000,
+      "reorderLevel": 5,
+      "reorderQty": 10,
+      "initialStock": 15
+    },
+    {
+      "sku": "CAF-INV-PKG-0002",
+      "name": "Takeaway Coffee Cups (12oz)",
+      "category": "Packaging",
+      "unit": "PACK",
+      "unitCost": 18000,
+      "reorderLevel": 5,
+      "reorderQty": 10,
+      "initialStock": 15
+    },
+    {
+      "sku": "CAF-INV-PKG-0003",
+      "name": "Cup Lids",
+      "category": "Packaging",
+      "unit": "PACK",
+      "unitCost": 8000,
+      "reorderLevel": 5,
+      "reorderQty": 10,
+      "initialStock": 12
+    },
+    {
+      "sku": "CAF-INV-PKG-0004",
+      "name": "Paper Bags",
+      "category": "Packaging",
+      "unit": "PACK",
+      "unitCost": 12000,
+      "reorderLevel": 3,
+      "reorderQty": 8,
+      "initialStock": 10
+    },
+    {
+      "sku": "CAF-INV-PKG-0005",
+      "name": "Napkins",
+      "category": "Packaging",
+      "unit": "PACK",
+      "unitCost": 5000,
+      "reorderLevel": 5,
+      "reorderQty": 10,
+      "initialStock": 12
+    }
+  ]
+}

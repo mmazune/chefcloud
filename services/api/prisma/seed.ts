@@ -1,7 +1,7 @@
 import { prisma } from '@chefcloud/db';
 import * as argon2 from 'argon2';
-import { seedTapasDemoOrg } from './tapas/seed-tapas-org';
-import { seedTapasDemoData } from './tapas/seed-tapas-data';
+import { seedDemo, printDemoCredentials } from './demo/seedDemo';
+import { seedCatalog } from './demo/seedCatalog';
 
 async function hashPassword(password: string): Promise<string> {
   return argon2.hash(password, {
@@ -747,9 +747,11 @@ async function main() {
     console.log(`  ✅ ${rateData.baseCode}/${rateData.quoteCode} = ${rateData.rate}`);
   }
 
-  // ===== M33-DEMO-S2: Tapas Demo Org =====
-  const tapas = await seedTapasDemoOrg(prisma);
-  await seedTapasDemoData(prisma, tapas.org.id);
+  // ===== Demo Organizations =====
+  await seedDemo(prisma);
+
+  // ===== Demo Catalog (Menu & Inventory) =====
+  await seedCatalog(prisma);
 
   console.log('\n🎉 Seed completed successfully!');
   console.log('\n📝 Test Credentials:');
@@ -761,11 +763,9 @@ async function main() {
   console.log('\n📝 Dev Portal:');
   console.log('Super Dev 1: dev1@chefcloud.local');
   console.log('Super Dev 2: dev2@chefcloud.local');
-  console.log('\n📝 Tapas Demo Org:');
-  console.log('Owner:      owner@tapas.demo / TapasDemo!123');
-  console.log('Manager:    manager@tapas.demo / TapasDemo!123 (PIN: 1234)');
-  console.log('Waiter:     waiter@tapas.demo / TapasDemo!123');
-  console.log('Dev:        dev@tapas.demo / TapasDemo!123');
+
+  // Print demo credentials
+  printDemoCredentials();
 }
 
 main()

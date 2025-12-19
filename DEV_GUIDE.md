@@ -108,24 +108,46 @@ npx tsx ../../services/api/prisma/seed.ts
 ```
 
 This will create:
-- **Tapas Kampala** demo org (`slug: tapas-demo`, `isDemo: true`)
-- **2 branches**: Kampala CBD (80 seats) and Kololo Rooftop (60 seats)
-- **10 demo users**: All use password `TapasDemo!123`
-  - `owner@tapas.demo` (L5 Owner)
-  - `manager@tapas.demo` (L4 Manager, PIN: 1234)
-  - `assistant@tapas.demo` (L3 Assistant Manager)
-  - `accountant@tapas.demo` (L4 Accountant)
-  - `chef@tapas.demo` (L2 Kitchen Lead)
-  - `stock@tapas.demo` (L3 Stock Manager)
-  - `waiter@tapas.demo` (L1 CBD Waiter)
-  - `waiter.kololo@tapas.demo` (L1 Kololo Waiter)
-  - `kds@tapas.demo` (L1 KDS Station)
-  - `dev@tapas.demo` (L5 Dev Integrator)
-- **40+ menu items** across 7 categories with UGX pricing
-- **Inventory items** with realistic COGS
-- **30 days of operational data** (November 2024): orders, KDS tickets, budgets, KPIs, feedback, reservations, and billing
 
-The seed is idempotent and can be re-run safely.
+**Demo Organizations (V2 - Deterministic Seeding):**
+
+1. **Tapas Bar & Restaurant** (`slug: tapas-demo`)
+   - **1 branch**: Main Branch (Kampala, Uganda)
+   - **11 demo users**: All use password `Demo#123`
+     - `owner@tapas.demo.local` (L5 Owner)
+     - `manager@tapas.demo.local` (L4 Manager, PIN: 1234)
+     - `accountant@tapas.demo.local` (L4 Accountant)
+     - `procurement@tapas.demo.local` (L3 Procurement)
+     - `stock@tapas.demo.local` (L3 Stock)
+     - `supervisor@tapas.demo.local` (L2 Supervisor)
+     - `cashier@tapas.demo.local` (L2 Cashier)
+     - `waiter@tapas.demo.local` (L1 Waiter)
+     - `chef@tapas.demo.local` (L2 Chef)
+     - `bartender@tapas.demo.local` (L1 Bartender)
+     - `eventmgr@tapas.demo.local` (L3 Event Manager)
+
+2. **Cafesserie** (`slug: cafesserie-demo`)
+   - **4 branches**: 
+     - Village Mall (Bugolobi, Kampala)
+     - Acacia Mall (Kampala)
+     - Arena Mall (Nsambya Rd, Kampala)
+     - Mombasa (Kenya)
+   - **8 demo users**: All use password `Demo#123`
+     - `owner@cafesserie.demo.local` (L5 Owner)
+     - `manager@cafesserie.demo.local` (L4 Manager, PIN: 5678)
+     - `accountant@cafesserie.demo.local` (L4 Accountant)
+     - `procurement@cafesserie.demo.local` (L3 Procurement)
+     - `supervisor@cafesserie.demo.local` (L2 Supervisor)
+     - `cashier@cafesserie.demo.local` (L2 Cashier)
+     - `waiter@cafesserie.demo.local` (L1 Waiter)
+     - `chef@cafesserie.demo.local` (L2 Chef)
+
+**⚠️ Production Safety:**
+- Demo data seeding is **disabled in production** by default
+- Set `SEED_DEMO_DATA=true` to force seeding in production (not recommended)
+- All demo IDs are deterministic (stable across machines)
+
+The seed is idempotent and can be re-run safely without creating duplicates.
 
 #### Demo Protections & Reset (M33-DEMO-S4)
 
@@ -137,7 +159,7 @@ When `DEMO_PROTECT_WRITES=1`, the following operations are blocked for the Tapas
 - Billing: Plan changes, subscription cancellations
 - Dev Portal: API key creation/revocation, webhook subscriptions
 
-**Reset Tapas Demo Data:**
+**Reset Demo Data:**
 To reset the Tapas demo to a clean state (e.g., before/after demos):
 
 ```bash
