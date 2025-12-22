@@ -770,6 +770,127 @@
       "reorderLevel": 5,
       "reorderQty": 10,
       "initialStock": 12
+    },
+    {
+      "sku": "CAF-INV-TEA-0006",
+      "name": "Chai Spice Mix",
+      "category": "Tea",
+      "unit": "KG",
+      "unitCost": 35000,
+      "reorderLevel": 1,
+      "reorderQty": 2,
+      "initialStock": 2,
+      "tags": ["ADDED_FOR_RECIPE"]
+    },
+    {
+      "sku": "CAF-INV-TEA-0007",
+      "name": "Black Tea (Loose Leaf)",
+      "category": "Tea",
+      "unit": "KG",
+      "unitCost": 28000,
+      "reorderLevel": 1,
+      "reorderQty": 2,
+      "initialStock": 3,
+      "tags": ["ADDED_FOR_RECIPE"]
+    },
+    {
+      "sku": "CAF-INV-TEA-0008",
+      "name": "Peach Tea Bags",
+      "category": "Tea",
+      "unit": "BOX",
+      "unitCost": 15000,
+      "reorderLevel": 2,
+      "reorderQty": 5,
+      "initialStock": 4,
+      "tags": ["ADDED_FOR_RECIPE"]
+    },
+    {
+      "sku": "CAF-INV-SYRP-0007",
+      "name": "Maple Syrup",
+      "category": "Syrups",
+      "unit": "BTL",
+      "unitCost": 18000,
+      "reorderLevel": 2,
+      "reorderQty": 4,
+      "initialStock": 5,
+      "tags": ["ADDED_FOR_RECIPE"]
+    },
+    {
+      "sku": "CAF-INV-BRED-0007",
+      "name": "Tortilla Wraps",
+      "category": "Bread",
+      "unit": "PACK",
+      "unitCost": 8000,
+      "reorderLevel": 5,
+      "reorderQty": 10,
+      "initialStock": 12,
+      "tags": ["ADDED_FOR_RECIPE"]
+    },
+    {
+      "sku": "CAF-INV-BAKF-0009",
+      "name": "Granola Mix",
+      "category": "Baking",
+      "unit": "KG",
+      "unitCost": 22000,
+      "reorderLevel": 2,
+      "reorderQty": 5,
+      "initialStock": 6,
+      "tags": ["ADDED_FOR_RECIPE"]
+    },
+    {
+      "sku": "CAF-INV-BAKF-0010",
+      "name": "Sliced Almonds",
+      "category": "Baking",
+      "unit": "KG",
+      "unitCost": 32000,
+      "reorderLevel": 1,
+      "reorderQty": 3,
+      "initialStock": 4,
+      "tags": ["ADDED_FOR_RECIPE"]
+    },
+    {
+      "sku": "CAF-INV-DARY-0012",
+      "name": "Mascarpone Cheese",
+      "category": "Dairy",
+      "unit": "KG",
+      "unitCost": 28000,
+      "reorderLevel": 1,
+      "reorderQty": 2,
+      "initialStock": 3,
+      "tags": ["ADDED_FOR_RECIPE"]
+    },
+    {
+      "sku": "CAF-INV-BEV-0007",
+      "name": "Ice Cubes",
+      "category": "Beverages",
+      "unit": "KG",
+      "unitCost": 2000,
+      "reorderLevel": 10,
+      "reorderQty": 20,
+      "initialStock": 25,
+      "tags": ["ADDED_FOR_RECIPE"]
+    },
+    {
+      "sku": "CAF-INV-PROT-0006",
+      "name": "Sausages",
+      "category": "Proteins",
+      "unit": "KG",
+      "unitCost": 18000,
+      "reorderLevel": 3,
+      "reorderQty": 5,
+      "initialStock": 6,
+      "tags": ["ADDED_FOR_RECIPE"]
+    },
+    {
+      "sku": "CAF-INV-BAKF-0011",
+      "name": "Honey",
+      "category": "Baking",
+      "unit": "BTL",
+      "unitCost": 15000,
+      "reorderLevel": 2,
+      "reorderQty": 4,
+      "initialStock": 5,
+      "tags": ["ADDED_FOR_RECIPE"]
     }
   ]
 }

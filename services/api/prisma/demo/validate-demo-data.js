@@ -136,11 +136,29 @@ if (cafeInvDuplicates.length > 0) {
 // Check recipe coverage
 console.log(`Menu items: ${cafesserieMenu.items.length}`);
 console.log(`Recipes: ${cafesserieRecipes.length}`);
-const cafeCoverage = (cafesserieRecipes.length / cafesserieMenu.items.length * 100).toFixed(1);
-console.log(`Recipe coverage: ${cafeCoverage}%`);
 
-if (cafesserieRecipes.length < cafesserieMenu.items.length) {
-  console.warn(`⚠️  ${cafesserieMenu.items.length - cafesserieRecipes.length} menu items missing recipes`);
+// Enforce exact recipe count match (Milestone 2 requirement)
+if (cafesserieMenu.items.length !== cafesserieRecipes.length) {
+  console.error(`❌ Recipe count (${cafesserieRecipes.length}) does NOT match menu count (${cafesserieMenu.items.length})`);
+  errors++;
+} else {
+  console.log('✅ Recipe count matches menu count');
+}
+
+// Check all menu items have recipes
+const cafeOrphanItems = cafesserieMenu.items.filter(item => !cafeRecipeSKUs.has(item.sku));
+if (cafeOrphanItems.length > 0) {
+  console.error(`❌ ${cafeOrphanItems.length} menu items missing recipes:`);
+  cafeOrphanItems.slice(0, 5).forEach(item => console.error(`   - ${item.sku}: ${item.name}`));
+  if (cafeOrphanItems.length > 5) console.error(`   ... and ${cafeOrphanItems.length - 5} more`);
+  errors++;
+}
+
+// Check all recipes reference valid menu SKUs
+const cafeOrphanRecipes = cafesserieRecipes.filter(r => !cafeMenuSKUs.has(r.menuSku));
+if (cafeOrphanRecipes.length > 0) {
+  console.warn(`⚠️  ${cafeOrphanRecipes.length} recipes reference non-existent menu items`);
+  cafeOrphanRecipes.slice(0, 3).forEach(r => console.warn(`   - ${r.menuSku}: ${r.menuName}`));
   warnings++;
 }
 

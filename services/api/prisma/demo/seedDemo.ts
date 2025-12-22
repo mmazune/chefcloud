@@ -63,19 +63,25 @@ async function cleanupOldDemoData(prisma: PrismaClient): Promise<void> {
   // Delete in correct order due to foreign key constraints
   console.log(`  🗑️  Deleting data for ${demoOrgs.length} demo org(s)...`);
 
-  // Delete user-related data first
+  // Delete orders first (cascades to order items, payments, refunds)
+  const deletedOrders = await prisma.order.deleteMany({
+    where: { branch: { orgId: { in: orgIds } } },
+  });
+  console.log(`    ✅ Deleted ${deletedOrders.count} orders (cascaded items, payments, refunds)`);
+
+  // Delete user-related data
   await prisma.employeeProfile.deleteMany({
     where: { user: { orgId: { in: orgIds } } },
   });
   console.log(`    ✅ Deleted employee profiles`);
 
-  // Users (cascades to many relations via onDelete: Cascade)
+  // Users (now safe to delete after orders)
   const deletedUsers = await prisma.user.deleteMany({
     where: { orgId: { in: orgIds } },
   });
   console.log(`    ✅ Deleted ${deletedUsers.count} users`);
 
-  // Branches (cascades to tables, floor plans, etc.)
+  // Branches (cascades to tables, floor plans, menu items, inventory, etc.)
   const deletedBranches = await prisma.branch.deleteMany({
     where: { orgId: { in: orgIds } },
   });

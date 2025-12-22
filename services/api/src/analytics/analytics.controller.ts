@@ -7,6 +7,7 @@ import { Roles } from '../auth/roles.decorator';
 import { PrismaService } from '../prisma.service';
 import { AccountingService } from '../accounting/accounting.service';
 import { BudgetService } from '../finance/budget.service';
+import { InventoryAnalyticsService } from '../inventory/inventory-analytics.service';
 
 @Controller('analytics')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
@@ -16,6 +17,7 @@ export class AnalyticsController {
     private prisma: PrismaService,
     private accountingService: AccountingService,
     private budgetService: BudgetService,
+    private inventoryAnalyticsService: InventoryAnalyticsService,
   ) {}
 
   @Get('daily')
@@ -262,5 +264,126 @@ export class AnalyticsController {
         })),
       } : null,
     };
+  }
+
+  /**
+   * GET /analytics/branch-ranking
+   * Get branch performance ranking for multi-branch orgs (e.g., Cafesserie)
+   * Returns branches ranked by revenue with growth metrics
+   * RBAC: L4+ (Manager, Owner, Accountant)
+   * M3: For populating branch leaderboard dashboards
+   */
+  @Get('branch-ranking')
+  @Roles('L4', 'L5', 'ACCOUNTANT')
+  async getBranchRanking(
+    @Req() req: any,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+  ): Promise<any> {
+    const toDate = to ? new Date(to) : new Date();
+    const fromDate = from
+      ? new Date(from)
+      : new Date(toDate.getTime() - 30 * 24 * 60 * 60 * 1000); // default last 30 days
+
+    return this.analyticsService.getBranchRanking({
+      orgId: req.user.orgId,
+      from: fromDate,
+      to: toDate,
+    });
+  }
+
+  /**
+   * GET /analytics/cogs-timeseries
+   * Get COGS (Cost of Goods Sold) timeseries
+   * M4: For inventory cost tracking and gross margin analysis
+   * RBAC: L3+ (Can see cost data)
+   */
+  @Get('cogs-timeseries')
+  @Roles('L3')
+  async getCOGSTimeseries(
+    @Req() req: any,
+    @Query('branchId') branchId?: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+  ): Promise<any> {
+    const canSeeCost = await this.canUserSeeCostData(req.user);
+    if (!canSeeCost) {
+      return { error: 'Unauthorized to view cost data' };
+    }
+
+    const targetBranchId = branchId || req.user.branchId;
+    const toDate = to ? new Date(to) : new Date();
+    const fromDate = from
+      ? new Date(from)
+      : new Date(toDate.getTime() - 30 * 24 * 60 * 60 * 1000); // default last 30 days
+
+    // If requesting org-wide and user has access
+    if (branchId === 'org' && (req.user.roleLevel === 'L5' || req.user.roleLevel === 'L4')) {
+      return this.inventoryAnalyticsService.getOrgCOGSTimeseries(
+        req.user.orgId,
+        fromDate,
+        toDate,
+      );
+    }
+
+    return this.inventoryAnalyticsService.getCOGSTimeseries(
+      targetBranchId,
+      fromDate,
+      toDate,
+    );
+  }
+
+  /**
+   * GET /analytics/stock-valuation
+   * Get stock valuation by category
+   * M4: For inventory value tracking
+   * RBAC: L3+ (Can see cost data)
+   */
+  @Get('stock-valuation')
+  @Roles('L3')
+  async getStockValuation(
+    @Req() req: any,
+    @Query('branchId') branchId?: string,
+    @Query('asOf') asOf?: string,
+  ): Promise<any> {
+    const canSeeCost = await this.canUserSeeCostData(req.user);
+    if (!canSeeCost) {
+      return { error: 'Unauthorized to view cost data' };
+    }
+
+    const targetBranchId = branchId || req.user.branchId;
+    const asOfDate = asOf ? new Date(asOf) : new Date();
+
+    return this.inventoryAnalyticsService.getStockValuation(
+      targetBranchId,
+      asOfDate,
+    );
+  }
+
+  /**
+   * GET /analytics/wastage-summary
+   * Get wastage summary
+   * M4: For wastage cost tracking
+   * RBAC: L3+
+   */
+  @Get('wastage-summary')
+  @Roles('L3')
+  async getWastageSummary(
+    @Req() req: any,
+    @Query('branchId') branchId?: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+  ): Promise<any> {
+    const targetBranchId = branchId || req.user.branchId;
+    const toDate = to ? new Date(to) : new Date();
+    const fromDate = from
+      ? new Date(from)
+      : new Date(toDate.getTime() - 30 * 24 * 60 * 60 * 1000); // default last 30 days
+
+    return this.inventoryAnalyticsService.getWastageSummary(
+      targetBranchId,
+      fromDate,
+      toDate,
+    );
   }
 }

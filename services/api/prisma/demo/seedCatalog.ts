@@ -52,8 +52,8 @@ export async function seedCatalog(prisma: PrismaClient): Promise<void> {
     console.log('  ☕ Cafesserie (4 branches):');
     console.log('     - 12 menu categories per branch');
     console.log('     - 80 menu items per branch');
-    console.log('     - 77 inventory items');
-    console.log('     - 63 recipes with ingredient mappings');
+    console.log('     - 88 inventory items (includes 11 ADDED_FOR_RECIPE items)');
+    console.log('     - 80 recipes with ingredient mappings (100% coverage)');
     console.log('     - Prices vary 0-3% across branches (deterministic)');
 
   } catch (error) {

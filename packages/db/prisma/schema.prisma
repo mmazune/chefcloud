@@ -72,6 +72,7 @@ enum StationTag {
   GRILL
   FRYER
   BAR
+  KITCHEN
   OTHER
 }
 

@@ -6,7 +6,7 @@
  */
 
 import { PrismaClient } from '@prisma/client';
-import { ORG_CAFESSERIE_ID, BRANCH_CAFESSERIE_VILLAGE_ID } from '../constants';
+import { ORG_CAFESSERIE_ID, BRANCH_CAFE_VILLAGE_MALL_ID } from '../constants';
 import inventoryData from '../data/cafesserie-inventory.json';
 
 /**
@@ -17,7 +17,7 @@ export async function seedCafesserieInventory(prisma: PrismaClient): Promise<voi
 
   // Get Cafesserie Village branch (main branch for initial stock)
   const branch = await prisma.branch.findUnique({
-    where: { id: BRANCH_CAFESSERIE_VILLAGE_ID },
+    where: { id: BRANCH_CAFE_VILLAGE_MALL_ID },
   });
 
   if (!branch) {

@@ -614,4 +614,107 @@ export class AnalyticsService {
         return type.replace(/_/g, ' ').toLowerCase();
     }
   }
+
+  /**
+   * M3: Branch Ranking for multi-branch orgs (e.g., Cafesserie)
+   * Returns branch performance comparison with growth metrics
+   */
+  async getBranchRanking(params: {
+    orgId: string;
+    from?: Date;
+    to?: Date;
+  }): Promise<any[]> {
+    const { orgId, from, to } = params;
+
+    // Get all branches for this org
+    const branches = await this.prisma.client.branch.findMany({
+      where: { orgId },
+      select: { id: true, name: true },
+    });
+
+    if (branches.length === 0) {
+      return [];
+    }
+
+    const branchStats = [];
+
+    for (const branch of branches) {
+      // Current period
+      const currentWhere: any = {
+        branchId: branch.id,
+        status: { in: ['CLOSED', 'SERVED'] },
+      };
+
+      if (from || to) {
+        currentWhere.createdAt = {};
+        if (from) currentWhere.createdAt.gte = from;
+        if (to) currentWhere.createdAt.lte = to;
+      }
+
+      const currentOrders = await this.prisma.client.order.findMany({
+        where: currentWhere,
+        select: {
+          total: true,
+          createdAt: true,
+        },
+      });
+
+      const currentRevenue = currentOrders.reduce((sum, o) => sum + Number(o.total), 0);
+      const currentOrderCount = currentOrders.length;
+      const currentAvgOrderValue = currentOrderCount > 0 ? currentRevenue / currentOrderCount : 0;
+
+      // Previous period (same duration)
+      let priorRevenue = 0;
+      let priorOrderCount = 0;
+      let growthPct = 0;
+
+      if (from && to) {
+        const duration = to.getTime() - from.getTime();
+        const priorFrom = new Date(from.getTime() - duration);
+        const priorTo = new Date(from);
+
+        const priorOrders = await this.prisma.client.order.findMany({
+          where: {
+            branchId: branch.id,
+            status: { in: ['CLOSED', 'SERVED'] },
+            createdAt: {
+              gte: priorFrom,
+              lte: priorTo,
+            },
+          },
+          select: {
+            total: true,
+          },
+        });
+
+        priorRevenue = priorOrders.reduce((sum, o) => sum + Number(o.total), 0);
+        priorOrderCount = priorOrders.length;
+
+        // Calculate growth percentage
+        if (priorRevenue > 0) {
+          growthPct = ((currentRevenue - priorRevenue) / priorRevenue) * 100;
+        }
+      }
+
+      branchStats.push({
+        branchId: branch.id,
+        branchName: branch.name,
+        revenue: Math.round(currentRevenue * 100) / 100,
+        orderCount: currentOrderCount,
+        avgOrderValue: Math.round(currentAvgOrderValue * 100) / 100,
+        priorRevenue: Math.round(priorRevenue * 100) / 100,
+        priorOrderCount,
+        growthPct: Math.round(growthPct * 100) / 100,
+      });
+    }
+
+    // Sort by revenue descending
+    branchStats.sort((a, b) => b.revenue - a.revenue);
+
+    // Add rank
+    return branchStats.map((stat, idx) => ({
+      ...stat,
+      rank: idx + 1,
+    }));
+  }
 }

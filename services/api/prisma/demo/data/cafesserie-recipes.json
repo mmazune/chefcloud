@@ -1517,5 +1517,698 @@
       }
     ],
     "needsConfirmation": false
+  },
+  {
+    "menuSku": "CAF-TEA-0006",
+    "menuName": "Masala Chai",
+    "ingredients": [
+      {
+        "inventorySku": "CAF-INV-TEA-0007",
+        "name": "Black Tea",
+        "qty": 5,
+        "unit": "G",
+        "note": "Loose leaf"
+      },
+      {
+        "inventorySku": "CAF-INV-TEA-0006",
+        "name": "Chai Spice Mix",
+        "qty": 3,
+        "unit": "G",
+        "note": "Cardamom, cinnamon, ginger, cloves"
+      },
+      {
+        "inventorySku": "CAF-INV-DARY-0001",
+        "name": "Milk",
+        "qty": 150,
+        "unit": "ML",
+        "note": "Heated with spices"
+      },
+      {
+        "inventorySku": "CAF-INV-BAKF-0002",
+        "name": "Sugar",
+        "qty": 10,
+        "unit": "G",
+        "note": "To taste"
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "CAF-BRK-0001",
+    "menuName": "English Breakfast",
+    "ingredients": [
+      {
+        "inventorySku": "CAF-INV-DARY-0011",
+        "name": "Eggs",
+        "qty": 2,
+        "unit": "PC",
+        "note": "Fried or scrambled"
+      },
+      {
+        "inventorySku": "CAF-INV-PROT-0003",
+        "name": "Bacon",
+        "qty": 60,
+        "unit": "G",
+        "note": "2-3 strips"
+      },
+      {
+        "inventorySku": "CAF-INV-PROT-0006",
+        "name": "Sausages",
+        "qty": 80,
+        "unit": "G",
+        "note": "2 sausages"
+      },
+      {
+        "inventorySku": "CAF-INV-BRED-0001",
+        "name": "Toast",
+        "qty": 2,
+        "unit": "SLICES",
+        "note": "Buttered"
+      },
+      {
+        "inventorySku": "CAF-INV-PROD-0001",
+        "name": "Tomatoes",
+        "qty": 50,
+        "unit": "G",
+        "note": "Grilled"
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "CAF-BRK-0002",
+    "menuName": "Pancakes (Stack of 3)",
+    "ingredients": [
+      {
+        "inventorySku": "CAF-INV-BAKF-0001",
+        "name": "Flour",
+        "qty": 150,
+        "unit": "G",
+        "note": "For batter"
+      },
+      {
+        "inventorySku": "CAF-INV-DARY-0011",
+        "name": "Eggs",
+        "qty": 2,
+        "unit": "PC",
+        "note": ""
+      },
+      {
+        "inventorySku": "CAF-INV-DARY-0001",
+        "name": "Milk",
+        "qty": 120,
+        "unit": "ML",
+        "note": ""
+      },
+      {
+        "inventorySku": "CAF-INV-BAKF-0002",
+        "name": "Sugar",
+        "qty": 15,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "CAF-INV-BAKF-0004",
+        "name": "Baking Powder",
+        "qty": 5,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "CAF-INV-SYRP-0007",
+        "name": "Maple Syrup",
+        "qty": 30,
+        "unit": "ML",
+        "note": "Served on side"
+      },
+      {
+        "inventorySku": "CAF-INV-DARY-0005",
+        "name": "Butter",
+        "qty": 10,
+        "unit": "G",
+        "note": "For topping"
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "CAF-BRK-0003",
+    "menuName": "French Toast",
+    "ingredients": [
+      {
+        "inventorySku": "CAF-INV-BRED-0001",
+        "name": "Bread",
+        "qty": 3,
+        "unit": "SLICES",
+        "note": "Thick cut"
+      },
+      {
+        "inventorySku": "CAF-INV-DARY-0011",
+        "name": "Eggs",
+        "qty": 2,
+        "unit": "PC",
+        "note": "Beaten for egg wash"
+      },
+      {
+        "inventorySku": "CAF-INV-DARY-0001",
+        "name": "Milk",
+        "qty": 60,
+        "unit": "ML",
+        "note": "Mixed with eggs"
+      },
+      {
+        "inventorySku": "CAF-INV-BAKF-0008",
+        "name": "Cinnamon",
+        "qty": 2,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "CAF-INV-SYRP-0007",
+        "name": "Maple Syrup",
+        "qty": 30,
+        "unit": "ML",
+        "note": "Served on side"
+      },
+      {
+        "inventorySku": "CAF-INV-DARY-0005",
+        "name": "Butter",
+        "qty": 15,
+        "unit": "G",
+        "note": "For cooking"
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "CAF-BRK-0007",
+    "menuName": "Granola Bowl",
+    "ingredients": [
+      {
+        "inventorySku": "CAF-INV-BAKF-0009",
+        "name": "Granola Mix",
+        "qty": 80,
+        "unit": "G",
+        "note": "Base"
+      },
+      {
+        "inventorySku": "CAF-INV-DARY-0010",
+        "name": "Yoghurt",
+        "qty": 150,
+        "unit": "G",
+        "note": "Plain or Greek"
+      },
+      {
+        "inventorySku": "CAF-INV-FRUT-0001",
+        "name": "Bananas",
+        "qty": 50,
+        "unit": "G",
+        "note": "Sliced"
+      },
+      {
+        "inventorySku": "CAF-INV-FRUT-0003",
+        "name": "Blueberries",
+        "qty": 30,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "CAF-INV-BAKF-0011",
+        "name": "Honey",
+        "qty": 15,
+        "unit": "ML",
+        "note": "Drizzled on top"
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "CAF-BRK-0008",
+    "menuName": "Breakfast Burrito",
+    "ingredients": [
+      {
+        "inventorySku": "CAF-INV-BRED-0007",
+        "name": "Tortilla Wrap",
+        "qty": 1,
+        "unit": "PC",
+        "note": "Large flour tortilla"
+      },
+      {
+        "inventorySku": "CAF-INV-DARY-0011",
+        "name": "Eggs",
+        "qty": 2,
+        "unit": "PC",
+        "note": "Scrambled"
+      },
+      {
+        "inventorySku": "CAF-INV-PROT-0003",
+        "name": "Bacon",
+        "qty": 40,
+        "unit": "G",
+        "note": "Cooked and chopped"
+      },
+      {
+        "inventorySku": "CAF-INV-DARY-0007",
+        "name": "Cheddar Cheese",
+        "qty": 30,
+        "unit": "G",
+        "note": "Shredded"
+      },
+      {
+        "inventorySku": "CAF-INV-PROD-0004",
+        "name": "Avocado",
+        "qty": 30,
+        "unit": "G",
+        "note": "Sliced"
+      },
+      {
+        "inventorySku": "CAF-INV-COND-0006",
+        "name": "Salt",
+        "qty": 1,
+        "unit": "G",
+        "note": "To taste"
+      },
+      {
+        "inventorySku": "CAF-INV-COND-0007",
+        "name": "Pepper",
+        "qty": 1,
+        "unit": "G",
+        "note": "To taste"
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "CAF-PAST-0001",
+    "menuName": "Croissant",
+    "ingredients": [
+      {
+        "inventorySku": "CAF-INV-BRED-0003",
+        "name": "Croissant (Frozen)",
+        "qty": 1,
+        "unit": "PC",
+        "note": "Baked fresh"
+      },
+      {
+        "inventorySku": "CAF-INV-DARY-0005",
+        "name": "Butter",
+        "qty": 50,
+        "unit": "G",
+        "note": "Layered in dough"
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "CAF-PAST-0002",
+    "menuName": "Chocolate Croissant",
+    "ingredients": [
+      {
+        "inventorySku": "CAF-INV-BRED-0003",
+        "name": "Croissant (Frozen)",
+        "qty": 1,
+        "unit": "PC",
+        "note": "Baked fresh"
+      },
+      {
+        "inventorySku": "CAF-INV-DARY-0005",
+        "name": "Butter",
+        "qty": 50,
+        "unit": "G",
+        "note": "Layered in dough"
+      },
+      {
+        "inventorySku": "CAF-INV-BAKF-0006",
+        "name": "Chocolate Chips",
+        "qty": 30,
+        "unit": "G",
+        "note": "Filled"
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "CAF-PAST-0003",
+    "menuName": "Almond Croissant",
+    "ingredients": [
+      {
+        "inventorySku": "CAF-INV-BRED-0003",
+        "name": "Croissant (Frozen)",
+        "qty": 1,
+        "unit": "PC",
+        "note": "Baked fresh"
+      },
+      {
+        "inventorySku": "CAF-INV-DARY-0005",
+        "name": "Butter",
+        "qty": 50,
+        "unit": "G",
+        "note": "Layered in dough"
+      },
+      {
+        "inventorySku": "CAF-INV-BAKF-0010",
+        "name": "Sliced Almonds",
+        "qty": 25,
+        "unit": "G",
+        "note": "Filling and topping"
+      },
+      {
+        "inventorySku": "CAF-INV-BAKF-0002",
+        "name": "Sugar",
+        "qty": 20,
+        "unit": "G",
+        "note": "For almond paste"
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "CAF-PAST-0004",
+    "menuName": "Cinnamon Roll",
+    "ingredients": [
+      {
+        "inventorySku": "CAF-INV-BAKF-0001",
+        "name": "Flour",
+        "qty": 100,
+        "unit": "G",
+        "note": "For dough"
+      },
+      {
+        "inventorySku": "CAF-INV-DARY-0005",
+        "name": "Butter",
+        "qty": 40,
+        "unit": "G",
+        "note": "For filling and dough"
+      },
+      {
+        "inventorySku": "CAF-INV-BAKF-0003",
+        "name": "Brown Sugar",
+        "qty": 30,
+        "unit": "G",
+        "note": "For filling"
+      },
+      {
+        "inventorySku": "CAF-INV-BAKF-0008",
+        "name": "Cinnamon",
+        "qty": 5,
+        "unit": "G",
+        "note": "For filling"
+      },
+      {
+        "inventorySku": "CAF-INV-DARY-0011",
+        "name": "Eggs",
+        "qty": 1,
+        "unit": "PC",
+        "note": "For dough"
+      },
+      {
+        "inventorySku": "CAF-INV-DARY-0001",
+        "name": "Milk",
+        "qty": 30,
+        "unit": "ML",
+        "note": "For dough"
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "CAF-PAST-0007",
+    "menuName": "Banana Bread Slice",
+    "ingredients": [
+      {
+        "inventorySku": "CAF-INV-BAKF-0001",
+        "name": "Flour",
+        "qty": 80,
+        "unit": "G",
+        "note": "Per slice portion"
+      },
+      {
+        "inventorySku": "CAF-INV-FRUT-0001",
+        "name": "Bananas",
+        "qty": 60,
+        "unit": "G",
+        "note": "Mashed ripe bananas"
+      },
+      {
+        "inventorySku": "CAF-INV-BAKF-0002",
+        "name": "Sugar",
+        "qty": 40,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "CAF-INV-DARY-0011",
+        "name": "Eggs",
+        "qty": 1,
+        "unit": "PC",
+        "note": ""
+      },
+      {
+        "inventorySku": "CAF-INV-DARY-0005",
+        "name": "Butter",
+        "qty": 30,
+        "unit": "G",
+        "note": "Melted"
+      },
+      {
+        "inventorySku": "CAF-INV-BAKF-0004",
+        "name": "Baking Powder",
+        "qty": 3,
+        "unit": "G",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "CAF-DESS-0001",
+    "menuName": "Chocolate Brownie",
+    "ingredients": [
+      {
+        "inventorySku": "CAF-INV-BAKF-0005",
+        "name": "Cocoa Powder",
+        "qty": 40,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "CAF-INV-BAKF-0001",
+        "name": "Flour",
+        "qty": 60,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "CAF-INV-BAKF-0002",
+        "name": "Sugar",
+        "qty": 80,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "CAF-INV-DARY-0011",
+        "name": "Eggs",
+        "qty": 2,
+        "unit": "PC",
+        "note": ""
+      },
+      {
+        "inventorySku": "CAF-INV-DARY-0005",
+        "name": "Butter",
+        "qty": 70,
+        "unit": "G",
+        "note": "Melted"
+      },
+      {
+        "inventorySku": "CAF-INV-BAKF-0006",
+        "name": "Chocolate Chips",
+        "qty": 40,
+        "unit": "G",
+        "note": "Optional chunks"
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "CAF-DESS-0003",
+    "menuName": "Tiramisu",
+    "ingredients": [
+      {
+        "inventorySku": "CAF-INV-DARY-0012",
+        "name": "Mascarpone",
+        "qty": 100,
+        "unit": "G",
+        "note": "Main cream base"
+      },
+      {
+        "inventorySku": "CAF-INV-DARY-0011",
+        "name": "Eggs",
+        "qty": 2,
+        "unit": "PC",
+        "note": "Separated for sabayon"
+      },
+      {
+        "inventorySku": "CAF-INV-BAKF-0002",
+        "name": "Sugar",
+        "qty": 30,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "CAF-INV-COFF-0001",
+        "name": "Coffee Beans",
+        "qty": 15,
+        "unit": "G",
+        "note": "Brewed strong espresso"
+      },
+      {
+        "inventorySku": "CAF-INV-BAKF-0005",
+        "name": "Cocoa Powder",
+        "qty": 5,
+        "unit": "G",
+        "note": "For dusting"
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "CAF-DESS-0004",
+    "menuName": "Apple Pie",
+    "ingredients": [
+      {
+        "inventorySku": "CAF-INV-FRUT-0005",
+        "name": "Apples",
+        "qty": 120,
+        "unit": "G",
+        "note": "Sliced"
+      },
+      {
+        "inventorySku": "CAF-INV-BAKF-0001",
+        "name": "Flour",
+        "qty": 80,
+        "unit": "G",
+        "note": "For pastry"
+      },
+      {
+        "inventorySku": "CAF-INV-BAKF-0002",
+        "name": "Sugar",
+        "qty": 40,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "CAF-INV-DARY-0005",
+        "name": "Butter",
+        "qty": 50,
+        "unit": "G",
+        "note": "For pastry"
+      },
+      {
+        "inventorySku": "CAF-INV-BAKF-0008",
+        "name": "Cinnamon",
+        "qty": 3,
+        "unit": "G",
+        "note": ""
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "CAF-COLD-0001",
+    "menuName": "Coca-Cola (330ml)",
+    "ingredients": [
+      {
+        "inventorySku": "CAF-INV-BEV-0001",
+        "name": "Coca Cola",
+        "qty": 1,
+        "unit": "BTL",
+        "note": "330ml bottle"
+      },
+      {
+        "inventorySku": "CAF-INV-BEV-0007",
+        "name": "Ice Cubes",
+        "qty": 50,
+        "unit": "G",
+        "note": "Served with ice"
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "CAF-COLD-0005",
+    "menuName": "Iced Tea (Lemon)",
+    "ingredients": [
+      {
+        "inventorySku": "CAF-INV-TEA-0001",
+        "name": "Tea Bags",
+        "qty": 2,
+        "unit": "PC",
+        "note": "Brewed and chilled"
+      },
+      {
+        "inventorySku": "CAF-INV-FRUT-0009",
+        "name": "Lemon",
+        "qty": 20,
+        "unit": "G",
+        "note": "Fresh lemon juice"
+      },
+      {
+        "inventorySku": "CAF-INV-BAKF-0002",
+        "name": "Sugar",
+        "qty": 15,
+        "unit": "G",
+        "note": "To taste"
+      },
+      {
+        "inventorySku": "CAF-INV-BEV-0007",
+        "name": "Ice Cubes",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "CAF-INV-BEV-0004",
+        "name": "Water",
+        "qty": 300,
+        "unit": "ML",
+        "note": "Chilled"
+      }
+    ],
+    "needsConfirmation": false
+  },
+  {
+    "menuSku": "CAF-COLD-0006",
+    "menuName": "Iced Tea (Peach)",
+    "ingredients": [
+      {
+        "inventorySku": "CAF-INV-TEA-0008",
+        "name": "Peach Tea Bags",
+        "qty": 2,
+        "unit": "PC",
+        "note": "Brewed and chilled"
+      },
+      {
+        "inventorySku": "CAF-INV-BAKF-0002",
+        "name": "Sugar",
+        "qty": 15,
+        "unit": "G",
+        "note": "To taste"
+      },
+      {
+        "inventorySku": "CAF-INV-BEV-0007",
+        "name": "Ice Cubes",
+        "qty": 100,
+        "unit": "G",
+        "note": ""
+      },
+      {
+        "inventorySku": "CAF-INV-BEV-0004",
+        "name": "Water",
+        "qty": 300,
+        "unit": "ML",
+        "note": "Chilled"
+      }
+    ],
+    "needsConfirmation": false
   }
 ]
