@@ -1,7 +1,7 @@
 
 # ChefCloud — Engineering Blueprint v0.1
 
-**Owner:** Ssemakula Allan (Product)
+**Owner:** Mazune m (Product)
 **Tech Lead (you + me):** Build director + coding assistant
 **Repo:** `github.com/mmazune/chefcloud` (fresh)
 **Goal:** Enterprise‑grade, offline‑first POS for restaurants/bars in Uganda, reaching or exceeding Oracle MICROS parity while staying lighter, faster, and more local.

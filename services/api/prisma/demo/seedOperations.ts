@@ -567,7 +567,6 @@ async function seedVendorsAndBills(prisma: PrismaClient) {
       const total = subtotal + tax;
       
       const isPaid = billDate < new Date(NOW.getTime() - 7 * 24 * 60 * 60 * 1000) && seededRng.next() > 0.1;
-      const isOverdue = dueDate < NOW && !isPaid;
       
       const bill = await prisma.vendorBill.create({
         data: {
@@ -579,7 +578,7 @@ async function seedVendorsAndBills(prisma: PrismaClient) {
           subtotal: new Prisma.Decimal(subtotal),
           tax: new Prisma.Decimal(tax),
           total: new Prisma.Decimal(total),
-          status: isPaid ? 'PAID' : (isOverdue ? 'OVERDUE' : 'OPEN'),
+          status: isPaid ? 'PAID' : 'OPEN',
         },
       });
       
@@ -640,7 +639,6 @@ async function seedVendorsAndBills(prisma: PrismaClient) {
       const total = subtotal + tax;
       
       const isPaid = billDate < new Date(NOW.getTime() - 7 * 24 * 60 * 60 * 1000) && seededRng.next() > 0.08;
-      const isOverdue = dueDate < NOW && !isPaid;
       
       const bill = await prisma.vendorBill.create({
         data: {
@@ -652,7 +650,7 @@ async function seedVendorsAndBills(prisma: PrismaClient) {
           subtotal: new Prisma.Decimal(subtotal),
           tax: new Prisma.Decimal(tax),
           total: new Prisma.Decimal(total),
-          status: isPaid ? 'PAID' : (isOverdue ? 'OVERDUE' : 'OPEN'),
+          status: isPaid ? 'PAID' : 'OPEN',
         },
       });
       

@@ -113,9 +113,6 @@ async function getCounts() {
   const tapasBillsPaid = await prisma.vendorBill.count({
     where: { orgId: TAPAS_ORG_ID, status: 'PAID' },
   });
-  const tapasBillsOverdue = await prisma.vendorBill.count({
-    where: { orgId: TAPAS_ORG_ID, status: 'OVERDUE' },
-  });
   const tapasBillsOpen = await prisma.vendorBill.count({
     where: { orgId: TAPAS_ORG_ID, status: 'OPEN' },
   });
@@ -127,7 +124,6 @@ async function getCounts() {
   console.log(`  Vendors: ${tapasVendors}`);
   console.log(`  Vendor Bills: ${tapasVendorBills}`);
   console.log(`  - Paid: ${tapasBillsPaid}`);
-  console.log(`  - Overdue: ${tapasBillsOverdue}`);
   console.log(`  - Open: ${tapasBillsOpen}`);
   console.log(`  Payments Recorded: ${tapasPayments}\n`);
 
@@ -140,9 +136,6 @@ async function getCounts() {
   const cafBillsPaid = await prisma.vendorBill.count({
     where: { orgId: CAFESSERIE_ORG_ID, status: 'PAID' },
   });
-  const cafBillsOverdue = await prisma.vendorBill.count({
-    where: { orgId: CAFESSERIE_ORG_ID, status: 'OVERDUE' },
-  });
   const cafBillsOpen = await prisma.vendorBill.count({
     where: { orgId: CAFESSERIE_ORG_ID, status: 'OPEN' },
   });
@@ -154,7 +147,6 @@ async function getCounts() {
   console.log(`  Vendors: ${cafVendors}`);
   console.log(`  Vendor Bills: ${cafVendorBills}`);
   console.log(`  - Paid: ${cafBillsPaid}`);
-  console.log(`  - Overdue: ${cafBillsOverdue}`);
   console.log(`  - Open: ${cafBillsOpen}`);
   console.log(`  Payments Recorded: ${cafPayments}\n`);
 
@@ -287,7 +279,6 @@ async function getCounts() {
         vendors: tapasVendors,
         bills: tapasVendorBills,
         paid: tapasBillsPaid,
-        overdue: tapasBillsOverdue,
         open: tapasBillsOpen,
         payments: tapasPayments,
       },
@@ -295,7 +286,6 @@ async function getCounts() {
         vendors: cafVendors,
         bills: cafVendorBills,
         paid: cafBillsPaid,
-        overdue: cafBillsOverdue,
         open: cafBillsOpen,
         payments: cafPayments,
       },
