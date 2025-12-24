@@ -57,7 +57,25 @@ export class AnalyticsService {
     };
   }
 
-  async getTopItems(branchId: string, limit = 10, includeCostData = false): Promise<any> {
+  async getTopItems(
+    branchId: string,
+    limit = 10,
+    includeCostData = false,
+    from?: string,
+    to?: string,
+  ): Promise<any> {
+    // Build date filter if provided
+    // M7.2A: Fix end-of-day inclusive for 'to' date
+    const dateFilter: any = {};
+    if (from) {
+      dateFilter.gte = new Date(from);
+    }
+    if (to) {
+      const endDate = new Date(to);
+      endDate.setHours(23, 59, 59, 999);
+      dateFilter.lte = endDate;
+    }
+
     // Simple aggregation - get top items by quantity sold
     const items = await this.prisma.client.orderItem.groupBy({
       by: ['menuItemId'],
@@ -65,6 +83,7 @@ export class AnalyticsService {
         order: {
           branchId,
           status: { in: ['CLOSED', 'SERVED'] },
+          ...(Object.keys(dateFilter).length > 0 && { createdAt: dateFilter }),
         },
       },
       _sum: {
@@ -317,7 +336,9 @@ export class AnalyticsService {
     branchId?: string,
   ): Promise<any[]> {
     const startDate = new Date(from);
+    // M7.2A: Fix end-of-day inclusive - set to 23:59:59.999
     const endDate = new Date(to);
+    endDate.setHours(23, 59, 59, 999);
 
     // Ensure dates are valid
     if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
@@ -328,11 +349,13 @@ export class AnalyticsService {
     const daysDiff = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
     if (daysDiff > 90) {
       endDate.setTime(startDate.getTime() + 90 * 24 * 60 * 60 * 1000);
+      endDate.setHours(23, 59, 59, 999); // Reset end-of-day after limit adjustment
     }
 
     // Query orders for the period
     const orders = await this.prisma.client.order.findMany({
       where: {
+        branch: { orgId },
         ...(branchId && { branchId }),
         createdAt: { gte: startDate, lte: endDate },
         status: { in: ['CLOSED', 'SERVED'] },
@@ -350,7 +373,6 @@ export class AnalyticsService {
         orgId,
         ...(branchId && { branchId }),
         createdAt: { gte: startDate, lte: endDate },
-        score: { not: null },
       },
       select: {
         score: true,
@@ -613,5 +635,151 @@ export class AnalyticsService {
       default:
         return type.replace(/_/g, ' ').toLowerCase();
     }
+  }
+
+  /**
+   * Get sales breakdown by menu category
+   * Returns: [{ name: string, value: number, count: number }]
+   */
+  async getCategoryMix(branchId: string, from?: string, to?: string): Promise<any> {
+    const dateFilter: any = {};
+    if (from) {
+      dateFilter.gte = new Date(from);
+    }
+    if (to) {
+      // M7.2A: Fix end-of-day inclusive - set to 23:59:59.999
+      const endDate = new Date(to);
+      endDate.setHours(23, 59, 59, 999);
+      dateFilter.lte = endDate;
+    }
+
+    // Aggregate order items with category info
+    const orderItems = await this.prisma.client.orderItem.findMany({
+      where: {
+        order: {
+          branchId,
+          status: { in: ['CLOSED', 'SERVED'] },
+          ...(Object.keys(dateFilter).length > 0 && { createdAt: dateFilter }),
+        },
+      },
+      include: {
+        menuItem: {
+          include: {
+            category: true,
+          },
+        },
+      },
+    });
+
+    // Group by category
+    const categoryMap = new Map<string, { value: number; count: number }>();
+
+    for (const item of orderItems) {
+      const categoryName = item.menuItem?.category?.name || 'Uncategorized';
+      const current = categoryMap.get(categoryName) || { value: 0, count: 0 };
+      current.value += Number(item.subtotal || 0);
+      current.count += item.quantity || 1;
+      categoryMap.set(categoryName, current);
+    }
+
+    // Convert to array and sort by value
+    return Array.from(categoryMap.entries())
+      .map(([name, data]) => ({
+        name,
+        value: data.value,
+        count: data.count,
+      }))
+      .sort((a, b) => b.value - a.value);
+  }
+
+  /**
+   * Get payment method breakdown
+   * Returns: [{ method: string, amount: number, count: number }]
+   */
+  async getPaymentMix(branchId: string, from?: string, to?: string): Promise<any> {
+    const dateFilter: any = {};
+    if (from) {
+      dateFilter.gte = new Date(from);
+    }
+    if (to) {
+      // M7.2A: Fix end-of-day inclusive - set to 23:59:59.999
+      const endDate = new Date(to);
+      endDate.setHours(23, 59, 59, 999);
+      dateFilter.lte = endDate;
+    }
+
+    // Aggregate payments by method
+    const payments = await this.prisma.client.payment.groupBy({
+      by: ['method'],
+      where: {
+        order: {
+          branchId,
+          status: { in: ['CLOSED', 'SERVED'] },
+          ...(Object.keys(dateFilter).length > 0 && { createdAt: dateFilter }),
+        },
+      },
+      _sum: {
+        amount: true,
+      },
+      _count: true,
+    });
+
+    return payments.map((p: any) => ({
+      method: p.method,
+      amount: p._sum.amount ? Number(p._sum.amount) : 0,
+      count: p._count,
+    }));
+  }
+
+  /**
+   * Get order distribution by hour of day
+   * Returns: [{ hour: number, orders: number, revenue: number }]
+   */
+  async getPeakHours(branchId: string, from?: string, to?: string): Promise<any> {
+    const dateFilter: any = {};
+    if (from) {
+      dateFilter.gte = new Date(from);
+    }
+    if (to) {
+      // M7.2A: Fix end-of-day inclusive - set to 23:59:59.999
+      const endDate = new Date(to);
+      endDate.setHours(23, 59, 59, 999);
+      dateFilter.lte = endDate;
+    }
+
+    // Fetch orders with timestamps
+    const orders = await this.prisma.client.order.findMany({
+      where: {
+        branchId,
+        status: { in: ['CLOSED', 'SERVED'] },
+        ...(Object.keys(dateFilter).length > 0 && { createdAt: dateFilter }),
+      },
+      select: {
+        createdAt: true,
+        total: true,
+      },
+    });
+
+    // Initialize all 24 hours
+    const hourlyData = new Map<number, { orders: number; revenue: number }>();
+    for (let h = 0; h < 24; h++) {
+      hourlyData.set(h, { orders: 0, revenue: 0 });
+    }
+
+    // Aggregate by hour
+    for (const order of orders) {
+      const hour = order.createdAt.getHours();
+      const current = hourlyData.get(hour)!;
+      current.orders += 1;
+      current.revenue += Number(order.total || 0);
+    }
+
+    return Array.from(hourlyData.entries())
+      .map(([hour, data]) => ({
+        hour,
+        orders: data.orders,
+        revenue: data.revenue,
+      }))
+      .sort((a, b) => a.hour - b.hour);
   }
 }

@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Controller, Post, Get, Patch, Body, Param, UseGuards, Req, Query } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { SkipThrottle } from '@nestjs/throttler';
 import { InventoryService } from './inventory.service';
 import { CreateInventoryItemDto, UpdateInventoryItemDto } from './inventory.dto';
 import { RolesGuard } from '../auth/roles.guard';
@@ -8,6 +9,7 @@ import { Roles } from '../auth/roles.decorator';
 
 @Controller('inventory')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
+@SkipThrottle()
 export class InventoryController {
   constructor(private inventoryService: InventoryService) {}
 

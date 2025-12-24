@@ -1,0 +1,17 @@
+﻿{
+    "00000000-0000-4000-8000-000000000006":  {
+                                                 "error":  "The remote server returned an error: (401) Unauthorized."
+                                             },
+    "00000000-0000-4000-8000-000000000002":  {
+                                                 "error":  "The remote server returned an error: (401) Unauthorized."
+                                             },
+    "00000000-0000-4000-8000-000000000009":  {
+                                                 "error":  "The remote server returned an error: (401) Unauthorized."
+                                             },
+    "00000000-0000-4000-8000-000000000008":  {
+                                                 "error":  "The remote server returned an error: (401) Unauthorized."
+                                             },
+    "00000000-0000-4000-8000-000000000007":  {
+                                                 "error":  "The remote server returned an error: (401) Unauthorized."
+                                             }
+}

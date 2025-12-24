@@ -12,6 +12,7 @@
 import { useEffect, useState } from 'react';
 import { loadPosSnapshot, savePosSnapshot, isSnapshotStale, getSnapshotAgeMs } from '@/lib/posIndexedDb';
 import { PosModifierGroup } from '@/types/pos';
+import { authenticatedFetch, API_BASE_URL } from '@/lib/api';
 
 export interface PosMenuItem {
   id: string;
@@ -69,11 +70,10 @@ export function usePosCachedMenu(): UsePosCachedMenuResult {
       }
 
       try {
-        const resp = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/menu/items`, {
+        const resp = await authenticatedFetch(`${API_BASE_URL}/menu/items`, {
           headers: {
             'Accept': 'application/json',
           },
-          credentials: 'include',
         });
 
         if (!resp.ok) {

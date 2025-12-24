@@ -1,0 +1,79 @@
+================================================================================
+ M7.4D NPS Endpoint Reproduction Results
+ Date: 2025-12-24
+================================================================================
+
+## Test Environment
+- API Server: http://localhost:3001
+- User: owner@tapas.demo.local (L5 - Owner role)
+- Password: Demo#123
+
+================================================================================
+TEST 1: NPS WITHOUT params (expect 400)
+================================================================================
+
+Request:
+  GET /feedback/analytics/nps-summary
+  Headers: Authorization: Bearer <jwt>
+
+Response:
+  Status: 400
+  Body: {
+    "status": "error",
+    "code": "BAD_REQUEST",
+    "message": "Request failed",
+    "requestId": "c22fe9d5-f035-4c1c-a0d9-fa0c3d0ef6e4",
+    "details": {
+      "validation": [
+        "from must be a valid ISO 8601 date string",
+        "to must be a valid ISO 8601 date string"
+      ]
+    }
+  }
+
+RESULT: ✓ CONFIRMED - 400 due to missing required params
+
+================================================================================
+TEST 2: NPS WITH params (expect 200)
+================================================================================
+
+Request:
+  GET /feedback/analytics/nps-summary?from=2025-11-24&to=2025-12-24
+  Headers: Authorization: Bearer <jwt>
+
+Response:
+  Status: 200
+  Body: {
+    "nps": 43,
+    "promoterCount": 114,
+    "passiveCount": 59,
+    "detractorCount": 27,
+    "totalCount": 200,
+    "promoterPct": 57,
+    "passivePct": 29.5,
+    "detractorPct": 13.5,
+    "avgScore": 8,
+    "period": {
+      "from": "2025-11-24T00:00:00.000Z",
+      "to": "2025-12-24T00:00:00.000Z"
+    },
+    "filters": {}
+  }
+
+RESULT: ✓ CONFIRMED - 200 with valid NPS data
+
+================================================================================
+CONCLUSION
+================================================================================
+
+Root Cause: The verifier script at scripts/verify-role-coverage.ts line 146
+calls the NPS endpoint WITHOUT the required `from` and `to` query parameters.
+
+The endpoint DTO (NpsSummaryQueryDto) requires:
+  - from: string (@IsDateString, REQUIRED)
+  - to: string (@IsDateString, REQUIRED)
+
+Fix: Add `params: { from: getDateDaysAgo(30), to: getTodayISO() }` to the
+NPS endpoint entry in the verifier script.
+
+================================================================================

@@ -2,6 +2,8 @@ import { prisma } from '@chefcloud/db';
 import * as argon2 from 'argon2';
 import { seedDemo, printDemoCredentials } from './demo/seedDemo';
 import { seedCatalog } from './demo/seedCatalog';
+import { seedOpenOrders } from './demo/seedOrders';
+import { seedComprehensive } from './demo/seedComprehensive';
 
 async function hashPassword(password: string): Promise<string> {
   return argon2.hash(password, {
@@ -752,6 +754,13 @@ async function main() {
 
   // ===== Demo Catalog (Menu & Inventory) =====
   await seedCatalog(prisma);
+
+  // ===== Demo Open Orders (V2.1.1) =====
+  await seedOpenOrders(prisma);
+
+  // ===== Comprehensive Demo Data (V2.1.2) =====
+  // Tables, Reservations, Completed Orders, Service Providers, Finance, Staff
+  await seedComprehensive(prisma);
 
   console.log('\n🎉 Seed completed successfully!');
   console.log('\n📝 Test Credentials:');

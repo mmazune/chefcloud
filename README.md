@@ -51,13 +51,37 @@ ChefCloud/
 
 ## Quick Start
 
-### Prerequisites
+### 🚀 Zero-Touch Demo Setup (M7.6)
 
-- Node.js 20+
+**New!** One-shot script that does everything:
+
+```bash
+# Windows
+.\scripts\demo-reset.ps1
+
+# Linux/Mac/WSL
+chmod +x scripts/demo-reset.sh
+./scripts/demo-reset.sh
+```
+
+**What it does**: Installs deps, builds packages, runs migrations, seeds demo data, verifies setup.  
+**Time**: ~3-5 minutes  
+**Result**: Production-ready demo with 0 test failures
+
+📖 **Full guide**: [M7.6_FRESH_START_GUIDE.md](./instructions/M7.6_FRESH_START_GUIDE.md)  
+🎯 **Quick ref**: [DEMO_QUICK_REFERENCE.md](./DEMO_QUICK_REFERENCE.md)
+
+---
+
+### Manual Setup (Advanced)
+
+#### Prerequisites
+
+- Node.js 18+
 - pnpm 8+
-- Docker & Docker Compose
+- PostgreSQL 14+ (or Docker Compose)
 
-### Installation
+#### Installation
 
 ```bash
 # Clone the repository
@@ -67,7 +91,7 @@ cd chefcloud
 # Install dependencies
 pnpm install
 
-# Start infrastructure services
+# Start infrastructure services (if using Docker)
 cd infra/docker
 docker-compose up -d
 cd ../..

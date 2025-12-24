@@ -24,7 +24,7 @@ export const DEMO_PASSWORD = 'Demo#123';
 // All Tapas users with consistent names and proper role levels
 // Role levels: L5=Owner, L4=Manager/Accountant, L3=Procurement/Stock/EventMgr, L2=Supervisor/Cashier/Chef, L1=Waiter/Bartender
 export const TAPAS_DEMO_USERS = [
-  { email: 'owner@tapas.demo.local', roleLevel: 'L5', firstName: 'Alice', lastName: 'Owner' },
+  { email: 'owner@tapas.demo.local', roleLevel: 'L5', firstName: 'Joshua', lastName: 'Owner' },
   { email: 'manager@tapas.demo.local', roleLevel: 'L4', firstName: 'Bob', lastName: 'Manager', pin: '1234' },
   { email: 'accountant@tapas.demo.local', roleLevel: 'L4', firstName: 'Carol', lastName: 'Accountant' },
   { email: 'procurement@tapas.demo.local', roleLevel: 'L3', firstName: 'Dan', lastName: 'Procurement' },
@@ -40,7 +40,7 @@ export const TAPAS_DEMO_USERS = [
 // All Cafesserie users (no eventmgr as requested)
 // Role levels: L5=Owner, L4=Manager/Accountant, L3=Procurement, L2=Supervisor/Cashier/Chef, L1=Waiter
 export const CAFESSERIE_DEMO_USERS = [
-  { email: 'owner@cafesserie.demo.local', roleLevel: 'L5', firstName: 'Laura', lastName: 'Owner' },
+  { email: 'owner@cafesserie.demo.local', roleLevel: 'L5', firstName: 'Joshua', lastName: 'Owner' },
   { email: 'manager@cafesserie.demo.local', roleLevel: 'L4', firstName: 'Mike', lastName: 'Manager', pin: '5678' },
   { email: 'accountant@cafesserie.demo.local', roleLevel: 'L4', firstName: 'Nina', lastName: 'Accountant' },
   { email: 'procurement@cafesserie.demo.local', roleLevel: 'L3', firstName: 'Oscar', lastName: 'Procurement' },

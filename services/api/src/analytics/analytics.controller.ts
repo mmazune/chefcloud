@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Controller, Get, Query, UseGuards, Req } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { SkipThrottle } from '@nestjs/throttler';
 import { AnalyticsService } from './analytics.service';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
@@ -10,6 +11,7 @@ import { BudgetService } from '../finance/budget.service';
 
 @Controller('analytics')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
+@SkipThrottle()
 export class AnalyticsController {
   constructor(
     private analyticsService: AnalyticsService,
@@ -26,13 +28,20 @@ export class AnalyticsController {
 
   @Get('top-items')
   @Roles('L3')
-  async getTopItems(@Req() req: any, @Query('limit') limit?: string): Promise<any> {
+  async getTopItems(
+    @Req() req: any,
+    @Query('limit') limit?: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+    @Query('branchId') branchId?: string,
+  ): Promise<any> {
     const limitNum = limit ? parseInt(limit, 10) : 10;
+    const effectiveBranchId = branchId || req.user.branchId;
 
     // Determine if user can see cost data
     const canSeeCost = await this.canUserSeeCostData(req.user);
 
-    return this.analyticsService.getTopItems(req.user.branchId, limitNum, canSeeCost);
+    return this.analyticsService.getTopItems(effectiveBranchId, limitNum, canSeeCost, from, to);
   }
 
   /**
@@ -262,5 +271,56 @@ export class AnalyticsController {
         })),
       } : null,
     };
+  }
+
+  /**
+   * GET /analytics/category-mix
+   * Get sales breakdown by category for dashboard charts
+   * RBAC: L3+ (Chef, Manager, Owner)
+   */
+  @Get('category-mix')
+  @Roles('L3', 'L4', 'L5')
+  async getCategoryMix(
+    @Req() req: any,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+    @Query('branchId') branchId?: string,
+  ): Promise<any> {
+    const effectiveBranchId = branchId || req.user.branchId;
+    return this.analyticsService.getCategoryMix(effectiveBranchId, from, to);
+  }
+
+  /**
+   * GET /analytics/payment-mix
+   * Get payment method breakdown for dashboard charts
+   * RBAC: L3+ (Chef, Manager, Owner)
+   */
+  @Get('payment-mix')
+  @Roles('L3', 'L4', 'L5')
+  async getPaymentMix(
+    @Req() req: any,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+    @Query('branchId') branchId?: string,
+  ): Promise<any> {
+    const effectiveBranchId = branchId || req.user.branchId;
+    return this.analyticsService.getPaymentMix(effectiveBranchId, from, to);
+  }
+
+  /**
+   * GET /analytics/peak-hours
+   * Get order distribution by hour for dashboard charts
+   * RBAC: L3+ (Chef, Manager, Owner)
+   */
+  @Get('peak-hours')
+  @Roles('L3', 'L4', 'L5')
+  async getPeakHours(
+    @Req() req: any,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+    @Query('branchId') branchId?: string,
+  ): Promise<any> {
+    const effectiveBranchId = branchId || req.user.branchId;
+    return this.analyticsService.getPeakHours(effectiveBranchId, from, to);
   }
 }

@@ -72,11 +72,16 @@ const TOKEN_EXPIRY_DAYS = 1; // 1 day expiry for MVP
  * Store auth token in cookie
  */
 export function setAuthToken(token: string): void {
+  console.log('[AUTH] Setting auth token, length:', token?.length);
   Cookies.set(AUTH_TOKEN_KEY, token, {
     expires: TOKEN_EXPIRY_DAYS,
-    sameSite: 'strict',
+    sameSite: 'lax', // Changed from 'strict' to 'lax' for better compatibility
     secure: process.env.NODE_ENV === 'production',
+    path: '/', // Ensure cookie is available on all paths
   });
+  // Verify cookie was set
+  const savedToken = Cookies.get(AUTH_TOKEN_KEY);
+  console.log('[AUTH] Cookie saved successfully:', !!savedToken, 'length:', savedToken?.length);
 }
 
 /**
@@ -104,25 +109,37 @@ export function isAuthenticated(): boolean {
  * Login with email and password
  */
 export async function login(credentials: LoginCredentials): Promise<AuthUser> {
-  const response = await apiClient.post<LoginResponse>('/auth/login', credentials);
-  const { access_token, user } = response.data;
-  setAuthToken(access_token);
-  
-  // Transform backend user format to frontend AuthUser format
-  return {
-    id: user.id,
-    email: user.email,
-    displayName: `${user.firstName} ${user.lastName}`,
-    roleLevel: user.roleLevel,
-    org: {
-      id: user.orgId,
-      name: '', // Will be populated by getCurrentUser
-    },
-    branch: user.branchId ? {
-      id: user.branchId,
-      name: '', // Will be populated by getCurrentUser
-    } : undefined,
-  };
+  try {
+    console.log('[Auth] Attempting login with:', credentials.email);
+    const response = await apiClient.post<LoginResponse>('/auth/login', credentials);
+    console.log('[Auth] Login successful:', response.data.user.email);
+    const { access_token, user } = response.data;
+    setAuthToken(access_token);
+    
+    // Transform backend user format to frontend AuthUser format
+    return {
+      id: user.id,
+      email: user.email,
+      displayName: `${user.firstName} ${user.lastName}`,
+      roleLevel: user.roleLevel,
+      org: {
+        id: user.orgId,
+        name: '', // Will be populated by getCurrentUser
+      },
+      branch: user.branchId ? {
+        id: user.branchId,
+        name: '', // Will be populated by getCurrentUser
+      } : undefined,
+    };
+  } catch (error: any) {
+    console.error('[Auth] Login error:', {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status,
+      code: error.code,
+    });
+    throw error;
+  }
 }
 
 /**

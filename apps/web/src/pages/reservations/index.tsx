@@ -6,6 +6,8 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useAuth } from '@/contexts/AuthContext';
+import { apiClient } from '@/lib/api';
 
 interface Reservation {
   id: string;
@@ -42,10 +44,11 @@ interface EventBooking {
   } | null;
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-
 export default function ReservationsPage() {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const branchId = user?.branch?.id;
+
   const [dateFrom, setDateFrom] = useState(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -57,46 +60,35 @@ export default function ReservationsPage() {
     return future.toISOString().split('T')[0];
   });
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
-  const branchId = 'branch-1';
 
   const { data: reservations = [], isLoading: reservationsLoading } = useQuery<Reservation[]>({
     queryKey: ['reservations', dateFrom, dateTo, statusFilter, branchId],
     queryFn: async () => {
-      const params = new URLSearchParams({
-        branchId,
+      const params: Record<string, string> = {
         from: new Date(dateFrom).toISOString(),
         to: new Date(dateTo).toISOString(),
-      });
-      if (statusFilter !== 'ALL') {
-        params.append('status', statusFilter);
-      }
-      const res = await fetch(`${API_URL}/reservations?${params}`, {
-        credentials: 'include',
-      });
-      if (!res.ok) throw new Error('Failed to fetch reservations');
-      return res.json();
+      };
+      if (branchId) params.branchId = branchId;
+      if (statusFilter !== 'ALL') params.status = statusFilter;
+      const res = await apiClient.get('/reservations', { params });
+      return res.data;
     },
+    enabled: !!user,
   });
 
   const { data: bookings = [], isLoading: bookingsLoading } = useQuery<EventBooking[]>({
     queryKey: ['bookings-list'],
     queryFn: async () => {
-      const res = await fetch(`${API_URL}/bookings/list`, {
-        credentials: 'include',
-      });
-      if (!res.ok) throw new Error('Failed to fetch bookings');
-      return res.json();
+      const res = await apiClient.get('/bookings/list');
+      return res.data;
     },
+    enabled: !!user,
   });
 
   const confirmMutation = useMutation({
     mutationFn: async (id: string) => {
-      const res = await fetch(`${API_URL}/reservations/${id}/confirm`, {
-        method: 'POST',
-        credentials: 'include',
-      });
-      if (!res.ok) throw new Error('Failed to confirm');
-      return res.json();
+      const res = await apiClient.post(`/reservations/${id}/confirm`);
+      return res.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reservations'] });

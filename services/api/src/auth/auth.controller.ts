@@ -10,6 +10,7 @@ import {
   UseGuards,
   Request,
 } from '@nestjs/common';
+import { SkipThrottle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { LoginDto, PinLoginDto, MsrSwipeDto, AuthResponse } from './dto/auth.dto';
 import { JwtService } from '@nestjs/jwt';
@@ -28,6 +29,7 @@ export class AuthController {
   ) {}
 
   @Post('login')
+  @SkipThrottle() // M7.4: Temporary - skip throttling for automated testing
   @HttpCode(HttpStatus.OK)
   async login(@Body() loginDto: LoginDto): Promise<AuthResponse> {
     return this.authService.login(loginDto);

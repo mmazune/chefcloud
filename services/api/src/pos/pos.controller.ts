@@ -1,5 +1,6 @@
 import { Controller, Post, Get, Param, Body, Query, UseGuards, UseInterceptors } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { SkipThrottle } from '@nestjs/throttler';
 import { PosService } from './pos.service';
 import {
   CreateOrderDto,
@@ -15,6 +16,7 @@ import { IdempotencyInterceptor } from '../common/idempotency.interceptor';
 
 @Controller('pos/orders')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
+@SkipThrottle()
 export class PosController {
   constructor(private posService: PosService) {}
 

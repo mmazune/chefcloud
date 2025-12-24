@@ -1,0 +1,51 @@
+# M7.2A Verification Output - BEFORE FIXES
+
+**Date:** 2025-12-23
+**Status:** API NOT RUNNING - Need to start API and run verification
+
+## Instructions to Run
+
+1. Start API:
+```bash
+cd services/api
+pnpm run start:dev
+```
+
+2. Wait for API to be ready (15-20 seconds)
+
+3. Run verification script:
+```bash
+cd scripts
+ts-node verify-demo-health.ts > ../instructions/M7.2A_VERIFY_OUTPUT_BEFORE.txt
+```
+
+4. Call /debug/demo-health:
+```bash
+# Org-wide (no branchId)
+curl -H "Authorization: Bearer $TOKEN" \
+  "http://localhost:3001/debug/demo-health?from=2024-11-23T00:00:00Z&to=2025-12-23T23:59:59Z"
+
+# With branchId=main-branch
+curl -H "Authorization: Bearer $TOKEN" \
+  "http://localhost:3001/debug/demo-health?from=2024-11-23T00:00:00Z&to=2025-12-23T23:59:59Z&branchId=main-branch"
+```
+
+## Expected Issues to Document
+
+Based on M7 guide, likely root causes:
+1. **Active branch mismatch** - UI uses wrong branchId
+2. **Date range mismatch** - Seeded data outside UI default range
+3. **User branchId NULL** - Backend can't filter properly
+4. **Orders missing orderItems/payments** - Charts show empty
+
+## Demo Org Context
+
+- **Org Slug:** `demo-restaurant`
+- **Org ID:** (to be retrieved from /auth/me)
+- **Branch ID:** `main-branch`
+- **Owner:** `owner@demo.local` / `Owner#123`
+- **Seeded Date Range:** Last 30-90 days from anchor (needs verification)
+
+---
+
+*This file will be updated with actual API responses once the server is running.*

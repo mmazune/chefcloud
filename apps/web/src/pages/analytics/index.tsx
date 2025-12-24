@@ -27,6 +27,8 @@ import { FranchiseBudgetTable } from '@/components/analytics/franchise/Franchise
 import { FranchiseVarianceCard } from '@/components/analytics/franchise/FranchiseVarianceCard';
 import { FranchiseForecastCard } from '@/components/analytics/franchise/FranchiseForecastCard';
 import { FranchiseMultiMonthChart } from '@/components/analytics/franchise/FranchiseMultiMonthChart';
+import { useAuth } from '@/contexts/AuthContext';
+import { apiClient } from '@/lib/api';
 
 interface DailyMetricPoint {
   date: string;
@@ -35,8 +37,6 @@ interface DailyMetricPoint {
   ordersCount?: number;
   nps?: number | null;
 }
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
 // Helper to get date in YYYY-MM-DD format
 const formatDateForInput = (date: Date): string => {
@@ -129,6 +129,10 @@ export default function AnalyticsPage() {
   // View toggle state
   const [view, setView] = useState<'overview' | 'branches' | 'financial' | 'risk' | 'franchise'>('overview');
 
+  // Get user context for branchId
+  const { user } = useAuth();
+  const branchId = user?.branch?.id;
+
   // Date range state
   const [from, setFrom] = useState<string>(formatDateForInput(getDaysAgo(30)));
   const [to, setTo] = useState<string>(formatDateForInput(new Date()));
@@ -141,94 +145,76 @@ export default function AnalyticsPage() {
   // Franchise view mode (E22-FRANCHISE-FE-S2)
   const [franchiseViewMode, setFranchiseViewMode] = useState<'current' | 'multi'>('current');
 
-  // TODO: Get from user auth context
-  const branchId = 'branch-1';
-
   // Fetch daily metrics for overview
   const { data: metrics = [], isLoading } = useQuery<DailyMetricPoint[]>({
     queryKey: ['analytics-daily', from, to, branchId],
     queryFn: async () => {
-      const params = new URLSearchParams({
+      const params: Record<string, string> = {
         from: new Date(from).toISOString(),
         to: new Date(to).toISOString(),
-        branchId,
-      });
-      const res = await fetch(`${API_URL}/analytics/daily-metrics?${params.toString()}`, {
-        credentials: 'include',
-      });
-      if (!res.ok) throw new Error('Failed to load analytics');
-      return res.json();
+      };
+      if (branchId) params.branchId = branchId;
+      const res = await apiClient.get('/analytics/daily-metrics', { params });
+      return res.data;
     },
-    enabled: view === 'overview',
+    enabled: view === 'overview' && !!user,
   });
 
   // Fetch branch metrics for comparison view
   const { data: branchMetrics = [], isLoading: isLoadingBranches } = useQuery<BranchMetric[]>({
     queryKey: ['analytics-branches', from, to],
     queryFn: async () => {
-      const params = new URLSearchParams({
+      const params = {
         from: new Date(from).toISOString(),
         to: new Date(to).toISOString(),
-      });
-      const res = await fetch(`${API_URL}/franchise/branch-metrics?${params.toString()}`, {
-        credentials: 'include',
-      });
-      if (!res.ok) throw new Error('Failed to load branch metrics');
-      return res.json();
+      };
+      const res = await apiClient.get('/franchise/branch-metrics', { params });
+      return res.data;
     },
-    enabled: view === 'branches',
+    enabled: view === 'branches' && !!user,
   });
 
   // Fetch financial summary for financial view
   const { data: financialSummary, isLoading: financialLoading } = useQuery<FinancialSummary>({
     queryKey: ['analytics-financial', from, to, branchId],
     queryFn: async () => {
-      const params = new URLSearchParams({
+      const params: Record<string, string> = {
         from: new Date(from).toISOString(),
         to: new Date(to).toISOString(),
-        branchId,
-      });
-      const res = await fetch(`${API_URL}/analytics/financial-summary?${params.toString()}`, {
-        credentials: 'include',
-      });
-      if (!res.ok) throw new Error('Failed to load financial summary');
-      return res.json();
+      };
+      if (branchId) params.branchId = branchId;
+      const res = await apiClient.get('/analytics/financial-summary', { params });
+      return res.data;
     },
-    enabled: view === 'financial',
+    enabled: view === 'financial' && !!user,
   });
 
   // Fetch risk summary for risk view
   const { data: riskSummary, isLoading: riskSummaryLoading } = useQuery<RiskSummary>({
     queryKey: ['analytics-risk-summary', from, to],
     queryFn: async () => {
-      const params = new URLSearchParams({
+      const params = {
         from: new Date(from).toISOString(),
         to: new Date(to).toISOString(),
-      });
-      const res = await fetch(`${API_URL}/analytics/risk-summary?${params.toString()}`, {
-        credentials: 'include',
-      });
-      if (!res.ok) throw new Error('Failed to load risk summary');
-      return res.json();
+      };
+      const res = await apiClient.get('/analytics/risk-summary', { params });
+      return res.data;
     },
-    enabled: view === 'risk',
+    enabled: view === 'risk' && !!user,
   });
 
   // Fetch risk events for risk view
   const { data: riskEvents = [], isLoading: riskEventsLoading } = useQuery<RiskEvent[]>({
     queryKey: ['analytics-risk-events', from, to],
     queryFn: async () => {
-      const params = new URLSearchParams({
+      const params = {
         from: new Date(from).toISOString(),
         to: new Date(to).toISOString(),
-      });
-      const res = await fetch(`${API_URL}/analytics/risk-events?${params.toString()}`, {
-        credentials: 'include',
-      });
-      if (!res.ok) throw new Error('Failed to load risk events');
-      return res.json();
+      };
+      const res = await apiClient.get('/analytics/risk-events', { params });
+      return res.data;
     },
-    enabled: view === 'risk',
+    enabled: view === 'risk' && !!user,
   });
 
   // Fetch franchise analytics data (E22-FRANCHISE-FE-S1)

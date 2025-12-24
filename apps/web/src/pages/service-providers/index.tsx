@@ -7,6 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Drawer } from '@/components/ui/drawer';
+import { useAuth } from '@/contexts/AuthContext';
+import { apiClient } from '@/lib/api';
 
 interface ServiceProvider {
   id: string;
@@ -53,8 +55,6 @@ interface ServiceReminder {
   branchName?: string | null;
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-
 export default function ServiceProvidersPage() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
@@ -63,59 +63,56 @@ export default function ServiceProvidersPage() {
   const [editingProvider, setEditingProvider] = useState<ServiceProvider | null>(null);
   const [editForm, setEditForm] = useState<Partial<ServiceProvider> & { activeContract?: Partial<ServiceContract> }>({});
 
-  // TODO: Get from user context
-  const branchId = 'branch-1';
+  // Get branchId from user context
+  const { user } = useAuth();
+  const branchId = user?.branch?.id;
 
   // Fetch providers
   const { data: providers = [], isLoading: providersLoading } = useQuery<ServiceProvider[]>({
     queryKey: ['service-providers', branchId],
     queryFn: async () => {
-      const params = new URLSearchParams({ branchId });
-      const res = await fetch(`${API_URL}/service-providers?${params}`, {
-        credentials: 'include',
-      });
-      if (!res.ok) throw new Error('Failed to fetch providers');
-      return res.json();
+      const params: Record<string, string> = {};
+      if (branchId) params.branchId = branchId;
+      const res = await apiClient.get('/service-providers', { params });
+      return res.data;
     },
+    enabled: !!user,
   });
 
   // Fetch contracts
   const { data: contracts = [] } = useQuery<ServiceContract[]>({
     queryKey: ['service-contracts', branchId],
     queryFn: async () => {
-      const params = new URLSearchParams({ branchId });
-      const res = await fetch(`${API_URL}/service-providers/contracts?${params}`, {
-        credentials: 'include',
-      });
-      if (!res.ok) throw new Error('Failed to fetch contracts');
-      return res.json();
+      const params: Record<string, string> = {};
+      if (branchId) params.branchId = branchId;
+      const res = await apiClient.get('/service-providers/contracts', { params });
+      return res.data;
     },
+    enabled: !!user,
   });
 
   // Fetch reminder summary
   const { data: reminderSummary } = useQuery<ReminderSummary>({
     queryKey: ['service-reminders-summary', branchId],
     queryFn: async () => {
-      const params = new URLSearchParams({ branchId });
-      const res = await fetch(`${API_URL}/finance/service-reminders/summary?${params}`, {
-        credentials: 'include',
-      });
-      if (!res.ok) throw new Error('Failed to fetch summary');
-      return res.json();
+      const params: Record<string, string> = {};
+      if (branchId) params.branchId = branchId;
+      const res = await apiClient.get('/finance/service-reminders/summary', { params });
+      return res.data;
     },
+    enabled: !!user,
   });
 
   // Fetch reminders
   const { data: reminders = [] } = useQuery<ServiceReminder[]>({
     queryKey: ['service-reminders', branchId],
     queryFn: async () => {
-      const params = new URLSearchParams({ branchId });
-      const res = await fetch(`${API_URL}/finance/service-reminders?${params}`, {
-        credentials: 'include',
-      });
-      if (!res.ok) throw new Error('Failed to fetch reminders');
-      return res.json();
+      const params: Record<string, string> = {};
+      if (branchId) params.branchId = branchId;
+      const res = await apiClient.get('/finance/service-reminders', { params });
+      return res.data;
     },
+    enabled: !!user,
   });
 
   // Update provider mutation
