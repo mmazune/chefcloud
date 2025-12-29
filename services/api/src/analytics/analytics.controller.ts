@@ -1,23 +1,23 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Controller, Get, Query, UseGuards, Req } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { SkipThrottle } from '@nestjs/throttler';
 import { AnalyticsService } from './analytics.service';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 import { PrismaService } from '../prisma.service';
 import { AccountingService } from '../accounting/accounting.service';
 import { BudgetService } from '../finance/budget.service';
-import { InventoryAnalyticsService } from '../inventory/inventory-analytics.service';
 
 @Controller('analytics')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
+@SkipThrottle()
 export class AnalyticsController {
   constructor(
     private analyticsService: AnalyticsService,
     private prisma: PrismaService,
     private accountingService: AccountingService,
     private budgetService: BudgetService,
-    private inventoryAnalyticsService: InventoryAnalyticsService,
   ) {}
 
   @Get('daily')
@@ -28,13 +28,20 @@ export class AnalyticsController {
 
   @Get('top-items')
   @Roles('L3')
-  async getTopItems(@Req() req: any, @Query('limit') limit?: string): Promise<any> {
+  async getTopItems(
+    @Req() req: any,
+    @Query('limit') limit?: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+    @Query('branchId') branchId?: string,
+  ): Promise<any> {
     const limitNum = limit ? parseInt(limit, 10) : 10;
+    const effectiveBranchId = branchId || req.user.branchId;
 
     // Determine if user can see cost data
     const canSeeCost = await this.canUserSeeCostData(req.user);
 
-    return this.analyticsService.getTopItems(req.user.branchId, limitNum, canSeeCost);
+    return this.analyticsService.getTopItems(effectiveBranchId, limitNum, canSeeCost, from, to);
   }
 
   /**
@@ -267,123 +274,53 @@ export class AnalyticsController {
   }
 
   /**
-   * GET /analytics/branch-ranking
-   * Get branch performance ranking for multi-branch orgs (e.g., Cafesserie)
-   * Returns branches ranked by revenue with growth metrics
-   * RBAC: L4+ (Manager, Owner, Accountant)
-   * M3: For populating branch leaderboard dashboards
+   * GET /analytics/category-mix
+   * Get sales breakdown by category for dashboard charts
+   * RBAC: L3+ (Chef, Manager, Owner)
    */
-  @Get('branch-ranking')
-  @Roles('L4', 'L5', 'ACCOUNTANT')
-  async getBranchRanking(
+  @Get('category-mix')
+  @Roles('L3', 'L4', 'L5')
+  async getCategoryMix(
     @Req() req: any,
     @Query('from') from?: string,
     @Query('to') to?: string,
+    @Query('branchId') branchId?: string,
   ): Promise<any> {
-    const toDate = to ? new Date(to) : new Date();
-    const fromDate = from
-      ? new Date(from)
-      : new Date(toDate.getTime() - 30 * 24 * 60 * 60 * 1000); // default last 30 days
-
-    return this.analyticsService.getBranchRanking({
-      orgId: req.user.orgId,
-      from: fromDate,
-      to: toDate,
-    });
+    const effectiveBranchId = branchId || req.user.branchId;
+    return this.analyticsService.getCategoryMix(effectiveBranchId, from, to);
   }
 
   /**
-   * GET /analytics/cogs-timeseries
-   * Get COGS (Cost of Goods Sold) timeseries
-   * M4: For inventory cost tracking and gross margin analysis
-   * RBAC: L3+ (Can see cost data)
+   * GET /analytics/payment-mix
+   * Get payment method breakdown for dashboard charts
+   * RBAC: L3+ (Chef, Manager, Owner)
    */
-  @Get('cogs-timeseries')
-  @Roles('L3')
-  async getCOGSTimeseries(
+  @Get('payment-mix')
+  @Roles('L3', 'L4', 'L5')
+  async getPaymentMix(
     @Req() req: any,
-    @Query('branchId') branchId?: string,
     @Query('from') from?: string,
     @Query('to') to?: string,
+    @Query('branchId') branchId?: string,
   ): Promise<any> {
-    const canSeeCost = await this.canUserSeeCostData(req.user);
-    if (!canSeeCost) {
-      return { error: 'Unauthorized to view cost data' };
-    }
-
-    const targetBranchId = branchId || req.user.branchId;
-    const toDate = to ? new Date(to) : new Date();
-    const fromDate = from
-      ? new Date(from)
-      : new Date(toDate.getTime() - 30 * 24 * 60 * 60 * 1000); // default last 30 days
-
-    // If requesting org-wide and user has access
-    if (branchId === 'org' && (req.user.roleLevel === 'L5' || req.user.roleLevel === 'L4')) {
-      return this.inventoryAnalyticsService.getOrgCOGSTimeseries(
-        req.user.orgId,
-        fromDate,
-        toDate,
-      );
-    }
-
-    return this.inventoryAnalyticsService.getCOGSTimeseries(
-      targetBranchId,
-      fromDate,
-      toDate,
-    );
+    const effectiveBranchId = branchId || req.user.branchId;
+    return this.analyticsService.getPaymentMix(effectiveBranchId, from, to);
   }
 
   /**
-   * GET /analytics/stock-valuation
-   * Get stock valuation by category
-   * M4: For inventory value tracking
-   * RBAC: L3+ (Can see cost data)
+   * GET /analytics/peak-hours
+   * Get order distribution by hour for dashboard charts
+   * RBAC: L3+ (Chef, Manager, Owner)
    */
-  @Get('stock-valuation')
-  @Roles('L3')
-  async getStockValuation(
+  @Get('peak-hours')
+  @Roles('L3', 'L4', 'L5')
+  async getPeakHours(
     @Req() req: any,
-    @Query('branchId') branchId?: string,
-    @Query('asOf') asOf?: string,
-  ): Promise<any> {
-    const canSeeCost = await this.canUserSeeCostData(req.user);
-    if (!canSeeCost) {
-      return { error: 'Unauthorized to view cost data' };
-    }
-
-    const targetBranchId = branchId || req.user.branchId;
-    const asOfDate = asOf ? new Date(asOf) : new Date();
-
-    return this.inventoryAnalyticsService.getStockValuation(
-      targetBranchId,
-      asOfDate,
-    );
-  }
-
-  /**
-   * GET /analytics/wastage-summary
-   * Get wastage summary
-   * M4: For wastage cost tracking
-   * RBAC: L3+
-   */
-  @Get('wastage-summary')
-  @Roles('L3')
-  async getWastageSummary(
-    @Req() req: any,
-    @Query('branchId') branchId?: string,
     @Query('from') from?: string,
     @Query('to') to?: string,
+    @Query('branchId') branchId?: string,
   ): Promise<any> {
-    const targetBranchId = branchId || req.user.branchId;
-    const toDate = to ? new Date(to) : new Date();
-    const fromDate = from
-      ? new Date(from)
-      : new Date(toDate.getTime() - 30 * 24 * 60 * 60 * 1000); // default last 30 days
-
-    return this.inventoryAnalyticsService.getWastageSummary(
-      targetBranchId,
-      fromDate,
-      toDate,
-    );
+    const effectiveBranchId = branchId || req.user.branchId;
+    return this.analyticsService.getPeakHours(effectiveBranchId, from, to);
   }
 }

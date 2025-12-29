@@ -9,7 +9,7 @@
       "unitCost": 45000,
       "reorderLevel": 2,
       "reorderQty": 5,
-      "initialStock": 10
+      "initialStock": 0
     },
     {
       "sku": "CAF-INV-COFF-0002",
@@ -19,7 +19,7 @@
       "unitCost": 48000,
       "reorderLevel": 1,
       "reorderQty": 2,
-      "initialStock": 3
+      "initialStock": 0.3
     },
     {
       "sku": "CAF-INV-DARY-0001",
@@ -29,7 +29,7 @@
       "unitCost": 3500,
       "reorderLevel": 10,
       "reorderQty": 30,
-      "initialStock": 40
+      "initialStock": 1
     },
     {
       "sku": "CAF-INV-DARY-0002",
@@ -39,7 +39,7 @@
       "unitCost": 8000,
       "reorderLevel": 5,
       "reorderQty": 10,
-      "initialStock": 12
+      "initialStock": 3.5
     },
     {
       "sku": "CAF-INV-DARY-0003",
@@ -49,7 +49,7 @@
       "unitCost": 9000,
       "reorderLevel": 3,
       "reorderQty": 8,
-      "initialStock": 8
+      "initialStock": 1.8
     },
     {
       "sku": "CAF-INV-DARY-0004",
@@ -59,7 +59,7 @@
       "unitCost": 12000,
       "reorderLevel": 3,
       "reorderQty": 5,
-      "initialStock": 6
+      "initialStock": 1.5
     },
     {
       "sku": "CAF-INV-DARY-0005",
@@ -69,7 +69,7 @@
       "unitCost": 16000,
       "reorderLevel": 2,
       "reorderQty": 5,
-      "initialStock": 5
+      "initialStock": 1.8
     },
     {
       "sku": "CAF-INV-DARY-0006",
@@ -79,7 +79,7 @@
       "unitCost": 18000,
       "reorderLevel": 2,
       "reorderQty": 3,
-      "initialStock": 4
+      "initialStock": 1.6
     },
     {
       "sku": "CAF-INV-DARY-0007",
@@ -89,7 +89,7 @@
       "unitCost": 22000,
       "reorderLevel": 1,
       "reorderQty": 2,
-      "initialStock": 2
+      "initialStock": 0.7
     },
     {
       "sku": "CAF-INV-DARY-0008",
@@ -99,7 +99,7 @@
       "unitCost": 20000,
       "reorderLevel": 1,
       "reorderQty": 2,
-      "initialStock": 2
+      "initialStock": 0.6
     },
     {
       "sku": "CAF-INV-DARY-0009",
@@ -109,7 +109,7 @@
       "unitCost": 15000,
       "reorderLevel": 2,
       "reorderQty": 4,
-      "initialStock": 5
+      "initialStock": 1
     },
     {
       "sku": "CAF-INV-DARY-0010",
@@ -119,7 +119,7 @@
       "unitCost": 6000,
       "reorderLevel": 3,
       "reorderQty": 5,
-      "initialStock": 6
+      "initialStock": 2.7
     },
     {
       "sku": "CAF-INV-DARY-0011",
@@ -129,7 +129,7 @@
       "unitCost": 13000,
       "reorderLevel": 3,
       "reorderQty": 5,
-      "initialStock": 8
+      "initialStock": 2.4
     },
     {
       "sku": "CAF-INV-SYRP-0001",
@@ -139,7 +139,7 @@
       "unitCost": 12000,
       "reorderLevel": 2,
       "reorderQty": 6,
-      "initialStock": 6
+      "initialStock": 1.4
     },
     {
       "sku": "CAF-INV-SYRP-0002",
@@ -149,7 +149,7 @@
       "unitCost": 12000,
       "reorderLevel": 2,
       "reorderQty": 6,
-      "initialStock": 6
+      "initialStock": 8
     },
     {
       "sku": "CAF-INV-SYRP-0003",
@@ -159,7 +159,7 @@
       "unitCost": 13000,
       "reorderLevel": 1,
       "reorderQty": 4,
-      "initialStock": 4
+      "initialStock": 2
     },
     {
       "sku": "CAF-INV-SYRP-0004",
@@ -169,7 +169,7 @@
       "unitCost": 11000,
       "reorderLevel": 2,
       "reorderQty": 5,
-      "initialStock": 5
+      "initialStock": 6
     },
     {
       "sku": "CAF-INV-SYRP-0005",
@@ -179,7 +179,7 @@
       "unitCost": 12000,
       "reorderLevel": 1,
       "reorderQty": 3,
-      "initialStock": 3
+      "initialStock": 4
     },
     {
       "sku": "CAF-INV-SYRP-0006",
@@ -189,7 +189,7 @@
       "unitCost": 25000,
       "reorderLevel": 1,
       "reorderQty": 2,
-      "initialStock": 3
+      "initialStock": 2
     },
     {
       "sku": "CAF-INV-TEA-0001",
@@ -209,7 +209,7 @@
       "unitCost": 9000,
       "reorderLevel": 2,
       "reorderQty": 5,
-      "initialStock": 5
+      "initialStock": 8
     },
     {
       "sku": "CAF-INV-TEA-0003",
@@ -219,7 +219,7 @@
       "unitCost": 9500,
       "reorderLevel": 2,
       "reorderQty": 5,
-      "initialStock": 5
+      "initialStock": 4
     },
     {
       "sku": "CAF-INV-TEA-0004",
@@ -229,7 +229,7 @@
       "unitCost": 10000,
       "reorderLevel": 1,
       "reorderQty": 3,
-      "initialStock": 4
+      "initialStock": 3
     },
     {
       "sku": "CAF-INV-TEA-0005",
@@ -239,7 +239,7 @@
       "unitCost": 9000,
       "reorderLevel": 1,
       "reorderQty": 3,
-      "initialStock": 3
+      "initialStock": 4
     },
     {
       "sku": "CAF-INV-BAKF-0001",
@@ -249,7 +249,7 @@
       "unitCost": 3000,
       "reorderLevel": 10,
       "reorderQty": 25,
-      "initialStock": 30
+      "initialStock": 20
     },
     {
       "sku": "CAF-INV-BAKF-0002",
@@ -259,7 +259,7 @@
       "unitCost": 3500,
       "reorderLevel": 10,
       "reorderQty": 20,
-      "initialStock": 25
+      "initialStock": 30
     },
     {
       "sku": "CAF-INV-BAKF-0003",
@@ -269,7 +269,7 @@
       "unitCost": 4000,
       "reorderLevel": 5,
       "reorderQty": 10,
-      "initialStock": 12
+      "initialStock": 20
     },
     {
       "sku": "CAF-INV-BAKF-0004",
@@ -279,7 +279,7 @@
       "unitCost": 5000,
       "reorderLevel": 2,
       "reorderQty": 5,
-      "initialStock": 5
+      "initialStock": 4
     },
     {
       "sku": "CAF-INV-BAKF-0005",
@@ -299,7 +299,7 @@
       "unitCost": 18000,
       "reorderLevel": 2,
       "reorderQty": 5,
-      "initialStock": 5
+      "initialStock": 8
     },
     {
       "sku": "CAF-INV-BAKF-0007",
@@ -309,7 +309,7 @@
       "unitCost": 8000,
       "reorderLevel": 1,
       "reorderQty": 2,
-      "initialStock": 3
+      "initialStock": 2
     },
     {
       "sku": "CAF-INV-BAKF-0008",
@@ -319,7 +319,7 @@
       "unitCost": 12000,
       "reorderLevel": 1,
       "reorderQty": 2,
-      "initialStock": 2
+      "initialStock": 3
     },
     {
       "sku": "CAF-INV-BRED-0001",
@@ -329,7 +329,7 @@
       "unitCost": 4000,
       "reorderLevel": 10,
       "reorderQty": 20,
-      "initialStock": 25
+      "initialStock": 40
     },
     {
       "sku": "CAF-INV-BRED-0002",
@@ -339,7 +339,7 @@
       "unitCost": 4500,
       "reorderLevel": 8,
       "reorderQty": 15,
-      "initialStock": 20
+      "initialStock": 16
     },
     {
       "sku": "CAF-INV-BRED-0003",
@@ -359,7 +359,7 @@
       "unitCost": 1500,
       "reorderLevel": 15,
       "reorderQty": 30,
-      "initialStock": 40
+      "initialStock": 60
     },
     {
       "sku": "CAF-INV-BRED-0005",
@@ -379,7 +379,7 @@
       "unitCost": 7500,
       "reorderLevel": 2,
       "reorderQty": 4,
-      "initialStock": 5
+      "initialStock": 6
     },
     {
       "sku": "CAF-INV-PROD-0001",
@@ -389,7 +389,7 @@
       "unitCost": 3000,
       "reorderLevel": 5,
       "reorderQty": 10,
-      "initialStock": 12
+      "initialStock": 20
     },
     {
       "sku": "CAF-INV-PROD-0002",
@@ -399,7 +399,7 @@
       "unitCost": 2500,
       "reorderLevel": 5,
       "reorderQty": 10,
-      "initialStock": 15
+      "initialStock": 10
     },
     {
       "sku": "CAF-INV-PROD-0003",
@@ -409,7 +409,7 @@
       "unitCost": 3000,
       "reorderLevel": 3,
       "reorderQty": 8,
-      "initialStock": 10
+      "initialStock": 9
     },
     {
       "sku": "CAF-INV-PROD-0004",
@@ -419,7 +419,7 @@
       "unitCost": 1500,
       "reorderLevel": 10,
       "reorderQty": 20,
-      "initialStock": 25
+      "initialStock": 40
     },
     {
       "sku": "CAF-INV-PROD-0005",
@@ -429,7 +429,7 @@
       "unitCost": 4000,
       "reorderLevel": 3,
       "reorderQty": 6,
-      "initialStock": 8
+      "initialStock": 6
     },
     {
       "sku": "CAF-INV-PROD-0006",
@@ -439,7 +439,7 @@
       "unitCost": 2500,
       "reorderLevel": 3,
       "reorderQty": 8,
-      "initialStock": 10
+      "initialStock": 9
     },
     {
       "sku": "CAF-INV-PROD-0007",
@@ -449,7 +449,7 @@
       "unitCost": 2000,
       "reorderLevel": 5,
       "reorderQty": 10,
-      "initialStock": 15
+      "initialStock": 20
     },
     {
       "sku": "CAF-INV-FRUT-0001",
@@ -459,7 +459,7 @@
       "unitCost": 3000,
       "reorderLevel": 5,
       "reorderQty": 10,
-      "initialStock": 15
+      "initialStock": 10
     },
     {
       "sku": "CAF-INV-FRUT-0002",
@@ -489,7 +489,7 @@
       "unitCost": 4000,
       "reorderLevel": 5,
       "reorderQty": 10,
-      "initialStock": 12
+      "initialStock": 10
     },
     {
       "sku": "CAF-INV-FRUT-0005",
@@ -499,7 +499,7 @@
       "unitCost": 5000,
       "reorderLevel": 3,
       "reorderQty": 8,
-      "initialStock": 10
+      "initialStock": 9
     },
     {
       "sku": "CAF-INV-FRUT-0006",
@@ -509,7 +509,7 @@
       "unitCost": 3500,
       "reorderLevel": 3,
       "reorderQty": 8,
-      "initialStock": 10
+      "initialStock": 12
     },
     {
       "sku": "CAF-INV-FRUT-0007",
@@ -519,7 +519,7 @@
       "unitCost": 6000,
       "reorderLevel": 2,
       "reorderQty": 5,
-      "initialStock": 6
+      "initialStock": 4
     },
     {
       "sku": "CAF-INV-FRUT-0008",
@@ -529,7 +529,7 @@
       "unitCost": 5000,
       "reorderLevel": 2,
       "reorderQty": 5,
-      "initialStock": 5
+      "initialStock": 6
     },
     {
       "sku": "CAF-INV-FRUT-0009",
@@ -539,7 +539,7 @@
       "unitCost": 3500,
       "reorderLevel": 3,
       "reorderQty": 5,
-      "initialStock": 8
+      "initialStock": 12
     },
     {
       "sku": "CAF-INV-PROT-0001",
@@ -549,7 +549,7 @@
       "unitCost": 18000,
       "reorderLevel": 3,
       "reorderQty": 8,
-      "initialStock": 10
+      "initialStock": 6
     },
     {
       "sku": "CAF-INV-PROT-0002",
@@ -569,7 +569,7 @@
       "unitCost": 28000,
       "reorderLevel": 2,
       "reorderQty": 5,
-      "initialStock": 6
+      "initialStock": 8
     },
     {
       "sku": "CAF-INV-PROT-0004",
@@ -579,7 +579,7 @@
       "unitCost": 8000,
       "reorderLevel": 5,
       "reorderQty": 12,
-      "initialStock": 15
+      "initialStock": 10
     },
     {
       "sku": "CAF-INV-PROT-0005",
@@ -589,7 +589,7 @@
       "unitCost": 45000,
       "reorderLevel": 1,
       "reorderQty": 2,
-      "initialStock": 2
+      "initialStock": 3
     },
     {
       "sku": "CAF-INV-COND-0001",
@@ -599,7 +599,7 @@
       "unitCost": 8000,
       "reorderLevel": 2,
       "reorderQty": 5,
-      "initialStock": 6
+      "initialStock": 8
     },
     {
       "sku": "CAF-INV-COND-0002",
@@ -609,7 +609,7 @@
       "unitCost": 7000,
       "reorderLevel": 2,
       "reorderQty": 4,
-      "initialStock": 5
+      "initialStock": 4
     },
     {
       "sku": "CAF-INV-COND-0003",
@@ -619,7 +619,7 @@
       "unitCost": 18000,
       "reorderLevel": 2,
       "reorderQty": 4,
-      "initialStock": 5
+      "initialStock": 6
     },
     {
       "sku": "CAF-INV-COND-0004",
@@ -629,7 +629,7 @@
       "unitCost": 12000,
       "reorderLevel": 1,
       "reorderQty": 3,
-      "initialStock": 3
+      "initialStock": 4
     },
     {
       "sku": "CAF-INV-COND-0005",
@@ -639,7 +639,7 @@
       "unitCost": 15000,
       "reorderLevel": 1,
       "reorderQty": 3,
-      "initialStock": 3
+      "initialStock": 2
     },
     {
       "sku": "CAF-INV-COND-0006",
@@ -649,7 +649,7 @@
       "unitCost": 1000,
       "reorderLevel": 3,
       "reorderQty": 5,
-      "initialStock": 8
+      "initialStock": 9
     },
     {
       "sku": "CAF-INV-COND-0007",
@@ -659,7 +659,7 @@
       "unitCost": 20000,
       "reorderLevel": 1,
       "reorderQty": 2,
-      "initialStock": 2
+      "initialStock": 4
     },
     {
       "sku": "CAF-INV-BEV-0001",
@@ -669,7 +669,7 @@
       "unitCost": 18000,
       "reorderLevel": 2,
       "reorderQty": 5,
-      "initialStock": 8
+      "initialStock": 4
     },
     {
       "sku": "CAF-INV-BEV-0002",
@@ -699,7 +699,7 @@
       "unitCost": 12000,
       "reorderLevel": 3,
       "reorderQty": 8,
-      "initialStock": 10
+      "initialStock": 6
     },
     {
       "sku": "CAF-INV-BEV-0005",
@@ -709,7 +709,7 @@
       "unitCost": 8000,
       "reorderLevel": 3,
       "reorderQty": 8,
-      "initialStock": 10
+      "initialStock": 9
     },
     {
       "sku": "CAF-INV-BEV-0006",
@@ -729,7 +729,7 @@
       "unitCost": 15000,
       "reorderLevel": 5,
       "reorderQty": 10,
-      "initialStock": 15
+      "initialStock": 10
     },
     {
       "sku": "CAF-INV-PKG-0002",
@@ -749,7 +749,7 @@
       "unitCost": 8000,
       "reorderLevel": 5,
       "reorderQty": 10,
-      "initialStock": 12
+      "initialStock": 20
     },
     {
       "sku": "CAF-INV-PKG-0004",
@@ -759,7 +759,7 @@
       "unitCost": 12000,
       "reorderLevel": 3,
       "reorderQty": 8,
-      "initialStock": 10
+      "initialStock": 6
     },
     {
       "sku": "CAF-INV-PKG-0005",
@@ -769,128 +769,7 @@
       "unitCost": 5000,
       "reorderLevel": 5,
       "reorderQty": 10,
-      "initialStock": 12
-    },
-    {
-      "sku": "CAF-INV-TEA-0006",
-      "name": "Chai Spice Mix",
-      "category": "Tea",
-      "unit": "KG",
-      "unitCost": 35000,
-      "reorderLevel": 1,
-      "reorderQty": 2,
-      "initialStock": 2,
-      "tags": ["ADDED_FOR_RECIPE"]
-    },
-    {
-      "sku": "CAF-INV-TEA-0007",
-      "name": "Black Tea (Loose Leaf)",
-      "category": "Tea",
-      "unit": "KG",
-      "unitCost": 28000,
-      "reorderLevel": 1,
-      "reorderQty": 2,
-      "initialStock": 3,
-      "tags": ["ADDED_FOR_RECIPE"]
-    },
-    {
-      "sku": "CAF-INV-TEA-0008",
-      "name": "Peach Tea Bags",
-      "category": "Tea",
-      "unit": "BOX",
-      "unitCost": 15000,
-      "reorderLevel": 2,
-      "reorderQty": 5,
-      "initialStock": 4,
-      "tags": ["ADDED_FOR_RECIPE"]
-    },
-    {
-      "sku": "CAF-INV-SYRP-0007",
-      "name": "Maple Syrup",
-      "category": "Syrups",
-      "unit": "BTL",
-      "unitCost": 18000,
-      "reorderLevel": 2,
-      "reorderQty": 4,
-      "initialStock": 5,
-      "tags": ["ADDED_FOR_RECIPE"]
-    },
-    {
-      "sku": "CAF-INV-BRED-0007",
-      "name": "Tortilla Wraps",
-      "category": "Bread",
-      "unit": "PACK",
-      "unitCost": 8000,
-      "reorderLevel": 5,
-      "reorderQty": 10,
-      "initialStock": 12,
-      "tags": ["ADDED_FOR_RECIPE"]
-    },
-    {
-      "sku": "CAF-INV-BAKF-0009",
-      "name": "Granola Mix",
-      "category": "Baking",
-      "unit": "KG",
-      "unitCost": 22000,
-      "reorderLevel": 2,
-      "reorderQty": 5,
-      "initialStock": 6,
-      "tags": ["ADDED_FOR_RECIPE"]
-    },
-    {
-      "sku": "CAF-INV-BAKF-0010",
-      "name": "Sliced Almonds",
-      "category": "Baking",
-      "unit": "KG",
-      "unitCost": 32000,
-      "reorderLevel": 1,
-      "reorderQty": 3,
-      "initialStock": 4,
-      "tags": ["ADDED_FOR_RECIPE"]
-    },
-    {
-      "sku": "CAF-INV-DARY-0012",
-      "name": "Mascarpone Cheese",
-      "category": "Dairy",
-      "unit": "KG",
-      "unitCost": 28000,
-      "reorderLevel": 1,
-      "reorderQty": 2,
-      "initialStock": 3,
-      "tags": ["ADDED_FOR_RECIPE"]
-    },
-    {
-      "sku": "CAF-INV-BEV-0007",
-      "name": "Ice Cubes",
-      "category": "Beverages",
-      "unit": "KG",
-      "unitCost": 2000,
-      "reorderLevel": 10,
-      "reorderQty": 20,
-      "initialStock": 25,
-      "tags": ["ADDED_FOR_RECIPE"]
-    },
-    {
-      "sku": "CAF-INV-PROT-0006",
-      "name": "Sausages",
-      "category": "Proteins",
-      "unit": "KG",
-      "unitCost": 18000,
-      "reorderLevel": 3,
-      "reorderQty": 5,
-      "initialStock": 6,
-      "tags": ["ADDED_FOR_RECIPE"]
-    },
-    {
-      "sku": "CAF-INV-BAKF-0011",
-      "name": "Honey",
-      "category": "Baking",
-      "unit": "BTL",
-      "unitCost": 15000,
-      "reorderLevel": 2,
-      "reorderQty": 4,
-      "initialStock": 5,
-      "tags": ["ADDED_FOR_RECIPE"]
+      "initialStock": 15
     }
   ]
 }

@@ -14,6 +14,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
+import { SkipThrottle } from '@nestjs/throttler';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 import { ServiceProvidersService } from './service-providers.service';
@@ -35,6 +36,7 @@ import {
 @ApiBearerAuth()
 @Controller('service-providers')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
+@SkipThrottle()
 export class ServiceProvidersController {
   constructor(private readonly service: ServiceProvidersService) {}
 

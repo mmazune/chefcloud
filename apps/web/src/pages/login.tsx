@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/router';
 import { LoginCredentials, PinLoginCredentials } from '@/lib/auth';
+import { DemoQuickLogin, useDemoAutofill } from '@/components/demo/DemoQuickLogin';
 
 export default function LoginPage() {
   const { login, pinLogin, loading, error: authError } = useAuth();
@@ -11,6 +12,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [pin, setPin] = useState('');
   const [error, setError] = useState('');
+  const { autofillTapas, autofillCafesserie, DEMO_PASSWORD } = useDemoAutofill();
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -180,10 +182,19 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Dev Note */}
+        {/* Demo Quick Login Panel */}
+        <DemoQuickLogin
+          onSelectCredentials={(demoEmail, demoPassword) => {
+            setEmail(demoEmail);
+            setPassword(demoPassword);
+            setActiveTab('email');
+          }}
+        />
+
+        {/* Dev Note - only in development */}
         {process.env.NEXT_PUBLIC_APP_ENV === 'development' && (
           <div className="mt-4 rounded-md bg-yellow-50 p-3 text-xs text-yellow-800">
-            <strong>Dev Mode:</strong> Use test credentials from backend seed data
+            <strong>Dev Mode:</strong> Demo accounts auto-populate credentials. Password: {DEMO_PASSWORD}
           </div>
         )}
       </div>

@@ -59,6 +59,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const userData = await authLogin(credentials);
       setUser(userData);
       
+      // Small delay to ensure cookie is fully set before navigation
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       // Redirect to original page or dashboard
       const redirect = router.query.redirect as string;
       router.push(redirect || '/dashboard');
@@ -76,6 +79,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setError(null);
       const userData = await authPinLogin(credentials);
       setUser(userData);
+      
+      // Small delay to ensure cookie is fully set before navigation
+      await new Promise(resolve => setTimeout(resolve, 100));
       
       // Redirect to original page or dashboard
       const redirect = router.query.redirect as string;

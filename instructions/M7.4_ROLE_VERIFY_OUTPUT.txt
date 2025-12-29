@@ -1,0 +1,822 @@
+# M7.4 Role Coverage Verification Output
+Date: 2025-12-23T18:38:00.431Z
+API Base: http://localhost:3001
+CLI Args: {"out":"instructions/M7.4_ROLE_VERIFY_OUTPUT.txt","base":"http://localhost:3001","role":"all","org":"both","delayMs":50,"maxRetries":4}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## VERIFICATION IN PROGRESS...
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Test Plan: 19 roles, 204 planned endpoint tests
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📍 TAPAS BAR & RESTAURANT (Single Branch)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+### Tapas - Owner (L5)
+Email: owner@tapas.demo.local
+Login: ✅ SUCCESS
+Branch ID: 00000000-0000-4000-8000-000000000101
+
+Endpoint Tests:
+  ✅ /me - User profile
+     Status: PASS, Message: 11 records
+     Records: 11
+  ✅ /menu/items - Menu items
+     Status: PASS, Message: 178 records
+     Records: 178
+  ✅ /pos/orders - Open orders (POS)
+     Status: PASS, Message: 17 records
+     Records: 17
+  ✅ /pos/orders - Closed orders
+     Status: PASS, Message: 284 records
+     Records: 284
+  ✅ /inventory/levels - Inventory levels
+     Status: PASS, Message: 158 records
+     Records: 158
+  ✅ /inventory/items - Inventory items
+     Status: PASS, Message: 158 records
+     Records: 158
+  ✅ /inventory/low-stock/alerts - Low stock alerts
+     Status: PASS, Message: 26 records
+     Records: 26
+  ✅ /analytics/daily - Daily analytics
+     Status: PASS, Message: 3 records
+     Records: 3
+  ✅ /service-providers - Service providers
+     Status: PASS, Message: 5 records
+     Records: 5
+  ✅ /analytics/daily-metrics - Daily metrics
+     Status: PASS, Message: 31 records
+     Records: 31
+  ✅ /analytics/top-items - Top items
+     Status: PASS, Message: 10 records
+     Records: 10
+  ✅ /analytics/category-mix - Category mix
+     Status: PASS, Message: 4 records
+     Records: 4
+  ✅ /analytics/payment-mix - Payment mix
+     Status: PASS, Message: 3 records
+     Records: 3
+  ✅ /analytics/peak-hours - Peak hours
+     Status: PASS, Message: 24 records
+     Records: 24
+  ✅ /analytics/financial-summary - Financial summary
+     Status: PASS, Message: 4 records
+     Records: 4
+  ✅ /hr/employees - Employee list
+     Status: PASS, Message: 8 records
+     Records: 8
+  ✅ /staff/insights - Staff insights
+     Status: PASS, Message: 4 records
+     Records: 4
+  ⚠️ /feedback/analytics/nps-summary - NPS summary
+     Status: ERROR, Message: 400: Request failed
+  ✅ /reservations - Reservations
+     Status: PASS, Message: 5 records
+     Records: 5
+  ✅ /debug/demo-health - Demo health debug
+     Status: PASS, Message: 301 records
+     Records: 301
+
+
+### Tapas - Manager (L4)
+Email: manager@tapas.demo.local
+Login: ✅ SUCCESS
+Branch ID: 00000000-0000-4000-8000-000000000101
+
+Endpoint Tests:
+  ✅ /me - User profile
+     Status: PASS, Message: 11 records
+     Records: 11
+  ✅ /menu/items - Menu items
+     Status: PASS, Message: 178 records
+     Records: 178
+  ✅ /pos/orders - Open orders (POS)
+     Status: PASS, Message: 17 records
+     Records: 17
+  ✅ /pos/orders - Closed orders
+     Status: PASS, Message: 284 records
+     Records: 284
+  ✅ /inventory/levels - Inventory levels
+     Status: PASS, Message: 158 records
+     Records: 158
+  ✅ /inventory/items - Inventory items
+     Status: PASS, Message: 158 records
+     Records: 158
+  ✅ /inventory/low-stock/alerts - Low stock alerts
+     Status: PASS, Message: 26 records
+     Records: 26
+  ✅ /analytics/daily - Daily analytics
+     Status: PASS, Message: 3 records
+     Records: 3
+  ✅ /service-providers - Service providers
+     Status: PASS, Message: 5 records
+     Records: 5
+  ✅ /analytics/daily-metrics - Daily metrics
+     Status: PASS, Message: 31 records
+     Records: 31
+  ✅ /analytics/top-items - Top items
+     Status: PASS, Message: 10 records
+     Records: 10
+  ✅ /analytics/category-mix - Category mix
+     Status: PASS, Message: 4 records
+     Records: 4
+  ✅ /analytics/payment-mix - Payment mix
+     Status: PASS, Message: 3 records
+     Records: 3
+  ✅ /analytics/peak-hours - Peak hours
+     Status: PASS, Message: 24 records
+     Records: 24
+  ✅ /analytics/financial-summary - Financial summary
+     Status: PASS, Message: 4 records
+     Records: 4
+  ✅ /hr/employees - Employee list
+     Status: PASS, Message: 8 records
+     Records: 8
+  ✅ /staff/insights - Staff insights
+     Status: PASS, Message: 4 records
+     Records: 4
+  ⚠️ /feedback/analytics/nps-summary - NPS summary
+     Status: ERROR, Message: 400: Request failed
+  ✅ /reservations - Reservations
+     Status: PASS, Message: 5 records
+     Records: 5
+  ✅ /debug/demo-health - Demo health debug
+     Status: PASS, Message: 301 records
+     Records: 301
+
+
+### Tapas - Accountant (L4)
+Email: accountant@tapas.demo.local
+Login: ✅ SUCCESS
+Branch ID: 00000000-0000-4000-8000-000000000101
+
+Endpoint Tests:
+  ✅ /me - User profile
+     Status: PASS, Message: 11 records
+     Records: 11
+  ✅ /menu/items - Menu items
+     Status: PASS, Message: 178 records
+     Records: 178
+  ✅ /pos/orders - Open orders (POS)
+     Status: PASS, Message: 17 records
+     Records: 17
+  ✅ /pos/orders - Closed orders
+     Status: PASS, Message: 284 records
+     Records: 284
+  ✅ /inventory/levels - Inventory levels
+     Status: PASS, Message: 158 records
+     Records: 158
+  ✅ /inventory/items - Inventory items
+     Status: PASS, Message: 158 records
+     Records: 158
+  ✅ /inventory/low-stock/alerts - Low stock alerts
+     Status: PASS, Message: 26 records
+     Records: 26
+  ✅ /analytics/daily - Daily analytics
+     Status: PASS, Message: 3 records
+     Records: 3
+  ✅ /service-providers - Service providers
+     Status: PASS, Message: 5 records
+     Records: 5
+  ✅ /analytics/daily-metrics - Daily metrics
+     Status: PASS, Message: 31 records
+     Records: 31
+  ✅ /analytics/top-items - Top items
+     Status: PASS, Message: 10 records
+     Records: 10
+  ✅ /analytics/category-mix - Category mix
+     Status: PASS, Message: 4 records
+     Records: 4
+  ✅ /analytics/payment-mix - Payment mix
+     Status: PASS, Message: 3 records
+     Records: 3
+  ✅ /analytics/peak-hours - Peak hours
+     Status: PASS, Message: 24 records
+     Records: 24
+  ✅ /analytics/financial-summary - Financial summary
+     Status: PASS, Message: 4 records
+     Records: 4
+  ✅ /hr/employees - Employee list
+     Status: PASS, Message: 8 records
+     Records: 8
+  ✅ /staff/insights - Staff insights
+     Status: PASS, Message: 4 records
+     Records: 4
+  ⚠️ /feedback/analytics/nps-summary - NPS summary
+     Status: ERROR, Message: 400: Request failed
+  ✅ /reservations - Reservations
+     Status: PASS, Message: 5 records
+     Records: 5
+  ✅ /debug/demo-health - Demo health debug
+     Status: PASS, Message: 301 records
+     Records: 301
+
+
+### Tapas - Procurement (L3)
+Email: procurement@tapas.demo.local
+Login: ✅ SUCCESS
+Branch ID: 00000000-0000-4000-8000-000000000101
+
+Endpoint Tests:
+  ✅ /me - User profile
+     Status: PASS, Message: 11 records
+     Records: 11
+  ✅ /menu/items - Menu items
+     Status: PASS, Message: 178 records
+     Records: 178
+  ✅ /pos/orders - Open orders (POS)
+     Status: PASS, Message: 17 records
+     Records: 17
+  ✅ /pos/orders - Closed orders
+     Status: PASS, Message: 284 records
+     Records: 284
+  ✅ /inventory/levels - Inventory levels
+     Status: PASS, Message: 158 records
+     Records: 158
+  ✅ /inventory/items - Inventory items
+     Status: PASS, Message: 158 records
+     Records: 158
+  ✅ /inventory/low-stock/alerts - Low stock alerts
+     Status: PASS, Message: 26 records
+     Records: 26
+  ✅ /analytics/daily - Daily analytics
+     Status: PASS, Message: 3 records
+     Records: 3
+  ✅ /service-providers - Service providers
+     Status: PASS, Message: 5 records
+     Records: 5
+
+
+### Tapas - Stock (L3)
+Email: stock@tapas.demo.local
+Login: ✅ SUCCESS
+Branch ID: 00000000-0000-4000-8000-000000000101
+
+Endpoint Tests:
+  ✅ /me - User profile
+     Status: PASS, Message: 11 records
+     Records: 11
+  ✅ /menu/items - Menu items
+     Status: PASS, Message: 178 records
+     Records: 178
+  ✅ /pos/orders - Open orders (POS)
+     Status: PASS, Message: 17 records
+     Records: 17
+  ✅ /pos/orders - Closed orders
+     Status: PASS, Message: 284 records
+     Records: 284
+  ✅ /inventory/levels - Inventory levels
+     Status: PASS, Message: 158 records
+     Records: 158
+  ✅ /inventory/items - Inventory items
+     Status: PASS, Message: 158 records
+     Records: 158
+  ✅ /inventory/low-stock/alerts - Low stock alerts
+     Status: PASS, Message: 26 records
+     Records: 26
+  ✅ /analytics/daily - Daily analytics
+     Status: PASS, Message: 3 records
+     Records: 3
+  ✅ /service-providers - Service providers
+     Status: PASS, Message: 5 records
+     Records: 5
+
+
+### Tapas - Supervisor (L2)
+Email: supervisor@tapas.demo.local
+Login: ✅ SUCCESS
+Branch ID: 00000000-0000-4000-8000-000000000101
+
+Endpoint Tests:
+  ✅ /me - User profile
+     Status: PASS, Message: 11 records
+     Records: 11
+  ✅ /menu/items - Menu items
+     Status: PASS, Message: 178 records
+     Records: 178
+  ✅ /pos/orders - Open orders (POS)
+     Status: PASS, Message: 17 records
+     Records: 17
+  ✅ /pos/orders - Closed orders
+     Status: PASS, Message: 284 records
+     Records: 284
+  ❌ /inventory/levels - Inventory levels
+     Status: FAIL, Message: RBAC denied but user level L2 should have access (min: L2)
+
+
+### Tapas - Cashier (L2)
+Email: cashier@tapas.demo.local
+Login: ✅ SUCCESS
+Branch ID: 00000000-0000-4000-8000-000000000101
+
+Endpoint Tests:
+  ✅ /me - User profile
+     Status: PASS, Message: 11 records
+     Records: 11
+  ✅ /menu/items - Menu items
+     Status: PASS, Message: 178 records
+     Records: 178
+  ✅ /pos/orders - Open orders (POS)
+     Status: PASS, Message: 17 records
+     Records: 17
+  ✅ /pos/orders - Closed orders
+     Status: PASS, Message: 284 records
+     Records: 284
+  ❌ /inventory/levels - Inventory levels
+     Status: FAIL, Message: RBAC denied but user level L2 should have access (min: L2)
+
+
+### Tapas - Waiter (L1)
+Email: waiter@tapas.demo.local
+Login: ✅ SUCCESS
+Branch ID: 00000000-0000-4000-8000-000000000101
+
+Endpoint Tests:
+  ✅ /me - User profile
+     Status: PASS, Message: 11 records
+     Records: 11
+  ✅ /menu/items - Menu items
+     Status: PASS, Message: 178 records
+     Records: 178
+  ✅ /pos/orders - Open orders (POS)
+     Status: PASS, Message: 17 records
+     Records: 17
+
+
+### Tapas - Chef (L2)
+Email: chef@tapas.demo.local
+Login: ✅ SUCCESS
+Branch ID: 00000000-0000-4000-8000-000000000101
+
+Endpoint Tests:
+  ✅ /me - User profile
+     Status: PASS, Message: 11 records
+     Records: 11
+  ✅ /menu/items - Menu items
+     Status: PASS, Message: 178 records
+     Records: 178
+  ✅ /pos/orders - Open orders (POS)
+     Status: PASS, Message: 17 records
+     Records: 17
+  ✅ /pos/orders - Closed orders
+     Status: PASS, Message: 284 records
+     Records: 284
+  ❌ /inventory/levels - Inventory levels
+     Status: FAIL, Message: RBAC denied but user level L2 should have access (min: L2)
+
+
+### Tapas - Bartender (L1)
+Email: bartender@tapas.demo.local
+Login: ✅ SUCCESS
+Branch ID: 00000000-0000-4000-8000-000000000101
+
+Endpoint Tests:
+  ✅ /me - User profile
+     Status: PASS, Message: 11 records
+     Records: 11
+  ✅ /menu/items - Menu items
+     Status: PASS, Message: 178 records
+     Records: 178
+  ✅ /pos/orders - Open orders (POS)
+     Status: PASS, Message: 17 records
+     Records: 17
+
+
+### Tapas - EventMgr (L3)
+Email: eventmgr@tapas.demo.local
+Login: ✅ SUCCESS
+Branch ID: 00000000-0000-4000-8000-000000000101
+
+Endpoint Tests:
+  ✅ /me - User profile
+     Status: PASS, Message: 11 records
+     Records: 11
+  ✅ /menu/items - Menu items
+     Status: PASS, Message: 178 records
+     Records: 178
+  ✅ /pos/orders - Open orders (POS)
+     Status: PASS, Message: 17 records
+     Records: 17
+  ✅ /pos/orders - Closed orders
+     Status: PASS, Message: 284 records
+     Records: 284
+  ✅ /inventory/levels - Inventory levels
+     Status: PASS, Message: 158 records
+     Records: 158
+  ✅ /inventory/items - Inventory items
+     Status: PASS, Message: 158 records
+     Records: 158
+  ✅ /inventory/low-stock/alerts - Low stock alerts
+     Status: PASS, Message: 26 records
+     Records: 26
+  ✅ /analytics/daily - Daily analytics
+     Status: PASS, Message: 3 records
+     Records: 3
+  ✅ /service-providers - Service providers
+     Status: PASS, Message: 5 records
+     Records: 5
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📍 CAFESSERIE (4 Branches - Franchise)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+### Cafesserie - Owner (L5)
+Email: owner@cafesserie.demo.local
+Login: ✅ SUCCESS
+Branch ID: 00000000-0000-4000-8000-000000000201
+
+Endpoint Tests:
+  ✅ /me - User profile
+     Status: PASS, Message: 11 records
+     Records: 11
+  ✅ /menu/items - Menu items
+     Status: PASS, Message: 80 records
+     Records: 80
+  ✅ /pos/orders - Open orders (POS)
+     Status: PASS, Message: 14 records
+     Records: 14
+  ✅ /pos/orders - Closed orders
+     Status: PASS, Message: 284 records
+     Records: 284
+  ✅ /inventory/levels - Inventory levels
+     Status: PASS, Message: 76 records
+     Records: 76
+  ✅ /inventory/items - Inventory items
+     Status: PASS, Message: 77 records
+     Records: 77
+  ✅ /inventory/low-stock/alerts - Low stock alerts
+     Status: PASS, Message: 2 records
+     Records: 2
+  ✅ /analytics/daily - Daily analytics
+     Status: PASS, Message: 3 records
+     Records: 3
+  ✅ /service-providers - Service providers
+     Status: PASS, Message: 3 records
+     Records: 3
+  ✅ /analytics/daily-metrics - Daily metrics
+     Status: PASS, Message: 31 records
+     Records: 31
+  ✅ /analytics/top-items - Top items
+     Status: PASS, Message: 10 records
+     Records: 10
+  ✅ /analytics/category-mix - Category mix
+     Status: PASS, Message: 3 records
+     Records: 3
+  ✅ /analytics/payment-mix - Payment mix
+     Status: PASS, Message: 3 records
+     Records: 3
+  ✅ /analytics/peak-hours - Peak hours
+     Status: PASS, Message: 24 records
+     Records: 24
+  ✅ /analytics/financial-summary - Financial summary
+     Status: PASS, Message: 4 records
+     Records: 4
+  ❌ /hr/employees - Employee list
+     Status: FAIL, Message: Empty response - seed data missing or branchId mismatch
+     Records: 0
+  ✅ /staff/insights - Staff insights
+     Status: PASS, Message: 4 records
+     Records: 4
+  ⚠️ /feedback/analytics/nps-summary - NPS summary
+     Status: ERROR, Message: 400: Request failed
+  ✅ /reservations - Reservations
+     Status: PASS, Message: 1 records
+     Records: 1
+  ✅ /debug/demo-health - Demo health debug
+     Status: PASS, Message: 1192 records
+     Records: 1192
+  ✅ /franchise/rankings - Branch rankings
+     Status: PASS, Message: 4 records
+     Records: 4
+  ⚠️ /franchise/analytics/overview - Franchise overview
+     Status: ERROR, Message: 400: Request failed
+  ✅ /franchise/branch-metrics - Branch metrics
+     Status: PASS, Message: 4 records
+     Records: 4
+
+
+### Cafesserie - Manager (L4)
+Email: manager@cafesserie.demo.local
+Login: ✅ SUCCESS
+Branch ID: 00000000-0000-4000-8000-000000000201
+
+Endpoint Tests:
+  ✅ /me - User profile
+     Status: PASS, Message: 11 records
+     Records: 11
+  ✅ /menu/items - Menu items
+     Status: PASS, Message: 80 records
+     Records: 80
+  ✅ /pos/orders - Open orders (POS)
+     Status: PASS, Message: 14 records
+     Records: 14
+  ✅ /pos/orders - Closed orders
+     Status: PASS, Message: 284 records
+     Records: 284
+  ✅ /inventory/levels - Inventory levels
+     Status: PASS, Message: 76 records
+     Records: 76
+  ✅ /inventory/items - Inventory items
+     Status: PASS, Message: 77 records
+     Records: 77
+  ✅ /inventory/low-stock/alerts - Low stock alerts
+     Status: PASS, Message: 2 records
+     Records: 2
+  ✅ /analytics/daily - Daily analytics
+     Status: PASS, Message: 3 records
+     Records: 3
+  ✅ /service-providers - Service providers
+     Status: PASS, Message: 3 records
+     Records: 3
+  ✅ /analytics/daily-metrics - Daily metrics
+     Status: PASS, Message: 31 records
+     Records: 31
+  ✅ /analytics/top-items - Top items
+     Status: PASS, Message: 10 records
+     Records: 10
+  ✅ /analytics/category-mix - Category mix
+     Status: PASS, Message: 3 records
+     Records: 3
+  ✅ /analytics/payment-mix - Payment mix
+     Status: PASS, Message: 3 records
+     Records: 3
+  ✅ /analytics/peak-hours - Peak hours
+     Status: PASS, Message: 24 records
+     Records: 24
+  ✅ /analytics/financial-summary - Financial summary
+     Status: PASS, Message: 4 records
+     Records: 4
+  ❌ /hr/employees - Employee list
+     Status: FAIL, Message: Empty response - seed data missing or branchId mismatch
+     Records: 0
+  ✅ /staff/insights - Staff insights
+     Status: PASS, Message: 4 records
+     Records: 4
+  ⚠️ /feedback/analytics/nps-summary - NPS summary
+     Status: ERROR, Message: 400: Request failed
+  ✅ /reservations - Reservations
+     Status: PASS, Message: 1 records
+     Records: 1
+  ✅ /debug/demo-health - Demo health debug
+     Status: PASS, Message: 1192 records
+     Records: 1192
+  ❌ /franchise/rankings - Branch rankings
+     Status: FAIL, Message: RBAC denied but user level L4 should have access (min: L4)
+  ⚠️ /franchise/analytics/overview - Franchise overview
+     Status: ERROR, Message: 400: Request failed
+  ✅ /franchise/branch-metrics - Branch metrics
+     Status: PASS, Message: 4 records
+     Records: 4
+
+
+### Cafesserie - Accountant (L4)
+Email: accountant@cafesserie.demo.local
+Login: ✅ SUCCESS
+Branch ID: 00000000-0000-4000-8000-000000000201
+
+Endpoint Tests:
+  ✅ /me - User profile
+     Status: PASS, Message: 11 records
+     Records: 11
+  ✅ /menu/items - Menu items
+     Status: PASS, Message: 80 records
+     Records: 80
+  ✅ /pos/orders - Open orders (POS)
+     Status: PASS, Message: 14 records
+     Records: 14
+  ✅ /pos/orders - Closed orders
+     Status: PASS, Message: 284 records
+     Records: 284
+  ✅ /inventory/levels - Inventory levels
+     Status: PASS, Message: 76 records
+     Records: 76
+  ✅ /inventory/items - Inventory items
+     Status: PASS, Message: 77 records
+     Records: 77
+  ✅ /inventory/low-stock/alerts - Low stock alerts
+     Status: PASS, Message: 2 records
+     Records: 2
+  ✅ /analytics/daily - Daily analytics
+     Status: PASS, Message: 3 records
+     Records: 3
+  ✅ /service-providers - Service providers
+     Status: PASS, Message: 3 records
+     Records: 3
+  ✅ /analytics/daily-metrics - Daily metrics
+     Status: PASS, Message: 31 records
+     Records: 31
+  ✅ /analytics/top-items - Top items
+     Status: PASS, Message: 10 records
+     Records: 10
+  ✅ /analytics/category-mix - Category mix
+     Status: PASS, Message: 3 records
+     Records: 3
+  ✅ /analytics/payment-mix - Payment mix
+     Status: PASS, Message: 3 records
+     Records: 3
+  ✅ /analytics/peak-hours - Peak hours
+     Status: PASS, Message: 24 records
+     Records: 24
+  ✅ /analytics/financial-summary - Financial summary
+     Status: PASS, Message: 4 records
+     Records: 4
+  ❌ /hr/employees - Employee list
+     Status: FAIL, Message: Empty response - seed data missing or branchId mismatch
+     Records: 0
+  ✅ /staff/insights - Staff insights
+     Status: PASS, Message: 4 records
+     Records: 4
+  ⚠️ /feedback/analytics/nps-summary - NPS summary
+     Status: ERROR, Message: 400: Request failed
+  ✅ /reservations - Reservations
+     Status: PASS, Message: 1 records
+     Records: 1
+  ✅ /debug/demo-health - Demo health debug
+     Status: PASS, Message: 1192 records
+     Records: 1192
+  ❌ /franchise/rankings - Branch rankings
+     Status: FAIL, Message: RBAC denied but user level L4 should have access (min: L4)
+  ⚠️ /franchise/analytics/overview - Franchise overview
+     Status: ERROR, Message: 400: Request failed
+  ✅ /franchise/branch-metrics - Branch metrics
+     Status: PASS, Message: 4 records
+     Records: 4
+
+
+### Cafesserie - Procurement (L3)
+Email: procurement@cafesserie.demo.local
+Login: ✅ SUCCESS
+Branch ID: 00000000-0000-4000-8000-000000000201
+
+Endpoint Tests:
+  ✅ /me - User profile
+     Status: PASS, Message: 11 records
+     Records: 11
+  ✅ /menu/items - Menu items
+     Status: PASS, Message: 80 records
+     Records: 80
+  ✅ /pos/orders - Open orders (POS)
+     Status: PASS, Message: 14 records
+     Records: 14
+  ✅ /pos/orders - Closed orders
+     Status: PASS, Message: 284 records
+     Records: 284
+  ✅ /inventory/levels - Inventory levels
+     Status: PASS, Message: 76 records
+     Records: 76
+  ✅ /inventory/items - Inventory items
+     Status: PASS, Message: 77 records
+     Records: 77
+  ✅ /inventory/low-stock/alerts - Low stock alerts
+     Status: PASS, Message: 2 records
+     Records: 2
+  ✅ /analytics/daily - Daily analytics
+     Status: PASS, Message: 3 records
+     Records: 3
+  ✅ /service-providers - Service providers
+     Status: PASS, Message: 3 records
+     Records: 3
+
+
+### Cafesserie - Supervisor (L2)
+Email: supervisor@cafesserie.demo.local
+Login: ✅ SUCCESS
+Branch ID: 00000000-0000-4000-8000-000000000201
+
+Endpoint Tests:
+  ✅ /me - User profile
+     Status: PASS, Message: 11 records
+     Records: 11
+  ✅ /menu/items - Menu items
+     Status: PASS, Message: 80 records
+     Records: 80
+  ✅ /pos/orders - Open orders (POS)
+     Status: PASS, Message: 14 records
+     Records: 14
+  ✅ /pos/orders - Closed orders
+     Status: PASS, Message: 284 records
+     Records: 284
+  ❌ /inventory/levels - Inventory levels
+     Status: FAIL, Message: RBAC denied but user level L2 should have access (min: L2)
+
+
+### Cafesserie - Cashier (L2)
+Email: cashier@cafesserie.demo.local
+Login: ✅ SUCCESS
+Branch ID: 00000000-0000-4000-8000-000000000201
+
+Endpoint Tests:
+  ✅ /me - User profile
+     Status: PASS, Message: 11 records
+     Records: 11
+  ✅ /menu/items - Menu items
+     Status: PASS, Message: 80 records
+     Records: 80
+  ✅ /pos/orders - Open orders (POS)
+     Status: PASS, Message: 14 records
+     Records: 14
+  ✅ /pos/orders - Closed orders
+     Status: PASS, Message: 284 records
+     Records: 284
+  ❌ /inventory/levels - Inventory levels
+     Status: FAIL, Message: RBAC denied but user level L2 should have access (min: L2)
+
+
+### Cafesserie - Waiter (L1)
+Email: waiter@cafesserie.demo.local
+Login: ✅ SUCCESS
+Branch ID: 00000000-0000-4000-8000-000000000201
+
+Endpoint Tests:
+  ✅ /me - User profile
+     Status: PASS, Message: 11 records
+     Records: 11
+  ✅ /menu/items - Menu items
+     Status: PASS, Message: 80 records
+     Records: 80
+  ✅ /pos/orders - Open orders (POS)
+     Status: PASS, Message: 14 records
+     Records: 14
+
+
+### Cafesserie - Chef (L2)
+Email: chef@cafesserie.demo.local
+Login: ✅ SUCCESS
+Branch ID: 00000000-0000-4000-8000-000000000201
+
+Endpoint Tests:
+  ✅ /me - User profile
+     Status: PASS, Message: 11 records
+     Records: 11
+  ✅ /menu/items - Menu items
+     Status: PASS, Message: 80 records
+     Records: 80
+  ✅ /pos/orders - Open orders (POS)
+     Status: PASS, Message: 14 records
+     Records: 14
+  ✅ /pos/orders - Closed orders
+     Status: PASS, Message: 284 records
+     Records: 284
+  ❌ /inventory/levels - Inventory levels
+     Status: FAIL, Message: RBAC denied but user level L2 should have access (min: L2)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## FINAL SUMMARY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Total Endpoint Tests: 204
+✅ Passed: 184 (90.2%)
+❌ Failed: 11 (5.4%)
+🔒 RBAC Denied (Expected): 0 (0.0%)
+⚠️  Errors: 9 (4.4%)
+⏳ 429 Retries: 0
+
+❌ FAILED TESTS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Tapas - Supervisor (supervisor@tapas.demo.local):
+  ❌ /inventory/levels - Inventory levels
+     RBAC denied but user level L2 should have access (min: L2)
+
+Tapas - Cashier (cashier@tapas.demo.local):
+  ❌ /inventory/levels - Inventory levels
+     RBAC denied but user level L2 should have access (min: L2)
+
+Tapas - Chef (chef@tapas.demo.local):
+  ❌ /inventory/levels - Inventory levels
+     RBAC denied but user level L2 should have access (min: L2)
+
+Cafesserie - Owner (owner@cafesserie.demo.local):
+  ❌ /hr/employees - Employee list
+     Empty response - seed data missing or branchId mismatch
+
+Cafesserie - Manager (manager@cafesserie.demo.local):
+  ❌ /hr/employees - Employee list
+     Empty response - seed data missing or branchId mismatch
+  ❌ /franchise/rankings - Branch rankings
+     RBAC denied but user level L4 should have access (min: L4)
+
+Cafesserie - Accountant (accountant@cafesserie.demo.local):
+  ❌ /hr/employees - Employee list
+     Empty response - seed data missing or branchId mismatch
+  ❌ /franchise/rankings - Branch rankings
+     RBAC denied but user level L4 should have access (min: L4)
+
+Cafesserie - Supervisor (supervisor@cafesserie.demo.local):
+  ❌ /inventory/levels - Inventory levels
+     RBAC denied but user level L2 should have access (min: L2)
+
+Cafesserie - Cashier (cashier@cafesserie.demo.local):
+  ❌ /inventory/levels - Inventory levels
+     RBAC denied but user level L2 should have access (min: L2)
+
+Cafesserie - Chef (chef@cafesserie.demo.local):
+  ❌ /inventory/levels - Inventory levels
+     RBAC denied but user level L2 should have access (min: L2)
+

@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
+import { ConfigService } from '@nestjs/config';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtStrategy } from './jwt.strategy';
@@ -13,9 +14,12 @@ import { CacheModule } from '../common/cache.module';
 @Module({
   imports: [
     PassportModule,
-    JwtModule.register({
-      secret: process.env.JWT_SECRET || 'dev-secret-change-in-production',
-      signOptions: { expiresIn: '24h' },
+    JwtModule.registerAsync({
+      useFactory: (configService: ConfigService) => ({
+        secret: configService.get<string>('JWT_SECRET') || 'dev-secret-change-in-production',
+        signOptions: { expiresIn: '24h' },
+      }),
+      inject: [ConfigService],
     }),
     CacheModule, // T1.8: Added to resolve RedisService dependency for SessionInvalidationService
     // M30-OPS-S5: Removed WorkforceModule import to break circular dependency

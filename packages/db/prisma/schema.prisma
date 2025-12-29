@@ -20,6 +20,20 @@ enum RoleLevel {
   L5 // Owner/Admin
 }
 
+enum JobRole {
+  OWNER
+  MANAGER
+  ACCOUNTANT
+  PROCUREMENT
+  STOCK_MANAGER
+  SUPERVISOR
+  CASHIER
+  CHEF
+  WAITER
+  BARTENDER
+  EVENT_MANAGER
+}
+
 enum TableStatus {
   AVAILABLE
   OCCUPIED
@@ -358,6 +372,7 @@ model User {
   firstName      String
   lastName       String
   roleLevel      RoleLevel @default(L1)
+  jobRole        JobRole? // M8.1: Job role for role-specific UX (nullable for backward compatibility)
   isActive       Boolean   @default(true)
   sessionVersion Int       @default(0) // E25: Incremented on badge revocation to invalidate old JWTs
   createdAt      DateTime  @default(now())

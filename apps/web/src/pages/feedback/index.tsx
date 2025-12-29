@@ -6,47 +6,74 @@ import { StatCard } from '@/components/ui/stat-card';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { apiClient } from '@/lib/api';
 import { Star, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { RequireRole } from '@/components/RequireRole';
+import { RoleLevel } from '@/lib/auth';
 
 interface NPSSummary {
-  currentNPS: number;
-  totalResponses: number;
-  promoters: number;
-  passives: number;
-  detractors: number;
+  nps: number;
+  totalCount: number;
+  promoterCount: number;
+  passiveCount: number;
+  detractorCount: number;
+  promoterPct: number;
+  passivePct: number;
+  detractorPct: number;
+}
+
+// Helper to get date range (last 30 days)
+function getDateRange() {
+  const to = new Date();
+  const from = new Date();
+  from.setDate(from.getDate() - 30);
+  return {
+    from: from.toISOString().split('T')[0],
+    to: to.toISOString().split('T')[0],
+  };
 }
 
 export default function FeedbackPage() {
-  const { data, isLoading } = useQuery({
-    queryKey: ['feedback-nps'],
+  const dateRange = getDateRange();
+  
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['feedback-nps', dateRange],
     queryFn: async () => {
-      const response = await apiClient.get<NPSSummary>('/feedback/analytics/nps-summary');
+      const response = await apiClient.get<NPSSummary>('/feedback/analytics/nps-summary', {
+        params: { from: dateRange.from, to: dateRange.to },
+      });
       return response.data;
     },
   });
 
   return (
-    <AppShell>
-      <PageHeader title="Customer Feedback" subtitle="Net Promoter Score and customer feedback" />
+    <RequireRole minRole={RoleLevel.L4}>
+      <AppShell>
+        <PageHeader title="Customer Feedback" subtitle="Net Promoter Score and customer feedback" />
       
+      {error && (
+        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
+          <p className="text-sm text-red-600">Failed to load feedback data. Make sure you are logged in as a manager (L4+).</p>
+        </div>
+      )}
+
       <div className="grid gap-4 md:grid-cols-4 mb-8">
         <StatCard
           label="Current NPS"
-          value={data?.currentNPS ?? '—'}
+          value={data?.nps !== undefined ? Math.round(data.nps) : '—'}
           icon={<Star className="h-4 w-4" />}
         />
         <StatCard
           label="Total Responses"
-          value={data?.totalResponses ?? '—'}
+          value={data?.totalCount ?? '—'}
           icon={<ThumbsUp className="h-4 w-4" />}
         />
         <StatCard
           label="Promoters"
-          value={data?.promoters ?? '—'}
+          value={data?.promoterCount ?? '—'}
           icon={<ThumbsUp className="h-4 w-4 text-green-500" />}
         />
         <StatCard
           label="Detractors"
-          value={data?.detractors ?? '—'}
+          value={data?.detractorCount ?? '—'}
           icon={<ThumbsDown className="h-4 w-4 text-red-500" />}
         />
       </div>
@@ -63,13 +90,13 @@ export default function FeedbackPage() {
                 <div className="flex justify-between mb-2">
                   <span className="text-sm font-medium">Promoters (9-10)</span>
                   <span className="text-sm text-muted-foreground">
-                    {((data.promoters / data.totalResponses) * 100).toFixed(1)}%
+                    {data.promoterPct.toFixed(1)}%
                   </span>
                 </div>
                 <div className="h-3 bg-muted rounded-full overflow-hidden">
                   <div
                     className="h-full bg-green-500"
-                    style={{ width: `${(data.promoters / data.totalResponses) * 100}%` }}
+                    style={{ width: `${data.promoterPct}%` }}
                   />
                 </div>
               </div>
@@ -77,13 +104,13 @@ export default function FeedbackPage() {
                 <div className="flex justify-between mb-2">
                   <span className="text-sm font-medium">Passives (7-8)</span>
                   <span className="text-sm text-muted-foreground">
-                    {((data.passives / data.totalResponses) * 100).toFixed(1)}%
+                    {data.passivePct.toFixed(1)}%
                   </span>
                 </div>
                 <div className="h-3 bg-muted rounded-full overflow-hidden">
                   <div
                     className="h-full bg-yellow-500"
-                    style={{ width: `${(data.passives / data.totalResponses) * 100}%` }}
+                    style={{ width: `${data.passivePct}%` }}
                   />
                 </div>
               </div>
@@ -91,13 +118,13 @@ export default function FeedbackPage() {
                 <div className="flex justify-between mb-2">
                   <span className="text-sm font-medium">Detractors (0-6)</span>
                   <span className="text-sm text-muted-foreground">
-                    {((data.detractors / data.totalResponses) * 100).toFixed(1)}%
+                    {data.detractorPct.toFixed(1)}%
                   </span>
                 </div>
                 <div className="h-3 bg-muted rounded-full overflow-hidden">
                   <div
                     className="h-full bg-red-500"
-                    style={{ width: `${(data.detractors / data.totalResponses) * 100}%` }}
+                    style={{ width: `${data.detractorPct}%` }}
                   />
                 </div>
               </div>
@@ -109,6 +136,7 @@ export default function FeedbackPage() {
       <div className="mt-4 text-sm text-muted-foreground">
         ✓ Connected to backend endpoint: GET /feedback/analytics/nps-summary
       </div>
-    </AppShell>
+      </AppShell>
+    </RequireRole>
   );
 }

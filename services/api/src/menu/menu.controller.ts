@@ -1,5 +1,6 @@
 import { Controller, Post, Get, Param, Body, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { SkipThrottle } from '@nestjs/throttler';
 import { MenuService } from './menu.service';
 import { CreateMenuItemDto, CreateModifierGroupDto } from './menu.dto';
 import { Roles } from '../auth/roles.decorator';
@@ -9,6 +10,7 @@ import { User } from '../me/user.decorator';
 
 @Controller('menu')
 @UseGuards(AuthGuard('jwt'), OrgScopeGuard, RolesGuard)
+@SkipThrottle()
 export class MenuController {
   constructor(private menuService: MenuService) {}
 

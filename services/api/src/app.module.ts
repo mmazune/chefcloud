@@ -52,6 +52,10 @@ import { ObservabilityModule } from './observability/observability.module';
 import { MetaModule } from './meta/meta.module';
 import { DocumentsModule } from './documents/documents.module'; // M18
 import { FeedbackModule } from './feedback/feedback.module'; // M20
+import { ServiceProvidersModule } from './service-providers/service-providers.module'; // M7
+import { HrModule } from './hr/hr.module'; // HR employees
+import { StaffModule } from './staff/staff.module'; // Staff insights
+import { DebugModule } from './debug/debug.module'; // M7.1 Demo Health
 import { LoggerMiddleware } from './logger.middleware';
 import { WriteBlockMiddleware } from './ops/write-block.middleware';
 import { WebhookVerificationGuard } from './common/webhook-verification.guard';
@@ -116,6 +120,10 @@ import { PrismaModule } from './prisma.module';
     MetaModule,
     DocumentsModule, // M18
     FeedbackModule, // M20
+    ServiceProvidersModule, // M7
+    HrModule, // HR employees
+    StaffModule, // Staff insights
+    DebugModule, // M7.1 Demo Health
   ],
   controllers: [HealthController, WebhooksController],
   providers: [

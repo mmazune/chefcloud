@@ -2,10 +2,8 @@ import { prisma } from '@chefcloud/db';
 import * as argon2 from 'argon2';
 import { seedDemo, printDemoCredentials } from './demo/seedDemo';
 import { seedCatalog } from './demo/seedCatalog';
-import { seedTransactions } from './demo/seedTransactions';
-import { seedInventoryMovements } from './demo/seedInventoryMovements';
-import { seedInventoryConsumption } from './demo/seedInventoryConsumption';
-import { seedOperations } from './demo/seedOperations';
+import { seedOpenOrders } from './demo/seedOrders';
+import { seedComprehensive } from './demo/seedComprehensive';
 
 async function hashPassword(password: string): Promise<string> {
   return argon2.hash(password, {
@@ -323,11 +321,9 @@ async function main() {
   });
   console.log(`✅ Attached modifier group to Burger`);
 
-  // Clean up old inventory data before seeding (in correct order to avoid FK violations)
+  // Clean up old inventory data before seeding
   await prisma.recipeIngredient.deleteMany({});
-  await prisma.adjustment.deleteMany({});
   await prisma.wastage.deleteMany({});
-  await prisma.stockMovement.deleteMany({});
   await prisma.stockBatch.deleteMany({});
   await prisma.goodsReceiptLine.deleteMany({});
   await prisma.goodsReceipt.deleteMany({});
@@ -759,17 +755,12 @@ async function main() {
   // ===== Demo Catalog (Menu & Inventory) =====
   await seedCatalog(prisma);
 
-  // ===== Demo Transactions (Orders & Payments) =====
-  await seedTransactions(prisma);
+  // ===== Demo Open Orders (V2.1.1) =====
+  await seedOpenOrders(prisma);
 
-  // ===== M5: Operational Data (Staff, Vendors, Reservations, Feedback) =====
-  await seedOperations(prisma);
-
-  // ===== Demo Inventory Movements (Purchases, Wastage, Adjustments) =====
-  await seedInventoryMovements(prisma);
-
-  // ===== Demo Inventory Consumption (Recipe-based consumption from sales) =====
-  await seedInventoryConsumption(prisma);
+  // ===== Comprehensive Demo Data (V2.1.2) =====
+  // Tables, Reservations, Completed Orders, Service Providers, Finance, Staff
+  await seedComprehensive(prisma);
 
   console.log('\n🎉 Seed completed successfully!');
   console.log('\n📝 Test Credentials:');

@@ -63,11 +63,23 @@ async function cleanupOldDemoData(prisma: PrismaClient): Promise<void> {
   // Delete in correct order due to foreign key constraints
   console.log(`  🗑️  Deleting data for ${demoOrgs.length} demo org(s)...`);
 
-  // Delete orders first (cascades to order items, payments, refunds)
-  const deletedOrders = await prisma.order.deleteMany({
-    where: { branch: { orgId: { in: orgIds } } },
+  // First get all branch IDs for these orgs
+  const branches = await prisma.branch.findMany({
+    where: { orgId: { in: orgIds } },
+    select: { id: true },
   });
-  console.log(`    ✅ Deleted ${deletedOrders.count} orders (cascaded items, payments, refunds)`);
+  const branchIds = branches.map((b) => b.id);
+
+  // Delete orders first (V2.1.1 - open orders exist now)
+  if (branchIds.length > 0) {
+    await prisma.orderItem.deleteMany({
+      where: { order: { branchId: { in: branchIds } } },
+    });
+    await prisma.order.deleteMany({
+      where: { branchId: { in: branchIds } },
+    });
+    console.log(`    ✅ Deleted orders for demo branches`);
+  }
 
   // Delete user-related data
   await prisma.employeeProfile.deleteMany({
@@ -75,13 +87,25 @@ async function cleanupOldDemoData(prisma: PrismaClient): Promise<void> {
   });
   console.log(`    ✅ Deleted employee profiles`);
 
-  // Users (now safe to delete after orders)
+  // Delete shifts before deleting users (foreign key constraint)
+  await prisma.shift.deleteMany({
+    where: { orgId: { in: orgIds } },
+  });
+  console.log(`    ✅ Deleted shifts`);
+
+  // Delete staff awards before deleting users (foreign key constraint)
+  await prisma.staffAward.deleteMany({
+    where: { orgId: { in: orgIds } },
+  });
+  console.log(`    ✅ Deleted staff awards`);
+
+  // Users (cascades to many relations via onDelete: Cascade)
   const deletedUsers = await prisma.user.deleteMany({
     where: { orgId: { in: orgIds } },
   });
   console.log(`    ✅ Deleted ${deletedUsers.count} users`);
 
-  // Branches (cascades to tables, floor plans, menu items, inventory, etc.)
+  // Branches (cascades to tables, floor plans, etc.)
   const deletedBranches = await prisma.branch.deleteMany({
     where: { orgId: { in: orgIds } },
   });

@@ -1,6 +1,7 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
+import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma.service';
 import { SessionInvalidationService } from './session-invalidation.service';
 import { SessionsService } from './sessions.service';
@@ -23,11 +24,13 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     private prisma: PrismaService,
     private sessionInvalidation: SessionInvalidationService,
     private sessionsService: SessionsService, // M10
+    private configService: ConfigService,
   ) {
+    const secret = configService.get<string>('JWT_SECRET') || 'dev-secret-change-in-production';
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: process.env.JWT_SECRET || 'dev-secret-change-in-production',
+      secretOrKey: secret,
       passReqToCallback: true, // E25: Pass request to extract full token for deny list check
     });
   }

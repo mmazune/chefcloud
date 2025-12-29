@@ -35,6 +35,85 @@ export class StaffInsightsController {
   constructor(private readonly staffInsights: StaffInsightsService) {}
 
   /**
+   * GET /staff/insights
+   * Unified endpoint returning topPerformers, recentAwards, promotionSuggestions, allStaffKpis
+   * This is used by the frontend Staff Insights page
+   *
+   * Access: L4+ (Managers, Owners, HR, Accountants)
+   */
+  @Get()
+  @Roles('L4', 'L5', 'HR', 'ACCOUNTANT')
+  async getInsightsSummary(@CurrentUser() user: any) {
+    // Get last 30 days period
+    const to = new Date();
+    const from = new Date();
+    from.setDate(from.getDate() - 30);
+
+    let rankings: any[] = [];
+    let awards: any[] = [];
+
+    try {
+      const insights = await this.staffInsights.getStaffInsights({
+        orgId: user.orgId,
+        branchId: null,
+        from,
+        to,
+        periodType: AwardPeriodType.MONTH,
+      });
+      rankings = insights?.rankings || [];
+    } catch (err) {
+      // If insights fail, continue with empty rankings
+      console.warn('Failed to get staff insights:', err);
+    }
+
+    try {
+      const recentAwards = await this.staffInsights.listAwards({
+        orgId: user.orgId,
+        periodType: AwardPeriodType.MONTH,
+        limit: 10,
+      });
+      awards = recentAwards || [];
+    } catch (err) {
+      // If awards fail, continue with empty awards
+      console.warn('Failed to get awards:', err);
+    }
+
+    // Transform to frontend expected format
+    return {
+      topPerformers: rankings.slice(0, 5).map((r) => ({
+        employeeId: r.employeeId,
+        employeeName: r.employeeName,
+        position: r.position || null,
+        branchName: r.branchName || null,
+        kpiScore: r.avgScore,
+        attendanceScore: r.attendanceScore,
+        upsellScore: 0, // Not tracked yet
+        serviceScore: 0, // Not tracked yet
+      })),
+      recentAwards: awards.map((a: any) => ({
+        id: a.id,
+        employeeId: a.employeeId,
+        employeeName: a.employee ? `${a.employee.firstName} ${a.employee.lastName}` : 'Unknown',
+        awardType: a.category,
+        month: new Date(a.periodStart).toLocaleString('default', { month: 'long' }),
+        year: new Date(a.periodStart).getFullYear(),
+        reason: a.reason || null,
+      })),
+      promotionSuggestions: [], // TODO: Implement promotion suggestions
+      allStaffKpis: rankings.map((r) => ({
+        employeeId: r.employeeId,
+        employeeName: r.employeeName,
+        position: r.position || null,
+        branchName: r.branchName || null,
+        kpiScore: r.avgScore,
+        attendanceScore: r.attendanceScore,
+        upsellScore: 0,
+        serviceScore: 0,
+      })),
+    };
+  }
+
+  /**
    * GET /staff/insights/rankings
    * Get ranked staff with performance + reliability
    *

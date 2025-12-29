@@ -2,6 +2,8 @@ import React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
+import { RoleLevel } from '@/lib/auth';
 import {
   LayoutDashboard,
   Users,
@@ -20,29 +22,46 @@ interface NavItem {
   label: string;
   href: string;
   icon: React.ReactNode;
+  minRole: RoleLevel; // Minimum role level required
+  franchiseOnly?: boolean; // Only show for multi-branch orgs (L5 only)
 }
 
-// M34-FE-PARITY-S2: Added Staff Insights entry
+// M7.5: Navigation items with RBAC enforcement
 const navigationItems: NavItem[] = [
-  { label: 'Dashboard', href: '/dashboard', icon: <LayoutDashboard className="h-5 w-5" /> },
-  { label: 'POS', href: '/pos', icon: <ShoppingCart className="h-5 w-5" /> },
-  { label: 'Analytics', href: '/analytics', icon: <BarChart3 className="h-5 w-5" /> },
-  { label: 'Reports', href: '/reports', icon: <FileText className="h-5 w-5" /> },
-  { label: 'Staff', href: '/staff', icon: <Users className="h-5 w-5" /> },
-  { label: 'Inventory', href: '/inventory', icon: <Package className="h-5 w-5" /> },
-  { label: 'Finance', href: '/finance', icon: <DollarSign className="h-5 w-5" /> },
-  { label: 'Service Providers', href: '/service-providers', icon: <Wrench className="h-5 w-5" /> },
-  { label: 'Reservations', href: '/reservations', icon: <Calendar className="h-5 w-5" /> },
-  { label: 'Feedback', href: '/feedback', icon: <MessageSquare className="h-5 w-5" /> },
-  { label: 'Settings', href: '/settings', icon: <Settings className="h-5 w-5" /> },
+  { label: 'Dashboard', href: '/dashboard', icon: <LayoutDashboard className="h-5 w-5" />, minRole: RoleLevel.L1 },
+  { label: 'POS', href: '/pos', icon: <ShoppingCart className="h-5 w-5" />, minRole: RoleLevel.L1 },
+  { label: 'Analytics', href: '/analytics', icon: <BarChart3 className="h-5 w-5" />, minRole: RoleLevel.L3 },
+  { label: 'Reports', href: '/reports', icon: <FileText className="h-5 w-5" />, minRole: RoleLevel.L3 },
+  { label: 'Staff', href: '/staff', icon: <Users className="h-5 w-5" />, minRole: RoleLevel.L3 },
+  { label: 'Inventory', href: '/inventory', icon: <Package className="h-5 w-5" />, minRole: RoleLevel.L3 },
+  { label: 'Finance', href: '/finance', icon: <DollarSign className="h-5 w-5" />, minRole: RoleLevel.L4 },
+  { label: 'Service Providers', href: '/service-providers', icon: <Wrench className="h-5 w-5" />, minRole: RoleLevel.L3 },
+  { label: 'Reservations', href: '/reservations', icon: <Calendar className="h-5 w-5" />, minRole: RoleLevel.L3 },
+  { label: 'Feedback', href: '/feedback', icon: <MessageSquare className="h-5 w-5" />, minRole: RoleLevel.L4 },
+  { label: 'Settings', href: '/settings', icon: <Settings className="h-5 w-5" />, minRole: RoleLevel.L1 },
 ];
+
+/**
+ * Compare role levels for RBAC
+ */
+function canAccessRole(userRole: RoleLevel, requiredRole: RoleLevel): boolean {
+  const roleOrder = { L1: 1, L2: 2, L3: 3, L4: 4, L5: 5 };
+  return roleOrder[userRole] >= roleOrder[requiredRole];
+}
 
 export function Sidebar() {
   const router = useRouter();
+  const { user } = useAuth();
 
   const isActive = (href: string) => {
     return router.pathname === href || router.pathname.startsWith(href + '/');
   };
+
+  // M7.5: Filter navigation items based on user role
+  const visibleItems = navigationItems.filter((item) => {
+    if (!user) return false;
+    return canAccessRole(user.roleLevel, item.minRole);
+  });
 
   return (
     <aside className="fixed left-0 top-0 z-40 h-screen w-64 border-r bg-card">
@@ -61,7 +80,7 @@ export function Sidebar() {
 
       {/* Navigation */}
       <nav aria-label="Primary" className="flex-1 space-y-1 p-4">
-        {navigationItems.map((item) => (
+        {visibleItems.map((item) => (
           <Link
             key={item.href}
             href={item.href}

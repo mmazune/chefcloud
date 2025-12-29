@@ -92,6 +92,7 @@ async function bootstrap() {
       'X-Requested-With',
       'X-Idempotency-Key',
       'X-Client-Platform',
+      'X-Org-Id',
       'Accept',
     ],
   });
