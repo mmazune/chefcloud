@@ -1,0 +1,47 @@
+
+> @chefcloud/api@1.0.0-rc.1 test:e2e /workspaces/chefcloud/services/api
+> jest --config ./test/jest-e2e.json "--" "test/e2e/billing.slice.e2e-spec.ts" "--runInBand" "--json"
+
+✓ E2E environment loaded
+  DATABASE_URL: postgresql://postgres:***@localhost:5432/chefcloud_test
+  console.log
+    Rate limit test results: { '401': 20 }
+
+      at Object.<anonymous> (e2e/billing.slice.e2e-spec.ts:103:15)
+
+  console.warn
+    WARNING: No 429 responses observed. Rate limiter may not be active.
+
+      105 |       // Verify we actually got some 429s (not just 401s)
+      106 |       if (!has429) {
+    > 107 |         console.warn('WARNING: No 429 responses observed. Rate limiter may not be active.');
+          |                 ^
+      108 |       }
+      109 |     });
+      110 |   });
+
+      at Object.<anonymous> (e2e/billing.slice.e2e-spec.ts:107:17)
+
+PASS test/e2e/billing.slice.e2e-spec.ts
+  Billing (Slice E2E) — Deterministic
+    Authentication & Authorization
+      ✓ POST /billing/plan/change should return 401 if no authorization token is provided (51 ms)
+      ✓ POST /billing/cancel should return 401 if no authorization token is provided (20 ms)
+      ✓ GET /billing/subscription should return 401 if no authorization token is provided (5 ms)
+    Rate Limiting
+      ✓ Rate limiting produces >= one 429 deterministically (90 ms)
+    Basic Functionality (without auth)
+      ✓ should bootstrap successfully without metatype errors (1 ms)
+      ✓ should have billing controller mounted at /billing (4 ms)
+      ✓ POST /billing/plan/change should validate request body (3 ms)
+      ✓ POST /billing/cancel should be idempotent (5 ms)
+    Endpoint Availability
+      ✓ GET /billing/subscription endpoint exists (2 ms)
+      ✓ POST /billing/plan/change endpoint exists (3 ms)
+      ✓ POST /billing/cancel endpoint exists (2 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       11 passed, 11 total
+Snapshots:   0 total
+Time:        1.626 s, estimated 8 s
+Ran all test suites matching /test\/e2e\/billing.slice.e2e-spec.ts|--runInBand|--json/i.

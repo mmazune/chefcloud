@@ -1,27 +1,31 @@
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { Test } from '@nestjs/testing';
+import { createE2ETestingModule, createE2ETestingModuleBuilder } from '../helpers/e2e-bootstrap';
 
-import { CacheModule } from '../../src/common/cache.module';
+import {} from '../../src/common/cache.module';
 import { ObservabilityModule } from '../../src/observability/observability.module';
 
 import { WebhookReplayTestModule } from '../webhooks/replay.test.module';
 import { signCanonical } from '../webhooks/replay.validate';
+import { cleanup } from '../helpers/cleanup';
 
 describe('Webhook Replay Protection (Slice E2E)', () => {
   let app: INestApplication;
   const secret = 'whsec_test_123'; // Matches jest-setup-e2e.ts
 
   beforeAll(async () => {
-    const modRef = await Test.createTestingModule({
-      imports: [CacheModule, ObservabilityModule, WebhookReplayTestModule],
-    }).compile();
+    const modRef = await createE2ETestingModule({
+      imports: [ObservabilityModule, WebhookReplayTestModule],
+    });
 
     app = modRef.createNestApplication();
     await app.init();
   });
 
-  afterAll(async () => { await app?.close(); });
+  afterAll(async () => {
+    await cleanup(app);
+  });
 
   const url = '/webhook-test/events';
 

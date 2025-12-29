@@ -2,6 +2,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
 import { AppModule } from '../src/app.module';
+import { cleanup } from './helpers/cleanup';
+import { E2E_USERS } from './helpers/e2e-credentials';
 
 describe('A3 POS Core (e2e)', () => {
   let app: INestApplication;
@@ -28,8 +30,8 @@ describe('A3 POS Core (e2e)', () => {
 
     // Login as waiter
     const loginResponse = await request(app.getHttpServer()).post('/auth/login').send({
-      email: 'waiter@demo.local',
-      password: 'Waiter#123',
+      email: E2E_USERS.waiter.email,
+      password: E2E_USERS.waiter.password,
     });
 
     authToken = loginResponse.body.access_token;
@@ -53,7 +55,7 @@ describe('A3 POS Core (e2e)', () => {
   });
 
   afterAll(async () => {
-    await app.close();
+    await cleanup(app);
   });
 
   it('should create order with burger+fries -> send-to-kitchen -> kds queue shows ticket -> mark ready -> close order', async () => {

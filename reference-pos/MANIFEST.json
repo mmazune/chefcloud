@@ -1,0 +1,102 @@
+{
+  "generated": "2025-12-25T22:40:00Z",
+  "purpose": "Reference POS repositories for architecture pattern study - DO NOT COPY CODE without license review",
+  "repositories": [
+    {
+      "name": "opensourcepos",
+      "url": "https://github.com/opensourcepos/opensourcepos.git",
+      "defaultBranch": "master",
+      "commit": "849439c71eaa4c15857fb7c603297261c2ddc26d",
+      "licenseFile": "LICENSE",
+      "licenseType": "MIT",
+      "licenseSnippet": [
+        "MIT License",
+        "",
+        "Copyright (c) 2013-2025 jekkos",
+        "Copyright (c) 2017-2025 objecttothis",
+        "Copyright (c) 2017-2025 odiea"
+      ],
+      "notes": "PHP/CodeIgniter POS - MIT license, safe for reference and inspiration"
+    },
+    {
+      "name": "nexopos",
+      "url": "https://github.com/Blair2004/NexoPOS.git",
+      "defaultBranch": "master",
+      "commit": "ecfcf0a3e2e871c6f4c3d27096fc5d94f8c08868",
+      "licenseFile": "LICENSE",
+      "licenseType": "GPL-3.0",
+      "licenseSnippet": [
+        "                    GNU GENERAL PUBLIC LICENSE",
+        "                       Version 3, 29 June 2007",
+        "",
+        " Copyright (C) 2007 Free Software Foundation, Inc. <https://fsf.org/>",
+        " Everyone is permitted to copy and distribute verbatim copies"
+      ],
+      "notes": "Laravel/Vue POS - GPL-3.0 (COPYLEFT WARNING: reference only, do not copy code)"
+    },
+    {
+      "name": "pos-awesome",
+      "url": "https://github.com/ucraft-com/POS-Awesome.git",
+      "defaultBranch": "develop",
+      "commit": "a86fd291ab18a655b3f6d58882b01ecad81fe6af",
+      "licenseFile": "license.txt",
+      "licenseType": "GPL-3.0",
+      "licenseSnippet": [
+        "### GNU GENERAL PUBLIC LICENSE",
+        "",
+        "Version 3, 29 June 2007",
+        "",
+        "Copyright (C) 2007 Free Software Foundation, Inc."
+      ],
+      "notes": "Frappe/ERPNext POS - GPL-3.0 (COPYLEFT WARNING: reference only, do not copy code)"
+    },
+    {
+      "name": "medusa-pos-starter",
+      "url": "https://github.com/Agilo/medusa-pos-starter.git",
+      "defaultBranch": "master",
+      "commit": "7d44f9be18124612c9fb7db386d23bd981ae11c4",
+      "licenseFile": "LICENSE",
+      "licenseType": "MIT",
+      "licenseSnippet": [
+        "Copyright (c) 2025 Agilo",
+        "",
+        "Permission is hereby granted, free of charge, to any person obtaining a copy of",
+        "this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:",
+        "The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software."
+      ],
+      "notes": "Medusa.js POS starter - MIT license, safe for reference and inspiration"
+    },
+    {
+      "name": "medusa-pos-react",
+      "url": "https://github.com/pavlotsyhanok/medusa-pos-react.git",
+      "defaultBranch": "pos/develop",
+      "commit": "6fd9df1b24a3e2d239926b063851389978ee2817",
+      "licenseFile": "",
+      "licenseType": "UNKNOWN",
+      "licenseSnippet": [],
+      "notes": "React Medusa POS - No license file found, assume proprietary/all rights reserved"
+    },
+    {
+      "name": "store-pos",
+      "url": "https://github.com/tngoman/Store-POS.git",
+      "defaultBranch": "master",
+      "commit": "45d304ba01d3852596ef208278bfe809941c5797",
+      "licenseFile": "",
+      "licenseType": "UNKNOWN",
+      "licenseSnippet": [],
+      "notes": "Laravel POS - No license file found, assume proprietary/all rights reserved"
+    }
+  ],
+  "warnings": {
+    "GPL_REPOS": [
+      "nexopos",
+      "pos-awesome"
+    ],
+    "COPYLEFT_NOTICE": "GPL-3.0 licensed repos (nexopos, pos-awesome) require derivative works to also be GPL-3.0. DO NOT COPY CODE from these repos into Nimbus POS unless we release Nimbus as GPL-3.0. Use for architecture study and design inspiration only.",
+    "UNKNOWN_LICENSE_REPOS": [
+      "medusa-pos-react",
+      "store-pos"
+    ],
+    "UNKNOWN_LICENSE_NOTICE": "Repos without license files should be assumed to be proprietary/all rights reserved. Do not copy any code from these repos."
+  }
+}

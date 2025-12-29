@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import Redis from 'ioredis';
 import { createRedisClient } from '../config/redis.config';
@@ -60,7 +60,7 @@ class ErrorTracker {
 export const errorTracker = new ErrorTracker();
 
 @Injectable()
-export class OpsService {
+export class OpsService implements OnModuleDestroy {
   private redis: Redis;
 
   constructor(private prisma: PrismaService) {
@@ -297,5 +297,11 @@ export class OpsService {
     logger.info({ apiKeyId: id, name: apiKey.name, orgId }, 'API key deleted');
 
     return { success: true, message: 'API key deleted' };
+  }
+
+  async onModuleDestroy() {
+    if (this.redis) {
+      await this.redis.quit();
+    }
   }
 }

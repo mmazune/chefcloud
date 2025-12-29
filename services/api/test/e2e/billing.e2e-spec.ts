@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { createE2ETestingModule, createE2ETestingModuleBuilder } from '../helpers/e2e-bootstrap';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { json } from 'express';
@@ -13,6 +14,7 @@ import {
   MockMetricsService,
   MockReadinessService,
 } from './_mocks';
+import { cleanup } from '../helpers/cleanup';
 
 describe('Billing E2E (E24 - Auth, Authz, Rate Limiting)', () => {
   let app: INestApplication;
@@ -136,7 +138,7 @@ describe('Billing E2E (E24 - Auth, Authz, Rate Limiting)', () => {
   }
 
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
+    const moduleFixture: TestingModule = await createE2ETestingModuleBuilder({
       imports: [AppModule],
     })
       .overrideProvider(RedisService)
@@ -194,7 +196,7 @@ describe('Billing E2E (E24 - Auth, Authz, Rate Limiting)', () => {
       });
     }
 
-    await app.close();
+    await cleanup(app);
   });
 
   describe('POST /billing/plan/change', () => {

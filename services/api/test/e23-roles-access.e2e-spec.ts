@@ -3,6 +3,8 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/prisma.service';
+import { cleanup } from './helpers/cleanup';
+import { E2E_USERS } from './helpers/e2e-credentials';
 
 describe('E23 Roles & Platform Access (e2e)', () => {
   let app: INestApplication;
@@ -33,8 +35,8 @@ describe('E23 Roles & Platform Access (e2e)', () => {
     const managerRes = await request(app.getHttpServer())
       .post('/auth/login')
       .send({
-        email: 'manager@demo.local',
-        password: 'Manager#123',
+        email: E2E_USERS.manager.email,
+        password: E2E_USERS.manager.password,
       });
     managerToken = managerRes.body.access_token;
 
@@ -42,17 +44,17 @@ describe('E23 Roles & Platform Access (e2e)', () => {
     const procurementRes = await request(app.getHttpServer())
       .post('/auth/login')
       .send({
-        email: 'procurement@demo.local',
-        password: 'Procurement#123',
+        email: E2E_USERS.procurement.email,
+        password: E2E_USERS.procurement.password,
       });
     procurementToken = procurementRes.body.access_token;
 
-    // Login as ticket master (L2)
+    // Login as supervisor (L2) - using supervisor instead of non-existent ticketmaster
     const ticketMasterRes = await request(app.getHttpServer())
       .post('/auth/login')
       .send({
-        email: 'ticketmaster@demo.local',
-        password: 'TicketMaster#123',
+        email: E2E_USERS.supervisor.email,
+        password: E2E_USERS.supervisor.password,
       });
     ticketMasterToken = ticketMasterRes.body.access_token;
 
@@ -60,14 +62,14 @@ describe('E23 Roles & Platform Access (e2e)', () => {
     const waiterRes = await request(app.getHttpServer())
       .post('/auth/login')
       .send({
-        email: 'waiter@demo.local',
-        password: 'Waiter#123',
+        email: E2E_USERS.waiter.email,
+        password: E2E_USERS.waiter.password,
       });
     waiterToken = waiterRes.body.access_token;
   });
 
   afterAll(async () => {
-    await app.close();
+    await cleanup(app);
   });
 
   describe('GET /access/matrix', () => {
@@ -179,33 +181,33 @@ describe('E23 Roles & Platform Access (e2e)', () => {
       const response = await request(app.getHttpServer())
         .post('/auth/login')
         .send({
-          email: 'procurement@demo.local',
-          password: 'Procurement#123',
+          email: E2E_USERS.procurement.email,
+          password: E2E_USERS.procurement.password,
         })
         .expect(200);
 
       expect(response.body.user).toMatchObject({
-        email: 'procurement@demo.local',
-        firstName: 'Frank',
-        lastName: 'Procurement',
-        roleLevel: 'L3',
+        email: E2E_USERS.procurement.email,
+        firstName: E2E_USERS.procurement.firstName,
+        lastName: E2E_USERS.procurement.lastName,
+        roleLevel: E2E_USERS.procurement.roleLevel,
       });
     });
 
-    it('should authenticate assistant manager user (L3)', async () => {
+    it('should authenticate stock user (L3)', async () => {
       const response = await request(app.getHttpServer())
         .post('/auth/login')
         .send({
-          email: 'assistantmgr@demo.local',
-          password: 'AssistantMgr#123',
+          email: E2E_USERS.stock.email,
+          password: E2E_USERS.stock.password,
         })
         .expect(200);
 
       expect(response.body.user).toMatchObject({
-        email: 'assistantmgr@demo.local',
-        firstName: 'Grace',
-        lastName: 'Asst Manager',
-        roleLevel: 'L3',
+        email: E2E_USERS.stock.email,
+        firstName: E2E_USERS.stock.firstName,
+        lastName: E2E_USERS.stock.lastName,
+        roleLevel: E2E_USERS.stock.roleLevel,
       });
     });
 
@@ -213,67 +215,67 @@ describe('E23 Roles & Platform Access (e2e)', () => {
       const response = await request(app.getHttpServer())
         .post('/auth/login')
         .send({
-          email: 'eventmgr@demo.local',
-          password: 'EventMgr#123',
+          email: E2E_USERS.eventmgr.email,
+          password: E2E_USERS.eventmgr.password,
         })
         .expect(200);
 
       expect(response.body.user).toMatchObject({
-        email: 'eventmgr@demo.local',
-        firstName: 'Henry',
-        lastName: 'Event Manager',
-        roleLevel: 'L3',
+        email: E2E_USERS.eventmgr.email,
+        firstName: E2E_USERS.eventmgr.firstName,
+        lastName: E2E_USERS.eventmgr.lastName,
+        roleLevel: E2E_USERS.eventmgr.roleLevel,
       });
     });
 
-    it('should authenticate ticket master user (L2)', async () => {
+    it('should authenticate supervisor user (L2)', async () => {
       const response = await request(app.getHttpServer())
         .post('/auth/login')
         .send({
-          email: 'ticketmaster@demo.local',
-          password: 'TicketMaster#123',
+          email: E2E_USERS.supervisor.email,
+          password: E2E_USERS.supervisor.password,
         })
         .expect(200);
 
       expect(response.body.user).toMatchObject({
-        email: 'ticketmaster@demo.local',
-        firstName: 'Iris',
-        lastName: 'Ticket Master',
-        roleLevel: 'L2',
+        email: E2E_USERS.supervisor.email,
+        firstName: E2E_USERS.supervisor.firstName,
+        lastName: E2E_USERS.supervisor.lastName,
+        roleLevel: E2E_USERS.supervisor.roleLevel,
       });
     });
 
-    it('should authenticate assistant chef user (L2)', async () => {
+    it('should authenticate chef user (L2)', async () => {
       const response = await request(app.getHttpServer())
         .post('/auth/login')
         .send({
-          email: 'assistantchef@demo.local',
-          password: 'AssistantChef#123',
+          email: E2E_USERS.chef.email,
+          password: E2E_USERS.chef.password,
         })
         .expect(200);
 
       expect(response.body.user).toMatchObject({
-        email: 'assistantchef@demo.local',
-        firstName: 'Jack',
-        lastName: 'Asst Chef',
-        roleLevel: 'L2',
+        email: E2E_USERS.chef.email,
+        firstName: E2E_USERS.chef.firstName,
+        lastName: E2E_USERS.chef.lastName,
+        roleLevel: E2E_USERS.chef.roleLevel,
       });
     });
 
-    it('should authenticate head barista user (L3)', async () => {
+    it('should authenticate bartender user (L1)', async () => {
       const response = await request(app.getHttpServer())
         .post('/auth/login')
         .send({
-          email: 'headbarista@demo.local',
-          password: 'HeadBarista#123',
+          email: E2E_USERS.bartender.email,
+          password: E2E_USERS.bartender.password,
         })
         .expect(200);
 
       expect(response.body.user).toMatchObject({
-        email: 'headbarista@demo.local',
-        firstName: 'Kelly',
-        lastName: 'Head Barista',
-        roleLevel: 'L3',
+        email: E2E_USERS.bartender.email,
+        firstName: E2E_USERS.bartender.firstName,
+        lastName: E2E_USERS.bartender.lastName,
+        roleLevel: E2E_USERS.bartender.roleLevel,
       });
     });
   });

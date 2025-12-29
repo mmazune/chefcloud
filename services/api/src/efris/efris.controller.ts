@@ -1,11 +1,11 @@
-import { Controller, Post, Param } from '@nestjs/common';
+import { Controller, Post, Param, OnModuleDestroy } from '@nestjs/common';
 import { EfrisService } from './efris.service';
 import { Queue } from 'bullmq';
 import { ConfigService } from '@nestjs/config';
 import { getRedisConnectionOptions } from '../config/redis.config';
 
 @Controller('fiscal')
-export class EfrisController {
+export class EfrisController implements OnModuleDestroy {
   private efrisQueue: Queue;
 
   constructor(
@@ -37,5 +37,11 @@ export class EfrisController {
       jobId: job.id,
       message: `EFRIS retry job enqueued for order ${orderId}`,
     };
+  }
+
+  async onModuleDestroy() {
+    if (this.efrisQueue) {
+      await this.efrisQueue.close();
+    }
   }
 }

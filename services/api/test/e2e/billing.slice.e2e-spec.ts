@@ -1,11 +1,13 @@
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { Test } from '@nestjs/testing';
+import { createE2ETestingModule, createE2ETestingModuleBuilder } from '../helpers/e2e-bootstrap';
 
 // Slice imports – keep this list tight
 import { BillingModule } from '../../src/billing/billing.module';
 import { AuthModule } from '../../src/auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
+import { DemoModule } from '../../src/common/demo/demo.module';
 
 // Test helpers
 import { ThrottlerTestModule } from './throttler.test.module';
@@ -14,12 +16,13 @@ import { PrismaTestModule, PrismaService as TestPrismaService } from '../prisma/
 
 // Real PrismaService token to override
 import { PrismaService } from '../../src/prisma.service';
+import { cleanup } from '../helpers/cleanup';
 
 describe('Billing (Slice E2E) — Deterministic', () => {
   let app: INestApplication;
 
   beforeAll(async () => {
-    const modRef = await Test.createTestingModule({
+    const modRef = await createE2ETestingModuleBuilder({
       imports: [
         ConfigModule.forRoot({ isGlobal: true }),
         
@@ -28,6 +31,7 @@ describe('Billing (Slice E2E) — Deterministic', () => {
         PrismaTestModule,
         
         // Billing dependencies
+        DemoModule, // T1.9: Provides DemoProtectionService for BillingController
         AuthModule,
         BillingModule,
       ],
@@ -42,7 +46,7 @@ describe('Billing (Slice E2E) — Deterministic', () => {
   });
 
   afterAll(async () => {
-    await app?.close();
+    await cleanup(app);
   });
 
   describe('Authentication & Authorization', () => {

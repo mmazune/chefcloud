@@ -1,6 +1,7 @@
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { Test } from '@nestjs/testing';
+import { createE2ETestingModule, createE2ETestingModuleBuilder } from '../helpers/e2e-bootstrap';
 
 // Slice imports – keep this list tight
 import { AuthModule } from '../../src/auth/auth.module';
@@ -18,6 +19,7 @@ import { MockAuthService } from '../auth/auth.mock';
 import { PrismaService } from '../../src/prisma.service';
 import { AuthService } from '../../src/auth/auth.service';
 import { SessionInvalidationService } from '../../src/auth/session-invalidation.service';
+import { cleanup } from '../helpers/cleanup';
 
 // Mock SessionInvalidationService (simple stub)
 class MockSessionInvalidationService {
@@ -36,7 +38,7 @@ describe('Auth (Slice E2E) — Deterministic', () => {
   let app: INestApplication;
 
   beforeAll(async () => {
-    const modRef = await Test.createTestingModule({
+    const modRef = await createE2ETestingModuleBuilder({
       imports: [
         ConfigModule.forRoot({ isGlobal: true }),
 
@@ -68,7 +70,7 @@ describe('Auth (Slice E2E) — Deterministic', () => {
   });
 
   afterAll(async () => {
-    await app?.close();
+    await cleanup(app);
   });
 
   // ========================================

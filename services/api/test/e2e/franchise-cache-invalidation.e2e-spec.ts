@@ -1,9 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { createE2ETestingModule, createE2ETestingModuleBuilder } from '../helpers/e2e-bootstrap';
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { AppModule } from '../../src/app.module';
 import { PrismaService } from '../../src/prisma.service';
 import { CacheService } from '../../src/common/cache.service';
+import { cleanup } from '../helpers/cleanup';
 
 /**
  * E22.D: Integration test for cache invalidation
@@ -23,9 +25,9 @@ describe('E22.D - Franchise Cache Invalidation (e2e)', () => {
   let testBranchId: string;
 
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
+    const moduleFixture: TestingModule = await createE2ETestingModule({
       imports: [AppModule],
-    }).compile();
+    });
 
     app = moduleFixture.createNestApplication();
     await app.init();
@@ -49,7 +51,7 @@ describe('E22.D - Franchise Cache Invalidation (e2e)', () => {
       await prisma.organization.delete({ where: { id: testOrgId } }).catch(() => {});
     }
 
-    await app.close();
+    await cleanup(app);
   });
 
   async function setupTestData() {

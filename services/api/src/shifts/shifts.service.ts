@@ -6,18 +6,27 @@ import {
   ForbiddenException,
   Optional,
   Inject,
+  OnModuleDestroy,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { CountsService } from '../inventory/counts.service';
 import { OpenShiftDto, CloseShiftDto } from './shifts.dto';
+import { Queue } from 'bullmq';
+import { getRedisConnectionOptions } from '../config/redis.config';
 
 @Injectable()
-export class ShiftsService {
+export class ShiftsService implements OnModuleDestroy {
+  private digestQueue: Queue;
+
   constructor(
     private prisma: PrismaService,
     @Optional() @Inject('KpisService') private kpisService?: any,
     @Optional() private countsService?: CountsService,
-  ) {}
+  ) {
+    this.digestQueue = new Queue('digest', {
+      connection: getRedisConnectionOptions(),
+    });
+  }
 
   private markKpisDirty(orgId: string, branchId: string) {
     if (this.kpisService) {
@@ -169,15 +178,8 @@ export class ShiftsService {
     });
 
     // Enqueue shift-close digest jobs (legacy and new subscription-based)
-    const { Queue } = await import('bullmq');
-    const connection = {
-      host: process.env.REDIS_HOST || 'localhost',
-      port: parseInt(process.env.REDIS_PORT || '6379', 10),
-    };
-    const digestQueue = new Queue('digest', { connection });
-
     // Legacy: Enqueue for old OwnerDigest system (sendOnShiftClose flag)
-    await digestQueue.add('owner-digest-shift-close', {
+    await this.digestQueue.add('owner-digest-shift-close', {
       type: 'owner-digest-shift-close',
       orgId: shift.orgId,
       branchId: shift.branchId,
@@ -185,7 +187,7 @@ export class ShiftsService {
     });
 
     // M4: Enqueue for new subscription-based shift-end reports
-    await digestQueue.add('shift-end-report', {
+    await this.digestQueue.add('shift-end-report', {
       type: 'shift-end-report',
       orgId: shift.orgId,
       branchId: shift.branchId,
@@ -218,5 +220,11 @@ export class ShiftsService {
         closedBy: { select: { id: true, firstName: true, lastName: true } },
       },
     });
+  }
+
+  async onModuleDestroy() {
+    if (this.digestQueue) {
+      await this.digestQueue.close();
+    }
   }
 }

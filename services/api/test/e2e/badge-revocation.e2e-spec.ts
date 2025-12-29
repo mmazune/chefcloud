@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { createE2ETestingModule, createE2ETestingModuleBuilder } from '../helpers/e2e-bootstrap';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';
 import { AppModule } from '../../src/app.module';
@@ -17,9 +18,9 @@ describe('Badge Revocation & Session Invalidation (E25) - E2E', () => {
   let adminToken: string;
 
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
+    const moduleFixture: TestingModule = await createE2ETestingModule({
       imports: [AppModule],
-    }).compile();
+    });
 
     app = moduleFixture.createNestApplication();
     app.useGlobalPipes(

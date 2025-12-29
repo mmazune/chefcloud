@@ -3,6 +3,7 @@ import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/prisma.service';
+import { cleanup } from './helpers/cleanup';
 
 /**
  * E2E Test for E27-s1: Costing & Profit Engine
@@ -49,7 +50,7 @@ describe('E27 - Costing & Profit Engine (e2e)', () => {
     await prisma.client.orgSettings.deleteMany({ where: { orgId } });
     await prisma.client.org.deleteMany({ where: { id: orgId } });
 
-    await app.close();
+    await cleanup(app);
   });
 
   async function setupTestData() {

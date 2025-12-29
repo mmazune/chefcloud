@@ -1,6 +1,7 @@
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { Test } from '@nestjs/testing';
+import { createE2ETestingModule, createE2ETestingModuleBuilder } from '../helpers/e2e-bootstrap';
 
 // Slice imports – keep this list tight
 import { PurchasingModule } from '../../src/purchasing/purchasing.module';
@@ -14,12 +15,13 @@ import { PrismaTestModule, PrismaService as TestPrismaService } from '../prisma/
 
 // Real PrismaService token to override
 import { PrismaService } from '../../src/prisma.service';
+import { cleanup } from '../helpers/cleanup';
 
 describe('Purchasing (Slice E2E) — Deterministic', () => {
   let app: INestApplication;
 
   beforeAll(async () => {
-    const modRef = await Test.createTestingModule({
+    const modRef = await createE2ETestingModuleBuilder({
       imports: [
         ConfigModule.forRoot({ isGlobal: true }),
         
@@ -42,7 +44,7 @@ describe('Purchasing (Slice E2E) — Deterministic', () => {
   });
 
   afterAll(async () => {
-    await app?.close();
+    await cleanup(app);
   });
 
   describe('Authentication & Authorization', () => {

@@ -1,8 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { createE2ETestingModule, createE2ETestingModuleBuilder } from '../helpers/e2e-bootstrap';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
 import { AppModule } from '../../src/app.module';
-import { createOrgWithUsers, createMenu, createFloor, disconnect } from './factory';
+import { PrismaService } from '../../src/prisma.service';
+import { createOrgWithUsers, createMenu, createFloor } from './factory';
+import { cleanup } from '../helpers/cleanup';
 
 describe('POS E2E', () => {
   let app: INestApplication;
@@ -12,17 +15,9 @@ describe('POS E2E', () => {
   let tableId: string;
 
   beforeAll(async () => {
-    const factory = await createOrgWithUsers('e2e-pos');
-    const menu = await createMenu(factory.orgId, factory.branchId);
-    const floor = await createFloor(factory.orgId, factory.branchId);
-
-    burgerId = menu.burger.id;
-    friesId = menu.fries.id;
-    tableId = floor.table1.id;
-
-    const moduleFixture: TestingModule = await Test.createTestingModule({
+    const moduleFixture: TestingModule = await createE2ETestingModule({
       imports: [AppModule],
-    }).compile();
+    });
 
     app = moduleFixture.createNestApplication();
     app.useGlobalPipes(
@@ -35,6 +30,15 @@ describe('POS E2E', () => {
 
     await app.init();
 
+    const prisma = app.get(PrismaService);
+    const factory = await createOrgWithUsers(prisma, 'e2e-pos');
+    const menu = await createMenu(prisma, factory.orgId, factory.branchId);
+    const floor = await createFloor(prisma, factory.orgId, factory.branchId);
+
+    burgerId = menu.burger.id;
+    friesId = menu.fries.id;
+    tableId = floor.table1.id;
+
     // Login as waiter
     const loginResponse = await request(app.getHttpServer()).post('/auth/login').send({
       email: factory.users.waiter.email,
@@ -45,8 +49,7 @@ describe('POS E2E', () => {
   });
 
   afterAll(async () => {
-    await app.close();
-    await disconnect();
+    await cleanup(app);
   });
 
   it('should create order → send-to-kitchen → close', async () => {

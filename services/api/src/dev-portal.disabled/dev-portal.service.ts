@@ -171,7 +171,6 @@ export class DevPortalService {
   }
 
   /**
-<<<<<<< HEAD
    * Helper for time range resolution
    */
   private resolveRange(range: '24h' | '7d') {
@@ -316,40 +315,5 @@ export class DevPortalService {
         ];
 
     return { timeseries, keys };
-=======
-   * List all developer API keys
-   */
-  async listKeys() {
-    return this.keyRepo.findMany();
-  }
-
-  /**
-   * Create new developer API key
-   */
-  async createKey(label: string, plan: 'free' | 'pro' = 'free') {
-    return this.keyRepo.create({ label, plan });
-  }
-
-  /**
-   * Revoke API key (soft delete)
-   */
-  async revokeKey(id: string) {
-    return this.keyRepo.update({ id, active: false });
-  }
-
-  /**
-   * Handle webhook event and verify HMAC signature
-   */
-  handleWebhook(body: any, sig?: string) {
-    const secret = process.env.WH_SECRET || '';
-    const raw = JSON.stringify(body ?? {});
-    const ok = !!sig && verifySignature(raw, secret, sig);
-    
-    if (!ok) {
-      return { ok: false, reason: sig ? 'bad_signature' : 'missing_signature' };
-    }
-    
-    return { ok: true, type: body?.type ?? 'dev.event', id: body?.id ?? 'evt' };
->>>>>>> feat/devportal-prod-endpoints
   }
 }

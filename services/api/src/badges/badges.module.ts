@@ -8,7 +8,7 @@ import { RedisService } from '../common/redis.service';
 @Module({
   imports: [AuthModule],
   controllers: [BadgesController],
-  providers: [BadgesService, PrismaService, RedisService],
+  providers: [BadgesService, PrismaService],
   exports: [BadgesService],
 })
 export class BadgesModule {}

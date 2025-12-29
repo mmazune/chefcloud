@@ -4,6 +4,7 @@ import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { E2eAppModule } from './e2e-app.module';
 import { PrismaService } from '../src/prisma.service';
+import { cleanup } from './helpers/cleanup';
 
 describe('E22-s2: Franchise APIs (e2e)', () => {
   let app: INestApplication;
@@ -132,7 +133,7 @@ describe('E22-s2: Franchise APIs (e2e)', () => {
     await prisma.client.branch.deleteMany({ where: { orgId } });
     await prisma.client.orgSettings.deleteMany({ where: { orgId } });
     await prisma.client.org.delete({ where: { id: orgId } });
-    await app.close();
+    await cleanup(app);
   });
 
   describe('POST /franchise/budgets', () => {

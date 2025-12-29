@@ -3,6 +3,8 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
 import { E2eAppModule } from './e2e-app.module';
 import { PrismaService } from '../src/prisma.service';
+import { cleanup } from './helpers/cleanup';
+import { E2E_USERS } from './helpers/e2e-credentials';
 
 describe('Auth (e2e)', () => {
   let app: INestApplication;
@@ -27,7 +29,7 @@ describe('Auth (e2e)', () => {
   });
 
   afterAll(async () => {
-    await app.close();
+    await cleanup(app);
   });
 
   describe('POST /auth/login', () => {
@@ -35,18 +37,18 @@ describe('Auth (e2e)', () => {
       const response = await request(app.getHttpServer())
         .post('/auth/login')
         .send({
-          email: 'owner@demo.local',
-          password: 'Owner#123',
+          email: E2E_USERS.owner.email,
+          password: E2E_USERS.owner.password,
         })
         .expect(200);
 
       expect(response.body).toHaveProperty('access_token');
       expect(response.body).toHaveProperty('user');
       expect(response.body.user).toMatchObject({
-        email: 'owner@demo.local',
-        firstName: 'Alice',
-        lastName: 'Owner',
-        roleLevel: 'L5',
+        email: E2E_USERS.owner.email,
+        firstName: E2E_USERS.owner.firstName,
+        lastName: E2E_USERS.owner.lastName,
+        roleLevel: E2E_USERS.owner.roleLevel,
       });
     });
 
@@ -55,7 +57,7 @@ describe('Auth (e2e)', () => {
         .post('/auth/login')
         .send({
           email: 'nonexistent@demo.restaurant',
-          password: 'Owner#123',
+          password: E2E_USERS.owner.password,
         })
         .expect(401);
     });
@@ -64,7 +66,7 @@ describe('Auth (e2e)', () => {
       await request(app.getHttpServer())
         .post('/auth/login')
         .send({
-          email: 'owner@demo.local',
+          email: E2E_USERS.owner.email,
           password: 'WrongPassword!',
         })
         .expect(401);
@@ -74,7 +76,7 @@ describe('Auth (e2e)', () => {
       await request(app.getHttpServer())
         .post('/auth/login')
         .send({
-          email: 'owner@demo.local',
+          email: E2E_USERS.owner.email,
         })
         .expect(400);
     });
@@ -177,8 +179,8 @@ describe('Auth (e2e)', () => {
 
     beforeAll(async () => {
       const loginResponse = await request(app.getHttpServer()).post('/auth/login').send({
-        email: 'owner@demo.local',
-        password: 'Owner#123',
+        email: E2E_USERS.owner.email,
+        password: E2E_USERS.owner.password,
       });
 
       accessToken = loginResponse.body.access_token;
@@ -191,10 +193,10 @@ describe('Auth (e2e)', () => {
         .expect(200);
 
       expect(response.body).toMatchObject({
-        email: 'owner@demo.local',
-        firstName: 'Alice',
-        lastName: 'Owner',
-        roleLevel: 'L5',
+        email: E2E_USERS.owner.email,
+        firstName: E2E_USERS.owner.firstName,
+        lastName: E2E_USERS.owner.lastName,
+        roleLevel: E2E_USERS.owner.roleLevel,
       });
       expect(response.body).toHaveProperty('id');
       expect(response.body).toHaveProperty('orgId');
@@ -218,8 +220,8 @@ describe('Auth (e2e)', () => {
 
     beforeAll(async () => {
       const loginResponse = await request(app.getHttpServer()).post('/auth/login').send({
-        email: 'manager@demo.local',
-        password: 'Manager#123',
+        email: E2E_USERS.manager.email,
+        password: E2E_USERS.manager.password,
       });
 
       managerToken = loginResponse.body.access_token;

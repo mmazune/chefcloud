@@ -1,6 +1,7 @@
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { Test } from '@nestjs/testing';
+import { createE2ETestingModule, createE2ETestingModuleBuilder } from '../helpers/e2e-bootstrap';
 import { Controller, Post, Get, Body, Param, UseGuards, Module } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 
@@ -22,6 +23,7 @@ import { PrismaService } from '../../src/prisma.service';
 // Webhook test module
 import { PaymentsWebhookTestModule } from '../payments/webhook.test.module';
 import { signBody } from '../payments/webhook.hmac';
+import { cleanup } from '../helpers/cleanup';
 
 const AUTH = { Authorization: 'Bearer TEST_TOKEN' };
 
@@ -103,7 +105,7 @@ describe('Payments (Slice E2E)', () => {
   let app: INestApplication;
 
   beforeAll(async () => {
-    const modRef = await Test.createTestingModule({
+    const modRef = await createE2ETestingModuleBuilder({
       imports: [
         ConfigModule.forRoot({ isGlobal: true }),
 
@@ -126,7 +128,7 @@ describe('Payments (Slice E2E)', () => {
   });
 
   afterAll(async () => {
-    await app?.close();
+    await cleanup(app);
   });
 
   // --- Auth & availability ---

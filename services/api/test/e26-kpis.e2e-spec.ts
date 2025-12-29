@@ -4,6 +4,7 @@ import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/prisma.service';
+import { cleanup } from './helpers/cleanup';
 
 describe('E26-s1: Live KPI Streaming (SSE)', () => {
   let app: INestApplication;
@@ -74,7 +75,7 @@ describe('E26-s1: Live KPI Streaming (SSE)', () => {
     await prisma.client.user.deleteMany({ where: { orgId } });
     await prisma.client.branch.deleteMany({ where: { orgId } });
     await prisma.client.org.delete({ where: { id: orgId } });
-    await app.close();
+    await cleanup(app);
   });
 
   describe('GET /stream/kpis (SSE)', () => {

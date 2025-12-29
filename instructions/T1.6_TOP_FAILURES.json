@@ -1,0 +1,137 @@
+{
+  "stats": {
+    "totalSuites": 57,
+    "passedSuites": 13,
+    "failedSuites": 44,
+    "totalTests": 422,
+    "passedTests": 72,
+    "failedTests": 349
+  },
+  "categories": {
+    "Other": 19,
+    "Auth/Seed Expectation Mismatches": 14,
+    "Prisma Validation Errors": 8,
+    "Response Shape Mismatches": 2,
+    "Module Import Errors": 1
+  },
+  "topCategory": "Other",
+  "topFailingFiles": [
+    {
+      "file": "test/e22-franchise.e2e-spec.ts",
+      "category": "Prisma Validation Errors",
+      "failedTests": 34
+    },
+    {
+      "file": "test/m2-shifts-scheduling.e2e-spec.ts",
+      "category": "Prisma Validation Errors",
+      "failedTests": 22
+    },
+    {
+      "file": "test/webhook-security.e2e-spec.ts",
+      "category": "Other",
+      "failedTests": 19
+    },
+    {
+      "file": "test/m7-service-providers.e2e-spec.ts",
+      "category": "Prisma Validation Errors",
+      "failedTests": 16
+    },
+    {
+      "file": "test/e23-roles-access.e2e-spec.ts",
+      "category": "Auth/Seed Expectation Mismatches",
+      "failedTests": 15
+    },
+    {
+      "file": "test/e2e/inventory.slice.e2e-spec.ts",
+      "category": "Auth/Seed Expectation Mismatches",
+      "failedTests": 14
+    },
+    {
+      "file": "test/e2e/payments.slice.e2e-spec.ts",
+      "category": "Auth/Seed Expectation Mismatches",
+      "failedTests": 14
+    },
+    {
+      "file": "test/e2e/orders.slice.e2e-spec.ts",
+      "category": "Auth/Seed Expectation Mismatches",
+      "failedTests": 14
+    },
+    {
+      "file": "test/e2e/reservations.slice.e2e-spec.ts",
+      "category": "Auth/Seed Expectation Mismatches",
+      "failedTests": 13
+    },
+    {
+      "file": "test/sse-security.e2e-spec.ts",
+      "category": "Auth/Seed Expectation Mismatches",
+      "failedTests": 12
+    },
+    {
+      "file": "test/billing-simple.e2e-spec.ts",
+      "category": "Auth/Seed Expectation Mismatches",
+      "failedTests": 11
+    },
+    {
+      "file": "test/e2e/billing.e2e-spec.ts",
+      "category": "Auth/Seed Expectation Mismatches",
+      "failedTests": 11
+    },
+    {
+      "file": "test/e2e/devportal.slice.e2e-spec.ts",
+      "category": "Other",
+      "failedTests": 11
+    },
+    {
+      "file": "test/e2e/billing.slice.e2e-spec.ts",
+      "category": "Auth/Seed Expectation Mismatches",
+      "failedTests": 11
+    },
+    {
+      "file": "test/e2e/badge-revocation.e2e-spec.ts",
+      "category": "Other",
+      "failedTests": 9
+    }
+  ],
+  "topErrors": [
+    {
+      "message": "● Test suite failed to run",
+      "count": 2
+    },
+    {
+      "message": "● SSE /stream/kpis Security (E26) › Authentication › should return 401 when no token provided",
+      "count": 1
+    },
+    {
+      "message": "● Accounting E2E › should create period → lock → posting blocked",
+      "count": 1
+    },
+    {
+      "message": "● E22-s2: Franchise APIs (e2e) › POST /franchise/budgets › should upsert a budget for a branch",
+      "count": 1
+    },
+    {
+      "message": "● Auth (e2e) › POST /auth/login › should login with valid credentials",
+      "count": 1
+    },
+    {
+      "message": "● Reports E2E › should fetch X report (shift summary)",
+      "count": 1
+    },
+    {
+      "message": "● Inventory E2E › should receive PO → on-hand increases",
+      "count": 1
+    },
+    {
+      "message": "● Workforce E2E › should clock in → clock out",
+      "count": 1
+    },
+    {
+      "message": "● Bookings E2E › should create booking → HOLD → pay → confirm",
+      "count": 1
+    },
+    {
+      "message": "● E23 Platform Access (e2e) › Public routes bypass › should allow unauthenticated access to /health",
+      "count": 1
+    }
+  ]
+}

@@ -3,6 +3,7 @@ import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/prisma.service';
+import { cleanup } from './helpers/cleanup';
 
 describe('API Key Security (E2E)', () => {
   let app: INestApplication;
@@ -78,14 +79,16 @@ describe('API Key Security (E2E)', () => {
   });
 
   afterAll(async () => {
-    // Cleanup
+    // Data cleanup
     await prisma.spoutDevice.deleteMany({ where: { orgId } });
     await prisma.apiKey.deleteMany({ where: { orgId } });
     await prisma.session.deleteMany({});
     await prisma.user.deleteMany({ where: { orgId } });
     await prisma.branch.deleteMany({ where: { orgId } });
     await prisma.org.deleteMany({ where: { id: orgId } });
-    await app.close();
+    
+    // App cleanup
+    await cleanup(app);
   });
 
   describe('POST /ops/apikeys', () => {

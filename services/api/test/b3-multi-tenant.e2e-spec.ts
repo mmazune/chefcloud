@@ -3,6 +3,7 @@ import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/prisma.service';
+import { cleanup } from './helpers/cleanup';
 
 describe('Multi-Tenant Isolation (E2E)', () => {
   let app: INestApplication;
@@ -161,7 +162,7 @@ describe('Multi-Tenant Isolation (E2E)', () => {
     await prisma.branch.deleteMany({ where: { orgId: orgB.id } });
     await prisma.org.deleteMany({ where: { id: orgA.id } });
     await prisma.org.deleteMany({ where: { id: orgB.id } });
-    await app.close();
+    await cleanup(app);
   });
 
   describe('Cross-org menu item access', () => {

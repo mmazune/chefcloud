@@ -54,7 +54,6 @@ import { DocumentsModule } from './documents/documents.module'; // M18
 import { FeedbackModule } from './feedback/feedback.module'; // M20
 import { LoggerMiddleware } from './logger.middleware';
 import { WriteBlockMiddleware } from './ops/write-block.middleware';
-import { RedisService } from './common/redis.service';
 import { WebhookVerificationGuard } from './common/webhook-verification.guard';
 import { DemoModule } from './common/demo/demo.module'; // M33-DEMO-S4
 import { CacheModule } from './common/cache.module';
@@ -121,7 +120,7 @@ import { PrismaModule } from './prisma.module';
   controllers: [HealthController, WebhooksController],
   providers: [
     // PrismaService now provided by global PrismaModule
-    RedisService,
+    // RedisService now provided by global CacheModule
     WebhookVerificationGuard,
     {
       provide: APP_GUARD,

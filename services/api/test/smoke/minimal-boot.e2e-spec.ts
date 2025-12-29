@@ -3,9 +3,14 @@ import { INestApplication } from '@nestjs/common';
 import { AppModule } from '../../src/app.module';
 import { EventBusService } from '../../src/events/event-bus.service';
 import { NoopEventBusService } from '../../src/events/noop-event-bus.service';
+import { cleanup } from '../helpers/cleanup';
 
 describe('Minimal Boot Test', () => {
   let app: INestApplication;
+
+  afterAll(async () => {
+    await cleanup(app);
+  });
 
   it('should boot AppModule without errors', async () => {
     console.log('Starting module compilation...');
@@ -27,8 +32,6 @@ describe('Minimal Boot Test', () => {
       console.log(`App initialized in ${Date.now() - startTime}ms total`);
       
       expect(app).toBeDefined();
-      
-      await app.close();
     } catch (error) {
       console.error('Boot failed:', error);
       throw error;

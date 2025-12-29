@@ -1,8 +1,10 @@
 import request from 'supertest';
 import { Test } from '@nestjs/testing';
+import { createE2ETestingModule, createE2ETestingModuleBuilder } from '../helpers/e2e-bootstrap';
 import { INestApplication, Controller, Get } from '@nestjs/common';
 import { setupSwagger } from '../../src/docs/swagger';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { cleanup } from '../helpers/cleanup';
 
 // Minimal test module to avoid full app bootstrap
 @ApiTags('Test')
@@ -26,9 +28,9 @@ describe('Docs (env-gated)', () => {
     'returns 404 when DOCS_ENABLED!=1',
     async () => {
       process.env.DOCS_ENABLED = '0';
-      const mod = await Test.createTestingModule({
+      const mod = await createE2ETestingModule({
         controllers: [TestController],
-      }).compile();
+      });
       app = mod.createNestApplication();
       setupSwagger(app);
       await app.init();
@@ -46,9 +48,9 @@ describe('Docs (env-gated)', () => {
     'serves OpenAPI JSON when DOCS_ENABLED=1',
     async () => {
       process.env.DOCS_ENABLED = '1';
-      const mod = await Test.createTestingModule({
+      const mod = await createE2ETestingModule({
         controllers: [TestController],
-      }).compile();
+      });
       app = mod.createNestApplication();
       setupSwagger(app);
       await app.init();

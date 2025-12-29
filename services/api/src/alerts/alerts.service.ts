@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { CreateChannelDto, CreateScheduleDto } from './alerts.dto';
 import { Queue } from 'bullmq';
@@ -7,7 +7,7 @@ import { getRedisConnectionOptions } from '../config/redis.config';
 import * as nodemailer from 'nodemailer';
 
 @Injectable()
-export class AlertsService {
+export class AlertsService implements OnModuleDestroy {
   private readonly logger = new Logger(AlertsService.name);
   private alertsQueue: Queue;
   private transporter: nodemailer.Transporter;
@@ -175,5 +175,11 @@ export class AlertsService {
     await this.transporter.sendMail(mailOptions);
 
     this.logger.log(`[SMTP] sent -> to: ${to}, subject: ${mailOptions.subject}`);
+  }
+
+  async onModuleDestroy() {
+    if (this.alertsQueue) {
+      await this.alertsQueue.close();
+    }
   }
 }

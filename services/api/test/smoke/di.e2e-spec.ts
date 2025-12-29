@@ -5,6 +5,7 @@ import { MetricsService } from '../../src/observability/metrics.service';
 import { ReadinessService } from '../../src/observability/readiness.service';
 import { CacheService } from '../../src/common/cache.service';
 import { RedisService } from '../../src/common/redis.service';
+import { cleanup } from '../helpers/cleanup';
 
 /**
  * DI Graph Smoke Test
@@ -24,7 +25,7 @@ describe('DI graph smoke test', () => {
   });
 
   afterAll(async () => {
-    await app?.close();
+    await cleanup(app);
   });
 
   describe('Common services', () => {

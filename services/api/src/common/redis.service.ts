@@ -341,12 +341,12 @@ export class RedisService {
     }
   }
 
-  onModuleDestroy() {
+  async onModuleDestroy() {
     if (this.cleanupInterval) {
       clearInterval(this.cleanupInterval);
     }
     if (this.redis) {
-      this.redis.disconnect();
+      await this.redis.quit();
     }
   }
 }

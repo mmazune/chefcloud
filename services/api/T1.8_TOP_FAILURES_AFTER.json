@@ -1,0 +1,139 @@
+{
+  "stats": {
+    "totalSuites": 57,
+    "passedSuites": 18,
+    "failedSuites": 39,
+    "totalTests": 422,
+    "passedTests": 167,
+    "failedTests": 254
+  },
+  "categories": {
+    "Other": 16,
+    "Prisma Validation Errors": 9,
+    "DI/Module Resolution Errors": 6,
+    "Missing Routes/Endpoints": 5,
+    "Auth/Login Failures": 1,
+    "Response Shape Mismatches": 1,
+    "Module Import Errors": 1
+  },
+  "topCategory": "Other",
+  "topFailingFiles": [
+    {
+      "file": "test/e22-franchise.e2e-spec.ts",
+      "category": "Prisma Validation Errors",
+      "failedTests": 34
+    },
+    {
+      "file": "test/m2-shifts-scheduling.e2e-spec.ts",
+      "category": "Prisma Validation Errors",
+      "failedTests": 22
+    },
+    {
+      "file": "test/webhook-security.e2e-spec.ts",
+      "category": "Other",
+      "failedTests": 19
+    },
+    {
+      "file": "test/m7-service-providers.e2e-spec.ts",
+      "category": "Prisma Validation Errors",
+      "failedTests": 16
+    },
+    {
+      "file": "test/sse-security.e2e-spec.ts",
+      "category": "Other",
+      "failedTests": 12
+    },
+    {
+      "file": "test/billing-simple.e2e-spec.ts",
+      "category": "Other",
+      "failedTests": 11
+    },
+    {
+      "file": "test/e2e/billing.e2e-spec.ts",
+      "category": "Other",
+      "failedTests": 11
+    },
+    {
+      "file": "test/e2e/billing.slice.e2e-spec.ts",
+      "category": "DI/Module Resolution Errors",
+      "failedTests": 11
+    },
+    {
+      "file": "test/e2e/badge-revocation.e2e-spec.ts",
+      "category": "Other",
+      "failedTests": 9
+    },
+    {
+      "file": "test/e2e/franchise.slice.e2e-spec.ts",
+      "category": "DI/Module Resolution Errors",
+      "failedTests": 9
+    },
+    {
+      "file": "test/e24-subscriptions.e2e-spec.ts",
+      "category": "Missing Routes/Endpoints",
+      "failedTests": 8
+    },
+    {
+      "file": "test/m1-kds-enterprise.e2e-spec.ts",
+      "category": "Other",
+      "failedTests": 7
+    },
+    {
+      "file": "test/plan-rate-limit.e2e-spec.ts",
+      "category": "Prisma Validation Errors",
+      "failedTests": 7
+    },
+    {
+      "file": "test/b2-apikey.e2e-spec.ts",
+      "category": "Prisma Validation Errors",
+      "failedTests": 7
+    },
+    {
+      "file": "test/e37-promotions.e2e-spec.ts",
+      "category": "Other",
+      "failedTests": 7
+    }
+  ],
+  "topErrors": [
+    {
+      "message": "● Test suite failed to run",
+      "count": 2
+    },
+    {
+      "message": "● E22-s2: Franchise APIs (e2e) › POST /franchise/budgets › should upsert a budget for a branch",
+      "count": 1
+    },
+    {
+      "message": "● M2 - Shifts, Scheduling & Stock-Count Gate (E2E) › Shift Templates › POST /shift-templates - creates a lunch shift template",
+      "count": 1
+    },
+    {
+      "message": "● E23 Platform Access (e2e) › Public routes bypass › should allow unauthenticated access to /health",
+      "count": 1
+    },
+    {
+      "message": "● SSE /stream/kpis Security (E26) › Authentication › should return 401 when no token provided",
+      "count": 1
+    },
+    {
+      "message": "● Auth (e2e) › POST /auth/pin-login › should login with valid employee code and PIN",
+      "count": 1
+    },
+    {
+      "message": "● E23 Roles & Platform Access (e2e) › GET /access/matrix › should allow L4 (manager) to get platform access matrix",
+      "count": 1
+    },
+    {
+      "message": "● M1 KDS Enterprise (e2e) › KDS Queue with Enhanced DTOs › should return tickets with waiterName, slaState, and proper ordering",
+      "count": 1
+    },
+    {
+      "message": "● Inventory E2E › should receive PO → on-hand increases",
+      "count": 1
+    },
+    {
+      "message": "● Workforce E2E › should clock in → clock out",
+      "count": 1
+    }
+  ]
+}

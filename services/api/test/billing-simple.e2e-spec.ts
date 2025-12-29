@@ -5,6 +5,7 @@ import { json } from 'express';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/prisma.service';
 import { JwtService } from '@nestjs/jwt';
+import { cleanup } from './helpers/cleanup';
 
 describe('Billing E2E (E24 - Auth, Authz, Rate Limiting)', () => {
   let app: INestApplication;
@@ -105,8 +106,9 @@ describe('Billing E2E (E24 - Auth, Authz, Rate Limiting)', () => {
   });
 
   afterAll(async () => {
-    await app?.close();
+    await cleanup(app);
   });
+
 
   describe('GET /billing/subscription', () => {
     it('should return 401 if no authorization token is provided', async () => {

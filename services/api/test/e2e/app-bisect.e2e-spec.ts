@@ -1,8 +1,10 @@
 import './_injector-patch';
 import 'reflect-metadata';
 import { Test } from '@nestjs/testing';
+import { createE2ETestingModule, createE2ETestingModuleBuilder } from '../helpers/e2e-bootstrap';
 import { AppModule } from '../../src/app.module';
 import { Module as _Module } from '@nestjs/common';
+import { cleanup } from '../helpers/cleanup';
 
 // Pull out AppModule.imports at runtime
 const appModuleImports = (AppModule as any).__imports;
@@ -12,9 +14,9 @@ if (!appModuleImports || !Array.isArray(appModuleImports)) {
 }
 
 async function tryImports(imports: any[]) {
-  const moduleRef = await Test.createTestingModule({
+  const moduleRef = await createE2ETestingModule({
     imports,
-  }).compile();
+  });
   await moduleRef.init();
   await moduleRef.close();
 }

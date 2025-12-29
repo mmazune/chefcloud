@@ -3,6 +3,7 @@ import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '@chefcloud/db';
+import { cleanup } from './helpers/cleanup';
 
 describe('E37 - Promotions & Pricing Engine (e2e)', () => {
   let app: INestApplication;
@@ -95,7 +96,7 @@ describe('E37 - Promotions & Pricing Engine (e2e)', () => {
     await prisma.branch.deleteMany({ where: { orgId } });
     await prisma.user.deleteMany({ where: { orgId } });
     await prisma.organization.deleteMany({ where: { id: orgId } });
-    await app.close();
+    await cleanup(app);
   });
 
   describe('Happy Hour Promotion Flow', () => {

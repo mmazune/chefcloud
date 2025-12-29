@@ -1,0 +1,193 @@
+
+> @chefcloud/api@1.0.0-rc.1 test:e2e /workspaces/chefcloud/services/api
+> jest --config ./test/jest-e2e.json "test/auth.e2e-spec.ts" "--runInBand"
+
+✓ E2E environment loaded
+  DATABASE_URL: postgresql://postgres:***@localhost:5432/chefcloud_test
+{"level":"info","time":1766851580522,"service":"chefcloud-api","env":"test","type":"http_request","method":"POST","url":"/auth/login","statusCode":200,"durationMs":164,"requestId":"8b329fab-4d1a-4208-af7b-a21caad4ce27","route":"/auth/login"}
+{"level":"info","time":1766851580536,"service":"chefcloud-api","env":"test","type":"http_request","method":"POST","url":"/auth/login","statusCode":401,"durationMs":4,"requestId":"4287f0ee-26a0-4b96-b86e-5a23320925c4","route":"/auth/login"}
+{"level":"info","time":1766851580648,"service":"chefcloud-api","env":"test","type":"http_request","method":"POST","url":"/auth/login","statusCode":401,"durationMs":110,"requestId":"9996bc39-5e54-4afe-bcb5-4cd4f60b55dd","route":"/auth/login"}
+{"level":"info","time":1766851580653,"service":"chefcloud-api","env":"test","type":"http_request","method":"POST","url":"/auth/login","statusCode":400,"durationMs":2,"requestId":"898d9dff-6cf5-460f-91d5-3bfc1f5387a2","route":"/auth/login"}
+{"level":"info","time":1766851580663,"service":"chefcloud-api","env":"test","type":"http_request","method":"POST","url":"/auth/pin-login","statusCode":401,"durationMs":5,"requestId":"fed77fc9-b78c-4a51-ac48-ba9f79f77376","route":"/auth/pin-login"}
+{"level":"info","time":1766851580671,"service":"chefcloud-api","env":"test","type":"http_request","method":"POST","url":"/auth/pin-login","statusCode":401,"durationMs":3,"requestId":"50ed416b-0ae3-4671-8db3-9f8054f88bf0","route":"/auth/pin-login"}
+{"level":"info","time":1766851580679,"service":"chefcloud-api","env":"test","type":"http_request","method":"POST","url":"/auth/pin-login","statusCode":401,"durationMs":4,"requestId":"bab91ec7-7926-49e2-96cc-22e07d938a7c","route":"/auth/pin-login"}
+{"level":"info","time":1766851580685,"service":"chefcloud-api","env":"test","type":"http_request","method":"POST","url":"/auth/pin-login","statusCode":401,"durationMs":3,"requestId":"3a8a5047-65ea-41c3-a54a-1c9283744ef1","route":"/auth/pin-login"}
+{"level":"info","time":1766851580692,"service":"chefcloud-api","env":"test","type":"http_request","method":"POST","url":"/auth/msr-swipe","statusCode":400,"durationMs":4,"requestId":"c036c5b0-8177-4495-9b83-ea4461e6f45a","route":"/auth/msr-swipe"}
+{"level":"info","time":1766851580699,"service":"chefcloud-api","env":"test","type":"http_request","method":"POST","url":"/auth/msr-swipe","statusCode":400,"durationMs":3,"requestId":"2bcab46d-d0b2-4b30-875b-81f15722d49f","route":"/auth/msr-swipe"}
+{"level":"info","time":1766851580705,"service":"chefcloud-api","env":"test","type":"http_request","method":"POST","url":"/auth/msr-swipe","statusCode":400,"durationMs":2,"requestId":"347128a5-ddcb-41ed-b4f2-8db909af9bea","route":"/auth/msr-swipe"}
+{"level":"info","time":1766851580820,"service":"chefcloud-api","env":"test","type":"http_request","method":"POST","url":"/auth/login","statusCode":200,"durationMs":112,"requestId":"e5018933-72fd-4e12-9a1d-d264ce5a14aa","route":"/auth/login"}
+{"level":"info","time":1766851580824,"service":"chefcloud-api","env":"test","type":"http_request","method":"GET","url":"/me","statusCode":401,"durationMs":1,"requestId":"0d8a2896-2b50-4957-8236-5d1386e0ec4e","route":"/me"}
+{"level":"info","time":1766851580828,"service":"chefcloud-api","env":"test","type":"http_request","method":"GET","url":"/me","statusCode":401,"durationMs":1,"requestId":"48aa13d5-f703-42e7-87d3-63a5c2e207ca","route":"/me"}
+{"level":"info","time":1766851580831,"service":"chefcloud-api","env":"test","type":"http_request","method":"GET","url":"/me","statusCode":401,"durationMs":1,"requestId":"5e13549f-8dbb-46b4-b416-d60bcd9b724e","route":"/me"}
+{"level":"info","time":1766851580955,"service":"chefcloud-api","env":"test","type":"http_request","method":"POST","url":"/auth/login","statusCode":200,"durationMs":122,"requestId":"10c6682f-2015-46ed-af84-f60afdb5d9ff","route":"/auth/login"}
+{"level":"info","time":1766851580964,"service":"chefcloud-api","env":"test","type":"http_request","method":"POST","url":"/devices/register","statusCode":401,"durationMs":1,"requestId":"252bfca3-a82e-4cd5-8e8f-1a0a3c6392d7","route":"/devices/register"}
+{"level":"info","time":1766851580968,"service":"chefcloud-api","env":"test","type":"http_request","method":"POST","url":"/devices/register","statusCode":401,"durationMs":0,"requestId":"3fd2d3d7-1c03-4f0d-8375-660c9575cda6","route":"/devices/register"}
+FAIL test/auth.e2e-spec.ts
+  Auth (e2e)
+    POST /auth/login
+      ✕ should login with valid credentials (209 ms)
+      ✓ should reject invalid email (7 ms)
+      ✓ should reject invalid password (112 ms)
+      ✓ should reject missing fields (4 ms)
+    POST /auth/pin-login
+      ✕ should login with valid employee code and PIN (11 ms)
+      ✓ should reject invalid employee code (7 ms)
+      ✓ should reject invalid PIN (8 ms)
+      ✓ should reject wrong branch (6 ms)
+    POST /auth/msr-swipe
+      ✕ should login with valid badge ID (8 ms)
+      ✕ should reject unknown badge ID (6 ms)
+      ✕ should login with branch verification (6 ms)
+    GET /me
+      ✕ should return user profile with valid token (4 ms)
+      ✓ should reject request without token (2 ms)
+      ✓ should reject request with invalid token (3 ms)
+    POST /devices/register
+      ✕ should allow L4 manager to register a device (9 ms)
+      ✓ should reject device registration without auth (3 ms)
+
+  ● Auth (e2e) › POST /auth/login › should login with valid credentials
+
+    expect(received).toHaveProperty(path)
+
+    Expected path: "accessToken"
+    Received path: []
+
+    Received value: {"access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjbWpvZ2kybWYwMDM5aHcwejllN2k1MzJ4IiwiZW1haWwiOiJvd25lckB0YXBhcy5kZW1vLmxvY2FsIiwib3JnSWQiOiIwMDAwMDAwMC0wMDAwLTQwMDAtODAwMC0wMDAwMDAwMDAwMDEiLCJyb2xlTGV2ZWwiOiJMNSIsInN2IjowLCJqdGkiOiJhYTQ2YTkwNmVjY2E2ODBmY2RhYjg1ZmEyYzQ3MzE3MCIsInNlc3Npb25JZCI6ImNtam9odDhwdDAwMDMxMnZrc2F5ZGZ3cTkiLCJwbGF0Zm9ybSI6IldFQl9CQUNLT0ZGSUNFIiwiaWF0IjoxNzY2ODUxNTgwLCJleHAiOjE3NjY5Mzc5ODB9.21_O5hNQ9PWeQkIGxx3_33f-ggVg2pYYXuINsKovTIc", "session": {"expiresAt": "2025-12-28T00:06:20.512Z", "id": "cmjoht8pt000312vksaydfwq9", "platform": "WEB_BACKOFFICE"}, "user": {"branchId": "00000000-0000-4000-8000-000000000101", "email": "owner@tapas.demo.local", "firstName": "Alice", "id": "cmjogi2mf0039hw0z9e7i532x", "lastName": "Owner", "orgId": "00000000-0000-4000-8000-000000000001", "roleLevel": "L5"}}
+
+      43 |         .expect(200);
+      44 |
+    > 45 |       expect(response.body).toHaveProperty('accessToken');
+         |                             ^
+      46 |       expect(response.body).toHaveProperty('user');
+      47 |       expect(response.body.user).toMatchObject({
+      48 |         email: E2E_USERS.owner.email,
+
+      at Object.<anonymous> (auth.e2e-spec.ts:45:29)
+
+  ● Auth (e2e) › POST /auth/pin-login › should login with valid employee code and PIN
+
+    expected 200 "OK", got 401 "Unauthorized"
+
+      92 |           branchId: await getMainBranchId(),
+      93 |         })
+    > 94 |         .expect(200);
+         |          ^
+      95 |
+      96 |       expect(response.body).toHaveProperty('access_token');
+      97 |       expect(response.body.user).toMatchObject({
+
+      at Object.<anonymous> (auth.e2e-spec.ts:94:10)
+      ----
+      at Test._assertStatus (../../../node_modules/.pnpm/supertest@6.3.4/node_modules/supertest/lib/test.js:252:14)
+      at ../../../node_modules/.pnpm/supertest@6.3.4/node_modules/supertest/lib/test.js:308:13
+      at Test._assertFunction (../../../node_modules/.pnpm/supertest@6.3.4/node_modules/supertest/lib/test.js:285:13)
+      at Test.assert (../../../node_modules/.pnpm/supertest@6.3.4/node_modules/supertest/lib/test.js:164:23)
+      at Server.localAssert (../../../node_modules/.pnpm/supertest@6.3.4/node_modules/supertest/lib/test.js:120:14)
+
+  ● Auth (e2e) › POST /auth/msr-swipe › should login with valid badge ID
+
+    expected 200 "OK", got 400 "Bad Request"
+
+      143 |           badgeId: 'CASHIER001',
+      144 |         })
+    > 145 |         .expect(200);
+          |          ^
+      146 |
+      147 |       expect(response.body).toHaveProperty('access_token');
+      148 |       expect(response.body.user).toMatchObject({
+
+      at Object.<anonymous> (auth.e2e-spec.ts:145:10)
+      ----
+      at Test._assertStatus (../../../node_modules/.pnpm/supertest@6.3.4/node_modules/supertest/lib/test.js:252:14)
+      at ../../../node_modules/.pnpm/supertest@6.3.4/node_modules/supertest/lib/test.js:308:13
+      at Test._assertFunction (../../../node_modules/.pnpm/supertest@6.3.4/node_modules/supertest/lib/test.js:285:13)
+      at Test.assert (../../../node_modules/.pnpm/supertest@6.3.4/node_modules/supertest/lib/test.js:164:23)
+      at Server.localAssert (../../../node_modules/.pnpm/supertest@6.3.4/node_modules/supertest/lib/test.js:120:14)
+
+  ● Auth (e2e) › POST /auth/msr-swipe › should reject unknown badge ID
+
+    expected 404 "Not Found", got 400 "Bad Request"
+
+      159 |           badgeId: 'UNKNOWN_BADGE',
+      160 |         })
+    > 161 |         .expect(404);
+          |          ^
+      162 |     });
+      163 |
+      164 |     it('should login with branch verification', async () => {
+
+      at Object.<anonymous> (auth.e2e-spec.ts:161:10)
+      ----
+      at Test._assertStatus (../../../node_modules/.pnpm/supertest@6.3.4/node_modules/supertest/lib/test.js:252:14)
+      at ../../../node_modules/.pnpm/supertest@6.3.4/node_modules/supertest/lib/test.js:308:13
+      at Test._assertFunction (../../../node_modules/.pnpm/supertest@6.3.4/node_modules/supertest/lib/test.js:285:13)
+      at Test.assert (../../../node_modules/.pnpm/supertest@6.3.4/node_modules/supertest/lib/test.js:164:23)
+      at Server.localAssert (../../../node_modules/.pnpm/supertest@6.3.4/node_modules/supertest/lib/test.js:120:14)
+
+  ● Auth (e2e) › POST /auth/msr-swipe › should login with branch verification
+
+    expected 200 "OK", got 400 "Bad Request"
+
+      169 |           branchId: await getMainBranchId(),
+      170 |         })
+    > 171 |         .expect(200);
+          |          ^
+      172 |
+      173 |       expect(response.body).toHaveProperty('access_token');
+      174 |     });
+
+      at Object.<anonymous> (auth.e2e-spec.ts:171:10)
+      ----
+      at Test._assertStatus (../../../node_modules/.pnpm/supertest@6.3.4/node_modules/supertest/lib/test.js:252:14)
+      at ../../../node_modules/.pnpm/supertest@6.3.4/node_modules/supertest/lib/test.js:308:13
+      at Test._assertFunction (../../../node_modules/.pnpm/supertest@6.3.4/node_modules/supertest/lib/test.js:285:13)
+      at Test.assert (../../../node_modules/.pnpm/supertest@6.3.4/node_modules/supertest/lib/test.js:164:23)
+      at Server.localAssert (../../../node_modules/.pnpm/supertest@6.3.4/node_modules/supertest/lib/test.js:120:14)
+
+  ● Auth (e2e) › GET /me › should return user profile with valid token
+
+    expected 200 "OK", got 401 "Unauthorized"
+
+      191 |         .get('/me')
+      192 |         .set('Authorization', `Bearer ${accessToken}`)
+    > 193 |         .expect(200);
+          |          ^
+      194 |
+      195 |       expect(response.body).toMatchObject({
+      196 |         email: E2E_USERS.owner.email,
+
+      at Object.<anonymous> (auth.e2e-spec.ts:193:10)
+      ----
+      at Test._assertStatus (../../../node_modules/.pnpm/supertest@6.3.4/node_modules/supertest/lib/test.js:252:14)
+      at ../../../node_modules/.pnpm/supertest@6.3.4/node_modules/supertest/lib/test.js:308:13
+      at Test._assertFunction (../../../node_modules/.pnpm/supertest@6.3.4/node_modules/supertest/lib/test.js:285:13)
+      at Test.assert (../../../node_modules/.pnpm/supertest@6.3.4/node_modules/supertest/lib/test.js:164:23)
+      at Server.localAssert (../../../node_modules/.pnpm/supertest@6.3.4/node_modules/supertest/lib/test.js:120:14)
+
+  ● Auth (e2e) › POST /devices/register › should allow L4 manager to register a device
+
+    expected 201 "Created", got 401 "Unauthorized"
+
+      236 |           branchId: await getMainBranchId(),
+      237 |         })
+    > 238 |         .expect(201);
+          |          ^
+      239 |
+      240 |       expect(response.body).toHaveProperty('id');
+      241 |       expect(response.body).toHaveProperty('deviceKey');
+
+      at Object.<anonymous> (auth.e2e-spec.ts:238:10)
+      ----
+      at Test._assertStatus (../../../node_modules/.pnpm/supertest@6.3.4/node_modules/supertest/lib/test.js:252:14)
+      at ../../../node_modules/.pnpm/supertest@6.3.4/node_modules/supertest/lib/test.js:308:13
+      at Test._assertFunction (../../../node_modules/.pnpm/supertest@6.3.4/node_modules/supertest/lib/test.js:285:13)
+      at Test.assert (../../../node_modules/.pnpm/supertest@6.3.4/node_modules/supertest/lib/test.js:164:23)
+      at Server.localAssert (../../../node_modules/.pnpm/supertest@6.3.4/node_modules/supertest/lib/test.js:120:14)
+
+Test Suites: 1 failed, 1 total
+Tests:       7 failed, 9 passed, 16 total
+Snapshots:   0 total
+Time:        2.907 s, estimated 3 s
+Ran all test suites matching /test\/auth.e2e-spec.ts/i.
+ ELIFECYCLE  Command failed with exit code 1.

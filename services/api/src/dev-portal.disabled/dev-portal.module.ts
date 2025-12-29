@@ -3,7 +3,6 @@ import { DevPortalController } from './dev-portal.controller';
 import { DevPortalService } from './dev-portal.service';
 import { PrismaService } from '../prisma.service';
 import { PlanRateLimiterGuard } from '../common/plan-rate-limiter.guard';
-import { RedisService } from '../common/redis.service';
 import { DevPortalKeyRepo } from './ports/devportal.port';
 import { DevPortalPrismaRepo } from './repo/devportal.prisma.adapter';
 
@@ -13,7 +12,6 @@ import { DevPortalPrismaRepo } from './repo/devportal.prisma.adapter';
     DevPortalService,
     PrismaService,
     PlanRateLimiterGuard,
-    RedisService,
     // DevAdminGuard and SuperDevGuard are NOT provided here
     // They are instantiated on-demand by @UseGuards decorator
     // This allows test overrides to work properly

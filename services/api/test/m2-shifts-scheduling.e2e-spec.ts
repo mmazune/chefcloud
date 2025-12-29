@@ -7,6 +7,7 @@ import { Test } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/prisma.service';
+import { cleanup } from './helpers/cleanup';
 
 describe('M2 - Shifts, Scheduling & Stock-Count Gate (E2E)', () => {
   let app: INestApplication;
@@ -93,7 +94,7 @@ describe('M2 - Shifts, Scheduling & Stock-Count Gate (E2E)', () => {
   afterAll(async () => {
     // Cleanup
     await prisma.client.org.delete({ where: { id: orgId } });
-    await app.close();
+    await cleanup(app);
   });
 
   describe('Shift Templates', () => {

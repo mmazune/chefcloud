@@ -1,8 +1,9 @@
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { Test } from '@nestjs/testing';
+import { createE2ETestingModule, createE2ETestingModuleBuilder } from '../helpers/e2e-bootstrap';
 
-import { CacheModule } from '../../src/common/cache.module';
+import {} from '../../src/common/cache.module';
 import { ObservabilityModule } from '../../src/observability/observability.module';
 import { AuthModule } from '../../src/auth/auth.module';
 
@@ -10,6 +11,7 @@ import { ThrottlerTestModule } from './throttler.test.module';
 import { ForecastTestModule } from '../forecast/forecast.test.module';
 import { ForecastAuthOverrideModule } from '../forecast/auth-override.module';
 import { TransferEventsTestModule } from '../transfers/transfer.events.test.module';
+import { cleanup } from '../helpers/cleanup';
 
 const AUTH = { Authorization: 'Bearer TEST_TOKEN' };
 
@@ -17,23 +19,24 @@ describe('Transfer Invalidation (Slice E2E) — E22.D', () => {
   let app: INestApplication;
 
   beforeAll(async () => {
-    const modRef = await Test.createTestingModule({
+    const modRef = await createE2ETestingModule({
       imports: [
-        // minimal prod deps for parity
-        CacheModule, ObservabilityModule, AuthModule,
+        // minimal prod deps for parityObservabilityModule, AuthModule,
         // test-only modules
         ThrottlerTestModule,
         ForecastTestModule,           // exposes /forecast-test/sales + /invalidate
         ForecastAuthOverrideModule,   // bypass auth with TEST_TOKEN
         TransferEventsTestModule,     // new event endpoint
       ],
-    }).compile();
+    });
 
     app = modRef.createNestApplication();
     await app.init();
   });
 
-  afterAll(async () => { await app?.close(); });
+  afterAll(async () => {
+    await cleanup(app);
+  });
 
   it('POST /transfer-test/event -> 401 without token', async () => {
     const r = await request(app.getHttpServer())

@@ -4,6 +4,7 @@ import request from 'supertest';
 import { E2eAppModule } from './e2e-app.module';
 import { PrismaService } from '../src/prisma.service';
 import { createHash } from 'crypto';
+import { E2E_USERS } from './helpers/e2e-credentials';
 
 /**
  * M30-OPS-S4: MSR Card Service E2E Smoke Tests
@@ -46,13 +47,18 @@ describe('MSR Card Management (e2e)', () => {
     const loginResponse = await request(app.getHttpServer())
       .post('/auth/login')
       .send({
-        email: 'owner@demo.local',
-        password: 'Owner#123',
-      });
+        email: E2E_USERS.owner.email,
+        password: E2E_USERS.owner.password,
+      })
+      .expect(200); // Ensure login succeeds
 
     ownerToken = loginResponse.body.access_token;
-    orgId = loginResponse.body.user.orgId;
-    branchId = loginResponse.body.user.branchId;
+    orgId = loginResponse.body.user?.orgId || loginResponse.body.user?.org?.id; // Handle both formats
+    branchId = loginResponse.body.user?.branchId || loginResponse.body.user?.branch?.id; // Handle both formats
+
+    if (!orgId || !branchId) {
+      throw new Error(`Login succeeded but missing orgId/branchId. Response: ${JSON.stringify(loginResponse.body)}`);
+    }
 
     // Get an employee from seeded data
     const employee = await prisma.client.employee.findFirst({

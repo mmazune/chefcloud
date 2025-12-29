@@ -1,9 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Controller, Get, Post, Patch, Body, Param, UseGuards, Req } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Body, Param, UseGuards, Req, OnModuleDestroy } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { OwnerService } from './owner.service';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
+import { Queue } from 'bullmq';
+import { getRedisConnectionOptions } from '../config/redis.config';
 
 class CreateDigestDto {
   name!: string;
@@ -21,8 +23,14 @@ class UpdateDigestDto {
 
 @Controller('owner')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
-export class OwnerController {
-  constructor(private ownerService: OwnerService) {}
+export class OwnerController implements OnModuleDestroy {
+  private digestQueue: Queue;
+
+  constructor(private ownerService: OwnerService) {
+    this.digestQueue = new Queue('digest', {
+      connection: getRedisConnectionOptions(),
+    });
+  }
 
   @Get('overview')
   @Roles('L5')
@@ -56,19 +64,17 @@ export class OwnerController {
       return { error: 'Digest not found' };
     }
 
-    // Enqueue digest job (will be implemented in worker)
-    const { Queue } = await import('bullmq');
-    const connection = {
-      host: process.env.REDIS_HOST || 'localhost',
-      port: parseInt(process.env.REDIS_PORT || '6379', 10),
-    };
-    const digestQueue = new Queue('digest', { connection });
-
-    await digestQueue.add('owner-digest-run', {
+    await this.digestQueue.add('owner-digest-run', {
       type: 'owner-digest-run',
       digestId: id,
     });
 
     return { success: true, message: `Digest job enqueued for ${digest.name}` };
+  }
+
+  async onModuleDestroy() {
+    if (this.digestQueue) {
+      await this.digestQueue.close();
+    }
   }
 }

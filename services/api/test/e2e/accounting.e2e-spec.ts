@@ -1,8 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { createE2ETestingModule, createE2ETestingModuleBuilder } from '../helpers/e2e-bootstrap';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
 import { AppModule } from '../../src/app.module';
-import { createOrgWithUsers, createChartOfAccounts, disconnect } from './factory';
+import { PrismaService } from '../../src/prisma.service';
+import { createOrgWithUsers, createChartOfAccounts } from './factory';
+import { cleanup } from '../helpers/cleanup';
 
 describe('Accounting E2E', () => {
   let app: INestApplication;
@@ -10,14 +13,9 @@ describe('Accounting E2E', () => {
   let _orgId: string;
 
   beforeAll(async () => {
-    const factory = await createOrgWithUsers('e2e-accounting');
-    await createChartOfAccounts(factory.orgId);
-
-    _orgId = factory.orgId;
-
-    const moduleFixture: TestingModule = await Test.createTestingModule({
+    const moduleFixture: TestingModule = await createE2ETestingModule({
       imports: [AppModule],
-    }).compile();
+    });
 
     app = moduleFixture.createNestApplication();
     app.useGlobalPipes(
@@ -30,6 +28,12 @@ describe('Accounting E2E', () => {
 
     await app.init();
 
+    const prisma = app.get(PrismaService);
+    const factory = await createOrgWithUsers(prisma, 'e2e-accounting');
+    await createChartOfAccounts(prisma, factory.orgId);
+
+    _orgId = factory.orgId;
+
     // Login as owner
     const loginResponse = await request(app.getHttpServer()).post('/auth/login').send({
       email: factory.users.owner.email,
@@ -40,8 +44,7 @@ describe('Accounting E2E', () => {
   });
 
   afterAll(async () => {
-    await app.close();
-    await disconnect();
+    await cleanup(app);
   });
 
   it('should create period → lock → posting blocked', async () => {

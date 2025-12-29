@@ -1,8 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { createE2ETestingModule, createE2ETestingModuleBuilder } from '../helpers/e2e-bootstrap';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
 import { AppModule } from '../../src/app.module';
-import { createOrgWithUsers, createInventory, disconnect } from './factory';
+import { PrismaService } from '../../src/prisma.service';
+import { createOrgWithUsers, createInventory } from './factory';
+import { cleanup } from '../helpers/cleanup';
 
 describe('Inventory E2E', () => {
   let app: INestApplication;
@@ -12,16 +15,9 @@ describe('Inventory E2E', () => {
   let _branchId: string;
 
   beforeAll(async () => {
-    const factory = await createOrgWithUsers('e2e-inventory');
-    const inventory = await createInventory(factory.orgId);
-
-    _orgId = factory.orgId;
-    _branchId = factory.branchId;
-    beefId = inventory.beef.id;
-
-    const moduleFixture: TestingModule = await Test.createTestingModule({
+    const moduleFixture: TestingModule = await createE2ETestingModule({
       imports: [AppModule],
-    }).compile();
+    });
 
     app = moduleFixture.createNestApplication();
     app.useGlobalPipes(
@@ -34,6 +30,14 @@ describe('Inventory E2E', () => {
 
     await app.init();
 
+    const prisma = app.get(PrismaService);
+    const factory = await createOrgWithUsers(prisma, 'e2e-inventory');
+    const inventory = await createInventory(prisma, factory.orgId);
+
+    _orgId = factory.orgId;
+    _branchId = factory.branchId;
+    beefId = inventory.beef.id;
+
     // Login as manager
     const loginResponse = await request(app.getHttpServer()).post('/auth/login').send({
       email: factory.users.manager.email,
@@ -44,8 +48,7 @@ describe('Inventory E2E', () => {
   });
 
   afterAll(async () => {
-    await app.close();
-    await disconnect();
+    await cleanup(app);
   });
 
   it('should receive PO → on-hand increases', async () => {

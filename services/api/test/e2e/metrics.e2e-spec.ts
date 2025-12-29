@@ -1,7 +1,9 @@
 import request from 'supertest';
 import { Test } from '@nestjs/testing';
+import { createE2ETestingModule, createE2ETestingModuleBuilder } from '../helpers/e2e-bootstrap';
 import { INestApplication } from '@nestjs/common';
 import { ObservabilityModule } from '../../src/observability/observability.module';
+import { cleanup } from '../helpers/cleanup';
 
 describe('Metrics endpoint', () => {
   let app: INestApplication;
@@ -9,16 +11,16 @@ describe('Metrics endpoint', () => {
 
   beforeAll(async () => {
     process.env.METRICS_ENABLED = '1';
-    const mod = await Test.createTestingModule({
+    const mod = await createE2ETestingModule({
       imports: [ObservabilityModule],
-    }).compile();
+    });
     app = mod.createNestApplication();
     await app.init();
   });
 
   afterAll(async () => {
     process.env.METRICS_ENABLED = prev;
-    await app.close();
+    await cleanup(app);
   });
 
   it('/metrics returns text exposition', async () => {

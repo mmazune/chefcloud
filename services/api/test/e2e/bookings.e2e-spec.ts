@@ -1,8 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { createE2ETestingModule, createE2ETestingModuleBuilder } from '../helpers/e2e-bootstrap';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
 import { AppModule } from '../../src/app.module';
-import { createOrgWithUsers, createEvent, disconnect } from './factory';
+import { PrismaService } from '../../src/prisma.service';
+import { createOrgWithUsers, createEvent } from './factory';
+import { cleanup } from '../helpers/cleanup';
 
 describe('Bookings E2E', () => {
   let app: INestApplication;
@@ -10,14 +13,9 @@ describe('Bookings E2E', () => {
   let eventId: string;
 
   beforeAll(async () => {
-    const factory = await createOrgWithUsers('e2e-bookings');
-    const event = await createEvent(factory.orgId, factory.branchId);
-
-    eventId = event.id;
-
-    const moduleFixture: TestingModule = await Test.createTestingModule({
+    const moduleFixture: TestingModule = await createE2ETestingModule({
       imports: [AppModule],
-    }).compile();
+    });
 
     app = moduleFixture.createNestApplication();
     app.useGlobalPipes(
@@ -30,6 +28,12 @@ describe('Bookings E2E', () => {
 
     await app.init();
 
+    const prisma = app.get(PrismaService);
+    const factory = await createOrgWithUsers(prisma, 'e2e-bookings');
+    const event = await createEvent(prisma, factory.orgId, factory.branchId);
+
+    eventId = event.id;
+
     // Login as manager
     const loginResponse = await request(app.getHttpServer()).post('/auth/login').send({
       email: factory.users.manager.email,
@@ -40,8 +44,7 @@ describe('Bookings E2E', () => {
   });
 
   afterAll(async () => {
-    await app.close();
-    await disconnect();
+    await cleanup(app);
   });
 
   it('should create booking → HOLD → pay → confirm', async () => {

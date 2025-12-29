@@ -1,0 +1,24 @@
+
+> @chefcloud/api@1.0.0-rc.1 test:e2e /workspaces/chefcloud/services/api
+> jest --config ./test/jest-e2e.json "--" "--runTestsByPath" "test/e2e/billing.slice.e2e-spec.ts" "--runInBand" "--json"
+
+✓ E2E environment loaded
+  DATABASE_URL: postgresql://postgres:***@localhost:5432/chefcloud_test
+  console.log
+    Rate limit test results: { '401': 20 }
+
+      at Object.<anonymous> (e2e/billing.slice.e2e-spec.ts:103:15)
+
+  console.warn
+    WARNING: No 429 responses observed. Rate limiter may not be active.
+
+      105 |       // Verify we actually got some 429s (not just 401s)
+      106 |       if (!has429) {
+    > 107 |         console.warn('WARNING: No 429 responses observed. Rate limiter may not be active.');
+          |                 ^
+      108 |       }
+      109 |     });
+      110 |   });
+
+      at Object.<anonymous> (e2e/billing.slice.e2e-spec.ts:107:17)
+

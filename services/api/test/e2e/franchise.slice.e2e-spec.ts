@@ -1,6 +1,7 @@
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { Test } from '@nestjs/testing';
+import { createE2ETestingModule, createE2ETestingModuleBuilder } from '../helpers/e2e-bootstrap';
 import { Controller, Get, Post, Query, UseGuards, Module } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 
@@ -13,12 +14,13 @@ import { AuthModule } from '../../src/auth/auth.module';
 import { ThrottlerTestModule } from './throttler.test.module';
 import { FranchiseInvalidationTestModule } from '../franchise/invalidation.test.module';
 
-// Import CacheModule for invalidation controller
-import { CacheModule } from '../../src/common/cache.module';
+// Importfor invalidation controller
+import {} from '../../src/common/cache.module';
 
 // Prisma stub
 import { PrismaTestModule, PrismaService as TestPrismaService } from '../prisma/prisma.module';
 import { PrismaService } from '../../src/prisma.service';
+import { cleanup } from '../helpers/cleanup';
 
 const AUTH = { Authorization: 'Bearer TEST_TOKEN' };
 
@@ -107,13 +109,12 @@ describe('Franchise (Slice E2E)', () => {
   let app: INestApplication;
 
   beforeAll(async () => {
-    const moduleRef = await Test.createTestingModule({
+    const moduleRef = await createE2ETestingModuleBuilder({
       imports: [
         ThrottlerTestModule,
         PrismaTestModule,
-        AuthModule,
-        CacheModule,
-        FranchiseInvalidationTestModule,
+        AuthModule, // T1.9: Provides JWT strategy for @UseGuards(AuthGuard('jwt'))
+        FranchiseInvalidationTestModule, // Fixed: was AuthModuleFranchiseInvalidationTestModule (undefined)
       ],
       controllers: [TestFranchiseController],
     })
@@ -126,7 +127,7 @@ describe('Franchise (Slice E2E)', () => {
   });
 
   afterAll(async () => {
-    await app?.close();
+    await cleanup(app);
   });
 
   // --- Auth required on endpoints ---

@@ -4,6 +4,7 @@ import * as request from 'supertest';
 import { createHmac } from 'crypto';
 import { AppModule } from '../src/app.module';
 import { json } from 'express';
+import { cleanup } from './helpers/cleanup';
 
 describe('Webhook Security E2E (E24)', () => {
   let app: INestApplication;
@@ -42,8 +43,8 @@ describe('Webhook Security E2E (E24)', () => {
   });
 
   afterAll(async () => {
-    await app.close();
     delete process.env.WH_SECRET;
+    await cleanup(app);
   });
 
   const generateSignature = (timestamp: string, body: string): string => {

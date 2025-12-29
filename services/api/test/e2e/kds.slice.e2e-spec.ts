@@ -1,6 +1,7 @@
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { Test } from '@nestjs/testing';
+import { createE2ETestingModule, createE2ETestingModuleBuilder } from '../helpers/e2e-bootstrap';
 
 import { AuthModule } from '../../src/auth/auth.module';
 
@@ -8,6 +9,7 @@ import { ThrottlerTestModule } from './throttler.test.module';
 import { PrismaTestModule, PrismaService as TestPrismaService } from '../prisma/prisma.module';
 import { PrismaService } from '../../src/prisma.service';
 import { KdsTestModule } from '../kds/kds.test.module';
+import { cleanup } from '../helpers/cleanup';
 
 const AUTH = { Authorization: 'Bearer TEST_TOKEN' };
 
@@ -15,7 +17,7 @@ describe('KDS (Slice E2E)', () => {
   let app: INestApplication;
 
   beforeAll(async () => {
-    const modRef = await Test.createTestingModule({
+    const modRef = await createE2ETestingModuleBuilder({
       imports: [
         // minimal shared deps
         AuthModule,
@@ -33,7 +35,9 @@ describe('KDS (Slice E2E)', () => {
     await app.init();
   });
 
-  afterAll(async () => { await app?.close(); });
+  afterAll(async () => {
+    await cleanup(app);
+  });
 
   // --- Auth & listing ---
 

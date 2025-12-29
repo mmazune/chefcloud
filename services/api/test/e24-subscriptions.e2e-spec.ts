@@ -2,6 +2,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { AppModule } from '../src/app.module';
+import { cleanup } from './helpers/cleanup';
+import { E2E_USERS } from './helpers/e2e-credentials';
 
 describe('E24 Subscriptions & Dev Portal (e2e)', () => {
   let app: INestApplication;
@@ -16,7 +18,7 @@ describe('E24 Subscriptions & Dev Portal (e2e)', () => {
   });
 
   afterAll(async () => {
-    await app.close();
+    await cleanup(app);
   });
 
   describe('Dev Portal - POST /dev/orgs', () => {
@@ -116,8 +118,8 @@ describe('E24 Subscriptions & Dev Portal (e2e)', () => {
       const loginResponse = await request(app.getHttpServer())
         .post('/auth/login')
         .send({
-          email: 'owner@demo.local',
-          password: 'Owner#123',
+          email: E2E_USERS.owner.email,
+          password: E2E_USERS.owner.password,
         })
         .expect(200);
 
@@ -139,8 +141,8 @@ describe('E24 Subscriptions & Dev Portal (e2e)', () => {
       const loginResponse = await request(app.getHttpServer())
         .post('/auth/login')
         .send({
-          email: 'waiter@demo.local',
-          password: 'Waiter#123',
+          email: E2E_USERS.waiter.email,
+          password: E2E_USERS.waiter.password,
         })
         .expect(200);
 
@@ -158,8 +160,8 @@ describe('E24 Subscriptions & Dev Portal (e2e)', () => {
       const loginResponse = await request(app.getHttpServer())
         .post('/auth/login')
         .send({
-          email: 'owner@demo.local',
-          password: 'Owner#123',
+          email: E2E_USERS.owner.email,
+          password: E2E_USERS.owner.password,
         })
         .expect(200);
 
@@ -181,8 +183,8 @@ describe('E24 Subscriptions & Dev Portal (e2e)', () => {
       const loginResponse = await request(app.getHttpServer())
         .post('/auth/login')
         .send({
-          email: 'owner@demo.local',
-          password: 'Owner#123',
+          email: E2E_USERS.owner.email,
+          password: E2E_USERS.owner.password,
         })
         .expect(200);
 

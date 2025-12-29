@@ -1,19 +1,20 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { createE2ETestingModule, createE2ETestingModuleBuilder } from '../helpers/e2e-bootstrap';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
 import { AppModule } from '../../src/app.module';
-import { createOrgWithUsers, disconnect } from './factory';
+import { PrismaService } from '../../src/prisma.service';
+import { createOrgWithUsers } from './factory';
+import { cleanup } from '../helpers/cleanup';
 
 describe('Reports E2E', () => {
   let app: INestApplication;
   let authToken: string;
 
   beforeAll(async () => {
-    const factory = await createOrgWithUsers('e2e-reports');
-
-    const moduleFixture: TestingModule = await Test.createTestingModule({
+    const moduleFixture: TestingModule = await createE2ETestingModule({
       imports: [AppModule],
-    }).compile();
+    });
 
     app = moduleFixture.createNestApplication();
     app.useGlobalPipes(
@@ -26,6 +27,9 @@ describe('Reports E2E', () => {
 
     await app.init();
 
+    const prisma = app.get(PrismaService);
+    const factory = await createOrgWithUsers(prisma, 'e2e-reports');
+
     // Login as owner
     const loginResponse = await request(app.getHttpServer()).post('/auth/login').send({
       email: factory.users.owner.email,
@@ -36,8 +40,7 @@ describe('Reports E2E', () => {
   });
 
   afterAll(async () => {
-    await app.close();
-    await disconnect();
+    await cleanup(app);
   });
 
   it('should fetch X report (shift summary)', async () => {

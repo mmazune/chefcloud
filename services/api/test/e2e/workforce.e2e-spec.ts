@@ -1,8 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { createE2ETestingModule, createE2ETestingModuleBuilder } from '../helpers/e2e-bootstrap';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
 import { AppModule } from '../../src/app.module';
-import { createOrgWithUsers, disconnect } from './factory';
+import { PrismaService } from '../../src/prisma.service';
+import { createOrgWithUsers } from './factory';
+import { cleanup } from '../helpers/cleanup';
 
 describe('Workforce E2E', () => {
   let app: INestApplication;
@@ -11,12 +14,9 @@ describe('Workforce E2E', () => {
   let _waiterId: string;
 
   beforeAll(async () => {
-    const factory = await createOrgWithUsers('e2e-workforce');
-    _waiterId = factory.users.waiter.id;
-
-    const moduleFixture: TestingModule = await Test.createTestingModule({
+    const moduleFixture: TestingModule = await createE2ETestingModule({
       imports: [AppModule],
-    }).compile();
+    });
 
     app = moduleFixture.createNestApplication();
     app.useGlobalPipes(
@@ -28,6 +28,10 @@ describe('Workforce E2E', () => {
     );
 
     await app.init();
+
+    const prisma = app.get(PrismaService);
+    const factory = await createOrgWithUsers(prisma, 'e2e-workforce');
+    _waiterId = factory.users.waiter.id;
 
     // Login as waiter
     const waiterLogin = await request(app.getHttpServer()).post('/auth/login').send({
@@ -45,8 +49,7 @@ describe('Workforce E2E', () => {
   });
 
   afterAll(async () => {
-    await app.close();
-    await disconnect();
+    await cleanup(app);
   });
 
   it('should clock in → clock out', async () => {

@@ -1,20 +1,22 @@
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { Test } from '@nestjs/testing';
+import { createE2ETestingModule, createE2ETestingModuleBuilder } from '../helpers/e2e-bootstrap';
 
 import { DevPortalModule } from '../../src/dev-portal/dev-portal.module';
-import { CacheModule } from '../../src/common/cache.module';
+import {} from '../../src/common/cache.module';
 import { ObservabilityModule } from '../../src/observability/observability.module';
 
 import { PrismaTestModule, PrismaService as TestPrismaService } from '../prisma/prisma.module';
 import { PrismaService } from '../../src/prisma.service';
 import { TestAuthOverrideModule } from '../devportal/auth-override.module';
 import { TestDevAdminGuard, TestSuperDevGuard } from '../devportal/guards.stub';
-import { DevAdminGuard } from '../../src/dev-portal/guards/dev-admin.guard';
-import { SuperDevGuard } from '../../src/dev-portal/guards/super-dev.guard';
+import { DevAdminGuard } from '../../src/dev-portal.disabled/guards/dev-admin.guard'; // Fixed: was dev-portal (now disabled)
+import { SuperDevGuard } from '../../src/dev-portal.disabled/guards/super-dev.guard'; // Fixed: was dev-portal (now disabled)
 import { signBody } from '../payments/webhook.hmac';
 import { DevPortalKeyRepo } from '../../src/dev-portal/ports/devportal.port';
 import { TestBypassAuthGuard } from '../devportal/auth-override.guard';
+import { cleanup } from '../helpers/cleanup';
 
 const AUTH = { Authorization: 'Bearer TEST_TOKEN' };
 const DEV_ADMIN = { 'x-dev-admin': 'dev1@chefcloud.local' };
@@ -27,12 +29,10 @@ describe('Dev-Portal Production Endpoints (Slice E2E)', () => {
     const testPrisma = new TestPrismaService();
     const { SseThrottlerModule } = await import('../sse/throttler.module');
     
-    const modRef = await Test.createTestingModule({
+    const modRef = await createE2ETestingModuleBuilder({
       imports: [
         // Production modules
-        DevPortalModule,
-        CacheModule,
-        ObservabilityModule,
+        DevPortalModuleObservabilityModule,
 
         // Test-only modules
         PrismaTestModule,
@@ -80,7 +80,7 @@ describe('Dev-Portal Production Endpoints (Slice E2E)', () => {
   });
 
   afterAll(async () => {
-    await app?.close();
+    await cleanup(app);
   });
 
   // --- POST /dev/orgs (create organization with subscription) ---
