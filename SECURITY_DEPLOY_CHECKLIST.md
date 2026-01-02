@@ -1,81 +1,149 @@
 # Nimbus POS / ChefCloud — Security & Deployment Checklist
 
-_Last updated: 2025-12-25 (Africa/Kampala)_
+_Last updated: 2026-01-02 (Africa/Kampala)_
 
-This checklist must be completed before any production deployment. It focuses on practical, verifiable security controls relevant to a multi-tenant POS and backoffice platform.
+This checklist is structured in two layers:
+- **Layer A: Pre-Merge (Automated)** — Gates that run in CI before merge
+- **Layer B: Pre-Deploy (Manual + Automated)** — Checks before production deployment
+
+**Related Security Documents:**
+- [Security Baseline (ASVS)](instructions/security/SECURITY_BASELINE_ASVS.md)
+- [Threat Model](instructions/security/THREAT_MODEL.md)
+- [Control Matrix](instructions/security/SECURITY_CONTROL_MATRIX.md)
+- [Test Plan](instructions/security/SECURITY_TEST_PLAN.md)
+- [Security Gates](instructions/security/SECURITY_GATES.md)
 
 ---
 
-## 1. Secrets and Configuration
-- [ ] No secrets committed to git (scan repo history if necessary).
-- [ ] Production environment variables are set via secure secret manager.
-- [ ] `DATABASE_URL`, Redis credentials, SMTP credentials, webhook secrets are all protected.
-- [ ] `.env.example` contains placeholders only.
-- [ ] Distinct secrets per environment (dev/staging/prod).
+## Layer A: Pre-Merge Gates (Automated CI)
 
-## 2. Authentication & Sessions
-- [ ] HTTP-only secure cookies for web auth where intended.
-- [ ] Session revocation works (logout kills session; revoked token cannot be reused).
-- [ ] Idle timeout policies enforced for sensitive roles.
-- [ ] Platform access guards validated (web vs desktop vs mobile).
-- [ ] Password policies: minimum length, lockouts/rate limits (as designed).
+These gates MUST pass before any PR can be merged:
 
-## 3. Authorization (RBAC/ABAC)
-- [ ] RBAC enforced server-side on every protected endpoint (UI hiding is not security).
-- [ ] Endpoint matrix verification run: only expected 403 denials remain.
-- [ ] Branch/org isolation validated: cannot access other org data with valid session.
-- [ ] “Owner-only” settings endpoints verified.
+### A1. Code Quality Gates
+- [ ] `pnpm lint` passes (timeout 120s)
+- [ ] `pnpm tsc --noEmit` passes (timeout 120s)
+- [ ] `pnpm test` passes (timeout 180s)
+- [ ] `pnpm test:e2e:gate` passes (timeout 600s)
 
-## 4. Input Validation & API Hardening
-- [ ] DTO validation enabled globally (NestJS ValidationPipe).
-- [ ] All write endpoints validate payloads and reject unknown fields (where appropriate).
-- [ ] Rate limits configured for:
-  - public feedback endpoints
-  - auth endpoints (login attempts)
-  - webhook ingress (if applicable)
-- [ ] CORS policy is strict (known origins) and not `*` in production.
-- [ ] Helmet (or equivalent headers) configured for web and API.
+### A2. Security-Specific Gates
+- [ ] `pnpm audit --audit-level=critical` — no CRITICAL vulnerabilities
+- [ ] Security regression tests pass (when implemented)
+- [ ] No obvious secrets in diff (advisory scan)
+- [ ] pnpm-lock.yaml committed and up-to-date
 
-## 5. CSRF / XSS / Clickjacking
-- [ ] CSRF protections applied where cookies are used (or alternative mitigations documented).
-- [ ] Content Security Policy (CSP) defined for web app.
-- [ ] `X-Frame-Options` / frame-ancestors set to prevent clickjacking (unless kiosk embed needed).
-- [ ] Output encoding and sanitization for any user-generated content (feedback/comments/notes).
+### A3. Review Requirements
+- [ ] PR reviewed by at least one team member
+- [ ] Security-sensitive changes flagged and reviewed by security lead
+- [ ] No `// @ts-ignore` in security-critical code
 
-## 6. Data Protection & Privacy
-- [ ] No raw payment card data stored.
-- [ ] MSR/badge data stored only as non-reversible hashes.
-- [ ] Logs do not contain secrets, tokens, passwords, or sensitive PII.
-- [ ] Document storage access controls validated (payslips, contracts).
-- [ ] Backups encrypted at rest (if using managed DB, verify policy).
+---
 
-## 7. Financial and Inventory Integrity
-- [ ] Idempotency enforced on critical financial endpoints (payments, close, refunds, receiving).
-- [ ] Audit trails exist for voids/refunds/adjustments with actor + reason.
-- [ ] Reconciliation reports consistent with DB ledgers.
+## Layer B: Pre-Deploy Gates (Manual + Automated)
 
-## 8. Dependency and Supply Chain
-- [ ] `pnpm audit` (or equivalent) reviewed; critical vulnerabilities addressed.
-- [ ] Lockfile committed and consistent.
-- [ ] Dependabot or similar update strategy defined (optional but recommended).
-- [ ] Container images pinned to stable versions where used.
+Complete before any production deployment:
 
-## 9. Infrastructure & Network
-- [ ] TLS enforced end-to-end.
-- [ ] Database not publicly exposed (private network or firewall).
-- [ ] Redis not publicly exposed.
-- [ ] Webhook endpoints protected (HMAC signatures, replay protection).
-- [ ] Webhook delivery retries bounded (avoid infinite loops).
+### B1. Secrets and Configuration
+- [ ] No secrets committed to git (scan repo history if necessary)
+- [ ] Production environment variables set via secure secret manager
+- [ ] `DATABASE_URL`, Redis credentials, SMTP, webhook secrets protected
+- [ ] `.env.example` contains placeholders only
+- [ ] Distinct secrets per environment (dev/staging/prod)
+- [ ] JWT signing uses RS256/ES256 (not HS256 in prod)
 
-## 10. Observability and Incident Response
-- [ ] Health checks (`/health`, `/api/health`) verified and monitored.
-- [ ] Request IDs enabled and visible in error responses (non-sensitive).
-- [ ] Error reporting configured (Sentry or equivalent) with PII scrubbing.
-- [ ] Backup and restore drill documented.
-- [ ] Rollback plan documented for each deployment.
+### B2. Authentication & Sessions
+- [ ] HTTP-only secure cookies configured
+- [ ] Session revocation works (logout kills session)
+- [ ] sessionVersion invalidation tested
+- [ ] Idle timeout policies enforced (30min default)
+- [ ] Platform access guards validated (web/desktop/mobile)
+- [ ] Password policies enforced (12+ chars, complexity)
+- [ ] Account lockout after failed attempts (10 failures)
 
-## 11. Final Go/No-Go
-- [ ] All tests pass: lint, unit, e2e (where applicable).
-- [ ] M7 verifiers pass (0 failed; only expected denials).
-- [ ] Manual smoke tests completed on production-like environment.
-- [ ] Security checklist signed off.
+### B3. Authorization (RBAC)
+- [ ] RBAC enforced server-side on every protected endpoint
+- [ ] Endpoint matrix verification run (only expected 403s)
+- [ ] Tenant isolation validated (cannot access other tenant data)
+- [ ] Branch isolation validated (where applicable)
+- [ ] "Owner-only" settings endpoints verified
+- [ ] Self-privilege escalation blocked
+
+### B4. Input Validation & API Hardening
+- [ ] ValidationPipe enabled globally (whitelist, forbidNonWhitelisted)
+- [ ] All write endpoints validate payloads
+- [ ] Rate limits configured:
+  - [ ] Login: 5/min per IP
+  - [ ] Password reset: 3/hour per email
+  - [ ] API general: 1000/min per user
+  - [ ] Public endpoints: stricter limits
+- [ ] CORS policy strict (known origins, not `*`)
+- [ ] Helmet middleware configured
+
+### B5. CSRF / XSS / Clickjacking
+- [ ] CSRF protection applied (or alternative documented)
+- [ ] Content Security Policy defined
+- [ ] X-Frame-Options set (DENY or SAMEORIGIN)
+- [ ] Output encoding for user-generated content
+
+### B6. Data Protection & Privacy
+- [ ] No raw payment card data stored
+- [ ] MSR/badge data stored as non-reversible hashes
+- [ ] Logs do not contain secrets, tokens, passwords, PII
+- [ ] Document storage access controls validated
+- [ ] Backups encrypted at rest
+
+### B7. Financial and Inventory Integrity
+- [ ] Idempotency enforced on critical endpoints (payments, refunds)
+- [ ] Audit trails for voids/refunds with actor + reason
+- [ ] Reconciliation reports consistent with ledgers
+
+### B8. Dependency and Supply Chain
+- [ ] `pnpm audit` reviewed (HIGH vulnerabilities documented)
+- [ ] Lockfile committed and consistent
+- [ ] Container images pinned to specific versions
+- [ ] No `latest` tags in production Dockerfiles
+
+### B9. Infrastructure & Network
+- [ ] TLS 1.2+ enforced end-to-end
+- [ ] HSTS header configured
+- [ ] Database not publicly exposed
+- [ ] Redis not publicly exposed
+- [ ] Webhook HMAC signatures verified
+- [ ] Webhook replay protection active (timestamp + nonce)
+- [ ] Webhook retry limits bounded
+
+### B10. Observability and Incident Response
+- [ ] Health checks verified (`/health`, `/api/health`)
+- [ ] Request IDs enabled (X-Request-ID)
+- [ ] Error reporting configured (Sentry) with PII scrubbing
+- [ ] Audit logging active for auth events
+- [ ] Backup and restore drill documented
+- [ ] Rollback plan documented
+
+### B11. Full Test Suite
+- [ ] `pnpm test:e2e:ci` passes (25min deadline)
+- [ ] Security regression suite passes (when implemented)
+- [ ] All DEMO datasets verified
+
+### B12. Final Sign-Off
+- [ ] All gates in Layer A passing
+- [ ] All checklist items in Layer B completed
+- [ ] Security lead sign-off (if security-sensitive changes)
+- [ ] Deployment authorized by release manager
+
+---
+
+## Sign-Off Record
+
+| Deploy Date | Version | Reviewed By | Security Lead | Notes |
+|-------------|---------|-------------|---------------|-------|
+| YYYY-MM-DD | x.x.x | Name | Name | |
+
+---
+
+## Exception Register
+
+Document any acknowledged risks or deferred items:
+
+| Item | Risk Level | Reason | Remediation Date | Approved By |
+|------|------------|--------|------------------|-------------|
+| | | | | |
