@@ -1,23 +1,41 @@
 import { spawn, ChildProcess } from 'child_process';
 import http from 'http';
+import { withTimeout } from '../helpers/with-timeout';
 
 export async function waitFor(path: string, timeoutMs = 15000): Promise<void> {
-  const started = Date.now();
-  while (Date.now() - started < timeoutMs) {
-    try {
-      await new Promise<void>((resolve, reject) => {
-        const req = http.get(path, (res) => {
-          if (res.statusCode && res.statusCode < 500) resolve();
-          else reject(new Error(`HTTP ${res.statusCode}`));
+  let lastError: Error | null = null;
+  let attempts = 0;
+  
+  const pollOperation = async () => {
+    const started = Date.now();
+    while (Date.now() - started < timeoutMs) {
+      attempts++;
+      try {
+        await new Promise<void>((resolve, reject) => {
+          const req = http.get(path, (res) => {
+            if (res.statusCode && res.statusCode < 500) resolve();
+            else reject(new Error(`HTTP ${res.statusCode}`));
+          });
+          req.on('error', reject);
         });
-        req.on('error', reject);
-      });
-      return;
-    } catch {
-      await new Promise((r) => setTimeout(r, 250));
+        return;
+      } catch (error) {
+        lastError = error as Error;
+        await new Promise((r) => setTimeout(r, 250));
+      }
     }
-  }
-  throw new Error(`Timeout waiting for ${path}`);
+    throw new Error(`Timeout waiting for ${path} after ${attempts} attempts`);
+  };
+  
+  return withTimeout(pollOperation(), {
+    label: `waitFor(${path})`,
+    ms: timeoutMs,
+    onTimeoutInfo: () => ({
+      path,
+      attempts,
+      lastError: lastError?.message,
+    }),
+  });
 }
 
 export function startServer(bin: string, env: Record<string, string>): ChildProcess {

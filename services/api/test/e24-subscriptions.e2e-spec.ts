@@ -1,20 +1,16 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { AppModule } from '../src/app.module';
+import { createE2EApp } from './helpers/e2e-bootstrap';
 import { cleanup } from './helpers/cleanup';
 import { E2E_USERS } from './helpers/e2e-credentials';
+import { withTimeout } from './helpers/with-timeout';
 
 describe('E24 Subscriptions & Dev Portal (e2e)', () => {
   let app: INestApplication;
 
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-    await app.init();
+    app = await createE2EApp({ imports: [AppModule] }, { enableValidation: false });
   });
 
   afterAll(async () => {
@@ -23,15 +19,18 @@ describe('E24 Subscriptions & Dev Portal (e2e)', () => {
 
   describe('Dev Portal - POST /dev/orgs', () => {
     it('should create org with ACTIVE subscription (dev admin)', async () => {
-      const response = await request(app.getHttpServer())
-        .post('/dev/orgs')
-        .set('X-Dev-Admin', 'dev1@chefcloud.local')
-        .send({
-          ownerEmail: 'newowner@testorg.local',
-          orgName: 'Test Org E24',
-          planCode: 'BASIC',
-        })
-        .expect(201);
+      const response = await withTimeout(
+        request(app.getHttpServer())
+          .post('/dev/orgs')
+          .set('X-Dev-Admin', 'dev1@chefcloud.local')
+          .send({
+            ownerEmail: 'newowner@testorg.local',
+            orgName: 'Test Org E24',
+            planCode: 'BASIC',
+          })
+          .expect(201),
+        { label: 'POST /dev/orgs', ms: 30000 }
+      );
 
       expect(response.body).toHaveProperty('org');
       expect(response.body).toHaveProperty('owner');

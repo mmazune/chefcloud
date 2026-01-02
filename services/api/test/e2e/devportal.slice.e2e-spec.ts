@@ -1,6 +1,7 @@
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { Test } from '@nestjs/testing';
+import { ConfigModule } from '@nestjs/config';
 import { createE2ETestingModule, createE2ETestingModuleBuilder } from '../helpers/e2e-bootstrap';
 
 import { AuthModule } from '../../src/auth/auth.module';
@@ -12,6 +13,7 @@ import { DevPortalTestModule } from '../devportal/devportal.test.module';
 import { DevPortalWebhookTestModule } from '../devportal/webhook.test.module';
 import { signBody } from '../payments/webhook.hmac';
 import { cleanup } from '../helpers/cleanup';
+import { withTimeout } from '../helpers/with-timeout';
 
 const AUTH = { Authorization: 'Bearer TEST_TOKEN' };
 
@@ -19,23 +21,30 @@ describe('Dev-Portal (Slice E2E) — Plan-aware limits + HMAC', () => {
   let app: INestApplication;
 
   beforeAll(async () => {
-    const modRef = await createE2ETestingModuleBuilder({
-      imports: [
-        // minimal shared deps
-        AuthModule,
+    const modRef = await withTimeout(
+      createE2ETestingModuleBuilder({
+        imports: [
+          // ConfigModule is required by AuthModule's JwtModule.registerAsync
+          ConfigModule.forRoot({ isGlobal: true }),
+          
+          // minimal shared deps
+          AuthModule,
 
-        // test-only modules
-        PrismaTestModule,
-        PlanLimitTestModule,
-        DevPortalTestModule,
-        DevPortalWebhookTestModule,
-      ],
-    })
-      .overrideProvider(PrismaService)
-      .useClass(TestPrismaService)
-      .compile();
+          // test-only modules
+          PrismaTestModule,
+          PlanLimitTestModule,
+          DevPortalTestModule,
+          DevPortalWebhookTestModule,
+        ],
+      })
+        .overrideProvider(PrismaService)
+        .useClass(TestPrismaService)
+        .compile(),
+      { label: 'devportal.slice module compilation', ms: 30000 }
+    );
 
     app = modRef.createNestApplication();
+    app.enableShutdownHooks(); // CRITICAL: Before init
     await app.init();
   });
 

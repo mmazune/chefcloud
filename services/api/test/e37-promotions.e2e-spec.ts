@@ -1,9 +1,11 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { AppModule } from '../src/app.module';
-import { PrismaService } from '@chefcloud/db';
+import { PrismaService } from '../src/prisma.service';
+import { createE2EApp } from './helpers/e2e-bootstrap';
 import { cleanup } from './helpers/cleanup';
+import { loginAs } from './helpers/e2e-login';
+import { requireTapasOrg } from './helpers/require-preconditions';
 
 describe('E37 - Promotions & Pricing Engine (e2e)', () => {
   let app: INestApplication;
@@ -17,85 +19,54 @@ describe('E37 - Promotions & Pricing Engine (e2e)', () => {
   let promotionId: string;
 
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
+    app = await createE2EApp({ imports: [AppModule] });
+    prisma = app.get(PrismaService);
 
-    app = moduleFixture.createNestApplication();
-    prisma = app.get<PrismaService>(PrismaService);
-    await app.init();
-
-    // Create org, user, and branch for testing
-    const org = await prisma.organization.create({
-      data: {
-        name: 'E37 Test Restaurant',
-        email: 'e37test@chefcloud.test',
-        phone: '+256700000037',
-      },
+    // Use seeded Tapas org and branch
+    await requireTapasOrg(prisma);
+    
+    const org = await prisma.org.findFirst({
+      where: { slug: 'tapas-demo' },
     });
+    if (!org) throw new Error('Tapas org not found after precondition check');
     orgId = org.id;
 
-    const user = await prisma.user.create({
-      data: {
-        email: 'manager-e37@chefcloud.test',
-        name: 'E37 Test Manager',
-        role: 'L4',
-        orgId,
-      },
+    // Get first branch from Tapas org
+    const branch = await prisma.branch.findFirst({
+      where: { orgId },
     });
-    userId = user.id;
-
-    const branch = await prisma.branch.create({
-      data: {
-        name: 'E37 Test Branch',
-        orgId,
-        address: 'Test Location',
-      },
-    });
+    if (!branch) throw new Error('Tapas org must have at least 1 branch');
     branchId = branch.id;
 
-    // Create category and menu item (drinks)
-    const category = await prisma.menuCategory.create({
-      data: {
-        name: 'Drinks',
-        orgId,
-      },
+    // Login as manager from seeded data
+    const login = await loginAs(app, 'manager', 'tapas');
+    authToken = login.accessToken;
+    userId = login.user.id;
+
+    // Use existing menu category and item from seeded Tapas data
+    const category = await prisma.menuCategory.findFirst({
+      where: { orgId },
     });
+    if (!category) throw new Error('Tapas org must have at least 1 category');
     categoryId = category.id;
 
-    const menuItem = await prisma.menuItem.create({
-      data: {
-        name: 'Craft Beer',
-        price: 10000,
-        categoryId,
-        orgId,
-      },
+    const menuItem = await prisma.menuItem.findFirst({
+      where: { categoryId },
     });
+    if (!menuItem) throw new Error('Tapas category must have at least 1 item');
     menuItemId = menuItem.id;
-
-    // Mock authentication token (simple mock for e2e)
-    authToken = Buffer.from(
-      JSON.stringify({
-        sub: user.email,
-        email: user.email,
-        orgId: user.orgId,
-        role: user.role,
-        id: user.id,
-      }),
-    ).toString('base64');
   });
 
   afterAll(async () => {
-    // Clean up test data
-    await prisma.promotionEffect.deleteMany({ where: { promotion: { orgId } } });
-    await prisma.promotion.deleteMany({ where: { orgId } });
-    await prisma.orderItem.deleteMany({ where: { order: { branchId } } });
-    await prisma.order.deleteMany({ where: { branchId } });
-    await prisma.menuItem.deleteMany({ where: { orgId } });
-    await prisma.menuCategory.deleteMany({ where: { orgId } });
-    await prisma.branch.deleteMany({ where: { orgId } });
-    await prisma.user.deleteMany({ where: { orgId } });
-    await prisma.organization.deleteMany({ where: { id: orgId } });
+    // Clean up only the promotion created in tests (not seeded data)
+    if (promotionId) {
+      await prisma.promotionEffect.deleteMany({ 
+        where: { promotionId } 
+      });
+      await prisma.promotion.deleteMany({ 
+        where: { id: promotionId } 
+      });
+    }
     await cleanup(app);
   });
 

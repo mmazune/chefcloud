@@ -322,8 +322,10 @@ async function main() {
   console.log(`✅ Attached modifier group to Burger`);
 
   // Clean up old inventory data before seeding
+  // CRITICAL: Delete in FK dependency order (children before parents)
   await prisma.recipeIngredient.deleteMany({});
   await prisma.wastage.deleteMany({});
+  await prisma.stockMovement.deleteMany({}); // ← Must delete before inventoryItem (FK constraint)
   await prisma.stockBatch.deleteMany({});
   await prisma.goodsReceiptLine.deleteMany({});
   await prisma.goodsReceipt.deleteMany({});

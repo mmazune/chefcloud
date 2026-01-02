@@ -29,57 +29,95 @@ const PATTERN = patternArg ? patternArg.split('=')[1] : null;
 const STATUS_FILE = '.e2e-run-status.json';
 const OUTPUT_FILE = '.e2e-results-latest.json';
 
-console.log(`🚀 Starting E2E test runner with ${DEADLINE_MINUTES}m deadline`);
-if (PATTERN) {
-  console.log(`📁 Pattern: ${PATTERN}`);
-}
-console.log(`📊 JSON output: ${OUTPUT_FILE}`);
-console.log(`📋 Status file: ${STATUS_FILE}`);
-console.log('');
-
-// Build Jest command args
-const jestArgs = [
-  '--config', './test/jest-e2e.json',
-  '--runInBand',
-  '--testLocationInResults',
-  '--json',
-];
-
-if (PATTERN) {
-  jestArgs.push('--testPathPattern', PATTERN);
+// Dataset defaulting per DEMO_TENANTS_AND_DATASETS.md
+// Default to DEMO_TAPAS unless explicitly overridden
+if (!process.env.E2E_DEMO_DATASET) {
+  process.env.E2E_DEMO_DATASET = 'DEMO_TAPAS';
 }
 
-console.log(`🎯 Jest args: ${jestArgs.join(' ')}`);
-console.log('');
+// Run setup first, then start tests
+(async () => {
+  console.log(`🚀 Starting E2E test runner with ${DEADLINE_MINUTES}m deadline`);
+  if (PATTERN) {
+    console.log(`📁 Pattern: ${PATTERN}`);
+  }
+  console.log(`🗂️  Dataset: ${process.env.E2E_DEMO_DATASET}`);
+  console.log(`📊 JSON output: ${OUTPUT_FILE}`);
+  console.log(`📋 Status file: ${STATUS_FILE}`);
+  console.log('');
 
-// Status tracking
-const status = {
-  status: 'RUNNING',
-  exitCode: null,
-  durationMs: null,
-  startedAt: new Date().toISOString(),
-  finishedAt: null,
-  deadlineMinutes: DEADLINE_MINUTES,
-};
+  // Run E2E setup first
+  console.log('🔧 Running E2E database setup...');
+  const setupStart = Date.now();
+  const setupChild = spawn('pnpm', ['test:e2e:setup'], {
+    cwd: process.cwd(),
+    stdio: 'inherit',
+    shell: false,
+  });
 
-const startTime = Date.now();
+  await new Promise((resolve, reject) => {
+    setupChild.on('close', (code) => {
+      if (code !== 0) {
+        console.error(`❌ E2E setup failed with code ${code}`);
+        process.exit(1);
+      }
+      resolve();
+    });
+    setupChild.on('error', (err) => {
+      console.error('❌ Failed to spawn setup:', err);
+      process.exit(1);
+    });
+  });
 
-// Spawn jest directly (not through pnpm) to avoid wrapper noise
-const child = spawn('npx', ['jest', ...jestArgs], {
-  cwd: process.cwd(),
-  stdio: ['ignore', 'pipe', 'pipe'], // Capture stdout/stderr separately
-  shell: false,
-});
+  const setupDuration = Date.now() - setupStart;
+  console.log(`✅ Setup complete (${Math.floor(setupDuration / 1000)}s)\n`);
 
-let stdout = '';
-let stderr = '';
+  // Build Jest command args
+  const jestArgs = [
+    '--config', './test/jest-e2e.json',
+    '--runInBand',
+    '--testLocationInResults',
+    '--json',
+  ];
 
-// Capture stdout (JSON output)
-child.stdout.on('data', (data) => {
-  stdout += data.toString();
-});
+  if (PATTERN) {
+    jestArgs.push('--testPathPattern', PATTERN);
+  }
 
-// Capture stderr (logs, warnings) - don't mix with stdout
+  console.log(`🎯 Jest args: ${jestArgs.join(' ')}`);
+  console.log('');
+
+  // Status tracking
+  const status = {
+    status: 'RUNNING',
+    exitCode: null,
+    durationMs: null,
+    startedAt: new Date().toISOString(),
+    finishedAt: null,
+    deadlineMinutes: DEADLINE_MINUTES,
+    dataset: process.env.E2E_DEMO_DATASET || 'DEMO_TAPAS',
+    pattern: PATTERN || 'all',
+  };
+
+  const startTime = Date.now();
+
+  // Spawn jest directly (not through pnpm) to avoid wrapper noise
+  const child = spawn('npx', ['jest', ...jestArgs], {
+    cwd: process.cwd(),
+    stdio: ['ignore', 'pipe', 'pipe'], // Capture stdout/stderr separately
+    shell: false,
+    detached: process.platform !== 'win32', // Create process group on Unix for clean termination
+  });
+
+  let stdout = '';
+  let stderr = '';
+
+  // Capture stdout (JSON output)
+  child.stdout.on('data', (data) => {
+    stdout += data.toString();
+  });
+
+  // Capture stderr (logs, warnings) - don't mix with stdout
 child.stderr.on('data', (data) => {
   const text = data.toString();
   stderr += text;
@@ -101,13 +139,33 @@ const heartbeatInterval = setInterval(() => {
 const deadlineTimer = setTimeout(() => {
   console.log(`\n⏰ DEADLINE REACHED (${DEADLINE_MINUTES}m) - Terminating Jest`);
   
-  // Send SIGTERM first (graceful)
-  child.kill('SIGTERM');
+  // Try to kill entire process tree (best effort)
+  try {
+    // On Unix-like systems, send SIGTERM to the process group
+    // Negative PID kills the process group
+    if (process.platform !== 'win32') {
+      process.kill(-child.pid, 'SIGTERM');
+    } else {
+      child.kill('SIGTERM');
+    }
+  } catch (err) {
+    // Fallback to killing just the child process
+    console.warn(`⚠️  Could not kill process tree: ${err.message}`);
+    child.kill('SIGTERM');
+  }
   
   // If not dead in 10s, send SIGKILL
   const killTimer = setTimeout(() => {
     console.log('🔪 Process did not terminate gracefully - sending SIGKILL');
-    child.kill('SIGKILL');
+    try {
+      if (process.platform !== 'win32') {
+        process.kill(-child.pid, 'SIGKILL');
+      } else {
+        child.kill('SIGKILL');
+      }
+    } catch (err) {
+      child.kill('SIGKILL');
+    }
   }, 10000);
   
   // Clear kill timer if process exits
@@ -210,3 +268,4 @@ child.on('error', (err) => {
   writeFileSync(STATUS_FILE, JSON.stringify(status, null, 2));
   process.exit(1);
 });
+})(); // End of async IIFE

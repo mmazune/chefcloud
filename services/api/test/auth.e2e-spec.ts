@@ -1,31 +1,23 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { E2eAppModule } from './e2e-app.module';
 import { PrismaService } from '../src/prisma.service';
+import { createE2EApp } from './helpers/e2e-bootstrap';
 import { cleanup } from './helpers/cleanup';
-import { E2E_USERS } from './helpers/e2e-credentials';
+import { E2E_USERS, DEMO_DATASETS } from './helpers/e2e-credentials';
+import { requireTapasOrg, requireBadges } from './helpers/require-preconditions';
 
 describe('Auth (e2e)', () => {
   let app: INestApplication;
   let prisma: PrismaService;
 
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [E2eAppModule],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-    app.useGlobalPipes(
-      new ValidationPipe({
-        whitelist: true,
-        forbidNonWhitelisted: true,
-        transform: true,
-      }),
-    );
-
-    await app.init();
+    app = await createE2EApp({ imports: [E2eAppModule] });
     prisma = app.get<PrismaService>(PrismaService);
+
+    // Preconditions: require seeded Tapas org with badges for MSR auth
+    await requireTapasOrg(prisma.client);
+    await requireBadges(prisma.client, { orgSlug: DEMO_DATASETS.DEMO_TAPAS.slug, minCount: 1 });
   });
 
   afterAll(async () => {

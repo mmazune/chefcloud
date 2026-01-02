@@ -1,6 +1,7 @@
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { Test } from '@nestjs/testing';
+import { ConfigModule } from '@nestjs/config';
 import { createE2ETestingModule, createE2ETestingModuleBuilder } from '../helpers/e2e-bootstrap';
 
 import {} from '../../src/common/cache.module';
@@ -21,6 +22,9 @@ describe('Transfer Invalidation (Slice E2E) — E22.D', () => {
   beforeAll(async () => {
     const modRef = await createE2ETestingModule({
       imports: [
+        // ConfigModule is required by AuthModule's JwtModule.registerAsync
+        ConfigModule.forRoot({ isGlobal: true }),
+        
         // minimal prod deps for parityObservabilityModule, AuthModule,
         // test-only modules
         ThrottlerTestModule,

@@ -1,9 +1,11 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { AppModule } from '../src/app.module';
+import { createE2EApp } from './helpers/e2e-bootstrap';
 import { cleanup } from './helpers/cleanup';
-import { E2E_USERS } from './helpers/e2e-credentials';
+import { E2E_USERS, DEMO_DATASETS } from './helpers/e2e-credentials';
+import { requireMenuItems, requireFloorPlan } from './helpers/require-preconditions';
+import { PrismaService } from '../src/prisma.service';
 
 describe('A3 POS Core (e2e)', () => {
   let app: INestApplication;
@@ -13,20 +15,15 @@ describe('A3 POS Core (e2e)', () => {
   let tableId: string;
 
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
+    app = await createE2EApp({ imports: [AppModule] });
+    const prisma = app.get<PrismaService>(PrismaService);
 
-    app = moduleFixture.createNestApplication();
-    app.useGlobalPipes(
-      new ValidationPipe({
-        whitelist: true,
-        forbidNonWhitelisted: true,
-        transform: true,
-      }),
-    );
-
-    await app.init();
+    // Preconditions: require Burger, Fries menu items and floor plan for POS flow
+    await requireMenuItems(prisma.client, { 
+      orgSlug: DEMO_DATASETS.DEMO_TAPAS.slug, 
+      itemNames: ['Burger', 'Fries'] 
+    });
+    await requireFloorPlan(prisma.client, { orgSlug: DEMO_DATASETS.DEMO_TAPAS.slug });
 
     // Login as waiter
     const loginResponse = await request(app.getHttpServer()).post('/auth/login').send({

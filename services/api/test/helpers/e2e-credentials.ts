@@ -24,7 +24,7 @@ export const TAPAS_CREDENTIALS = {
     email: 'owner@tapas.demo.local',
     password: E2E_DEMO_PASSWORD,
     roleLevel: 'L5',
-    firstName: 'Alice',
+    firstName: 'Joshua',
     lastName: 'Owner',
   },
   manager: {
@@ -108,7 +108,7 @@ export const CAFESSERIE_CREDENTIALS = {
     email: 'owner@cafesserie.demo.local',
     password: E2E_DEMO_PASSWORD,
     roleLevel: 'L5',
-    firstName: 'Laura',
+    firstName: 'Joshua',
     lastName: 'Owner',
   },
   manager: {
@@ -165,10 +165,27 @@ export const CAFESSERIE_CREDENTIALS = {
 
 /**
  * Org slugs (for x-org-id headers)
+ * MUST match prisma/demo/constants.ts exactly
  */
 export const DEMO_ORG_SLUGS = {
-  tapas: 'tapas-bar',
-  cafesserie: 'cafesserie',
+  tapas: 'tapas-demo',
+  cafesserie: 'cafesserie-demo',
+} as const;
+
+/**
+ * Dataset configurations - ties credentials to their org context
+ */
+export const DEMO_DATASETS = {
+  DEMO_TAPAS: {
+    slug: 'tapas-demo',
+    orgId: '00000000-0000-4000-8000-000000000001', // Deterministic ID from seed
+    credentials: TAPAS_CREDENTIALS,
+  },
+  DEMO_CAFESSERIE_FRANCHISE: {
+    slug: 'cafesserie-demo',
+    orgId: '00000000-0000-4000-8000-000000000002', // Deterministic ID from seed
+    credentials: CAFESSERIE_CREDENTIALS,
+  },
 } as const;
 
 /**

@@ -1,6 +1,7 @@
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { Test } from '@nestjs/testing';
+import { ConfigModule } from '@nestjs/config';
 import { createE2ETestingModule, createE2ETestingModuleBuilder } from '../helpers/e2e-bootstrap';
 
 import { ReservationsModule } from '../../src/reservations/reservations.module';
@@ -20,6 +21,9 @@ describe('Reservations (Slice E2E)', () => {
   beforeAll(async () => {
     const modRef = await createE2ETestingModuleBuilder({
       imports: [
+        // ConfigModule is required by AuthModule's JwtModule.registerAsync
+        ConfigModule.forRoot({ isGlobal: true }),
+        
         ReservationsModule,
         AuthModule,
 

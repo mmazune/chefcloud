@@ -1,11 +1,11 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { createE2ETestingModule, createE2ETestingModuleBuilder } from '../helpers/e2e-bootstrap';
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { createE2EApp } from '../helpers/e2e-bootstrap';
+import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { AppModule } from '../../src/app.module';
 import { PrismaService } from '../../src/prisma.service';
 import { createOrgWithUsers } from './factory';
 import { cleanup } from '../helpers/cleanup';
+import { withTimeout } from '../helpers/with-timeout';
 
 describe('Auth E2E', () => {
   let app: INestApplication;
@@ -13,23 +13,13 @@ describe('Auth E2E', () => {
   let waiterEmail: string;
 
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await createE2ETestingModule({
-      imports: [AppModule],
-    });
-
-    app = moduleFixture.createNestApplication();
-    app.useGlobalPipes(
-      new ValidationPipe({
-        whitelist: true,
-        forbidNonWhitelisted: true,
-        transform: true,
-      }),
-    );
-
-    await app.init();
+    app = await createE2EApp({ imports: [AppModule] });
 
     const prisma = app.get(PrismaService);
-    const factory = await createOrgWithUsers(prisma, 'e2e-auth');
+    const factory = await withTimeout(
+      createOrgWithUsers(prisma, 'e2e-auth'),
+      { label: 'createOrgWithUsers factory', ms: 30000 }
+    );
     _orgId = factory.orgId;
     waiterEmail = factory.users.waiter.email;
   });

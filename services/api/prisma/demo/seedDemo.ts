@@ -81,11 +81,17 @@ async function cleanupOldDemoData(prisma: PrismaClient): Promise<void> {
     console.log(`    ✅ Deleted orders for demo branches`);
   }
 
-  // Delete user-related data
+  // Delete employee profiles before users (foreign key)
   await prisma.employeeProfile.deleteMany({
     where: { user: { orgId: { in: orgIds } } },
   });
   console.log(`    ✅ Deleted employee profiles`);
+
+  // Delete badge assets (orphaned by employeeProfile deletion)
+  await prisma.badgeAsset.deleteMany({
+    where: { orgId: { in: orgIds } },
+  });
+  console.log(`    ✅ Deleted badge assets`);
 
   // Delete shifts before deleting users (foreign key constraint)
   await prisma.shift.deleteMany({
@@ -236,6 +242,74 @@ async function seedOrg(
       },
     });
     console.log(`    ✅ User: ${user.email} (${user.roleLevel})`);
+  }
+
+  // Seed badges for MSR authentication
+  await seedBadges(prisma, org.id, users);
+}
+
+/**
+ * Seed badge assets for MSR (Multi-Scan Reader) authentication
+ * Creates canonical badges tied to specific employees for POS/FOH workflows
+ */
+async function seedBadges(
+  prisma: PrismaClient,
+  orgId: string,
+  users: readonly any[],
+): Promise<void> {
+  console.log(`\n  🎫 Seeding Badge Assets for org ${orgId}...`);
+
+  // Get all users with employee profiles
+  const allUsers = await prisma.user.findMany({
+    where: { orgId },
+    include: { employeeProfile: true },
+  });
+
+  // Badge mapping: role-specific badges for canonical MSR flows
+  const badgeConfigs = [
+    { role: 'manager', code: 'MGR001', badgeId: 'MGR001' },
+    { role: 'cashier', code: 'CASHIER001', badgeId: 'CASHIER001' },
+    { role: 'supervisor', code: 'SUP001', badgeId: 'SUP001' },
+    { role: 'waiter', code: 'WAIT001', badgeId: 'WAIT001' },
+    { role: 'chef', code: 'CHEF001', badgeId: 'CHEF001' },
+  ];
+
+  for (const config of badgeConfigs) {
+    const user = allUsers.find((u) =>
+      u.email.toLowerCase().includes(config.role),
+    );
+
+    if (!user) {
+      console.log(`    ⚠️  No ${config.role} user found, skipping badge ${config.code}`);
+      continue;
+    }
+
+    // Create badge asset
+    await prisma.badgeAsset.upsert({
+      where: { code: config.code },
+      update: {
+        orgId,
+        state: 'ACTIVE',
+        assignedUserId: user.id,
+        lastUsedAt: null,
+      },
+      create: {
+        code: config.code,
+        orgId,
+        state: 'ACTIVE',
+        assignedUserId: user.id,
+      },
+    });
+
+    // Update employee profile with badge ID
+    if (user.employeeProfile) {
+      await prisma.employeeProfile.update({
+        where: { id: user.employeeProfile.id },
+        data: { badgeId: config.badgeId },
+      });
+    }
+
+    console.log(`    ✅ Badge ${config.code} → ${user.email}`);
   }
 }
 

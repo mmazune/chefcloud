@@ -4,7 +4,9 @@ import type { INestApplication } from '@nestjs/common';
  * Universal E2E Test Cleanup
  * 
  * Ensures proper shutdown of NestJS app and all connections.
- * CRITICAL: Must call enableShutdownHooks() for onModuleDestroy to fire!
+ * 
+ * IMPORTANT: This assumes app.enableShutdownHooks() was called BEFORE app.init().
+ * Use the createE2EApp() helper from e2e-bootstrap.ts to ensure proper setup.
  * 
  * Usage in tests:
  *   import { cleanup } from '../helpers/cleanup';
@@ -22,10 +24,8 @@ export async function cleanup(app: INestApplication | null | undefined): Promise
   }
 
   try {
-    // CRITICAL: Enable shutdown hooks to trigger onModuleDestroy lifecycle
-    app.enableShutdownHooks();
-    
     // Close the application (triggers onModuleDestroy lifecycle hooks)
+    // This works properly only if enableShutdownHooks() was called before init
     await app.close();
   } catch (error) {
     console.error('⚠️  Error during test cleanup:', error);

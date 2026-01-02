@@ -1,10 +1,12 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/prisma.service';
+import { createE2EApp } from './helpers/e2e-bootstrap';
 import { cleanup } from './helpers/cleanup';
-import { E2E_USERS } from './helpers/e2e-credentials';
+import { E2E_USERS, DEMO_DATASETS } from './helpers/e2e-credentials';
+import { requireTapasOrg } from './helpers/require-preconditions';
+import { withTimeout } from './helpers/with-timeout';
 
 describe('E23 Roles & Platform Access (e2e)', () => {
   let app: INestApplication;
@@ -15,56 +17,60 @@ describe('E23 Roles & Platform Access (e2e)', () => {
   let waiterToken: string;
 
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-    app.useGlobalPipes(
-      new ValidationPipe({
-        whitelist: true,
-        forbidNonWhitelisted: true,
-        transform: true,
-      }),
-    );
+    app = await createE2EApp({ imports: [AppModule] });
 
     await app.init();
     prisma = app.get<PrismaService>(PrismaService);
 
+    // Precondition: require Tapas org with users
+    await requireTapasOrg(prisma.client);
+
     // Login as manager (L4) to access /access/matrix
-    const managerRes = await request(app.getHttpServer())
-      .post('/auth/login')
-      .send({
-        email: E2E_USERS.manager.email,
-        password: E2E_USERS.manager.password,
-      });
+    const managerRes = await withTimeout(
+      request(app.getHttpServer())
+        .post('/auth/login')
+        .send({
+          email: E2E_USERS.manager.email,
+          password: E2E_USERS.manager.password,
+        }),
+      { label: 'manager login', ms: 15000 }
+    );
     managerToken = managerRes.body.access_token;
 
     // Login as procurement (L3)
-    const procurementRes = await request(app.getHttpServer())
-      .post('/auth/login')
-      .send({
-        email: E2E_USERS.procurement.email,
-        password: E2E_USERS.procurement.password,
-      });
+    const procurementRes = await withTimeout(
+      request(app.getHttpServer())
+        .post('/auth/login')
+        .send({
+          email: E2E_USERS.procurement.email,
+          password: E2E_USERS.procurement.password,
+        }),
+      { label: 'procurement login', ms: 15000 }
+    );
     procurementToken = procurementRes.body.access_token;
 
     // Login as supervisor (L2) - using supervisor instead of non-existent ticketmaster
-    const ticketMasterRes = await request(app.getHttpServer())
-      .post('/auth/login')
-      .send({
-        email: E2E_USERS.supervisor.email,
-        password: E2E_USERS.supervisor.password,
-      });
+    const ticketMasterRes = await withTimeout(
+      request(app.getHttpServer())
+        .post('/auth/login')
+        .send({
+          email: E2E_USERS.supervisor.email,
+          password: E2E_USERS.supervisor.password,
+        }),
+      { label: 'supervisor login', ms: 15000 }
+    );
     ticketMasterToken = ticketMasterRes.body.access_token;
 
     // Login as waiter (L1)
-    const waiterRes = await request(app.getHttpServer())
-      .post('/auth/login')
-      .send({
-        email: E2E_USERS.waiter.email,
-        password: E2E_USERS.waiter.password,
-      });
+    const waiterRes = await withTimeout(
+      request(app.getHttpServer())
+        .post('/auth/login')
+        .send({
+          email: E2E_USERS.waiter.email,
+          password: E2E_USERS.waiter.password,
+        }),
+      { label: 'waiter login', ms: 15000 }
+    );
     waiterToken = waiterRes.body.access_token;
   });
 

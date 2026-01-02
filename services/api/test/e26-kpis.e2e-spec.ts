@@ -1,10 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Test } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/prisma.service';
+import { createE2EApp } from './helpers/e2e-bootstrap';
 import { cleanup } from './helpers/cleanup';
+import { loginAs } from './helpers/e2e-login';
+import { requireTapasOrg } from './helpers/require-preconditions';
 
 describe('E26-s1: Live KPI Streaming (SSE)', () => {
   let app: INestApplication;
@@ -12,69 +14,33 @@ describe('E26-s1: Live KPI Streaming (SSE)', () => {
   let managerToken: string;
   let orgId: string;
   let branchId: string;
-  let _userId: string;
 
   beforeAll(async () => {
-    const moduleRef = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleRef.createNestApplication();
-    await app.init();
+    app = await createE2EApp({ imports: [AppModule] });
     prisma = app.get(PrismaService);
 
-    // Create test org
-    const org = await prisma.client.org.create({
-      data: {
-        name: 'E26 Test Org',
-        currency: 'UGX',
-      },
+    // Use seeded Tapas org and branch
+    await requireTapasOrg(prisma);
+    
+    const org = await prisma.org.findFirst({
+      where: { slug: 'tapas-demo' },
     });
+    if (!org) throw new Error('Tapas org not found after precondition check');
     orgId = org.id;
 
-    // Create test branch
-    const branch = await prisma.client.branch.create({
-      data: {
-        orgId,
-        name: 'E26 Test Branch',
-        timezone: 'Africa/Kampala',
-      },
+    // Get first branch from Tapas org
+    const branch = await prisma.branch.findFirst({
+      where: { orgId },
     });
+    if (!branch) throw new Error('Tapas org must have at least 1 branch');
     branchId = branch.id;
 
-    // Create Manager (L4) user
-    const user = await prisma.client.user.create({
-      data: {
-        orgId,
-        email: 'e26-manager@test.local',
-        firstName: 'Manager',
-        lastName: 'User',
-        role: 'L4', // Manager
-        passwordHash: 'dummy-hash',
-      },
-    });
-    _userId = user.id;
-
-    // Login to get token
-    const loginRes = await request(app.getHttpServer()).post('/auth/login').send({
-      email: 'e26-manager@test.local',
-      password: 'test123', // Won't work with dummy hash, but test structure is here
-    });
-
-    if (loginRes.status === 200) {
-      managerToken = loginRes.body.accessToken;
-    } else {
-      // For test purposes, generate a mock token
-      // In production, you'd need actual JWT signing
-      managerToken = 'mock-token';
-    }
+    // Login as manager (L4) from seeded data
+    const login = await loginAs(app, 'manager', 'tapas');
+    managerToken = login.accessToken;
   });
 
   afterAll(async () => {
-    // Cleanup
-    await prisma.client.user.deleteMany({ where: { orgId } });
-    await prisma.client.branch.deleteMany({ where: { orgId } });
-    await prisma.client.org.delete({ where: { id: orgId } });
     await cleanup(app);
   });
 
@@ -86,25 +52,13 @@ describe('E26-s1: Live KPI Streaming (SSE)', () => {
     });
 
     it('should reject non-L4+ users', async () => {
-      // Create L3 user
-      const l3User = await prisma.client.user.create({
-        data: {
-          orgId,
-          email: 'e26-l3@test.local',
-          firstName: 'Staff',
-          lastName: 'User',
-          role: 'L3',
-          passwordHash: 'dummy-hash',
-        },
-      });
+      // Login as waiter (L1) from seeded data
+      const waiterLogin = await loginAs(app, 'waiter', 'tapas');
 
-      // Mock token for L3 user
       await request(app.getHttpServer())
         .get('/stream/kpis?scope=org')
-        .set('Authorization', `Bearer mock-l3-token`)
+        .set('Authorization', `Bearer ${waiterLogin.accessToken}`)
         .expect(403);
-
-      await prisma.client.user.delete({ where: { id: l3User.id } });
     });
 
     it('should require scope query param', async () => {
@@ -146,8 +100,8 @@ describe('E26-s1: Live KPI Streaming (SSE)', () => {
 
   describe('KPI Computation', () => {
     it('should compute salesToday from completed orders', async () => {
-      // Create a completed order
-      const order = await prisma.client.order.create({
+      // Create a completed order in Tapas branch
+      const order = await prisma.order.create({
         data: {
           orgId,
           branchId,
@@ -160,11 +114,11 @@ describe('E26-s1: Live KPI Streaming (SSE)', () => {
       // In real test, you'd call KpisService.getOrgKpis directly
       // and assert on the returned data
 
-      await prisma.client.order.delete({ where: { id: order.id } });
+      await prisma.order.delete({ where: { id: order.id } });
     });
 
     it('should count open orders correctly', async () => {
-      const order1 = await prisma.client.order.create({
+      const order1 = await prisma.order.create({
         data: {
           orgId,
           branchId,
@@ -173,7 +127,7 @@ describe('E26-s1: Live KPI Streaming (SSE)', () => {
         },
       });
 
-      const order2 = await prisma.client.order.create({
+      const order2 = await prisma.order.create({
         data: {
           orgId,
           branchId,
@@ -184,7 +138,7 @@ describe('E26-s1: Live KPI Streaming (SSE)', () => {
 
       // Would call KpisService.getOrgKpis() and assert openOrders === 2
 
-      await prisma.client.order.deleteMany({
+      await prisma.order.deleteMany({
         where: { id: { in: [order1.id, order2.id] } },
       });
     });

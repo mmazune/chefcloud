@@ -1,6 +1,7 @@
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { Test } from '@nestjs/testing';
+import { ConfigModule } from '@nestjs/config';
 import { createE2ETestingModule, createE2ETestingModuleBuilder } from '../helpers/e2e-bootstrap';
 import { Controller, Get, Post, Query, UseGuards, Module } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
@@ -21,6 +22,7 @@ import {} from '../../src/common/cache.module';
 import { PrismaTestModule, PrismaService as TestPrismaService } from '../prisma/prisma.module';
 import { PrismaService } from '../../src/prisma.service';
 import { cleanup } from '../helpers/cleanup';
+import { withTimeout } from '../helpers/with-timeout';
 
 const AUTH = { Authorization: 'Bearer TEST_TOKEN' };
 
@@ -109,20 +111,27 @@ describe('Franchise (Slice E2E)', () => {
   let app: INestApplication;
 
   beforeAll(async () => {
-    const moduleRef = await createE2ETestingModuleBuilder({
-      imports: [
-        ThrottlerTestModule,
-        PrismaTestModule,
-        AuthModule, // T1.9: Provides JWT strategy for @UseGuards(AuthGuard('jwt'))
-        FranchiseInvalidationTestModule, // Fixed: was AuthModuleFranchiseInvalidationTestModule (undefined)
-      ],
-      controllers: [TestFranchiseController],
-    })
-      .overrideProvider(PrismaService)
-      .useClass(TestPrismaService)
-      .compile();
+    const moduleRef = await withTimeout(
+      createE2ETestingModuleBuilder({
+        imports: [
+          // ConfigModule is required by AuthModule's JwtModule.registerAsync
+          ConfigModule.forRoot({ isGlobal: true }),
+          
+          ThrottlerTestModule,
+          PrismaTestModule,
+          AuthModule, // T1.9: Provides JWT strategy for @UseGuards(AuthGuard('jwt'))
+          FranchiseInvalidationTestModule, // Fixed: was AuthModuleFranchiseInvalidationTestModule (undefined)
+        ],
+        controllers: [TestFranchiseController],
+      })
+        .overrideProvider(PrismaService)
+        .useClass(TestPrismaService)
+        .compile(),
+      { label: 'franchise.slice module compilation', ms: 30000 }
+    );
 
     app = moduleRef.createNestApplication();
+    app.enableShutdownHooks(); // CRITICAL: Before init
     await app.init();
   });
 

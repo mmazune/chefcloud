@@ -1,0 +1,5 @@
+test/e2e/kds.slice.e2e-spec.ts
+test/e2e/app-bisect.e2e-spec.ts
+test/e2e/minimal-harness.e2e-spec.ts
+test/e2e/orders.slice.e2e-spec.ts
+test/e2e/transfer.invalidation.slice.e2e-spec.ts

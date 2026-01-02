@@ -35,6 +35,23 @@ fi
 DISPLAY_URL=$(echo $DATABASE_URL | sed 's/:\/\/[^:]*:[^@]*@/:\/\/***:***@/')
 echo -e "📍 Target: ${DISPLAY_URL}"
 
+# Extract database name for safety check
+DB_NAME=$(echo $DATABASE_URL | sed -n 's/.*\/\([^?]*\).*/\1/p')
+echo -e "🗄️  Database: ${DB_NAME}"
+
+# SAFETY: Confirm this is test database, not dev/prod
+if [[ ! "$DB_NAME" =~ test ]]; then
+  echo -e "${RED}❌ SAFETY CHECK FAILED: Database name does not contain 'test'${NC}"
+  echo "   This script should only run against test databases"
+  echo "   Current database: $DB_NAME"
+  echo "   Expected pattern: *test*"
+  exit 1
+fi
+
+# Dataset configuration (default to DEMO_TAPAS per spec)
+E2E_DATASET="${E2E_DATASET:-DEMO_TAPAS}"
+echo -e "📊 Dataset: ${E2E_DATASET}"
+
 # Path to Prisma schema (monorepo structure)
 SCHEMA_PATH="../../packages/db/prisma/schema.prisma"
 PRISMA_BIN="../../node_modules/.pnpm/node_modules/.bin/prisma"
@@ -51,30 +68,16 @@ if [ ! -f "$PRISMA_BIN" ]; then
 fi
 
 echo ""
-echo "📊 Checking migration status..."
-MIGRATE_STATUS_OUTPUT=$($PRISMA_BIN migrate status --schema=$SCHEMA_PATH 2>&1 || true)
+echo "🔄 Resetting test database (FK-proof clean slate)..."
+echo ""
 
-if echo "$MIGRATE_STATUS_OUTPUT" | grep -q "migrate found failed migrations"; then
-  echo -e "${YELLOW}⚠️  Warning: Database has failed migrations (dirty state)${NC}"
-  echo -e "${YELLOW}   Resetting to clean state...${NC}"
-  echo ""
-  
-  # Reset removes all data and reapplies all migrations from scratch
-  $PRISMA_BIN migrate reset --force --skip-seed --schema=$SCHEMA_PATH
-  
-  echo -e "${GREEN}✅ Database reset complete${NC}"
-elif echo "$MIGRATE_STATUS_OUTPUT" | grep -q "have not yet been applied"; then
-  PENDING_COUNT=$(echo "$MIGRATE_STATUS_OUTPUT" | grep -A 100 "have not yet been applied" | grep "^20" | wc -l)
-  echo -e "${YELLOW}📦 Found $PENDING_COUNT pending migration(s)${NC}"
-  echo ""
-  echo "🚀 Applying migrations..."
-  
-  $PRISMA_BIN migrate deploy --schema=$SCHEMA_PATH
-  
-  echo -e "${GREEN}✅ Migrations applied successfully${NC}"
-else
-  echo -e "${GREEN}✅ Database schema is up-to-date${NC}"
-fi
+# ALWAYS reset test DB to avoid FK constraint issues
+# This drops all data and reapplies migrations from scratch
+# Safe for E2E test database (not prod!)
+$PRISMA_BIN migrate reset --force --skip-seed --skip-generate --schema=$SCHEMA_PATH
+
+echo ""
+echo -e "${GREEN}✅ Database reset complete - schema is clean${NC}"
 
 echo ""
 echo "🌱 Seeding E2E test data..."
@@ -102,6 +105,21 @@ npx tsx "$SEED_SCRIPT" || {
 
 echo ""
 echo -e "${GREEN}✅ Seed complete - demo users ready${NC}"
+
+echo ""
+echo "🔍 Verifying seed data integrity..."
+VERIFY_SCRIPT="scripts/verify-e2e-seed.mjs"
+if [ ! -f "$VERIFY_SCRIPT" ]; then
+  echo -e "${YELLOW}⚠️  Warning: Verification script not found at $VERIFY_SCRIPT${NC}"
+  echo "   Skipping verification (seed assumed successful)"
+else
+  node "$VERIFY_SCRIPT" ALL || {
+    echo -e "${RED}❌ Seed verification failed - dataset is incomplete${NC}"
+    echo "   Tests will likely fail due to missing data"
+    exit 1
+  }
+  echo -e "${GREEN}✅ Seed verification passed${NC}"
+fi
 
 echo ""
 echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
