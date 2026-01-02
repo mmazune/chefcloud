@@ -62,6 +62,7 @@ export interface AuthResponse {
     firstName: string;
     lastName: string;
     roleLevel: string;
+    jobRole?: string; // M8.1: Job role for role-specific UX
     orgId: string;
     branchId?: string;
   };

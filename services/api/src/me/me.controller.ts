@@ -16,6 +16,7 @@ export class MeController {
   /**
    * GET /me
    * Returns current user profile with org, branch, and employee details
+   * M8.1: Now includes jobRole for role-specific UX
    * 
    * Rate limiting: Skipped for demo verification reliability
    */
@@ -40,6 +41,7 @@ export class MeController {
       firstName: fullUser.firstName,
       lastName: fullUser.lastName,
       roleLevel: fullUser.roleLevel,
+      jobRole: fullUser.jobRole ?? null, // M8.1: Include jobRole for role-specific UX
       orgId: fullUser.orgId,
       branchId: fullUser.branchId,
       isActive: fullUser.isActive,

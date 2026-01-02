@@ -284,6 +284,7 @@ export class AuthService {
       firstName: string;
       lastName: string;
       roleLevel: string;
+      jobRole?: string | null; // M8.1: Job role for role-specific UX
       orgId: string;
       branchId: string | null;
       sessionVersion?: number;
@@ -328,6 +329,7 @@ export class AuthService {
       email: user.email,
       orgId: user.orgId,
       roleLevel: user.roleLevel,
+      ...(user.jobRole && { jobRole: user.jobRole }), // M8.1: Include jobRole if present
       sv: sessionVersion, // E25: Session version
       jti, // E25: JWT ID
       ...(sessionContext?.badgeId && { badgeId: sessionContext.badgeId }), // E25: Include badge ID if authenticated via badge
@@ -343,6 +345,7 @@ export class AuthService {
         firstName: user.firstName,
         lastName: user.lastName,
         roleLevel: user.roleLevel,
+        jobRole: user.jobRole ?? undefined, // M8.1: Include jobRole in response
         orgId: user.orgId,
         branchId: user.branchId ?? undefined,
       },

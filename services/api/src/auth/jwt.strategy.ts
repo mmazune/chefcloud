@@ -11,6 +11,7 @@ export interface JwtPayload {
   email: string;
   orgId: string;
   roleLevel: string;
+  jobRole?: string; // M8.1: Job role for role-specific UX
   sv?: number; // E25: Session version for revocation
   badgeId?: string; // E25: Badge ID if authenticated via badge swipe
   jti?: string; // E25: JWT ID for deny list lookup
