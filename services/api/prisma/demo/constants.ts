@@ -23,31 +23,32 @@ export const DEMO_PASSWORD = 'Demo#123';
 // ===== Demo Users =====
 // All Tapas users with consistent names and proper role levels
 // Role levels: L5=Owner, L4=Manager/Accountant, L3=Procurement/Stock/EventMgr, L2=Supervisor/Cashier/Chef, L1=Waiter/Bartender
+// JobRole: Enum from schema (OWNER, MANAGER, ACCOUNTANT, PROCUREMENT, STOCK_MANAGER, SUPERVISOR, CASHIER, CHEF, WAITER, BARTENDER, EVENT_MANAGER)
 export const TAPAS_DEMO_USERS = [
-  { email: 'owner@tapas.demo.local', roleLevel: 'L5', firstName: 'Joshua', lastName: 'Owner' },
-  { email: 'manager@tapas.demo.local', roleLevel: 'L4', firstName: 'Bob', lastName: 'Manager', pin: '1234' },
-  { email: 'accountant@tapas.demo.local', roleLevel: 'L4', firstName: 'Carol', lastName: 'Accountant' },
-  { email: 'procurement@tapas.demo.local', roleLevel: 'L3', firstName: 'Dan', lastName: 'Procurement' },
-  { email: 'stock@tapas.demo.local', roleLevel: 'L3', firstName: 'Eve', lastName: 'Stock' },
-  { email: 'supervisor@tapas.demo.local', roleLevel: 'L2', firstName: 'Frank', lastName: 'Supervisor' },
-  { email: 'cashier@tapas.demo.local', roleLevel: 'L2', firstName: 'Grace', lastName: 'Cashier' },
-  { email: 'waiter@tapas.demo.local', roleLevel: 'L1', firstName: 'Henry', lastName: 'Waiter' },
-  { email: 'chef@tapas.demo.local', roleLevel: 'L2', firstName: 'Iris', lastName: 'Chef' },
-  { email: 'bartender@tapas.demo.local', roleLevel: 'L1', firstName: 'Jack', lastName: 'Bartender' },
-  { email: 'eventmgr@tapas.demo.local', roleLevel: 'L3', firstName: 'Kelly', lastName: 'Events' },
+  { email: 'owner@tapas.demo.local', roleLevel: 'L5', jobRole: 'OWNER', firstName: 'Joshua', lastName: 'Owner' },
+  { email: 'manager@tapas.demo.local', roleLevel: 'L4', jobRole: 'MANAGER', firstName: 'Bob', lastName: 'Manager', pin: '1234' },
+  { email: 'accountant@tapas.demo.local', roleLevel: 'L4', jobRole: 'ACCOUNTANT', firstName: 'Carol', lastName: 'Accountant' },
+  { email: 'procurement@tapas.demo.local', roleLevel: 'L3', jobRole: 'PROCUREMENT', firstName: 'Dan', lastName: 'Procurement' },
+  { email: 'stock@tapas.demo.local', roleLevel: 'L3', jobRole: 'STOCK_MANAGER', firstName: 'Eve', lastName: 'Stock' },
+  { email: 'supervisor@tapas.demo.local', roleLevel: 'L2', jobRole: 'SUPERVISOR', firstName: 'Frank', lastName: 'Supervisor' },
+  { email: 'cashier@tapas.demo.local', roleLevel: 'L2', jobRole: 'CASHIER', firstName: 'Grace', lastName: 'Cashier' },
+  { email: 'waiter@tapas.demo.local', roleLevel: 'L1', jobRole: 'WAITER', firstName: 'Henry', lastName: 'Waiter' },
+  { email: 'chef@tapas.demo.local', roleLevel: 'L2', jobRole: 'CHEF', firstName: 'Iris', lastName: 'Chef' },
+  { email: 'bartender@tapas.demo.local', roleLevel: 'L1', jobRole: 'BARTENDER', firstName: 'Jack', lastName: 'Bartender' },
+  { email: 'eventmgr@tapas.demo.local', roleLevel: 'L3', jobRole: 'EVENT_MANAGER', firstName: 'Kelly', lastName: 'Events' },
 ] as const;
 
 // All Cafesserie users (no eventmgr as requested)
 // Role levels: L5=Owner, L4=Manager/Accountant, L3=Procurement, L2=Supervisor/Cashier/Chef, L1=Waiter
 export const CAFESSERIE_DEMO_USERS = [
-  { email: 'owner@cafesserie.demo.local', roleLevel: 'L5', firstName: 'Joshua', lastName: 'Owner' },
-  { email: 'manager@cafesserie.demo.local', roleLevel: 'L4', firstName: 'Mike', lastName: 'Manager', pin: '5678' },
-  { email: 'accountant@cafesserie.demo.local', roleLevel: 'L4', firstName: 'Nina', lastName: 'Accountant' },
-  { email: 'procurement@cafesserie.demo.local', roleLevel: 'L3', firstName: 'Oscar', lastName: 'Procurement' },
-  { email: 'supervisor@cafesserie.demo.local', roleLevel: 'L2', firstName: 'Paula', lastName: 'Supervisor' },
-  { email: 'cashier@cafesserie.demo.local', roleLevel: 'L2', firstName: 'Quinn', lastName: 'Cashier' },
-  { email: 'waiter@cafesserie.demo.local', roleLevel: 'L1', firstName: 'Rachel', lastName: 'Waiter' },
-  { email: 'chef@cafesserie.demo.local', roleLevel: 'L2', firstName: 'Sam', lastName: 'Chef' },
+  { email: 'owner@cafesserie.demo.local', roleLevel: 'L5', jobRole: 'OWNER', firstName: 'Joshua', lastName: 'Owner' },
+  { email: 'manager@cafesserie.demo.local', roleLevel: 'L4', jobRole: 'MANAGER', firstName: 'Mike', lastName: 'Manager', pin: '5678' },
+  { email: 'accountant@cafesserie.demo.local', roleLevel: 'L4', jobRole: 'ACCOUNTANT', firstName: 'Nina', lastName: 'Accountant' },
+  { email: 'procurement@cafesserie.demo.local', roleLevel: 'L3', jobRole: 'PROCUREMENT', firstName: 'Oscar', lastName: 'Procurement' },
+  { email: 'supervisor@cafesserie.demo.local', roleLevel: 'L2', jobRole: 'SUPERVISOR', firstName: 'Paula', lastName: 'Supervisor' },
+  { email: 'cashier@cafesserie.demo.local', roleLevel: 'L2', jobRole: 'CASHIER', firstName: 'Quinn', lastName: 'Cashier' },
+  { email: 'waiter@cafesserie.demo.local', roleLevel: 'L1', jobRole: 'WAITER', firstName: 'Rachel', lastName: 'Waiter' },
+  { email: 'chef@cafesserie.demo.local', roleLevel: 'L2', jobRole: 'CHEF', firstName: 'Sam', lastName: 'Chef' },
 ] as const;
 
 // ===== Organization Definitions =====

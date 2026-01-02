@@ -1009,129 +1009,246 @@ async function seedLiveOrders(prisma: PrismaClient): Promise<void> {
 
 /**
  * Seed journal entries for finance page
+ * Seeds for BOTH Tapas (single branch) and Cafesserie (4 branches) with branch-level data
  */
 async function seedJournalEntries(prisma: PrismaClient): Promise<void> {
   console.log('\n📒 Seeding Journal Entries...');
 
-  // Get accounts
-  const accounts = await prisma.account.findMany({
-    where: { orgId: ORG_TAPAS_ID },
-  });
+  const orgs = [
+    { 
+      id: ORG_TAPAS_ID, 
+      name: 'Tapas',
+      prefix: '6', 
+      branches: [
+        { id: BRANCH_TAPAS_MAIN_ID, name: 'Main', multiplier: 1.0 }
+      ]
+    },
+    { 
+      id: ORG_CAFESSERIE_ID, 
+      name: 'Cafesserie',
+      prefix: '7',
+      branches: [
+        { id: BRANCH_CAFE_VILLAGE_MALL_ID, name: 'Village Mall', multiplier: 1.2 },
+        { id: BRANCH_CAFE_ACACIA_MALL_ID, name: 'Acacia Mall', multiplier: 1.0 },
+        { id: BRANCH_CAFE_ARENA_MALL_ID, name: 'Arena Mall', multiplier: 0.8 },
+        { id: BRANCH_CAFE_MOMBASA_ID, name: 'Mombasa', multiplier: 0.6 },
+      ]
+    },
+  ];
 
-  if (accounts.length === 0) {
-    console.log('  ⚠️  No accounts found, skipping journal entries');
-    return;
-  }
+  let totalEntryCount = 0;
 
-  const cashAccount = accounts.find(a => a.code === '1000');
-  const salesAccount = accounts.find(a => a.code === '4000');
-  const expenseAccount = accounts.find(a => a.code === '5000');
-
-  if (!cashAccount || !salesAccount) {
-    console.log('  ⚠️  Required accounts not found, skipping journal entries');
-    return;
-  }
-
-  const now = new Date();
-  let entryCount = 0;
-
-  // Create journal entries for last 30 days
-  for (let daysAgo = 30; daysAgo >= 0; daysAgo--) {
-    const entryDate = new Date(now.getTime() - daysAgo * 24 * 60 * 60 * 1000);
-    
-    // Daily sales entry
-    const salesAmount = 500000 + Math.floor(Math.random() * 1000000); // 500k - 1.5m UGX
-    const salesEntryId = `00000000-0000-4000-8000-00000006${String(daysAgo).padStart(2, '0')}01`;
-    
-    await prisma.journalEntry.upsert({
-      where: { id: salesEntryId },
-      update: {},
-      create: {
-        id: salesEntryId,
-        orgId: ORG_TAPAS_ID,
-        date: entryDate,
-        memo: `Daily sales - ${entryDate.toISOString().split('T')[0]}`,
-        reference: `SALES-${entryDate.toISOString().split('T')[0]}`,
-        status: 'POSTED',
-        createdAt: entryDate,
-      },
+  for (const org of orgs) {
+    // Get accounts for this org
+    const accounts = await prisma.account.findMany({
+      where: { orgId: org.id },
     });
 
-    // Journal lines for sales entry
-    await prisma.journalLine.upsert({
-      where: { id: `${salesEntryId}-line-1` },
-      update: {},
-      create: {
-        id: `${salesEntryId}-line-1`,
-        entryId: salesEntryId,
-        accountId: cashAccount.id,
-        debit: salesAmount,
-        credit: 0,
-      },
-    });
-
-    await prisma.journalLine.upsert({
-      where: { id: `${salesEntryId}-line-2` },
-      update: {},
-      create: {
-        id: `${salesEntryId}-line-2`,
-        entryId: salesEntryId,
-        accountId: salesAccount.id,
-        debit: 0,
-        credit: salesAmount,
-      },
-    });
-
-    entryCount++;
-
-    // Weekly expense entry
-    if (daysAgo % 7 === 0 && expenseAccount) {
-      const expenseAmount = 100000 + Math.floor(Math.random() * 200000); // 100k - 300k UGX
-      const expenseEntryId = `00000000-0000-4000-8000-00000006${String(daysAgo).padStart(2, '0')}02`;
-      
-      await prisma.journalEntry.upsert({
-        where: { id: expenseEntryId },
-        update: {},
-        create: {
-          id: expenseEntryId,
-          orgId: ORG_TAPAS_ID,
-          date: entryDate,
-          memo: `Weekly supplies - ${entryDate.toISOString().split('T')[0]}`,
-          reference: `EXP-${entryDate.toISOString().split('T')[0]}`,
-          status: 'POSTED',
-          createdAt: entryDate,
-        },
-      });
-
-      await prisma.journalLine.upsert({
-        where: { id: `${expenseEntryId}-line-1` },
-        update: {},
-        create: {
-          id: `${expenseEntryId}-line-1`,
-          entryId: expenseEntryId,
-          accountId: expenseAccount.id,
-          debit: expenseAmount,
-          credit: 0,
-        },
-      });
-
-      await prisma.journalLine.upsert({
-        where: { id: `${expenseEntryId}-line-2` },
-        update: {},
-        create: {
-          id: `${expenseEntryId}-line-2`,
-          entryId: expenseEntryId,
-          accountId: cashAccount.id,
-          debit: 0,
-          credit: expenseAmount,
-        },
-      });
-
-      entryCount++;
+    if (accounts.length === 0) {
+      console.log(`  ⚠️  No accounts found for ${org.name}, skipping journal entries`);
+      continue;
     }
+
+    const cashAccount = accounts.find(a => a.code === '1000');
+    const arAccount = accounts.find(a => a.code === '1100');
+    const inventoryAccount = accounts.find(a => a.code === '1200');
+    const apAccount = accounts.find(a => a.code === '2000');
+    const salesAccount = accounts.find(a => a.code === '4000');
+    const cogsAccount = accounts.find(a => a.code === '5000');
+    const salariesAccount = accounts.find(a => a.code === '6100');
+    const rentAccount = accounts.find(a => a.code === '6200');
+
+    if (!cashAccount || !salesAccount) {
+      console.log(`  ⚠️  Required accounts not found for ${org.name}, skipping journal entries`);
+      continue;
+    }
+
+    const now = new Date();
+    let orgEntryCount = 0;
+
+    for (const branch of org.branches) {
+      const branchIndex = org.branches.indexOf(branch);
+      
+      // Create journal entries for last 30 days
+      for (let daysAgo = 30; daysAgo >= 0; daysAgo--) {
+        const entryDate = new Date(now.getTime() - daysAgo * 24 * 60 * 60 * 1000);
+        const dateStr = entryDate.toISOString().split('T')[0];
+        
+        // Daily sales entry with COGS
+        const salesAmount = Math.floor((500000 + Math.random() * 1000000) * branch.multiplier); // 500k - 1.5m UGX * multiplier
+        const cogsAmount = Math.floor(salesAmount * 0.35); // 35% cost of goods
+        const salesEntryId = `00000000-0000-4000-8000-0000000${org.prefix}${branchIndex}${String(daysAgo).padStart(2, '0')}01`;
+        
+        await prisma.journalEntry.upsert({
+          where: { id: salesEntryId },
+          update: {},
+          create: {
+            id: salesEntryId,
+            orgId: org.id,
+            branchId: branch.id,
+            date: entryDate,
+            memo: `Daily sales - ${branch.name} - ${dateStr}`,
+            source: 'POS_SALE',
+            sourceId: `SALES-${branch.name.substring(0, 3).toUpperCase()}-${dateStr}`,
+            createdAt: entryDate,
+          },
+        });
+
+        // Lines: Debit Cash, Credit Sales, Debit COGS, Credit Inventory
+        const salesLines = [
+          { id: `${salesEntryId}-L1`, accountId: cashAccount.id, debit: salesAmount, credit: 0 },
+          { id: `${salesEntryId}-L2`, accountId: salesAccount.id, debit: 0, credit: salesAmount },
+        ];
+        
+        if (cogsAccount && inventoryAccount) {
+          salesLines.push(
+            { id: `${salesEntryId}-L3`, accountId: cogsAccount.id, debit: cogsAmount, credit: 0 },
+            { id: `${salesEntryId}-L4`, accountId: inventoryAccount.id, debit: 0, credit: cogsAmount },
+          );
+        }
+
+        for (const line of salesLines) {
+          await prisma.journalLine.upsert({
+            where: { id: line.id },
+            update: {},
+            create: {
+              id: line.id,
+              entryId: salesEntryId,
+              accountId: line.accountId,
+              debit: line.debit,
+              credit: line.credit,
+            },
+          });
+        }
+        orgEntryCount++;
+
+        // Weekly inventory purchase (every Monday)
+        if (daysAgo % 7 === 0 && inventoryAccount && apAccount) {
+          const purchaseAmount = Math.floor((200000 + Math.random() * 300000) * branch.multiplier);
+          const purchaseEntryId = `00000000-0000-4000-8000-0000000${org.prefix}${branchIndex}${String(daysAgo).padStart(2, '0')}02`;
+          
+          await prisma.journalEntry.upsert({
+            where: { id: purchaseEntryId },
+            update: {},
+            create: {
+              id: purchaseEntryId,
+              orgId: org.id,
+              branchId: branch.id,
+              date: entryDate,
+              memo: `Inventory purchase - ${branch.name} - ${dateStr}`,
+              source: 'VENDOR_PAYMENT',
+              sourceId: `INV-${branch.name.substring(0, 3).toUpperCase()}-${dateStr}`,
+              createdAt: entryDate,
+            },
+          });
+
+          // Debit Inventory, Credit AP
+          for (const line of [
+            { id: `${purchaseEntryId}-L1`, accountId: inventoryAccount.id, debit: purchaseAmount, credit: 0 },
+            { id: `${purchaseEntryId}-L2`, accountId: apAccount.id, debit: 0, credit: purchaseAmount },
+          ]) {
+            await prisma.journalLine.upsert({
+              where: { id: line.id },
+              update: {},
+              create: {
+                id: line.id,
+                entryId: purchaseEntryId,
+                accountId: line.accountId,
+                debit: line.debit,
+                credit: line.credit,
+              },
+            });
+          }
+          orgEntryCount++;
+        }
+
+        // Bi-weekly payroll (every 14 days)
+        if (daysAgo % 14 === 0 && salariesAccount) {
+          const payrollAmount = Math.floor((800000 + Math.random() * 400000) * branch.multiplier);
+          const payrollEntryId = `00000000-0000-4000-8000-0000000${org.prefix}${branchIndex}${String(daysAgo).padStart(2, '0')}03`;
+          
+          await prisma.journalEntry.upsert({
+            where: { id: payrollEntryId },
+            update: {},
+            create: {
+              id: payrollEntryId,
+              orgId: org.id,
+              branchId: branch.id,
+              date: entryDate,
+              memo: `Payroll - ${branch.name} - ${dateStr}`,
+              source: 'PAYROLL',
+              sourceId: `PAY-${branch.name.substring(0, 3).toUpperCase()}-${dateStr}`,
+              createdAt: entryDate,
+            },
+          });
+
+          // Debit Salaries, Credit Cash
+          for (const line of [
+            { id: `${payrollEntryId}-L1`, accountId: salariesAccount.id, debit: payrollAmount, credit: 0 },
+            { id: `${payrollEntryId}-L2`, accountId: cashAccount.id, debit: 0, credit: payrollAmount },
+          ]) {
+            await prisma.journalLine.upsert({
+              where: { id: line.id },
+              update: {},
+              create: {
+                id: line.id,
+                entryId: payrollEntryId,
+                accountId: line.accountId,
+                debit: line.debit,
+                credit: line.credit,
+              },
+            });
+          }
+          orgEntryCount++;
+        }
+
+        // Monthly rent (1st of month)
+        if (entryDate.getDate() === 1 && rentAccount) {
+          const rentAmount = Math.floor(1500000 * branch.multiplier);
+          const rentEntryId = `00000000-0000-4000-8000-0000000${org.prefix}${branchIndex}${String(daysAgo).padStart(2, '0')}04`;
+          
+          await prisma.journalEntry.upsert({
+            where: { id: rentEntryId },
+            update: {},
+            create: {
+              id: rentEntryId,
+              orgId: org.id,
+              branchId: branch.id,
+              date: entryDate,
+              memo: `Monthly rent - ${branch.name} - ${dateStr}`,
+              source: 'EXPENSE',
+              sourceId: `RENT-${branch.name.substring(0, 3).toUpperCase()}-${entryDate.getMonth() + 1}`,
+              createdAt: entryDate,
+            },
+          });
+
+          // Debit Rent, Credit Cash
+          for (const line of [
+            { id: `${rentEntryId}-L1`, accountId: rentAccount.id, debit: rentAmount, credit: 0 },
+            { id: `${rentEntryId}-L2`, accountId: cashAccount.id, debit: 0, credit: rentAmount },
+          ]) {
+            await prisma.journalLine.upsert({
+              where: { id: line.id },
+              update: {},
+              create: {
+                id: line.id,
+                entryId: rentEntryId,
+                accountId: line.accountId,
+                debit: line.debit,
+                credit: line.credit,
+              },
+            });
+          }
+          orgEntryCount++;
+        }
+      }
+    }
+
+    console.log(`  ✅ Created ${orgEntryCount} journal entries for ${org.name}`);
+    totalEntryCount += orgEntryCount;
   }
 
-  console.log(`  ✅ Created ${entryCount} journal entries`);
+  console.log(`  📊 Total journal entries: ${totalEntryCount}`);
 }
 
 /**

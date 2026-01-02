@@ -53,7 +53,29 @@ export class PeriodsService {
     return updated;
   }
 
-  async listPeriods(orgId: string, status?: 'OPEN' | 'LOCKED') {
+  async closePeriod(periodId: string, userId: string) {
+    const period = await this.prisma.client.fiscalPeriod.findUnique({
+      where: { id: periodId },
+    });
+
+    if (!period) {
+      throw new NotFoundException(`Fiscal period ${periodId} not found`);
+    }
+
+    if (period.status !== 'OPEN') {
+      throw new BadRequestException(`Period ${period.name} is not open (current status: ${period.status})`);
+    }
+
+    const updated = await this.prisma.client.fiscalPeriod.update({
+      where: { id: periodId },
+      data: { status: 'CLOSED', closedById: userId, closedAt: new Date() },
+    });
+
+    this.logger.log(`Closed fiscal period: ${period.name}`);
+    return updated;
+  }
+
+  async listPeriods(orgId: string, status?: 'OPEN' | 'CLOSED' | 'LOCKED') {
     return this.prisma.client.fiscalPeriod.findMany({
       where: { orgId, ...(status && { status }) },
       orderBy: { startsAt: 'desc' },

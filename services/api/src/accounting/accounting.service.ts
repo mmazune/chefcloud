@@ -2,11 +2,12 @@
  * E40-s1: Accounting Service
  * 
  * Business logic for accounting operations.
+ * M8.2b: Enterprise hardening - lifecycle, period lock, exports
  */
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 
 @Injectable()
@@ -76,10 +77,12 @@ export class AccountingService {
 
   /**
    * Mark vendor bill as OPEN (approved and ready for payment)
+   * M8.3: Creates GL entry and enforces period lock
    */
-  async openVendorBill(billId: string): Promise<any> {
+  async openVendorBill(billId: string, userId: string): Promise<any> {
     const bill = await this.prisma.client.vendorBill.findUnique({
       where: { id: billId },
+      include: { vendor: true },
     });
 
     if (!bill) {
@@ -87,20 +90,173 @@ export class AccountingService {
     }
 
     if (bill.status !== 'DRAFT') {
-      throw new Error(`Bill ${billId} is not in DRAFT status`);
+      throw new BadRequestException(`Bill ${billId} is not in DRAFT status. Current status: ${bill.status}`);
     }
 
-    return this.prisma.client.vendorBill.update({
-      where: { id: billId },
-      data: { status: 'OPEN' },
+    // M8.3: Check fiscal period lock
+    const period = await this.prisma.client.fiscalPeriod.findFirst({
+      where: {
+        orgId: bill.orgId,
+        startsAt: { lte: bill.billDate },
+        endsAt: { gte: bill.billDate },
+      },
     });
+
+    if (period?.status === 'LOCKED') {
+      throw new ForbiddenException(`Cannot open bill in locked fiscal period: ${period.name}`);
+    }
+
+    // M8.3: Find required accounts for GL entry
+    const apAccount = await this.prisma.client.account.findFirst({
+      where: { orgId: bill.orgId, name: { contains: 'Accounts Payable' }, type: 'LIABILITY' },
+    });
+
+    const expenseAccount = await this.prisma.client.account.findFirst({
+      where: { orgId: bill.orgId, type: 'EXPENSE' },
+      orderBy: { code: 'asc' },
+    });
+
+    if (!apAccount || !expenseAccount) {
+      throw new BadRequestException('Required accounts (AP, Expense) not found. Please set up chart of accounts.');
+    }
+
+    // M8.3: Create POSTED journal entry in transaction
+    const result = await this.prisma.client.$transaction(async (tx) => {
+      // Create journal entry (auto-POSTED)
+      const journalEntry = await tx.journalEntry.create({
+        data: {
+          orgId: bill.orgId,
+          date: bill.billDate,
+          memo: `Vendor Bill: ${bill.number || billId} - ${bill.vendor.name}`,
+          source: 'VENDOR_BILL',
+          sourceId: billId,
+          status: 'POSTED',
+          postedById: userId,
+          postedAt: new Date(),
+          lines: {
+            create: [
+              {
+                accountId: expenseAccount.id,
+                debit: Number(bill.total),
+                credit: 0,
+              },
+              {
+                accountId: apAccount.id,
+                debit: 0,
+                credit: Number(bill.total),
+              },
+            ],
+          },
+        },
+      });
+
+      // Update bill to OPEN with journal link
+      const updatedBill = await tx.vendorBill.update({
+        where: { id: billId },
+        data: {
+          status: 'OPEN',
+          journalEntryId: journalEntry.id,
+          openedAt: new Date(),
+          openedById: userId,
+        },
+        include: { vendor: true, journalEntry: true },
+      });
+
+      return updatedBill;
+    });
+
+    this.logger.log(`Opened bill ${billId} with journal entry ${result.journalEntryId}`);
+    return result;
+  }
+
+  /**
+   * Void a vendor bill
+   * M8.3: Creates reversal GL entry
+   * M8.4: Also supports PARTIALLY_PAID bills
+   */
+  async voidVendorBill(billId: string, userId: string): Promise<any> {
+    const bill = await this.prisma.client.vendorBill.findUnique({
+      where: { id: billId },
+      include: { journalEntry: { include: { lines: true } } },
+    });
+
+    if (!bill) {
+      throw new NotFoundException(`Bill ${billId} not found`);
+    }
+
+    // M8.4: Allow voiding OPEN, PARTIALLY_PAID, or PAID bills
+    if (bill.status !== 'OPEN' && bill.status !== 'PARTIALLY_PAID' && bill.status !== 'PAID') {
+      throw new BadRequestException(`Cannot void bill with status ${bill.status}. Only OPEN, PARTIALLY_PAID, or PAID bills can be voided.`);
+    }
+
+    // Check period lock
+    const period = await this.prisma.client.fiscalPeriod.findFirst({
+      where: {
+        orgId: bill.orgId,
+        startsAt: { lte: new Date() },
+        endsAt: { gte: new Date() },
+      },
+    });
+
+    if (period?.status === 'LOCKED') {
+      throw new ForbiddenException(`Cannot void bill in locked fiscal period: ${period.name}`);
+    }
+
+    const result = await this.prisma.client.$transaction(async (tx) => {
+      // Create reversal journal entry if original exists
+      if (bill.journalEntry) {
+        await tx.journalEntry.create({
+          data: {
+            orgId: bill.orgId,
+            date: new Date(),
+            memo: `Void Vendor Bill: ${bill.number || billId}`,
+            source: 'VENDOR_BILL_VOID',
+            sourceId: billId,
+            status: 'POSTED',
+            postedById: userId,
+            postedAt: new Date(),
+            reversesEntryId: bill.journalEntry.id,
+            lines: {
+              create: bill.journalEntry.lines.map((line) => ({
+                accountId: line.accountId,
+                debit: Number(line.credit), // Swap
+                credit: Number(line.debit),
+              })),
+            },
+          },
+        });
+
+        // Mark original entry as reversed
+        await tx.journalEntry.update({
+          where: { id: bill.journalEntry.id },
+          data: {
+            status: 'REVERSED',
+            reversedById: userId,
+            reversedAt: new Date(),
+          },
+        });
+      }
+
+      // Mark bill as VOID
+      return tx.vendorBill.update({
+        where: { id: billId },
+        data: { status: 'VOID' },
+        include: { vendor: true },
+      });
+    });
+
+    this.logger.log(`Voided bill ${billId}`);
+    return result;
   }
 
   /**
    * Create vendor payment
+   * M8.3: Creates GL entry (Debit AP, Credit Cash/Bank)
+   * M8.4: Supports partial payments, uses PaymentMethodMapping
    */
   async createVendorPayment(
     orgId: string,
+    userId: string,
     data: {
       vendorId: string;
       billId?: string;
@@ -111,58 +267,173 @@ export class AccountingService {
       metadata?: any;
     },
   ): Promise<any> {
-    const payment = await this.prisma.client.vendorPayment.create({
-      data: {
-        orgId,
-        ...data,
-      },
-      include: {
-        vendor: true,
-        bill: true,
-      },
-    });
+    // M8.4: Validate payment amount is positive
+    if (data.amount <= 0) {
+      throw new BadRequestException('Payment amount must be greater than zero');
+    }
 
-    // If payment is for a specific bill, check if bill is fully paid
+    // Validate bill if provided
+    let bill: any = null;
     if (data.billId) {
-      const bill = await this.prisma.client.vendorBill.findUnique({
+      bill = await this.prisma.client.vendorBill.findUnique({
         where: { id: data.billId },
-        include: {
-          payments: true,
-        },
       });
 
-      if (bill) {
-        const totalPaid = bill.payments.reduce(
-          (sum, p) => sum + Number(p.amount),
-          0,
-        );
+      if (!bill) {
+        throw new NotFoundException(`Bill ${data.billId} not found`);
+      }
 
-        if (totalPaid >= Number(bill.total)) {
-          await this.prisma.client.vendorBill.update({
-            where: { id: data.billId },
-            data: { status: 'PAID' },
-          });
-          this.logger.log(`Bill ${data.billId} marked as PAID`);
-        }
+      // M8.4: Allow OPEN or PARTIALLY_PAID bills
+      if (bill.status !== 'OPEN' && bill.status !== 'PARTIALLY_PAID') {
+        throw new BadRequestException(`Bill ${data.billId} is not in OPEN or PARTIALLY_PAID status. Current status: ${bill.status}`);
+      }
+
+      // M8.4: Check outstanding amount using paidAmount field
+      const outstanding = Number(bill.total) - Number(bill.paidAmount);
+
+      if (data.amount > outstanding + 0.01) {
+        throw new BadRequestException(`Payment amount ${data.amount.toFixed(2)} exceeds outstanding balance ${outstanding.toFixed(2)}`);
       }
     }
 
-    return payment;
+    // M8.4: Use PaymentMethodMapping to resolve cash/bank account
+    const mapping = await this.prisma.client.paymentMethodMapping.findUnique({
+      where: { orgId_method: { orgId, method: data.method as any } },
+      include: { account: true },
+    });
+
+    let cashAccount: any;
+    if (mapping) {
+      cashAccount = mapping.account;
+    } else {
+      // Fallback to name-based search for backwards compatibility
+      cashAccount = await this.prisma.client.account.findFirst({
+        where: { orgId, name: { contains: 'Cash' }, type: 'ASSET' },
+        orderBy: { code: 'asc' },
+      });
+    }
+
+    // M8.3: Find required accounts
+    const apAccount = await this.prisma.client.account.findFirst({
+      where: { orgId, name: { contains: 'Accounts Payable' }, type: 'LIABILITY' },
+    });
+
+    if (!apAccount || !cashAccount) {
+      throw new BadRequestException('Required accounts (AP, Cash) not found. Please set up chart of accounts.');
+    }
+
+    // Check period lock
+    const paymentDate = data.paidAt || new Date();
+    const period = await this.prisma.client.fiscalPeriod.findFirst({
+      where: {
+        orgId,
+        startsAt: { lte: paymentDate },
+        endsAt: { gte: paymentDate },
+      },
+    });
+
+    if (period?.status === 'LOCKED') {
+      throw new ForbiddenException(`Cannot create payment in locked fiscal period: ${period.name}`);
+    }
+
+    const result = await this.prisma.client.$transaction(async (tx) => {
+      // Create journal entry
+      const journalEntry = await tx.journalEntry.create({
+        data: {
+          orgId,
+          date: paymentDate,
+          memo: `Vendor Payment: ${data.ref || 'No ref'} - ${data.method}`,
+          source: 'VENDOR_PAYMENT',
+          status: 'POSTED',
+          postedById: userId,
+          postedAt: new Date(),
+          lines: {
+            create: [
+              {
+                accountId: apAccount.id,
+                debit: data.amount,
+                credit: 0,
+              },
+              {
+                accountId: cashAccount.id,
+                debit: 0,
+                credit: data.amount,
+              },
+            ],
+          },
+        },
+      });
+
+      // Create payment with journal link
+      const payment = await tx.vendorPayment.create({
+        data: {
+          orgId,
+          vendorId: data.vendorId,
+          billId: data.billId,
+          amount: data.amount,
+          paidAt: paymentDate,
+          method: data.method,
+          ref: data.ref,
+          metadata: data.metadata,
+          journalEntryId: journalEntry.id,
+        },
+        include: {
+          vendor: true,
+          bill: true,
+          journalEntry: true,
+        },
+      });
+
+      // M8.4: If payment is for a specific bill, update paidAmount and status
+      if (data.billId) {
+        const currentBill = await tx.vendorBill.findUnique({
+          where: { id: data.billId },
+        });
+
+        if (currentBill) {
+          const newPaidAmount = Number(currentBill.paidAmount) + data.amount;
+          const total = Number(currentBill.total);
+          
+          // Determine new status
+          let newStatus: 'OPEN' | 'PARTIALLY_PAID' | 'PAID' = currentBill.status as any;
+          if (newPaidAmount >= total - 0.01) {
+            newStatus = 'PAID';
+          } else if (newPaidAmount > 0) {
+            newStatus = 'PARTIALLY_PAID';
+          }
+
+          await tx.vendorBill.update({
+            where: { id: data.billId },
+            data: { 
+              paidAmount: newPaidAmount,
+              status: newStatus,
+            },
+          });
+          this.logger.log(`Bill ${data.billId} updated: paidAmount=${newPaidAmount.toFixed(2)}, status=${newStatus}`);
+        }
+      }
+
+      return payment;
+    });
+
+    this.logger.log(`Created vendor payment ${result.id} with journal entry ${result.journalEntryId}`);
+    return result;
   }
 
   /**
    * Get AP aging report
    * Buckets: 0-30, 31-60, 61-90, 90+
+   * M8.4: Now includes PARTIALLY_PAID bills
    */
   async getAPAging(orgId: string) {
+    // M8.4: Include both OPEN and PARTIALLY_PAID bills
     const openBills = await this.prisma.client.vendorBill.findMany({
       where: {
         orgId,
-        status: 'OPEN',
+        status: { in: ['OPEN', 'PARTIALLY_PAID'] },
       },
       include: {
         vendor: true,
-        payments: true,
       },
     });
 
@@ -177,8 +448,8 @@ export class AccountingService {
     };
 
     for (const bill of openBills) {
-      const totalPaid = bill.payments.reduce((sum: number, p: any) => sum + Number(p.amount), 0);
-      const balance = Number(bill.total) - totalPaid;
+      // M8.4: Use paidAmount field directly
+      const balance = Number(bill.total) - Number(bill.paidAmount);
 
       if (balance <= 0) continue;
 
@@ -192,9 +463,10 @@ export class AccountingService {
         number: bill.number,
         dueDate: bill.dueDate,
         total: bill.total,
-        paid: totalPaid,
+        paid: Number(bill.paidAmount), // M8.4: Use paidAmount field
         balance,
         daysOverdue,
+        status: bill.status, // M8.4: Include status
       });
 
       if (daysOverdue <= 30) {
@@ -216,12 +488,14 @@ export class AccountingService {
   /**
    * Get AR aging report
    * Buckets: 0-30, 31-60, 61-90, 90+
+   * M8.4: Now includes PARTIALLY_PAID invoices
    */
   async getARAging(orgId: string) {
+    // M8.4: Include both OPEN and PARTIALLY_PAID invoices
     const openInvoices = await this.prisma.client.customerInvoice.findMany({
       where: {
         orgId,
-        status: 'OPEN',
+        status: { in: ['OPEN', 'PARTIALLY_PAID'] },
       },
       include: {
         customer: true,
@@ -239,7 +513,11 @@ export class AccountingService {
     };
 
     for (const invoice of openInvoices) {
-      const balance = Number(invoice.total);
+      // M8.4: Use paidAmount field for balance calculation
+      const balance = Number(invoice.total) - Number(invoice.paidAmount);
+      
+      if (balance <= 0) continue;
+      
       const daysOverdue = Math.floor(
         (today.getTime() - invoice.dueDate.getTime()) / (1000 * 60 * 60 * 24),
       );
@@ -250,8 +528,10 @@ export class AccountingService {
         number: invoice.number,
         dueDate: invoice.dueDate,
         total: invoice.total,
+        paid: Number(invoice.paidAmount), // M8.4
         balance,
         daysOverdue,
+        status: invoice.status, // M8.4
       });
 
       if (daysOverdue <= 30) {
@@ -270,10 +550,414 @@ export class AccountingService {
     return aging;
   }
 
+  // ===== M8.3: Customer / AR Lifecycle =====
+
+  /**
+   * Create customer account
+   */
+  async createCustomer(
+    orgId: string,
+    data: {
+      name: string;
+      email?: string;
+      phone?: string;
+      creditLimit?: number;
+      metadata?: any;
+    },
+  ): Promise<any> {
+    return this.prisma.client.customerAccount.create({
+      data: {
+        orgId,
+        ...data,
+      },
+    });
+  }
+
+  /**
+   * Get all customers for org
+   */
+  async getCustomers(orgId: string): Promise<any> {
+    return this.prisma.client.customerAccount.findMany({
+      where: { orgId },
+      orderBy: { name: 'asc' },
+    });
+  }
+
+  /**
+   * Create customer invoice
+   */
+  async createCustomerInvoice(
+    orgId: string,
+    data: {
+      customerId: string;
+      number?: string;
+      invoiceDate?: Date;
+      dueDate: Date;
+      subtotal: number;
+      tax?: number;
+      total: number;
+      memo?: string;
+    },
+  ): Promise<any> {
+    return this.prisma.client.customerInvoice.create({
+      data: {
+        orgId,
+        status: 'DRAFT',
+        ...data,
+      },
+      include: {
+        customer: true,
+      },
+    });
+  }
+
+  /**
+   * Open customer invoice (DRAFT → OPEN)
+   * M8.3: Creates GL entry (Debit AR, Credit Revenue)
+   */
+  async openCustomerInvoice(invoiceId: string, userId: string): Promise<any> {
+    const invoice = await this.prisma.client.customerInvoice.findUnique({
+      where: { id: invoiceId },
+      include: { customer: true },
+    });
+
+    if (!invoice) {
+      throw new NotFoundException(`Invoice ${invoiceId} not found`);
+    }
+
+    if (invoice.status !== 'DRAFT') {
+      throw new BadRequestException(`Invoice ${invoiceId} is not in DRAFT status. Current status: ${invoice.status}`);
+    }
+
+    // Check fiscal period lock
+    const period = await this.prisma.client.fiscalPeriod.findFirst({
+      where: {
+        orgId: invoice.orgId,
+        startsAt: { lte: invoice.invoiceDate },
+        endsAt: { gte: invoice.invoiceDate },
+      },
+    });
+
+    if (period?.status === 'LOCKED') {
+      throw new ForbiddenException(`Cannot open invoice in locked fiscal period: ${period.name}`);
+    }
+
+    // Find required accounts
+    const arAccount = await this.prisma.client.account.findFirst({
+      where: { orgId: invoice.orgId, name: { contains: 'Accounts Receivable' }, type: 'ASSET' },
+    });
+
+    const revenueAccount = await this.prisma.client.account.findFirst({
+      where: { orgId: invoice.orgId, type: 'REVENUE' },
+      orderBy: { code: 'asc' },
+    });
+
+    if (!arAccount || !revenueAccount) {
+      throw new BadRequestException('Required accounts (AR, Revenue) not found. Please set up chart of accounts.');
+    }
+
+    const result = await this.prisma.client.$transaction(async (tx) => {
+      // Create journal entry (auto-POSTED)
+      const journalEntry = await tx.journalEntry.create({
+        data: {
+          orgId: invoice.orgId,
+          date: invoice.invoiceDate,
+          memo: `Customer Invoice: ${invoice.number || invoiceId} - ${invoice.customer.name}`,
+          source: 'CUSTOMER_INVOICE',
+          sourceId: invoiceId,
+          status: 'POSTED',
+          postedById: userId,
+          postedAt: new Date(),
+          lines: {
+            create: [
+              {
+                accountId: arAccount.id,
+                debit: Number(invoice.total),
+                credit: 0,
+              },
+              {
+                accountId: revenueAccount.id,
+                debit: 0,
+                credit: Number(invoice.total),
+              },
+            ],
+          },
+        },
+      });
+
+      // Update invoice to OPEN
+      const updatedInvoice = await tx.customerInvoice.update({
+        where: { id: invoiceId },
+        data: {
+          status: 'OPEN',
+          journalEntryId: journalEntry.id,
+          openedAt: new Date(),
+          openedById: userId,
+        },
+        include: { customer: true, journalEntry: true },
+      });
+
+      return updatedInvoice;
+    });
+
+    this.logger.log(`Opened invoice ${invoiceId} with journal entry ${result.journalEntryId}`);
+    return result;
+  }
+
+  /**
+   * Void a customer invoice
+   * M8.3: Creates reversal GL entry
+   * M8.4: Also supports PARTIALLY_PAID invoices
+   */
+  async voidCustomerInvoice(invoiceId: string, userId: string): Promise<any> {
+    const invoice = await this.prisma.client.customerInvoice.findUnique({
+      where: { id: invoiceId },
+      include: { journalEntry: { include: { lines: true } } },
+    });
+
+    if (!invoice) {
+      throw new NotFoundException(`Invoice ${invoiceId} not found`);
+    }
+
+    // M8.4: Allow voiding OPEN, PARTIALLY_PAID, or PAID invoices
+    if (invoice.status !== 'OPEN' && invoice.status !== 'PARTIALLY_PAID' && invoice.status !== 'PAID') {
+      throw new BadRequestException(`Cannot void invoice with status ${invoice.status}. Only OPEN, PARTIALLY_PAID, or PAID invoices can be voided.`);
+    }
+
+    // Check period lock
+    const period = await this.prisma.client.fiscalPeriod.findFirst({
+      where: {
+        orgId: invoice.orgId,
+        startsAt: { lte: new Date() },
+        endsAt: { gte: new Date() },
+      },
+    });
+
+    if (period?.status === 'LOCKED') {
+      throw new ForbiddenException(`Cannot void invoice in locked fiscal period: ${period.name}`);
+    }
+
+    const result = await this.prisma.client.$transaction(async (tx) => {
+      if (invoice.journalEntry) {
+        await tx.journalEntry.create({
+          data: {
+            orgId: invoice.orgId,
+            date: new Date(),
+            memo: `Void Customer Invoice: ${invoice.number || invoiceId}`,
+            source: 'CUSTOMER_INVOICE_VOID',
+            sourceId: invoiceId,
+            status: 'POSTED',
+            postedById: userId,
+            postedAt: new Date(),
+            reversesEntryId: invoice.journalEntry.id,
+            lines: {
+              create: invoice.journalEntry.lines.map((line) => ({
+                accountId: line.accountId,
+                debit: Number(line.credit),
+                credit: Number(line.debit),
+              })),
+            },
+          },
+        });
+
+        await tx.journalEntry.update({
+          where: { id: invoice.journalEntry.id },
+          data: {
+            status: 'REVERSED',
+            reversedById: userId,
+            reversedAt: new Date(),
+          },
+        });
+      }
+
+      return tx.customerInvoice.update({
+        where: { id: invoiceId },
+        data: { status: 'VOID' },
+        include: { customer: true },
+      });
+    });
+
+    this.logger.log(`Voided invoice ${invoiceId}`);
+    return result;
+  }
+
+  /**
+   * Create customer receipt (payment)
+   * M8.3: Creates GL entry (Debit Cash, Credit AR)
+   * M8.4: Supports partial payments, uses PaymentMethodMapping
+   */
+  async createCustomerReceipt(
+    orgId: string,
+    userId: string,
+    data: {
+      customerId: string;
+      invoiceId?: string;
+      amount: number;
+      receivedAt?: Date;
+      method: string;
+      ref?: string;
+      metadata?: any;
+    },
+  ): Promise<any> {
+    // M8.4: Validate receipt amount is positive
+    if (data.amount <= 0) {
+      throw new BadRequestException('Receipt amount must be greater than zero');
+    }
+
+    // Validate invoice if provided
+    let invoice: any = null;
+    if (data.invoiceId) {
+      invoice = await this.prisma.client.customerInvoice.findUnique({
+        where: { id: data.invoiceId },
+      });
+
+      if (!invoice) {
+        throw new NotFoundException(`Invoice ${data.invoiceId} not found`);
+      }
+
+      // M8.4: Allow OPEN or PARTIALLY_PAID invoices
+      if (invoice.status !== 'OPEN' && invoice.status !== 'PARTIALLY_PAID') {
+        throw new BadRequestException(`Invoice ${data.invoiceId} is not in OPEN or PARTIALLY_PAID status. Current status: ${invoice.status}`);
+      }
+
+      // M8.4: Check outstanding amount using paidAmount field
+      const outstanding = Number(invoice.total) - Number(invoice.paidAmount);
+
+      if (data.amount > outstanding + 0.01) {
+        throw new BadRequestException(`Receipt amount ${data.amount.toFixed(2)} exceeds outstanding balance ${outstanding.toFixed(2)}`);
+      }
+    }
+
+    // M8.4: Use PaymentMethodMapping to resolve cash/bank account
+    const mapping = await this.prisma.client.paymentMethodMapping.findUnique({
+      where: { orgId_method: { orgId, method: data.method as any } },
+      include: { account: true },
+    });
+
+    let cashAccount: any;
+    if (mapping) {
+      cashAccount = mapping.account;
+    } else {
+      // Fallback to name-based search for backwards compatibility
+      cashAccount = await this.prisma.client.account.findFirst({
+        where: { orgId, name: { contains: 'Cash' }, type: 'ASSET' },
+        orderBy: { code: 'asc' },
+      });
+    }
+
+    // Find required accounts
+    const arAccount = await this.prisma.client.account.findFirst({
+      where: { orgId, name: { contains: 'Accounts Receivable' }, type: 'ASSET' },
+    });
+
+    if (!arAccount || !cashAccount) {
+      throw new BadRequestException('Required accounts (AR, Cash) not found. Please set up chart of accounts.');
+    }
+
+    const receiptDate = data.receivedAt || new Date();
+
+    // Check period lock
+    const period = await this.prisma.client.fiscalPeriod.findFirst({
+      where: {
+        orgId,
+        startsAt: { lte: receiptDate },
+        endsAt: { gte: receiptDate },
+      },
+    });
+
+    if (period?.status === 'LOCKED') {
+      throw new ForbiddenException(`Cannot create receipt in locked fiscal period: ${period.name}`);
+    }
+
+    const result = await this.prisma.client.$transaction(async (tx) => {
+      // Create journal entry
+      const journalEntry = await tx.journalEntry.create({
+        data: {
+          orgId,
+          date: receiptDate,
+          memo: `Customer Receipt: ${data.ref || 'No ref'} - ${data.method}`,
+          source: 'CUSTOMER_RECEIPT',
+          status: 'POSTED',
+          postedById: userId,
+          postedAt: new Date(),
+          lines: {
+            create: [
+              {
+                accountId: cashAccount.id,
+                debit: data.amount,
+                credit: 0,
+              },
+              {
+                accountId: arAccount.id,
+                debit: 0,
+                credit: data.amount,
+              },
+            ],
+          },
+        },
+      });
+
+      // Create receipt
+      const receipt = await tx.customerReceipt.create({
+        data: {
+          orgId,
+          customerId: data.customerId,
+          invoiceId: data.invoiceId,
+          amount: data.amount,
+          receivedAt: receiptDate,
+          method: data.method,
+          ref: data.ref,
+          metadata: data.metadata,
+          journalEntryId: journalEntry.id,
+        },
+        include: {
+          customer: true,
+          invoice: true,
+          journalEntry: true,
+        },
+      });
+
+      // M8.4: If receipt is for a specific invoice, update paidAmount and status
+      if (data.invoiceId) {
+        const currentInvoice = await tx.customerInvoice.findUnique({
+          where: { id: data.invoiceId },
+        });
+
+        if (currentInvoice) {
+          const newPaidAmount = Number(currentInvoice.paidAmount) + data.amount;
+          const total = Number(currentInvoice.total);
+          
+          // Determine new status
+          let newStatus: 'OPEN' | 'PARTIALLY_PAID' | 'PAID' = currentInvoice.status as any;
+          if (newPaidAmount >= total - 0.01) {
+            newStatus = 'PAID';
+          } else if (newPaidAmount > 0) {
+            newStatus = 'PARTIALLY_PAID';
+          }
+
+          await tx.customerInvoice.update({
+            where: { id: data.invoiceId },
+            data: { 
+              paidAmount: newPaidAmount,
+              status: newStatus,
+            },
+          });
+          this.logger.log(`Invoice ${data.invoiceId} updated: paidAmount=${newPaidAmount.toFixed(2)}, status=${newStatus}`);
+        }
+      }
+
+      return receipt;
+    });
+
+    this.logger.log(`Created customer receipt ${result.id} with journal entry ${result.journalEntryId}`);
+    return result;
+  }
+
   /**
    * Get trial balance as of a specific date
+   * M8.2b: Only includes POSTED entries
    */
-  async getTrialBalance(orgId: string, asOf?: string) {
+  async getTrialBalance(orgId: string, asOf?: string, branchId?: string) {
     const asOfDate = asOf ? new Date(asOf) : new Date();
 
     const accounts = await this.prisma.client.account.findMany({
@@ -284,12 +968,14 @@ export class AccountingService {
     const balances = [];
 
     for (const account of accounts) {
-      // Sum all journal lines for this account up to asOf date
+      // Sum all POSTED journal lines for this account up to asOf date
       const lines = await this.prisma.client.journalLine.findMany({
         where: {
           accountId: account.id,
+          ...(branchId && { branchId }),
           entry: {
             orgId,
+            status: 'POSTED', // M8.2b: Only POSTED entries
             date: { lte: asOfDate },
           },
         },
@@ -323,8 +1009,9 @@ export class AccountingService {
 
   /**
    * Get Profit & Loss statement
+   * M8.2b: Only includes POSTED entries
    */
-  async getProfitAndLoss(orgId: string, from?: string, to?: string) {
+  async getProfitAndLoss(orgId: string, from?: string, to?: string, branchId?: string) {
     const fromDate = from ? new Date(from) : new Date(new Date().getFullYear(), 0, 1);
     const toDate = to ? new Date(to) : new Date();
 
@@ -354,8 +1041,10 @@ export class AccountingService {
       const lines = await this.prisma.client.journalLine.findMany({
         where: {
           accountId: account.id,
+          ...(branchId && { branchId }),
           entry: {
             orgId,
+            status: 'POSTED', // M8.2b: Only POSTED entries
             date: { gte: fromDate, lte: toDate },
           },
         },
@@ -395,8 +1084,9 @@ export class AccountingService {
 
   /**
    * Get Balance Sheet as of a specific date
+   * M8.2b: Only includes POSTED entries
    */
-  async getBalanceSheet(orgId: string, asOf?: string) {
+  async getBalanceSheet(orgId: string, asOf?: string, branchId?: string) {
     const asOfDate = asOf ? new Date(asOf) : new Date();
 
     const accounts = await this.prisma.client.account.findMany({
@@ -422,8 +1112,10 @@ export class AccountingService {
       const lines = await this.prisma.client.journalLine.findMany({
         where: {
           accountId: account.id,
+          ...(branchId && { branchId }),
           entry: {
             orgId,
+            status: 'POSTED', // M8.2b: Only POSTED entries
             date: { lte: asOfDate },
           },
         },
@@ -456,5 +1148,531 @@ export class AccountingService {
     }
 
     return bs;
+  }
+
+  // ===== M8.2: Chart of Accounts =====
+
+  /**
+   * Get chart of accounts for org
+   */
+  async getAccounts(
+    orgId: string,
+    filters: { type?: string; isActive?: boolean },
+  ): Promise<any> {
+    const where: any = { orgId };
+    
+    if (filters.type) {
+      where.type = filters.type;
+    }
+    if (filters.isActive !== undefined) {
+      where.isActive = filters.isActive;
+    }
+
+    const accounts = await this.prisma.client.account.findMany({
+      where,
+      orderBy: { code: 'asc' },
+    });
+
+    return { accounts, total: accounts.length };
+  }
+
+  /**
+   * Create a new account in chart of accounts
+   */
+  async createAccount(
+    orgId: string,
+    data: {
+      code: string;
+      name: string;
+      type: 'ASSET' | 'LIABILITY' | 'EQUITY' | 'REVENUE' | 'COGS' | 'EXPENSE';
+      parentId?: string;
+    },
+  ): Promise<any> {
+    // Check for duplicate code
+    const existing = await this.prisma.client.account.findFirst({
+      where: { orgId, code: data.code },
+    });
+
+    if (existing) {
+      throw new Error(`Account code ${data.code} already exists`);
+    }
+
+    return this.prisma.client.account.create({
+      data: {
+        orgId,
+        ...data,
+        isActive: true,
+      },
+    });
+  }
+
+  // ===== M8.2: Journal Entries =====
+
+  /**
+   * Get journal entries with filters
+   */
+  async getJournalEntries(
+    orgId: string,
+    filters: {
+      from?: Date;
+      to?: Date;
+      branchId?: string;
+      source?: string;
+      limit?: number;
+      offset?: number;
+    },
+  ): Promise<any> {
+    const where: any = { orgId };
+
+    if (filters.from || filters.to) {
+      where.date = {};
+      if (filters.from) where.date.gte = filters.from;
+      if (filters.to) where.date.lte = filters.to;
+    }
+
+    if (filters.branchId) {
+      where.branchId = filters.branchId;
+    }
+
+    if (filters.source) {
+      where.source = filters.source;
+    }
+
+    const [entries, total] = await Promise.all([
+      this.prisma.client.journalEntry.findMany({
+        where,
+        include: {
+          lines: {
+            include: {
+              account: true,
+            },
+          },
+        },
+        orderBy: { date: 'desc' },
+        take: filters.limit || 50,
+        skip: filters.offset || 0,
+      }),
+      this.prisma.client.journalEntry.count({ where }),
+    ]);
+
+    return { entries, total, limit: filters.limit, offset: filters.offset };
+  }
+
+  /**
+   * Get single journal entry by ID
+   */
+  async getJournalEntry(orgId: string, id: string): Promise<any> {
+    const entry = await this.prisma.client.journalEntry.findFirst({
+      where: { id, orgId },
+      include: {
+        lines: {
+          include: {
+            account: true,
+          },
+        },
+      },
+    });
+
+    if (!entry) {
+      throw new NotFoundException(`Journal entry ${id} not found`);
+    }
+
+    return entry;
+  }
+
+  /**
+   * Create manual journal entry as DRAFT
+   * M8.2b: Creates as DRAFT - must be posted to affect reports
+   * Validates that entry is balanced (debits == credits)
+   */
+  async createJournalEntry(
+    orgId: string,
+    userId: string,
+    data: {
+      date: Date;
+      memo?: string;
+      branchId?: string;
+      lines: Array<{
+        accountId: string;
+        debit: number;
+        credit: number;
+      }>;
+    },
+  ): Promise<any> {
+    // Validate balance
+    const totalDebit = data.lines.reduce((sum, l) => sum + l.debit, 0);
+    const totalCredit = data.lines.reduce((sum, l) => sum + l.credit, 0);
+
+    if (Math.abs(totalDebit - totalCredit) > 0.01) {
+      throw new BadRequestException(
+        `Journal entry is not balanced. Debits: ${totalDebit}, Credits: ${totalCredit}`,
+      );
+    }
+
+    // Validate accounts exist and belong to org
+    const accountIds = data.lines.map((l) => l.accountId);
+    const accounts = await this.prisma.client.account.findMany({
+      where: { id: { in: accountIds }, orgId },
+    });
+
+    if (accounts.length !== accountIds.length) {
+      throw new BadRequestException('One or more accounts not found or do not belong to this organization');
+    }
+
+    // Create journal entry as DRAFT (M8.2b: explicit lifecycle)
+    const entry = await this.prisma.client.journalEntry.create({
+      data: {
+        orgId,
+        branchId: data.branchId,
+        date: data.date,
+        memo: data.memo,
+        source: 'MANUAL',
+        status: 'DRAFT', // M8.2b: Explicit DRAFT status
+        lines: {
+          create: data.lines.map((line) => ({
+            accountId: line.accountId,
+            branchId: data.branchId,
+            debit: line.debit,
+            credit: line.credit,
+          })),
+        },
+      },
+      include: {
+        lines: {
+          include: {
+            account: true,
+          },
+        },
+      },
+    });
+
+    this.logger.log(`Created DRAFT journal entry ${entry.id} with ${data.lines.length} lines`);
+
+    return entry;
+  }
+
+  // ===== M8.2b: Journal Entry Lifecycle =====
+
+  /**
+   * Post a draft journal entry
+   * M8.2b: Transitions DRAFT → POSTED, enforces period lock
+   */
+  async postJournalEntry(orgId: string, entryId: string, userId: string): Promise<any> {
+    const entry = await this.prisma.client.journalEntry.findFirst({
+      where: { id: entryId, orgId },
+    });
+
+    if (!entry) {
+      throw new NotFoundException(`Journal entry ${entryId} not found`);
+    }
+
+    if (entry.status !== 'DRAFT') {
+      throw new BadRequestException(`Cannot post entry with status ${entry.status}. Only DRAFT entries can be posted.`);
+    }
+
+    // Check fiscal period lock
+    const period = await this.prisma.client.fiscalPeriod.findFirst({
+      where: {
+        orgId,
+        startsAt: { lte: entry.date },
+        endsAt: { gte: entry.date },
+      },
+    });
+
+    if (period?.status === 'LOCKED') {
+      throw new ForbiddenException(`Cannot post to locked fiscal period: ${period.name}`);
+    }
+
+    const updated = await this.prisma.client.journalEntry.update({
+      where: { id: entryId },
+      data: {
+        status: 'POSTED',
+        postedById: userId,
+        postedAt: new Date(),
+      },
+      include: {
+        lines: {
+          include: {
+            account: true,
+          },
+        },
+      },
+    });
+
+    this.logger.log(`Posted journal entry ${entryId}`);
+    return updated;
+  }
+
+  /**
+   * Reverse a posted journal entry
+   * M8.2b: Creates opposite entry, marks original as REVERSED
+   */
+  async reverseJournalEntry(
+    orgId: string,
+    entryId: string,
+    userId: string,
+    reversalDate?: Date,
+  ): Promise<any> {
+    const entry = await this.prisma.client.journalEntry.findFirst({
+      where: { id: entryId, orgId },
+      include: { lines: true },
+    });
+
+    if (!entry) {
+      throw new NotFoundException(`Journal entry ${entryId} not found`);
+    }
+
+    if (entry.status !== 'POSTED') {
+      throw new BadRequestException(`Cannot reverse entry with status ${entry.status}. Only POSTED entries can be reversed.`);
+    }
+
+    const revDate = reversalDate || new Date();
+
+    // Check fiscal period lock for reversal date
+    const period = await this.prisma.client.fiscalPeriod.findFirst({
+      where: {
+        orgId,
+        startsAt: { lte: revDate },
+        endsAt: { gte: revDate },
+      },
+    });
+
+    if (period?.status === 'LOCKED') {
+      throw new ForbiddenException(`Cannot reverse in locked fiscal period: ${period.name}`);
+    }
+
+    // Create reversal entry with opposite debits/credits
+    const reversalEntry = await this.prisma.client.journalEntry.create({
+      data: {
+        orgId,
+        branchId: entry.branchId,
+        date: revDate,
+        memo: `Reversal of: ${entry.memo || entry.id}`,
+        source: 'REVERSAL',
+        sourceId: entry.id,
+        status: 'POSTED',
+        postedById: userId,
+        postedAt: new Date(),
+        reversesEntryId: entry.id,
+        lines: {
+          create: entry.lines.map((line) => ({
+            accountId: line.accountId,
+            branchId: line.branchId,
+            debit: Number(line.credit), // Swap debit/credit
+            credit: Number(line.debit),
+          })),
+        },
+      },
+      include: {
+        lines: {
+          include: {
+            account: true,
+          },
+        },
+      },
+    });
+
+    // Mark original as REVERSED
+    await this.prisma.client.journalEntry.update({
+      where: { id: entryId },
+      data: {
+        status: 'REVERSED',
+        reversedById: userId,
+        reversedAt: new Date(),
+      },
+    });
+
+    this.logger.log(`Reversed journal entry ${entryId} with new entry ${reversalEntry.id}`);
+    return reversalEntry;
+  }
+
+  // ===== M8.2b: CSV Exports =====
+
+  /**
+   * Export chart of accounts to CSV
+   */
+  async exportAccountsCSV(orgId: string): Promise<string> {
+    const accounts = await this.prisma.client.account.findMany({
+      where: { orgId },
+      orderBy: { code: 'asc' },
+    });
+
+    const headers = ['Code', 'Name', 'Type', 'Active', 'Parent ID'];
+    const rows = accounts.map((a) => [
+      a.code,
+      `"${a.name.replace(/"/g, '""')}"`,
+      a.type,
+      a.isActive ? 'Yes' : 'No',
+      a.parentId || '',
+    ]);
+
+    return [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+  }
+
+  /**
+   * Export journal entries to CSV
+   */
+  async exportJournalCSV(orgId: string, from?: Date, to?: Date): Promise<string> {
+    const where: any = { orgId };
+    if (from || to) {
+      where.date = {};
+      if (from) where.date.gte = from;
+      if (to) where.date.lte = to;
+    }
+
+    const entries = await this.prisma.client.journalEntry.findMany({
+      where,
+      include: {
+        lines: {
+          include: {
+            account: true,
+          },
+        },
+      },
+      orderBy: { date: 'desc' },
+    });
+
+    const headers = ['Entry ID', 'Date', 'Status', 'Memo', 'Account Code', 'Account Name', 'Debit', 'Credit'];
+    const rows: string[][] = [];
+
+    for (const entry of entries) {
+      for (const line of entry.lines) {
+        rows.push([
+          entry.id,
+          entry.date.toISOString().split('T')[0],
+          entry.status,
+          `"${(entry.memo || '').replace(/"/g, '""')}"`,
+          line.account.code,
+          `"${line.account.name.replace(/"/g, '""')}"`,
+          Number(line.debit).toFixed(2),
+          Number(line.credit).toFixed(2),
+        ]);
+      }
+    }
+
+    return [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+  }
+
+  /**
+   * Export trial balance to CSV
+   */
+  async exportTrialBalanceCSV(orgId: string, asOf?: string): Promise<string> {
+    const tb = await this.getTrialBalance(orgId, asOf);
+
+    const headers = ['Code', 'Name', 'Type', 'Debit', 'Credit', 'Balance'];
+    const rows = tb.accounts.map((a: any) => [
+      a.code,
+      `"${a.name.replace(/"/g, '""')}"`,
+      a.type,
+      a.debit.toFixed(2),
+      a.credit.toFixed(2),
+      a.balance.toFixed(2),
+    ]);
+
+    // Add totals row
+    rows.push([
+      '',
+      'TOTALS',
+      '',
+      tb.totalDebits.toFixed(2),
+      tb.totalCredits.toFixed(2),
+      (tb.totalDebits - tb.totalCredits).toFixed(2),
+    ]);
+
+    return [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+  }
+
+  // ===== M8.4: Payment Method Mapping =====
+
+  /**
+   * Get all payment method mappings for org
+   */
+  async getPaymentMethodMappings(orgId: string): Promise<any[]> {
+    return this.prisma.client.paymentMethodMapping.findMany({
+      where: { orgId },
+      include: { account: true },
+      orderBy: { method: 'asc' },
+    });
+  }
+
+  /**
+   * Create or update payment method mapping
+   */
+  async upsertPaymentMethodMapping(
+    orgId: string,
+    data: {
+      method: 'CASH' | 'CARD' | 'MOMO' | 'BANK_TRANSFER';
+      accountId: string;
+    },
+  ): Promise<any> {
+    // Validate account exists and belongs to org
+    const account = await this.prisma.client.account.findFirst({
+      where: { id: data.accountId, orgId },
+    });
+
+    if (!account) {
+      throw new NotFoundException(`Account ${data.accountId} not found in org`);
+    }
+
+    // Validate account is an asset type (for cash/bank accounts)
+    if (account.type !== 'ASSET') {
+      throw new BadRequestException(`Payment method accounts should be ASSET type. Got: ${account.type}`);
+    }
+
+    return this.prisma.client.paymentMethodMapping.upsert({
+      where: { orgId_method: { orgId, method: data.method } },
+      update: { accountId: data.accountId },
+      create: { orgId, method: data.method, accountId: data.accountId },
+      include: { account: true },
+    });
+  }
+
+  /**
+   * Delete payment method mapping
+   */
+  async deletePaymentMethodMapping(orgId: string, method: string): Promise<any> {
+    return this.prisma.client.paymentMethodMapping.delete({
+      where: { orgId_method: { orgId, method: method as any } },
+    });
+  }
+
+  // ===== M8.4: Outstanding Balance Helpers =====
+
+  /**
+   * Get outstanding balance for a vendor bill
+   */
+  async getVendorBillOutstanding(billId: string): Promise<{ total: number; paid: number; outstanding: number; status: string }> {
+    const bill = await this.prisma.client.vendorBill.findUnique({
+      where: { id: billId },
+    });
+
+    if (!bill) {
+      throw new NotFoundException(`Bill ${billId} not found`);
+    }
+
+    const total = Number(bill.total);
+    const paid = Number(bill.paidAmount);
+    const outstanding = total - paid;
+
+    return { total, paid, outstanding, status: bill.status };
+  }
+
+  /**
+   * Get outstanding balance for a customer invoice
+   */
+  async getCustomerInvoiceOutstanding(invoiceId: string): Promise<{ total: number; paid: number; outstanding: number; status: string }> {
+    const invoice = await this.prisma.client.customerInvoice.findUnique({
+      where: { id: invoiceId },
+    });
+
+    if (!invoice) {
+      throw new NotFoundException(`Invoice ${invoiceId} not found`);
+    }
+
+    const total = Number(invoice.total);
+    const paid = Number(invoice.paidAmount);
+    const outstanding = total - paid;
+
+    return { total, paid, outstanding, status: invoice.status };
   }
 }

@@ -23,6 +23,7 @@
     "test:e2e:ci": "node scripts/run-e2e-with-deadline.mjs --minutes=25",
     "test:e2e:profile": "node scripts/e2e-profile.mjs",
     "test:e2e:teardown-check": "node scripts/check-e2e-teardown.mjs",
+    "test:e2e:coverage-check": "node scripts/check-e2e-coverage.mjs",
     "test:e2e-js": "jest --config ./jest-e2e-js.json",
     "test:e2e-slice": "jest --config ./jest-e2e-slice.json",
     "test:e2e-blackbox": "jest --config ./jest-e2e-blackbox.json",
