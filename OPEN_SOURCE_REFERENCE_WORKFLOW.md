@@ -1,8 +1,31 @@
 # Nimbus POS / ChefCloud — Open-Source Reference Workflow (Code Reuse, Comparison, and Validation)
 
-_Last updated: 2025-12-25 (Africa/Kampala)_
+_Last updated: 2026-01-02 (Africa/Kampala)_
 
 This document defines how we use external open-source POS projects to accelerate Nimbus POS development without introducing architectural drift, license risk, or low-quality copy/paste.
+
+---
+
+## Feature-Level Workflow (M0.2)
+
+For detailed feature-level comparison and clean-room implementation, see the following documents:
+
+| Document | Purpose |
+|----------|---------|
+| [FEATURE_LEVEL_COMPARISON_WORKFLOW.md](instructions/FEATURE_LEVEL_COMPARISON_WORKFLOW.md) | Step-by-step workflow for feature implementation |
+| [CLEAN_ROOM_IMPLEMENTATION_PROTOCOL.md](instructions/CLEAN_ROOM_IMPLEMENTATION_PROTOCOL.md) | License-safe implementation rules |
+| [FEATURE_DOSSIER_TEMPLATE.md](instructions/FEATURE_DOSSIER_TEMPLATE.md) | Feature documentation template |
+| [E2E_EXPANSION_CONTRACT.md](instructions/E2E_EXPANSION_CONTRACT.md) | E2E test requirements |
+| [REFERENCE_FEATURE_REPOS_OVERVIEW.md](instructions/REFERENCE_FEATURE_REPOS_OVERVIEW.md) | 18 feature-level repos with license info |
+| [REFERENCE_FEATURE_SIDE_BY_SIDE_INDEX.md](instructions/REFERENCE_FEATURE_SIDE_BY_SIDE_INDEX.md) | Nimbus module → reference repo mapping |
+
+**Quick Start for Feature Implementation:**
+1. Select feature → consult `REFERENCE_FEATURE_SIDE_BY_SIDE_INDEX.md`
+2. Check license → consult `MANIFEST.json` (ADAPT vs STUDY-ONLY)
+3. Create dossier → use `FEATURE_DOSSIER_TEMPLATE.md`
+4. Implement → follow `CLEAN_ROOM_IMPLEMENTATION_PROTOCOL.md`
+5. Add E2E tests → follow `E2E_EXPANSION_CONTRACT.md`
+6. Verify → run `pnpm lint && pnpm test && pnpm test:e2e:gate`
 
 ---
 

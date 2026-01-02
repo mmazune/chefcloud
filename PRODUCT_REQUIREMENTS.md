@@ -1,10 +1,31 @@
 # Nimbus POS / ChefCloud — Product Requirements Document (PRD)
 
-_Last updated: 2025-12-25 (Africa/Kampala)_
+_Last updated: 2026-01-02 (Africa/Kampala)_
 
 This PRD defines the full feature set and quality bar for Nimbus POS (ChefCloud). It consolidates what is already implemented, what is in-progress, and what remains required for an enterprise-grade restaurant POS + backoffice platform.
 
 This is a living document. **Source of truth is the repository code and Prisma schema**, but this PRD is the roadmap and acceptance reference for LLM-driven implementation.
+
+---
+
+## Quality Standards (M0.3)
+
+For enterprise-grade implementation, all features must comply with domain-specific quality standards:
+
+| Standard | Scope |
+|----------|-------|
+| [ACCOUNTING_QUALITY_STANDARD.md](instructions/quality-standards/ACCOUNTING_QUALITY_STANDARD.md) | Chart of accounts, journal entries, financial statements |
+| [INVENTORY_PROCUREMENT_COSTING_QUALITY_STANDARD.md](instructions/quality-standards/INVENTORY_PROCUREMENT_COSTING_QUALITY_STANDARD.md) | SKUs, FIFO, recipes, COGS |
+| [POS_KDS_FOH_QUALITY_STANDARD.md](instructions/quality-standards/POS_KDS_FOH_QUALITY_STANDARD.md) | Orders, KDS, payments, tips |
+| [WORKFORCE_SHIFTS_CASH_QUALITY_STANDARD.md](instructions/quality-standards/WORKFORCE_SHIFTS_CASH_QUALITY_STANDARD.md) | Shifts, cash drawers, EOD |
+| [RESERVATIONS_EVENTS_QUALITY_STANDARD.md](instructions/quality-standards/RESERVATIONS_EVENTS_QUALITY_STANDARD.md) | Table reservations, events |
+| [BILLING_SUBSCRIPTIONS_DEVPORTAL_QUALITY_STANDARD.md](instructions/quality-standards/BILLING_SUBSCRIPTIONS_DEVPORTAL_QUALITY_STANDARD.md) | Subscriptions, API keys |
+| [REPORTING_KPIS_ANALYTICS_QUALITY_STANDARD.md](instructions/quality-standards/REPORTING_KPIS_ANALYTICS_QUALITY_STANDARD.md) | Dashboards, reports |
+| [SECURITY_QUALITY_STANDARD.md](instructions/quality-standards/SECURITY_QUALITY_STANDARD.md) | Auth, RBAC, OWASP |
+| [ROLE_OPTIMIZED_UX_STANDARD.md](instructions/quality-standards/ROLE_OPTIMIZED_UX_STANDARD.md) | Job role workspaces |
+
+**Index:** [instructions/quality-standards/README.md](instructions/quality-standards/README.md)  
+**Traceability:** [DOMAIN_TRACEABILITY_MATRIX.md](instructions/quality-standards/DOMAIN_TRACEABILITY_MATRIX.md)
 
 ---
 

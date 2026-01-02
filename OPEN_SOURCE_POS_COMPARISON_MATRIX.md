@@ -1,10 +1,32 @@
 # Open-Source POS Comparison Matrix (Initial)
 
-_Last updated: 2025-12-25_
+_Last updated: 2026-01-02_
 
 This is an initial, pragmatic comparison of candidate open-source POS projects against Nimbus POS goals. It is intended to guide which repos we study for patterns and parity, not to mandate copying.
 
 > Important: For any repo under GPL/AGPL, do not copy code verbatim into Nimbus POS unless we intentionally adopt a compatible open-source license.
+
+---
+
+## Feature-Level Reference Repos (M0.1)
+
+In addition to full POS systems, we maintain 18 feature-level reference repos for targeted study:
+
+| Domain | Repos | Licenses |
+|--------|-------|----------|
+| Accounting | bigcapital, hledger, beancount | AGPL, AGPL, GPL (study-only) |
+| Inventory | InvenTree, medusa | MIT, MIT (adapt allowed) |
+| Reservations | TastyIgniter, easyappointments, cal.com | MIT, AGPL, AGPL |
+| Workforce | kimai | AGPL (study-only) |
+| Billing | killbill, lago | Apache, AGPL |
+| UI | appsmith, tremor | Apache, Apache (adapt allowed) |
+| QA | playwright, cypress | Apache, MIT (adapt allowed) |
+| Security | CheatSheetSeries, ASVS, juice-shop | CC-BY, CC-BY, MIT |
+
+**Detailed documentation:**
+- [REFERENCE_FEATURE_REPOS_OVERVIEW.md](instructions/REFERENCE_FEATURE_REPOS_OVERVIEW.md) — Usage guide
+- [REFERENCE_FEATURE_SIDE_BY_SIDE_INDEX.md](instructions/REFERENCE_FEATURE_SIDE_BY_SIDE_INDEX.md) — Nimbus module mapping
+- [MANIFEST.json](reference-feature-repos/MANIFEST.json) — Machine-readable metadata
 
 ---
 
