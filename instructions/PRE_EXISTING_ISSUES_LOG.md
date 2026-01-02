@@ -79,20 +79,26 @@ test/webhooks/replay.validate.ts
 | **Command** | `timeout 60s pnpm -C apps/web lint 2>&1` |
 | **Impact** | Medium |
 | **Suggested Owner** | Frontend / M9.x cleanup |
-| **Status** | OPEN |
+| **Status** | ✅ RESOLVED |
+| **Resolved Date** | 2026-01-02 |
+| **Resolution** | Replaced `require()` with dynamic `import()` in api.ts. Commit: see below |
 
-**Errors (2)**:
+**Original Errors (2)** – FIXED:
 ```
 ./src/lib/api.ts
 84:32  Error: Require statement not part of import statement.  @typescript-eslint/no-var-requires
 102:32 Error: Require statement not part of import statement.  @typescript-eslint/no-var-requires
 ```
 
-**Warnings (16)**: All `@typescript-eslint/no-unused-vars`
+**Fix Applied**: Converted synchronous `require('@/components/dev/DevDebugPanel')` to async `import('@/components/dev/DevDebugPanel').then(...)` pattern.
+
+**Remaining Warnings (16)**: All `@typescript-eslint/no-unused-vars` – not blocking, tracked separately
 
 **Affected Files**:
-- `src/lib/api.ts` – dynamic require statements (2 errors)
+- ~~`src/lib/api.ts` – dynamic require statements (2 errors)~~ FIXED
 - `src/pages/dashboard.tsx` – unused imports (10 warnings)
+- `src/pages/login.tsx` – unused vars (2 warnings)
+- `src/hooks/*.test.tsx` – unused React imports (4 warnings)
 - `src/pages/login.tsx` – unused autofill functions (2 warnings)
 - `src/hooks/usePosCached*.test.tsx` – unused React import (2 warnings)
 
@@ -123,7 +129,11 @@ test/webhooks/replay.validate.ts
 
 ## Resolution History
 
-_No resolutions yet._
+### 2026-01-02: PRE-002 Resolved
+- **Issue**: 2 ESLint errors in `apps/web/src/lib/api.ts` (`@typescript-eslint/no-var-requires`)
+- **Fix**: Replaced `require()` with dynamic `import().then()` pattern
+- **Commit**: `fix(web): resolve lint errors (PRE-002)`
+- **Verification**: `pnpm -C apps/web lint` now exits 0 (16 warnings remain, non-blocking)
 
 ---
 
@@ -132,7 +142,7 @@ _No resolutions yet._
 | Category | Open | Resolved | Total |
 |----------|------|----------|-------|
 | lint-warning | 1 | 0 | 1 |
-| lint-error | 1 | 0 | 1 |
+| lint-error | 0 | 1 | 1 |
 | test-warning | 1 | 0 | 1 |
 | **Total** | **3** | **0** | **3** |
 

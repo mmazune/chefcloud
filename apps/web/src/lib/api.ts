@@ -81,14 +81,15 @@ apiClient.interceptors.response.use(
       const rowCount = Array.isArray(response.data) ? response.data.length : 
                        (response.data?.data && Array.isArray(response.data.data)) ? response.data.data.length : null;
       if (typeof window !== 'undefined') {
-        const { logApiCall } = require('@/components/dev/DevDebugPanel');
-        logApiCall({
-          method: response.config.method?.toUpperCase() || 'GET',
-          path: response.config.url || '',
-          status: response.status,
-          rowCount,
-          duration: 0, // Could be calculated with request start time
-        });
+        import('@/components/dev/DevDebugPanel').then(({ logApiCall }) => {
+          logApiCall({
+            method: response.config.method?.toUpperCase() || 'GET',
+            path: response.config.url || '',
+            status: response.status,
+            rowCount,
+            duration: 0, // Could be calculated with request start time
+          });
+        }).catch(() => { /* Ignore logging errors */ });
       }
     } catch (e) {
       // Ignore logging errors
@@ -99,15 +100,16 @@ apiClient.interceptors.response.use(
     // Log failed API call
     try {
       if (typeof window !== 'undefined' && error.response) {
-        const { logApiCall } = require('@/components/dev/DevDebugPanel');
-        logApiCall({
-          method: error.config?.method?.toUpperCase() || 'GET',
-          path: error.config?.url || '',
-          status: error.response?.status || 0,
-          rowCount: null,
-          duration: 0,
-          error: error.response?.data?.message || error.message,
-        });
+        import('@/components/dev/DevDebugPanel').then(({ logApiCall }) => {
+          logApiCall({
+            method: error.config?.method?.toUpperCase() || 'GET',
+            path: error.config?.url || '',
+            status: error.response?.status || 0,
+            rowCount: null,
+            duration: 0,
+            error: error.response?.data?.message || error.message,
+          });
+        }).catch(() => { /* Ignore logging errors */ });
       }
     } catch (e) {
       // Ignore logging errors
