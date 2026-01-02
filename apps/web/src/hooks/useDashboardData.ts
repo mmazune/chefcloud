@@ -59,6 +59,7 @@ export interface CategoryMix {
   name: string;
   value: number;
   count: number;
+  [key: string]: string | number | undefined;
 }
 
 export interface PaymentMix {

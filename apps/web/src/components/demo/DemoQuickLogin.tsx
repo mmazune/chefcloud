@@ -48,6 +48,7 @@ interface DemoQuickLoginProps {
   onLoginStart?: () => void;
   onLoginSuccess?: () => void;
   onLoginError?: (error: string) => void;
+  onSelectCredentials?: (email: string, password: string) => void;
   className?: string;
   compact?: boolean;
 }

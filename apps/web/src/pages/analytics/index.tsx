@@ -30,6 +30,8 @@ import { FranchiseMultiMonthChart } from '@/components/analytics/franchise/Franc
 import { useAuth } from '@/contexts/AuthContext';
 import { apiClient } from '@/lib/api';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+
 interface DailyMetricPoint {
   date: string;
   totalSales: number;
