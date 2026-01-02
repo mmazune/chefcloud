@@ -150,7 +150,7 @@ describe('M8.3 AP/AR Lifecycle + GL Posting E2E', () => {
           vendorId,
           billId,
           amount: 118000,
-          method: 'BANK',
+          method: 'BANK_TRANSFER',
           ref: 'CHK-001',
           paidAt: new Date().toISOString(),
         })

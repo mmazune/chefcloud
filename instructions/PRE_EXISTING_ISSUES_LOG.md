@@ -186,7 +186,8 @@ test/webhooks/replay.validate.ts
 | **Command** | `timeout 600 pnpm jest --config ./test/jest-e2e.json --testPathPattern='accounting-m83' --forceExit` |
 | **Impact** | Medium |
 | **Suggested Owner** | M8.3 / Finance Module |
-| **Status** | OPEN |
+| **Status** | ✅ RESOLVED |
+| **Resolved Date** | 2026-01-02 |
 
 **Summary**: M8.3 AP/AR E2E test uses `BANK` but the PaymentMethod enum value is `BANK_TRANSFER`
 
@@ -200,12 +201,14 @@ Invalid value for argument `method`. Expected PaymentMethod.
 ```
 
 **Affected Test**:
-- `test/e2e/accounting-m83-ap-ar.e2e-spec.ts` line 157
+- `test/e2e/accounting-m83-ap-ar.e2e-spec.ts` line 153
 - Test: "AC-03: vendor payment creates POSTED journal entry"
 
 **Root Cause**: Test data uses `BANK` but `PaymentMethod` enum defines `BANK_TRANSFER`
 
-**Suggested Fix**: Update test to use `BANK_TRANSFER` instead of `BANK`
+**Resolution**:
+- Changed `method: 'BANK'` to `method: 'BANK_TRANSFER'` in test
+- Verified test passes: `pnpm jest --testPathPattern='accounting-m83' --forceExit`
 
 ---
 
@@ -219,9 +222,10 @@ Invalid value for argument `method`. Expected PaymentMethod.
 | **Command** | `timeout 600 pnpm jest --config ./test/jest-e2e.json --testPathPattern='accounting-m84' --forceExit` |
 | **Impact** | Medium |
 | **Suggested Owner** | M8.4 / Finance Module |
-| **Status** | OPEN |
+| **Status** | ✅ RESOLVED |
+| **Resolved Date** | 2026-01-02 |
 
-**Summary**: Period lock is not preventing payment posting as designed
+**Summary**: Period lock test was not correctly locking all periods covering today's date
 
 **Error**:
 ```
@@ -233,15 +237,24 @@ expected 403 "Forbidden", got 201 "Created"
 - `test/e2e/accounting-m84-partial-payments.e2e-spec.ts` line 476
 - Test: "AC-08: period lock blocks payment posting with 403"
 
-**Root Cause**: Either:
-1. Period lock check not implemented in payment endpoint
-2. Test setup not correctly locking the period before attempting payment
+**Root Cause**: Test setup was locking first OPEN period but there were multiple periods covering today (duplicate Q1 2026 entries). The period lock query finds periods by date range, not by status alone.
 
-**Suggested Fix**: Investigate whether period lock enforcement is missing from payment service or test setup is incorrect
+**Resolution**:
+- Changed `fiscalPeriod.findFirst({ where: { orgId, status: 'OPEN' } })` to 
+  `fiscalPeriod.updateMany({ where: { orgId, startsAt: { lte: today }, endsAt: { gte: today } } })`
+- This locks ALL periods containing today's date, ensuring the payment endpoint finds a locked period
+- Verified test passes: 70/70 finance regression tests green
 
 ---
 
 ## Resolution History
+
+### 2026-01-02: PRE-005 + PRE-006 Resolved
+- **Issue PRE-005**: M8.3 test using `BANK` enum value that doesn't exist (should be `BANK_TRANSFER`)
+- **Issue PRE-006**: M8.4 test locking wrong period (first OPEN vs. period containing today)
+- **Fix**: Updated test enum to `BANK_TRANSFER`, changed period lock to use `updateMany` with date range
+- **Commit**: `fix(finance): resolve PRE-005 PRE-006 (enum + period lock test setup)`
+- **Verification**: `pnpm jest --testPathPattern='accounting-m82b|accounting-m83|accounting-m84|m85' --forceExit` → 70/70 passed
 
 ### 2026-01-02: PRE-004 Resolved
 - **Issue**: Web app build failing due to missing UI components, type errors, and noUnusedLocals
@@ -265,9 +278,9 @@ expected 403 "Forbidden", got 201 "Created"
 | lint-error | 0 | 1 | 1 |
 | build-error | 0 | 1 | 1 |
 | test-warning | 1 | 0 | 1 |
-| test-error | 2 | 0 | 2 |
-| **Total** | **4** | **2** | **6** |
+| test-error | 0 | 2 | 2 |
+| **Total** | **2** | **4** | **6** |
 
 ---
 
-*Last Updated: 2026-01-02 (M8.5 Verification)*
+*Last Updated: 2026-01-02 (PRE-005 + PRE-006 Resolved)*

@@ -437,29 +437,30 @@ describe('M8.4 Partial Payments + Payment Method Mapping E2E', () => {
         .set('Authorization', `Bearer ${authToken}`)
         .expect(201);
 
-      // Lock the current period
-      const period = await prisma.client.fiscalPeriod.findFirst({
-        where: { orgId, status: 'OPEN' },
+      // Lock ALL periods for this org that contain today's date
+      // This ensures the period lock check will find a locked period
+      const today = new Date();
+      await prisma.client.fiscalPeriod.updateMany({
+        where: { 
+          orgId, 
+          startsAt: { lte: today },
+          endsAt: { gte: today },
+        },
+        data: { status: 'LOCKED' },
       });
-      if (period) {
-        await prisma.client.fiscalPeriod.update({
-          where: { id: period.id },
-          data: { status: 'LOCKED' },
-        });
-      }
     });
 
     afterAll(async () => {
-      // Unlock for cleanup
-      const period = await prisma.client.fiscalPeriod.findFirst({
-        where: { orgId, status: 'LOCKED' },
+      // Unlock all periods for this org that contain today's date for cleanup
+      const today = new Date();
+      await prisma.client.fiscalPeriod.updateMany({
+        where: { 
+          orgId,
+          startsAt: { lte: today },
+          endsAt: { gte: today },
+        },
+        data: { status: 'OPEN' },
       });
-      if (period) {
-        await prisma.client.fiscalPeriod.update({
-          where: { id: period.id },
-          data: { status: 'OPEN' },
-        });
-      }
     });
 
     it('AC-08: period lock blocks payment posting with 403', async () => {
