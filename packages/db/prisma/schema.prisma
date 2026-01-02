@@ -183,6 +183,15 @@ enum InvoiceStatus {
   VOID
 }
 
+// M8.5: Credit Note Status
+enum CreditNoteStatus {
+  DRAFT
+  OPEN
+  PARTIALLY_APPLIED // Some credits allocated
+  APPLIED           // All credits exhausted
+  VOID
+}
+
 enum ReminderType {
   VENDOR_BILL
   UTILITY
@@ -2020,6 +2029,11 @@ model JournalEntry {
   vendorPayments   VendorPayment[]    @relation("VendorPaymentJournal")
   customerInvoices CustomerInvoice[]  @relation("CustomerInvoiceJournal")
   customerReceipts CustomerReceipt[]  @relation("CustomerReceiptJournal")
+  // M8.5: Credit note relations
+  customerCreditNotes       CustomerCreditNote[]       @relation("CustomerCreditNoteJournal")
+  customerCreditNoteRefunds CustomerCreditNoteRefund[] @relation("CustomerCreditNoteRefundJournal")
+  vendorCreditNotes         VendorCreditNote[]         @relation("VendorCreditNoteJournal")
+  vendorCreditNoteRefunds   VendorCreditNoteRefund[]   @relation("VendorCreditNoteRefundJournal")
 
   @@index([orgId, date])
   @@index([orgId, branchId])
@@ -2057,8 +2071,9 @@ model Vendor {
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 
-  bills    VendorBill[]
-  payments VendorPayment[]
+  bills       VendorBill[]
+  payments    VendorPayment[]
+  creditNotes VendorCreditNote[] // M8.5
 
   @@index([orgId])
   @@map("vendors")
@@ -2085,9 +2100,10 @@ model VendorBill {
   openedAt       DateTime?     // When bill was opened
   openedById     String?       // User who opened the bill
 
-  vendor       Vendor          @relation(fields: [vendorId], references: [id], onDelete: Restrict)
-  payments     VendorPayment[]
-  journalEntry JournalEntry?   @relation("VendorBillJournal", fields: [journalEntryId], references: [id])
+  vendor            Vendor                       @relation(fields: [vendorId], references: [id], onDelete: Restrict)
+  payments          VendorPayment[]
+  journalEntry      JournalEntry?                @relation("VendorBillJournal", fields: [journalEntryId], references: [id])
+  creditAllocations VendorCreditNoteAllocation[] // M8.5
 
   @@index([orgId, status])
   @@index([vendorId])
@@ -2133,8 +2149,9 @@ model CustomerAccount {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  invoices CustomerInvoice[]
-  receipts CustomerReceipt[]
+  invoices    CustomerInvoice[]
+  receipts    CustomerReceipt[]
+  creditNotes CustomerCreditNote[] // M8.5
 
   @@index([orgId])
   @@map("customer_accounts")
@@ -2162,9 +2179,10 @@ model CustomerInvoice {
   openedAt       DateTime?     // When invoice was opened
   openedById     String?       // User who opened the invoice
 
-  customer     CustomerAccount   @relation(fields: [customerId], references: [id], onDelete: Restrict)
-  receipts     CustomerReceipt[]
-  journalEntry JournalEntry?     @relation("CustomerInvoiceJournal", fields: [journalEntryId], references: [id])
+  customer          CustomerAccount                @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  receipts          CustomerReceipt[]
+  journalEntry      JournalEntry?                  @relation("CustomerInvoiceJournal", fields: [journalEntryId], references: [id])
+  creditAllocations CustomerCreditNoteAllocation[] // M8.5
 
   @@index([orgId, status])
   @@index([customerId])
@@ -2198,6 +2216,150 @@ model CustomerReceipt {
   @@index([invoiceId])
   @@index([journalEntryId])
   @@map("customer_receipts")
+}
+
+// ===== M8.5: Credit Notes + Write-offs + Refund Accounting =====
+
+// M8.5: Customer Credit Note (AR Credit Memo)
+model CustomerCreditNote {
+  id              String           @id @default(cuid())
+  orgId           String
+  customerId      String
+  number          String?          // Credit note number
+  creditDate      DateTime         @default(now())
+  amount          Decimal          @db.Decimal(12, 2)
+  allocatedAmount Decimal          @default(0) @db.Decimal(12, 2) // Sum of allocations
+  refundedAmount  Decimal          @default(0) @db.Decimal(12, 2) // Sum of refunds
+  status          CreditNoteStatus @default(DRAFT)
+  reason          String?          // Reason for credit
+  memo            String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  // GL Integration
+  journalEntryId String?   // Links to GL entry when OPEN
+  openedAt       DateTime? // When credit note was opened
+  openedById     String?   // User who opened
+
+  customer     CustomerAccount                @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  journalEntry JournalEntry?                  @relation("CustomerCreditNoteJournal", fields: [journalEntryId], references: [id])
+  allocations  CustomerCreditNoteAllocation[]
+  refunds      CustomerCreditNoteRefund[]
+
+  @@index([orgId, status])
+  @@index([customerId])
+  @@index([journalEntryId])
+  @@map("customer_credit_notes")
+}
+
+// M8.5: Allocation of customer credit to invoice
+model CustomerCreditNoteAllocation {
+  id           String   @id @default(cuid())
+  creditNoteId String
+  invoiceId    String
+  amount       Decimal  @db.Decimal(12, 2)
+  appliedAt    DateTime @default(now())
+  appliedById  String?
+
+  creditNote CustomerCreditNote @relation(fields: [creditNoteId], references: [id], onDelete: Restrict)
+  invoice    CustomerInvoice    @relation(fields: [invoiceId], references: [id], onDelete: Restrict)
+
+  @@index([creditNoteId])
+  @@index([invoiceId])
+  @@map("customer_credit_note_allocations")
+}
+
+// M8.5: Refund of customer credit balance
+model CustomerCreditNoteRefund {
+  id           String   @id @default(cuid())
+  creditNoteId String
+  amount       Decimal  @db.Decimal(12, 2)
+  refundDate   DateTime @default(now())
+  method       String   // CASH, BANK, CHECK
+  ref          String?  // Reference number
+  memo         String?
+  createdAt    DateTime @default(now())
+
+  // GL Integration
+  journalEntryId String?
+
+  creditNote   CustomerCreditNote @relation(fields: [creditNoteId], references: [id], onDelete: Restrict)
+  journalEntry JournalEntry?      @relation("CustomerCreditNoteRefundJournal", fields: [journalEntryId], references: [id])
+
+  @@index([creditNoteId])
+  @@index([journalEntryId])
+  @@map("customer_credit_note_refunds")
+}
+
+// M8.5: Vendor Credit Note (AP Debit Memo - credits from vendor)
+model VendorCreditNote {
+  id              String           @id @default(cuid())
+  orgId           String
+  vendorId        String
+  number          String?          // Credit note number
+  creditDate      DateTime         @default(now())
+  amount          Decimal          @db.Decimal(12, 2)
+  allocatedAmount Decimal          @default(0) @db.Decimal(12, 2)
+  refundedAmount  Decimal          @default(0) @db.Decimal(12, 2)
+  status          CreditNoteStatus @default(DRAFT)
+  reason          String?
+  memo            String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  // GL Integration
+  journalEntryId String?
+  openedAt       DateTime?
+  openedById     String?
+
+  vendor       Vendor                       @relation(fields: [vendorId], references: [id], onDelete: Restrict)
+  journalEntry JournalEntry?                @relation("VendorCreditNoteJournal", fields: [journalEntryId], references: [id])
+  allocations  VendorCreditNoteAllocation[]
+  refunds      VendorCreditNoteRefund[]
+
+  @@index([orgId, status])
+  @@index([vendorId])
+  @@index([journalEntryId])
+  @@map("vendor_credit_notes")
+}
+
+// M8.5: Allocation of vendor credit to bill
+model VendorCreditNoteAllocation {
+  id           String   @id @default(cuid())
+  creditNoteId String
+  billId       String
+  amount       Decimal  @db.Decimal(12, 2)
+  appliedAt    DateTime @default(now())
+  appliedById  String?
+
+  creditNote VendorCreditNote @relation(fields: [creditNoteId], references: [id], onDelete: Restrict)
+  bill       VendorBill       @relation(fields: [billId], references: [id], onDelete: Restrict)
+
+  @@index([creditNoteId])
+  @@index([billId])
+  @@map("vendor_credit_note_allocations")
+}
+
+// M8.5: Refund of vendor credit balance (receiving cash back)
+model VendorCreditNoteRefund {
+  id           String   @id @default(cuid())
+  creditNoteId String
+  amount       Decimal  @db.Decimal(12, 2)
+  refundDate   DateTime @default(now())
+  method       String   // CASH, BANK, CHECK
+  ref          String?
+  memo         String?
+  createdAt    DateTime @default(now())
+
+  // GL Integration
+  journalEntryId String?
+
+  creditNote   VendorCreditNote @relation(fields: [creditNoteId], references: [id], onDelete: Restrict)
+  journalEntry JournalEntry?    @relation("VendorCreditNoteRefundJournal", fields: [journalEntryId], references: [id])
+
+  @@index([creditNoteId])
+  @@index([journalEntryId])
+  @@map("vendor_credit_note_refunds")
 }
 
 model ReminderSchedule {

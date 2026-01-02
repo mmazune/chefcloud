@@ -1675,4 +1675,1144 @@ export class AccountingService {
 
     return { total, paid, outstanding, status: invoice.status };
   }
+
+  // ===== M8.5: Customer Credit Notes =====
+
+  /**
+   * Create a customer credit note (DRAFT)
+   */
+  async createCustomerCreditNote(
+    orgId: string,
+    data: {
+      customerId: string;
+      number?: string;
+      creditDate?: Date;
+      amount: number;
+      reason?: string;
+      memo?: string;
+    },
+  ): Promise<any> {
+    if (data.amount <= 0) {
+      throw new BadRequestException('Credit note amount must be greater than zero');
+    }
+
+    const customer = await this.prisma.client.customerAccount.findUnique({
+      where: { id: data.customerId },
+    });
+
+    if (!customer) {
+      throw new NotFoundException(`Customer ${data.customerId} not found`);
+    }
+
+    return this.prisma.client.customerCreditNote.create({
+      data: {
+        orgId,
+        customerId: data.customerId,
+        number: data.number,
+        creditDate: data.creditDate || new Date(),
+        amount: data.amount,
+        reason: data.reason,
+        memo: data.memo,
+        status: 'DRAFT',
+      },
+      include: { customer: true },
+    });
+  }
+
+  /**
+   * Get customer credit notes for org
+   */
+  async getCustomerCreditNotes(orgId: string, status?: string): Promise<any[]> {
+    return this.prisma.client.customerCreditNote.findMany({
+      where: {
+        orgId,
+        ...(status ? { status: status as any } : {}),
+      },
+      include: {
+        customer: true,
+        allocations: { include: { invoice: true } },
+        refunds: true,
+      },
+      orderBy: { creditDate: 'desc' },
+    });
+  }
+
+  /**
+   * Get single customer credit note by ID
+   */
+  async getCustomerCreditNote(creditNoteId: string): Promise<any> {
+    const creditNote = await this.prisma.client.customerCreditNote.findUnique({
+      where: { id: creditNoteId },
+      include: {
+        customer: true,
+        allocations: { include: { invoice: true } },
+        refunds: true,
+        journalEntry: { include: { lines: true } },
+      },
+    });
+
+    if (!creditNote) {
+      throw new NotFoundException(`Credit note ${creditNoteId} not found`);
+    }
+
+    return creditNote;
+  }
+
+  /**
+   * Open customer credit note (DRAFT → OPEN)
+   * Creates GL entry: Dr Revenue/Adjustment, Cr AR
+   */
+  async openCustomerCreditNote(creditNoteId: string, userId: string): Promise<any> {
+    const creditNote = await this.prisma.client.customerCreditNote.findUnique({
+      where: { id: creditNoteId },
+      include: { customer: true },
+    });
+
+    if (!creditNote) {
+      throw new NotFoundException(`Credit note ${creditNoteId} not found`);
+    }
+
+    if (creditNote.status !== 'DRAFT') {
+      throw new BadRequestException(`Credit note is not in DRAFT status. Current: ${creditNote.status}`);
+    }
+
+    // Check period lock
+    const period = await this.prisma.client.fiscalPeriod.findFirst({
+      where: {
+        orgId: creditNote.orgId,
+        startsAt: { lte: creditNote.creditDate },
+        endsAt: { gte: creditNote.creditDate },
+      },
+    });
+
+    if (period?.status === 'LOCKED') {
+      throw new ForbiddenException(`Cannot open credit note in locked fiscal period: ${period.name}`);
+    }
+
+    // Find required accounts
+    const arAccount = await this.prisma.client.account.findFirst({
+      where: { orgId: creditNote.orgId, name: { contains: 'Accounts Receivable' }, type: 'ASSET' },
+    });
+
+    const revenueAccount = await this.prisma.client.account.findFirst({
+      where: { orgId: creditNote.orgId, type: 'REVENUE' },
+      orderBy: { code: 'asc' },
+    });
+
+    if (!arAccount || !revenueAccount) {
+      throw new BadRequestException('Required accounts (AR, Revenue) not found');
+    }
+
+    const result = await this.prisma.client.$transaction(async (tx) => {
+      // Create journal entry: Dr Revenue, Cr AR (reducing AR)
+      const journalEntry = await tx.journalEntry.create({
+        data: {
+          orgId: creditNote.orgId,
+          date: creditNote.creditDate,
+          memo: `Customer Credit Note: ${creditNote.number || creditNoteId} - ${creditNote.customer.name}`,
+          source: 'CUSTOMER_CREDIT_NOTE',
+          sourceId: creditNoteId,
+          status: 'POSTED',
+          postedById: userId,
+          postedAt: new Date(),
+          lines: {
+            create: [
+              {
+                accountId: revenueAccount.id,
+                debit: Number(creditNote.amount),
+                credit: 0,
+              },
+              {
+                accountId: arAccount.id,
+                debit: 0,
+                credit: Number(creditNote.amount),
+              },
+            ],
+          },
+        },
+      });
+
+      return tx.customerCreditNote.update({
+        where: { id: creditNoteId },
+        data: {
+          status: 'OPEN',
+          journalEntryId: journalEntry.id,
+          openedAt: new Date(),
+          openedById: userId,
+        },
+        include: { customer: true, journalEntry: true },
+      });
+    });
+
+    this.logger.log(`Opened customer credit note ${creditNoteId}`);
+    return result;
+  }
+
+  /**
+   * Void customer credit note
+   * Creates reversal GL entry
+   */
+  async voidCustomerCreditNote(creditNoteId: string, userId: string): Promise<any> {
+    const creditNote = await this.prisma.client.customerCreditNote.findUnique({
+      where: { id: creditNoteId },
+      include: {
+        allocations: true,
+        refunds: true,
+        journalEntry: { include: { lines: true } },
+      },
+    });
+
+    if (!creditNote) {
+      throw new NotFoundException(`Credit note ${creditNoteId} not found`);
+    }
+
+    if (creditNote.status !== 'OPEN' && creditNote.status !== 'PARTIALLY_APPLIED') {
+      throw new BadRequestException(`Cannot void credit note with status ${creditNote.status}`);
+    }
+
+    if (creditNote.allocations.length > 0) {
+      throw new BadRequestException('Cannot void credit note with existing allocations. Delete allocations first.');
+    }
+
+    if (creditNote.refunds.length > 0) {
+      throw new BadRequestException('Cannot void credit note with existing refunds. Delete refunds first.');
+    }
+
+    // Check period lock
+    const period = await this.prisma.client.fiscalPeriod.findFirst({
+      where: {
+        orgId: creditNote.orgId,
+        startsAt: { lte: new Date() },
+        endsAt: { gte: new Date() },
+      },
+    });
+
+    if (period?.status === 'LOCKED') {
+      throw new ForbiddenException(`Cannot void in locked fiscal period: ${period.name}`);
+    }
+
+    const result = await this.prisma.client.$transaction(async (tx) => {
+      if (creditNote.journalEntry) {
+        // Create reversal entry
+        await tx.journalEntry.create({
+          data: {
+            orgId: creditNote.orgId,
+            date: new Date(),
+            memo: `Void Customer Credit Note: ${creditNote.number || creditNoteId}`,
+            source: 'CUSTOMER_CREDIT_NOTE_VOID',
+            sourceId: creditNoteId,
+            status: 'POSTED',
+            postedById: userId,
+            postedAt: new Date(),
+            reversesEntryId: creditNote.journalEntry.id,
+            lines: {
+              create: creditNote.journalEntry.lines.map((line) => ({
+                accountId: line.accountId,
+                debit: Number(line.credit),
+                credit: Number(line.debit),
+              })),
+            },
+          },
+        });
+
+        await tx.journalEntry.update({
+          where: { id: creditNote.journalEntry.id },
+          data: {
+            status: 'REVERSED',
+            reversedById: userId,
+            reversedAt: new Date(),
+          },
+        });
+      }
+
+      return tx.customerCreditNote.update({
+        where: { id: creditNoteId },
+        data: { status: 'VOID' },
+        include: { customer: true },
+      });
+    });
+
+    this.logger.log(`Voided customer credit note ${creditNoteId}`);
+    return result;
+  }
+
+  /**
+   * Allocate customer credit to invoice(s)
+   */
+  async allocateCustomerCredit(
+    creditNoteId: string,
+    userId: string,
+    allocations: Array<{ invoiceId: string; amount: number }>,
+  ): Promise<any> {
+    const creditNote = await this.prisma.client.customerCreditNote.findUnique({
+      where: { id: creditNoteId },
+    });
+
+    if (!creditNote) {
+      throw new NotFoundException(`Credit note ${creditNoteId} not found`);
+    }
+
+    if (creditNote.status !== 'OPEN' && creditNote.status !== 'PARTIALLY_APPLIED') {
+      throw new BadRequestException(`Credit note is not allocatable. Status: ${creditNote.status}`);
+    }
+
+    const creditsRemaining = Number(creditNote.amount) - Number(creditNote.allocatedAmount) - Number(creditNote.refundedAmount);
+    const totalToAllocate = allocations.reduce((sum, a) => sum + a.amount, 0);
+
+    if (totalToAllocate > creditsRemaining + 0.01) {
+      throw new BadRequestException(`Cannot allocate ${totalToAllocate.toFixed(2)}. Only ${creditsRemaining.toFixed(2)} remaining.`);
+    }
+
+    // Validate each invoice
+    for (const alloc of allocations) {
+      if (alloc.amount <= 0) {
+        throw new BadRequestException('Allocation amount must be greater than zero');
+      }
+
+      const invoice = await this.prisma.client.customerInvoice.findUnique({
+        where: { id: alloc.invoiceId },
+      });
+
+      if (!invoice) {
+        throw new NotFoundException(`Invoice ${alloc.invoiceId} not found`);
+      }
+
+      if (invoice.status !== 'OPEN' && invoice.status !== 'PARTIALLY_PAID') {
+        throw new BadRequestException(`Invoice ${alloc.invoiceId} is not in OPEN or PARTIALLY_PAID status`);
+      }
+
+      const outstanding = Number(invoice.total) - Number(invoice.paidAmount);
+      if (alloc.amount > outstanding + 0.01) {
+        throw new BadRequestException(`Allocation ${alloc.amount.toFixed(2)} exceeds invoice outstanding ${outstanding.toFixed(2)}`);
+      }
+    }
+
+    const result = await this.prisma.client.$transaction(async (tx) => {
+      const createdAllocations = [];
+
+      for (const alloc of allocations) {
+        // Create allocation record
+        const allocation = await tx.customerCreditNoteAllocation.create({
+          data: {
+            creditNoteId,
+            invoiceId: alloc.invoiceId,
+            amount: alloc.amount,
+            appliedById: userId,
+          },
+          include: { invoice: true },
+        });
+        createdAllocations.push(allocation);
+
+        // Update invoice paidAmount
+        const invoice = await tx.customerInvoice.findUnique({ where: { id: alloc.invoiceId } });
+        if (invoice) {
+          const newPaidAmount = Number(invoice.paidAmount) + alloc.amount;
+          const total = Number(invoice.total);
+          let newStatus = invoice.status;
+
+          if (newPaidAmount >= total - 0.01) {
+            newStatus = 'PAID';
+          } else if (newPaidAmount > 0) {
+            newStatus = 'PARTIALLY_PAID';
+          }
+
+          await tx.customerInvoice.update({
+            where: { id: alloc.invoiceId },
+            data: { paidAmount: newPaidAmount, status: newStatus },
+          });
+        }
+      }
+
+      // Update credit note allocatedAmount and status
+      const newAllocatedAmount = Number(creditNote.allocatedAmount) + totalToAllocate;
+      const totalUsed = newAllocatedAmount + Number(creditNote.refundedAmount);
+      let newStatus: 'OPEN' | 'PARTIALLY_APPLIED' | 'APPLIED' = 'OPEN';
+
+      if (totalUsed >= Number(creditNote.amount) - 0.01) {
+        newStatus = 'APPLIED';
+      } else if (totalUsed > 0) {
+        newStatus = 'PARTIALLY_APPLIED';
+      }
+
+      const updatedCreditNote = await tx.customerCreditNote.update({
+        where: { id: creditNoteId },
+        data: { allocatedAmount: newAllocatedAmount, status: newStatus },
+        include: { customer: true, allocations: true },
+      });
+
+      return { creditNote: updatedCreditNote, allocations: createdAllocations };
+    });
+
+    this.logger.log(`Allocated ${totalToAllocate} from credit note ${creditNoteId}`);
+    return result;
+  }
+
+  /**
+   * Delete customer credit allocation
+   */
+  async deleteCustomerCreditAllocation(allocationId: string, userId: string): Promise<void> {
+    const allocation = await this.prisma.client.customerCreditNoteAllocation.findUnique({
+      where: { id: allocationId },
+      include: { creditNote: true, invoice: true },
+    });
+
+    if (!allocation) {
+      throw new NotFoundException(`Allocation ${allocationId} not found`);
+    }
+
+    await this.prisma.client.$transaction(async (tx) => {
+      // Reverse invoice paidAmount
+      const invoice = allocation.invoice;
+      const newPaidAmount = Math.max(0, Number(invoice.paidAmount) - Number(allocation.amount));
+      const total = Number(invoice.total);
+      let newInvoiceStatus = invoice.status;
+
+      if (newPaidAmount <= 0.01) {
+        newInvoiceStatus = 'OPEN';
+      } else if (newPaidAmount < total - 0.01) {
+        newInvoiceStatus = 'PARTIALLY_PAID';
+      }
+
+      await tx.customerInvoice.update({
+        where: { id: invoice.id },
+        data: { paidAmount: newPaidAmount, status: newInvoiceStatus },
+      });
+
+      // Reverse credit note allocatedAmount
+      const creditNote = allocation.creditNote;
+      const newAllocatedAmount = Math.max(0, Number(creditNote.allocatedAmount) - Number(allocation.amount));
+      const totalUsed = newAllocatedAmount + Number(creditNote.refundedAmount);
+      let newCreditNoteStatus: 'OPEN' | 'PARTIALLY_APPLIED' | 'APPLIED' = 'APPLIED';
+
+      if (totalUsed <= 0.01) {
+        newCreditNoteStatus = 'OPEN';
+      } else if (totalUsed < Number(creditNote.amount) - 0.01) {
+        newCreditNoteStatus = 'PARTIALLY_APPLIED';
+      }
+
+      await tx.customerCreditNote.update({
+        where: { id: creditNote.id },
+        data: { allocatedAmount: newAllocatedAmount, status: newCreditNoteStatus },
+      });
+
+      // Delete the allocation
+      await tx.customerCreditNoteAllocation.delete({ where: { id: allocationId } });
+    });
+
+    this.logger.log(`Deleted credit allocation ${allocationId}`);
+  }
+
+  /**
+   * Create customer credit refund (cash back to customer)
+   * GL: Dr AR, Cr Cash/Bank
+   */
+  async createCustomerCreditRefund(
+    creditNoteId: string,
+    userId: string,
+    data: {
+      amount: number;
+      refundDate?: Date;
+      method: string;
+      ref?: string;
+      memo?: string;
+    },
+  ): Promise<any> {
+    if (data.amount <= 0) {
+      throw new BadRequestException('Refund amount must be greater than zero');
+    }
+
+    const creditNote = await this.prisma.client.customerCreditNote.findUnique({
+      where: { id: creditNoteId },
+      include: { customer: true },
+    });
+
+    if (!creditNote) {
+      throw new NotFoundException(`Credit note ${creditNoteId} not found`);
+    }
+
+    if (creditNote.status !== 'OPEN' && creditNote.status !== 'PARTIALLY_APPLIED') {
+      throw new BadRequestException(`Cannot refund credit note with status ${creditNote.status}`);
+    }
+
+    const creditsRemaining = Number(creditNote.amount) - Number(creditNote.allocatedAmount) - Number(creditNote.refundedAmount);
+    if (data.amount > creditsRemaining + 0.01) {
+      throw new BadRequestException(`Refund amount ${data.amount.toFixed(2)} exceeds remaining ${creditsRemaining.toFixed(2)}`);
+    }
+
+    // Check period lock
+    const refundDate = data.refundDate || new Date();
+    const period = await this.prisma.client.fiscalPeriod.findFirst({
+      where: {
+        orgId: creditNote.orgId,
+        startsAt: { lte: refundDate },
+        endsAt: { gte: refundDate },
+      },
+    });
+
+    if (period?.status === 'LOCKED') {
+      throw new ForbiddenException(`Cannot create refund in locked fiscal period: ${period.name}`);
+    }
+
+    // Find accounts
+    const arAccount = await this.prisma.client.account.findFirst({
+      where: { orgId: creditNote.orgId, name: { contains: 'Accounts Receivable' }, type: 'ASSET' },
+    });
+
+    // Use PaymentMethodMapping or fallback
+    const mapping = await this.prisma.client.paymentMethodMapping.findUnique({
+      where: { orgId_method: { orgId: creditNote.orgId, method: data.method as any } },
+      include: { account: true },
+    });
+
+    let cashAccount: any;
+    if (mapping) {
+      cashAccount = mapping.account;
+    } else {
+      cashAccount = await this.prisma.client.account.findFirst({
+        where: { orgId: creditNote.orgId, name: { contains: 'Cash' }, type: 'ASSET' },
+      });
+    }
+
+    if (!arAccount || !cashAccount) {
+      throw new BadRequestException('Required accounts (AR, Cash) not found');
+    }
+
+    const result = await this.prisma.client.$transaction(async (tx) => {
+      // Create journal entry: Dr AR (restoring), Cr Cash (paying out)
+      const journalEntry = await tx.journalEntry.create({
+        data: {
+          orgId: creditNote.orgId,
+          date: refundDate,
+          memo: `Customer Credit Refund: ${creditNote.number || creditNoteId} - ${data.ref || 'No ref'}`,
+          source: 'CUSTOMER_CREDIT_REFUND',
+          sourceId: creditNoteId,
+          status: 'POSTED',
+          postedById: userId,
+          postedAt: new Date(),
+          lines: {
+            create: [
+              {
+                accountId: arAccount.id,
+                debit: data.amount,
+                credit: 0,
+              },
+              {
+                accountId: cashAccount.id,
+                debit: 0,
+                credit: data.amount,
+              },
+            ],
+          },
+        },
+      });
+
+      // Create refund record
+      const refund = await tx.customerCreditNoteRefund.create({
+        data: {
+          creditNoteId,
+          amount: data.amount,
+          refundDate,
+          method: data.method,
+          ref: data.ref,
+          memo: data.memo,
+          journalEntryId: journalEntry.id,
+        },
+        include: { journalEntry: true },
+      });
+
+      // Update credit note refundedAmount and status
+      const newRefundedAmount = Number(creditNote.refundedAmount) + data.amount;
+      const totalUsed = Number(creditNote.allocatedAmount) + newRefundedAmount;
+      let newStatus: 'OPEN' | 'PARTIALLY_APPLIED' | 'APPLIED' = 'OPEN';
+
+      if (totalUsed >= Number(creditNote.amount) - 0.01) {
+        newStatus = 'APPLIED';
+      } else if (totalUsed > 0) {
+        newStatus = 'PARTIALLY_APPLIED';
+      }
+
+      await tx.customerCreditNote.update({
+        where: { id: creditNoteId },
+        data: { refundedAmount: newRefundedAmount, status: newStatus },
+      });
+
+      return refund;
+    });
+
+    this.logger.log(`Created customer credit refund for ${creditNoteId}`);
+    return result;
+  }
+
+  // ===== M8.5: Vendor Credit Notes =====
+
+  /**
+   * Create a vendor credit note (DRAFT)
+   */
+  async createVendorCreditNote(
+    orgId: string,
+    data: {
+      vendorId: string;
+      number?: string;
+      creditDate?: Date;
+      amount: number;
+      reason?: string;
+      memo?: string;
+    },
+  ): Promise<any> {
+    if (data.amount <= 0) {
+      throw new BadRequestException('Credit note amount must be greater than zero');
+    }
+
+    const vendor = await this.prisma.client.vendor.findUnique({
+      where: { id: data.vendorId },
+    });
+
+    if (!vendor) {
+      throw new NotFoundException(`Vendor ${data.vendorId} not found`);
+    }
+
+    return this.prisma.client.vendorCreditNote.create({
+      data: {
+        orgId,
+        vendorId: data.vendorId,
+        number: data.number,
+        creditDate: data.creditDate || new Date(),
+        amount: data.amount,
+        reason: data.reason,
+        memo: data.memo,
+        status: 'DRAFT',
+      },
+      include: { vendor: true },
+    });
+  }
+
+  /**
+   * Get vendor credit notes for org
+   */
+  async getVendorCreditNotes(orgId: string, status?: string): Promise<any[]> {
+    return this.prisma.client.vendorCreditNote.findMany({
+      where: {
+        orgId,
+        ...(status ? { status: status as any } : {}),
+      },
+      include: {
+        vendor: true,
+        allocations: { include: { bill: true } },
+        refunds: true,
+      },
+      orderBy: { creditDate: 'desc' },
+    });
+  }
+
+  /**
+   * Get single vendor credit note by ID
+   */
+  async getVendorCreditNote(creditNoteId: string): Promise<any> {
+    const creditNote = await this.prisma.client.vendorCreditNote.findUnique({
+      where: { id: creditNoteId },
+      include: {
+        vendor: true,
+        allocations: { include: { bill: true } },
+        refunds: true,
+        journalEntry: { include: { lines: true } },
+      },
+    });
+
+    if (!creditNote) {
+      throw new NotFoundException(`Credit note ${creditNoteId} not found`);
+    }
+
+    return creditNote;
+  }
+
+  /**
+   * Open vendor credit note (DRAFT → OPEN)
+   * Creates GL entry: Dr AP, Cr Expense/Adjustment
+   */
+  async openVendorCreditNote(creditNoteId: string, userId: string): Promise<any> {
+    const creditNote = await this.prisma.client.vendorCreditNote.findUnique({
+      where: { id: creditNoteId },
+      include: { vendor: true },
+    });
+
+    if (!creditNote) {
+      throw new NotFoundException(`Credit note ${creditNoteId} not found`);
+    }
+
+    if (creditNote.status !== 'DRAFT') {
+      throw new BadRequestException(`Credit note is not in DRAFT status. Current: ${creditNote.status}`);
+    }
+
+    // Check period lock
+    const period = await this.prisma.client.fiscalPeriod.findFirst({
+      where: {
+        orgId: creditNote.orgId,
+        startsAt: { lte: creditNote.creditDate },
+        endsAt: { gte: creditNote.creditDate },
+      },
+    });
+
+    if (period?.status === 'LOCKED') {
+      throw new ForbiddenException(`Cannot open credit note in locked fiscal period: ${period.name}`);
+    }
+
+    // Find required accounts
+    const apAccount = await this.prisma.client.account.findFirst({
+      where: { orgId: creditNote.orgId, name: { contains: 'Accounts Payable' }, type: 'LIABILITY' },
+    });
+
+    const expenseAccount = await this.prisma.client.account.findFirst({
+      where: { orgId: creditNote.orgId, type: 'EXPENSE' },
+      orderBy: { code: 'asc' },
+    });
+
+    if (!apAccount || !expenseAccount) {
+      throw new BadRequestException('Required accounts (AP, Expense) not found');
+    }
+
+    const result = await this.prisma.client.$transaction(async (tx) => {
+      // Create journal entry: Dr AP (reducing), Cr Expense (reducing)
+      const journalEntry = await tx.journalEntry.create({
+        data: {
+          orgId: creditNote.orgId,
+          date: creditNote.creditDate,
+          memo: `Vendor Credit Note: ${creditNote.number || creditNoteId} - ${creditNote.vendor.name}`,
+          source: 'VENDOR_CREDIT_NOTE',
+          sourceId: creditNoteId,
+          status: 'POSTED',
+          postedById: userId,
+          postedAt: new Date(),
+          lines: {
+            create: [
+              {
+                accountId: apAccount.id,
+                debit: Number(creditNote.amount),
+                credit: 0,
+              },
+              {
+                accountId: expenseAccount.id,
+                debit: 0,
+                credit: Number(creditNote.amount),
+              },
+            ],
+          },
+        },
+      });
+
+      return tx.vendorCreditNote.update({
+        where: { id: creditNoteId },
+        data: {
+          status: 'OPEN',
+          journalEntryId: journalEntry.id,
+          openedAt: new Date(),
+          openedById: userId,
+        },
+        include: { vendor: true, journalEntry: true },
+      });
+    });
+
+    this.logger.log(`Opened vendor credit note ${creditNoteId}`);
+    return result;
+  }
+
+  /**
+   * Void vendor credit note
+   */
+  async voidVendorCreditNote(creditNoteId: string, userId: string): Promise<any> {
+    const creditNote = await this.prisma.client.vendorCreditNote.findUnique({
+      where: { id: creditNoteId },
+      include: {
+        allocations: true,
+        refunds: true,
+        journalEntry: { include: { lines: true } },
+      },
+    });
+
+    if (!creditNote) {
+      throw new NotFoundException(`Credit note ${creditNoteId} not found`);
+    }
+
+    if (creditNote.status !== 'OPEN' && creditNote.status !== 'PARTIALLY_APPLIED') {
+      throw new BadRequestException(`Cannot void credit note with status ${creditNote.status}`);
+    }
+
+    if (creditNote.allocations.length > 0) {
+      throw new BadRequestException('Cannot void credit note with existing allocations');
+    }
+
+    if (creditNote.refunds.length > 0) {
+      throw new BadRequestException('Cannot void credit note with existing refunds');
+    }
+
+    const period = await this.prisma.client.fiscalPeriod.findFirst({
+      where: {
+        orgId: creditNote.orgId,
+        startsAt: { lte: new Date() },
+        endsAt: { gte: new Date() },
+      },
+    });
+
+    if (period?.status === 'LOCKED') {
+      throw new ForbiddenException(`Cannot void in locked fiscal period: ${period.name}`);
+    }
+
+    const result = await this.prisma.client.$transaction(async (tx) => {
+      if (creditNote.journalEntry) {
+        await tx.journalEntry.create({
+          data: {
+            orgId: creditNote.orgId,
+            date: new Date(),
+            memo: `Void Vendor Credit Note: ${creditNote.number || creditNoteId}`,
+            source: 'VENDOR_CREDIT_NOTE_VOID',
+            sourceId: creditNoteId,
+            status: 'POSTED',
+            postedById: userId,
+            postedAt: new Date(),
+            reversesEntryId: creditNote.journalEntry.id,
+            lines: {
+              create: creditNote.journalEntry.lines.map((line) => ({
+                accountId: line.accountId,
+                debit: Number(line.credit),
+                credit: Number(line.debit),
+              })),
+            },
+          },
+        });
+
+        await tx.journalEntry.update({
+          where: { id: creditNote.journalEntry.id },
+          data: {
+            status: 'REVERSED',
+            reversedById: userId,
+            reversedAt: new Date(),
+          },
+        });
+      }
+
+      return tx.vendorCreditNote.update({
+        where: { id: creditNoteId },
+        data: { status: 'VOID' },
+        include: { vendor: true },
+      });
+    });
+
+    this.logger.log(`Voided vendor credit note ${creditNoteId}`);
+    return result;
+  }
+
+  /**
+   * Allocate vendor credit to bill(s)
+   */
+  async allocateVendorCredit(
+    creditNoteId: string,
+    userId: string,
+    allocations: Array<{ billId: string; amount: number }>,
+  ): Promise<any> {
+    const creditNote = await this.prisma.client.vendorCreditNote.findUnique({
+      where: { id: creditNoteId },
+    });
+
+    if (!creditNote) {
+      throw new NotFoundException(`Credit note ${creditNoteId} not found`);
+    }
+
+    if (creditNote.status !== 'OPEN' && creditNote.status !== 'PARTIALLY_APPLIED') {
+      throw new BadRequestException(`Credit note is not allocatable. Status: ${creditNote.status}`);
+    }
+
+    const creditsRemaining = Number(creditNote.amount) - Number(creditNote.allocatedAmount) - Number(creditNote.refundedAmount);
+    const totalToAllocate = allocations.reduce((sum, a) => sum + a.amount, 0);
+
+    if (totalToAllocate > creditsRemaining + 0.01) {
+      throw new BadRequestException(`Cannot allocate ${totalToAllocate.toFixed(2)}. Only ${creditsRemaining.toFixed(2)} remaining.`);
+    }
+
+    // Validate each bill
+    for (const alloc of allocations) {
+      if (alloc.amount <= 0) {
+        throw new BadRequestException('Allocation amount must be greater than zero');
+      }
+
+      const bill = await this.prisma.client.vendorBill.findUnique({
+        where: { id: alloc.billId },
+      });
+
+      if (!bill) {
+        throw new NotFoundException(`Bill ${alloc.billId} not found`);
+      }
+
+      if (bill.status !== 'OPEN' && bill.status !== 'PARTIALLY_PAID') {
+        throw new BadRequestException(`Bill ${alloc.billId} is not in OPEN or PARTIALLY_PAID status`);
+      }
+
+      const outstanding = Number(bill.total) - Number(bill.paidAmount);
+      if (alloc.amount > outstanding + 0.01) {
+        throw new BadRequestException(`Allocation ${alloc.amount.toFixed(2)} exceeds bill outstanding ${outstanding.toFixed(2)}`);
+      }
+    }
+
+    const result = await this.prisma.client.$transaction(async (tx) => {
+      const createdAllocations = [];
+
+      for (const alloc of allocations) {
+        const allocation = await tx.vendorCreditNoteAllocation.create({
+          data: {
+            creditNoteId,
+            billId: alloc.billId,
+            amount: alloc.amount,
+            appliedById: userId,
+          },
+          include: { bill: true },
+        });
+        createdAllocations.push(allocation);
+
+        // Update bill paidAmount
+        const bill = await tx.vendorBill.findUnique({ where: { id: alloc.billId } });
+        if (bill) {
+          const newPaidAmount = Number(bill.paidAmount) + alloc.amount;
+          const total = Number(bill.total);
+          let newStatus = bill.status;
+
+          if (newPaidAmount >= total - 0.01) {
+            newStatus = 'PAID';
+          } else if (newPaidAmount > 0) {
+            newStatus = 'PARTIALLY_PAID';
+          }
+
+          await tx.vendorBill.update({
+            where: { id: alloc.billId },
+            data: { paidAmount: newPaidAmount, status: newStatus },
+          });
+        }
+      }
+
+      // Update credit note
+      const newAllocatedAmount = Number(creditNote.allocatedAmount) + totalToAllocate;
+      const totalUsed = newAllocatedAmount + Number(creditNote.refundedAmount);
+      let newStatus: 'OPEN' | 'PARTIALLY_APPLIED' | 'APPLIED' = 'OPEN';
+
+      if (totalUsed >= Number(creditNote.amount) - 0.01) {
+        newStatus = 'APPLIED';
+      } else if (totalUsed > 0) {
+        newStatus = 'PARTIALLY_APPLIED';
+      }
+
+      const updatedCreditNote = await tx.vendorCreditNote.update({
+        where: { id: creditNoteId },
+        data: { allocatedAmount: newAllocatedAmount, status: newStatus },
+        include: { vendor: true, allocations: true },
+      });
+
+      return { creditNote: updatedCreditNote, allocations: createdAllocations };
+    });
+
+    this.logger.log(`Allocated ${totalToAllocate} from vendor credit note ${creditNoteId}`);
+    return result;
+  }
+
+  /**
+   * Delete vendor credit allocation
+   */
+  async deleteVendorCreditAllocation(allocationId: string, userId: string): Promise<void> {
+    const allocation = await this.prisma.client.vendorCreditNoteAllocation.findUnique({
+      where: { id: allocationId },
+      include: { creditNote: true, bill: true },
+    });
+
+    if (!allocation) {
+      throw new NotFoundException(`Allocation ${allocationId} not found`);
+    }
+
+    await this.prisma.client.$transaction(async (tx) => {
+      // Reverse bill paidAmount
+      const bill = allocation.bill;
+      const newPaidAmount = Math.max(0, Number(bill.paidAmount) - Number(allocation.amount));
+      const total = Number(bill.total);
+      let newBillStatus = bill.status;
+
+      if (newPaidAmount <= 0.01) {
+        newBillStatus = 'OPEN';
+      } else if (newPaidAmount < total - 0.01) {
+        newBillStatus = 'PARTIALLY_PAID';
+      }
+
+      await tx.vendorBill.update({
+        where: { id: bill.id },
+        data: { paidAmount: newPaidAmount, status: newBillStatus },
+      });
+
+      // Reverse credit note
+      const creditNote = allocation.creditNote;
+      const newAllocatedAmount = Math.max(0, Number(creditNote.allocatedAmount) - Number(allocation.amount));
+      const totalUsed = newAllocatedAmount + Number(creditNote.refundedAmount);
+      let newCreditNoteStatus: 'OPEN' | 'PARTIALLY_APPLIED' | 'APPLIED' = 'APPLIED';
+
+      if (totalUsed <= 0.01) {
+        newCreditNoteStatus = 'OPEN';
+      } else if (totalUsed < Number(creditNote.amount) - 0.01) {
+        newCreditNoteStatus = 'PARTIALLY_APPLIED';
+      }
+
+      await tx.vendorCreditNote.update({
+        where: { id: creditNote.id },
+        data: { allocatedAmount: newAllocatedAmount, status: newCreditNoteStatus },
+      });
+
+      await tx.vendorCreditNoteAllocation.delete({ where: { id: allocationId } });
+    });
+
+    this.logger.log(`Deleted vendor credit allocation ${allocationId}`);
+  }
+
+  /**
+   * Create vendor credit refund (receive cash from vendor)
+   * GL: Dr Cash/Bank, Cr AP
+   */
+  async createVendorCreditRefund(
+    creditNoteId: string,
+    userId: string,
+    data: {
+      amount: number;
+      refundDate?: Date;
+      method: string;
+      ref?: string;
+      memo?: string;
+    },
+  ): Promise<any> {
+    if (data.amount <= 0) {
+      throw new BadRequestException('Refund amount must be greater than zero');
+    }
+
+    const creditNote = await this.prisma.client.vendorCreditNote.findUnique({
+      where: { id: creditNoteId },
+      include: { vendor: true },
+    });
+
+    if (!creditNote) {
+      throw new NotFoundException(`Credit note ${creditNoteId} not found`);
+    }
+
+    if (creditNote.status !== 'OPEN' && creditNote.status !== 'PARTIALLY_APPLIED') {
+      throw new BadRequestException(`Cannot refund credit note with status ${creditNote.status}`);
+    }
+
+    const creditsRemaining = Number(creditNote.amount) - Number(creditNote.allocatedAmount) - Number(creditNote.refundedAmount);
+    if (data.amount > creditsRemaining + 0.01) {
+      throw new BadRequestException(`Refund amount ${data.amount.toFixed(2)} exceeds remaining ${creditsRemaining.toFixed(2)}`);
+    }
+
+    const refundDate = data.refundDate || new Date();
+    const period = await this.prisma.client.fiscalPeriod.findFirst({
+      where: {
+        orgId: creditNote.orgId,
+        startsAt: { lte: refundDate },
+        endsAt: { gte: refundDate },
+      },
+    });
+
+    if (period?.status === 'LOCKED') {
+      throw new ForbiddenException(`Cannot create refund in locked fiscal period: ${period.name}`);
+    }
+
+    // Find accounts
+    const apAccount = await this.prisma.client.account.findFirst({
+      where: { orgId: creditNote.orgId, name: { contains: 'Accounts Payable' }, type: 'LIABILITY' },
+    });
+
+    const mapping = await this.prisma.client.paymentMethodMapping.findUnique({
+      where: { orgId_method: { orgId: creditNote.orgId, method: data.method as any } },
+      include: { account: true },
+    });
+
+    let cashAccount: any;
+    if (mapping) {
+      cashAccount = mapping.account;
+    } else {
+      cashAccount = await this.prisma.client.account.findFirst({
+        where: { orgId: creditNote.orgId, name: { contains: 'Cash' }, type: 'ASSET' },
+      });
+    }
+
+    if (!apAccount || !cashAccount) {
+      throw new BadRequestException('Required accounts (AP, Cash) not found');
+    }
+
+    const result = await this.prisma.client.$transaction(async (tx) => {
+      // GL: Dr Cash (receiving), Cr AP (reducing)
+      const journalEntry = await tx.journalEntry.create({
+        data: {
+          orgId: creditNote.orgId,
+          date: refundDate,
+          memo: `Vendor Credit Refund: ${creditNote.number || creditNoteId} - ${data.ref || 'No ref'}`,
+          source: 'VENDOR_CREDIT_REFUND',
+          sourceId: creditNoteId,
+          status: 'POSTED',
+          postedById: userId,
+          postedAt: new Date(),
+          lines: {
+            create: [
+              {
+                accountId: cashAccount.id,
+                debit: data.amount,
+                credit: 0,
+              },
+              {
+                accountId: apAccount.id,
+                debit: 0,
+                credit: data.amount,
+              },
+            ],
+          },
+        },
+      });
+
+      const refund = await tx.vendorCreditNoteRefund.create({
+        data: {
+          creditNoteId,
+          amount: data.amount,
+          refundDate,
+          method: data.method,
+          ref: data.ref,
+          memo: data.memo,
+          journalEntryId: journalEntry.id,
+        },
+        include: { journalEntry: true },
+      });
+
+      // Update credit note
+      const newRefundedAmount = Number(creditNote.refundedAmount) + data.amount;
+      const totalUsed = Number(creditNote.allocatedAmount) + newRefundedAmount;
+      let newStatus: 'OPEN' | 'PARTIALLY_APPLIED' | 'APPLIED' = 'OPEN';
+
+      if (totalUsed >= Number(creditNote.amount) - 0.01) {
+        newStatus = 'APPLIED';
+      } else if (totalUsed > 0) {
+        newStatus = 'PARTIALLY_APPLIED';
+      }
+
+      await tx.vendorCreditNote.update({
+        where: { id: creditNoteId },
+        data: { refundedAmount: newRefundedAmount, status: newStatus },
+      });
+
+      return refund;
+    });
+
+    this.logger.log(`Created vendor credit refund for ${creditNoteId}`);
+    return result;
+  }
+
+  /**
+   * Get credits remaining for a customer credit note
+   */
+  getCustomerCreditRemaining(creditNote: any): number {
+    return Number(creditNote.amount) - Number(creditNote.allocatedAmount) - Number(creditNote.refundedAmount);
+  }
+
+  /**
+   * Get credits remaining for a vendor credit note
+   */
+  getVendorCreditRemaining(creditNote: any): number {
+    return Number(creditNote.amount) - Number(creditNote.allocatedAmount) - Number(creditNote.refundedAmount);
+  }
 }

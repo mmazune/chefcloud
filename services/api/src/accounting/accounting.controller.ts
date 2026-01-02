@@ -7,7 +7,7 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { Controller, Post, Get, Body, Param, Query, UseGuards, Request, Res, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Get, Delete, Body, Param, Query, UseGuards, Request, Res, HttpStatus } from '@nestjs/common';
 import { Response } from 'express';
 import { AuthGuard } from '@nestjs/passport';
 import { AccountingService } from './accounting.service';
@@ -433,5 +433,191 @@ export class AccountingController {
   @Roles('L4', 'L5')
   async getCustomerInvoiceOutstanding(@Param('invoiceId') invoiceId: string) {
     return this.accountingService.getCustomerInvoiceOutstanding(invoiceId);
+  }
+
+  // ===== M8.5: Customer Credit Notes =====
+
+  @Post('credit-notes/customer')
+  @Roles('L4', 'L5')
+  async createCustomerCreditNote(
+    @Request() req: RequestWithUser,
+    @Body() body: {
+      customerId: string;
+      number?: string;
+      creditDate?: string;
+      amount: number;
+      reason?: string;
+      memo?: string;
+    },
+  ) {
+    return this.accountingService.createCustomerCreditNote(req.user.orgId, {
+      ...body,
+      creditDate: body.creditDate ? new Date(body.creditDate) : undefined,
+    });
+  }
+
+  @Get('credit-notes/customer')
+  @Roles('L4', 'L5')
+  async getCustomerCreditNotes(
+    @Request() req: RequestWithUser,
+    @Query('status') status?: string,
+  ) {
+    return this.accountingService.getCustomerCreditNotes(req.user.orgId, status);
+  }
+
+  @Get('credit-notes/customer/:id')
+  @Roles('L4', 'L5')
+  async getCustomerCreditNote(@Param('id') id: string) {
+    return this.accountingService.getCustomerCreditNote(id);
+  }
+
+  @Post('credit-notes/customer/:id/open')
+  @Roles('L4', 'L5')
+  async openCustomerCreditNote(
+    @Param('id') id: string,
+    @Request() req: RequestWithUser,
+  ) {
+    return this.accountingService.openCustomerCreditNote(id, req.user.id);
+  }
+
+  @Post('credit-notes/customer/:id/void')
+  @Roles('L4', 'L5')
+  async voidCustomerCreditNote(
+    @Param('id') id: string,
+    @Request() req: RequestWithUser,
+  ) {
+    return this.accountingService.voidCustomerCreditNote(id, req.user.id);
+  }
+
+  @Post('credit-notes/customer/:id/allocate')
+  @Roles('L4', 'L5')
+  async allocateCustomerCredit(
+    @Param('id') id: string,
+    @Request() req: RequestWithUser,
+    @Body() body: { allocations: Array<{ invoiceId: string; amount: number }> },
+  ) {
+    return this.accountingService.allocateCustomerCredit(id, req.user.id, body.allocations);
+  }
+
+  @Delete('credit-notes/customer/allocations/:allocationId')
+  @Roles('L4', 'L5')
+  async deleteCustomerCreditAllocation(
+    @Param('allocationId') allocationId: string,
+    @Request() req: RequestWithUser,
+  ) {
+    await this.accountingService.deleteCustomerCreditAllocation(allocationId, req.user.id);
+    return { success: true };
+  }
+
+  @Post('credit-notes/customer/:id/refund')
+  @Roles('L4', 'L5')
+  async createCustomerCreditRefund(
+    @Param('id') id: string,
+    @Request() req: RequestWithUser,
+    @Body() body: {
+      amount: number;
+      refundDate?: string;
+      method: string;
+      ref?: string;
+      memo?: string;
+    },
+  ) {
+    return this.accountingService.createCustomerCreditRefund(id, req.user.id, {
+      ...body,
+      refundDate: body.refundDate ? new Date(body.refundDate) : undefined,
+    });
+  }
+
+  // ===== M8.5: Vendor Credit Notes =====
+
+  @Post('credit-notes/vendor')
+  @Roles('L4', 'L5')
+  async createVendorCreditNote(
+    @Request() req: RequestWithUser,
+    @Body() body: {
+      vendorId: string;
+      number?: string;
+      creditDate?: string;
+      amount: number;
+      reason?: string;
+      memo?: string;
+    },
+  ) {
+    return this.accountingService.createVendorCreditNote(req.user.orgId, {
+      ...body,
+      creditDate: body.creditDate ? new Date(body.creditDate) : undefined,
+    });
+  }
+
+  @Get('credit-notes/vendor')
+  @Roles('L4', 'L5')
+  async getVendorCreditNotes(
+    @Request() req: RequestWithUser,
+    @Query('status') status?: string,
+  ) {
+    return this.accountingService.getVendorCreditNotes(req.user.orgId, status);
+  }
+
+  @Get('credit-notes/vendor/:id')
+  @Roles('L4', 'L5')
+  async getVendorCreditNote(@Param('id') id: string) {
+    return this.accountingService.getVendorCreditNote(id);
+  }
+
+  @Post('credit-notes/vendor/:id/open')
+  @Roles('L4', 'L5')
+  async openVendorCreditNote(
+    @Param('id') id: string,
+    @Request() req: RequestWithUser,
+  ) {
+    return this.accountingService.openVendorCreditNote(id, req.user.id);
+  }
+
+  @Post('credit-notes/vendor/:id/void')
+  @Roles('L4', 'L5')
+  async voidVendorCreditNote(
+    @Param('id') id: string,
+    @Request() req: RequestWithUser,
+  ) {
+    return this.accountingService.voidVendorCreditNote(id, req.user.id);
+  }
+
+  @Post('credit-notes/vendor/:id/allocate')
+  @Roles('L4', 'L5')
+  async allocateVendorCredit(
+    @Param('id') id: string,
+    @Request() req: RequestWithUser,
+    @Body() body: { allocations: Array<{ billId: string; amount: number }> },
+  ) {
+    return this.accountingService.allocateVendorCredit(id, req.user.id, body.allocations);
+  }
+
+  @Delete('credit-notes/vendor/allocations/:allocationId')
+  @Roles('L4', 'L5')
+  async deleteVendorCreditAllocation(
+    @Param('allocationId') allocationId: string,
+    @Request() req: RequestWithUser,
+  ) {
+    await this.accountingService.deleteVendorCreditAllocation(allocationId, req.user.id);
+    return { success: true };
+  }
+
+  @Post('credit-notes/vendor/:id/refund')
+  @Roles('L4', 'L5')
+  async createVendorCreditRefund(
+    @Param('id') id: string,
+    @Request() req: RequestWithUser,
+    @Body() body: {
+      amount: number;
+      refundDate?: string;
+      method: string;
+      ref?: string;
+      memo?: string;
+    },
+  ) {
+    return this.accountingService.createVendorCreditRefund(id, req.user.id, {
+      ...body,
+      refundDate: body.refundDate ? new Date(body.refundDate) : undefined,
+    });
   }
 }
