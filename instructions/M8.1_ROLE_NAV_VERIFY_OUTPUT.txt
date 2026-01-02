@@ -1,0 +1,208 @@
+# M8.1 Role Navigation Verification Output
+Date: 2026-01-02T06:38:14.232Z
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## ROLE CAPABILITY CONFIGURATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+### OWNER
+Default Route: /workspaces/owner
+Dashboard Variant: full
+Workspace Title: Owner Headquarters
+Workspace Description: Full visibility across all branches, finance, staff, and strategic analytics.
+
+Nav Groups:
+  📁 Overview
+     ├─ Dashboard → /dashboard
+     ├─ Analytics → /analytics
+  📁 Operations
+     ├─ POS → /pos
+     ├─ Inventory → /inventory
+     ├─ Menu → /menu
+  📁 Finance
+     ├─ Reports → /reports
+     ├─ Billing → /billing
+     ├─ Invoices → /invoices
+  📁 Team
+     ├─ Staff → /staff
+     ├─ Feedback → /feedback
+  📁 Settings
+     ├─ Settings → /settings
+     ├─ Service Providers → /service-providers
+
+---
+
+### MANAGER
+Default Route: /workspaces/manager
+Dashboard Variant: operational
+Workspace Title: Manager Hub
+Workspace Description: Manage daily operations, staff schedules, and branch performance.
+
+Nav Groups:
+  📁 Overview
+     ├─ Dashboard → /dashboard
+     ├─ Analytics → /analytics
+  📁 Operations
+     ├─ POS → /pos
+     ├─ Inventory → /inventory
+     ├─ Menu → /menu
+     ├─ Reservations → /reservations
+  📁 Team
+     ├─ Staff → /staff
+     ├─ Feedback → /feedback
+  📁 Reports
+     ├─ Reports → /reports
+
+---
+
+### ACCOUNTANT
+Default Route: /workspaces/accountant
+Dashboard Variant: finance
+Workspace Title: Finance Center
+Workspace Description: Manage invoices, billing, financial reports, and revenue tracking.
+
+Nav Groups:
+  📁 Finance
+     ├─ Dashboard → /dashboard/finance
+     ├─ Invoices → /invoices
+     ├─ Billing → /billing
+     ├─ Reports → /reports
+
+---
+
+### PROCUREMENT
+Default Route: /workspaces/procurement
+Dashboard Variant: inventory
+Workspace Title: Procurement Center
+Workspace Description: Manage suppliers, purchase orders, and stock procurement.
+
+Nav Groups:
+  📁 Procurement
+     ├─ Dashboard → /dashboard/procurement
+     ├─ Suppliers → /suppliers
+     ├─ Inventory → /inventory
+     ├─ Invoices → /invoices
+
+---
+
+### STOCK_MANAGER
+Default Route: /workspaces/stock-manager
+Dashboard Variant: inventory
+Workspace Title: Inventory Hub
+Workspace Description: Monitor stock levels, manage counts, and track waste.
+
+Nav Groups:
+  📁 Inventory
+     ├─ Dashboard → /dashboard/inventory
+     ├─ Inventory → /inventory
+     ├─ Stock Counts → /stock-counts
+     ├─ Waste Log → /waste
+
+---
+
+### SUPERVISOR
+Default Route: /workspaces/supervisor
+Dashboard Variant: operational
+Workspace Title: Shift Command
+Workspace Description: Oversee floor operations, approve voids, and manage the team.
+
+Nav Groups:
+  📁 Operations
+     ├─ Dashboard → /dashboard
+     ├─ POS → /pos
+     ├─ Staff → /staff
+     ├─ Reservations → /reservations
+
+---
+
+### CASHIER
+Default Route: /pos
+Dashboard Variant: pos
+Workspace Title: Point of Sale
+Workspace Description: Process orders and payments efficiently.
+
+Nav Groups:
+  📁 POS
+     ├─ POS → /pos
+
+---
+
+### CHEF
+Default Route: /workspaces/chef
+Dashboard Variant: kds
+Workspace Title: Kitchen Hub
+Workspace Description: View orders, manage prep, and monitor kitchen operations.
+
+Nav Groups:
+  📁 Kitchen
+     ├─ Kitchen Display → /kds
+     ├─ Menu → /menu
+     ├─ Inventory → /inventory
+
+---
+
+### WAITER
+Default Route: /pos
+Dashboard Variant: pos
+Workspace Title: Table Service
+Workspace Description: Take orders and serve customers with ease.
+
+Nav Groups:
+  📁 Service
+     ├─ POS → /pos
+     ├─ Menu → /menu
+
+---
+
+### BARTENDER
+Default Route: /pos
+Dashboard Variant: pos
+Workspace Title: Bar Station
+Workspace Description: Manage drink orders and bar operations.
+
+Nav Groups:
+  📁 Bar
+     ├─ POS → /pos
+     ├─ Menu → /menu
+
+---
+
+### EVENT_MANAGER
+Default Route: /workspaces/event-manager
+Dashboard Variant: events
+Workspace Title: Events Center
+Workspace Description: Manage reservations, catering, and special events.
+
+Nav Groups:
+  📁 Events
+     ├─ Dashboard → /dashboard/events
+     ├─ Reservations → /reservations
+     ├─ Catering → /catering
+
+---
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## SUMMARY TABLE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+| Role | Default Route | Dashboard | Nav Groups |
+|------|---------------|-----------|------------|
+| OWNER | /workspaces/owner | full | Overview, Operations, Finance, Team, Settings |
+| MANAGER | /workspaces/manager | operational | Overview, Operations, Team, Reports |
+| ACCOUNTANT | /workspaces/accountant | finance | Finance |
+| PROCUREMENT | /workspaces/procurement | inventory | Procurement |
+| STOCK_MANAGER | /workspaces/stock-manager | inventory | Inventory |
+| SUPERVISOR | /workspaces/supervisor | operational | Operations |
+| CASHIER | /pos | pos | POS |
+| CHEF | /workspaces/chef | kds | Kitchen |
+| WAITER | /pos | pos | Service |
+| BARTENDER | /pos | pos | Bar |
+| EVENT_MANAGER | /workspaces/event-manager | events | Events |
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## VERIFICATION COMPLETE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Total Roles: 11
+All roles have defaultRoute: ✅
+All roles have navGroups: ✅

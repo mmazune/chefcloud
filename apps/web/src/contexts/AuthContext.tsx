@@ -10,6 +10,7 @@ import {
   LoginCredentials,
   PinLoginCredentials,
 } from '@/lib/auth';
+import { getDefaultRoute } from '@/config/roleCapabilities';
 
 interface AuthContextType {
   user: AuthUser | null;
@@ -62,9 +63,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Small delay to ensure cookie is fully set before navigation
       await new Promise(resolve => setTimeout(resolve, 100));
       
-      // Redirect to original page or dashboard
+      // M8.1: Role-based post-login routing
+      // Use explicit redirect if provided, otherwise route based on jobRole
       const redirect = router.query.redirect as string;
-      router.push(redirect || '/dashboard');
+      const defaultRoute = getDefaultRoute(userData.jobRole);
+      router.push(redirect || defaultRoute);
     } catch (err: any) {
       setError(err.message || 'Login failed');
       throw err;
@@ -83,9 +86,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Small delay to ensure cookie is fully set before navigation
       await new Promise(resolve => setTimeout(resolve, 100));
       
-      // Redirect to original page or dashboard
+      // M8.1: Role-based post-login routing
+      // Use explicit redirect if provided, otherwise route based on jobRole
       const redirect = router.query.redirect as string;
-      router.push(redirect || '/dashboard');
+      const defaultRoute = getDefaultRoute(userData.jobRole);
+      router.push(redirect || defaultRoute);
     } catch (err: any) {
       setError(err.message || 'PIN login failed');
       throw err;

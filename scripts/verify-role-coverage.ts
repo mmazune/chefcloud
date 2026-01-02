@@ -246,10 +246,12 @@ interface TestResult {
   email: string;
   roleLevel: string;
   role: string;
+  jobRole: string | null;
   org: string;
   loginSuccess: boolean;
   branchId: string | null;
   branchIdError?: string;
+  jobRoleError?: string;
   endpointResults: EndpointResult[];
 }
 
@@ -491,6 +493,7 @@ async function testRole(
     email,
     roleLevel,
     role,
+    jobRole: null,
     org,
     loginSuccess: false,
     branchId: null,
@@ -527,6 +530,7 @@ async function testRole(
     );
     const userData = meResponse.data;
     result.branchId = userData.branchId;
+    result.jobRole = userData.jobRole || null;
     orgId = userData.orgId;
 
     // Recreate client with orgId and branchId headers
@@ -538,7 +542,15 @@ async function testRole(
       console.log(`  ⚠️  ${result.branchIdError}`);
     }
 
-    console.log(`  ✅ /me successful - branchId: ${result.branchId || 'NULL'}, orgId: ${orgId}`);
+    // M8.1: Check jobRole is present for all demo users
+    if (!result.jobRole) {
+      result.jobRoleError = 'jobRole is NULL (demo user must have jobRole assigned)';
+      console.log(`  ⚠️  ${result.jobRoleError}`);
+    } else {
+      console.log(`  ✅ jobRole: ${result.jobRole}`);
+    }
+
+    console.log(`  ✅ /me successful - branchId: ${result.branchId || 'NULL'}, orgId: ${orgId}, jobRole: ${result.jobRole || 'NULL'}`);
   } catch (error: any) {
     console.error(`  ❌ /me failed:`, error.response?.data || error.message);
     result.endpointResults.push({
@@ -615,10 +627,15 @@ function formatRoleResult(roleResult: TestResult): string {
     `Email: ${roleResult.email}`,
     `Login: ${roleResult.loginSuccess ? '✅ SUCCESS' : '❌ FAILED'}`,
     `Branch ID: ${roleResult.branchId || 'NULL'}`,
+    `Job Role: ${roleResult.jobRole || 'NULL'}`,
   ];
 
   if (roleResult.branchIdError) {
     lines.push(`⚠️  ${roleResult.branchIdError}`);
+  }
+
+  if (roleResult.jobRoleError) {
+    lines.push(`⚠️  ${roleResult.jobRoleError}`);
   }
 
   lines.push('', 'Endpoint Tests:');
@@ -817,6 +834,21 @@ async function main() {
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     branchIdIssues.forEach((r) => {
       const issueLine = `  ⚠️  ${r.email}: ${r.branchIdError}`;
+      console.log(issueLine);
+      summaryLines.push(issueLine);
+    });
+    summaryLines.push('');
+  }
+
+  // M8.1: List jobRole issues
+  const jobRoleIssues = allResults.filter((r) => r.jobRoleError);
+  if (jobRoleIssues.length > 0) {
+    summaryLines.push('⚠️  JOB ROLE ISSUES:');
+    summaryLines.push('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('\n⚠️  JOB ROLE ISSUES:');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    jobRoleIssues.forEach((r) => {
+      const issueLine = `  ⚠️  ${r.email}: ${r.jobRoleError}`;
       console.log(issueLine);
       summaryLines.push(issueLine);
     });

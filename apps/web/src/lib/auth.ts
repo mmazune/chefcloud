@@ -20,6 +20,7 @@ export interface AuthUser {
   email: string;
   displayName: string;
   roleLevel: RoleLevel;
+  jobRole?: string; // M8.1: Job role for role-specific UX
   org: {
     id: string;
     name: string;
@@ -57,6 +58,7 @@ export interface LoginResponse {
     firstName: string;
     lastName: string;
     roleLevel: RoleLevel;
+    jobRole?: string; // M8.1: Job role for role-specific UX
     orgId: string;
     branchId?: string;
   };
@@ -122,6 +124,7 @@ export async function login(credentials: LoginCredentials): Promise<AuthUser> {
       email: user.email,
       displayName: `${user.firstName} ${user.lastName}`,
       roleLevel: user.roleLevel,
+      jobRole: user.jobRole, // M8.1: Include jobRole
       org: {
         id: user.orgId,
         name: '', // Will be populated by getCurrentUser
@@ -156,6 +159,7 @@ export async function pinLogin(credentials: PinLoginCredentials): Promise<AuthUs
     email: user.email,
     displayName: `${user.firstName} ${user.lastName}`,
     roleLevel: user.roleLevel,
+    jobRole: user.jobRole, // M8.1: Include jobRole
     org: {
       id: user.orgId,
       name: '', // Will be populated by getCurrentUser
@@ -192,6 +196,7 @@ export async function getCurrentUser(): Promise<AuthUser> {
     email: data.email,
     displayName: `${data.firstName} ${data.lastName}`,
     roleLevel: data.roleLevel,
+    jobRole: data.jobRole ?? undefined, // M8.1: Include jobRole
     org: {
       id: data.org.id,
       name: data.org.name,
