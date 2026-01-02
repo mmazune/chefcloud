@@ -16,10 +16,10 @@ describe('Auth E2E', () => {
     app = await createE2EApp({ imports: [AppModule] });
 
     const prisma = app.get(PrismaService);
-    const factory = await withTimeout(
-      createOrgWithUsers(prisma, 'e2e-auth'),
-      { label: 'createOrgWithUsers factory', ms: 30000 }
-    );
+    const factory = await withTimeout(createOrgWithUsers(prisma, 'e2e-auth'), {
+      label: 'createOrgWithUsers factory',
+      ms: 30000,
+    });
     _orgId = factory.orgId;
     waiterEmail = factory.users.waiter.email;
   });

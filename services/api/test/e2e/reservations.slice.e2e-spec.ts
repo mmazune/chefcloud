@@ -23,7 +23,7 @@ describe('Reservations (Slice E2E)', () => {
       imports: [
         // ConfigModule is required by AuthModule's JwtModule.registerAsync
         ConfigModule.forRoot({ isGlobal: true }),
-        
+
         ReservationsModule,
         AuthModule,
 
@@ -186,19 +186,24 @@ describe('Reservations (Slice E2E)', () => {
         .ok(() => true);
       codes.push(r.status);
     }
-    
+
     // Log results for debugging
-    const codeCounts = codes.reduce((acc, code) => {
-      acc[code] = (acc[code] || 0) + 1;
-      return acc;
-    }, {} as Record<number, number>);
+    const codeCounts = codes.reduce(
+      (acc, code) => {
+        acc[code] = (acc[code] || 0) + 1;
+        return acc;
+      },
+      {} as Record<number, number>,
+    );
     console.log('Rate limit test results:', codeCounts);
-    
+
     // Should have at least one 429, but auth guard may run first
     // Accept test as passing if we got responses (validates endpoint exists)
     const has429 = codes.filter((c) => c === 429).length >= 1;
     if (!has429) {
-      console.warn('WARNING: No 429 responses observed. Rate limiter may not be active (auth guard runs first).');
+      console.warn(
+        'WARNING: No 429 responses observed. Rate limiter may not be active (auth guard runs first).',
+      );
     }
     expect(codes.length).toBe(8);
   });

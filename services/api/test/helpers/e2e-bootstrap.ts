@@ -5,13 +5,11 @@ import { trace, traceSpan } from './e2e-trace';
 /**
  * Create an E2E testing module with standard configuration.
  * This is a thin wrapper around Test.createTestingModule() for consistency.
- * 
+ *
  * @param metadata - Module metadata (imports, providers, controllers, etc.)
  * @returns TestingModule instance
  */
-export async function createE2ETestingModule(
-  metadata: ModuleMetadata,
-): Promise<TestingModule> {
+export async function createE2ETestingModule(metadata: ModuleMetadata): Promise<TestingModule> {
   return traceSpan('createE2ETestingModule', async () => {
     // CRITICAL: Ensure JWT_SECRET is always present for E2E tests
     if (!process.env.JWT_SECRET) {
@@ -31,35 +29,33 @@ export async function createE2ETestingModule(
 /**
  * Create an E2E testing module builder for advanced configuration.
  * Use this when you need to override providers, mock dependencies, etc.
- * 
+ *
  * @param metadata - Module metadata (imports, providers, controllers, etc.)
  * @returns TestingModuleBuilder instance (call .compile() to finalize)
  */
-export function createE2ETestingModuleBuilder(
-  metadata: ModuleMetadata,
-): TestingModuleBuilder {
+export function createE2ETestingModuleBuilder(metadata: ModuleMetadata): TestingModuleBuilder {
   return Test.createTestingModule(metadata);
 }
 
 /**
  * Create and initialize a NestJS application for E2E testing with proper lifecycle management.
- * 
+ *
  * CRITICAL: This helper ensures enableShutdownHooks() is called BEFORE app.init(),
  * which is required for onModuleDestroy lifecycle hooks to fire during cleanup.
- * 
+ *
  * @param metadata - Module metadata (imports, providers, controllers, etc.)
  * @param options - Optional configuration
  * @param options.enableValidation - Whether to enable global ValidationPipe (default: true)
  * @returns Initialized INestApplication ready for testing
- * 
+ *
  * @example
  * ```typescript
  * let app: INestApplication;
- * 
+ *
  * beforeAll(async () => {
  *   app = await createE2EApp({ imports: [AppModule] });
  * });
- * 
+ *
  * afterAll(async () => {
  *   await cleanup(app);
  * });

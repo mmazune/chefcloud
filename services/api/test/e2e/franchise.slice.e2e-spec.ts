@@ -36,12 +36,26 @@ class TestFranchiseController {
     if (!period || !/^\d{4}-\d{2}$/.test(period)) {
       return { error: 'Invalid period format. Use YYYY-MM' };
     }
-    
+
     // Return mock data simulating cached response
     return {
       data: [
-        { branchId: 'branch_1', branchName: 'Downtown', sales: 150000, grossMargin: 0.65, wastePercent: 2.1, sla: 0.98 },
-        { branchId: 'branch_2', branchName: 'Uptown', sales: 120000, grossMargin: 0.62, wastePercent: 3.2, sla: 0.95 },
+        {
+          branchId: 'branch_1',
+          branchName: 'Downtown',
+          sales: 150000,
+          grossMargin: 0.65,
+          wastePercent: 2.1,
+          sla: 0.98,
+        },
+        {
+          branchId: 'branch_2',
+          branchName: 'Uptown',
+          sales: 120000,
+          grossMargin: 0.62,
+          wastePercent: 3.2,
+          sla: 0.95,
+        },
       ],
       cached: false,
     };
@@ -53,12 +67,24 @@ class TestFranchiseController {
     if (!period || !/^\d{4}-\d{2}$/.test(period)) {
       return { error: 'Invalid period format. Use YYYY-MM' };
     }
-    
+
     // Return mock rankings
     return {
       data: [
-        { branchId: 'branch_1', branchName: 'Downtown', score: 95, rank: 1, metrics: { revenue: 150000, margin: 0.65, waste: 2.1, sla: 0.98 } },
-        { branchId: 'branch_2', branchName: 'Uptown', score: 88, rank: 2, metrics: { revenue: 120000, margin: 0.62, waste: 3.2, sla: 0.95 } },
+        {
+          branchId: 'branch_1',
+          branchName: 'Downtown',
+          score: 95,
+          rank: 1,
+          metrics: { revenue: 150000, margin: 0.65, waste: 2.1, sla: 0.98 },
+        },
+        {
+          branchId: 'branch_2',
+          branchName: 'Uptown',
+          score: 88,
+          rank: 2,
+          metrics: { revenue: 120000, margin: 0.62, waste: 3.2, sla: 0.95 },
+        },
       ],
       cached: false,
     };
@@ -70,12 +96,26 @@ class TestFranchiseController {
     if (!period || !/^\d{4}-\d{2}$/.test(period)) {
       return { error: 'Invalid period format. Use YYYY-MM' };
     }
-    
+
     // Return mock budgets
     return {
       data: [
-        { branchId: 'branch_1', period: period, revenueTarget: 160000, cogsTarget: 56000, expenseTarget: 40000, actual: { revenue: 150000, cogs: 52500, expense: 38000 } },
-        { branchId: 'branch_2', period: period, revenueTarget: 130000, cogsTarget: 45500, expenseTarget: 35000, actual: { revenue: 120000, cogs: 45600, expense: 34000 } },
+        {
+          branchId: 'branch_1',
+          period: period,
+          revenueTarget: 160000,
+          cogsTarget: 56000,
+          expenseTarget: 40000,
+          actual: { revenue: 150000, cogs: 52500, expense: 38000 },
+        },
+        {
+          branchId: 'branch_2',
+          period: period,
+          revenueTarget: 130000,
+          cogsTarget: 45500,
+          expenseTarget: 35000,
+          actual: { revenue: 120000, cogs: 45600, expense: 34000 },
+        },
       ],
       cached: false,
     };
@@ -83,15 +123,32 @@ class TestFranchiseController {
 
   @Get('forecast/items')
   @Roles('L4', 'L5')
-  async getForecastItems(@Query('period') period: string, @Query('method') _method: string): Promise<any> {
+  async getForecastItems(
+    @Query('period') period: string,
+    @Query('method') _method: string,
+  ): Promise<any> {
     if (!period || !/^\d{4}-\d{2}$/.test(period)) {
       return { error: 'Invalid period format. Use YYYY-MM' };
     }
-    
+
     // Return mock forecast data
     return [
-      { itemId: 'item_001', itemName: 'Tomatoes', forecasts: [{ date: '2024-11-15', predictedQty: 25 }, { date: '2024-11-16', predictedQty: 28 }] },
-      { itemId: 'item_002', itemName: 'Onions', forecasts: [{ date: '2024-11-15', predictedQty: 15 }, { date: '2024-11-16', predictedQty: 18 }] },
+      {
+        itemId: 'item_001',
+        itemName: 'Tomatoes',
+        forecasts: [
+          { date: '2024-11-15', predictedQty: 25 },
+          { date: '2024-11-16', predictedQty: 28 },
+        ],
+      },
+      {
+        itemId: 'item_002',
+        itemName: 'Onions',
+        forecasts: [
+          { date: '2024-11-15', predictedQty: 15 },
+          { date: '2024-11-16', predictedQty: 18 },
+        ],
+      },
     ];
   }
 
@@ -116,7 +173,7 @@ describe('Franchise (Slice E2E)', () => {
         imports: [
           // ConfigModule is required by AuthModule's JwtModule.registerAsync
           ConfigModule.forRoot({ isGlobal: true }),
-          
+
           ThrottlerTestModule,
           PrismaTestModule,
           AuthModule, // T1.9: Provides JWT strategy for @UseGuards(AuthGuard('jwt'))
@@ -127,7 +184,7 @@ describe('Franchise (Slice E2E)', () => {
         .overrideProvider(PrismaService)
         .useClass(TestPrismaService)
         .compile(),
-      { label: 'franchise.slice module compilation', ms: 30000 }
+      { label: 'franchise.slice module compilation', ms: 30000 },
     );
 
     app = moduleRef.createNestApplication();
@@ -204,7 +261,7 @@ describe('Franchise (Slice E2E)', () => {
     const res = await request(app.getHttpServer())
       .post('/franchise-test/invalidate')
       .ok(() => true);
-    
+
     // Accept 200 (success) or 201 (created)
     expect([200, 201]).toContain(res.status);
     if ([200, 201].includes(res.status)) {

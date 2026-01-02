@@ -2,17 +2,17 @@ import type { INestApplication } from '@nestjs/common';
 
 /**
  * Universal E2E Test Cleanup
- * 
+ *
  * Ensures proper shutdown of NestJS app and all connections.
- * 
+ *
  * IMPORTANT: This assumes app.enableShutdownHooks() was called BEFORE app.init().
  * Use the createE2EApp() helper from e2e-bootstrap.ts to ensure proper setup.
- * 
+ *
  * Usage in tests:
  *   import { cleanup } from '../helpers/cleanup';
- * 
+ *
  *   let app: INestApplication;
- *   
+ *
  *   afterAll(async () => {
  *     await cleanup(app);
  *   });

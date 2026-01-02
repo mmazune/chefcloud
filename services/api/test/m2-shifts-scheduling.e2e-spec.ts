@@ -1,6 +1,6 @@
 /**
  * M2-SHIFTS: E2E tests for shift templates, schedules, and assignments
- * 
+ *
  * Uses seeded DEMO_TAPAS data for isolation.
  * Tests read operations + validation only (no writes to seeded data).
  */
@@ -27,7 +27,7 @@ describe('M2 - Shifts, Scheduling & Stock-Count Gate (E2E)', () => {
 
     // Use seeded Tapas org
     await requireTapasOrg(prisma);
-    
+
     const org = await prisma.org.findFirst({
       where: { slug: 'tapas-demo' },
       include: { branches: true },
@@ -62,23 +62,19 @@ describe('M2 - Shifts, Scheduling & Stock-Count Gate (E2E)', () => {
     });
 
     it('GET /shifts/templates should require auth', async () => {
-      const res = await request(app.getHttpServer())
-        .get('/shifts/templates')
-        .query({ branchId });
+      const res = await request(app.getHttpServer()).get('/shifts/templates').query({ branchId });
 
       // 401 = route exists and requires auth, 404 = route doesn't exist
       expect([401, 404]).toContain(res.status);
     });
 
     it('POST /shifts/templates should require auth', async () => {
-      const res = await request(app.getHttpServer())
-        .post('/shifts/templates')
-        .send({
-          name: 'Morning Shift',
-          branchId,
-          startTime: '06:00',
-          endTime: '14:00',
-        });
+      const res = await request(app.getHttpServer()).post('/shifts/templates').send({
+        name: 'Morning Shift',
+        branchId,
+        startTime: '06:00',
+        endTime: '14:00',
+      });
 
       // 401 = route exists and requires auth, 404 = route doesn't exist
       expect([401, 404]).toContain(res.status);
@@ -116,14 +112,12 @@ describe('M2 - Shifts, Scheduling & Stock-Count Gate (E2E)', () => {
     });
 
     it('POST /shifts/assignments should require auth', async () => {
-      const res = await request(app.getHttpServer())
-        .post('/shifts/assignments')
-        .send({
-          branchId,
-          userId: 'fake-user-id',
-          date: new Date().toISOString(),
-          shiftType: 'MORNING',
-        });
+      const res = await request(app.getHttpServer()).post('/shifts/assignments').send({
+        branchId,
+        userId: 'fake-user-id',
+        date: new Date().toISOString(),
+        shiftType: 'MORNING',
+      });
 
       // 401 = route exists and requires auth, 404 = route doesn't exist
       expect([401, 404]).toContain(res.status);

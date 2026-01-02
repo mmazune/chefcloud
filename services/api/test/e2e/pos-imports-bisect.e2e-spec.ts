@@ -28,10 +28,9 @@ describe('PosModule imports bisect', () => {
           AccountingModule,
         ],
       }),
-      { label: 'PosModule imports compilation', ms: 30000 }
+      { label: 'PosModule imports compilation', ms: 30000 },
     );
     await moduleRef.init();
     await cleanup(moduleRef);
   });
 });
-

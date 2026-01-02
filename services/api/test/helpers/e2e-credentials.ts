@@ -1,12 +1,12 @@
 /**
  * E2E Test Credentials - Single Source of Truth
- * 
+ *
  * MUST match prisma/demo/constants.ts seed data exactly.
  * All demo users share the same password: Demo#123
- * 
+ *
  * DO NOT hardcode credentials in individual test files.
  * Import from this file instead.
- * 
+ *
  * @see services/api/prisma/demo/constants.ts
  * @see services/api/prisma/demo/seedDemo.ts
  */

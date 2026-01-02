@@ -5,7 +5,7 @@ import { withTimeout } from '../helpers/with-timeout';
 export async function waitFor(path: string, timeoutMs = 15000): Promise<void> {
   let lastError: Error | null = null;
   let attempts = 0;
-  
+
   const pollOperation = async () => {
     const started = Date.now();
     while (Date.now() - started < timeoutMs) {
@@ -26,7 +26,7 @@ export async function waitFor(path: string, timeoutMs = 15000): Promise<void> {
     }
     throw new Error(`Timeout waiting for ${path} after ${attempts} attempts`);
   };
-  
+
   return withTimeout(pollOperation(), {
     label: `waitFor(${path})`,
     ms: timeoutMs,

@@ -1,9 +1,9 @@
 /**
  * E22-s2: Franchise APIs (e2e)
- * 
+ *
  * Tests franchise functionality using seeded DEMO_CAFESSERIE_FRANCHISE dataset.
  * Cafesserie has 4 branches configured for franchise features.
- * 
+ *
  * Key endpoints:
  * - GET /franchise/rankings - Branch performance rankings
  * - GET /franchise/budgets - Budget allocations
@@ -39,7 +39,7 @@ describe('E22-s2: Franchise APIs (e2e)', () => {
     });
     if (!org) throw new Error('Cafesserie org not found after precondition check');
     orgId = org.id;
-    branchIds = org.branches.map(b => b.id);
+    branchIds = org.branches.map((b) => b.id);
 
     // Login as owner
     const login = await loginAs(app, 'owner', 'cafesserie');
@@ -61,7 +61,7 @@ describe('E22-s2: Franchise APIs (e2e)', () => {
 
       // Response could be array, object with data, or rankings property
       const body = response.body;
-      const isValidResponse = 
+      const isValidResponse =
         Array.isArray(body) ||
         Array.isArray(body.data) ||
         Array.isArray(body.rankings) ||
@@ -87,7 +87,7 @@ describe('E22-s2: Franchise APIs (e2e)', () => {
 
       // Response could be array, object with data, or budgets property
       const body = response.body;
-      const isValidResponse = 
+      const isValidResponse =
         Array.isArray(body) ||
         Array.isArray(body.data) ||
         Array.isArray(body.budgets) ||
@@ -171,4 +171,3 @@ describe('E22-s2: Franchise APIs (e2e)', () => {
     });
   });
 });
-

@@ -349,14 +349,32 @@ export async function createEvent(prisma: PrismaClient, orgId: string, branchId:
  * Create chart of accounts for accounting tests
  */
 export async function createChartOfAccounts(prisma: PrismaClient, orgId: string) {
+  // Mirror the 18 accounts from demo seed for consistent testing
   const accounts = [
-    { code: '1100', name: 'Cash', type: 'ASSET' },
-    { code: '1200', name: 'Accounts Receivable', type: 'ASSET' },
-    { code: '2100', name: 'Accounts Payable', type: 'LIABILITY' },
-    { code: '3000', name: 'Equity', type: 'EQUITY' },
-    { code: '4000', name: 'Sales Revenue', type: 'REVENUE' },
-    { code: '5000', name: 'Cost of Goods Sold', type: 'COGS' },
-    { code: '6000', name: 'Operating Expenses', type: 'EXPENSE' },
+    // ASSETS (1xxx)
+    { code: '1000', name: 'Cash on Hand', type: 'ASSET' },
+    { code: '1010', name: 'Cash in Bank', type: 'ASSET' },
+    { code: '1020', name: 'Petty Cash', type: 'ASSET' },
+    { code: '1100', name: 'Accounts Receivable', type: 'ASSET' },
+    { code: '1200', name: 'Inventory - Food', type: 'ASSET' },
+    { code: '1210', name: 'Inventory - Beverages', type: 'ASSET' },
+    { code: '1500', name: 'Equipment', type: 'ASSET' },
+    // LIABILITIES (2xxx)
+    { code: '2000', name: 'Accounts Payable', type: 'LIABILITY' },
+    { code: '2100', name: 'Accrued Wages', type: 'LIABILITY' },
+    { code: '2200', name: 'Sales Tax Payable', type: 'LIABILITY' },
+    // EQUITY (3xxx)
+    { code: '3000', name: "Owner's Equity", type: 'EQUITY' },
+    { code: '3100', name: 'Retained Earnings', type: 'EQUITY' },
+    // REVENUE (4xxx)
+    { code: '4000', name: 'Food Sales', type: 'REVENUE' },
+    { code: '4100', name: 'Beverage Sales', type: 'REVENUE' },
+    // COGS (5xxx)
+    { code: '5000', name: 'Cost of Goods Sold - Food', type: 'COGS' },
+    { code: '5100', name: 'Cost of Goods Sold - Beverages', type: 'COGS' },
+    // EXPENSES (6xxx)
+    { code: '6000', name: 'Wages & Salaries', type: 'EXPENSE' },
+    { code: '6400', name: 'Rent Expense', type: 'EXPENSE' },
   ];
 
   const created = [];

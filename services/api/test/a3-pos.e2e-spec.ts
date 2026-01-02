@@ -19,9 +19,9 @@ describe('A3 POS Core (e2e)', () => {
     const prisma = app.get<PrismaService>(PrismaService);
 
     // Preconditions: require Burger, Fries menu items and floor plan for POS flow
-    await requireMenuItems(prisma.client, { 
-      orgSlug: DEMO_DATASETS.DEMO_TAPAS.slug, 
-      itemNames: ['Burger', 'Fries'] 
+    await requireMenuItems(prisma.client, {
+      orgSlug: DEMO_DATASETS.DEMO_TAPAS.slug,
+      itemNames: ['Burger', 'Fries'],
     });
     await requireFloorPlan(prisma.client, { orgSlug: DEMO_DATASETS.DEMO_TAPAS.slug });
 

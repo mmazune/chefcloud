@@ -24,7 +24,7 @@ describe('E37 - Promotions & Pricing Engine (e2e)', () => {
 
     // Use seeded Tapas org and branch
     await requireTapasOrg(prisma);
-    
+
     const org = await prisma.org.findFirst({
       where: { slug: 'tapas-demo' },
     });
@@ -60,11 +60,11 @@ describe('E37 - Promotions & Pricing Engine (e2e)', () => {
   afterAll(async () => {
     // Clean up only the promotion created in tests (not seeded data)
     if (promotionId) {
-      await prisma.promotionEffect.deleteMany({ 
-        where: { promotionId } 
+      await prisma.promotionEffect.deleteMany({
+        where: { promotionId },
       });
-      await prisma.promotion.deleteMany({ 
-        where: { id: promotionId } 
+      await prisma.promotion.deleteMany({
+        where: { id: promotionId },
       });
     }
     await cleanup(app);

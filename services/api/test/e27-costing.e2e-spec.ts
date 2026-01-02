@@ -1,6 +1,6 @@
 /**
  * E27: Costing E2E Tests
- * 
+ *
  * Uses seeded DEMO_TAPAS data for isolation.
  * Tests recipe costing, menu item costing, and cost analysis endpoints.
  */
@@ -28,7 +28,7 @@ describe('E27: Costing (E2E)', () => {
 
     // Use seeded Tapas org
     await requireTapasOrg(prisma);
-    
+
     const org = await prisma.org.findFirst({
       where: { slug: 'tapas-demo' },
       include: { branches: true },
@@ -79,9 +79,7 @@ describe('E27: Costing (E2E)', () => {
     });
 
     it('should require auth', async () => {
-      const res = await request(app.getHttpServer())
-        .get('/costing/menu-items')
-        .query({ branchId });
+      const res = await request(app.getHttpServer()).get('/costing/menu-items').query({ branchId });
 
       // 401 = route exists and requires auth, 404 = route doesn't exist
       expect([401, 404]).toContain(res.status);

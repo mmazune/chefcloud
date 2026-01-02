@@ -29,7 +29,7 @@ describe('E24 Subscriptions & Dev Portal (e2e)', () => {
             planCode: 'BASIC',
           })
           .expect(201),
-        { label: 'POST /dev/orgs', ms: 30000 }
+        { label: 'POST /dev/orgs', ms: 30000 },
       );
 
       expect(response.body).toHaveProperty('org');
@@ -89,13 +89,13 @@ describe('E24 Subscriptions & Dev Portal (e2e)', () => {
       // First create a non-super dev admin
       const { PrismaClient } = await import('@chefcloud/db');
       const prisma = new PrismaClient();
-      
+
       await prisma.devAdmin.upsert({
         where: { email: 'regulardev@chefcloud.local' },
         create: { email: 'regulardev@chefcloud.local', isSuper: false },
         update: {},
       });
-      
+
       await prisma.$disconnect();
 
       await request(app.getHttpServer())

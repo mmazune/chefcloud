@@ -26,7 +26,7 @@ describe('Dev-Portal (Slice E2E) — Plan-aware limits + HMAC', () => {
         imports: [
           // ConfigModule is required by AuthModule's JwtModule.registerAsync
           ConfigModule.forRoot({ isGlobal: true }),
-          
+
           // minimal shared deps
           AuthModule,
 
@@ -40,7 +40,7 @@ describe('Dev-Portal (Slice E2E) — Plan-aware limits + HMAC', () => {
         .overrideProvider(PrismaService)
         .useClass(TestPrismaService)
         .compile(),
-      { label: 'devportal.slice module compilation', ms: 30000 }
+      { label: 'devportal.slice module compilation', ms: 30000 },
     );
 
     app = modRef.createNestApplication();
@@ -61,10 +61,7 @@ describe('Dev-Portal (Slice E2E) — Plan-aware limits + HMAC', () => {
   });
 
   it('GET /dev/keys -> 200 with token', async () => {
-    const res = await request(app.getHttpServer())
-      .get('/dev/keys')
-      .set(AUTH)
-      .expect(200);
+    const res = await request(app.getHttpServer()).get('/dev/keys').set(AUTH).expect(200);
     expect(Array.isArray(res.body)).toBe(true);
     expect(res.body.length).toBeGreaterThan(0);
   });
@@ -111,11 +108,11 @@ describe('Dev-Portal (Slice E2E) — Plan-aware limits + HMAC', () => {
         .ok(() => true);
       freeCodes.push(r.body?.statusCode ?? r.status);
     }
-    
+
     console.log('Free plan codes:', freeCodes);
     // Free plan should hit 429 after exhausting the limit (5 requests)
     // Since we make 7 requests, at least some should be 429
-    const has429 = freeCodes.filter(c => c === 429).length >= 1;
+    const has429 = freeCodes.filter((c) => c === 429).length >= 1;
     expect(has429).toBe(true);
 
     // PRO plan burst (should be all 200s or auth errors given high limit)
@@ -127,12 +124,12 @@ describe('Dev-Portal (Slice E2E) — Plan-aware limits + HMAC', () => {
         .ok(() => true);
       proCodes.push(r.body?.statusCode ?? r.status);
     }
-    
+
     console.log('Pro plan codes:', proCodes);
     // Pro should not hit 429 in this burst (limit is 50)
     // But accept auth failures
-    expect(proCodes.filter(c => c === 429).length).toBe(0);
-    expect(proCodes.every(c => c === 200)).toBe(true);
+    expect(proCodes.filter((c) => c === 429).length).toBe(0);
+    expect(proCodes.every((c) => c === 200)).toBe(true);
   });
 
   // --- Webhook HMAC (valid, bad, missing) ---
@@ -183,7 +180,7 @@ describe('Dev-Portal (Slice E2E) — Plan-aware limits + HMAC', () => {
       .get('/dev/keys')
       .set({ ...AUTH, 'x-plan': 'pro' }) // Use pro plan to avoid rate limits
       .expect(200);
-    
+
     expect(Array.isArray(res.body)).toBe(true);
     const keys = res.body;
     expect(keys.some((k: any) => k.plan === 'free')).toBe(true);
@@ -196,7 +193,7 @@ describe('Dev-Portal (Slice E2E) — Plan-aware limits + HMAC', () => {
       .set({ ...AUTH, 'x-plan': 'pro' }) // Use pro plan to avoid rate limits
       .send({ label: 'webhook service', plan: 'pro' })
       .expect(201);
-    
+
     expect(res.body?.plan).toBe('pro');
     expect(res.body?.active).toBe(true);
   });

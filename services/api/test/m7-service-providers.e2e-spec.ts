@@ -27,7 +27,7 @@ describe('M7: Service Providers, Budgets & Cost Insights (e2e)', () => {
 
     // Use seeded Tapas org - requireTapasOrg just validates, returns void
     await requireTapasOrg(prisma);
-    
+
     // Get the org directly
     const foundOrg = await prisma.org.findFirst({
       where: { slug: 'tapas-demo' },
@@ -77,13 +77,11 @@ describe('M7: Service Providers, Budgets & Cost Insights (e2e)', () => {
     });
 
     it('POST /service-providers should require auth', async () => {
-      const res = await request(app.getHttpServer())
-        .post('/service-providers')
-        .send({
-          name: 'Test Provider',
-          category: 'RENT',
-          branchId: branch.id,
-        });
+      const res = await request(app.getHttpServer()).post('/service-providers').send({
+        name: 'Test Provider',
+        category: 'RENT',
+        branchId: branch.id,
+      });
 
       expect(res.status).toBe(401);
     });

@@ -22,7 +22,7 @@ describe('SSE /stream/kpis Security (E26)', () => {
 
     // Use seeded Tapas org
     await requireTapasOrg(prisma);
-    
+
     const org = await prisma.org.findFirst({
       where: { slug: 'tapas-demo' },
     });
@@ -94,7 +94,7 @@ describe('SSE /stream/kpis Security (E26)', () => {
             }
           }, 2000);
         }),
-        { label: 'SSE Manager role test', ms: 5000 }
+        { label: 'SSE Manager role test', ms: 5000 },
       );
     });
 
@@ -125,7 +125,7 @@ describe('SSE /stream/kpis Security (E26)', () => {
             }
           }, 2000);
         }),
-        { label: 'SSE Owner role test', ms: 5000 }
+        { label: 'SSE Owner role test', ms: 5000 },
       );
     });
   });

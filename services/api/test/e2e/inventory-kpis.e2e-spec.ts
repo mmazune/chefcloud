@@ -13,7 +13,7 @@ describe('InventoryModule + KpisModule test', () => {
       createE2ETestingModule({
         imports: [CacheModule, InventoryModule, KpisModule],
       }),
-      { label: 'Inventory+KPIs module compilation', ms: 30000 }
+      { label: 'Inventory+KPIs module compilation', ms: 30000 },
     );
     await moduleRef.init();
     await moduleRef.close();

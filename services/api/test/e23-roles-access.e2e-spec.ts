@@ -27,49 +27,41 @@ describe('E23 Roles & Platform Access (e2e)', () => {
 
     // Login as manager (L4) to access /access/matrix
     const managerRes = await withTimeout(
-      request(app.getHttpServer())
-        .post('/auth/login')
-        .send({
-          email: E2E_USERS.manager.email,
-          password: E2E_USERS.manager.password,
-        }),
-      { label: 'manager login', ms: 15000 }
+      request(app.getHttpServer()).post('/auth/login').send({
+        email: E2E_USERS.manager.email,
+        password: E2E_USERS.manager.password,
+      }),
+      { label: 'manager login', ms: 15000 },
     );
     managerToken = managerRes.body.access_token;
 
     // Login as procurement (L3)
     const procurementRes = await withTimeout(
-      request(app.getHttpServer())
-        .post('/auth/login')
-        .send({
-          email: E2E_USERS.procurement.email,
-          password: E2E_USERS.procurement.password,
-        }),
-      { label: 'procurement login', ms: 15000 }
+      request(app.getHttpServer()).post('/auth/login').send({
+        email: E2E_USERS.procurement.email,
+        password: E2E_USERS.procurement.password,
+      }),
+      { label: 'procurement login', ms: 15000 },
     );
     procurementToken = procurementRes.body.access_token;
 
     // Login as supervisor (L2) - using supervisor instead of non-existent ticketmaster
     const ticketMasterRes = await withTimeout(
-      request(app.getHttpServer())
-        .post('/auth/login')
-        .send({
-          email: E2E_USERS.supervisor.email,
-          password: E2E_USERS.supervisor.password,
-        }),
-      { label: 'supervisor login', ms: 15000 }
+      request(app.getHttpServer()).post('/auth/login').send({
+        email: E2E_USERS.supervisor.email,
+        password: E2E_USERS.supervisor.password,
+      }),
+      { label: 'supervisor login', ms: 15000 },
     );
     ticketMasterToken = ticketMasterRes.body.access_token;
 
     // Login as waiter (L1)
     const waiterRes = await withTimeout(
-      request(app.getHttpServer())
-        .post('/auth/login')
-        .send({
-          email: E2E_USERS.waiter.email,
-          password: E2E_USERS.waiter.password,
-        }),
-      { label: 'waiter login', ms: 15000 }
+      request(app.getHttpServer()).post('/auth/login').send({
+        email: E2E_USERS.waiter.email,
+        password: E2E_USERS.waiter.password,
+      }),
+      { label: 'waiter login', ms: 15000 },
     );
     waiterToken = waiterRes.body.access_token;
   });
@@ -175,10 +167,7 @@ describe('E23 Roles & Platform Access (e2e)', () => {
         WAITER: { desktop: true, web: true, mobile: true },
       };
 
-      await request(app.getHttpServer())
-        .patch('/access/matrix')
-        .send(updates)
-        .expect(401);
+      await request(app.getHttpServer()).patch('/access/matrix').send(updates).expect(401);
     });
   });
 

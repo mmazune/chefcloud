@@ -1,10 +1,10 @@
 /**
  * Multi-Tenant Isolation E2E Tests
- * 
+ *
  * Tests cross-org data isolation using seeded demo datasets:
  * - Org A: DEMO_TAPAS (tapas-demo)
  * - Org B: DEMO_CAFESSERIE (cafesserie-demo)
- * 
+ *
  * Verifies that users from one org cannot access data from another org.
  */
 import { INestApplication } from '@nestjs/common';
@@ -142,7 +142,7 @@ describe('Multi-Tenant Isolation (E2E)', () => {
         .expect(200);
 
       expect(Array.isArray(response.body.data || response.body)).toBe(true);
-      
+
       const items = response.body.data || response.body;
       // Should not see any org B items
       const orgBItems = items.filter((item: any) => item.orgId === orgBId);
@@ -157,7 +157,7 @@ describe('Multi-Tenant Isolation (E2E)', () => {
         .expect(200);
 
       expect(Array.isArray(response.body.data || response.body)).toBe(true);
-      
+
       const items = response.body.data || response.body;
       // Should not see any org A items
       const orgAItems = items.filter((item: any) => item.orgId === orgAId);

@@ -1,6 +1,6 @@
 /**
  * JWT Token Generation Smoke Test
- * 
+ *
  * Proves that JWT_SECRET is properly configured in E2E environment
  * and that JwtService can sign/verify tokens.
  */

@@ -1,6 +1,6 @@
 /**
  * Badge Revocation E2E Tests
- * 
+ *
  * Uses seeded DEMO_TAPAS data for isolation.
  * Tests badge validation, revocation, and security endpoints.
  */
@@ -27,7 +27,7 @@ describe('Badge Revocation (E2E)', () => {
 
     // Use seeded Tapas org
     await requireTapasOrg(prisma);
-    
+
     const org = await prisma.org.findFirst({
       where: { slug: 'tapas-demo' },
       include: { branches: true },
@@ -57,9 +57,7 @@ describe('Badge Revocation (E2E)', () => {
     });
 
     it('GET /badges should require auth', async () => {
-      await request(app.getHttpServer())
-        .get('/badges')
-        .expect(401);
+      await request(app.getHttpServer()).get('/badges').expect(401);
     });
   });
 

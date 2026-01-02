@@ -21,7 +21,7 @@ describe('E26-s1: Live KPI Streaming (SSE)', () => {
 
     // Use seeded Tapas org and branch
     await requireTapasOrg(prisma);
-    
+
     const org = await prisma.org.findFirst({
       where: { slug: 'tapas-demo' },
     });
