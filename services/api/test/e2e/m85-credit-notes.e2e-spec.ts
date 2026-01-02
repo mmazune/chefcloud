@@ -7,11 +7,11 @@
 
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
-import { AppModule } from '../src/app.module';
-import { createE2EApp } from './helpers/e2e-bootstrap';
-import { cleanup } from './helpers/cleanup';
-import { TAPAS_CREDENTIALS, DEMO_DATASETS } from './helpers/e2e-credentials';
-import { PrismaService } from '../src/prisma.service';
+import { AppModule } from '../../src/app.module';
+import { createE2EApp } from '../helpers/e2e-bootstrap';
+import { cleanup } from '../helpers/cleanup';
+import { TAPAS_CREDENTIALS, DEMO_DATASETS } from '../helpers/e2e-credentials';
+import { PrismaService } from '../../src/prisma.service';
 
 describe('M8.5 Credit Notes (e2e)', () => {
   let app: INestApplication;
