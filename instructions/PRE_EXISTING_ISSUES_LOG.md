@@ -176,6 +176,71 @@ test/webhooks/replay.validate.ts
 
 ---
 
+### PRE-005: M8.3 PaymentMethodMapping Enum Mismatch
+
+| Field | Value |
+|-------|-------|
+| **ID** | PRE-005 |
+| **Category** | test-error |
+| **First Seen** | 2026-01-02 |
+| **Command** | `timeout 600 pnpm jest --config ./test/jest-e2e.json --testPathPattern='accounting-m83' --forceExit` |
+| **Impact** | Medium |
+| **Suggested Owner** | M8.3 / Finance Module |
+| **Status** | OPEN |
+
+**Summary**: M8.3 AP/AR E2E test uses `BANK` but the PaymentMethod enum value is `BANK_TRANSFER`
+
+**Error**:
+```
+Invalid value for argument `method`. Expected PaymentMethod.
+  at prisma.client.paymentMethodMapping.findUnique()
+  
+  method: "BANK"   ← Invalid
+  Expected: BANK_TRANSFER
+```
+
+**Affected Test**:
+- `test/e2e/accounting-m83-ap-ar.e2e-spec.ts` line 157
+- Test: "AC-03: vendor payment creates POSTED journal entry"
+
+**Root Cause**: Test data uses `BANK` but `PaymentMethod` enum defines `BANK_TRANSFER`
+
+**Suggested Fix**: Update test to use `BANK_TRANSFER` instead of `BANK`
+
+---
+
+### PRE-006: M8.4 Period Lock Enforcement Not Blocking Payments
+
+| Field | Value |
+|-------|-------|
+| **ID** | PRE-006 |
+| **Category** | test-error |
+| **First Seen** | 2026-01-02 |
+| **Command** | `timeout 600 pnpm jest --config ./test/jest-e2e.json --testPathPattern='accounting-m84' --forceExit` |
+| **Impact** | Medium |
+| **Suggested Owner** | M8.4 / Finance Module |
+| **Status** | OPEN |
+
+**Summary**: Period lock is not preventing payment posting as designed
+
+**Error**:
+```
+expected 403 "Forbidden", got 201 "Created"
+  at e2e/accounting-m84-partial-payments.e2e-spec.ts:476:10
+```
+
+**Affected Test**:
+- `test/e2e/accounting-m84-partial-payments.e2e-spec.ts` line 476
+- Test: "AC-08: period lock blocks payment posting with 403"
+
+**Root Cause**: Either:
+1. Period lock check not implemented in payment endpoint
+2. Test setup not correctly locking the period before attempting payment
+
+**Suggested Fix**: Investigate whether period lock enforcement is missing from payment service or test setup is incorrect
+
+---
+
 ## Resolution History
 
 ### 2026-01-02: PRE-004 Resolved
@@ -200,8 +265,9 @@ test/webhooks/replay.validate.ts
 | lint-error | 0 | 1 | 1 |
 | build-error | 0 | 1 | 1 |
 | test-warning | 1 | 0 | 1 |
-| **Total** | **2** | **2** | **4** |
+| test-error | 2 | 0 | 2 |
+| **Total** | **4** | **2** | **6** |
 
 ---
 
-*Last Updated: 2026-01-02*
+*Last Updated: 2026-01-02 (M8.5 Verification)*
