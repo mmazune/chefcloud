@@ -1,271 +1,406 @@
 /**
- * M15: Deposit Accounting Service
+ * M9.2: Deposit Accounting Service
  * 
- * Handles GL postings for reservation and event booking deposits
- * Integrates with M8 PostingService for accounting entries
+ * Manages reservation deposits with proper GL integration:
+ * - PAID: Dr Cash, Cr Deposits Held (liability)
+ * - REFUNDED: Dr Deposits Held, Cr Cash (reversal)
+ * - APPLIED: Dr Deposits Held, Cr Revenue (recognition)
  */
 
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 
-interface DepositGLEntry {
+// GL Account codes
+const ACCOUNT_CASH = '1000';
+const ACCOUNT_DEPOSITS_HELD = '2100';
+const ACCOUNT_REVENUE = '4000';
+
+interface RequireDepositParams {
   orgId: string;
-  branchId: string;
-  reservationId?: string;
-  eventBookingId?: string;
+  reservationId: string;
   amount: number;
-  description: string;
+  createdById?: string;
+}
+
+interface PayDepositParams {
+  orgId: string;
+  depositId: string;
+  paymentMethod?: 'CASH' | 'CARD' | 'MOMO' | 'BANK_TRANSFER';
+  paidById?: string;
+}
+
+interface RefundDepositParams {
+  orgId: string;
+  depositId: string;
+  reason?: string;
+  refundedById?: string;
+}
+
+interface ApplyDepositParams {
+  orgId: string;
+  depositId: string;
+  appliedById?: string;
 }
 
 @Injectable()
 export class DepositAccountingService {
+  private readonly logger = new Logger(DepositAccountingService.name);
+
   constructor(private readonly prisma: PrismaService) {}
 
   /**
-   * Post GL entry when deposit is collected
-   * Dr: Cash/Bank (1010)
-   * Cr: Reservation Deposit Liability (2200)
+   * Create a deposit requirement for a reservation
    */
-  async recordDepositCollection(params: DepositGLEntry): Promise<void> {
-    // TODO: Posting model doesn't exist in schema - needs implementation
-    // const { orgId, branchId, reservationId, eventBookingId, amount, description } = params;
-    return;
-    /*
-    const reference = reservationId
-      ? `RESERVATION-DEPOSIT-${reservationId}`
-      : `EVENT-DEPOSIT-${eventBookingId}`;
+  async requireDeposit(params: RequireDepositParams): Promise<unknown> {
+    const { orgId, reservationId, amount, createdById } = params;
 
-    // @ts-expect-error - Posting model does not exist
-    await this.prisma.posting.create({
+    // Check reservation exists
+    const reservation = await this.prisma.reservation.findUnique({
+      where: { id: reservationId },
+    });
+
+    if (!reservation || reservation.orgId !== orgId) {
+      throw new NotFoundException('Reservation not found');
+    }
+
+    // Check for existing deposit
+    const existing = await this.prisma.client.reservationDeposit.findFirst({
+      where: { reservationId },
+    });
+
+    if (existing) {
+      throw new ConflictException('Deposit already exists for this reservation');
+    }
+
+    const deposit = await this.prisma.client.reservationDeposit.create({
       data: {
         orgId,
-        branchId,
-        date: new Date(),
-        reference,
-        description: description || 'Deposit collected',
-        metadata: {
-          type: 'deposit_collection',
-          reservationId,
-          eventBookingId,
-        },
-        entries: {
-          create: [
-            {
-              accountCode: '1010', // Cash/Bank
-              debit: amount,
-              credit: 0,
-              description: `Deposit collected - ${reference}`,
-            },
-            {
-              accountCode: '2200', // Reservation Deposit Liability
-              debit: 0,
-              credit: amount,
-              description: `Deposit liability - ${reference}`,
-            },
-          ],
-        },
-      },
-      include: {
-        entries: true,
+        reservationId,
+        amount,
+        status: 'REQUIRED',
+        createdById,
       },
     });
-    */
+
+    this.logger.log(`Created deposit requirement: ${deposit.id} (${amount})`);
+    return deposit;
   }
 
   /**
-   * Post GL entry when guest shows up and deposit is applied to bill
-   * Dr: Reservation Deposit Liability (2200)
-   * Cr: Revenue (4000)
+   * Record deposit payment and post GL entry
+   * Dr Cash/Bank, Cr Deposits Held
    */
-  async applyDepositToBill(params: DepositGLEntry & { orderId: string }): Promise<void> {
-    const { orgId, branchId, reservationId, amount, orderId, description } = params;
+  async payDeposit(params: PayDepositParams): Promise<unknown> {
+    const { orgId, depositId, paymentMethod, paidById } = params;
 
-    const reference = `DEPOSIT-APPLY-${reservationId}`;
+    const deposit = await this.prisma.client.reservationDeposit.findUnique({
+      where: { id: depositId },
+      include: { reservation: true },
+    });
 
-    // @ts-expect-error - Posting model does not exist
-    await this.prisma.posting.create({
+    if (!deposit || deposit.orgId !== orgId) {
+      throw new NotFoundException('Deposit not found');
+    }
+
+    if (deposit.status !== 'REQUIRED') {
+      throw new ConflictException(`Cannot pay deposit in status ${deposit.status}`);
+    }
+
+    // Get GL accounts
+    const accounts = await this.prisma.client.account.findMany({
+      where: {
+        orgId,
+        code: { in: [ACCOUNT_CASH, ACCOUNT_DEPOSITS_HELD] },
+      },
+    });
+
+    const cashAccount = accounts.find((a: { code: string }) => a.code === ACCOUNT_CASH);
+    let depositsAccount = accounts.find((a: { code: string }) => a.code === ACCOUNT_DEPOSITS_HELD);
+
+    if (!cashAccount) {
+      throw new ConflictException('Cash account (1000) not found');
+    }
+
+    // Create Deposits Held account if missing
+    if (!depositsAccount) {
+      depositsAccount = await this.prisma.client.account.create({
+        data: {
+          orgId,
+          code: ACCOUNT_DEPOSITS_HELD,
+          name: 'Deposits Held',
+          type: 'LIABILITY',
+        },
+      });
+    }
+
+    const amount = Number(deposit.amount);
+
+    // Create journal entry
+    const journalEntry = await this.prisma.client.journalEntry.create({
       data: {
         orgId,
-        branchId,
+        branchId: deposit.reservation.branchId,
         date: new Date(),
-        reference,
-        description: description || 'Deposit applied to order',
-        metadata: {
-          type: 'deposit_applied',
-          reservationId,
-          orderId,
-        },
-        entries: {
+        memo: `Deposit paid - Reservation ${deposit.reservationId.slice(-8)}`,
+        source: 'RESERVATION_DEPOSIT',
+        sourceId: depositId,
+        status: 'POSTED',
+        postedById: paidById,
+        postedAt: new Date(),
+        lines: {
           create: [
             {
-              accountCode: '2200', // Deposit Liability
+              accountId: cashAccount.id,
+              branchId: deposit.reservation.branchId,
               debit: amount,
               credit: 0,
-              description: `Apply deposit to order ${orderId}`,
+              meta: { depositId },
             },
             {
-              accountCode: '4000', // Revenue
+              accountId: depositsAccount.id,
+              branchId: deposit.reservation.branchId,
               debit: 0,
               credit: amount,
-              description: `Revenue from applied deposit`,
+              meta: { depositId },
             },
           ],
         },
       },
-      include: {
-        entries: true,
+    });
+
+    // Update deposit status
+    const updatedDeposit = await this.prisma.client.reservationDeposit.update({
+      where: { id: depositId },
+      data: {
+        status: 'PAID',
+        paymentMethod: paymentMethod || 'CASH',
+        journalEntryId: journalEntry.id,
+        paidAt: new Date(),
+        paidById,
       },
     });
+
+    this.logger.log(`Deposit paid: ${depositId} → JE ${journalEntry.id}`);
+    return updatedDeposit;
   }
 
   /**
-   * Post GL entry when guest no-shows and deposit is forfeited
-   * Dr: Reservation Deposit Liability (2200)
-   * Cr: No-Show Fee Revenue (4901)
+   * Refund deposit with reversal journal entry
+   * Dr Deposits Held, Cr Cash
    */
-  async forfeitDeposit(params: DepositGLEntry): Promise<void> {
-    const { orgId, branchId, reservationId, eventBookingId, amount, description } = params;
+  async refundDeposit(params: RefundDepositParams): Promise<unknown> {
+    const { orgId, depositId, reason, refundedById } = params;
 
-    const reference = reservationId ? `NO-SHOW-${reservationId}` : `NO-SHOW-EVENT-${eventBookingId}`;
+    const deposit = await this.prisma.client.reservationDeposit.findUnique({
+      where: { id: depositId },
+      include: { reservation: true },
+    });
 
-    // @ts-expect-error - Posting model does not exist
-    await this.prisma.posting.create({
+    if (!deposit || deposit.orgId !== orgId) {
+      throw new NotFoundException('Deposit not found');
+    }
+
+    if (deposit.status !== 'PAID') {
+      throw new ConflictException(`Cannot refund deposit in status ${deposit.status}`);
+    }
+
+    // Get GL accounts
+    const accounts = await this.prisma.client.account.findMany({
+      where: {
+        orgId,
+        code: { in: [ACCOUNT_CASH, ACCOUNT_DEPOSITS_HELD] },
+      },
+    });
+
+    const cashAccount = accounts.find((a: { code: string }) => a.code === ACCOUNT_CASH);
+    const depositsAccount = accounts.find((a: { code: string }) => a.code === ACCOUNT_DEPOSITS_HELD);
+
+    if (!cashAccount || !depositsAccount) {
+      throw new ConflictException('Required GL accounts not found');
+    }
+
+    const amount = Number(deposit.amount);
+
+    // Create reversal journal entry
+    const journalEntry = await this.prisma.client.journalEntry.create({
       data: {
         orgId,
-        branchId,
+        branchId: deposit.reservation.branchId,
         date: new Date(),
-        reference,
-        description: description || 'Deposit forfeited - no show',
-        metadata: {
-          type: 'deposit_forfeited',
-          reservationId,
-          eventBookingId,
-          reason: 'no_show',
-        },
-        entries: {
+        memo: `Deposit refund - Reservation ${deposit.reservationId.slice(-8)}${reason ? ` (${reason})` : ''}`,
+        source: 'RESERVATION_DEPOSIT_REFUND',
+        sourceId: depositId,
+        status: 'POSTED',
+        postedById: refundedById,
+        postedAt: new Date(),
+        reversesEntryId: deposit.journalEntryId || undefined,
+        lines: {
           create: [
             {
-              accountCode: '2200', // Deposit Liability
+              accountId: depositsAccount.id,
+              branchId: deposit.reservation.branchId,
               debit: amount,
               credit: 0,
-              description: `Forfeit deposit - ${reference}`,
+              meta: { depositId, refund: true },
             },
             {
-              accountCode: '4901', // No-Show Fee Revenue
+              accountId: cashAccount.id,
+              branchId: deposit.reservation.branchId,
               debit: 0,
               credit: amount,
-              description: `No-show fee revenue - ${reference}`,
+              meta: { depositId, refund: true },
             },
           ],
         },
       },
-      include: {
-        entries: true,
+    });
+
+    // Update deposit status
+    const updatedDeposit = await this.prisma.client.reservationDeposit.update({
+      where: { id: depositId },
+      data: {
+        status: 'REFUNDED',
+        refundJournalId: journalEntry.id,
+        refundedAt: new Date(),
+        refundReason: reason,
+        refundedById,
       },
     });
+
+    this.logger.log(`Deposit refunded: ${depositId} → JE ${journalEntry.id}`);
+    return updatedDeposit;
   }
 
   /**
-   * Post GL entry when deposit is refunded (full refund)
-   * Dr: Reservation Deposit Liability (2200)
-   * Cr: Cash/Bank (1010)
+   * Apply deposit to bill (recognize as revenue)
+   * Dr Deposits Held, Cr Revenue
    */
-  async refundDeposit(params: DepositGLEntry & { reason: string }): Promise<void> {
-    const { orgId, branchId, reservationId, eventBookingId, amount, reason, description } = params;
+  async applyDeposit(params: ApplyDepositParams): Promise<unknown> {
+    const { orgId, depositId, appliedById } = params;
 
-    const reference = reservationId ? `REFUND-${reservationId}` : `REFUND-EVENT-${eventBookingId}`;
+    const deposit = await this.prisma.client.reservationDeposit.findUnique({
+      where: { id: depositId },
+      include: { reservation: true },
+    });
 
-    // @ts-expect-error - Posting model does not exist
-    await this.prisma.posting.create({
+    if (!deposit || deposit.orgId !== orgId) {
+      throw new NotFoundException('Deposit not found');
+    }
+
+    if (deposit.status !== 'PAID') {
+      throw new ConflictException(`Cannot apply deposit in status ${deposit.status}`);
+    }
+
+    // Get GL accounts
+    const accounts = await this.prisma.client.account.findMany({
+      where: {
+        orgId,
+        code: { in: [ACCOUNT_DEPOSITS_HELD, ACCOUNT_REVENUE] },
+      },
+    });
+
+    const depositsAccount = accounts.find((a: { code: string }) => a.code === ACCOUNT_DEPOSITS_HELD);
+    const revenueAccount = accounts.find((a: { code: string }) => a.code === ACCOUNT_REVENUE);
+
+    if (!depositsAccount || !revenueAccount) {
+      throw new ConflictException('Required GL accounts not found');
+    }
+
+    const amount = Number(deposit.amount);
+
+    // Create revenue recognition journal entry
+    const journalEntry = await this.prisma.client.journalEntry.create({
       data: {
         orgId,
-        branchId,
+        branchId: deposit.reservation.branchId,
         date: new Date(),
-        reference,
-        description: description || 'Deposit refunded',
-        metadata: {
-          type: 'deposit_refunded',
-          reservationId,
-          eventBookingId,
-          refundReason: reason,
-        },
-        entries: {
+        memo: `Deposit applied - Reservation ${deposit.reservationId.slice(-8)}`,
+        source: 'RESERVATION_DEPOSIT_APPLY',
+        sourceId: depositId,
+        status: 'POSTED',
+        postedById: appliedById,
+        postedAt: new Date(),
+        lines: {
           create: [
             {
-              accountCode: '2200', // Deposit Liability
+              accountId: depositsAccount.id,
+              branchId: deposit.reservation.branchId,
               debit: amount,
               credit: 0,
-              description: `Refund deposit - ${reference}`,
+              meta: { depositId, applied: true },
             },
             {
-              accountCode: '1010', // Cash/Bank
+              accountId: revenueAccount.id,
+              branchId: deposit.reservation.branchId,
               debit: 0,
               credit: amount,
-              description: `Deposit refund issued - ${reason}`,
+              meta: { depositId, applied: true },
             },
           ],
         },
       },
-      include: {
-        entries: true,
+    });
+
+    // Update deposit status
+    const updatedDeposit = await this.prisma.client.reservationDeposit.update({
+      where: { id: depositId },
+      data: {
+        status: 'APPLIED',
+        applyJournalId: journalEntry.id,
+        appliedAt: new Date(),
+        appliedById,
       },
     });
+
+    this.logger.log(`Deposit applied: ${depositId} → JE ${journalEntry.id}`);
+    return updatedDeposit;
   }
 
   /**
-   * Post GL entry for partial refund (late cancellation)
-   * Split between forfeited amount (revenue) and refunded amount (cash)
+   * Forfeit deposit (no-show) - mark as forfeited but don't refund
    */
-  async partialRefundDeposit(params: DepositGLEntry & {
-    forfeitAmount: number;
-    refundAmount: number;
-    reason: string;
-  }): Promise<void> {
-    const { orgId, branchId, reservationId, forfeitAmount, refundAmount, reason, description } = params;
+  async forfeitDeposit(depositId: string, orgId: string): Promise<unknown> {
+    const deposit = await this.prisma.client.reservationDeposit.findUnique({
+      where: { id: depositId },
+    });
 
-    const reference = `LATE-CANCEL-${reservationId}`;
-    const totalAmount = forfeitAmount + refundAmount;
+    if (!deposit || deposit.orgId !== orgId) {
+      throw new NotFoundException('Deposit not found');
+    }
 
-    // @ts-expect-error - Posting model does not exist
-    await this.prisma.posting.create({
+    if (!['REQUIRED', 'PAID'].includes(deposit.status)) {
+      throw new ConflictException(`Cannot forfeit deposit in status ${deposit.status}`);
+    }
+
+    const updatedDeposit = await this.prisma.client.reservationDeposit.update({
+      where: { id: depositId },
       data: {
+        status: 'FORFEITED',
+      },
+    });
+
+    this.logger.log(`Deposit forfeited: ${depositId}`);
+    return updatedDeposit;
+  }
+
+  /**
+   * Get deposit for a reservation
+   */
+  async getDeposit(orgId: string, reservationId: string): Promise<unknown> {
+    return this.prisma.client.reservationDeposit.findFirst({
+      where: {
         orgId,
-        branchId,
-        date: new Date(),
-        reference,
-        description: description || 'Deposit partially refunded - late cancellation',
-        metadata: {
-          type: 'deposit_partial_refund',
-          reservationId,
-          forfeitAmount,
-          refundAmount,
-          reason,
-        },
-        entries: {
-          create: [
-            {
-              accountCode: '2200', // Deposit Liability
-              debit: totalAmount,
-              credit: 0,
-              description: `Settle deposit - ${reference}`,
-            },
-            {
-              accountCode: '4902', // Cancellation Fee Revenue
-              debit: 0,
-              credit: forfeitAmount,
-              description: `Cancellation fee revenue`,
-            },
-            {
-              accountCode: '1010', // Cash/Bank
-              debit: 0,
-              credit: refundAmount,
-              description: `Partial refund issued`,
-            },
-          ],
-        },
+        reservationId,
       },
       include: {
-        entries: true,
+        journalEntry: { include: { lines: true } },
+        refundJournal: { include: { lines: true } },
+        applyJournal: { include: { lines: true } },
       },
     });
   }

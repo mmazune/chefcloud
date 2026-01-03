@@ -560,6 +560,61 @@ export class ReservationsService {
     return summary;
   }
 
+  /**
+   * M9.2: Get calendar/timeline view for a branch on a specific date
+   */
+  async getCalendar(orgId: string, branchId: string, date: string): Promise<any> {
+    const dayStart = new Date(date);
+    dayStart.setHours(0, 0, 0, 0);
+
+    const dayEnd = new Date(date);
+    dayEnd.setHours(23, 59, 59, 999);
+
+    const reservations = await this.prisma.reservation.findMany({
+      where: {
+        orgId,
+        branchId,
+        startAt: { gte: dayStart, lte: dayEnd },
+        status: { not: 'CANCELLED' },
+      },
+      include: {
+        table: { select: { id: true, label: true } },
+      },
+      orderBy: { startAt: 'asc' },
+    });
+
+    // Group by hour slots
+    const slots: Record<string, any[]> = {};
+
+    for (let hour = 0; hour < 24; hour++) {
+      const key = hour.toString().padStart(2, '0') + ':00';
+      slots[key] = [];
+    }
+
+    for (const res of reservations) {
+      const hour = res.startAt.getHours();
+      const key = hour.toString().padStart(2, '0') + ':00';
+      if (slots[key]) {
+        slots[key].push({
+          id: res.id,
+          name: res.name,
+          partySize: res.partySize,
+          startAt: res.startAt.toISOString(),
+          endAt: res.endAt.toISOString(),
+          status: res.status,
+          table: res.table,
+        });
+      }
+    }
+
+    return {
+      date,
+      branchId,
+      totalReservations: reservations.length,
+      slots,
+    };
+  }
+
   // Private helper methods
   private async validateTableAvailability(
     tableId: string,

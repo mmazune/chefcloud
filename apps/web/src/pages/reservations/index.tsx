@@ -214,6 +214,16 @@ export default function ReservationsPage() {
         subtitle="Manage table reservations and event bookings"
       />
 
+      {/* M9.2: Navigation to Policies and Calendar */}
+      <div className="flex gap-2 mb-6">
+        <Button variant="outline" onClick={() => window.location.href = '/reservations/policies'}>
+          ⚙️ Policies
+        </Button>
+        <Button variant="outline" onClick={() => window.location.href = '/reservations/calendar'}>
+          📅 Calendar View
+        </Button>
+      </div>
+
       <div className="grid gap-4 md:grid-cols-5 mb-6">
         <Card className="p-4">
           <div className="text-sm font-medium text-muted-foreground">Total Reservations</div>

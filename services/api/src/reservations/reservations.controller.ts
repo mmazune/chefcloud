@@ -3,6 +3,7 @@ import {
   Controller,
   Post,
   Get,
+  Put,
   Patch,
   Body,
   Param,
@@ -13,6 +14,9 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ReservationsService } from './reservations.service';
+import { PolicyService } from './policy.service';
+import { DepositAccountingService } from './deposit-accounting.service';
+import { NotificationService } from './notification.service';
 import {
   CreateReservationDto,
   UpdateReservationDto,
@@ -20,6 +24,13 @@ import {
   NoShowReservationDto,
   SeatReservationDto,
   AssignTablesDto,
+  UpsertPolicyDto,
+  RequireDepositDto,
+  PayDepositDto,
+  RefundDepositDto,
+  ApplyDepositDto,
+  CalendarQueryDto,
+  NotificationQueryDto,
 } from './reservations.dto';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
@@ -28,7 +39,12 @@ import { IdempotencyInterceptor } from '../common/idempotency.interceptor';
 @Controller('reservations')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 export class ReservationsController {
-  constructor(private readonly reservationsService: ReservationsService) {}
+  constructor(
+    private readonly reservationsService: ReservationsService,
+    private readonly policyService: PolicyService,
+    private readonly depositService: DepositAccountingService,
+    private readonly notificationService: NotificationService,
+  ) {}
 
   @Post()
   @Roles('L2') // Front desk / host
@@ -147,5 +163,169 @@ export class ReservationsController {
     @Body() dto: AssignTablesDto,
   ): Promise<any> {
     return this.reservationsService.assignTables(req.user.orgId, id, dto.tableIds, req.user.userId);
+  }
+
+  // ===== M9.2: Policy Endpoints =====
+
+  @Get('policies')
+  @Roles('L2')
+  getPolicy(@Req() req: any, @Query('branchId') branchId: string): Promise<any> {
+    return this.policyService.getPolicy(req.user.orgId, branchId);
+  }
+
+  @Put('policies')
+  @Roles('L3') // Manager+ only
+  @UseInterceptors(IdempotencyInterceptor)
+  upsertPolicy(
+    @Req() req: any,
+    @Query('branchId') branchId: string,
+    @Body() dto: UpsertPolicyDto,
+  ): Promise<any> {
+    return this.policyService.upsertPolicy(req.user.orgId, branchId, dto);
+  }
+
+  // ===== M9.2: Deposit Endpoints =====
+
+  @Get(':id/deposit')
+  @Roles('L1') // Read-only for all
+  getDeposit(@Req() req: any, @Param('id') id: string): Promise<any> {
+    return this.depositService.getDeposit(req.user.orgId, id);
+  }
+
+  @Post(':id/deposit/require')
+  @Roles('L2')
+  @UseInterceptors(IdempotencyInterceptor)
+  requireDeposit(
+    @Req() req: any,
+    @Param('id') id: string,
+    @Body() dto: RequireDepositDto,
+  ): Promise<any> {
+    return this.depositService.requireDeposit({
+      orgId: req.user.orgId,
+      reservationId: id,
+      amount: dto.amount,
+      createdById: req.user.userId,
+    });
+  }
+
+  @Post(':id/deposit/pay')
+  @Roles('L2')
+  @UseInterceptors(IdempotencyInterceptor)
+  async payDeposit(
+    @Req() req: any,
+    @Param('id') reservationId: string,
+    @Body() dto: PayDepositDto,
+  ): Promise<any> {
+    // Find deposit for this reservation
+    const deposit = await this.depositService.getDeposit(req.user.orgId, reservationId);
+    if (!deposit) {
+      throw new Error('Deposit not found for this reservation');
+    }
+    const result = await this.depositService.payDeposit({
+      orgId: req.user.orgId,
+      depositId: (deposit as { id: string }).id,
+      paymentMethod: dto.paymentMethod,
+      paidById: req.user.userId,
+    });
+
+    // Log notification
+    await this.notificationService.send({
+      orgId: req.user.orgId,
+      reservationId,
+      type: 'IN_APP',
+      event: 'DEPOSIT_PAID',
+      payload: { amount: (deposit as { amount: number }).amount },
+    });
+
+    return result;
+  }
+
+  @Post(':id/deposit/refund')
+  @Roles('L2')
+  @UseInterceptors(IdempotencyInterceptor)
+  async refundDeposit(
+    @Req() req: any,
+    @Param('id') reservationId: string,
+    @Body() dto: RefundDepositDto,
+  ): Promise<any> {
+    const deposit = await this.depositService.getDeposit(req.user.orgId, reservationId);
+    if (!deposit) {
+      throw new Error('Deposit not found for this reservation');
+    }
+    const result = await this.depositService.refundDeposit({
+      orgId: req.user.orgId,
+      depositId: (deposit as { id: string }).id,
+      reason: dto.reason,
+      refundedById: req.user.userId,
+    });
+
+    // Log notification
+    await this.notificationService.send({
+      orgId: req.user.orgId,
+      reservationId,
+      type: 'IN_APP',
+      event: 'DEPOSIT_REFUNDED',
+      payload: { reason: dto.reason },
+    });
+
+    return result;
+  }
+
+  @Post(':id/deposit/apply')
+  @Roles('L2')
+  @UseInterceptors(IdempotencyInterceptor)
+  async applyDeposit(
+    @Req() req: any,
+    @Param('id') reservationId: string,
+    @Body() dto: ApplyDepositDto,
+  ): Promise<any> {
+    const deposit = await this.depositService.getDeposit(req.user.orgId, reservationId);
+    if (!deposit) {
+      throw new Error('Deposit not found for this reservation');
+    }
+    const result = await this.depositService.applyDeposit({
+      orgId: req.user.orgId,
+      depositId: (deposit as { id: string }).id,
+      appliedById: req.user.userId,
+    });
+
+    // Log notification
+    await this.notificationService.send({
+      orgId: req.user.orgId,
+      reservationId,
+      type: 'IN_APP',
+      event: 'DEPOSIT_APPLIED',
+      payload: { orderId: dto.orderId },
+    });
+
+    return result;
+  }
+
+  // ===== M9.2: Calendar/Timeline =====
+
+  @Get('calendar')
+  @Roles('L1')
+  async getCalendar(
+    @Req() req: any,
+    @Query('branchId') branchId: string,
+    @Query('date') date: string,
+  ): Promise<any> {
+    return this.reservationsService.getCalendar(req.user.orgId, branchId, date);
+  }
+
+  // ===== M9.2: Notification Audit =====
+
+  @Get('notifications')
+  @Roles('L2')
+  getNotifications(
+    @Req() req: any,
+    @Query() query: NotificationQueryDto,
+  ): Promise<any> {
+    return this.notificationService.findLogs(req.user.orgId, {
+      branchId: query.branchId,
+      from: query.from,
+      to: query.to,
+      event: query.event,
+    });
   }
 }

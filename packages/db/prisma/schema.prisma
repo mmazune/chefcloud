@@ -266,6 +266,39 @@ enum NpsCategory {
   PROMOTER // 9-10: Loyal enthusiasts who will recommend
 }
 
+// M9.2: Deposit Management
+enum DepositStatus {
+  REQUIRED   // Deposit requested but not paid
+  PAID       // Deposit captured (posted to liability)
+  REFUNDED   // Deposit refunded (reversal posted)
+  APPLIED    // Deposit applied to bill (liability → revenue)
+  FORFEITED  // No-show deposit kept
+}
+
+// M9.2: Notification Types
+enum NotificationType {
+  EMAIL
+  SMS
+  IN_APP
+}
+
+enum NotificationEvent {
+  CONFIRMED
+  CANCELLED
+  NO_SHOW
+  DEPOSIT_PAID
+  DEPOSIT_REFUNDED
+  DEPOSIT_APPLIED
+  REMINDER
+  WAITLIST_READY
+}
+
+enum NotificationStatus {
+  QUEUED
+  SENT
+  FAILED
+}
+
 // ===== Organization & Multi-tenancy =====
 
 model Org {
@@ -311,6 +344,7 @@ model Org {
   Feedback             Feedback[]
   promotionSuggestions PromotionSuggestion[] // M22: Promotion suggestions
   waitlistEntries      WaitlistEntry[]       // M9.1: Waitlist
+  reservationPolicies  ReservationPolicy[]   // M9.2: Reservation policies
 
   @@map("orgs")
 }
@@ -391,6 +425,7 @@ model Branch {
   Feedback             Feedback[]
   promotionSuggestions PromotionSuggestion[] // M22: Promotion suggestions
   waitlistEntries      WaitlistEntry[]       // M9.1: Waitlist
+  reservationPolicy    ReservationPolicy?    // M9.2: Branch policy
 
   @@index([orgId, id])
   @@map("branches")
@@ -731,14 +766,16 @@ model Reservation {
   createdAt          DateTime          @default(now())
   updatedAt          DateTime          @updatedAt
 
-  org           Org                   @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  branch        Branch                @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  floorPlan     FloorPlan?            @relation(fields: [floorPlanId], references: [id], onDelete: SetNull)
-  table         Table?                @relation(fields: [tableId], references: [id], onDelete: SetNull)
-  paymentIntent PaymentIntent?        @relation(fields: [paymentIntentId], references: [id], onDelete: SetNull)
-  reminders     ReservationReminder[]
-  documents     Document[]
-  feedback      Feedback? // M20: Customer feedback for this reservation
+  org               Org                    @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  branch            Branch                 @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  floorPlan         FloorPlan?             @relation(fields: [floorPlanId], references: [id], onDelete: SetNull)
+  table             Table?                 @relation(fields: [tableId], references: [id], onDelete: SetNull)
+  paymentIntent     PaymentIntent?         @relation(fields: [paymentIntentId], references: [id], onDelete: SetNull)
+  reminders         ReservationReminder[]
+  documents         Document[]
+  feedback          Feedback?              // M20: Customer feedback for this reservation
+  deposits          ReservationDeposit[]   // M9.2: Deposit records
+  notificationLogs  NotificationLog[]      // M9.2: Notification audit trail
 
   @@index([orgId])
   @@index([branchId])
@@ -764,7 +801,7 @@ model ReservationReminder {
 }
 
 model WaitlistEntry {
-  id                String         @id @default(cuid())
+  id                String            @id @default(cuid())
   orgId             String
   branchId          String
   name              String
@@ -772,22 +809,106 @@ model WaitlistEntry {
   partySize         Int
   notes             String?
   quotedWaitMinutes Int?
-  status            WaitlistStatus @default(WAITING)
+  status            WaitlistStatus    @default(WAITING)
   addedById         String?
   seatedById        String?
   seatedAt          DateTime?
   droppedAt         DateTime?
   droppedReason     String?
-  createdAt         DateTime       @default(now())
-  updatedAt         DateTime       @updatedAt
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
 
-  org    Org    @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  branch Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  org              Org               @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  branch           Branch            @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  notificationLogs NotificationLog[] // M9.2: Notification audit trail
 
   @@index([orgId])
   @@index([branchId])
   @@index([status, createdAt])
   @@map("waitlist_entries")
+}
+
+// M9.2: Reservation Policy (per branch)
+model ReservationPolicy {
+  id                   String   @id @default(cuid())
+  orgId                String
+  branchId             String   @unique
+  leadTimeMinutes      Int      @default(60)
+  maxPartySize         Int      @default(20)
+  holdExpiresMinutes   Int      @default(30)
+  cancelCutoffMinutes  Int      @default(120)
+  depositRequired      Boolean  @default(false)
+  depositAmountDefault Decimal  @default(0) @db.Decimal(10, 2)
+  depositPerGuest      Decimal  @default(0) @db.Decimal(10, 2)
+  noShowFeeEnabled     Boolean  @default(false)
+  noShowFeeAmount      Decimal  @default(0) @db.Decimal(10, 2)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  org    Org    @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  branch Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  @@index([orgId])
+  @@map("reservation_policies")
+}
+
+// M9.2: Reservation Deposit
+model ReservationDeposit {
+  id               String        @id @default(cuid())
+  orgId            String
+  reservationId    String
+  amount           Decimal       @db.Decimal(10, 2)
+  status           DepositStatus @default(REQUIRED)
+  paymentMethod    PaymentMethod?
+  journalEntryId   String?
+  refundJournalId  String?
+  applyJournalId   String?
+  paidAt           DateTime?
+  refundedAt       DateTime?
+  appliedAt        DateTime?
+  refundReason     String?
+  createdById      String?
+  paidById         String?
+  refundedById     String?
+  appliedById      String?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  reservation   Reservation   @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  journalEntry  JournalEntry? @relation("DepositJournal", fields: [journalEntryId], references: [id])
+  refundJournal JournalEntry? @relation("DepositRefundJournal", fields: [refundJournalId], references: [id])
+  applyJournal  JournalEntry? @relation("DepositApplyJournal", fields: [applyJournalId], references: [id])
+
+  @@index([orgId])
+  @@index([reservationId])
+  @@index([status])
+  @@map("reservation_deposits")
+}
+
+// M9.2: Notification Log
+model NotificationLog {
+  id            String             @id @default(cuid())
+  orgId         String
+  branchId      String?
+  reservationId String?
+  waitlistId    String?
+  type          NotificationType
+  event         NotificationEvent
+  toAddress     String?
+  payloadJson   Json?
+  status        NotificationStatus @default(QUEUED)
+  sentAt        DateTime?
+  failedReason  String?
+  createdAt     DateTime           @default(now())
+
+  reservation Reservation?   @relation(fields: [reservationId], references: [id], onDelete: SetNull)
+  waitlist    WaitlistEntry? @relation(fields: [waitlistId], references: [id], onDelete: SetNull)
+
+  @@index([orgId])
+  @@index([branchId])
+  @@index([reservationId])
+  @@index([event, createdAt])
+  @@map("notification_logs")
 }
 
 // ===== Menu =====
@@ -2087,6 +2208,10 @@ model JournalEntry {
   customerCreditNoteRefunds CustomerCreditNoteRefund[] @relation("CustomerCreditNoteRefundJournal")
   vendorCreditNotes         VendorCreditNote[]         @relation("VendorCreditNoteJournal")
   vendorCreditNoteRefunds   VendorCreditNoteRefund[]   @relation("VendorCreditNoteRefundJournal")
+  // M9.2: Reservation deposit relations
+  depositJournals          ReservationDeposit[]       @relation("DepositJournal")
+  depositRefundJournals    ReservationDeposit[]       @relation("DepositRefundJournal")
+  depositApplyJournals     ReservationDeposit[]       @relation("DepositApplyJournal")
 
   @@index([orgId, date])
   @@index([orgId, branchId])

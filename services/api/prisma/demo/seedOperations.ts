@@ -77,7 +77,14 @@ async function cleanupOperationalData(prisma: PrismaClient) {
   
   // Delete in dependency order - simpler version without nested queries
   await prisma.feedback.deleteMany({ where: { orgId: { in: demoOrgIds } } });
+  
+  // M9.2: Clean up new models
+  await prisma.notificationLog.deleteMany({ where: { orgId: { in: demoOrgIds } } });
+  await prisma.reservationDeposit.deleteMany({ where: { reservation: { orgId: { in: demoOrgIds } } } });
+  await prisma.reservationPolicy.deleteMany({ where: { orgId: { in: demoOrgIds } } });
+  
   await prisma.reservationReminder.deleteMany({ where: { reservation: { orgId: { in: demoOrgIds } } } });
+  await prisma.waitlistEntry.deleteMany({ where: { orgId: { in: demoOrgIds } } });
   await prisma.reservation.deleteMany({ where: { orgId: { in: demoOrgIds } } });
   
   await prisma.vendorPayment.deleteMany({ where: { orgId: { in: demoOrgIds } } });
@@ -904,6 +911,367 @@ async function seedWaitlist(prisma: PrismaClient) {
 }
 
 /**
+ * STEP 6C: Seed Reservation Policies (M9.2)
+ * Creates per-branch reservation policies for demo orgs
+ */
+async function seedReservationPolicies(prisma: PrismaClient) {
+  console.log('📋 Seeding reservation policies...');
+  
+  let policyCount = 0;
+  
+  // Tapas: Single branch policy - upscale restaurant requires deposit for 6+ party
+  await prisma.reservationPolicy.create({
+    data: {
+      orgId: TAPAS_ORG_ID,
+      branchId: TAPAS_BRANCH_ID,
+      name: 'Tapas Main Dining Policy',
+      defaultDurationMinutes: 120,
+      minPartySize: 1,
+      maxPartySize: 20,
+      advanceBookingDays: 30,
+      minAdvanceMinutes: 60,
+      depositRequired: true,
+      depositMinPartySize: 6,
+      depositAmount: new Prisma.Decimal(50000), // Per person
+      depositType: 'PER_PERSON',
+      depositDeadlineMinutes: 1440, // 24 hours before
+      noShowFeePercent: new Prisma.Decimal(100),
+      lateCancelMinutes: 180, // 3 hours
+      lateCancelFeePercent: new Prisma.Decimal(50),
+      autoConfirm: false,
+      maxDailyReservations: 50,
+      slotIntervalMinutes: 15,
+      notes: 'Premium dining experience. Deposits required for groups of 6+.',
+    },
+  });
+  policyCount++;
+  
+  // Cafesserie: Different policies per branch based on size/clientele
+  const cafPolicies = [
+    {
+      branchId: CAF_BRANCHES['Village Mall'],
+      name: 'Village Mall - Premium',
+      maxPartySize: 15,
+      advanceBookingDays: 21,
+      depositRequired: true,
+      depositMinPartySize: 8,
+      depositAmount: 30000,
+      autoConfirm: false,
+      maxDaily: 40,
+      notes: 'Flagship location. Higher capacity.',
+    },
+    {
+      branchId: CAF_BRANCHES['Acacia Mall'],
+      name: 'Acacia Mall - Standard',
+      maxPartySize: 12,
+      advanceBookingDays: 14,
+      depositRequired: true,
+      depositMinPartySize: 8,
+      depositAmount: 25000,
+      autoConfirm: true,
+      maxDaily: 35,
+      notes: 'Shopping mall location. Auto-confirm enabled.',
+    },
+    {
+      branchId: CAF_BRANCHES['Arena Mall'],
+      name: 'Arena Mall - Casual',
+      maxPartySize: 10,
+      advanceBookingDays: 14,
+      depositRequired: false,
+      depositMinPartySize: 10,
+      depositAmount: 20000,
+      autoConfirm: true,
+      maxDaily: 30,
+      notes: 'Casual dining. No deposits required.',
+    },
+    {
+      branchId: CAF_BRANCHES['Mombasa'],
+      name: 'Mombasa - Coastal',
+      maxPartySize: 12,
+      advanceBookingDays: 21,
+      depositRequired: true,
+      depositMinPartySize: 6,
+      depositAmount: 35000,
+      autoConfirm: false,
+      maxDaily: 25,
+      notes: 'Coastal branch. Tourist focus.',
+    },
+  ];
+  
+  for (const p of cafPolicies) {
+    await prisma.reservationPolicy.create({
+      data: {
+        orgId: CAFESSERIE_ORG_ID,
+        branchId: p.branchId,
+        name: p.name,
+        defaultDurationMinutes: 90,
+        minPartySize: 1,
+        maxPartySize: p.maxPartySize,
+        advanceBookingDays: p.advanceBookingDays,
+        minAdvanceMinutes: 30,
+        depositRequired: p.depositRequired,
+        depositMinPartySize: p.depositMinPartySize,
+        depositAmount: new Prisma.Decimal(p.depositAmount),
+        depositType: 'PER_PERSON',
+        depositDeadlineMinutes: 720, // 12 hours before
+        noShowFeePercent: new Prisma.Decimal(100),
+        lateCancelMinutes: 120,
+        lateCancelFeePercent: new Prisma.Decimal(25),
+        autoConfirm: p.autoConfirm,
+        maxDailyReservations: p.maxDaily,
+        slotIntervalMinutes: 15,
+        notes: p.notes,
+      },
+    });
+    policyCount++;
+  }
+  
+  console.log(`  ✅ Created ${policyCount} reservation policies`);
+  console.log(`     - Tapas: 1 policy`);
+  console.log(`     - Cafesserie: ${policyCount - 1} policies (per branch)`);
+  
+  return policyCount;
+}
+
+/**
+ * STEP 6D: Seed Reservation Deposits (M9.2)
+ * Creates deposit records for existing reservations with large party sizes
+ */
+async function seedReservationDeposits(prisma: PrismaClient) {
+  console.log('💳 Seeding reservation deposits...');
+  
+  // Find reservations eligible for deposits (party size >= 6)
+  const eligibleReservations = await prisma.reservation.findMany({
+    where: {
+      orgId: { in: [TAPAS_ORG_ID, CAFESSERIE_ORG_ID] },
+      partySize: { gte: 6 },
+    },
+    orderBy: { startAt: 'asc' },
+  });
+  
+  let depositCount = 0;
+  let paidCount = 0;
+  let appliedCount = 0;
+  let refundedCount = 0;
+  let forfeitedCount = 0;
+  
+  for (const res of eligibleReservations) {
+    const depositAmount = res.partySize * 50000; // 50k per person
+    const now = new Date();
+    
+    // Determine deposit status based on reservation status
+    let depositStatus: 'REQUIRED' | 'PAID' | 'APPLIED' | 'REFUNDED' | 'FORFEITED';
+    
+    if (res.status === 'CANCELLED' || res.status === 'NO_SHOW') {
+      // Cancelled/No-show: Some forfeited, some refunded
+      depositStatus = seededRng.next() < 0.6 ? 'FORFEITED' : 'REFUNDED';
+    } else if (res.status === 'COMPLETED') {
+      // Completed: All applied
+      depositStatus = 'APPLIED';
+    } else if (res.startAt < now) {
+      // Past but seated: Paid or applied
+      depositStatus = seededRng.next() < 0.7 ? 'APPLIED' : 'PAID';
+    } else {
+      // Future: Required or Paid
+      depositStatus = seededRng.next() < 0.6 ? 'PAID' : 'REQUIRED';
+    }
+    
+    // Create deposit record
+    const depositCreatedAt = new Date(res.createdAt);
+    depositCreatedAt.setHours(depositCreatedAt.getHours() + 1);
+    
+    const paidAt = depositStatus !== 'REQUIRED' ? new Date(depositCreatedAt.getTime() + randomInt(1, 24) * 60 * 60 * 1000) : null;
+    
+    await prisma.reservationDeposit.create({
+      data: {
+        reservationId: res.id,
+        amount: new Prisma.Decimal(depositAmount),
+        status: depositStatus as any,
+        dueAt: new Date(res.startAt.getTime() - 24 * 60 * 60 * 1000), // 24h before
+        paidAt: paidAt,
+        paymentMethod: paidAt ? randomElement(['MOBILE_MONEY', 'CARD', 'BANK_TRANSFER']) : null,
+        paymentReference: paidAt ? `DEP-${res.id.substring(0, 8).toUpperCase()}` : null,
+        notes: depositStatus === 'FORFEITED' ? 'Customer no-show - deposit forfeited' : 
+               depositStatus === 'REFUNDED' ? 'Cancelled with notice - deposit refunded' : null,
+      },
+    });
+    
+    depositCount++;
+    
+    switch (depositStatus) {
+      case 'PAID': paidCount++; break;
+      case 'APPLIED': appliedCount++; break;
+      case 'REFUNDED': refundedCount++; break;
+      case 'FORFEITED': forfeitedCount++; break;
+    }
+  }
+  
+  console.log(`  ✅ Created ${depositCount} reservation deposits`);
+  console.log(`     - Paid: ${paidCount}`);
+  console.log(`     - Applied: ${appliedCount}`);
+  console.log(`     - Refunded: ${refundedCount}`);
+  console.log(`     - Forfeited: ${forfeitedCount}`);
+  
+  return { depositCount, paidCount, appliedCount, refundedCount, forfeitedCount };
+}
+
+/**
+ * STEP 6E: Seed Notification Logs (M9.2)
+ * Creates notification audit trail for reservations
+ */
+async function seedNotificationLogs(prisma: PrismaClient) {
+  console.log('📧 Seeding notification logs...');
+  
+  // Get some reservations to attach notifications to
+  const reservations = await prisma.reservation.findMany({
+    where: { orgId: { in: [TAPAS_ORG_ID, CAFESSERIE_ORG_ID] } },
+    take: 50,
+    orderBy: { startAt: 'desc' },
+  });
+  
+  // Get some waitlist entries
+  const waitlistEntries = await prisma.waitlistEntry.findMany({
+    where: { orgId: TAPAS_ORG_ID },
+    take: 20,
+  });
+  
+  let logCount = 0;
+  
+  // Reservation notifications
+  for (const res of reservations) {
+    // Confirmation notification
+    await prisma.notificationLog.create({
+      data: {
+        orgId: res.orgId,
+        branchId: res.branchId,
+        reservationId: res.id,
+        type: 'SMS',
+        event: 'CONFIRMED',
+        status: 'SENT',
+        recipient: res.phone,
+        payloadJson: { message: `Your reservation for ${res.partySize} guests on ${res.startAt.toISOString().split('T')[0]} is confirmed.` },
+        sentAt: new Date(res.createdAt.getTime() + 5 * 60 * 1000), // 5 min after creation
+      },
+    });
+    logCount++;
+    
+    // Reminder for future/past reservations
+    if (res.status !== 'CANCELLED') {
+      const reminderSentAt = new Date(res.startAt.getTime() - 24 * 60 * 60 * 1000);
+      if (reminderSentAt > res.createdAt) {
+        await prisma.notificationLog.create({
+          data: {
+            orgId: res.orgId,
+            branchId: res.branchId,
+            reservationId: res.id,
+            type: 'SMS',
+            event: 'REMINDER',
+            status: 'SENT',
+            recipient: res.phone,
+            payloadJson: { message: `Reminder: Your reservation for ${res.partySize} guests is tomorrow.` },
+            sentAt: reminderSentAt,
+          },
+        });
+        logCount++;
+      }
+    }
+    
+    // Cancellation notification
+    if (res.status === 'CANCELLED') {
+      await prisma.notificationLog.create({
+        data: {
+          orgId: res.orgId,
+          branchId: res.branchId,
+          reservationId: res.id,
+          type: 'SMS',
+          event: 'CANCELLED',
+          status: 'SENT',
+          recipient: res.phone,
+          payloadJson: { message: `Your reservation has been cancelled. Reason: ${res.cancellationReason || 'Not specified'}` },
+          sentAt: new Date(res.updatedAt),
+        },
+      });
+      logCount++;
+    }
+    
+    // No-show notification
+    if (res.status === 'NO_SHOW') {
+      await prisma.notificationLog.create({
+        data: {
+          orgId: res.orgId,
+          branchId: res.branchId,
+          reservationId: res.id,
+          type: 'SMS',
+          event: 'NO_SHOW',
+          status: 'SENT',
+          recipient: res.phone,
+          payloadJson: { message: 'You were marked as a no-show for your reservation.' },
+          sentAt: new Date(res.startAt.getTime() + 30 * 60 * 1000), // 30 min after start
+        },
+      });
+      logCount++;
+    }
+    
+    // Add some failed notifications for realism
+    if (seededRng.next() < 0.1) {
+      await prisma.notificationLog.create({
+        data: {
+          orgId: res.orgId,
+          branchId: res.branchId,
+          reservationId: res.id,
+          type: 'SMS',
+          event: 'REMINDER',
+          status: 'FAILED',
+          recipient: res.phone,
+          payloadJson: { message: 'Reminder notification', error: 'Phone number unreachable' },
+          failedAt: new Date(res.startAt.getTime() - 12 * 60 * 60 * 1000),
+        },
+      });
+      logCount++;
+    }
+  }
+  
+  // Waitlist notifications
+  for (const entry of waitlistEntries) {
+    await prisma.notificationLog.create({
+      data: {
+        orgId: entry.orgId,
+        branchId: entry.branchId,
+        waitlistEntryId: entry.id,
+        type: 'SMS',
+        event: 'WAITLIST_ADDED',
+        status: 'SENT',
+        recipient: entry.phone,
+        payloadJson: { message: `Added to waitlist. Estimated wait: ${entry.quotedWaitMinutes} minutes.` },
+        sentAt: new Date(entry.createdAt.getTime() + 1 * 60 * 1000),
+      },
+    });
+    logCount++;
+    
+    if (entry.status === 'SEATED' && entry.seatedAt) {
+      await prisma.notificationLog.create({
+        data: {
+          orgId: entry.orgId,
+          branchId: entry.branchId,
+          waitlistEntryId: entry.id,
+          type: 'SMS',
+          event: 'WAITLIST_READY',
+          status: 'SENT',
+          recipient: entry.phone,
+          payloadJson: { message: 'Your table is ready! Please proceed to the host.' },
+          sentAt: new Date(entry.seatedAt.getTime() - 5 * 60 * 1000), // 5 min before seated
+        },
+      });
+      logCount++;
+    }
+  }
+  
+  console.log(`  ✅ Created ${logCount} notification logs`);
+  
+  return logCount;
+}
+
+/**
  * STEP 7: Seed Customer Feedback/NPS
  */
 async function seedFeedback(prisma: PrismaClient) {
@@ -1110,6 +1478,12 @@ export async function seedOperations(prisma: PrismaClient) {
   const { billCount, paymentCount } = await seedVendorsAndBills(prisma);
   const reservations = await seedReservations(prisma);
   const waitlist = await seedWaitlist(prisma);
+  
+  // M9.2: Reservation Policies, Deposits, and Notifications
+  const policyCount = await seedReservationPolicies(prisma);
+  const deposits = await seedReservationDeposits(prisma);
+  const notificationLogs = await seedNotificationLogs(prisma);
+  
   const { tapasFeedbackCount, cafFeedbackCount } = await seedFeedback(prisma);
   
   console.log('\n═══════════════════════════════════════════');
@@ -1123,6 +1497,9 @@ export async function seedOperations(prisma: PrismaClient) {
   console.log(`  Vendor Bills: ${billCount} (${paymentCount} paid)`);
   console.log(`  Reservations: ${reservations} (Tapas only)`);
   console.log(`  Waitlist: ${waitlist.waitingCount + waitlist.seatedCount + waitlist.droppedCount}`);
+  console.log(`  Reservation Policies: ${policyCount}`);
+  console.log(`  Reservation Deposits: ${deposits.depositCount}`);
+  console.log(`  Notification Logs: ${notificationLogs}`);
   console.log(`  Feedback: ${tapasFeedbackCount + cafFeedbackCount}`);
   console.log(`    - Tapas: ${tapasFeedbackCount}`);
   console.log(`    - Cafesserie: ${cafFeedbackCount}`);

@@ -158,3 +158,103 @@ export class DropWaitlistDto {
   @IsString()
   reason?: string;
 }
+// M9.2: Policy DTOs
+export class UpsertPolicyDto {
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  leadTimeMinutes?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  maxPartySize?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  holdExpiresMinutes?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  cancelCutoffMinutes?: number;
+
+  @IsOptional()
+  depositRequired?: boolean;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  depositAmountDefault?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  depositPerGuest?: number;
+
+  @IsOptional()
+  noShowFeeEnabled?: boolean;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  noShowFeeAmount?: number;
+}
+
+// M9.2: Deposit DTOs
+export class RequireDepositDto {
+  @IsNumber()
+  @Min(0)
+  amount!: number;
+}
+
+export class PayDepositDto {
+  @IsOptional()
+  @IsIn(['CASH', 'CARD', 'MOMO', 'BANK_TRANSFER'])
+  paymentMethod?: 'CASH' | 'CARD' | 'MOMO' | 'BANK_TRANSFER';
+}
+
+export class RefundDepositDto {
+  @IsOptional()
+  @IsString()
+  reason?: string;
+}
+
+export class ApplyDepositDto {
+  @IsOptional()
+  @IsString()
+  orderId?: string; // Link to order where deposit applied
+}
+
+// M9.2: Calendar query
+export class CalendarQueryDto {
+  @IsString()
+  branchId!: string;
+
+  @IsDateString()
+  date!: string;
+
+  @IsOptional()
+  @IsIn(['HELD', 'CONFIRMED', 'SEATED', 'COMPLETED', 'CANCELLED', 'NO_SHOW'])
+  status?: string;
+}
+
+// M9.2: Notification query
+export class NotificationQueryDto {
+  @IsOptional()
+  @IsString()
+  branchId?: string;
+
+  @IsOptional()
+  @IsDateString()
+  from?: string;
+
+  @IsOptional()
+  @IsDateString()
+  to?: string;
+
+  @IsOptional()
+  @IsIn(['CONFIRMED', 'CANCELLED', 'NO_SHOW', 'DEPOSIT_PAID', 'DEPOSIT_REFUNDED', 'DEPOSIT_APPLIED', 'REMINDER', 'WAITLIST_READY'])
+  event?: string;
+}

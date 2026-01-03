@@ -264,4 +264,17 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
   get goodsReceipt(): typeof prisma.goodsReceipt {
     return prisma.goodsReceipt;
   }
+
+  // M9.2: Reservation policies, deposits, and notifications
+  get reservationPolicy(): typeof prisma.reservationPolicy {
+    return prisma.reservationPolicy;
+  }
+
+  get reservationDeposit(): typeof prisma.reservationDeposit {
+    return prisma.reservationDeposit;
+  }
+
+  get notificationLog(): typeof prisma.notificationLog {
+    return prisma.notificationLog;
+  }
 }
