@@ -370,6 +370,10 @@ model Org {
   webhookEndpoints     WebhookEndpoint[]     // M9.5: Webhook endpoints
   notificationTemplates NotificationTemplate[] // M9.5: Notification templates
   notificationOutbox   NotificationOutbox[]  // M9.5: Notification outbox
+  branchOperatingHours BranchOperatingHours[] // M9.6: Operating hours
+  branchBlackouts      BranchBlackout[]       // M9.6: Blackout windows
+  branchCapacityRules  BranchCapacityRule[]   // M9.6: Capacity rules
+  opsIncidents         OpsIncident[]          // M9.6: Ops incidents
 
   @@map("orgs")
 }
@@ -456,6 +460,10 @@ model Branch {
   webhookEndpoints     WebhookEndpoint[]     // M9.5: Webhook endpoints
   notificationTemplates NotificationTemplate[] // M9.5: Notification templates
   calendarFeedTokens   CalendarFeedToken[]   // M9.5: Calendar feed tokens
+  operatingHours       BranchOperatingHours[] // M9.6: Operating hours
+  blackouts            BranchBlackout[]       // M9.6: Blackout windows
+  capacityRule         BranchCapacityRule?    // M9.6: Capacity rules
+  opsIncidents         OpsIncident[]          // M9.6: Ops incidents
 
   @@index([orgId, id])
   @@map("branches")
@@ -3565,20 +3573,114 @@ model CostInsight {
   @@map("cost_insights")
 }
 
+// ===== M9.6: Branch Operating Hours =====
+
+model BranchOperatingHours {
+  id        String   @id @default(cuid())
+  orgId     String
+  branchId  String
+  dayOfWeek Int      // 0=Sunday, 6=Saturday
+  openTime  String   // "09:00" (24h format)
+  closeTime String   // "22:00" (24h format)
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  org    Org    @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  branch Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  @@unique([branchId, dayOfWeek])
+  @@index([orgId])
+  @@index([branchId])
+  @@map("branch_operating_hours")
+}
+
+// ===== M9.6: Branch Blackouts =====
+
+model BranchBlackout {
+  id        String   @id @default(cuid())
+  orgId     String
+  branchId  String
+  title     String   // "Private Event", "Maintenance", etc.
+  startAt   DateTime
+  endAt     DateTime
+  reason    String?
+  createdBy String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  org    Org    @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  branch Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  @@index([orgId])
+  @@index([branchId])
+  @@index([startAt, endAt])
+  @@map("branch_blackouts")
+}
+
+// ===== M9.6: Branch Capacity Rules =====
+
+model BranchCapacityRule {
+  id                String   @id @default(cuid())
+  orgId             String
+  branchId          String   @unique
+  maxPartiesPerHour Int?     // null = unlimited
+  maxCoversPerHour  Int?     // null = unlimited (covers = total guests)
+  enabled           Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  org    Org    @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  branch Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  @@index([orgId])
+  @@map("branch_capacity_rules")
+}
+
+// ===== M9.6: OpsIncident =====
+
+model OpsIncident {
+  id         String    @id @default(cuid())
+  orgId      String
+  branchId   String?
+  type       String    // "WEBHOOK_CIRCUIT_OPEN", "HOLD_EXPIRY_SPIKE", "NOTIFICATION_FAILURE_SPIKE"
+  severity   String    // "LOW", "MEDIUM", "HIGH", "CRITICAL"
+  title      String
+  payload    Json?
+  resolved   Boolean   @default(false)
+  resolvedAt DateTime?
+  resolvedBy String?
+  createdAt  DateTime  @default(now())
+
+  org    Org     @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  branch Branch? @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  @@index([orgId])
+  @@index([branchId])
+  @@index([type, createdAt])
+  @@index([resolved, createdAt])
+  @@map("ops_incidents")
+}
+
 // ===== M9.5: Webhook Integration =====
 
 model WebhookEndpoint {
-  id         String   @id @default(cuid())
-  orgId      String
-  branchId   String?
-  url        String
-  secret     String   // HMAC secret (stored hashed in production)
-  eventTypes String[] // Array of event type strings
-  enabled    Boolean  @default(true)
-  maxRetries Int      @default(3)
-  timeoutMs  Int      @default(5000)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id                    String    @id @default(cuid())
+  orgId                 String
+  branchId              String?
+  url                   String
+  secret                String    // HMAC secret (stored hashed in production)
+  eventTypes            String[]  // Array of event type strings
+  enabled               Boolean   @default(true)
+  maxRetries            Int       @default(3)
+  timeoutMs             Int       @default(5000)
+  // M9.6: Circuit breaker fields
+  failureCount          Int       @default(0)
+  disabledUntil         DateTime?
+  lastFailureAt         DateTime?
+  circuitBreakThreshold Int       @default(5)
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
 
   org        Org                @relation(fields: [orgId], references: [id], onDelete: Cascade)
   branch     Branch?            @relation(fields: [branchId], references: [id], onDelete: Cascade)

@@ -25,9 +25,11 @@ import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 import { WebhookService, WebhookEndpointDto } from './webhook.service';
 import { WebhookDispatcherService } from './webhook-dispatcher.service';
+import { WebhookHardeningService } from './webhook-hardening.service';
 import { IcsService } from './ics.service';
 import { TemplateRenderService, TemplateDto } from './template-render.service';
 import { NotificationDispatcherService } from './notification-dispatcher.service';
+import { NotificationHardeningService } from './notification-hardening.service';
 
 interface AuthenticatedRequest {
   user: {
@@ -47,9 +49,11 @@ export class IntegrationsController {
   constructor(
     private webhookService: WebhookService,
     private webhookDispatcher: WebhookDispatcherService,
+    private webhookHardening: WebhookHardeningService,
     private icsService: IcsService,
     private templateService: TemplateRenderService,
     private notificationDispatcher: NotificationDispatcherService,
+    private notificationHardening: NotificationHardeningService,
   ) {}
 
   // ==================== WEBHOOKS ====================
@@ -309,6 +313,71 @@ export class IntegrationsController {
     @Query('branchId') branchId: string,
   ) {
     return this.icsService.revokeFeedToken(id, branchId);
+  }
+
+  // ==================== M9.6: CIRCUIT BREAKER & REPLAY ====================
+
+  @Get('webhooks/circuit-status')
+  @Roles('L4', 'L5')
+  @ApiOperation({ summary: 'Get circuit breaker status for all endpoints' })
+  async getCircuitBreakerStatus(@Req() req: AuthenticatedRequest) {
+    return this.webhookHardening.getCircuitBreakerStatus(req.user.orgId);
+  }
+
+  @Post('webhooks/:id/reset-circuit')
+  @Roles('L5')
+  @ApiOperation({ summary: 'Reset circuit breaker for endpoint (L5 only)' })
+  async resetCircuitBreaker(
+    @Req() req: AuthenticatedRequest,
+    @Param('id') endpointId: string,
+  ) {
+    await this.webhookHardening.resetCircuitBreaker(req.user.orgId, endpointId);
+    return { success: true };
+  }
+
+  @Get('webhooks/dead-letter')
+  @Roles('L5')
+  @ApiOperation({ summary: 'Get dead letter deliveries (L5 only)' })
+  async getDeadLetterDeliveries(
+    @Req() req: AuthenticatedRequest,
+    @Query('branchId') branchId?: string,
+  ): Promise<object[]> {
+    return this.webhookHardening.getDeadLetterDeliveries(req.user.orgId, branchId);
+  }
+
+  @Post('webhooks/replay/:deliveryId')
+  @Roles('L5')
+  @ApiOperation({ summary: 'Replay a dead letter webhook delivery (L5 only)' })
+  async replayWebhookDelivery(
+    @Req() req: AuthenticatedRequest,
+    @Param('deliveryId') deliveryId: string,
+  ) {
+    return this.webhookHardening.replayDeadLetter(
+      req.user.orgId,
+      deliveryId,
+      req.user.orgId, // userId would come from req.user.userId in real impl
+    );
+  }
+
+  @Get('notifications/failed')
+  @Roles('L5')
+  @ApiOperation({ summary: 'Get failed notifications (L5 only)' })
+  async getFailedNotifications(@Req() req: AuthenticatedRequest): Promise<object[]> {
+    return this.notificationHardening.getFailedNotifications(req.user.orgId);
+  }
+
+  @Post('notifications/replay/:notificationId')
+  @Roles('L5')
+  @ApiOperation({ summary: 'Replay a failed notification (L5 only)' })
+  async replayNotification(
+    @Req() req: AuthenticatedRequest,
+    @Param('notificationId') notificationId: string,
+  ) {
+    return this.notificationHardening.replayNotification(
+      req.user.orgId,
+      notificationId,
+      req.user.orgId,
+    );
   }
 
   // ==================== HELPERS ====================
