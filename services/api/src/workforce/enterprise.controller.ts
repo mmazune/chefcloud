@@ -53,7 +53,7 @@ export class EnterpriseController {
   @Put('policy')
   @Roles('L4', 'L5')
   async updatePolicy(@Body() body: PolicyDto, @Request() req: any) {
-    return this.enterpriseService.upsertPolicy(req.user.orgId, body, req.user.id);
+    return this.enterpriseService.upsertPolicy(req.user.orgId, body, req.user.userId);
   }
 
   // ===== Pay Period Management =====
@@ -65,7 +65,7 @@ export class EnterpriseController {
   @Post('pay-periods/generate')
   @Roles('L4', 'L5')
   async generatePayPeriods(@Body() body: GeneratePayPeriodsDto, @Request() req: any) {
-    return this.enterpriseService.generatePayPeriods(req.user.orgId, body, req.user.id);
+    return this.enterpriseService.generatePayPeriods(req.user.orgId, body, req.user.userId);
   }
 
   /**
@@ -92,7 +92,7 @@ export class EnterpriseController {
   @Post('pay-periods/:id/close')
   @Roles('L4', 'L5')
   async closePayPeriod(@Param('id') id: string, @Request() req: any) {
-    return this.enterpriseService.closePayPeriod(req.user.orgId, id, req.user.id);
+    return this.enterpriseService.closePayPeriod(req.user.orgId, id, req.user.userId);
   }
 
   // ===== Timesheet Approvals =====
@@ -118,7 +118,7 @@ export class EnterpriseController {
   @Post('timesheets/approve')
   @Roles('L3', 'L4', 'L5')
   async bulkApprove(@Body() body: BulkApprovalDto, @Request() req: any) {
-    return this.enterpriseService.bulkApprove(req.user.orgId, body, req.user.id);
+    return this.enterpriseService.bulkApprove(req.user.orgId, body, req.user.userId);
   }
 
   /**
@@ -128,7 +128,7 @@ export class EnterpriseController {
   @Post('timesheets/reject')
   @Roles('L3', 'L4', 'L5')
   async bulkReject(@Body() body: BulkApprovalDto, @Request() req: any) {
-    return this.enterpriseService.bulkReject(req.user.orgId, body, req.user.id);
+    return this.enterpriseService.bulkReject(req.user.orgId, body, req.user.userId);
   }
 
   // ===== Payroll Export =====
@@ -140,6 +140,6 @@ export class EnterpriseController {
   @Post('payroll/export')
   @Roles('L4', 'L5')
   async exportPayroll(@Body() body: PayrollExportDto, @Request() req: any) {
-    return this.enterpriseService.exportPayroll(req.user.orgId, body, req.user.id);
+    return this.enterpriseService.exportPayroll(req.user.orgId, body, req.user.userId);
   }
 }

@@ -293,7 +293,7 @@ expected 403 "Forbidden", got 201 "Created"
 | **Command** | `pnpm -C services/api test:e2e -- --runInBand --runTestsByPath test/e2e/workforce-m102.e2e-spec.ts --forceExit` |
 | **Impact** | High |
 | **Suggested Owner** | E2E infrastructure / WaitlistModule |
-| **Status** | OPEN |
+| **Status** | **RESOLVED** (Commit `932d05f`, verified in M10.3 finalization 2026-01-03) |
 
 **Summary**: When loading the full AppModule for E2E tests, NestJS fails to resolve dependencies:
 ```
@@ -303,10 +303,8 @@ Please make sure that the argument IdempotencyService at index [0] is available 
 
 **Root Cause**: `WaitlistModule` uses `IdempotencyInterceptor` but doesn't import the module that provides `IdempotencyService`.
 
-**Workaround**: Use slice-based tests that import only WorkforceModule instead of full AppModule.
-
-**Recommended Fix**: Add `IdempotencyModule` (or the module that provides `IdempotencyService`) to `WaitlistModule` imports.
+**Resolution**: Added `CommonModule` import to `WaitlistModule` which exports `IdempotencyModule` and `IdempotencyService`. Fix verified via M10.3 E2E test suite - AppModule bootstraps successfully, WaitlistModule DI resolves correctly (19/19 tests pass).
 
 ---
 
-*Last Updated: 2026-01-03 (PRE-007 Added)*
+*Last Updated: 2026-01-03 (PRE-007 RESOLVED)*

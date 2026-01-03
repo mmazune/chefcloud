@@ -14,7 +14,7 @@
  */
 
 import { INestApplication, HttpStatus } from '@nestjs/common';
-import * as request from 'supertest';
+import request from 'supertest';
 import { createE2EApp } from '../helpers/e2e-bootstrap';
 import { cleanup } from '../helpers/cleanup';
 import { withTimeout } from '../helpers/with-timeout';
@@ -84,19 +84,31 @@ describe('M10.3 Workforce Enterprise (e2e)', () => {
     await traceSpan('afterAll', async () => {
       trace('cleaning up test data');
       
-      // Cleanup M10.3 test data
+      // Cleanup M10.3 test data - use try/catch for resilience
       if (prisma) {
-        await prisma.client.workforceAuditLog.deleteMany({
-          where: { 
-            entityType: { in: ['WorkforcePolicy', 'PayPeriod', 'TimesheetApproval', 'PayrollExport'] },
-          },
-        });
-        await prisma.client.timesheetApproval.deleteMany({
-          where: { orgId },
-        });
-        await prisma.client.payPeriod.deleteMany({
-          where: { orgId },
-        });
+        try {
+          await prisma.client.workforceAuditLog.deleteMany({
+            where: { 
+              entityType: { in: ['WorkforcePolicy', 'PayPeriod', 'TimesheetApproval', 'PayrollExport'] },
+            },
+          });
+        } catch (e) {
+          trace('Could not clean workforceAuditLog', { error: (e as Error).message });
+        }
+        try {
+          await prisma.client.timesheetApproval.deleteMany({
+            where: { orgId },
+          });
+        } catch (e) {
+          trace('Could not clean timesheetApproval', { error: (e as Error).message });
+        }
+        try {
+          await prisma.client.payPeriod.deleteMany({
+            where: { orgId },
+          });
+        } catch (e) {
+          trace('Could not clean payPeriod', { error: (e as Error).message });
+        }
       }
 
       trace('closing app');
@@ -308,9 +320,9 @@ describe('M10.3 Workforce Enterprise (e2e)', () => {
         .send({
           startDate: startDate.toISOString().split('T')[0],
           endDate: endDate.toISOString().split('T')[0],
-          format: 'csv',
+          format: 'CSV', // Service expects uppercase
         })
-        .expect(HttpStatus.OK);
+        .expect(HttpStatus.CREATED); // Export is a creation operation
       
       expect(res.body).toHaveProperty('csv');
       expect(typeof res.body.csv).toBe('string');

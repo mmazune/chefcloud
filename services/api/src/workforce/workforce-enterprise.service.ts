@@ -149,30 +149,33 @@ export class WorkforceEnterpriseService {
       current.setDate(current.getDate() + 1);
     }
 
-    // Use upsert to avoid duplicates
+    // Use findFirst + create to handle nullable branchId (Prisma doesn't support null in compound unique where)
     const created: typeof periods = [];
     for (const p of periods) {
       try {
-        await this.prisma.client.payPeriod.upsert({
+        // Check if period already exists
+        const existing = await this.prisma.client.payPeriod.findFirst({
           where: {
-            orgId_branchId_startDate_endDate: {
-              orgId,
-              branchId: dto.branchId ?? null,
-              startDate: p.startDate,
-              endDate: p.endDate,
-            },
-          },
-          create: {
             orgId,
-            branchId: dto.branchId,
-            periodType: dto.periodType,
+            branchId: dto.branchId ?? null,
             startDate: p.startDate,
             endDate: p.endDate,
-            status: 'OPEN',
           },
-          update: {}, // No-op if exists
         });
-        created.push(p);
+
+        if (!existing) {
+          await this.prisma.client.payPeriod.create({
+            data: {
+              orgId,
+              branchId: dto.branchId ?? null,
+              periodType: dto.periodType,
+              startDate: p.startDate,
+              endDate: p.endDate,
+              status: 'OPEN',
+            },
+          });
+          created.push(p);
+        }
       } catch {
         // Skip if constraint fails
       }
