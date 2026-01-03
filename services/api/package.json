@@ -18,6 +18,7 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e:setup": "bash test/setup-test-db.sh",
     "test:e2e:gate": "pnpm test:e2e:teardown-check && node scripts/e2e-runtime-matrix.mjs",
+    "test:e2e:strict": "pnpm test:e2e:teardown-check && node scripts/e2e-strict-runner.mjs",
     "pretest:e2e": "pnpm test:e2e:setup",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "test:e2e:ci": "node scripts/run-e2e-with-deadline.mjs --minutes=25",
