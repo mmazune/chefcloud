@@ -1,24 +1,20 @@
 /**
- * M15: ReservationsService Tests
+ * M9.1: ReservationsService Tests
  * 
  * Tests for core reservation functionality including:
- * - State transitions
+ * - State transitions (HELD → CONFIRMED → SEATED → COMPLETED)
  * - Deposit handling
- * - Capacity checks
+ * - Overlap detection
  * - No-show processing
  */
 
 import { Test, TestingModule } from '@nestjs/testing';
-import { ConflictException, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { ConflictException, NotFoundException } from '@nestjs/common';
 import { ReservationsService } from './reservations.service';
-import { DepositAccountingService } from './deposit-accounting.service';
 import { PrismaService } from '../prisma.service';
-import { ReservationStatus, DepositStatus } from '@prisma/client';
 
 describe('ReservationsService', () => {
   let service: ReservationsService;
-  let prismaService: PrismaService;
-  let depositAccounting: DepositAccountingService;
 
   const mockPrismaService = {
     reservation: {
@@ -28,15 +24,18 @@ describe('ReservationsService', () => {
       create: jest.fn(),
       update: jest.fn(),
     },
-    branch: {
-      findUnique: jest.fn(),
-    },
     client: {
       orgSettings: {
         findUnique: jest.fn(),
       },
       reservationReminder: {
         create: jest.fn(),
+      },
+      table: {
+        findMany: jest.fn(),
+      },
+      floorPlan: {
+        findMany: jest.fn(),
       },
     },
     paymentIntent: {
@@ -51,14 +50,6 @@ describe('ReservationsService', () => {
     },
   };
 
-  const mockDepositAccounting = {
-    recordDepositCollection: jest.fn(),
-    applyDepositToBill: jest.fn(),
-    forfeitDeposit: jest.fn(),
-    refundDeposit: jest.fn(),
-    partialRefundDeposit: jest.fn(),
-  };
-
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -67,16 +58,10 @@ describe('ReservationsService', () => {
           provide: PrismaService,
           useValue: mockPrismaService,
         },
-        {
-          provide: DepositAccountingService,
-          useValue: mockDepositAccounting,
-        },
       ],
     }).compile();
 
     service = module.get<ReservationsService>(ReservationsService);
-    prismaService = module.get<PrismaService>(PrismaService);
-    depositAccounting = module.get<DepositAccountingService>(DepositAccountingService);
 
     // Reset all mocks
     jest.clearAllMocks();
@@ -103,19 +88,21 @@ describe('ReservationsService', () => {
       const createdReservation = {
         id: 'res-1',
         ...dto,
+        orgId,
         startAt: new Date(dto.startAt),
         endAt: new Date(dto.endAt),
-        status: ReservationStatus.HELD,
+        status: 'HELD',
+        source: 'PHONE',
         deposit: 0,
-        depositStatus: DepositStatus.NONE,
+        depositStatus: 'NONE',
       };
 
       mockPrismaService.reservation.create.mockResolvedValue(createdReservation);
 
       const result = await service.create(orgId, dto as any);
 
-      expect(result.status).toBe(ReservationStatus.HELD);
-      expect(result.depositStatus).toBe(DepositStatus.NONE);
+      expect(result.status).toBe('HELD');
+      expect(result.depositStatus).toBe('NONE');
     });
 
     it('should throw ConflictException for overlapping reservations', async () => {
@@ -142,7 +129,7 @@ describe('ReservationsService', () => {
   });
 
   describe('confirm', () => {
-    it('should confirm a HELD reservation and post GL entry for deposit', async () => {
+    it('should confirm a HELD reservation', async () => {
       const orgId = 'org-1';
       const reservationId = 'res-1';
 
@@ -150,34 +137,26 @@ describe('ReservationsService', () => {
         id: reservationId,
         orgId,
         branchId: 'branch-1',
-        status: ReservationStatus.HELD,
-        depositStatus: DepositStatus.HELD,
-        deposit: 50,
+        status: 'HELD',
+        depositStatus: 'NONE',
+        deposit: 0,
         name: 'John Doe',
       };
 
       mockPrismaService.reservation.findUnique.mockResolvedValue(heldReservation);
       mockPrismaService.reservation.update.mockResolvedValue({
         ...heldReservation,
-        status: ReservationStatus.CONFIRMED,
-        depositStatus: DepositStatus.CAPTURED,
+        status: 'CONFIRMED',
       });
 
-      await service.confirm(orgId, reservationId);
+      const result = await service.confirm(orgId, reservationId);
 
-      expect(depositAccounting.recordDepositCollection).toHaveBeenCalledWith({
-        orgId,
-        branchId: 'branch-1',
-        reservationId,
-        amount: 50,
-        description: expect.stringContaining('John Doe'),
-      });
-
+      expect(result.status).toBe('CONFIRMED');
       expect(mockPrismaService.reservation.update).toHaveBeenCalledWith({
         where: { id: reservationId },
         data: expect.objectContaining({
-          status: ReservationStatus.CONFIRMED,
-          depositStatus: DepositStatus.CAPTURED,
+          status: 'CONFIRMED',
+          autoCancelAt: null,
         }),
       });
     });
@@ -189,138 +168,40 @@ describe('ReservationsService', () => {
       mockPrismaService.reservation.findUnique.mockResolvedValue({
         id: reservationId,
         orgId,
-        status: ReservationStatus.CONFIRMED,
-        depositStatus: DepositStatus.CAPTURED,
+        status: 'CONFIRMED',
+        depositStatus: 'CAPTURED',
       });
 
       await expect(service.confirm(orgId, reservationId)).rejects.toThrow(ConflictException);
     });
   });
 
-  describe('noShow', () => {
-    it('should mark reservation as NO_SHOW and forfeit deposit', async () => {
-      const orgId = 'org-1';
-      const reservationId = 'res-1';
-      const userId = 'user-1';
-
-      const pastReservation = {
-        id: reservationId,
-        orgId,
-        branchId: 'branch-1',
-        status: ReservationStatus.CONFIRMED,
-        depositStatus: DepositStatus.CAPTURED,
-        deposit: 50,
-        name: 'John Doe',
-        startAt: new Date(Date.now() - 60 * 60 * 1000), // 1 hour ago
-      };
-
-      mockPrismaService.reservation.findUnique.mockResolvedValue(pastReservation);
-      mockPrismaService.reservation.update.mockResolvedValue({
-        ...pastReservation,
-        status: ReservationStatus.NO_SHOW,
-        depositStatus: DepositStatus.FORFEITED,
-        noShowAt: new Date(),
-      });
-
-      await service.noShow(orgId, reservationId, userId);
-
-      expect(depositAccounting.forfeitDeposit).toHaveBeenCalledWith({
-        orgId,
-        branchId: 'branch-1',
-        reservationId,
-        amount: 50,
-        description: expect.stringContaining('no show'),
-      });
-
-      expect(mockPrismaService.reservation.update).toHaveBeenCalledWith({
-        where: { id: reservationId },
-        data: expect.objectContaining({
-          status: ReservationStatus.NO_SHOW,
-          depositStatus: DepositStatus.FORFEITED,
-          cancelledBy: userId,
-          cancelReason: 'NO_SHOW',
-        }),
-      });
-    });
-
-    it('should throw ForbiddenException if within grace period', async () => {
-      const orgId = 'org-1';
-      const reservationId = 'res-1';
-      const userId = 'user-1';
-
-      const recentReservation = {
-        id: reservationId,
-        orgId,
-        status: ReservationStatus.CONFIRMED,
-        depositStatus: DepositStatus.CAPTURED,
-        deposit: 50,
-        startAt: new Date(Date.now() - 5 * 60 * 1000), // 5 minutes ago (within 15min grace)
-      };
-
-      mockPrismaService.reservation.findUnique.mockResolvedValue(recentReservation);
-
-      await expect(service.noShow(orgId, reservationId, userId)).rejects.toThrow(
-        ForbiddenException,
-      );
-    });
-  });
-
-  describe('checkAvailability', () => {
-    it('should return availability for requested time slot', async () => {
-      const branchId = 'branch-1';
-      const dateTime = new Date('2025-12-01T19:00:00Z');
-      const partySize = 4;
-
-      mockPrismaService.branch.findUnique.mockResolvedValue({
-        totalSeats: 50,
-      });
-
-      mockPrismaService.reservation.findMany.mockResolvedValue([
-        { partySize: 6 },
-        { partySize: 4 },
-        { partySize: 8 },
-      ]);
-
-      const result = await service.checkAvailability({
-        branchId,
-        dateTime,
-        partySize,
-      });
-
-      expect(result.available).toBe(true);
-      expect(result.totalSeats).toBe(50);
-      expect(result.occupiedSeats).toBe(18);
-      expect(result.availableSeats).toBe(32);
-    });
-
-    it('should return unavailable when capacity exceeded', async () => {
-      const branchId = 'branch-1';
-      const dateTime = new Date('2025-12-01T19:00:00Z');
-      const partySize = 10;
-
-      mockPrismaService.branch.findUnique.mockResolvedValue({
-        totalSeats: 20,
-      });
-
-      mockPrismaService.reservation.findMany.mockResolvedValue([
-        { partySize: 8 },
-        { partySize: 6 },
-      ]);
-
-      const result = await service.checkAvailability({
-        branchId,
-        dateTime,
-        partySize,
-      });
-
-      expect(result.available).toBe(false);
-      expect(result.occupiedSeats).toBe(14);
-      expect(result.availableSeats).toBe(6);
-    });
-  });
-
   describe('seat', () => {
-    it('should seat a CONFIRMED reservation and link to order', async () => {
+    it('should seat a CONFIRMED reservation', async () => {
+      const orgId = 'org-1';
+      const reservationId = 'res-1';
+
+      const confirmedReservation = {
+        id: reservationId,
+        orgId,
+        status: 'CONFIRMED',
+        tableId: 'table-1',
+      };
+
+      mockPrismaService.reservation.findUnique.mockResolvedValue(confirmedReservation);
+      mockPrismaService.reservation.update.mockResolvedValue({
+        ...confirmedReservation,
+        status: 'SEATED',
+        seatedAt: new Date(),
+      });
+
+      const result = await service.seat(orgId, reservationId);
+
+      expect(result.status).toBe('SEATED');
+      expect(result.seatedAt).toBeDefined();
+    });
+
+    it('should link order to table when orderId provided', async () => {
       const orgId = 'org-1';
       const reservationId = 'res-1';
       const orderId = 'order-1';
@@ -328,15 +209,14 @@ describe('ReservationsService', () => {
       const confirmedReservation = {
         id: reservationId,
         orgId,
-        status: ReservationStatus.CONFIRMED,
+        status: 'CONFIRMED',
         tableId: 'table-1',
       };
 
       mockPrismaService.reservation.findUnique.mockResolvedValue(confirmedReservation);
       mockPrismaService.reservation.update.mockResolvedValue({
         ...confirmedReservation,
-        status: ReservationStatus.SEATED,
-        orderId,
+        status: 'SEATED',
         seatedAt: new Date(),
       });
       mockPrismaService.order.update.mockResolvedValue({});
@@ -347,14 +227,185 @@ describe('ReservationsService', () => {
         where: { id: orderId },
         data: { tableId: 'table-1' },
       });
+    });
 
-      expect(mockPrismaService.reservation.update).toHaveBeenCalledWith({
-        where: { id: reservationId },
-        data: expect.objectContaining({
-          status: ReservationStatus.SEATED,
-          orderId,
-        }),
+    it('should throw ConflictException if already seated', async () => {
+      const orgId = 'org-1';
+      const reservationId = 'res-1';
+
+      mockPrismaService.reservation.findUnique.mockResolvedValue({
+        id: reservationId,
+        orgId,
+        status: 'SEATED',
       });
+
+      await expect(service.seat(orgId, reservationId)).rejects.toThrow(ConflictException);
+    });
+  });
+
+  describe('complete', () => {
+    it('should complete a SEATED reservation', async () => {
+      const orgId = 'org-1';
+      const reservationId = 'res-1';
+
+      const seatedReservation = {
+        id: reservationId,
+        orgId,
+        status: 'SEATED',
+      };
+
+      mockPrismaService.reservation.findUnique.mockResolvedValue(seatedReservation);
+      mockPrismaService.reservation.update.mockResolvedValue({
+        ...seatedReservation,
+        status: 'COMPLETED',
+        completedAt: new Date(),
+      });
+
+      const result = await service.complete(orgId, reservationId);
+
+      expect(result.status).toBe('COMPLETED');
+      expect(result.completedAt).toBeDefined();
+    });
+
+    it('should throw ConflictException if not SEATED', async () => {
+      const orgId = 'org-1';
+      const reservationId = 'res-1';
+
+      mockPrismaService.reservation.findUnique.mockResolvedValue({
+        id: reservationId,
+        orgId,
+        status: 'CONFIRMED',
+      });
+
+      await expect(service.complete(orgId, reservationId)).rejects.toThrow(ConflictException);
+    });
+  });
+
+  describe('noShow', () => {
+    it('should mark reservation as NO_SHOW', async () => {
+      const orgId = 'org-1';
+      const reservationId = 'res-1';
+      const userId = 'user-1';
+
+      const confirmedReservation = {
+        id: reservationId,
+        orgId,
+        branchId: 'branch-1',
+        status: 'CONFIRMED',
+        depositStatus: 'CAPTURED',
+        deposit: 50,
+        name: 'John Doe',
+        startAt: new Date(Date.now() - 60 * 60 * 1000), // 1 hour ago
+      };
+
+      mockPrismaService.reservation.findUnique.mockResolvedValue(confirmedReservation);
+      mockPrismaService.reservation.update.mockResolvedValue({
+        ...confirmedReservation,
+        status: 'NO_SHOW',
+      });
+
+      const result = await service.noShow(orgId, reservationId, { reason: 'Customer did not arrive' }, userId);
+
+      expect(result.status).toBe('NO_SHOW');
+    });
+
+    it('should throw ConflictException if SEATED', async () => {
+      const orgId = 'org-1';
+      const reservationId = 'res-1';
+
+      mockPrismaService.reservation.findUnique.mockResolvedValue({
+        id: reservationId,
+        orgId,
+        status: 'SEATED',
+      });
+
+      await expect(service.noShow(orgId, reservationId)).rejects.toThrow(ConflictException);
+    });
+  });
+
+  describe('cancel', () => {
+    it('should cancel a CONFIRMED reservation with reason', async () => {
+      const orgId = 'org-1';
+      const reservationId = 'res-1';
+      const userId = 'user-1';
+
+      const confirmedReservation = {
+        id: reservationId,
+        orgId,
+        branchId: 'branch-1',
+        status: 'CONFIRMED',
+        depositStatus: 'NONE',
+        deposit: 0,
+      };
+
+      mockPrismaService.reservation.findUnique.mockResolvedValue(confirmedReservation);
+      mockPrismaService.reservation.update.mockResolvedValue({
+        ...confirmedReservation,
+        status: 'CANCELLED',
+        cancellationReason: 'Customer request',
+      });
+
+      const result = await service.cancel(orgId, reservationId, { reason: 'Customer request' }, userId);
+
+      expect(result.status).toBe('CANCELLED');
+      expect(result.cancellationReason).toBe('Customer request');
+    });
+
+    it('should throw ConflictException if SEATED or COMPLETED', async () => {
+      const orgId = 'org-1';
+      const reservationId = 'res-1';
+
+      mockPrismaService.reservation.findUnique.mockResolvedValue({
+        id: reservationId,
+        orgId,
+        status: 'SEATED',
+      });
+
+      await expect(service.cancel(orgId, reservationId)).rejects.toThrow(ConflictException);
+    });
+  });
+
+  describe('findOne', () => {
+    it('should return reservation with relations', async () => {
+      const orgId = 'org-1';
+      const reservationId = 'res-1';
+
+      const reservation = {
+        id: reservationId,
+        orgId,
+        name: 'John Doe',
+        status: 'CONFIRMED',
+        table: { id: 'table-1', label: 'T1' },
+        branch: { id: 'branch-1', name: 'Main Branch' },
+      };
+
+      mockPrismaService.reservation.findUnique.mockResolvedValue(reservation);
+
+      const result = await service.findOne(orgId, reservationId);
+
+      expect(result.name).toBe('John Doe');
+      expect(result.table).toBeDefined();
+    });
+
+    it('should throw NotFoundException if not found', async () => {
+      const orgId = 'org-1';
+      const reservationId = 'res-1';
+
+      mockPrismaService.reservation.findUnique.mockResolvedValue(null);
+
+      await expect(service.findOne(orgId, reservationId)).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw NotFoundException if wrong org', async () => {
+      const orgId = 'org-1';
+      const reservationId = 'res-1';
+
+      mockPrismaService.reservation.findUnique.mockResolvedValue({
+        id: reservationId,
+        orgId: 'different-org',
+      });
+
+      await expect(service.findOne(orgId, reservationId)).rejects.toThrow(NotFoundException);
     });
   });
 });

@@ -18,9 +18,19 @@ interface Reservation {
   partySize: number;
   startAt: string;
   endAt: string;
-  status: 'HELD' | 'CONFIRMED' | 'SEATED' | 'CANCELLED' | 'NO_SHOW';
+  status: 'HELD' | 'CONFIRMED' | 'SEATED' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW';
+  source: 'PHONE' | 'WALK_IN' | 'ONLINE' | 'INTERNAL';
+  notes?: string;
   deposit: number;
   depositStatus: string;
+  table?: {
+    id: string;
+    label: string;
+  };
+  branch?: {
+    id: string;
+    name: string;
+  };
 }
 
 interface EventBooking {
@@ -125,9 +135,30 @@ export default function ReservationsPage() {
     },
   });
 
+  const completeMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await apiClient.post(`/reservations/${id}/complete`);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['reservations'] });
+    },
+  });
+
+  const noShowMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await apiClient.post(`/reservations/${id}/no-show`, { reason: 'Customer did not arrive' });
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['reservations'] });
+    },
+  });
+
   const totalReservations = reservations.length;
   const confirmedCount = reservations.filter((r) => r.status === 'CONFIRMED').length;
   const seatedCount = reservations.filter((r) => r.status === 'SEATED').length;
+  const completedCount = reservations.filter((r) => r.status === 'COMPLETED').length;
   const cancelledCount = reservations.filter((r) => r.status === 'CANCELLED' || r.status === 'NO_SHOW').length;
 
   const getStatusBadge = (status: string) => {
@@ -137,14 +168,32 @@ export default function ReservationsPage() {
       case 'CONFIRMED':
         return <Badge variant="default">{status}</Badge>;
       case 'SEATED':
+        return <Badge className="bg-blue-500 hover:bg-blue-600">{status}</Badge>;
+      case 'COMPLETED':
         return <Badge variant="success">{status}</Badge>;
       case 'CANCELLED':
-      case 'NO_SHOW':
         return <Badge variant="destructive">{status}</Badge>;
+      case 'NO_SHOW':
+        return <Badge variant="destructive">{status.replace('_', ' ')}</Badge>;
       case 'CHECKED_IN':
         return <Badge variant="success">{status}</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
+    }
+  };
+
+  const getSourceBadge = (source: string) => {
+    switch (source) {
+      case 'PHONE':
+        return <Badge variant="outline" className="text-xs">📞 Phone</Badge>;
+      case 'ONLINE':
+        return <Badge variant="outline" className="text-xs">🌐 Online</Badge>;
+      case 'WALK_IN':
+        return <Badge variant="outline" className="text-xs">🚶 Walk-in</Badge>;
+      case 'INTERNAL':
+        return <Badge variant="outline" className="text-xs">🏠 Internal</Badge>;
+      default:
+        return <Badge variant="outline" className="text-xs">{source}</Badge>;
     }
   };
 
@@ -165,7 +214,7 @@ export default function ReservationsPage() {
         subtitle="Manage table reservations and event bookings"
       />
 
-      <div className="grid gap-4 md:grid-cols-4 mb-6">
+      <div className="grid gap-4 md:grid-cols-5 mb-6">
         <Card className="p-4">
           <div className="text-sm font-medium text-muted-foreground">Total Reservations</div>
           <div className="text-2xl font-bold mt-2">{totalReservations}</div>
@@ -176,7 +225,11 @@ export default function ReservationsPage() {
         </Card>
         <Card className="p-4">
           <div className="text-sm font-medium text-muted-foreground">Seated</div>
-          <div className="text-2xl font-bold mt-2 text-green-600">{seatedCount}</div>
+          <div className="text-2xl font-bold mt-2 text-purple-600">{seatedCount}</div>
+        </Card>
+        <Card className="p-4">
+          <div className="text-sm font-medium text-muted-foreground">Completed</div>
+          <div className="text-2xl font-bold mt-2 text-green-600">{completedCount}</div>
         </Card>
         <Card className="p-4">
           <div className="text-sm font-medium text-muted-foreground">Cancelled/No-Show</div>
@@ -256,6 +309,8 @@ export default function ReservationsPage() {
                   <th className="text-left p-3 text-sm font-medium">Guest Name</th>
                   <th className="text-left p-3 text-sm font-medium">Phone</th>
                   <th className="text-left p-3 text-sm font-medium">Covers</th>
+                  <th className="text-left p-3 text-sm font-medium">Source</th>
+                  <th className="text-left p-3 text-sm font-medium">Table</th>
                   <th className="text-left p-3 text-sm font-medium">Status</th>
                   <th className="text-left p-3 text-sm font-medium">Deposit</th>
                   <th className="text-left p-3 text-sm font-medium">Actions</th>
@@ -265,14 +320,23 @@ export default function ReservationsPage() {
                 {reservations.map((reservation) => (
                   <tr key={reservation.id} className="border-b hover:bg-muted/30">
                     <td className="p-3 text-sm">{formatDateTime(reservation.startAt)}</td>
-                    <td className="p-3 text-sm font-medium">{reservation.name}</td>
+                    <td className="p-3 text-sm font-medium">
+                      {reservation.name}
+                      {reservation.notes && (
+                        <span className="block text-xs text-muted-foreground">{reservation.notes}</span>
+                      )}
+                    </td>
                     <td className="p-3 text-sm">{reservation.phone}</td>
                     <td className="p-3 text-sm">{reservation.partySize}</td>
+                    <td className="p-3">{getSourceBadge(reservation.source)}</td>
+                    <td className="p-3 text-sm">
+                      {reservation.table ? reservation.table.label : <span className="text-muted-foreground">—</span>}
+                    </td>
                     <td className="p-3">{getStatusBadge(reservation.status)}</td>
                     <td className="p-3 text-sm">
                       {reservation.deposit > 0 ? (
                         <span>
-                          ${reservation.deposit.toFixed(2)}
+                          ${Number(reservation.deposit).toFixed(2)}
                           <span className="text-xs text-muted-foreground ml-1">
                             ({reservation.depositStatus})
                           </span>
@@ -282,7 +346,7 @@ export default function ReservationsPage() {
                       )}
                     </td>
                     <td className="p-3">
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 flex-wrap">
                         {reservation.status === 'HELD' && (
                           <>
                             <Button
@@ -314,6 +378,14 @@ export default function ReservationsPage() {
                             <Button
                               size="sm"
                               variant="outline"
+                              onClick={() => noShowMutation.mutate(reservation.id)}
+                              disabled={noShowMutation.isPending}
+                            >
+                              No-Show
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
                               onClick={() => cancelMutation.mutate(reservation.id)}
                               disabled={cancelMutation.isPending}
                             >
@@ -321,9 +393,17 @@ export default function ReservationsPage() {
                             </Button>
                           </>
                         )}
-                        {(reservation.status === 'SEATED' ||
-                          reservation.status === 'CANCELLED' ||
-                          reservation.status === 'NO_SHOW') && (
+                        {reservation.status === 'SEATED' && (
+                          <Button
+                            size="sm"
+                            className="bg-green-600 hover:bg-green-700"
+                            onClick={() => completeMutation.mutate(reservation.id)}
+                            disabled={completeMutation.isPending}
+                          >
+                            Complete
+                          </Button>
+                        )}
+                        {['COMPLETED', 'CANCELLED', 'NO_SHOW'].includes(reservation.status) && (
                           <span className="text-xs text-muted-foreground">—</span>
                         )}
                       </div>

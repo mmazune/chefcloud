@@ -45,7 +45,22 @@ enum ReservationStatus {
   HELD
   CONFIRMED
   SEATED
+  COMPLETED
   CANCELLED
+  NO_SHOW
+}
+
+enum ReservationSource {
+  PHONE
+  WALK_IN
+  ONLINE
+  INTERNAL
+}
+
+enum WaitlistStatus {
+  WAITING
+  SEATED
+  DROPPED
 }
 
 enum ItemType {
@@ -295,6 +310,7 @@ model Org {
   staffAwards          StaffAward[]          // M19: Staff awards
   Feedback             Feedback[]
   promotionSuggestions PromotionSuggestion[] // M22: Promotion suggestions
+  waitlistEntries      WaitlistEntry[]       // M9.1: Waitlist
 
   @@map("orgs")
 }
@@ -374,6 +390,7 @@ model Branch {
   staffAwards          StaffAward[]          // M19: Staff awards
   Feedback             Feedback[]
   promotionSuggestions PromotionSuggestion[] // M22: Promotion suggestions
+  waitlistEntries      WaitlistEntry[]       // M9.1: Waitlist
 
   @@index([orgId, id])
   @@map("branches")
@@ -687,24 +704,32 @@ model Table {
 }
 
 model Reservation {
-  id              String            @id @default(cuid())
-  orgId           String
-  branchId        String
-  floorPlanId     String?
-  tableId         String?
-  name            String
-  phone           String?
-  partySize       Int
-  startAt         DateTime
-  endAt           DateTime
-  status          ReservationStatus @default(HELD)
-  deposit         Decimal           @default(0) @db.Decimal(10, 2)
-  depositStatus   String            @default("NONE") // "NONE" | "HELD" | "CAPTURED" | "REFUNDED"
-  paymentIntentId String?
-  reminderSentAt  DateTime?
-  autoCancelAt    DateTime?
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
+  id                 String            @id @default(cuid())
+  orgId              String
+  branchId           String
+  floorPlanId        String?
+  tableId            String?
+  name               String
+  phone              String?
+  partySize          Int
+  startAt            DateTime
+  endAt              DateTime
+  status             ReservationStatus @default(HELD)
+  source             ReservationSource @default(PHONE)
+  notes              String?
+  cancellationReason String?
+  deposit            Decimal           @default(0) @db.Decimal(10, 2)
+  depositStatus      String            @default("NONE") // "NONE" | "HELD" | "CAPTURED" | "REFUNDED"
+  paymentIntentId    String?
+  reminderSentAt     DateTime?
+  autoCancelAt       DateTime?
+  seatedAt           DateTime?
+  completedAt        DateTime?
+  createdById        String?
+  updatedById        String?
+  cancelledById      String?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
 
   org           Org                   @relation(fields: [orgId], references: [id], onDelete: Cascade)
   branch        Branch                @relation(fields: [branchId], references: [id], onDelete: Cascade)
@@ -719,6 +744,7 @@ model Reservation {
   @@index([branchId])
   @@index([tableId, startAt, endAt])
   @@index([autoCancelAt])
+  @@index([status])
   @@map("reservations")
 }
 
@@ -735,6 +761,33 @@ model ReservationReminder {
 
   @@index([scheduledAt, sentAt])
   @@map("reservation_reminders")
+}
+
+model WaitlistEntry {
+  id                String         @id @default(cuid())
+  orgId             String
+  branchId          String
+  name              String
+  phone             String?
+  partySize         Int
+  notes             String?
+  quotedWaitMinutes Int?
+  status            WaitlistStatus @default(WAITING)
+  addedById         String?
+  seatedById        String?
+  seatedAt          DateTime?
+  droppedAt         DateTime?
+  droppedReason     String?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  org    Org    @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  branch Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  @@index([orgId])
+  @@index([branchId])
+  @@index([status, createdAt])
+  @@map("waitlist_entries")
 }
 
 // ===== Menu =====

@@ -64,6 +64,18 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
     return prisma.reservation;
   }
 
+  get waitlistEntry(): typeof prisma.waitlistEntry {
+    return prisma.waitlistEntry;
+  }
+
+  get table(): typeof prisma.table {
+    return prisma.table;
+  }
+
+  get floorPlan(): typeof prisma.floorPlan {
+    return prisma.floorPlan;
+  }
+
   get refund(): typeof prisma.refund {
     return prisma.refund;
   }

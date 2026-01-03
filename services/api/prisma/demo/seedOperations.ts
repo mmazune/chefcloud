@@ -723,31 +723,62 @@ async function seedReservations(prisma: PrismaClient) {
       const partySize = randomInt(2, 12);
       const needsDeposit = partySize >= 6;
       
-      // Status distribution
+      // Status distribution - use new M9.1 statuses
       let status: string;
       let depositAmt = 0;
+      let source: string = 'PHONE';
+      let seatedAt: Date | null = null;
+      let completedAt: Date | null = null;
+      let cancellationReason: string | null = null;
+      
+      // Random source
+      const sourceRand = seededRng.next();
+      if (sourceRand < 0.5) source = 'PHONE';
+      else if (sourceRand < 0.75) source = 'ONLINE';
+      else if (sourceRand < 0.9) source = 'WALK_IN';
+      else source = 'INTERNAL';
+      
       if (resDate < new Date(NOW.getTime() - 7 * 24 * 60 * 60 * 1000)) {
         // Past reservation
         const rand = seededRng.next();
-        if (rand < 0.75) {
-          status = 'SEATED';
+        if (rand < 0.70) {
+          status = 'COMPLETED'; // M9.1: Use COMPLETED for finished reservations
+          seatedAt = new Date(resDate.getTime() + 10 * 60 * 1000); // Seated 10 min after start
+          completedAt = new Date(seatedAt.getTime() + 90 * 60 * 1000); // Completed 90 min later
           confirmedCount++;
-        } else if (rand < 0.90) {
+        } else if (rand < 0.85) {
           status = 'CANCELLED';
+          cancellationReason = randomElement(['Customer request', 'Schedule conflict', 'Weather', 'No answer']);
           cancelledCount++;
         } else {
-          status = 'CANCELLED'; // No-show (also cancelled in DB)
+          status = 'NO_SHOW'; // M9.1: Use NO_SHOW instead of CANCELLED
+          cancellationReason = 'Customer did not arrive';
           noShowCount++;
         }
+      } else if (resDate < NOW) {
+        // Current day - some seated
+        status = 'SEATED';
+        seatedAt = new Date(resDate.getTime() + 5 * 60 * 1000);
+        confirmedCount++;
       } else {
         // Future reservation
         status = 'CONFIRMED';
         confirmedCount++;
       }
       
-      if (needsDeposit && status !== 'CANCELLED') {
+      if (needsDeposit && !['CANCELLED', 'NO_SHOW'].includes(status)) {
         depositAmt = partySize * 50000; // 50k per person
       }
+      
+      const notes = seededRng.next() < 0.3 ? randomElement([
+        'Birthday celebration',
+        'Anniversary dinner',
+        'Business meeting',
+        'Window seat preferred',
+        'Allergies: nuts',
+        'Quiet area please',
+        'Vegetarian options needed',
+      ]) : null;
       
       await prisma.reservation.create({
         data: {
@@ -759,6 +790,11 @@ async function seedReservations(prisma: PrismaClient) {
           startAt: resDate,
           endAt: endDate,
           status: status as any,
+          source: source as any,
+          notes: notes,
+          cancellationReason: cancellationReason,
+          seatedAt: seatedAt,
+          completedAt: completedAt,
           deposit: new Prisma.Decimal(depositAmt),
           depositStatus: depositAmt > 0 ? 'CAPTURED' : 'NONE',
         },
@@ -774,6 +810,97 @@ async function seedReservations(prisma: PrismaClient) {
   console.log(`     - No-shows: ${noShowCount}`);
   
   return reservationCount;
+}
+
+/**
+ * STEP 6B: Seed Waitlist (M9.1)
+ */
+async function seedWaitlist(prisma: PrismaClient) {
+  console.log('📋 Seeding waitlist entries...');
+  
+  const customerNames = [
+    'John Mugisha', 'Sarah Nakato', 'David Okello', 'Grace Namukasa', 'Peter Ssemakula',
+    'Mary Nabukalu', 'James Kiiza', 'Betty Akello', 'Robert Mubiru', 'Catherine Nantongo',
+  ];
+  
+  let waitingCount = 0;
+  let seatedCount = 0;
+  let droppedCount = 0;
+  
+  // Create waitlist entries for the past week
+  for (let day = 0; day < 7; day++) {
+    const entriesPerDay = randomInt(3, 8);
+    
+    for (let i = 0; i < entriesPerDay; i++) {
+      const entryDate = new Date(NOW);
+      entryDate.setDate(entryDate.getDate() - day);
+      entryDate.setHours(randomInt(18, 21), randomInt(0, 59), 0, 0);
+      
+      const partySize = randomInt(2, 6);
+      const quotedWait = randomInt(10, 45);
+      
+      let status: string;
+      let seatedAt: Date | null = null;
+      let droppedAt: Date | null = null;
+      let droppedReason: string | null = null;
+      
+      if (day === 0) {
+        // Today: some still waiting
+        if (i < 2) {
+          status = 'WAITING';
+          waitingCount++;
+        } else {
+          status = 'SEATED';
+          seatedAt = new Date(entryDate.getTime() + quotedWait * 60 * 1000);
+          seatedCount++;
+        }
+      } else {
+        // Past days: mostly seated or dropped
+        const rand = seededRng.next();
+        if (rand < 0.75) {
+          status = 'SEATED';
+          seatedAt = new Date(entryDate.getTime() + quotedWait * 60 * 1000);
+          seatedCount++;
+        } else {
+          status = 'DROPPED';
+          droppedAt = new Date(entryDate.getTime() + randomInt(15, 30) * 60 * 1000);
+          droppedReason = randomElement(['Left voluntarily', 'Wait too long', 'Called away', 'No answer']);
+          droppedCount++;
+        }
+      }
+      
+      const notes = seededRng.next() < 0.2 ? randomElement([
+        'High chair needed',
+        'Wheelchair access',
+        'Birthday surprise',
+        'Prefers patio',
+      ]) : null;
+      
+      await prisma.waitlistEntry.create({
+        data: {
+          orgId: TAPAS_ORG_ID,
+          branchId: TAPAS_BRANCH_ID,
+          name: randomElement(customerNames),
+          phone: `+256-77${randomInt(1000000, 9999999)}`,
+          partySize: partySize,
+          quotedWaitMinutes: quotedWait,
+          status: status as any,
+          notes: notes,
+          seatedAt: seatedAt,
+          droppedAt: droppedAt,
+          droppedReason: droppedReason,
+          createdAt: entryDate,
+        },
+      });
+    }
+  }
+  
+  console.log(`  ✅ Created ${waitingCount + seatedCount + droppedCount} waitlist entries`);
+  console.log(`     - Waiting: ${waitingCount}`);
+  console.log(`     - Seated: ${seatedCount}`);
+  console.log(`     - Dropped: ${droppedCount}`);
+  
+  return { waitingCount, seatedCount, droppedCount };
 }
 
 /**
@@ -982,6 +1109,7 @@ export async function seedOperations(prisma: PrismaClient) {
   const contracts = await seedServiceProviders(prisma);
   const { billCount, paymentCount } = await seedVendorsAndBills(prisma);
   const reservations = await seedReservations(prisma);
+  const waitlist = await seedWaitlist(prisma);
   const { tapasFeedbackCount, cafFeedbackCount } = await seedFeedback(prisma);
   
   console.log('\n═══════════════════════════════════════════');
@@ -994,6 +1122,7 @@ export async function seedOperations(prisma: PrismaClient) {
   console.log(`  Service Contracts: ${contracts}`);
   console.log(`  Vendor Bills: ${billCount} (${paymentCount} paid)`);
   console.log(`  Reservations: ${reservations} (Tapas only)`);
+  console.log(`  Waitlist: ${waitlist.waitingCount + waitlist.seatedCount + waitlist.droppedCount}`);
   console.log(`  Feedback: ${tapasFeedbackCount + cafFeedbackCount}`);
   console.log(`    - Tapas: ${tapasFeedbackCount}`);
   console.log(`    - Cafesserie: ${cafFeedbackCount}`);
