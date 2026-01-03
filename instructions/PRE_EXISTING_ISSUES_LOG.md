@@ -278,9 +278,35 @@ expected 403 "Forbidden", got 201 "Created"
 | lint-error | 0 | 1 | 1 |
 | build-error | 0 | 1 | 1 |
 | test-warning | 1 | 0 | 1 |
-| test-error | 0 | 2 | 2 |
-| **Total** | **2** | **4** | **6** |
+| test-error | 1 | 2 | 3 |
+| **Total** | **3** | **4** | **7** |
 
 ---
 
-*Last Updated: 2026-01-02 (PRE-005 + PRE-006 Resolved)*
+### PRE-007: WaitlistModule DI Failure – IdempotencyService Not Injected
+
+| Field | Value |
+|-------|-------|
+| **ID** | PRE-007 |
+| **Category** | test-error |
+| **First Seen** | 2026-01-03 |
+| **Command** | `pnpm -C services/api test:e2e -- --runInBand --runTestsByPath test/e2e/workforce-m102.e2e-spec.ts --forceExit` |
+| **Impact** | High |
+| **Suggested Owner** | E2E infrastructure / WaitlistModule |
+| **Status** | OPEN |
+
+**Summary**: When loading the full AppModule for E2E tests, NestJS fails to resolve dependencies:
+```
+Nest can't resolve dependencies of the IdempotencyInterceptor (?). 
+Please make sure that the argument IdempotencyService at index [0] is available in the WaitlistModule context.
+```
+
+**Root Cause**: `WaitlistModule` uses `IdempotencyInterceptor` but doesn't import the module that provides `IdempotencyService`.
+
+**Workaround**: Use slice-based tests that import only WorkforceModule instead of full AppModule.
+
+**Recommended Fix**: Add `IdempotencyModule` (or the module that provides `IdempotencyService`) to `WaitlistModule` imports.
+
+---
+
+*Last Updated: 2026-01-03 (PRE-007 Added)*

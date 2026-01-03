@@ -24,6 +24,8 @@ import {
   ShoppingCart,
   Truck,
   TrendingUp,
+  Clock,
+  CheckCircle,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -114,6 +116,15 @@ export const ROLE_CAPABILITIES: Record<JobRole, RoleCapability> = {
         ],
       },
       {
+        title: 'Workforce',
+        items: [
+          { label: 'Schedule', href: '/workforce/schedule', icon: Calendar },
+          { label: 'Timeclock', href: '/workforce/timeclock', icon: Clock },
+          { label: 'Approvals', href: '/workforce/approvals', icon: CheckCircle },
+          { label: 'Labor Reports', href: '/workforce/labor', icon: BarChart3 },
+        ],
+      },
+      {
         title: 'Settings',
         items: [
           { label: 'Settings', href: '/settings', icon: Settings },
@@ -149,6 +160,15 @@ export const ROLE_CAPABILITIES: Record<JobRole, RoleCapability> = {
         items: [
           { label: 'Staff', href: '/staff', icon: Users },
           { label: 'Feedback', href: '/feedback', icon: MessageSquare },
+        ],
+      },
+      {
+        title: 'Workforce',
+        items: [
+          { label: 'Schedule', href: '/workforce/schedule', icon: Calendar },
+          { label: 'Timeclock', href: '/workforce/timeclock', icon: Clock },
+          { label: 'Approvals', href: '/workforce/approvals', icon: CheckCircle },
+          { label: 'Labor Reports', href: '/workforce/labor', icon: BarChart3 },
         ],
       },
       {
@@ -273,6 +293,12 @@ export const ROLE_CAPABILITIES: Record<JobRole, RoleCapability> = {
         ],
       },
       {
+        title: 'Workforce',
+        items: [
+          { label: 'Timeclock', href: '/workforce/timeclock', icon: Clock },
+        ],
+      },
+      {
         title: 'Overview',
         items: [
           { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
@@ -301,6 +327,12 @@ export const ROLE_CAPABILITIES: Record<JobRole, RoleCapability> = {
         ],
       },
       {
+        title: 'Workforce',
+        items: [
+          { label: 'Timeclock', href: '/workforce/timeclock', icon: Clock },
+        ],
+      },
+      {
         title: 'Settings',
         items: [
           { label: 'Settings', href: '/settings', icon: Settings },
@@ -320,6 +352,12 @@ export const ROLE_CAPABILITIES: Record<JobRole, RoleCapability> = {
         items: [
           { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
           { label: 'Inventory', href: '/inventory', icon: Package },
+        ],
+      },
+      {
+        title: 'Workforce',
+        items: [
+          { label: 'Timeclock', href: '/workforce/timeclock', icon: Clock },
         ],
       },
       {

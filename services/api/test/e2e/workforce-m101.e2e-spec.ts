@@ -7,8 +7,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, HttpStatus } from '@nestjs/common';
 import * as request from 'supertest';
-import { AppModule } from '../src/app.module';
-import { PrismaService } from '../src/prisma.service';
+import { AppModule } from '../../src/app.module';
+import { PrismaService } from '../../src/prisma.service';
 
 describe('M10.1 Workforce Core (e2e)', () => {
   let app: INestApplication;

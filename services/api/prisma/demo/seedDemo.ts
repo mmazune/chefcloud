@@ -22,6 +22,7 @@ import {
   CAFESSERIE_DEMO_USERS,
   DEMO_PASSWORD,
 } from './constants';
+import { seedWorkforce } from './seedWorkforce';
 
 async function hashPassword(password: string): Promise<string> {
   return argon2.hash(password, {
@@ -679,6 +680,9 @@ export async function seedDemo(prisma: PrismaClient): Promise<void> {
   await seedVendorsAndBills(prisma, CAFESSERIE_ORG.id);
   await seedCustomersAndInvoices(prisma, CAFESSERIE_ORG.id);
 
+  // Seed workforce data (M10.2)
+  await seedWorkforce(prisma);
+
   console.log('\n✅ Demo organizations seeded successfully!');
 }
 
@@ -690,13 +694,13 @@ export function printDemoCredentials(): void {
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   console.log('\n📍 Tapas Bar & Restaurant:');
   TAPAS_DEMO_USERS.forEach((user) => {
-    const pin = user.pin ? ` (PIN: ${user.pin})` : '';
+    const pin = (user as { pin?: string }).pin ? ` (PIN: ${(user as { pin?: string }).pin})` : '';
     console.log(`   ${user.email.padEnd(35)} / ${DEMO_PASSWORD}${pin}`);
   });
 
   console.log('\n📍 Cafesserie:');
   CAFESSERIE_DEMO_USERS.forEach((user) => {
-    const pin = user.pin ? ` (PIN: ${user.pin})` : '';
+    const pin = (user as { pin?: string }).pin ? ` (PIN: ${(user as { pin?: string }).pin})` : '';
     console.log(`   ${user.email.padEnd(35)} / ${DEMO_PASSWORD}${pin}`);
   });
 
