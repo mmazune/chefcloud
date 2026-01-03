@@ -200,6 +200,31 @@ export class UpsertPolicyDto {
   @IsNumber()
   @Min(0)
   noShowFeeAmount?: number;
+
+  // M9.3: Automation fields
+  @IsOptional()
+  autoExpireHeldEnabled?: boolean;
+
+  @IsOptional()
+  waitlistAutoPromote?: boolean;
+
+  @IsOptional()
+  reminderEnabled?: boolean;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  reminderLeadMinutes?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  maxCapacityPerSlot?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  noShowGraceMinutes?: number;
 }
 
 // M9.2: Deposit DTOs

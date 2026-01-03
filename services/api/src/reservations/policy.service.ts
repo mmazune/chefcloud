@@ -114,6 +114,13 @@ export class PolicyService {
           depositPerGuest: dto.depositPerGuest,
           noShowFeeEnabled: dto.noShowFeeEnabled,
           noShowFeeAmount: dto.noShowFeeAmount,
+          // M9.3 fields
+          autoExpireHeldEnabled: dto.autoExpireHeldEnabled,
+          waitlistAutoPromote: dto.waitlistAutoPromote,
+          reminderEnabled: dto.reminderEnabled,
+          reminderLeadMinutes: dto.reminderLeadMinutes,
+          maxCapacityPerSlot: dto.maxCapacityPerSlot,
+          noShowGraceMinutes: dto.noShowGraceMinutes,
         },
       });
 
@@ -134,6 +141,13 @@ export class PolicyService {
           depositPerGuest: dto.depositPerGuest ?? 0,
           noShowFeeEnabled: dto.noShowFeeEnabled ?? false,
           noShowFeeAmount: dto.noShowFeeAmount ?? 0,
+          // M9.3 fields
+          autoExpireHeldEnabled: dto.autoExpireHeldEnabled ?? true,
+          waitlistAutoPromote: dto.waitlistAutoPromote ?? false,
+          reminderEnabled: dto.reminderEnabled ?? true,
+          reminderLeadMinutes: dto.reminderLeadMinutes ?? 1440,
+          maxCapacityPerSlot: dto.maxCapacityPerSlot ?? null,
+          noShowGraceMinutes: dto.noShowGraceMinutes ?? 15,
         },
       });
 

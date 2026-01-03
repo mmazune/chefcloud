@@ -4,6 +4,8 @@ import { ReservationsService } from './reservations.service';
 import { PolicyService } from './policy.service';
 import { DepositAccountingService } from './deposit-accounting.service';
 import { NotificationService } from './notification.service';
+import { AutomationService } from './automation.service';
+import { HostOpsService } from './host-ops.service';
 import { PrismaService } from '../prisma.service';
 import { AuthModule } from '../auth/auth.module';
 import { CommonModule } from '../common/common.module';
@@ -16,8 +18,17 @@ import { CommonModule } from '../common/common.module';
     PolicyService,
     DepositAccountingService,
     NotificationService,
+    AutomationService,
+    HostOpsService,
     PrismaService,
   ],
-  exports: [ReservationsService, PolicyService, DepositAccountingService, NotificationService],
+  exports: [
+    ReservationsService,
+    PolicyService,
+    DepositAccountingService,
+    NotificationService,
+    AutomationService,
+    HostOpsService,
+  ],
 })
 export class ReservationsModule {}

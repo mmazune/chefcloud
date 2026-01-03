@@ -11,12 +11,15 @@ import {
   UseGuards,
   UseInterceptors,
   Req,
+  BadRequestException,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ReservationsService } from './reservations.service';
 import { PolicyService } from './policy.service';
 import { DepositAccountingService } from './deposit-accounting.service';
 import { NotificationService } from './notification.service';
+import { AutomationService } from './automation.service';
+import { HostOpsService } from './host-ops.service';
 import {
   CreateReservationDto,
   UpdateReservationDto,
@@ -44,6 +47,8 @@ export class ReservationsController {
     private readonly policyService: PolicyService,
     private readonly depositService: DepositAccountingService,
     private readonly notificationService: NotificationService,
+    private readonly automationService: AutomationService,
+    private readonly hostOpsService: HostOpsService,
   ) {}
 
   @Post()
@@ -327,5 +332,130 @@ export class ReservationsController {
       to: query.to,
       event: query.event,
     });
+  }
+
+  // ===== M9.3: Host Operations =====
+
+  @Get('today-board')
+  @Roles('L2') // Host/Manager
+  async getTodayBoard(
+    @Req() req: any,
+    @Query('branchId') branchId?: string,
+    @Query('status') status?: string,
+    @Query('includeWaitlist') includeWaitlist?: string,
+  ): Promise<any> {
+    return this.hostOpsService.getTodayBoard(req.user.orgId, {
+      branchId,
+      status: status ? status.split(',') : undefined,
+      includeWaitlist: includeWaitlist !== 'false',
+    });
+  }
+
+  @Get('upcoming')
+  @Roles('L2')
+  async getUpcoming(
+    @Req() req: any,
+    @Query('branchId') branchId: string,
+    @Query('hoursAhead') hoursAhead?: string,
+  ): Promise<any> {
+    return this.hostOpsService.getUpcoming(
+      req.user.orgId,
+      branchId,
+      hoursAhead ? parseInt(hoursAhead, 10) : 2,
+    );
+  }
+
+  @Get('table-statuses')
+  @Roles('L2')
+  async getTableStatuses(
+    @Req() req: any,
+    @Query('branchId') branchId: string,
+  ): Promise<any> {
+    return this.hostOpsService.getTableStatuses(req.user.orgId, branchId);
+  }
+
+  @Get('calendar-refresh-key')
+  @Roles('L1')
+  async getCalendarRefreshKey(
+    @Req() req: any,
+    @Query('branchId') branchId: string,
+    @Query('date') date: string,
+  ): Promise<any> {
+    const key = await this.hostOpsService.getCalendarRefreshKey(
+      req.user.orgId,
+      branchId,
+      date,
+    );
+    return { key };
+  }
+
+  // ===== M9.3: Automation =====
+
+  @Post(':id/no-show-with-grace')
+  @Roles('L2')
+  @UseInterceptors(IdempotencyInterceptor)
+  async noShowWithGrace(
+    @Req() req: any,
+    @Param('id') id: string,
+  ): Promise<any> {
+    return this.automationService.handleNoShowWithGrace(
+      req.user.orgId,
+      id,
+      req.user.userId,
+    );
+  }
+
+  @Get('check-capacity')
+  @Roles('L2')
+  async checkCapacity(
+    @Req() req: any,
+    @Query('branchId') branchId: string,
+    @Query('startAt') startAt: string,
+    @Query('endAt') endAt: string,
+    @Query('partySize') partySize: string,
+  ): Promise<any> {
+    if (!branchId || !startAt || !endAt || !partySize) {
+      throw new BadRequestException('branchId, startAt, endAt, partySize are required');
+    }
+    return this.automationService.checkCapacity(
+      branchId,
+      new Date(startAt),
+      new Date(endAt),
+      parseInt(partySize, 10),
+    );
+  }
+
+  @Get('automation-logs')
+  @Roles('L3') // Manager+ only
+  async getAutomationLogs(
+    @Req() req: any,
+    @Query('branchId') branchId?: string,
+    @Query('entityType') entityType?: string,
+    @Query('entityId') entityId?: string,
+    @Query('action') action?: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+    @Query('limit') limit?: string,
+  ): Promise<any> {
+    return this.automationService.getAutomationLogs(req.user.orgId, {
+      branchId,
+      entityType,
+      entityId,
+      action,
+      from,
+      to,
+      limit: limit ? parseInt(limit, 10) : 100,
+    });
+  }
+
+  @Post('trigger-waitlist-promotion')
+  @Roles('L2')
+  @UseInterceptors(IdempotencyInterceptor)
+  async triggerWaitlistPromotion(
+    @Req() req: any,
+    @Query('branchId') branchId: string,
+  ): Promise<any> {
+    const reservationId = await this.automationService.tryAutoPromoteWaitlist(branchId);
+    return { promoted: !!reservationId, reservationId };
   }
 }

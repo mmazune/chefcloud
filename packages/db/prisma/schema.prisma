@@ -801,22 +801,23 @@ model ReservationReminder {
 }
 
 model WaitlistEntry {
-  id                String            @id @default(cuid())
-  orgId             String
-  branchId          String
-  name              String
-  phone             String?
-  partySize         Int
-  notes             String?
-  quotedWaitMinutes Int?
-  status            WaitlistStatus    @default(WAITING)
-  addedById         String?
-  seatedById        String?
-  seatedAt          DateTime?
-  droppedAt         DateTime?
-  droppedReason     String?
-  createdAt         DateTime          @default(now())
-  updatedAt         DateTime          @updatedAt
+  id                 String            @id @default(cuid())
+  orgId              String
+  branchId           String
+  name               String
+  phone              String?
+  partySize          Int
+  notes              String?
+  quotedWaitMinutes  Int?
+  status             WaitlistStatus    @default(WAITING)
+  addedById          String?
+  seatedById         String?
+  seatedAt           DateTime?
+  droppedAt          DateTime?
+  droppedReason      String?
+  promotedToResId    String?           // M9.3: Linked reservation ID if auto-promoted
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
 
   org              Org               @relation(fields: [orgId], references: [id], onDelete: Cascade)
   branch           Branch            @relation(fields: [branchId], references: [id], onDelete: Cascade)
@@ -830,20 +831,27 @@ model WaitlistEntry {
 
 // M9.2: Reservation Policy (per branch)
 model ReservationPolicy {
-  id                   String   @id @default(cuid())
-  orgId                String
-  branchId             String   @unique
-  leadTimeMinutes      Int      @default(60)
-  maxPartySize         Int      @default(20)
-  holdExpiresMinutes   Int      @default(30)
-  cancelCutoffMinutes  Int      @default(120)
-  depositRequired      Boolean  @default(false)
-  depositAmountDefault Decimal  @default(0) @db.Decimal(10, 2)
-  depositPerGuest      Decimal  @default(0) @db.Decimal(10, 2)
-  noShowFeeEnabled     Boolean  @default(false)
-  noShowFeeAmount      Decimal  @default(0) @db.Decimal(10, 2)
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
+  id                    String   @id @default(cuid())
+  orgId                 String
+  branchId              String   @unique
+  leadTimeMinutes       Int      @default(60)
+  maxPartySize          Int      @default(20)
+  holdExpiresMinutes    Int      @default(30)
+  cancelCutoffMinutes   Int      @default(120)
+  depositRequired       Boolean  @default(false)
+  depositAmountDefault  Decimal  @default(0) @db.Decimal(10, 2)
+  depositPerGuest       Decimal  @default(0) @db.Decimal(10, 2)
+  noShowFeeEnabled      Boolean  @default(false)
+  noShowFeeAmount       Decimal  @default(0) @db.Decimal(10, 2)
+  // M9.3: Automation fields
+  autoExpireHeldEnabled Boolean  @default(true)
+  waitlistAutoPromote   Boolean  @default(false)
+  reminderEnabled       Boolean  @default(true)
+  reminderLeadMinutes   Int      @default(1440) // 24 hours before
+  maxCapacityPerSlot    Int?     // null = unlimited
+  noShowGraceMinutes    Int      @default(15)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 
   org    Org    @relation(fields: [orgId], references: [id], onDelete: Cascade)
   branch Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
@@ -909,6 +917,28 @@ model NotificationLog {
   @@index([reservationId])
   @@index([event, createdAt])
   @@map("notification_logs")
+}
+
+// M9.3: Automation Audit Log
+model AutomationLog {
+  id            String   @id @default(cuid())
+  orgId         String
+  branchId      String?
+  action        String   // e.g., "HOLD_EXPIRED", "WAITLIST_PROMOTED", "REMINDER_SCHEDULED"
+  entityType    String   // "Reservation" | "WaitlistEntry"
+  entityId      String
+  actorType     String   @default("SYSTEM") // "SYSTEM" or userId
+  actorId       String?  // null for SYSTEM
+  beforeState   Json?
+  afterState    Json?
+  metadata      Json?
+  createdAt     DateTime @default(now())
+
+  @@index([orgId])
+  @@index([branchId])
+  @@index([entityType, entityId])
+  @@index([action, createdAt])
+  @@map("automation_logs")
 }
 
 // ===== Menu =====
