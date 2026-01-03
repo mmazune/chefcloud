@@ -244,6 +244,16 @@ enum ShiftSwapStatus {
   CANCELLED
 }
 
+// M10.1: Shift Scheduling Status Lifecycle
+enum ShiftStatus {
+  DRAFT
+  PUBLISHED
+  IN_PROGRESS
+  COMPLETED
+  APPROVED
+  CANCELLED
+}
+
 enum TimeClockMethod {
   MSR
   PASSKEY
@@ -374,6 +384,8 @@ model Org {
   branchBlackouts      BranchBlackout[]       // M9.6: Blackout windows
   branchCapacityRules  BranchCapacityRule[]   // M9.6: Capacity rules
   opsIncidents         OpsIncident[]          // M9.6: Ops incidents
+  scheduledShifts      ScheduledShift[]       // M10.1: Scheduled shifts
+  workforceAuditLogs   WorkforceAuditLog[]    // M10.1: Audit logs
 
   @@map("orgs")
 }
@@ -464,6 +476,8 @@ model Branch {
   blackouts            BranchBlackout[]       // M9.6: Blackout windows
   capacityRule         BranchCapacityRule?    // M9.6: Capacity rules
   opsIncidents         OpsIncident[]          // M9.6: Ops incidents
+  scheduledShifts      ScheduledShift[]       @relation("ScheduledShifts") // M10.1: Scheduled shifts
+  shiftTemplates       ShiftTemplate[]        // M10.1: Branch-level shift templates
 
   @@index([orgId, id])
   @@map("branches")
@@ -539,6 +553,11 @@ model User {
   feedbackSubmitted         Feedback[]               @relation("UserFeedback") // M20: Feedback submitted by this user
   suggestionsCreated        PromotionSuggestion[]    @relation("SuggestionCreators") // M22: Promotion suggestions created by this user
   suggestionsDecided        PromotionSuggestion[]    @relation("SuggestionDecisions") // M22: Promotion suggestions decided by this user
+  assignedScheduledShifts   ScheduledShift[]         @relation("AssignedScheduledShifts") // M10.1: Scheduled shifts
+  publishedScheduledShifts  ScheduledShift[]         @relation("PublishedScheduledShifts") // M10.1: Published shifts
+  approvedScheduledShifts   ScheduledShift[]         @relation("ApprovedScheduledShifts") // M10.1: Approved shifts
+  cancelledScheduledShifts  ScheduledShift[]         @relation("CancelledScheduledShifts") // M10.1: Cancelled shifts
+  workforceAuditLogs        WorkforceAuditLog[]      // M10.1: Audit log entries
 
   @@index([orgId, id])
   @@map("users")
@@ -1170,20 +1189,25 @@ model KdsSlaConfig {
 
 // M2-SHIFTS: Shift template for recurring shift patterns
 model ShiftTemplate {
-  id          String   @id @default(cuid())
-  orgId       String
-  name        String // e.g. "Lunch Service", "Dinner Service"
-  startTime   String // Time of day, e.g. "11:00"
-  endTime     String // Time of day, e.g. "16:00"
-  description String?
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id           String   @id @default(cuid())
+  orgId        String
+  branchId     String?  // M10.1: null = org-wide template
+  name         String   // e.g. "Lunch Service", "Dinner Service"
+  role         String?  // M10.1: jobRole slug
+  startTime    String   // Time of day, e.g. "11:00"
+  endTime      String   // Time of day, e.g. "16:00"
+  breakMinutes Int?     // M10.1: default break duration
+  description  String?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   org       Org             @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  branch    Branch?         @relation(fields: [branchId], references: [id], onDelete: Cascade)
   schedules ShiftSchedule[]
 
   @@index([orgId])
+  @@index([branchId])
   @@map("shift_templates")
 }
 
@@ -2854,6 +2878,7 @@ model TimeEntry {
   orgId           String
   branchId        String
   userId          String
+  shiftId         String?         // M10.1: Link to scheduled shift
   clockInAt       DateTime
   clockOutAt      DateTime?
   method          TimeClockMethod
@@ -2863,12 +2888,88 @@ model TimeEntry {
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
 
-  user       User  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  approvedBy User? @relation("ApprovedTimeEntries", fields: [approvedById], references: [id], onDelete: SetNull)
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  approvedBy     User?           @relation("ApprovedTimeEntries", fields: [approvedById], references: [id], onDelete: SetNull)
+  scheduledShift ScheduledShift? @relation(fields: [shiftId], references: [id], onDelete: SetNull)
+  breakEntries   BreakEntry[]
 
   @@index([orgId, branchId, clockInAt])
   @@index([userId, clockInAt])
+  @@index([shiftId])
   @@map("time_entries")
+}
+
+// ===== M10.1: Workforce Core - Shift Scheduling =====
+
+model ScheduledShift {
+  id              String      @id @default(cuid())
+  orgId           String
+  branchId        String
+  userId          String
+  role            String      // jobRole slug
+  startAt         DateTime
+  endAt           DateTime
+  plannedMinutes  Int
+  actualMinutes   Int?
+  breakMinutes    Int?
+  overtimeMinutes Int?
+  notes           String?
+  status          ShiftStatus @default(DRAFT)
+  publishedAt     DateTime?
+  publishedById   String?
+  approvedAt      DateTime?
+  approvedById    String?
+  cancelledAt     DateTime?
+  cancelledById   String?
+  cancelReason    String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  org         Org              @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  branch      Branch           @relation("ScheduledShifts", fields: [branchId], references: [id], onDelete: Cascade)
+  user        User             @relation("AssignedScheduledShifts", fields: [userId], references: [id], onDelete: Cascade)
+  publishedBy User?            @relation("PublishedScheduledShifts", fields: [publishedById], references: [id], onDelete: SetNull)
+  approvedBy  User?            @relation("ApprovedScheduledShifts", fields: [approvedById], references: [id], onDelete: SetNull)
+  cancelledBy User?            @relation("CancelledScheduledShifts", fields: [cancelledById], references: [id], onDelete: SetNull)
+  timeEntries TimeEntry[]
+
+  @@index([orgId, branchId, startAt])
+  @@index([userId, startAt])
+  @@index([status])
+  @@map("scheduled_shifts")
+}
+
+model BreakEntry {
+  id          String    @id @default(cuid())
+  timeEntryId String
+  startedAt   DateTime
+  endedAt     DateTime?
+  minutes     Int?
+  createdAt   DateTime  @default(now())
+
+  timeEntry TimeEntry @relation(fields: [timeEntryId], references: [id], onDelete: Cascade)
+
+  @@index([timeEntryId])
+  @@map("break_entries")
+}
+
+model WorkforceAuditLog {
+  id            String   @id @default(cuid())
+  orgId         String
+  action        String   // SHIFT_CREATED, CLOCK_IN, etc.
+  entityType    String   // Shift, TimeEntry, etc.
+  entityId      String
+  performedById String
+  payload       Json?
+  createdAt     DateTime @default(now())
+
+  org         Org  @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  performedBy User @relation(fields: [performedById], references: [id], onDelete: Cascade)
+
+  @@index([orgId, action])
+  @@index([entityType, entityId])
+  @@index([performedById])
+  @@map("workforce_audit_logs")
 }
 
 // ===== M9: HR & Payroll Enterprise Hardening =====
