@@ -7,7 +7,7 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { Controller, Post, Get, Delete, Body, Param, Query, UseGuards, Request, Res, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Get, Delete, Patch, Body, Param, Query, UseGuards, Request, Res, HttpStatus } from '@nestjs/common';
 import { Response } from 'express';
 import { AuthGuard } from '@nestjs/passport';
 import { AccountingService } from './accounting.service';
@@ -50,6 +50,44 @@ export class AccountingController {
   @Roles('L4', 'L5')
   async getVendors(@Request() req: RequestWithUser) {
     return this.accountingService.getVendors(req.user.orgId);
+  }
+
+  @Get('vendors/:id')
+  @Roles('L4', 'L5')
+  async getVendor(
+    @Request() req: RequestWithUser,
+    @Param('id') id: string,
+  ) {
+    return this.accountingService.getVendorWithDetails(req.user.orgId, id);
+  }
+
+  // ===== M8.6: Vendor Bills List Endpoints =====
+
+  @Get('vendor-bills')
+  @Roles('L4', 'L5')
+  async getVendorBills(
+    @Request() req: RequestWithUser,
+    @Query('status') status?: string,
+    @Query('vendorId') vendorId?: string,
+    @Query('branchId') branchId?: string,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ) {
+    return this.accountingService.getVendorBills(req.user.orgId, {
+      status,
+      vendorId,
+      branchId,
+      startDate: startDate ? new Date(startDate) : undefined,
+      endDate: endDate ? new Date(endDate) : undefined,
+    });
+  }
+
+  @Get('vendor-bills/:billId')
+  @Roles('L4', 'L5')
+  async getVendorBill(
+    @Param('billId') billId: string,
+  ) {
+    return this.accountingService.getVendorBill(billId);
   }
 
   @Post('vendor-bills')
@@ -142,6 +180,44 @@ export class AccountingController {
   @Roles('L4', 'L5')
   async getCustomers(@Request() req: RequestWithUser) {
     return this.accountingService.getCustomers(req.user.orgId);
+  }
+
+  @Get('customers/:id')
+  @Roles('L4', 'L5')
+  async getCustomer(
+    @Request() req: RequestWithUser,
+    @Param('id') id: string,
+  ) {
+    return this.accountingService.getCustomerWithDetails(req.user.orgId, id);
+  }
+
+  // ===== M8.6: Customer Invoice List Endpoints =====
+
+  @Get('customer-invoices')
+  @Roles('L4', 'L5')
+  async getCustomerInvoices(
+    @Request() req: RequestWithUser,
+    @Query('status') status?: string,
+    @Query('customerId') customerId?: string,
+    @Query('branchId') branchId?: string,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ) {
+    return this.accountingService.getCustomerInvoices(req.user.orgId, {
+      status,
+      customerId,
+      branchId,
+      startDate: startDate ? new Date(startDate) : undefined,
+      endDate: endDate ? new Date(endDate) : undefined,
+    });
+  }
+
+  @Get('customer-invoices/:invoiceId')
+  @Roles('L4', 'L5')
+  async getCustomerInvoice(
+    @Param('invoiceId') invoiceId: string,
+  ) {
+    return this.accountingService.getCustomerInvoice(invoiceId);
   }
 
   @Post('customer-invoices')
@@ -419,6 +495,16 @@ export class AccountingController {
     @Body() body: { method: 'CASH' | 'CARD' | 'MOMO' | 'BANK_TRANSFER'; accountId: string },
   ) {
     return this.accountingService.upsertPaymentMethodMapping(req.user.orgId, body);
+  }
+
+  @Patch('payment-methods/:id')
+  @Roles('L4', 'L5')
+  async updatePaymentMethodMapping(
+    @Request() req: RequestWithUser,
+    @Param('id') id: string,
+    @Body() body: { glAccountId?: string | null },
+  ) {
+    return this.accountingService.updatePaymentMethodMapping(req.user.orgId, id, body);
   }
 
   // ===== M8.4: Outstanding Balance =====

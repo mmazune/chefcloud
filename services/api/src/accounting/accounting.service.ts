@@ -44,7 +44,104 @@ export class AccountingService {
     return this.prisma.client.vendor.findMany({
       where: { orgId },
       orderBy: { name: 'asc' },
+      include: {
+        _count: {
+          select: {
+            bills: true,
+            creditNotes: true,
+          },
+        },
+      },
     });
+  }
+
+  /**
+   * M8.6: Get single vendor with bills and credit notes
+   */
+  async getVendorWithDetails(orgId: string, vendorId: string): Promise<any> {
+    return this.prisma.client.vendor.findFirst({
+      where: { id: vendorId, orgId },
+      include: {
+        bills: {
+          orderBy: { createdAt: 'desc' },
+          take: 50,
+        },
+        creditNotes: {
+          orderBy: { createdAt: 'desc' },
+          take: 50,
+        },
+      },
+    });
+  }
+
+  /**
+   * M8.6: Get vendor bills with optional filters
+   */
+  async getVendorBills(
+    orgId: string,
+    filters?: {
+      status?: string;
+      vendorId?: string;
+      branchId?: string;
+      startDate?: Date;
+      endDate?: Date;
+    },
+  ): Promise<any> {
+    const where: any = { orgId };
+    
+    if (filters?.status) {
+      where.status = filters.status;
+    }
+    if (filters?.vendorId) {
+      where.vendorId = filters.vendorId;
+    }
+    if (filters?.startDate || filters?.endDate) {
+      where.billDate = {};
+      if (filters.startDate) {
+        where.billDate.gte = filters.startDate;
+      }
+      if (filters.endDate) {
+        where.billDate.lte = filters.endDate;
+      }
+    }
+
+    return this.prisma.client.vendorBill.findMany({
+      where,
+      include: {
+        vendor: { select: { id: true, name: true } },
+        journalEntry: { select: { id: true } },
+      },
+      orderBy: { billDate: 'desc' },
+    });
+  }
+
+  /**
+   * M8.6: Get single vendor bill with payments
+   */
+  async getVendorBill(billId: string): Promise<any> {
+    const bill = await this.prisma.client.vendorBill.findUnique({
+      where: { id: billId },
+      include: {
+        vendor: true,
+        journalEntry: {
+          include: {
+            lines: { include: { account: true } },
+          },
+        },
+      },
+    });
+
+    if (!bill) {
+      throw new NotFoundException(`Bill ${billId} not found`);
+    }
+
+    // Get payments for this bill
+    const payments = await this.prisma.client.vendorPayment.findMany({
+      where: { billId },
+      orderBy: { paidAt: 'desc' },
+    });
+
+    return { ...bill, payments };
   }
 
   /**
@@ -580,7 +677,104 @@ export class AccountingService {
     return this.prisma.client.customerAccount.findMany({
       where: { orgId },
       orderBy: { name: 'asc' },
+      include: {
+        _count: {
+          select: {
+            invoices: true,
+            creditNotes: true,
+          },
+        },
+      },
     });
+  }
+
+  /**
+   * M8.6: Get single customer with invoices and credit notes
+   */
+  async getCustomerWithDetails(orgId: string, customerId: string): Promise<any> {
+    return this.prisma.client.customerAccount.findFirst({
+      where: { id: customerId, orgId },
+      include: {
+        invoices: {
+          orderBy: { createdAt: 'desc' },
+          take: 50,
+        },
+        creditNotes: {
+          orderBy: { createdAt: 'desc' },
+          take: 50,
+        },
+      },
+    });
+  }
+
+  /**
+   * M8.6: Get customer invoices with optional filters
+   */
+  async getCustomerInvoices(
+    orgId: string,
+    filters?: {
+      status?: string;
+      customerId?: string;
+      branchId?: string;
+      startDate?: Date;
+      endDate?: Date;
+    },
+  ): Promise<any> {
+    const where: any = { orgId };
+    
+    if (filters?.status) {
+      where.status = filters.status;
+    }
+    if (filters?.customerId) {
+      where.customerId = filters.customerId;
+    }
+    if (filters?.startDate || filters?.endDate) {
+      where.invoiceDate = {};
+      if (filters.startDate) {
+        where.invoiceDate.gte = filters.startDate;
+      }
+      if (filters.endDate) {
+        where.invoiceDate.lte = filters.endDate;
+      }
+    }
+
+    return this.prisma.client.customerInvoice.findMany({
+      where,
+      include: {
+        customer: { select: { id: true, name: true } },
+        journalEntry: { select: { id: true } },
+      },
+      orderBy: { invoiceDate: 'desc' },
+    });
+  }
+
+  /**
+   * M8.6: Get single customer invoice with receipts
+   */
+  async getCustomerInvoice(invoiceId: string): Promise<any> {
+    const invoice = await this.prisma.client.customerInvoice.findUnique({
+      where: { id: invoiceId },
+      include: {
+        customer: true,
+        journalEntry: {
+          include: {
+            lines: { include: { account: true } },
+          },
+        },
+      },
+    });
+
+    if (!invoice) {
+      throw new NotFoundException(`Invoice ${invoiceId} not found`);
+    }
+
+    // Get receipts for this invoice
+    const receipts = await this.prisma.client.customerReceipt.findMany({
+      where: { invoiceId },
+      orderBy: { receivedAt: 'desc' },
+    });
+
+    return { ...invoice, receipts };
   }
 
   /**
@@ -1633,6 +1827,45 @@ export class AccountingService {
   async deletePaymentMethodMapping(orgId: string, method: string): Promise<any> {
     return this.prisma.client.paymentMethodMapping.delete({
       where: { orgId_method: { orgId, method: method as any } },
+    });
+  }
+
+  /**
+   * M8.6: Update payment method GL account mapping by id
+   */
+  async updatePaymentMethodMapping(
+    orgId: string,
+    methodId: string,
+    data: { glAccountId?: string | null },
+  ): Promise<any> {
+    // Check if mapping exists
+    const existing = await this.prisma.client.paymentMethodMapping.findFirst({
+      where: { id: methodId, orgId },
+    });
+
+    if (!existing) {
+      throw new NotFoundException(`Payment method ${methodId} not found`);
+    }
+
+    // If glAccountId is provided, validate it
+    if (data.glAccountId) {
+      const account = await this.prisma.client.account.findFirst({
+        where: { id: data.glAccountId, orgId },
+      });
+
+      if (!account) {
+        throw new NotFoundException(`Account ${data.glAccountId} not found`);
+      }
+
+      if (account.type !== 'ASSET') {
+        throw new BadRequestException(`Payment method accounts should be ASSET type. Got: ${account.type}`);
+      }
+    }
+
+    return this.prisma.client.paymentMethodMapping.update({
+      where: { id: methodId },
+      data: { accountId: data.glAccountId || null },
+      include: { account: true },
     });
   }
 
