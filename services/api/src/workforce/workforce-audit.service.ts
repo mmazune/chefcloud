@@ -22,13 +22,20 @@ export enum WorkforceAuditAction {
   TEMPLATE_CREATED = 'TEMPLATE_CREATED',
   TEMPLATE_UPDATED = 'TEMPLATE_UPDATED',
   TEMPLATE_DELETED = 'TEMPLATE_DELETED',
+  // M10.3: Enterprise Controls
+  POLICY_UPDATED = 'POLICY_UPDATED',
+  PAY_PERIODS_GENERATED = 'PAY_PERIODS_GENERATED',
+  PAY_PERIOD_CLOSED = 'PAY_PERIOD_CLOSED',
+  TIMESHEETS_APPROVED = 'TIMESHEETS_APPROVED',
+  TIMESHEETS_REJECTED = 'TIMESHEETS_REJECTED',
+  PAYROLL_EXPORTED = 'PAYROLL_EXPORTED',
 }
 
 interface AuditLogData {
   orgId: string;
   performedById: string;
   action: WorkforceAuditAction;
-  entityType: 'SHIFT' | 'TIME_ENTRY' | 'BREAK' | 'TEMPLATE';
+  entityType: 'SHIFT' | 'TIME_ENTRY' | 'BREAK' | 'TEMPLATE' | 'WorkforcePolicy' | 'PayPeriod' | 'TimesheetApproval' | 'PayrollExport';
   entityId: string;
   payload?: Record<string, unknown>;
 }
@@ -57,7 +64,7 @@ export class WorkforceAuditService {
 
   async getAuditLogs(filters: {
     orgId: string;
-    entityType?: 'SHIFT' | 'TIME_ENTRY' | 'BREAK' | 'TEMPLATE';
+    entityType?: 'SHIFT' | 'TIME_ENTRY' | 'BREAK' | 'TEMPLATE' | 'WorkforcePolicy' | 'PayPeriod' | 'TimesheetApproval' | 'PayrollExport';
     entityId?: string;
     performedById?: string;
     action?: WorkforceAuditAction;

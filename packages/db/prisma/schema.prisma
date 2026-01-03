@@ -386,6 +386,9 @@ model Org {
   opsIncidents         OpsIncident[]          // M9.6: Ops incidents
   scheduledShifts      ScheduledShift[]       // M10.1: Scheduled shifts
   workforceAuditLogs   WorkforceAuditLog[]    // M10.1: Audit logs
+  workforcePolicy      WorkforcePolicy?       // M10.3: Workforce policy
+  payPeriods           PayPeriod[]            // M10.3: Pay periods
+  timesheetApprovals   TimesheetApproval[]    // M10.3: Timesheet approvals
 
   @@map("orgs")
 }
@@ -478,6 +481,7 @@ model Branch {
   opsIncidents         OpsIncident[]          // M9.6: Ops incidents
   scheduledShifts      ScheduledShift[]       @relation("ScheduledShifts") // M10.1: Scheduled shifts
   shiftTemplates       ShiftTemplate[]        // M10.1: Branch-level shift templates
+  payPeriods           PayPeriod[]            // M10.3: Pay periods
 
   @@index([orgId, id])
   @@map("branches")
@@ -558,6 +562,10 @@ model User {
   approvedScheduledShifts   ScheduledShift[]         @relation("ApprovedScheduledShifts") // M10.1: Approved shifts
   cancelledScheduledShifts  ScheduledShift[]         @relation("CancelledScheduledShifts") // M10.1: Cancelled shifts
   workforceAuditLogs        WorkforceAuditLog[]      // M10.1: Audit log entries
+  closedPayPeriods          PayPeriod[]              @relation("ClosedPayPeriods")    // M10.3: Pay periods closed
+  exportedPayPeriods        PayPeriod[]              @relation("ExportedPayPeriods")  // M10.3: Pay periods exported
+  approvedTimesheets        TimesheetApproval[]      @relation("ApprovedTimesheets")  // M10.3: Approved timesheets
+  rejectedTimesheets        TimesheetApproval[]      @relation("RejectedTimesheets")  // M10.3: Rejected timesheets
 
   @@index([orgId, id])
   @@map("users")
@@ -2892,6 +2900,7 @@ model TimeEntry {
   approvedBy     User?           @relation("ApprovedTimeEntries", fields: [approvedById], references: [id], onDelete: SetNull)
   scheduledShift ScheduledShift? @relation(fields: [shiftId], references: [id], onDelete: SetNull)
   breakEntries   BreakEntry[]
+  timesheetApproval TimesheetApproval? // M10.3: Timesheet approval record
 
   @@index([orgId, branchId, clockInAt])
   @@index([userId, clockInAt])
@@ -3875,4 +3884,89 @@ model CalendarFeedToken {
   @@index([branchId])
   @@index([token])
   @@map("calendar_feed_tokens")
+}
+
+// ===== M10.3: Workforce Enterprise Controls =====
+
+enum PayPeriodStatus {
+  OPEN
+  CLOSED
+  EXPORTED
+}
+
+enum RoundingMode {
+  NEAREST
+  UP
+  DOWN
+}
+
+enum TimesheetApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model WorkforcePolicy {
+  id                    String       @id @default(cuid())
+  orgId                 String       @unique
+  dailyOtThresholdMins  Int          @default(480)      // 8 hours
+  weeklyOtThresholdMins Int          @default(2400)     // 40 hours
+  roundingIntervalMins  Int          @default(15)       // Round to 15-min blocks
+  roundingMode          RoundingMode @default(NEAREST)
+  requireApproval       Boolean      @default(true)
+  autoLockDays          Int          @default(7)        // Auto-lock after N days
+  createdAt             DateTime     @default(now())
+  updatedAt             DateTime     @updatedAt
+
+  org Org @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@map("workforce_policies")
+}
+
+model PayPeriod {
+  id           String          @id @default(cuid())
+  orgId        String
+  branchId     String?                              // NULL = org-wide
+  periodType   String                               // WEEKLY, BIWEEKLY, MONTHLY
+  startDate    DateTime        @db.Date
+  endDate      DateTime        @db.Date
+  status       PayPeriodStatus @default(OPEN)
+  closedAt     DateTime?
+  closedById   String?
+  exportedAt   DateTime?
+  exportedById String?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  org        Org     @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  branch     Branch? @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  closedBy   User?   @relation("ClosedPayPeriods", fields: [closedById], references: [id])
+  exportedBy User?   @relation("ExportedPayPeriods", fields: [exportedById], references: [id])
+
+  @@unique([orgId, branchId, startDate, endDate])
+  @@index([orgId, status])
+  @@map("pay_periods")
+}
+
+model TimesheetApproval {
+  id              String                   @id @default(cuid())
+  timeEntryId     String                   @unique
+  orgId           String
+  status          TimesheetApprovalStatus  @default(PENDING)
+  approvedById    String?
+  approvedAt      DateTime?
+  rejectedById    String?
+  rejectedAt      DateTime?
+  rejectionReason String?
+  lockedAt        DateTime?                // Once locked, cannot be changed
+  createdAt       DateTime                 @default(now())
+  updatedAt       DateTime                 @updatedAt
+
+  timeEntry  TimeEntry @relation(fields: [timeEntryId], references: [id], onDelete: Cascade)
+  org        Org       @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  approvedBy User?     @relation("ApprovedTimesheets", fields: [approvedById], references: [id])
+  rejectedBy User?     @relation("RejectedTimesheets", fields: [rejectedById], references: [id])
+
+  @@index([orgId, status])
+  @@map("timesheet_approvals")
 }
