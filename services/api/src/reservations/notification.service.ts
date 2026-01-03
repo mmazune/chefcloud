@@ -18,7 +18,10 @@ type NotificationEvent =
   | 'DEPOSIT_REFUNDED'
   | 'DEPOSIT_APPLIED'
   | 'REMINDER'
-  | 'WAITLIST_READY';
+  | 'WAITLIST_READY'
+  | 'BOOKING_CREATED'
+  | 'BOOKING_CANCELLED'
+  | 'BOOKING_MODIFIED';
 
 interface SendNotificationParams {
   orgId: string;

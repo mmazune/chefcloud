@@ -291,6 +291,9 @@ enum NotificationEvent {
   DEPOSIT_APPLIED
   REMINDER
   WAITLIST_READY
+  BOOKING_CREATED   // M9.4: Public booking created
+  BOOKING_CANCELLED // M9.4: Public booking cancelled
+  BOOKING_MODIFIED  // M9.4: Public booking rescheduled
 }
 
 enum NotificationStatus {
@@ -378,14 +381,16 @@ model OrgSettings {
 }
 
 model Branch {
-  id           String   @id @default(cuid())
-  orgId        String
-  name         String
-  address      String?
-  timezone     String   @default("Africa/Kampala")
-  currencyCode String? // E39-s1: Branch-specific currency (falls back to org base)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id                   String   @id @default(cuid())
+  orgId                String
+  name                 String
+  address              String?
+  timezone             String   @default("Africa/Kampala")
+  currencyCode         String?  // E39-s1: Branch-specific currency (falls back to org base)
+  publicBookingEnabled Boolean  @default(false) // M9.4: Public booking enabled
+  publicBookingSlug    String?  @unique          // M9.4: URL slug for public booking
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
 
   org                 Org                      @relation(fields: [orgId], references: [id], onDelete: Cascade)
   tables              Table[]
@@ -776,6 +781,7 @@ model Reservation {
   feedback          Feedback?              // M20: Customer feedback for this reservation
   deposits          ReservationDeposit[]   // M9.2: Deposit records
   notificationLogs  NotificationLog[]      // M9.2: Notification audit trail
+  accessTokens      ReservationAccessToken[] // M9.4: Public access tokens
 
   @@index([orgId])
   @@index([branchId])
@@ -783,6 +789,23 @@ model Reservation {
   @@index([autoCancelAt])
   @@index([status])
   @@map("reservations")
+}
+
+// M9.4: Public Booking Access Tokens
+model ReservationAccessToken {
+  id            String    @id @default(cuid())
+  reservationId String
+  token         String    @unique
+  scope         String    // "CANCEL" | "RESCHEDULE" | "VIEW" | "ALL"
+  expiresAt     DateTime
+  usedAt        DateTime?
+  createdAt     DateTime  @default(now())
+
+  reservation   Reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([reservationId])
+  @@map("reservation_access_tokens")
 }
 
 model ReservationReminder {

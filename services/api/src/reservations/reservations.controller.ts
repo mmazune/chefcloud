@@ -11,8 +11,10 @@ import {
   UseGuards,
   UseInterceptors,
   Req,
+  Res,
   BadRequestException,
 } from '@nestjs/common';
+import { Response } from 'express';
 import { AuthGuard } from '@nestjs/passport';
 import { ReservationsService } from './reservations.service';
 import { PolicyService } from './policy.service';
@@ -20,6 +22,7 @@ import { DepositAccountingService } from './deposit-accounting.service';
 import { NotificationService } from './notification.service';
 import { AutomationService } from './automation.service';
 import { HostOpsService } from './host-ops.service';
+import { ReportingService } from './reporting.service';
 import {
   CreateReservationDto,
   UpdateReservationDto,
@@ -49,6 +52,7 @@ export class ReservationsController {
     private readonly notificationService: NotificationService,
     private readonly automationService: AutomationService,
     private readonly hostOpsService: HostOpsService,
+    private readonly reportingService: ReportingService,
   ) {}
 
   @Post()
@@ -457,5 +461,69 @@ export class ReservationsController {
   ): Promise<any> {
     const reservationId = await this.automationService.tryAutoPromoteWaitlist(branchId);
     return { promoted: !!reservationId, reservationId };
+  }
+
+  // ===== M9.4: Reporting Endpoints =====
+
+  /**
+   * Get reservation KPI summary
+   * AC-06: Reports summary returns expected KPI keys
+   * AC-08: RBAC enforced (L4+ for reports)
+   */
+  @Get('reports/summary')
+  @Roles('L4') // Manager/Owner/Accountant only
+  async getReportSummary(
+    @Req() req: any,
+    @Query('from') from: string,
+    @Query('to') to: string,
+    @Query('branchId') branchId?: string,
+  ): Promise<any> {
+    if (!from || !to) {
+      throw new BadRequestException('from and to date parameters are required');
+    }
+    return this.reportingService.getSummary(req.user.orgId, { from, to, branchId });
+  }
+
+  /**
+   * Export reservations as CSV
+   * AC-07: Export returns valid CSV with headers
+   * AC-08: RBAC enforced (L4+ for reports)
+   */
+  @Get('reports/export')
+  @Roles('L4') // Manager/Owner/Accountant only
+  async exportReservations(
+    @Req() req: any,
+    @Res() res: Response,
+    @Query('from') from: string,
+    @Query('to') to: string,
+    @Query('branchId') branchId?: string,
+  ): Promise<void> {
+    if (!from || !to) {
+      throw new BadRequestException('from and to date parameters are required');
+    }
+    
+    const csv = await this.reportingService.exportCSV(req.user.orgId, { from, to, branchId });
+    
+    const filename = `reservations_${from}_to_${to}.csv`;
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.send(csv);
+  }
+
+  /**
+   * Get detailed deposit report
+   */
+  @Get('reports/deposits')
+  @Roles('L4')
+  async getDepositReport(
+    @Req() req: any,
+    @Query('from') from: string,
+    @Query('to') to: string,
+    @Query('branchId') branchId?: string,
+  ): Promise<any> {
+    if (!from || !to) {
+      throw new BadRequestException('from and to date parameters are required');
+    }
+    return this.reportingService.getDepositReport(req.user.orgId, { from, to, branchId });
   }
 }
