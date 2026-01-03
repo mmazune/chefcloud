@@ -275,11 +275,30 @@ enum DepositStatus {
   FORFEITED  // No-show deposit kept
 }
 
+// M9.5: Webhook Delivery Status
+enum WebhookDeliveryStatus {
+  PENDING
+  ATTEMPTED
+  DELIVERED
+  FAILED
+  DEAD_LETTER
+}
+
+// M9.5: Notification Outbox Status
+enum NotificationOutboxStatus {
+  PENDING
+  SENT
+  FAILED
+  RETRYING
+}
+
 // M9.2: Notification Types
 enum NotificationType {
   EMAIL
   SMS
   IN_APP
+  WHATSAPP  // M9.5
+  PUSH      // M9.5
 }
 
 enum NotificationEvent {
@@ -348,6 +367,9 @@ model Org {
   promotionSuggestions PromotionSuggestion[] // M22: Promotion suggestions
   waitlistEntries      WaitlistEntry[]       // M9.1: Waitlist
   reservationPolicies  ReservationPolicy[]   // M9.2: Reservation policies
+  webhookEndpoints     WebhookEndpoint[]     // M9.5: Webhook endpoints
+  notificationTemplates NotificationTemplate[] // M9.5: Notification templates
+  notificationOutbox   NotificationOutbox[]  // M9.5: Notification outbox
 
   @@map("orgs")
 }
@@ -431,6 +453,9 @@ model Branch {
   promotionSuggestions PromotionSuggestion[] // M22: Promotion suggestions
   waitlistEntries      WaitlistEntry[]       // M9.1: Waitlist
   reservationPolicy    ReservationPolicy?    // M9.2: Branch policy
+  webhookEndpoints     WebhookEndpoint[]     // M9.5: Webhook endpoints
+  notificationTemplates NotificationTemplate[] // M9.5: Notification templates
+  calendarFeedTokens   CalendarFeedToken[]   // M9.5: Calendar feed tokens
 
   @@index([orgId, id])
   @@map("branches")
@@ -3538,4 +3563,113 @@ model CostInsight {
   @@index([orgId, createdAt])
   @@index([branchId, severity, createdAt])
   @@map("cost_insights")
+}
+
+// ===== M9.5: Webhook Integration =====
+
+model WebhookEndpoint {
+  id         String   @id @default(cuid())
+  orgId      String
+  branchId   String?
+  url        String
+  secret     String   // HMAC secret (stored hashed in production)
+  eventTypes String[] // Array of event type strings
+  enabled    Boolean  @default(true)
+  maxRetries Int      @default(3)
+  timeoutMs  Int      @default(5000)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  org        Org                @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  branch     Branch?            @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  deliveries WebhookDelivery[]
+
+  @@index([orgId])
+  @@index([branchId])
+  @@map("webhook_endpoints")
+}
+
+model WebhookDelivery {
+  id            String                @id @default(cuid())
+  endpointId    String
+  eventType     String
+  eventId       String                @unique // Idempotency key
+  payload       Json
+  status        WebhookDeliveryStatus @default(PENDING)
+  attempts      Int                   @default(0)
+  lastAttemptAt DateTime?
+  responseCode  Int?
+  responseBody  String?               // Truncated to 1000 chars
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+
+  endpoint WebhookEndpoint @relation(fields: [endpointId], references: [id], onDelete: Cascade)
+
+  @@index([endpointId])
+  @@index([status])
+  @@index([eventId])
+  @@map("webhook_deliveries")
+}
+
+// ===== M9.5: Notification Templates =====
+
+model NotificationTemplate {
+  id        String           @id @default(cuid())
+  orgId     String
+  branchId  String?
+  type      NotificationType
+  event     String           // e.g., "reservation.confirmed"
+  subject   String?          // For email
+  body      String           // Template with {{variables}}
+  enabled   Boolean          @default(true)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  org    Org     @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  branch Branch? @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  @@unique([orgId, branchId, type, event])
+  @@index([orgId])
+  @@map("notification_templates")
+}
+
+// ===== M9.5: Notification Outbox =====
+
+model NotificationOutbox {
+  id          String                   @id @default(cuid())
+  orgId       String
+  recipientId String?                  // User ID or external identifier
+  type        NotificationType
+  event       String
+  subject     String?
+  body        String                   // Rendered body
+  status      NotificationOutboxStatus @default(PENDING)
+  attempts    Int                      @default(0)
+  lastError   String?
+  metadata    Json?                    // Additional context
+  createdAt   DateTime                 @default(now())
+  updatedAt   DateTime                 @updatedAt
+
+  org Org @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([orgId])
+  @@map("notification_outbox")
+}
+
+// ===== M9.5: Calendar Feed Tokens =====
+
+model CalendarFeedToken {
+  id        String   @id @default(cuid())
+  branchId  String
+  token     String   @unique
+  scope     String   @default("CALENDAR_READ")
+  expiresAt DateTime?
+  createdAt DateTime @default(now())
+
+  branch Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  @@index([branchId])
+  @@index([token])
+  @@map("calendar_feed_tokens")
 }

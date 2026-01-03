@@ -27,6 +27,7 @@ import { WebhooksController } from './webhooks.controller';
 import { EfrisModule } from './efris/efris.module';
 import { AlertsModule } from './alerts/alerts.module';
 import { ReservationsModule } from './reservations/reservations.module';
+import { IntegrationsModule } from './integrations/integrations.module';
 import { WaitlistModule } from './waitlist/waitlist.module';
 import { OpsModule } from './ops/ops.module';
 import { SupportModule } from './support/support.module';
@@ -97,6 +98,7 @@ import { PrismaModule } from './prisma.module';
     EfrisModule,
     AlertsModule,
     ReservationsModule,
+    IntegrationsModule,
     WaitlistModule,
     OpsModule, // Needed by WriteBlockMiddleware
     SupportModule,
