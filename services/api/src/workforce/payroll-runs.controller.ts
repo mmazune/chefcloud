@@ -132,6 +132,20 @@ export class PayrollRunsController {
   }
 
   /**
+   * GET /workforce/payroll-runs/:id/posting-preview
+   * Preview GL entries that will be created when posting
+   * RBAC: L4+ can view preview
+   */
+  @Get(':id/posting-preview')
+  @Roles('L4', 'L5')
+  async getPostingPreview(
+    @Param('id') id: string,
+    @Request() req: any,
+  ) {
+    return this.payrollPostingService.getPostingPreview(req.user.orgId, id);
+  }
+
+  /**
    * POST /workforce/payroll-runs/:id/post
    * Post payroll run to GL (creates journal entry)
    * RBAC: L5 only (Owner/Accountant)

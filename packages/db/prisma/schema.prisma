@@ -394,6 +394,7 @@ model Org {
   compensationComponents      CompensationComponent[]       // M10.7: Compensation components
   employeeCompensationProfiles EmployeeCompensationProfile[] // M10.7: Employee compensation profiles
   payslips                    Payslip[]                     // M10.7: Payslips
+  payrollPostingMappings      PayrollPostingMapping[]       // M10.8: Payroll posting mappings
 
   @@map("orgs")
 }
@@ -489,6 +490,7 @@ model Branch {
   payPeriods           PayPeriod[]            // M10.3: Pay periods
   payrollRuns          PayrollRun[]           // M10.6: Payroll runs
   compensationComponents CompensationComponent[] // M10.7: Branch compensation overrides
+  payrollPostingMappings PayrollPostingMapping[] // M10.8: Branch payroll posting mappings
 
   @@index([orgId, id])
   @@map("branches")
@@ -2292,6 +2294,14 @@ model Account {
   children              Account[]              @relation("AccountHierarchy")
   journalLines          JournalLine[]
   paymentMethodMappings PaymentMethodMapping[] // M8.4: Reverse relation
+  // M10.8: Payroll posting mapping reverse relations
+  laborExpenseMappings        PayrollPostingMapping[] @relation("LaborExpenseAccount")
+  wagesPayableMappings        PayrollPostingMapping[] @relation("WagesPayableAccount")
+  taxesPayableMappings        PayrollPostingMapping[] @relation("TaxesPayableAccount")
+  deductionsPayableMappings   PayrollPostingMapping[] @relation("DeductionsPayableAccount")
+  employerContribExpenseMappings PayrollPostingMapping[] @relation("EmployerContribExpenseAccount")
+  employerContribPayableMappings PayrollPostingMapping[] @relation("EmployerContribPayableAccount")
+  cashAccountMappings         PayrollPostingMapping[] @relation("CashAccount")
 
   @@unique([orgId, code])
   @@index([orgId, type])
@@ -4118,6 +4128,43 @@ model PayrollRunJournalLink {
   @@index([payrollRunId])
   @@index([journalEntryId])
   @@map("payroll_run_journal_links")
+}
+
+// ===== M10.8: Payroll Posting Mapping (Configurable GL Accounts) =====
+
+model PayrollPostingMapping {
+  id                          String   @id @default(cuid())
+  orgId                       String
+  branchId                    String?  // Optional for branch-specific overrides
+  
+  // Account mappings
+  laborExpenseAccountId       String
+  wagesPayableAccountId       String
+  taxesPayableAccountId       String
+  deductionsPayableAccountId  String
+  employerContribExpenseAccountId String
+  employerContribPayableAccountId String
+  cashAccountId               String
+  
+  enabled                     Boolean  @default(true)
+  createdAt                   DateTime @default(now())
+  updatedAt                   DateTime @updatedAt
+
+  org    Org     @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  branch Branch? @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  // Account relations
+  laborExpenseAccount       Account @relation("LaborExpenseAccount", fields: [laborExpenseAccountId], references: [id])
+  wagesPayableAccount       Account @relation("WagesPayableAccount", fields: [wagesPayableAccountId], references: [id])
+  taxesPayableAccount       Account @relation("TaxesPayableAccount", fields: [taxesPayableAccountId], references: [id])
+  deductionsPayableAccount  Account @relation("DeductionsPayableAccount", fields: [deductionsPayableAccountId], references: [id])
+  employerContribExpenseAccount Account @relation("EmployerContribExpenseAccount", fields: [employerContribExpenseAccountId], references: [id])
+  employerContribPayableAccount Account @relation("EmployerContribPayableAccount", fields: [employerContribPayableAccountId], references: [id])
+  cashAccount               Account @relation("CashAccount", fields: [cashAccountId], references: [id])
+
+  @@unique([orgId, branchId]) // One mapping per org+branch combo
+  @@index([orgId])
+  @@map("payroll_posting_mappings")
 }
 
 // ===== M10.7: Compensation Components & Payslips =====

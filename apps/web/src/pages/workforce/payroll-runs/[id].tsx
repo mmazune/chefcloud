@@ -98,9 +98,29 @@ export default function PayrollRunDetailPage() {
   const canCalculate = isL4Plus && run?.status === 'DRAFT';
   const canApprove = isL4Plus && run?.status === 'CALCULATED';
   const canPost = isL5 && run?.status === 'APPROVED';
+  const canPreview = isL4Plus && (run?.status === 'APPROVED' || run?.status === 'POSTED');
   const canPay = isL5 && run?.status === 'POSTED';
   const canVoid = isL5 && (run?.status === 'POSTED' || run?.status === 'PAID');
   const canExport = isL4Plus && run?.status !== 'DRAFT';
+
+  // M10.8: Posting preview state
+  const [showPreview, setShowPreview] = useState(false);
+  const [previewData, setPreviewData] = useState<any>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
+
+  const fetchPreview = async () => {
+    if (!id) return;
+    setPreviewLoading(true);
+    try {
+      const res = await apiClient.get(`/workforce/payroll-runs/${id}/posting-preview`);
+      setPreviewData(res.data);
+      setShowPreview(true);
+    } catch (err: any) {
+      setError(err.message || 'Failed to load preview');
+    } finally {
+      setPreviewLoading(false);
+    }
+  };
 
   const actionMutation = useMutation({
     mutationFn: async (action: string) => {
@@ -190,6 +210,15 @@ export default function PayrollRunDetailPage() {
                 className="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700 disabled:opacity-50"
               >
                 Approve
+              </button>
+            )}
+            {canPreview && (
+              <button
+                onClick={fetchPreview}
+                disabled={previewLoading}
+                className="px-4 py-2 border rounded hover:bg-gray-50 disabled:opacity-50"
+              >
+                {previewLoading ? 'Loading...' : 'Preview GL'}
               </button>
             )}
             {canPost && (
@@ -396,6 +425,102 @@ export default function PayrollRunDetailPage() {
           )}
         </div>
       </div>
+
+      {/* M10.8: GL Posting Preview Modal */}
+      {showPreview && previewData && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg shadow-lg max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold">GL Posting Preview</h2>
+                <button
+                  onClick={() => setShowPreview(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="mb-4">
+                <p className="text-sm text-gray-600">
+                  Pay Period: {previewData.payPeriod?.start} to {previewData.payPeriod?.end}
+                </p>
+              </div>
+
+              {/* Totals Summary */}
+              {previewData.totals && (
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6 p-4 bg-gray-50 rounded">
+                  <div>
+                    <div className="text-xs text-gray-500">Gross Earnings</div>
+                    <div className="font-semibold">${Number(previewData.totals.grossEarnings || 0).toFixed(2)}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-gray-500">Net Pay</div>
+                    <div className="font-semibold text-green-600">${Number(previewData.totals.netPay || 0).toFixed(2)}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-gray-500">Taxes Withheld</div>
+                    <div className="font-semibold">${Number(previewData.totals.taxesWithheld || 0).toFixed(2)}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-gray-500">Pre-Tax Deductions</div>
+                    <div className="font-semibold">${Number(previewData.totals.preTaxDeductions || 0).toFixed(2)}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-gray-500">Post-Tax Deductions</div>
+                    <div className="font-semibold">${Number(previewData.totals.postTaxDeductions || 0).toFixed(2)}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-gray-500">Employer Contributions</div>
+                    <div className="font-semibold">${Number(previewData.totals.employerContribTotal || 0).toFixed(2)}</div>
+                  </div>
+                </div>
+              )}
+
+              {/* Journal Entries Preview */}
+              {previewData.entries && previewData.entries.length > 0 && (
+                <div>
+                  <h3 className="font-semibold mb-2">Journal Entries</h3>
+                  <table className="w-full text-sm border rounded">
+                    <thead className="bg-gray-100">
+                      <tr>
+                        <th className="px-3 py-2 text-left">Account</th>
+                        <th className="px-3 py-2 text-right">Debit</th>
+                        <th className="px-3 py-2 text-right">Credit</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {previewData.entries.map((entry: any, i: number) => (
+                        <tr key={i} className="border-t">
+                          <td className="px-3 py-2">
+                            <span className="font-mono text-xs">{entry.accountCode}</span>
+                            <span className="ml-2 text-gray-600">{entry.accountName}</span>
+                          </td>
+                          <td className="px-3 py-2 text-right">
+                            {Number(entry.debit) > 0 ? `$${Number(entry.debit).toFixed(2)}` : '—'}
+                          </td>
+                          <td className="px-3 py-2 text-right">
+                            {Number(entry.credit) > 0 ? `$${Number(entry.credit).toFixed(2)}` : '—'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              <div className="mt-6 flex justify-end">
+                <button
+                  onClick={() => setShowPreview(false)}
+                  className="px-4 py-2 border rounded hover:bg-gray-50"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </AppShell>
   );
 }

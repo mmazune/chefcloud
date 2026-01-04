@@ -49,6 +49,10 @@ import { PayrollGlStubService } from './payroll-gl-stub.service';
 import { CompensationController } from './compensation.controller';
 import { PayslipsController } from './payslips.controller';
 
+// M10.8: Payroll Posting Mappings
+import { PayrollMappingService } from './payroll-mapping.service';
+import { PayrollMappingController } from './payroll-mapping.controller';
+
 @Module({
   imports: [
     forwardRef(() => AccountingModule), // E43-s2
@@ -67,6 +71,7 @@ import { PayslipsController } from './payslips.controller';
     PayrollRunsController, // M10.6
     CompensationController, // M10.7
     PayslipsController, // M10.7
+    PayrollMappingController, // M10.8
   ],
   providers: [
     WorkforceService,
@@ -86,6 +91,7 @@ import { PayslipsController } from './payslips.controller';
     PayslipService, // M10.7
     PayrollExportService, // M10.7
     PayrollGlStubService, // M10.7
+    PayrollMappingService, // M10.8
     PrismaService,
   ],
   exports: [
@@ -106,6 +112,7 @@ import { PayslipsController } from './payslips.controller';
     PayslipService, // M10.7
     PayrollExportService, // M10.7
     PayrollGlStubService, // M10.7
+    PayrollMappingService, // M10.8
   ],
 })
 export class WorkforceModule {}

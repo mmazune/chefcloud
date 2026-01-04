@@ -1,8 +1,25 @@
 /**
- * M10.6: Payroll Posting Service
+ * M10.8: Payroll Posting Service (Full Gross-to-Net)
  * 
  * GL integration for payroll runs: posting, payment, and reversal.
- * Follows M8.2b lifecycle patterns.
+ * Uses PayrollPostingMapping for configurable GL accounts.
+ * Posts full breakdown: gross, taxes, pre/post-tax deductions, employer contributions.
+ * 
+ * GL Entry Pattern:
+ * - On APPROVED → POSTED (Accrual):
+ *   Dr Labor Expense (gross earnings)
+ *   Dr Employer Contrib Expense (employer contributions)
+ *   Cr Wages Payable (net pay = what employees get)
+ *   Cr Taxes Payable (tax withholdings)
+ *   Cr Deductions Payable (pre + post tax deductions)
+ *   Cr Employer Contrib Payable (employer contributions)
+ * 
+ * - On POSTED → PAID (Payment):
+ *   Dr Wages Payable (net pay)
+ *   Cr Cash (net pay = actual payment to employees)
+ * 
+ * - On VOID (Reversal):
+ *   Flip all debits ↔ credits from all linked journals
  */
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -11,13 +28,9 @@ import { Injectable, Logger, NotFoundException, BadRequestException, ForbiddenEx
 import { PrismaService } from '../prisma.service';
 import { Prisma } from '@chefcloud/db';
 import { WorkforceAuditService, WorkforceAuditAction } from './workforce-audit.service';
+import { PayrollMappingService, PayrollMappingPreview } from './payroll-mapping.service';
 
 const Decimal = Prisma.Decimal;
-
-// Default account codes (should be configurable per org in production)
-const ACCOUNT_LABOR_EXPENSE = '6000'; // Labor Expense
-const ACCOUNT_WAGES_PAYABLE = '2105'; // Wages Payable
-const ACCOUNT_CASH = '1000'; // Cash
 
 export interface PostPayrollDto {
   runId: string;
@@ -29,6 +42,36 @@ export interface PayPayrollDto {
   bankAccountCode?: string;
 }
 
+/**
+ * Aggregated payroll totals from payslips
+ */
+export interface PayrollTotals {
+  grossEarnings: Prisma.Decimal;
+  preTaxDeductions: Prisma.Decimal;
+  taxesWithheld: Prisma.Decimal;
+  postTaxDeductions: Prisma.Decimal;
+  netPay: Prisma.Decimal;
+  employerContribTotal: Prisma.Decimal;
+  totalDeductions: Prisma.Decimal; // pre + post tax deductions
+}
+
+/**
+ * GL posting preview showing how entries will be created
+ */
+export interface PostingPreview {
+  runId: string;
+  status: string;
+  payPeriod: { start: string; end: string };
+  totals: PayrollTotals;
+  entries: Array<{
+    accountCode: string;
+    accountName: string;
+    debit: string;
+    credit: string;
+  }>;
+  mapping: PayrollMappingPreview;
+}
+
 @Injectable()
 export class PayrollPostingService {
   private readonly logger = new Logger(PayrollPostingService.name);
@@ -36,11 +79,105 @@ export class PayrollPostingService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly auditService: WorkforceAuditService,
+    private readonly mappingService: PayrollMappingService,
   ) {}
 
   /**
-   * Post payroll run to GL (Accrual entry)
-   * Dr Labor Expense / Cr Wages Payable
+   * Get posting preview (what journal entries will be created)
+   */
+  async getPostingPreview(orgId: string, runId: string): Promise<PostingPreview> {
+    const run = await this.prisma.client.payrollRun.findFirst({
+      where: { id: runId, orgId },
+      include: { payPeriod: true, payslips: true },
+    });
+
+    if (!run) {
+      throw new NotFoundException('Payroll run not found');
+    }
+
+    const mapping = await this.mappingService.getEffectiveMapping(orgId, run.branchId);
+    const totals = this.aggregatePayslipTotals(run.payslips);
+
+    const entries: PostingPreview['entries'] = [];
+
+    // Debit entries
+    if (totals.grossEarnings.gt(0)) {
+      entries.push({
+        accountCode: mapping.laborExpenseAccount.code,
+        accountName: mapping.laborExpenseAccount.name,
+        debit: totals.grossEarnings.toString(),
+        credit: '0',
+      });
+    }
+
+    if (totals.employerContribTotal.gt(0)) {
+      entries.push({
+        accountCode: mapping.employerContribExpenseAccount.code,
+        accountName: mapping.employerContribExpenseAccount.name,
+        debit: totals.employerContribTotal.toString(),
+        credit: '0',
+      });
+    }
+
+    // Credit entries
+    if (totals.netPay.gt(0)) {
+      entries.push({
+        accountCode: mapping.wagesPayableAccount.code,
+        accountName: mapping.wagesPayableAccount.name,
+        debit: '0',
+        credit: totals.netPay.toString(),
+      });
+    }
+
+    if (totals.taxesWithheld.gt(0)) {
+      entries.push({
+        accountCode: mapping.taxesPayableAccount.code,
+        accountName: mapping.taxesPayableAccount.name,
+        debit: '0',
+        credit: totals.taxesWithheld.toString(),
+      });
+    }
+
+    if (totals.totalDeductions.gt(0)) {
+      entries.push({
+        accountCode: mapping.deductionsPayableAccount.code,
+        accountName: mapping.deductionsPayableAccount.name,
+        debit: '0',
+        credit: totals.totalDeductions.toString(),
+      });
+    }
+
+    if (totals.employerContribTotal.gt(0)) {
+      entries.push({
+        accountCode: mapping.employerContribPayableAccount.code,
+        accountName: mapping.employerContribPayableAccount.name,
+        debit: '0',
+        credit: totals.employerContribTotal.toString(),
+      });
+    }
+
+    return {
+      runId: run.id,
+      status: run.status,
+      payPeriod: {
+        start: run.payPeriod.startDate.toISOString().slice(0, 10),
+        end: run.payPeriod.endDate.toISOString().slice(0, 10),
+      },
+      totals,
+      entries,
+      mapping,
+    };
+  }
+
+  /**
+   * Post payroll run to GL (Full Accrual entry with breakdown)
+   * 
+   * Dr Labor Expense (gross)
+   * Dr Employer Contrib Expense (employer contributions)
+   * Cr Wages Payable (net pay)
+   * Cr Taxes Payable (taxes withheld)
+   * Cr Deductions Payable (pre + post tax deductions)
+   * Cr Employer Contrib Payable (employer contributions)
    */
   async postPayrollRun(
     orgId: string,
@@ -52,6 +189,7 @@ export class PayrollPostingService {
       include: {
         payPeriod: true,
         journalLinks: true,
+        payslips: true,
       },
     });
 
@@ -70,33 +208,115 @@ export class PayrollPostingService {
       throw new BadRequestException('Payroll run already has an accrual posting');
     }
 
-    // Check fiscal period is not locked
-    // Note: In production, check FiscalPeriod.status for the posting date
-    // For now, we just proceed
-
-    // Get accounts
-    const accounts = await this.prisma.client.account.findMany({
-      where: {
-        orgId,
-        code: { in: [ACCOUNT_LABOR_EXPENSE, ACCOUNT_WAGES_PAYABLE] },
-      },
-    });
-
-    const laborExpenseAccount = accounts.find((a: any) => a.code === ACCOUNT_LABOR_EXPENSE);
-    const wagesPayableAccount = accounts.find((a: any) => a.code === ACCOUNT_WAGES_PAYABLE);
-
-    if (!laborExpenseAccount || !wagesPayableAccount) {
-      throw new BadRequestException('Required GL accounts not configured (6000 Labor Expense, 2105 Wages Payable)');
+    // Validate payslips exist (M10.7 requirement)
+    if (run.payslips.length === 0) {
+      throw new BadRequestException('No payslips found. Generate payslips before posting.');
     }
 
-    // Calculate total payable (use paidHours as proxy, or grossAmount if available)
-    const amount = run.grossAmount 
-      ? new Decimal(run.grossAmount) 
-      : new Decimal(run.paidHours).mul(15); // Default $15/hr if no grossAmount
+    // Get effective mapping (validates exists and enabled)
+    const mapping = await this.mappingService.getEffectiveMapping(orgId, run.branchId);
+
+    // Aggregate totals from payslips
+    const totals = this.aggregatePayslipTotals(run.payslips);
+
+    // Validate net pay invariant: net = gross - preTax - taxes - postTax
+    const expectedNet = totals.grossEarnings
+      .sub(totals.preTaxDeductions)
+      .sub(totals.taxesWithheld)
+      .sub(totals.postTaxDeductions);
+    
+    if (!totals.netPay.eq(expectedNet)) {
+      this.logger.warn(`Net pay invariant failed: expected=${expectedNet}, actual=${totals.netPay}`);
+      // Don't throw - allow small rounding differences
+    }
+
+    // Build journal lines
+    const lines: Array<{
+      accountId: string;
+      branchId: string | null;
+      debit: Prisma.Decimal;
+      credit: Prisma.Decimal;
+      meta: object;
+    }> = [];
+
+    // Dr Labor Expense (gross earnings)
+    if (totals.grossEarnings.gt(0)) {
+      lines.push({
+        accountId: mapping.laborExpenseAccount.id,
+        branchId: run.branchId,
+        debit: totals.grossEarnings,
+        credit: new Decimal(0),
+        meta: { payrollRunId: run.id, component: 'GROSS_EARNINGS' },
+      });
+    }
+
+    // Dr Employer Contrib Expense
+    if (totals.employerContribTotal.gt(0)) {
+      lines.push({
+        accountId: mapping.employerContribExpenseAccount.id,
+        branchId: run.branchId,
+        debit: totals.employerContribTotal,
+        credit: new Decimal(0),
+        meta: { payrollRunId: run.id, component: 'EMPLOYER_CONTRIB_EXPENSE' },
+      });
+    }
+
+    // Cr Wages Payable (net pay)
+    if (totals.netPay.gt(0)) {
+      lines.push({
+        accountId: mapping.wagesPayableAccount.id,
+        branchId: run.branchId,
+        debit: new Decimal(0),
+        credit: totals.netPay,
+        meta: { payrollRunId: run.id, component: 'NET_PAY' },
+      });
+    }
+
+    // Cr Taxes Payable
+    if (totals.taxesWithheld.gt(0)) {
+      lines.push({
+        accountId: mapping.taxesPayableAccount.id,
+        branchId: run.branchId,
+        debit: new Decimal(0),
+        credit: totals.taxesWithheld,
+        meta: { payrollRunId: run.id, component: 'TAXES_WITHHELD' },
+      });
+    }
+
+    // Cr Deductions Payable (pre + post)
+    if (totals.totalDeductions.gt(0)) {
+      lines.push({
+        accountId: mapping.deductionsPayableAccount.id,
+        branchId: run.branchId,
+        debit: new Decimal(0),
+        credit: totals.totalDeductions,
+        meta: { payrollRunId: run.id, component: 'DEDUCTIONS' },
+      });
+    }
+
+    // Cr Employer Contrib Payable
+    if (totals.employerContribTotal.gt(0)) {
+      lines.push({
+        accountId: mapping.employerContribPayableAccount.id,
+        branchId: run.branchId,
+        debit: new Decimal(0),
+        credit: totals.employerContribTotal,
+        meta: { payrollRunId: run.id, component: 'EMPLOYER_CONTRIB_PAYABLE' },
+      });
+    }
+
+    // Verify balanced: sum(debits) = sum(credits)
+    const totalDebits = lines.reduce((sum, l) => sum.add(l.debit), new Decimal(0));
+    const totalCredits = lines.reduce((sum, l) => sum.add(l.credit), new Decimal(0));
+    
+    if (!totalDebits.eq(totalCredits)) {
+      throw new BadRequestException(
+        `Journal entry unbalanced: debits=${totalDebits}, credits=${totalCredits}`,
+      );
+    }
 
     // Create journal entry
     const result = await this.prisma.client.$transaction(async (tx) => {
-      // Create journal entry
       const journalEntry = await tx.journalEntry.create({
         data: {
           orgId,
@@ -108,24 +328,7 @@ export class PayrollPostingService {
           status: 'POSTED',
           postedById: userId,
           postedAt: new Date(),
-          lines: {
-            create: [
-              {
-                accountId: laborExpenseAccount.id,
-                branchId: run.branchId,
-                debit: amount,
-                credit: new Decimal(0),
-                meta: { payrollRunId: run.id },
-              },
-              {
-                accountId: wagesPayableAccount.id,
-                branchId: run.branchId,
-                debit: new Decimal(0),
-                credit: amount,
-                meta: { payrollRunId: run.id },
-              },
-            ],
-          },
+          lines: { create: lines },
         },
       });
 
@@ -166,15 +369,27 @@ export class PayrollPostingService {
       action: WorkforceAuditAction.PAYROLL_RUN_POSTED,
       entityType: 'PayrollRun',
       entityId: run.id,
-      payload: { journalEntryId: result.journalEntry.id, amount: amount.toString() },
+      payload: {
+        journalEntryId: result.journalEntry.id,
+        grossEarnings: totals.grossEarnings.toString(),
+        netPay: totals.netPay.toString(),
+        taxesWithheld: totals.taxesWithheld.toString(),
+        totalDeductions: totals.totalDeductions.toString(),
+        employerContribTotal: totals.employerContribTotal.toString(),
+      },
     });
+
+    this.logger.log(`Posted payroll run ${run.id}: gross=${totals.grossEarnings}, net=${totals.netPay}`);
 
     return result.run;
   }
 
   /**
    * Mark payroll run as paid (Payment entry)
-   * Dr Wages Payable / Cr Cash/Bank
+   * Dr Wages Payable / Cr Cash (NET PAY ONLY)
+   * 
+   * This pays out the net wages to employees.
+   * Taxes and deductions are settled separately.
    */
   async payPayrollRun(
     orgId: string,
@@ -186,6 +401,7 @@ export class PayrollPostingService {
       include: {
         payPeriod: true,
         journalLinks: true,
+        payslips: true,
       },
     });
 
@@ -204,26 +420,16 @@ export class PayrollPostingService {
       throw new BadRequestException('Payroll run already has a payment posting');
     }
 
-    // Get accounts
-    const bankAccountCode = dto.bankAccountCode ?? ACCOUNT_CASH;
-    const accounts = await this.prisma.client.account.findMany({
-      where: {
-        orgId,
-        code: { in: [ACCOUNT_WAGES_PAYABLE, bankAccountCode] },
-      },
-    });
+    // Get effective mapping
+    const mapping = await this.mappingService.getEffectiveMapping(orgId, run.branchId);
 
-    const wagesPayableAccount = accounts.find((a: any) => a.code === ACCOUNT_WAGES_PAYABLE);
-    const cashAccount = accounts.find((a: any) => a.code === bankAccountCode);
+    // Calculate NET pay from payslips (what employees actually receive)
+    const totals = this.aggregatePayslipTotals(run.payslips);
+    const netPay = totals.netPay;
 
-    if (!wagesPayableAccount || !cashAccount) {
-      throw new BadRequestException(`Required GL accounts not configured (2105 Wages Payable, ${bankAccountCode})`);
+    if (netPay.lte(0)) {
+      throw new BadRequestException('Net pay must be greater than zero');
     }
-
-    // Calculate total payable
-    const amount = run.grossAmount 
-      ? new Decimal(run.grossAmount) 
-      : new Decimal(run.paidHours).mul(15);
 
     // Create journal entry
     const result = await this.prisma.client.$transaction(async (tx) => {
@@ -241,18 +447,18 @@ export class PayrollPostingService {
           lines: {
             create: [
               {
-                accountId: wagesPayableAccount.id,
+                accountId: mapping.wagesPayableAccount.id,
                 branchId: run.branchId,
-                debit: amount,
+                debit: netPay,
                 credit: new Decimal(0),
-                meta: { payrollRunId: run.id },
+                meta: { payrollRunId: run.id, component: 'NET_PAY_SETTLEMENT' },
               },
               {
-                accountId: cashAccount.id,
+                accountId: mapping.cashAccount.id,
                 branchId: run.branchId,
                 debit: new Decimal(0),
-                credit: amount,
-                meta: { payrollRunId: run.id },
+                credit: netPay,
+                meta: { payrollRunId: run.id, component: 'CASH_DISBURSEMENT' },
               },
             ],
           },
@@ -296,8 +502,10 @@ export class PayrollPostingService {
       action: WorkforceAuditAction.PAYROLL_RUN_PAID,
       entityType: 'PayrollRun',
       entityId: run.id,
-      payload: { journalEntryId: result.journalEntry.id, amount: amount.toString() },
+      payload: { journalEntryId: result.journalEntry.id, netPay: netPay.toString() },
     });
+
+    this.logger.log(`Paid payroll run ${run.id}: netPay=${netPay}`);
 
     return result.run;
   }
@@ -417,6 +625,54 @@ export class PayrollPostingService {
       payload: { reversalCount: result.reversalIds.length },
     });
 
+    this.logger.log(`Voided payroll run ${runId}: ${result.reversalIds.length} reversals created`);
+
     return result.run;
+  }
+
+  /**
+   * Aggregate payslip totals for GL posting.
+   * All amounts use Prisma.Decimal for precision.
+   */
+  private aggregatePayslipTotals(payslips: any[]): PayrollTotals {
+    const zero = new Decimal(0);
+
+    if (payslips.length === 0) {
+      return {
+        grossEarnings: zero,
+        preTaxDeductions: zero,
+        taxesWithheld: zero,
+        postTaxDeductions: zero,
+        netPay: zero,
+        employerContribTotal: zero,
+        totalDeductions: zero,
+      };
+    }
+
+    let grossEarnings = zero;
+    let preTaxDeductions = zero;
+    let taxesWithheld = zero;
+    let postTaxDeductions = zero;
+    let netPay = zero;
+    let employerContribTotal = zero;
+
+    for (const payslip of payslips) {
+      grossEarnings = grossEarnings.add(new Decimal(payslip.grossEarnings));
+      preTaxDeductions = preTaxDeductions.add(new Decimal(payslip.preTaxDeductions));
+      taxesWithheld = taxesWithheld.add(new Decimal(payslip.taxesWithheld));
+      postTaxDeductions = postTaxDeductions.add(new Decimal(payslip.postTaxDeductions));
+      netPay = netPay.add(new Decimal(payslip.netPay));
+      employerContribTotal = employerContribTotal.add(new Decimal(payslip.employerContribTotal));
+    }
+
+    return {
+      grossEarnings,
+      preTaxDeductions,
+      taxesWithheld,
+      postTaxDeductions,
+      netPay,
+      employerContribTotal,
+      totalDeductions: preTaxDeductions.add(postTaxDeductions),
+    };
   }
 }
