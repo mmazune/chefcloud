@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * M10.13: Auto-Scheduler Controller
+ * M10.14: Extended with mode parameter and publish endpoint
  *
  * REST endpoints for auto-schedule generation and application.
  * RBAC: L4+ for write operations, L3+ for read operations.
@@ -18,7 +19,7 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { WorkforceAutoSchedulerService } from './workforce-auto-scheduler.service';
+import { WorkforceAutoSchedulerService, ASSIGNMENT_MODES, AssignmentMode } from './workforce-auto-scheduler.service';
 import { WorkforceAutoScheduleApplyService } from './workforce-auto-schedule-apply.service';
 
 @Controller('workforce/planning/auto-schedule')
@@ -31,13 +32,15 @@ export class WorkforceAutoSchedulerController {
 
   /**
    * Generate an auto-schedule run from staffing plan.
-   * POST /workforce/planning/auto-schedule/generate?branchId=&date=
+   * POST /workforce/planning/auto-schedule/generate?branchId=&date=&mode=
+   * M10.14: mode=UNASSIGNED (default) or ASSIGNED (with deterministic assignment)
    */
   @Post('generate')
   @HttpCode(HttpStatus.CREATED)
   async generateRun(
     @Query('branchId') branchId: string,
     @Query('date') date: string,
+    @Query('mode') mode: string,
     @Request() req: any,
   ): Promise<any> {
     const { orgId, sub: userId, roleLevel } = req.user;
@@ -51,7 +54,11 @@ export class WorkforceAutoSchedulerController {
       return { error: 'branchId and date are required', statusCode: 400 };
     }
 
-    return this.schedulerService.generateRun(orgId, branchId, date, userId);
+    // M10.14: Validate mode parameter
+    const assignmentMode: AssignmentMode = 
+      mode === 'ASSIGNED' ? ASSIGNMENT_MODES.ASSIGNED : ASSIGNMENT_MODES.UNASSIGNED;
+
+    return this.schedulerService.generateRun(orgId, branchId, date, userId, { mode: assignmentMode });
   }
 
   /**
@@ -143,6 +150,26 @@ export class WorkforceAutoSchedulerController {
     }
 
     return this.schedulerService.voidRun(runId, orgId, userId);
+  }
+
+  /**
+   * M10.14: Publish an applied run (send notifications to assigned employees).
+   * POST /workforce/planning/auto-schedule/:runId/publish
+   * Idempotent: returns existing publish timestamp if already published.
+   */
+  @Post(':runId/publish')
+  @HttpCode(HttpStatus.OK)
+  async publishRun(
+    @Param('runId') runId: string,
+    @Request() req: any,
+  ): Promise<any> {
+    const { orgId, sub: userId, roleLevel } = req.user;
+
+    if (!this.hasWriteAccess(roleLevel)) {
+      return { error: 'Forbidden', statusCode: 403 };
+    }
+
+    return this.schedulerService.publishRun(runId, orgId, userId);
   }
 
   /**

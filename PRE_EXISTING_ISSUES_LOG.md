@@ -74,6 +74,25 @@ C:\Users\arman\Desktop\nimbusPOS\nimbuspos\services\api\test\m1-kds-enterprise.e
 
 ---
 
+## PRE-010: M10.13 UI Test Missing displayName (FIXED)
+
+**Category**: lint-error  
+**First Observed**: M10.14 Baseline (2026-01-04)  
+**Impact**: HIGH - Blocks web build  
+**Status**: FIXED (M10.14 baseline fix)
+
+**Summary**: Component definition in m1013-auto-scheduler.test.tsx missing displayName.
+
+**Evidence**:
+```
+./src/__tests__/pages/workforce/m1013-auto-scheduler.test.tsx
+45:10  Error: Component definition is missing display name  react/display-name
+```
+
+**Fix Applied**: Added named `Wrapper` component with `.displayName` property in createWrapper().
+
+---
+
 ## Previously Logged Issues (Reference)
 
 - PRE-001 through PRE-006: See git history for M8.x milestones

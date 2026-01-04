@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * M10.13: Auto-Scheduler Service
+ * M10.14: Extended with Deterministic Assignment + Constraints + Publish
  *
  * Generates shift suggestions from StaffingPlan demand using a deterministic
  * greedy algorithm. Supports availability-aware candidate lists.
@@ -9,16 +10,32 @@
  * - Deterministic: same inputs -> same inputsHash -> same suggestions
  * - Idempotent: returns existing run if hash matches
  * - Availability-aware: candidates filtered by M10.11 availability
+ * - M10.14: Assignment mode (UNASSIGNED | ASSIGNED)
+ * - M10.14: Constraint enforcement (overlap, min-rest, max-weekly, max-consec-days)
+ * - M10.14: Publish workflow with notifications
  */
 
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { createHash } from 'crypto';
 import { Prisma } from '@chefcloud/db';
+import {
+  WorkforceConstraintsEvaluatorService,
+  CandidateEvaluation,
+  CONSTRAINT_REASONS,
+} from './workforce-constraints-evaluator.service';
 
-const ALGORITHM_VERSION = 'v1.0';
+const ALGORITHM_VERSION = 'v1.1'; // Bumped for M10.14
 const DEFAULT_MAX_SHIFT_MINUTES = 480; // 8 hours
 const DEFAULT_BLOCK_SIZE_HOURS = 4;
+
+// M10.14: Assignment modes
+export const ASSIGNMENT_MODES = {
+  UNASSIGNED: 'UNASSIGNED', // M10.13 behavior - candidates only
+  ASSIGNED: 'ASSIGNED', // M10.14 - deterministic assignment
+} as const;
+
+export type AssignmentMode = (typeof ASSIGNMENT_MODES)[keyof typeof ASSIGNMENT_MODES];
 
 interface DemandHour {
   hour: number;
@@ -38,20 +55,31 @@ interface CandidateResult {
   available: boolean;
 }
 
+interface GenerateRunOptions {
+  mode?: AssignmentMode;
+}
+
 @Injectable()
 export class WorkforceAutoSchedulerService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly constraintsEvaluator: WorkforceConstraintsEvaluatorService,
+  ) {}
 
   /**
    * Generate an auto-schedule run from a StaffingPlan.
    * Idempotent: returns existing run if inputsHash matches.
+   * M10.14: Supports mode=ASSIGNED for deterministic employee assignment.
    */
   async generateRun(
     orgId: string,
     branchId: string,
     date: string,
     userId: string,
+    options?: GenerateRunOptions,
   ): Promise<any> {
+    const mode = options?.mode || ASSIGNMENT_MODES.UNASSIGNED;
+
     // Find the best StaffingPlan for this date
     const plan = await this.findStaffingPlan(orgId, branchId, date);
     if (!plan) {
@@ -67,8 +95,8 @@ export class WorkforceAutoSchedulerService {
     });
     const timezone = branch?.timezone || 'UTC';
 
-    // Build canonical inputs for hash
-    const inputs = await this.buildCanonicalInputs(plan, timezone);
+    // Build canonical inputs for hash (includes mode for M10.14)
+    const inputs = await this.buildCanonicalInputs(plan, timezone, mode);
     const inputsHash = this.computeHash(inputs);
 
     // Check for existing run with same hash (idempotency)
@@ -81,7 +109,7 @@ export class WorkforceAutoSchedulerService {
           inputsHash,
         },
       },
-      include: { suggestions: true },
+      include: { suggestions: { include: { assignedUser: true } } },
     });
 
     if (existing) {
@@ -99,6 +127,7 @@ export class WorkforceAutoSchedulerService {
       date,
       orgId,
       branchId,
+      mode,
     );
 
     // Create run with suggestions in transaction
@@ -112,6 +141,7 @@ export class WorkforceAutoSchedulerService {
         inputsHash,
         algorithmVersion: ALGORITHM_VERSION,
         status: 'DRAFT',
+        assignmentMode: mode,
         suggestions: {
           create: suggestions.map((s) => ({
             roleKey: s.roleKey,
@@ -120,10 +150,13 @@ export class WorkforceAutoSchedulerService {
             headcount: s.headcount,
             candidateUserIds: s.candidateUserIds as Prisma.InputJsonValue,
             score: s.score,
+            assignedUserId: s.assignedUserId || null,
+            assignmentReason: s.assignmentReason || null,
+            assignmentScore: s.assignmentScore || null,
           })),
         },
       },
-      include: { suggestions: true },
+      include: { suggestions: { include: { assignedUser: true } } },
     });
 
     return {
@@ -214,6 +247,105 @@ export class WorkforceAutoSchedulerService {
     });
   }
 
+  /**
+   * M10.14: Publish a run (send notifications to assigned employees).
+   * Idempotent: returns existing publish timestamp if already published.
+   */
+  async publishRun(runId: string, orgId: string, userId: string): Promise<any> {
+    const run = await this.prisma.client.autoScheduleRun.findFirst({
+      where: { id: runId, orgId },
+      include: {
+        suggestions: { include: { assignedUser: true } },
+        branch: true,
+      },
+    });
+
+    if (!run) {
+      throw new NotFoundException(`Run ${runId} not found`);
+    }
+
+    if (run.status !== 'APPLIED') {
+      throw new BadRequestException('Can only publish an applied run');
+    }
+
+    // Idempotent: already published
+    if (run.publishedAt) {
+      return {
+        ...run,
+        isAlreadyPublished: true,
+        notificationsSent: 0,
+      };
+    }
+
+    // Get assigned user IDs for notifications
+    const assignedUserIds = run.suggestions
+      .filter((s: any) => s.assignedUserId)
+      .map((s: any) => s.assignedUserId);
+
+    const uniqueUserIds = [...new Set(assignedUserIds)] as string[];
+
+    // Update run with publish info (non-blocking notifications)
+    const updatedRun = await this.prisma.client.autoScheduleRun.update({
+      where: { id: runId },
+      data: {
+        publishedAt: new Date(),
+        publishedById: userId,
+      },
+      include: {
+        suggestions: { include: { assignedUser: true } },
+        branch: true,
+      },
+    });
+
+    // Queue notifications asynchronously (non-hanging per AC-07)
+    // For now we log to WorkforceNotificationLog without blocking
+    const dateStr = run.date.toISOString().split('T')[0];
+    await this.queuePublishNotifications(
+      orgId,
+      uniqueUserIds,
+      run.branch?.name || 'Unknown',
+      dateStr,
+      userId,
+      runId,
+    );
+
+    return {
+      ...updatedRun,
+      isAlreadyPublished: false,
+      notificationsSent: uniqueUserIds.length,
+    };
+  }
+
+  /**
+   * Queue publish notifications (non-blocking).
+   */
+  private async queuePublishNotifications(
+    orgId: string,
+    userIds: string[],
+    branchName: string,
+    date: string,
+    performerId: string,
+    runId?: string,
+  ): Promise<void> {
+    // Create notification logs (async, non-blocking)
+    const notifications = userIds.map((userId) => ({
+      orgId,
+      type: 'SCHEDULE_PUBLISHED' as const,
+      targetUserId: userId,
+      performedById: performerId,
+      entityType: 'AutoScheduleRun',
+      entityId: runId || 'unknown',
+      payload: { branchName, date },
+    }));
+
+    // Fire-and-forget: don't await or block on this
+    this.prisma.client.workforceNotificationLog
+      .createMany({ data: notifications })
+      .catch((err) => {
+        console.error('Failed to queue publish notifications:', err);
+      });
+  }
+
   // ===== PRIVATE HELPERS =====
 
   private async findStaffingPlan(
@@ -249,7 +381,11 @@ export class WorkforceAutoSchedulerService {
     return plan;
   }
 
-  private async buildCanonicalInputs(plan: any, timezone: string): Promise<string> {
+  private async buildCanonicalInputs(
+    plan: any,
+    timezone: string,
+    mode: AssignmentMode = ASSIGNMENT_MODES.UNASSIGNED,
+  ): Promise<string> {
     // Sort lines by hour and roleKey for determinism
     const sortedLines = [...plan.lines].sort((a, b) => {
       if (a.hour !== b.hour) return a.hour - b.hour;
@@ -261,6 +397,7 @@ export class WorkforceAutoSchedulerService {
       date: plan.date.toISOString().split('T')[0],
       timezone,
       algorithmVersion: ALGORITHM_VERSION,
+      mode, // M10.14: Include mode in hash
       lines: sortedLines.map((l: any) => ({
         hour: l.hour,
         roleKey: l.roleKey,
@@ -282,6 +419,7 @@ export class WorkforceAutoSchedulerService {
     dateStr: string,
     orgId: string,
     branchId: string,
+    mode: AssignmentMode = ASSIGNMENT_MODES.UNASSIGNED,
   ): Promise<any[]> {
     const lines: DemandHour[] = plan.lines.map((l: any) => ({
       hour: l.hour,
@@ -322,6 +460,33 @@ export class WorkforceAutoSchedulerService {
           block.endHour,
         );
 
+        // M10.14: If ASSIGNED mode, evaluate constraints and pick best candidate
+        let assignedUserId: string | null = null;
+        let assignmentReason: string | null = null;
+        let assignmentScore: number | null = null;
+
+        if (mode === ASSIGNMENT_MODES.ASSIGNED && candidates.length > 0) {
+          const evaluations = await this.constraintsEvaluator.evaluateCandidates(
+            orgId,
+            branchId,
+            candidates,
+            startAt,
+            endAt,
+          );
+
+          // Find first eligible candidate (already sorted by priority)
+          const eligible = evaluations.find((e) => e.isEligible);
+          if (eligible) {
+            assignedUserId = eligible.userId;
+            assignmentReason = 'ASSIGNED'; // Deterministic assignment
+            assignmentScore = eligible.score;
+          } else if (evaluations.length > 0) {
+            // No eligible candidate, record constraint reason
+            const first = evaluations[0];
+            assignmentReason = first.violations.map((v) => v.reason).join(',');
+          }
+        }
+
         suggestions.push({
           roleKey,
           startAt,
@@ -329,6 +494,9 @@ export class WorkforceAutoSchedulerService {
           headcount: block.headcount,
           candidateUserIds: candidates.length > 0 ? candidates : null,
           score: block.headcount * 10, // Simple scoring
+          assignedUserId,
+          assignmentReason,
+          assignmentScore,
         });
       }
     }

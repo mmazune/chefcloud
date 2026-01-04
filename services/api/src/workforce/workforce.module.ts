@@ -81,6 +81,9 @@ import { WorkforceAutoSchedulerService } from './workforce-auto-scheduler.servic
 import { WorkforceAutoScheduleApplyService } from './workforce-auto-schedule-apply.service';
 import { WorkforceAutoSchedulerController } from './workforce-auto-scheduler.controller';
 
+// M10.14: Constraints Evaluator (Assignment + Constraint Enforcement)
+import { WorkforceConstraintsEvaluatorService } from './workforce-constraints-evaluator.service';
+
 @Module({
   imports: [
     forwardRef(() => AccountingModule), // E43-s2
@@ -144,6 +147,7 @@ import { WorkforceAutoSchedulerController } from './workforce-auto-scheduler.con
     WorkforcePlanningExportService, // M10.12
     WorkforceAutoSchedulerService, // M10.13
     WorkforceAutoScheduleApplyService, // M10.13
+    WorkforceConstraintsEvaluatorService, // M10.14
     PrismaService,
   ],
   exports: [
@@ -175,6 +179,7 @@ import { WorkforceAutoSchedulerController } from './workforce-auto-scheduler.con
     WorkforcePlanningExportService, // M10.12
     WorkforceAutoSchedulerService, // M10.13
     WorkforceAutoScheduleApplyService, // M10.13
+    WorkforceConstraintsEvaluatorService, // M10.14
   ],
 })
 export class WorkforceModule {}

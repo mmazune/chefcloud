@@ -275,6 +275,7 @@ enum WorkforceNotificationType {
   OPEN_SHIFT_CLAIMED
   OPEN_SHIFT_CLAIM_APPROVED
   AVAILABILITY_UPDATED
+  SCHEDULE_PUBLISHED // M10.14: Auto-scheduler published notification
 }
 
 // M10.1: Shift Scheduling Status Lifecycle
@@ -667,6 +668,9 @@ model User {
   resolvedStaffingAlerts          StaffingAlert[]                  @relation("AlertResolver")
   // M10.13: Auto-Scheduler
   appliedAutoScheduleRuns         AutoScheduleRun[]                @relation("RunApplier")
+  // M10.14: Auto-Scheduler v2 (Publish + Assignment)
+  publishedAutoScheduleRuns       AutoScheduleRun[]                @relation("RunPublisher")
+  assignedScheduleSuggestions     AutoScheduleSuggestion[]         @relation("SuggestionAssignee")
 
   @@index([orgId, id])
   @@map("users")
@@ -4049,6 +4053,9 @@ model WorkforcePolicy {
   requireApproval           Boolean      @default(true)
   autoLockDays              Int          @default(7) // Auto-lock after N days
   openShiftRequiresApproval Boolean      @default(true) // M10.11: Require approval for open shift claims
+  minRestHoursBetweenShifts Int          @default(10) // M10.14: Minimum rest hours between shifts
+  maxWeeklyHours            Int          @default(48) // M10.14: Maximum weekly hours
+  maxConsecutiveDays        Int          @default(6) // M10.14: Maximum consecutive work days
   createdAt                 DateTime     @default(now())
   updatedAt                 DateTime     @updatedAt
 
@@ -4870,9 +4877,12 @@ model AutoScheduleRun {
   inputsHash       String                // SHA256 of canonicalized inputs for idempotency
   algorithmVersion String                @default("v1.0")
   status           AutoScheduleRunStatus @default(DRAFT)
+  assignmentMode   String                @default("UNASSIGNED") // M10.14: UNASSIGNED | ASSIGNED
   generatedAt      DateTime              @default(now())
   appliedAt        DateTime?
   appliedById      String?
+  publishedAt      DateTime? // M10.14: When schedule was published
+  publishedById    String? // M10.14: Who published the schedule
   createdAt        DateTime              @default(now())
   updatedAt        DateTime              @updatedAt
 
@@ -4880,6 +4890,7 @@ model AutoScheduleRun {
   branch       Branch                   @relation(fields: [branchId], references: [id], onDelete: Cascade)
   staffingPlan StaffingPlan             @relation(fields: [staffingPlanId], references: [id], onDelete: Cascade)
   appliedBy    User?                    @relation("RunApplier", fields: [appliedById], references: [id], onDelete: SetNull)
+  publishedBy  User?                    @relation("RunPublisher", fields: [publishedById], references: [id], onDelete: SetNull)
   suggestions  AutoScheduleSuggestion[]
 
   @@unique([orgId, branchId, date, inputsHash])
@@ -4898,9 +4909,13 @@ model AutoScheduleSuggestion {
   headcount        Int
   candidateUserIds Json?    // string[] of user IDs who are available
   score            Int?     // optional priority score
+  assignedUserId   String?  // M10.14: Deterministically assigned user ID
+  assignmentReason String?  // M10.14: Why this user was assigned or constraint reason
+  assignmentScore  Int?     // M10.14: Assignment score for ranking
   createdAt        DateTime @default(now())
 
-  run AutoScheduleRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+  run          AutoScheduleRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+  assignedUser User?           @relation("SuggestionAssignee", fields: [assignedUserId], references: [id], onDelete: SetNull)
 
   @@index([runId, roleKey])
   @@map("auto_schedule_suggestions")
