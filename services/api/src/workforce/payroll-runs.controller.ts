@@ -25,6 +25,8 @@ import { Roles } from '../auth/roles.decorator';
 import { PayrollRunService, CreatePayrollRunDto, PayrollRunStatus } from './payroll-run.service';
 import { PayrollPostingService, PostPayrollDto, PayPayrollDto } from './payroll-posting.service';
 import { PayrollReportingService } from './payroll-reporting.service';
+import { PayrollExportService } from './payroll-export.service';
+import { PayslipService } from './payslip.service';
 
 @Controller('workforce/payroll-runs')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
@@ -33,6 +35,8 @@ export class PayrollRunsController {
     private readonly payrollRunService: PayrollRunService,
     private readonly payrollPostingService: PayrollPostingService,
     private readonly payrollReportingService: PayrollReportingService,
+    private readonly payrollExportService: PayrollExportService,
+    private readonly payslipService: PayslipService,
   ) {}
 
   // ===== CRUD Endpoints =====
@@ -289,5 +293,75 @@ export class PayrollRunsController {
     res!.setHeader('Content-Type', 'text/csv');
     res!.setHeader('Content-Disposition', 'attachment; filename="payroll-audit.csv"');
     res!.send(csv);
+  }
+
+  // ===== M10.7: Export Endpoints =====
+
+  /**
+   * POST /workforce/payroll-runs/:id/generate-payslips
+   * Generate payslips for a calculated payroll run
+   * RBAC: L4+ can generate
+   */
+  @Post(':id/generate-payslips')
+  @Roles('L4', 'L5')
+  async generatePayslips(@Param('id') id: string, @Request() req: any) {
+    return this.payslipService.generatePayslipsForRun(req.user.orgId, id);
+  }
+
+  /**
+   * GET /workforce/payroll-runs/:id/export/summary
+   * Export payroll run summary CSV
+   * RBAC: L4+ can export
+   */
+  @Get(':id/export/summary')
+  @Roles('L4', 'L5')
+  async exportRunSummary(
+    @Param('id') id: string,
+    @Request() req: any,
+    @Res() res: Response,
+  ) {
+    const csv = await this.payrollExportService.exportRunSummaryCsv(req.user.orgId, id);
+    
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="payroll-run-${id}-summary.csv"`);
+    res.send(csv);
+  }
+
+  /**
+   * GET /workforce/payroll-runs/:id/export/payslips
+   * Export payslip details CSV (per employee per component)
+   * RBAC: L4+ can export
+   */
+  @Get(':id/export/payslips')
+  @Roles('L4', 'L5')
+  async exportPayslipDetails(
+    @Param('id') id: string,
+    @Request() req: any,
+    @Res() res: Response,
+  ) {
+    const csv = await this.payrollExportService.exportPayslipDetailsCsv(req.user.orgId, id);
+    
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="payroll-run-${id}-payslips.csv"`);
+    res.send(csv);
+  }
+
+  /**
+   * GET /workforce/payroll-runs/:id/export/employer-cost
+   * Export employer cost CSV (for accounting)
+   * RBAC: L4+ can export
+   */
+  @Get(':id/export/employer-cost')
+  @Roles('L4', 'L5')
+  async exportEmployerCost(
+    @Param('id') id: string,
+    @Request() req: any,
+    @Res() res: Response,
+  ) {
+    const csv = await this.payrollExportService.exportEmployerCostCsv(req.user.orgId, id);
+    
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="payroll-run-${id}-employer-cost.csv"`);
+    res.send(csv);
   }
 }

@@ -44,7 +44,7 @@ describe('M10.6: Payroll Runs (E2E)', () => {
   let orgId: string;
   let branchId: string;
   let payPeriodId: string;
-  let createdRunIds: string[] = [];
+  const createdRunIds: string[] = [];
 
   beforeAll(async () => {
     app = await withTimeout(

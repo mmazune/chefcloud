@@ -391,6 +391,9 @@ model Org {
   timesheetApprovals   TimesheetApproval[]    // M10.3: Timesheet approvals
   timeEntryAdjustments TimeEntryAdjustment[]  // M10.5: Time entry adjustments
   payrollRuns          PayrollRun[]           // M10.6: Payroll runs
+  compensationComponents      CompensationComponent[]       // M10.7: Compensation components
+  employeeCompensationProfiles EmployeeCompensationProfile[] // M10.7: Employee compensation profiles
+  payslips                    Payslip[]                     // M10.7: Payslips
 
   @@map("orgs")
 }
@@ -485,6 +488,7 @@ model Branch {
   shiftTemplates       ShiftTemplate[]        // M10.1: Branch-level shift templates
   payPeriods           PayPeriod[]            // M10.3: Pay periods
   payrollRuns          PayrollRun[]           // M10.6: Payroll runs
+  compensationComponents CompensationComponent[] // M10.7: Branch compensation overrides
 
   @@index([orgId, id])
   @@map("branches")
@@ -577,6 +581,8 @@ model User {
   paidPayrollRuns           PayrollRun[]             @relation("PaidPayrollRuns")       // M10.6: Paid payroll runs
   voidedPayrollRuns         PayrollRun[]             @relation("VoidedPayrollRuns")     // M10.6: Voided payroll runs
   payrollRunLines           PayrollRunLine[]         // M10.6: Payroll run lines
+  compensationProfiles      EmployeeCompensationProfile[] // M10.7: Compensation profiles
+  payslips                  Payslip[]                // M10.7: Payslips
 
   @@index([orgId, id])
   @@map("users")
@@ -4066,6 +4072,7 @@ model PayrollRun {
   voidedBy    User?       @relation("VoidedPayrollRuns", fields: [voidedById], references: [id])
   lines       PayrollRunLine[]
   journalLinks PayrollRunJournalLink[]
+  payslips    Payslip[]             // M10.7: Payslips generated from this run
 
   @@unique([payPeriodId, branchId])
   @@index([orgId, status])
@@ -4089,6 +4096,7 @@ model PayrollRunLine {
 
   payrollRun PayrollRun @relation(fields: [payrollRunId], references: [id], onDelete: Cascade)
   user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  payslip    Payslip?              // M10.7: One-to-one with payslip
 
   @@unique([payrollRunId, userId])
   @@index([payrollRunId])
@@ -4110,4 +4118,137 @@ model PayrollRunJournalLink {
   @@index([payrollRunId])
   @@index([journalEntryId])
   @@map("payroll_run_journal_links")
+}
+
+// ===== M10.7: Compensation Components & Payslips =====
+
+enum CompensationComponentType {
+  EARNING
+  DEDUCTION_PRE
+  DEDUCTION_POST
+  TAX
+  EMPLOYER_CONTRIB
+}
+
+enum CalcMethod {
+  FIXED
+  PERCENT_OF_GROSS
+  PERCENT_OF_EARNINGS_CODE
+  PER_HOUR
+}
+
+enum RoundingRule {
+  HALF_UP_CENTS
+  HALF_UP_UNIT
+}
+
+// M10.7: Org-scoped compensation component definitions
+model CompensationComponent {
+  id           String                    @id @default(cuid())
+  orgId        String
+  branchId     String?                   // NULL = org-level, set = branch override
+  code         String
+  name         String
+  type         CompensationComponentType
+  calcMethod   CalcMethod
+  rate         Decimal                   @default(0) @db.Decimal(10, 4)
+  amount       Decimal                   @default(0) @db.Decimal(12, 2)
+  earningsCode String?                   // For PERCENT_OF_EARNINGS_CODE method
+  capMin       Decimal?                  @db.Decimal(12, 2)
+  capMax       Decimal?                  @db.Decimal(12, 2)
+  roundingRule RoundingRule              @default(HALF_UP_CENTS)
+  enabled      Boolean                   @default(true)
+  createdAt    DateTime                  @default(now())
+  updatedAt    DateTime                  @updatedAt
+
+  org    Org     @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  branch Branch? @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  employeeComponents EmployeeCompensationComponent[]
+  payslipLineItems   PayslipLineItem[]
+
+  @@unique([orgId, code, branchId])
+  @@index([orgId, enabled])
+  @@index([branchId])
+  @@map("compensation_components")
+}
+
+// M10.7: Employee compensation profile with effective dates
+model EmployeeCompensationProfile {
+  id        String    @id @default(cuid())
+  orgId     String
+  userId    String
+  startDate DateTime
+  endDate   DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  org        Org    @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  user       User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  components EmployeeCompensationComponent[]
+
+  @@index([orgId, userId])
+  @@index([userId, startDate])
+  @@map("employee_compensation_profiles")
+}
+
+// M10.7: Component assignment to employee profile
+model EmployeeCompensationComponent {
+  id             String   @id @default(cuid())
+  profileId      String
+  componentId    String
+  overrideRate   Decimal? @db.Decimal(10, 4)
+  overrideAmount Decimal? @db.Decimal(12, 2)
+
+  profile   EmployeeCompensationProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  component CompensationComponent       @relation(fields: [componentId], references: [id], onDelete: Cascade)
+
+  @@unique([profileId, componentId])
+  @@map("employee_compensation_components")
+}
+
+// M10.7: Payslip generated from payroll run line
+model Payslip {
+  id                  String   @id @default(cuid())
+  orgId               String
+  payrollRunId        String
+  payrollRunLineId    String   @unique
+  userId              String
+  payPeriodStart      DateTime
+  payPeriodEnd        DateTime
+  grossEarnings       Decimal  @db.Decimal(12, 2)
+  preTaxDeductions    Decimal  @db.Decimal(12, 2)
+  taxableWages        Decimal  @db.Decimal(12, 2)
+  taxesWithheld       Decimal  @db.Decimal(12, 2)
+  postTaxDeductions   Decimal  @db.Decimal(12, 2)
+  netPay              Decimal  @db.Decimal(12, 2)
+  employerContribTotal Decimal @db.Decimal(12, 2)
+  totalEmployerCost   Decimal  @db.Decimal(12, 2)
+  createdAt           DateTime @default(now())
+
+  org            Org            @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  payrollRun     PayrollRun     @relation(fields: [payrollRunId], references: [id], onDelete: Cascade)
+  payrollRunLine PayrollRunLine @relation(fields: [payrollRunLineId], references: [id], onDelete: Cascade)
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lineItems      PayslipLineItem[]
+
+  @@index([orgId, userId])
+  @@index([payrollRunId])
+  @@map("payslips")
+}
+
+// M10.7: Payslip breakdown line item
+model PayslipLineItem {
+  id            String                    @id @default(cuid())
+  payslipId     String
+  componentId   String
+  componentCode String
+  componentName String
+  type          CompensationComponentType
+  amount        Decimal                   @db.Decimal(12, 2)
+
+  payslip   Payslip               @relation(fields: [payslipId], references: [id], onDelete: Cascade)
+  component CompensationComponent @relation(fields: [componentId], references: [id], onDelete: Restrict)
+
+  @@index([payslipId])
+  @@map("payslip_line_items")
 }

@@ -40,6 +40,15 @@ import { PayrollPostingService } from './payroll-posting.service';
 import { PayrollReportingService } from './payroll-reporting.service';
 import { PayrollRunsController } from './payroll-runs.controller';
 
+// M10.7: Compensation + Payslips + Exports
+import { CompensationService } from './compensation.service';
+import { PayrollCalculationService } from './payroll-calculation.service';
+import { PayslipService } from './payslip.service';
+import { PayrollExportService } from './payroll-export.service';
+import { PayrollGlStubService } from './payroll-gl-stub.service';
+import { CompensationController } from './compensation.controller';
+import { PayslipsController } from './payslips.controller';
+
 @Module({
   imports: [
     forwardRef(() => AccountingModule), // E43-s2
@@ -56,6 +65,8 @@ import { PayrollRunsController } from './payroll-runs.controller';
     SelfController, // M10.5
     AdjustmentsController, // M10.5
     PayrollRunsController, // M10.6
+    CompensationController, // M10.7
+    PayslipsController, // M10.7
   ],
   providers: [
     WorkforceService,
@@ -70,6 +81,11 @@ import { PayrollRunsController } from './payroll-runs.controller';
     PayrollRunService, // M10.6
     PayrollPostingService, // M10.6
     PayrollReportingService, // M10.6
+    CompensationService, // M10.7
+    PayrollCalculationService, // M10.7
+    PayslipService, // M10.7
+    PayrollExportService, // M10.7
+    PayrollGlStubService, // M10.7
     PrismaService,
   ],
   exports: [
@@ -85,6 +101,11 @@ import { PayrollRunsController } from './payroll-runs.controller';
     PayrollRunService, // M10.6
     PayrollPostingService, // M10.6
     PayrollReportingService, // M10.6
+    CompensationService, // M10.7
+    PayrollCalculationService, // M10.7
+    PayslipService, // M10.7
+    PayrollExportService, // M10.7
+    PayrollGlStubService, // M10.7
   ],
 })
 export class WorkforceModule {}

@@ -9,7 +9,7 @@
 
 import { Injectable, Logger, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
-import { Prisma } from '@prisma/client';
+import { Prisma } from '@chefcloud/db';
 import { WorkforceAuditService, WorkforceAuditAction } from './workforce-audit.service';
 
 const Decimal = Prisma.Decimal;

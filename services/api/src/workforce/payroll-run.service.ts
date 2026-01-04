@@ -9,7 +9,10 @@
 
 import { Injectable, Logger, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
+import { Prisma } from '@chefcloud/db';
 import { WorkforceAuditService, WorkforceAuditAction } from './workforce-audit.service';
+
+const Decimal = Prisma.Decimal;
 
 export type PayrollRunStatus = 'DRAFT' | 'CALCULATED' | 'APPROVED' | 'POSTED' | 'PAID' | 'VOID';
 
@@ -372,7 +375,7 @@ export class PayrollRunService {
         lines: {
           orderBy: { userId: 'asc' },
           include: {
-            user: { select: { id: true, email: true, name: true } },
+            user: { select: { id: true, email: true, firstName: true, lastName: true } },
           },
         },
         journalLinks: {
