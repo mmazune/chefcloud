@@ -389,6 +389,7 @@ model Org {
   workforcePolicy      WorkforcePolicy?       // M10.3: Workforce policy
   payPeriods           PayPeriod[]            // M10.3: Pay periods
   timesheetApprovals   TimesheetApproval[]    // M10.3: Timesheet approvals
+  timeEntryAdjustments TimeEntryAdjustment[]  // M10.5: Time entry adjustments
 
   @@map("orgs")
 }
@@ -566,6 +567,8 @@ model User {
   exportedPayPeriods        PayPeriod[]              @relation("ExportedPayPeriods")  // M10.3: Pay periods exported
   approvedTimesheets        TimesheetApproval[]      @relation("ApprovedTimesheets")  // M10.3: Approved timesheets
   rejectedTimesheets        TimesheetApproval[]      @relation("RejectedTimesheets")  // M10.3: Rejected timesheets
+  requestedAdjustments      TimeEntryAdjustment[]    @relation("RequestedAdjustments")  // M10.5: Adjustments requested
+  approvedAdjustments       TimeEntryAdjustment[]    @relation("ApprovedAdjustments")   // M10.5: Adjustments approved
 
   @@index([orgId, id])
   @@map("users")
@@ -2901,6 +2904,7 @@ model TimeEntry {
   scheduledShift ScheduledShift? @relation(fields: [shiftId], references: [id], onDelete: SetNull)
   breakEntries   BreakEntry[]
   timesheetApproval TimesheetApproval? // M10.3: Timesheet approval record
+  adjustments    TimeEntryAdjustment[]  // M10.5: Adjustment requests
 
   @@index([orgId, branchId, clockInAt])
   @@index([userId, clockInAt])
@@ -3906,6 +3910,13 @@ enum TimesheetApprovalStatus {
   REJECTED
 }
 
+// M10.5: Adjustment request status
+enum AdjustmentStatus {
+  REQUESTED
+  APPROVED
+  REJECTED
+}
+
 model WorkforcePolicy {
   id                    String       @id @default(cuid())
   orgId                 String       @unique
@@ -3969,4 +3980,32 @@ model TimesheetApproval {
 
   @@index([orgId, status])
   @@map("timesheet_approvals")
+}
+
+// M10.5: Timesheet Adjustment Workflow
+model TimeEntryAdjustment {
+  id               String           @id @default(cuid())
+  orgId            String
+  timeEntryId      String
+  requestedById    String
+  approvedById     String?
+  status           AdjustmentStatus @default(REQUESTED)
+  originalClockIn  DateTime?
+  originalClockOut DateTime?
+  newClockIn       DateTime?
+  newClockOut      DateTime?
+  reason           String
+  rejectionReason  String?
+  appliedAt        DateTime?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  org         Org       @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  timeEntry   TimeEntry @relation(fields: [timeEntryId], references: [id], onDelete: Cascade)
+  requestedBy User      @relation("RequestedAdjustments", fields: [requestedById], references: [id])
+  approvedBy  User?     @relation("ApprovedAdjustments", fields: [approvedById], references: [id])
+
+  @@index([orgId, status])
+  @@index([timeEntryId])
+  @@map("time_entry_adjustments")
 }

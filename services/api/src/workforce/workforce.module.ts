@@ -1,9 +1,10 @@
 /**
- * E43-s1 + M10.1 + M10.3: Workforce Module
+ * E43-s1 + M10.1 + M10.3 + M10.5: Workforce Module
  *
  * Provides leave management, roster, time clock, payroll export,
  * M10.1 shift scheduling, timeclock, approvals, and reporting.
  * M10.3 enterprise controls: policy, pay periods, timesheet approvals.
+ * M10.5 self-service: my-schedule, my-time, adjustments.
  */
 
 import { Module, forwardRef } from '@nestjs/common';
@@ -27,6 +28,12 @@ import { ReportsController } from './reports.controller';
 import { WorkforceEnterpriseService } from './workforce-enterprise.service';
 import { EnterpriseController } from './enterprise.controller';
 
+// M10.5: Self-Service + Adjustments
+import { WorkforceSelfService } from './workforce-self.service';
+import { AdjustmentsService } from './adjustments.service';
+import { SelfController } from './self.controller';
+import { AdjustmentsController } from './adjustments.controller';
+
 @Module({
   imports: [
     forwardRef(() => AccountingModule), // E43-s2
@@ -40,6 +47,8 @@ import { EnterpriseController } from './enterprise.controller';
     TimeclockController, // M10.1
     ReportsController, // M10.1
     EnterpriseController, // M10.3
+    SelfController, // M10.5
+    AdjustmentsController, // M10.5
   ],
   providers: [
     WorkforceService,
@@ -49,6 +58,8 @@ import { EnterpriseController } from './enterprise.controller';
     WorkforceReportingService, // M10.1
     WorkforceAuditService, // M10.1
     WorkforceEnterpriseService, // M10.3
+    WorkforceSelfService, // M10.5
+    AdjustmentsService, // M10.5
     PrismaService,
   ],
   exports: [
@@ -59,6 +70,8 @@ import { EnterpriseController } from './enterprise.controller';
     WorkforceReportingService, // M10.1
     WorkforceAuditService, // M10.1
     WorkforceEnterpriseService, // M10.3
+    WorkforceSelfService, // M10.5
+    AdjustmentsService, // M10.5
   ],
 })
 export class WorkforceModule {}

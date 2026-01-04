@@ -411,6 +411,156 @@ export class WorkforceReportingService {
     return this.toCsv(headers, rows);
   }
 
+  // ===== M10.5: Compliance Incident Reports =====
+
+  /**
+   * Get counts of compliance incidents from audit logs
+   */
+  async getComplianceIncidentCounts(orgId: string, dateRange?: { from: Date; to: Date }, branchId?: string) {
+    const baseWhere: Record<string, unknown> = { orgId };
+    
+    if (dateRange) {
+      baseWhere.createdAt = { gte: dateRange.from, lte: dateRange.to };
+    }
+
+    const [breakViolations, otViolations, doubleClockIn, maxShiftExceeded] = await Promise.all([
+      this.prisma.client.workforceAuditLog.count({
+        where: { ...baseWhere, action: 'BREAK_VIOLATION_LOGGED' },
+      }),
+      this.prisma.client.workforceAuditLog.count({
+        where: { ...baseWhere, action: 'OVERTIME_VIOLATION_LOGGED' },
+      }),
+      this.prisma.client.workforceAuditLog.count({
+        where: { ...baseWhere, action: 'DOUBLE_CLOCKIN_BLOCKED' },
+      }),
+      this.prisma.client.workforceAuditLog.count({
+        where: { ...baseWhere, action: 'MAX_SHIFT_EXCEEDED' },
+      }),
+    ]);
+
+    return {
+      breakViolations,
+      otViolations,
+      doubleClockIn,
+      maxShiftExceeded,
+      total: breakViolations + otViolations + doubleClockIn + maxShiftExceeded,
+    };
+  }
+
+  /**
+   * Export compliance incidents as CSV
+   */
+  async exportIncidentsCsv(orgId: string, dateRange?: { from: Date; to: Date }) {
+    const baseWhere: Record<string, unknown> = { 
+      orgId,
+      action: { 
+        in: [
+          'BREAK_VIOLATION_LOGGED', 
+          'OVERTIME_VIOLATION_LOGGED', 
+          'DOUBLE_CLOCKIN_BLOCKED', 
+          'MAX_SHIFT_EXCEEDED'
+        ] 
+      },
+    };
+    
+    if (dateRange) {
+      baseWhere.createdAt = { gte: dateRange.from, lte: dateRange.to };
+    }
+
+    const incidents = await this.prisma.client.workforceAuditLog.findMany({
+      where: baseWhere,
+      include: {
+        performedBy: { select: { id: true, firstName: true, lastName: true } },
+      },
+      orderBy: [{ createdAt: 'asc' }],
+    });
+
+    const headers = [
+      'Incident ID',
+      'Date',
+      'Type',
+      'Entity Type',
+      'Entity ID',
+      'User ID',
+      'User Name',
+      'Details',
+    ];
+
+    const rows = incidents.map(inc => [
+      inc.id,
+      inc.createdAt.toISOString(),
+      inc.action,
+      inc.entityType,
+      inc.entityId,
+      inc.performedById,
+      `${inc.performedBy.firstName} ${inc.performedBy.lastName}`,
+      JSON.stringify(inc.payload ?? {}),
+    ]);
+
+    return this.toCsv(headers, rows);
+  }
+
+  /**
+   * Export adjustments as CSV
+   */
+  async exportAdjustmentsCsv(orgId: string, dateRange?: { from: Date; to: Date }) {
+    const baseWhere: Record<string, unknown> = { orgId };
+    
+    if (dateRange) {
+      baseWhere.createdAt = { gte: dateRange.from, lte: dateRange.to };
+    }
+
+    const adjustments = await this.prisma.client.timeEntryAdjustment.findMany({
+      where: baseWhere,
+      include: {
+        timeEntry: {
+          select: { id: true, branchId: true, clockInAt: true, clockOutAt: true },
+        },
+        requestedBy: { select: { id: true, firstName: true, lastName: true } },
+        approvedBy: { select: { id: true, firstName: true, lastName: true } },
+      },
+      orderBy: [{ createdAt: 'asc' }],
+    });
+
+    const headers = [
+      'Adjustment ID',
+      'Status',
+      'Time Entry ID',
+      'Requested By ID',
+      'Requested By Name',
+      'Approved By ID',
+      'Approved By Name',
+      'Original Clock In',
+      'Original Clock Out',
+      'New Clock In',
+      'New Clock Out',
+      'Reason',
+      'Rejection Reason',
+      'Created At',
+      'Applied At',
+    ];
+
+    const rows = adjustments.map(adj => [
+      adj.id,
+      adj.status,
+      adj.timeEntryId,
+      adj.requestedById,
+      `${adj.requestedBy.firstName} ${adj.requestedBy.lastName}`,
+      adj.approvedById ?? '',
+      adj.approvedBy ? `${adj.approvedBy.firstName} ${adj.approvedBy.lastName}` : '',
+      adj.originalClockIn?.toISOString() ?? '',
+      adj.originalClockOut?.toISOString() ?? '',
+      adj.newClockIn?.toISOString() ?? '',
+      adj.newClockOut?.toISOString() ?? '',
+      adj.reason,
+      adj.rejectionReason ?? '',
+      adj.createdAt.toISOString(),
+      adj.appliedAt?.toISOString() ?? '',
+    ]);
+
+    return this.toCsv(headers, rows);
+  }
+
   // ===== Helpers =====
 
   private toCsv(headers: string[], rows: string[][]): string {

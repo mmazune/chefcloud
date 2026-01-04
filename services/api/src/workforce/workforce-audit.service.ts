@@ -29,13 +29,22 @@ export enum WorkforceAuditAction {
   TIMESHEETS_APPROVED = 'TIMESHEETS_APPROVED',
   TIMESHEETS_REJECTED = 'TIMESHEETS_REJECTED',
   PAYROLL_EXPORTED = 'PAYROLL_EXPORTED',
+  // M10.5: Adjustments + Compliance
+  ADJUSTMENT_REQUESTED = 'ADJUSTMENT_REQUESTED',
+  ADJUSTMENT_APPROVED = 'ADJUSTMENT_APPROVED',
+  ADJUSTMENT_REJECTED = 'ADJUSTMENT_REJECTED',
+  ADJUSTMENT_APPLIED = 'ADJUSTMENT_APPLIED',
+  BREAK_VIOLATION_LOGGED = 'BREAK_VIOLATION_LOGGED',
+  OVERTIME_VIOLATION_LOGGED = 'OVERTIME_VIOLATION_LOGGED',
+  DOUBLE_CLOCKIN_BLOCKED = 'DOUBLE_CLOCKIN_BLOCKED',
+  MAX_SHIFT_EXCEEDED = 'MAX_SHIFT_EXCEEDED',
 }
 
 interface AuditLogData {
   orgId: string;
   performedById: string;
   action: WorkforceAuditAction;
-  entityType: 'SHIFT' | 'TIME_ENTRY' | 'BREAK' | 'TEMPLATE' | 'WorkforcePolicy' | 'PayPeriod' | 'TimesheetApproval' | 'PayrollExport';
+  entityType: 'SHIFT' | 'TIME_ENTRY' | 'BREAK' | 'TEMPLATE' | 'WorkforcePolicy' | 'PayPeriod' | 'TimesheetApproval' | 'PayrollExport' | 'TimeEntryAdjustment' | 'TimeEntry';
   entityId: string;
   payload?: Record<string, unknown>;
 }

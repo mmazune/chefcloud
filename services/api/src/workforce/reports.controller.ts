@@ -190,4 +190,64 @@ export class ReportsController {
       offset: offset ? parseInt(offset, 10) : undefined,
     });
   }
+
+  // ===== M10.5: Compliance Incidents =====
+
+  /**
+   * GET /workforce/reports/incidents
+   * Get compliance incident counts (L3+)
+   */
+  @Get('incidents')
+  @Roles('L3', 'L4', 'L5')
+  async getIncidentCounts(
+    @Query('from') from: string | undefined,
+    @Query('to') to: string | undefined,
+    @Query('branchId') branchId: string | undefined,
+    @Request() req: any,
+  ) {
+    const dateRange = from && to ? { from: new Date(from), to: new Date(to) } : undefined;
+    return this.reportingService.getComplianceIncidentCounts(req.user.orgId, dateRange, branchId);
+  }
+
+  /**
+   * GET /workforce/reports/export/incidents
+   * Export compliance incidents as CSV (L4+)
+   */
+  @Get('export/incidents')
+  @Roles('L4', 'L5')
+  async exportIncidents(
+    @Query('from') from: string | undefined,
+    @Query('to') to: string | undefined,
+    @Request() req: any,
+    @Res() res: Response,
+  ) {
+    const dateRange = from && to ? { from: new Date(from), to: new Date(to) } : undefined;
+    const csv = await this.reportingService.exportIncidentsCsv(req.user.orgId, dateRange);
+
+    const filename = `incidents_${from ?? 'all'}_${to ?? 'all'}.csv`;
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.send(csv);
+  }
+
+  /**
+   * GET /workforce/reports/export/adjustments
+   * Export adjustment history as CSV (L4+)
+   */
+  @Get('export/adjustments')
+  @Roles('L4', 'L5')
+  async exportAdjustments(
+    @Query('from') from: string | undefined,
+    @Query('to') to: string | undefined,
+    @Request() req: any,
+    @Res() res: Response,
+  ) {
+    const dateRange = from && to ? { from: new Date(from), to: new Date(to) } : undefined;
+    const csv = await this.reportingService.exportAdjustmentsCsv(req.user.orgId, dateRange);
+
+    const filename = `adjustments_${from ?? 'all'}_${to ?? 'all'}.csv`;
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.send(csv);
+  }
 }
