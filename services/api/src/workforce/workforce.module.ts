@@ -54,8 +54,9 @@ import { PayrollMappingService } from './payroll-mapping.service';
 import { PayrollMappingController } from './payroll-mapping.controller';
 
 // M10.9: Remittances (Liability Settlements)
+// M10.10: Extended with Provider Directory, Mappings, Reconciliation
 import { RemittanceService } from './remittance.service';
-import { RemittanceController, RemittanceReportsController } from './remittance.controller';
+import { RemittanceController, RemittanceReportsController, RemittanceProviderController, RemittanceMappingController } from './remittance.controller';
 
 @Module({
   imports: [
@@ -78,6 +79,8 @@ import { RemittanceController, RemittanceReportsController } from './remittance.
     PayrollMappingController, // M10.8
     RemittanceController, // M10.9
     RemittanceReportsController, // M10.9
+    RemittanceProviderController, // M10.10
+    RemittanceMappingController, // M10.10
   ],
   providers: [
     WorkforceService,

@@ -64,10 +64,22 @@ CREATE TABLE IF NOT EXISTS "payroll_run_journal_links" (
   CONSTRAINT "payroll_run_journal_links_pkey" PRIMARY KEY ("id")
 );
 
--- Add unique constraints
-ALTER TABLE "payroll_runs" ADD CONSTRAINT "payroll_runs_payPeriodId_branchId_key" UNIQUE ("payPeriodId", "branchId") ON CONFLICT DO NOTHING;
-ALTER TABLE "payroll_run_lines" ADD CONSTRAINT "payroll_run_lines_payrollRunId_userId_key" UNIQUE ("payrollRunId", "userId") ON CONFLICT DO NOTHING;
-ALTER TABLE "payroll_run_journal_links" ADD CONSTRAINT "payroll_run_journal_links_payrollRunId_journalEntryId_key" UNIQUE ("payrollRunId", "journalEntryId") ON CONFLICT DO NOTHING;
+-- Add unique constraints (ignore if already exists)
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'payroll_runs_payPeriodId_branchId_key') THEN
+    ALTER TABLE "payroll_runs" ADD CONSTRAINT "payroll_runs_payPeriodId_branchId_key" UNIQUE ("payPeriodId", "branchId");
+  END IF;
+END $$;
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'payroll_run_lines_payrollRunId_userId_key') THEN
+    ALTER TABLE "payroll_run_lines" ADD CONSTRAINT "payroll_run_lines_payrollRunId_userId_key" UNIQUE ("payrollRunId", "userId");
+  END IF;
+END $$;
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'payroll_run_journal_links_payrollRunId_journalEntryId_key') THEN
+    ALTER TABLE "payroll_run_journal_links" ADD CONSTRAINT "payroll_run_journal_links_payrollRunId_journalEntryId_key" UNIQUE ("payrollRunId", "journalEntryId");
+  END IF;
+END $$;
 
 -- Add foreign keys
 ALTER TABLE "payroll_runs" ADD CONSTRAINT "payroll_runs_orgId_fkey" FOREIGN KEY ("orgId") REFERENCES "orgs"("id") ON DELETE CASCADE ON UPDATE CASCADE;

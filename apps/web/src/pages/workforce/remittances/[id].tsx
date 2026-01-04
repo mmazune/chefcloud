@@ -1,8 +1,9 @@
 /**
  * M10.9: Remittance Batch Detail Page
+ * M10.10: Extended with Mark Settled + Bank Upload
  *
  * Shows full batch details with lines and action buttons.
- * Role-based actions: Approve, Post, Pay, Void, Export.
+ * Role-based actions: Approve, Post, Pay, Void, Export, Mark Settled (L5), Bank Upload.
  */
 
 import { useState } from 'react';
@@ -15,6 +16,7 @@ import { format } from 'date-fns';
 
 type RemittanceBatchStatus = 'DRAFT' | 'APPROVED' | 'POSTED' | 'PAID' | 'VOID';
 type RemittanceBatchType = 'TAX' | 'DEDUCTION' | 'EMPLOYER_CONTRIB' | 'MIXED';
+type SettlementMethod = 'CASH' | 'BANK_TRANSFER' | 'MOBILE_MONEY' | 'OTHER';
 
 interface Account {
   id: string;
@@ -50,6 +52,11 @@ interface RemittanceBatch {
   totalAmount: string;
   memo: string | null;
   idempotencyKey: string | null;
+  // M10.10: Reconciliation fields
+  externalReference: string | null;
+  settledAt: string | null;
+  settlementMethod: SettlementMethod | null;
+  receiptNote: string | null;
   createdAt: string;
   updatedAt: string;
   branch?: { id: string; name: string } | null;
@@ -125,6 +132,14 @@ export default function RemittanceBatchDetailPage() {
     referenceCode: '',
   });
 
+  // M10.10: Mark settled form
+  const [showMarkSettled, setShowMarkSettled] = useState(false);
+  const [settledForm, setSettledForm] = useState({
+    externalReference: '',
+    settlementMethod: 'BANK_TRANSFER' as SettlementMethod,
+    receiptNote: '',
+  });
+
   const { data: batch, isLoading, refetch } = useQuery({
     queryKey: ['remittanceBatch', id],
     queryFn: async () => {
@@ -154,6 +169,9 @@ export default function RemittanceBatchDetailPage() {
   const canPreview = isL4Plus && ['APPROVED', 'POSTED'].includes(batch?.status ?? '');
   const canEdit = batch?.status === 'DRAFT';
   const canExport = isL4Plus;
+  // M10.10: Mark settled only for PAID batches that aren't already settled
+  const canMarkSettled = isL5 && batch?.status === 'PAID' && !batch?.settledAt;
+  const canBankUpload = isL4Plus && batch?.status !== 'VOID';
 
   const fetchPreview = async () => {
     if (!id || !orgId) return;
@@ -231,6 +249,23 @@ export default function RemittanceBatchDetailPage() {
     },
   });
 
+  // M10.10: Mark settled mutation
+  const markSettledMutation = useMutation({
+    mutationFn: async (data: typeof settledForm) => {
+      const res = await apiClient.post(`/orgs/${orgId}/remittances/${id}/mark-settled`, data);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['remittanceBatch', id] });
+      refetch();
+      setShowMarkSettled(false);
+      setSuccess('Batch marked as settled');
+    },
+    onError: (err: any) => {
+      setError(err?.response?.data?.message || 'Failed to mark settled');
+    },
+  });
+
   const handleAction = (action: string) => {
     if (confirm(`Are you sure you want to ${action} this batch?`)) {
       actionMutation.mutate(action);
@@ -262,6 +297,29 @@ export default function RemittanceBatchDetailPage() {
     document.body.appendChild(link);
     link.click();
     link.remove();
+  };
+
+  // M10.10: Bank upload export
+  const handleBankUpload = async () => {
+    const res = await apiClient.get(`/orgs/${orgId}/remittances/${id}/bank-upload`, {
+      responseType: 'blob',
+    });
+    const url = window.URL.createObjectURL(new Blob([res.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `bank-upload-${id}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  };
+
+  // M10.10: Submit mark settled
+  const handleMarkSettled = () => {
+    if (!settledForm.settlementMethod) {
+      setError('Settlement method is required');
+      return;
+    }
+    markSettledMutation.mutate(settledForm);
   };
 
   const formatAmount = (amount: string | number) => {
@@ -357,6 +415,23 @@ export default function RemittanceBatchDetailPage() {
                 className="px-4 py-2 border rounded hover:bg-gray-50"
               >
                 Export Lines
+              </button>
+            )}
+            {/* M10.10: Bank Upload and Mark Settled */}
+            {canBankUpload && (
+              <button
+                onClick={handleBankUpload}
+                className="px-4 py-2 border rounded hover:bg-gray-50"
+              >
+                Bank Upload
+              </button>
+            )}
+            {canMarkSettled && (
+              <button
+                onClick={() => setShowMarkSettled(true)}
+                className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
+              >
+                Mark Settled
               </button>
             )}
           </div>
@@ -697,6 +772,69 @@ export default function RemittanceBatchDetailPage() {
             </div>
           </div>
         </div>
+
+        {/* M10.10: Mark Settled Modal */}
+        {showMarkSettled && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+              <h2 className="text-xl font-bold mb-4">Mark as Settled</h2>
+              <p className="text-gray-600 mb-4">
+                Record reconciliation details for this paid remittance batch.
+              </p>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Settlement Method *</label>
+                  <select
+                    value={settledForm.settlementMethod}
+                    onChange={(e) => setSettledForm({ ...settledForm, settlementMethod: e.target.value as SettlementMethod })}
+                    className="mt-1 block w-full border rounded px-3 py-2"
+                  >
+                    <option value="BANK_TRANSFER">Bank Transfer</option>
+                    <option value="CASH">Cash</option>
+                    <option value="MOBILE_MONEY">Mobile Money</option>
+                    <option value="OTHER">Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">External Reference</label>
+                  <input
+                    type="text"
+                    value={settledForm.externalReference}
+                    onChange={(e) => setSettledForm({ ...settledForm, externalReference: e.target.value })}
+                    placeholder="Bank transaction ID, receipt #, etc."
+                    className="mt-1 block w-full border rounded px-3 py-2"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Receipt Note</label>
+                  <textarea
+                    value={settledForm.receiptNote}
+                    onChange={(e) => setSettledForm({ ...settledForm, receiptNote: e.target.value })}
+                    placeholder="Any additional notes..."
+                    rows={2}
+                    className="mt-1 block w-full border rounded px-3 py-2"
+                  />
+                </div>
+                <div className="flex justify-end gap-2 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowMarkSettled(false)}
+                    className="px-4 py-2 border rounded hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleMarkSettled}
+                    disabled={markSettledMutation.isPending}
+                    className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:opacity-50"
+                  >
+                    {markSettledMutation.isPending ? 'Saving...' : 'Mark Settled'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </AppShell>
   );

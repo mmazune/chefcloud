@@ -396,6 +396,8 @@ model Org {
   payslips                    Payslip[]                     // M10.7: Payslips
   payrollPostingMappings      PayrollPostingMapping[]       // M10.8: Payroll posting mappings
   remittanceBatches           RemittanceBatch[]             // M10.9: Remittance batches
+  remittanceProviders         RemittanceProvider[]          // M10.10: Remittance providers
+  compensationRemittanceMappings CompensationRemittanceMapping[] // M10.10: Component mappings
 
   @@map("orgs")
 }
@@ -493,6 +495,7 @@ model Branch {
   compensationComponents CompensationComponent[] // M10.7: Branch compensation overrides
   payrollPostingMappings PayrollPostingMapping[] // M10.8: Branch payroll posting mappings
   remittanceBatches      RemittanceBatch[]       // M10.9: Branch remittance batches
+  remittanceProviders    RemittanceProvider[]    // M10.10: Branch remittance providers
 
   @@index([orgId, id])
   @@map("branches")
@@ -2312,6 +2315,9 @@ model Account {
   // M10.9: Remittance line reverse relations
   remittanceLiabilityLines    RemittanceLine[] @relation("RemittanceLiabilityAccount")
   remittanceCounterLines      RemittanceLine[] @relation("RemittanceCounterAccount")
+  // M10.10: Remittance provider default account relations
+  providerLiabilityAccounts   RemittanceProvider[] @relation("ProviderLiabilityAccount")
+  providerCashAccounts        RemittanceProvider[] @relation("ProviderCashAccount")
 
   @@unique([orgId, code])
   @@index([orgId, type])
@@ -4095,6 +4101,7 @@ model PayrollRun {
   lines       PayrollRunLine[]
   journalLinks PayrollRunJournalLink[]
   payslips    Payslip[]             // M10.7: Payslips generated from this run
+  remittanceSourceLink RemittanceSourceLink? // M10.10: Link to generated remittance batch
 
   @@unique([payPeriodId, branchId])
   @@index([orgId, status])
@@ -4180,6 +4187,7 @@ model PayrollPostingMapping {
 }
 
 // ===== M10.9: Remittance Batches (Liability Settlements) =====
+// ===== M10.10: Extended with Provider Directory + Reconciliation =====
 
 enum RemittanceBatchStatus {
   DRAFT
@@ -4196,6 +4204,67 @@ enum RemittanceBatchType {
   MIXED
 }
 
+// M10.10: Settlement method for reconciliation
+enum SettlementMethod {
+  CASH
+  BANK_TRANSFER
+  MOBILE_MONEY
+  OTHER
+}
+
+// M10.10: Remittance provider type
+enum RemittanceProviderType {
+  TAX_AUTHORITY
+  BENEFITS
+  PENSION
+  OTHER
+}
+
+// M10.10: Provider directory for remittance payees
+model RemittanceProvider {
+  id                      String                  @id @default(cuid())
+  orgId                   String
+  branchId                String?                 // NULL = org-wide, set = branch-specific
+  name                    String
+  type                    RemittanceProviderType
+  referenceFormatHint     String?                 // e.g., "TIN-XXXXXX"
+  defaultLiabilityAccountId String?
+  defaultCashAccountId    String?
+  enabled                 Boolean                 @default(true)
+  createdAt               DateTime                @default(now())
+  updatedAt               DateTime                @updatedAt
+
+  org                Org      @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  branch             Branch?  @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  defaultLiabilityAccount Account? @relation("ProviderLiabilityAccount", fields: [defaultLiabilityAccountId], references: [id])
+  defaultCashAccount Account? @relation("ProviderCashAccount", fields: [defaultCashAccountId], references: [id])
+  
+  componentMappings  CompensationRemittanceMapping[]
+
+  @@index([orgId])
+  @@index([branchId])
+  @@map("remittance_providers")
+}
+
+// M10.10: Mapping from compensation component to remittance provider
+model CompensationRemittanceMapping {
+  id           String              @id @default(cuid())
+  orgId        String
+  componentId  String
+  providerId   String
+  remittanceType RemittanceBatchType // TAX, DEDUCTION, EMPLOYER_CONTRIB
+  createdAt    DateTime            @default(now())
+
+  org       Org                   @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  component CompensationComponent @relation(fields: [componentId], references: [id], onDelete: Cascade)
+  provider  RemittanceProvider    @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@unique([componentId])
+  @@index([orgId])
+  @@index([providerId])
+  @@map("compensation_remittance_mappings")
+}
+
 model RemittanceBatch {
   id             String               @id @default(cuid())
   orgId          String
@@ -4207,6 +4276,12 @@ model RemittanceBatch {
   idempotencyKey String?              // Unique per org to prevent duplicates
   memo           String?
   totalAmount    Decimal              @default(0) @db.Decimal(12, 2)
+  
+  // M10.10: Reconciliation fields
+  externalReference String?           // Bank transfer reference, etc.
+  settledAt         DateTime?         // When actually paid externally
+  settlementMethod  SettlementMethod? // How it was paid
+  receiptNote       String?           // Receipt or settlement note
   
   createdById    String
   approvedById   String?
@@ -4230,11 +4305,27 @@ model RemittanceBatch {
   
   lines        RemittanceLine[]
   journalLinks RemittanceJournalLink[]
+  sourceLinks  RemittanceSourceLink[]  // M10.10: Links to source payroll runs
 
   @@unique([orgId, idempotencyKey])
   @@index([orgId, status])
   @@index([branchId])
   @@map("remittance_batches")
+}
+
+// M10.10: Link table to prevent duplicate generation from same payroll run
+model RemittanceSourceLink {
+  id           String   @id @default(cuid())
+  batchId      String
+  payrollRunId String
+  createdAt    DateTime @default(now())
+
+  batch      RemittanceBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  payrollRun PayrollRun      @relation(fields: [payrollRunId], references: [id], onDelete: Cascade)
+
+  @@unique([payrollRunId])  // A payroll run can only be linked to ONE batch
+  @@index([batchId])
+  @@map("remittance_source_links")
 }
 
 model RemittanceLine {
@@ -4321,6 +4412,7 @@ model CompensationComponent {
   employeeComponents EmployeeCompensationComponent[]
   payslipLineItems   PayslipLineItem[]
   remittanceLines    RemittanceLine[]  // M10.9: Remittance lines linked to this component
+  remittanceMapping  CompensationRemittanceMapping? // M10.10: Provider mapping
 
   @@unique([orgId, code, branchId])
   @@index([orgId, enabled])

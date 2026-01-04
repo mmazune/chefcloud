@@ -380,15 +380,17 @@ describe('M10.9 Workforce Remittances (e2e)', () => {
         .set('Authorization', `Bearer ${ownerToken}`);
     });
 
-    it('should return payment preview with journal preview', async () => {
+    it('should return payment preview with journal lines', async () => {
       const res = await request(app.getHttpServer())
         .get(`/orgs/${orgId}/remittances/${previewBatchId}/preview`)
         .set('Authorization', `Bearer ${ownerToken}`)
         .expect(HttpStatus.OK);
 
       expect(res.body.batchId).toBe(previewBatchId);
-      expect(res.body.journalPreview).toBeDefined();
-      expect(res.body.journalPreview.entries).toBeDefined();
+      expect(res.body.lines).toBeDefined();
+      expect(Array.isArray(res.body.lines)).toBe(true);
+      expect(res.body.totals).toBeDefined();
+      expect(res.body.totals.balanced).toBe(true);
     });
   });
 
@@ -465,6 +467,73 @@ describe('M10.9 Workforce Remittances (e2e)', () => {
     });
   });
 
+  // ===== H11: Period Lock Enforcement =====
+  describe('H11: Period Lock Enforcement', () => {
+    let periodLockBatchId: string;
+
+    it('should reject pay transition when fiscal period is locked', async () => {
+      // Create a batch
+      const createRes = await request(app.getHttpServer())
+        .post(`/orgs/${orgId}/remittances`)
+        .set('Authorization', `Bearer ${ownerToken}`)
+        .send({
+          type: 'TAX',
+          memo: 'E2E_TEST_period_lock_batch',
+        })
+        .expect(HttpStatus.CREATED);
+      periodLockBatchId = createRes.body.id;
+
+      // Add a line
+      if (liabilityAccountId && cashAccountId) {
+        await request(app.getHttpServer())
+          .post(`/orgs/${orgId}/remittances/${periodLockBatchId}/lines`)
+          .set('Authorization', `Bearer ${ownerToken}`)
+          .send({
+            liabilityAccountId,
+            counterAccountId: cashAccountId,
+            amount: '5000.00',
+          });
+      }
+
+      // Approve and post
+      await request(app.getHttpServer())
+        .post(`/orgs/${orgId}/remittances/${periodLockBatchId}/approve`)
+        .set('Authorization', `Bearer ${ownerToken}`);
+      await request(app.getHttpServer())
+        .post(`/orgs/${orgId}/remittances/${periodLockBatchId}/post`)
+        .set('Authorization', `Bearer ${ownerToken}`);
+
+      // Lock current fiscal period (use updateMany with date filter)
+      const now = new Date();
+      await prisma.client.fiscalPeriod.updateMany({
+        where: {
+          orgId,
+          startsAt: { lte: now },
+          endsAt: { gte: now },
+          status: { not: 'LOCKED' },
+        },
+        data: { status: 'LOCKED' },
+      });
+
+      // Attempt to pay - should get 403
+      await request(app.getHttpServer())
+        .post(`/orgs/${orgId}/remittances/${periodLockBatchId}/pay`)
+        .set('Authorization', `Bearer ${ownerToken}`)
+        .expect(HttpStatus.FORBIDDEN);
+
+      // Unlock the period for cleanup
+      await prisma.client.fiscalPeriod.updateMany({
+        where: {
+          orgId,
+          startsAt: { lte: now },
+          endsAt: { gte: now },
+          status: 'LOCKED',
+        },
+        data: { status: 'OPEN' },
+      });
+    });
+  });
+
   // ===== H10: KPI and Export Endpoints =====
   describe('H10: KPI and Export Endpoints', () => {
     it('should return remittance KPIs', async () => {
@@ -474,9 +543,10 @@ describe('M10.9 Workforce Remittances (e2e)', () => {
         .expect(HttpStatus.OK);
 
       expect(res.body.totalBatches).toBeDefined();
-      expect(res.body.pendingApproval).toBeDefined();
-      expect(res.body.pendingPayment).toBeDefined();
-      expect(res.body.totalPaidAmount).toBeDefined();
+      expect(res.body.byStatus).toBeDefined();
+      expect(res.body.byType).toBeDefined();
+      expect(res.body.totalPaid).toBeDefined();
+      expect(res.body.totalPending).toBeDefined();
     });
 
     it('should export batches as CSV', async () => {

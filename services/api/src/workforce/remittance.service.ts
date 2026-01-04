@@ -1,5 +1,6 @@
 /**
  * M10.9: Remittance Service
+ * M10.10: Extended with Provider Directory, Reconciliation, Idempotent Generation
  *
  * Manages liability settlement batches (taxes, deductions, employer contributions).
  * State machine: DRAFT → APPROVED → POSTED → PAID (+ VOID from any state)
@@ -8,10 +9,18 @@
  * - POSTED: Locks batch, no journal yet
  * - PAID: Creates journal (Dr Liability / Cr Cash)
  * - VOID: Reverses journal if exists
+ *
+ * M10.10 additions:
+ * - Provider directory (TAX_AUTHORITY, BENEFITS, PENSION, OTHER)
+ * - Component → Provider mapping
+ * - Reconciliation fields (externalReference, settledAt, settlementMethod, receiptNote)
+ * - Idempotent generation with source links
+ * - Bank upload stub export
  */
 import { Injectable, BadRequestException, ForbiddenException, NotFoundException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
-import { Prisma, RemittanceBatchStatus, RemittanceBatchType } from '@chefcloud/db';
+import { Prisma, RemittanceBatchStatus, RemittanceBatchType, RemittanceProviderType, SettlementMethod } from '@chefcloud/db';
+import * as crypto from 'crypto';
 
 // Valid state transitions
 const VALID_TRANSITIONS: Record<RemittanceBatchStatus, RemittanceBatchStatus[]> = {
@@ -44,6 +53,46 @@ export interface BatchListFilters {
   status?: RemittanceBatchStatus;
   type?: RemittanceBatchType;
   branchId?: string;
+}
+
+// M10.10: Provider DTOs
+export interface CreateProviderDto {
+  branchId?: string;
+  name: string;
+  type: RemittanceProviderType;
+  referenceFormatHint?: string;
+  defaultLiabilityAccountId?: string;
+  defaultCashAccountId?: string;
+  enabled?: boolean;
+}
+
+export interface UpdateProviderDto {
+  name?: string;
+  type?: RemittanceProviderType;
+  referenceFormatHint?: string;
+  defaultLiabilityAccountId?: string;
+  defaultCashAccountId?: string;
+  enabled?: boolean;
+}
+
+// M10.10: Mapping DTO
+export interface CreateMappingDto {
+  componentId: string;
+  providerId: string;
+  remittanceType: RemittanceBatchType;
+}
+
+// M10.10: Mark settled DTO
+export interface MarkSettledDto {
+  externalReference?: string;
+  settlementMethod: SettlementMethod;
+  receiptNote?: string;
+}
+
+// M10.10: Generate from payroll DTO
+export interface GenerateFromPayrollDto {
+  branchId?: string;
+  payrollRunIds: string[];
 }
 
 @Injectable()
@@ -707,5 +756,377 @@ export class RemittanceService {
     ]);
 
     return [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+  }
+
+  // ============== M10.10: Provider Directory ==============
+
+  /**
+   * Create a remittance provider
+   */
+  async createProvider(orgId: string, dto: CreateProviderDto): Promise<any> {
+    return this.prisma.client.remittanceProvider.create({
+      data: {
+        orgId,
+        branchId: dto.branchId || null,
+        name: dto.name,
+        type: dto.type,
+        referenceFormatHint: dto.referenceFormatHint || null,
+        defaultLiabilityAccountId: dto.defaultLiabilityAccountId || null,
+        defaultCashAccountId: dto.defaultCashAccountId || null,
+        enabled: dto.enabled ?? true,
+      },
+      include: {
+        defaultLiabilityAccount: { select: { id: true, code: true, name: true } },
+        defaultCashAccount: { select: { id: true, code: true, name: true } },
+        branch: { select: { id: true, name: true } },
+      },
+    });
+  }
+
+  /**
+   * List providers
+   */
+  async listProviders(orgId: string, branchId?: string): Promise<any[]> {
+    const where: Prisma.RemittanceProviderWhereInput = { orgId };
+    if (branchId) {
+      where.OR = [{ branchId }, { branchId: null }];
+    }
+
+    return this.prisma.client.remittanceProvider.findMany({
+      where,
+      include: {
+        defaultLiabilityAccount: { select: { id: true, code: true, name: true } },
+        defaultCashAccount: { select: { id: true, code: true, name: true } },
+        branch: { select: { id: true, name: true } },
+        _count: { select: { componentMappings: true } },
+      },
+      orderBy: { name: 'asc' },
+    });
+  }
+
+  /**
+   * Get provider by ID
+   */
+  async getProvider(orgId: string, providerId: string): Promise<any> {
+    const provider = await this.prisma.client.remittanceProvider.findFirst({
+      where: { id: providerId, orgId },
+      include: {
+        defaultLiabilityAccount: { select: { id: true, code: true, name: true } },
+        defaultCashAccount: { select: { id: true, code: true, name: true } },
+        branch: { select: { id: true, name: true } },
+        componentMappings: {
+          include: {
+            component: { select: { id: true, code: true, name: true, type: true } },
+          },
+        },
+      },
+    });
+    if (!provider) {
+      throw new NotFoundException('Remittance provider not found');
+    }
+    return provider;
+  }
+
+  /**
+   * Update provider
+   */
+  async updateProvider(orgId: string, providerId: string, dto: UpdateProviderDto): Promise<any> {
+    await this.getProvider(orgId, providerId);
+    return this.prisma.client.remittanceProvider.update({
+      where: { id: providerId },
+      data: {
+        name: dto.name,
+        type: dto.type,
+        referenceFormatHint: dto.referenceFormatHint,
+        defaultLiabilityAccountId: dto.defaultLiabilityAccountId,
+        defaultCashAccountId: dto.defaultCashAccountId,
+        enabled: dto.enabled,
+      },
+      include: {
+        defaultLiabilityAccount: { select: { id: true, code: true, name: true } },
+        defaultCashAccount: { select: { id: true, code: true, name: true } },
+        branch: { select: { id: true, name: true } },
+      },
+    });
+  }
+
+  /**
+   * Delete provider (fails if mappings exist)
+   */
+  async deleteProvider(orgId: string, providerId: string): Promise<{ deleted: boolean }> {
+    const provider = await this.getProvider(orgId, providerId);
+    if (provider.componentMappings.length > 0) {
+      throw new BadRequestException('Cannot delete provider with existing mappings');
+    }
+    await this.prisma.client.remittanceProvider.delete({ where: { id: providerId } });
+    return { deleted: true };
+  }
+
+  // ============== M10.10: Component → Provider Mappings ==============
+
+  /**
+   * Create or update a component → provider mapping
+   */
+  async upsertMapping(orgId: string, dto: CreateMappingDto): Promise<any> {
+    // Verify component belongs to org
+    const component = await this.prisma.client.compensationComponent.findFirst({
+      where: { id: dto.componentId, orgId },
+    });
+    if (!component) {
+      throw new NotFoundException('Compensation component not found');
+    }
+
+    // Verify provider belongs to org
+    const provider = await this.prisma.client.remittanceProvider.findFirst({
+      where: { id: dto.providerId, orgId },
+    });
+    if (!provider) {
+      throw new NotFoundException('Remittance provider not found');
+    }
+
+    // Upsert mapping (unique on componentId)
+    return this.prisma.client.compensationRemittanceMapping.upsert({
+      where: { componentId: dto.componentId },
+      create: {
+        orgId,
+        componentId: dto.componentId,
+        providerId: dto.providerId,
+        remittanceType: dto.remittanceType,
+      },
+      update: {
+        providerId: dto.providerId,
+        remittanceType: dto.remittanceType,
+      },
+      include: {
+        component: { select: { id: true, code: true, name: true, type: true } },
+        provider: { select: { id: true, name: true, type: true } },
+      },
+    });
+  }
+
+  /**
+   * List all mappings
+   */
+  async listMappings(orgId: string, providerId?: string): Promise<any[]> {
+    const where: Prisma.CompensationRemittanceMappingWhereInput = { orgId };
+    if (providerId) where.providerId = providerId;
+
+    return this.prisma.client.compensationRemittanceMapping.findMany({
+      where,
+      include: {
+        component: { select: { id: true, code: true, name: true, type: true } },
+        provider: { select: { id: true, name: true, type: true } },
+      },
+      orderBy: { createdAt: 'asc' },
+    });
+  }
+
+  /**
+   * Delete a mapping
+   */
+  async deleteMapping(orgId: string, mappingId: string): Promise<{ deleted: boolean }> {
+    const mapping = await this.prisma.client.compensationRemittanceMapping.findFirst({
+      where: { id: mappingId, orgId },
+    });
+    if (!mapping) {
+      throw new NotFoundException('Mapping not found');
+    }
+    await this.prisma.client.compensationRemittanceMapping.delete({ where: { id: mappingId } });
+    return { deleted: true };
+  }
+
+  // ============== M10.10: Idempotent Generation from Payroll Runs ==============
+
+  /**
+   * Generate remittance batch from payroll runs with idempotency
+   * Uses deterministic key: hash(orgId, branchId, sorted payrollRunIds, type)
+   */
+  async generateFromPayrollRunsV2(
+    orgId: string,
+    userId: string,
+    dto: GenerateFromPayrollDto,
+  ): Promise<{ batchId: string; created: boolean; lineCount: number }> {
+    if (!dto.payrollRunIds || dto.payrollRunIds.length === 0) {
+      throw new BadRequestException('At least one payroll run ID is required');
+    }
+
+    // Sort run IDs for deterministic key
+    const sortedRunIds = [...dto.payrollRunIds].sort();
+    const idempotencyKey = this.computeIdempotencyKey(orgId, dto.branchId, sortedRunIds, 'MIXED');
+
+    // Check for existing batch with same key
+    const existing = await this.prisma.client.remittanceBatch.findFirst({
+      where: { orgId, idempotencyKey },
+    });
+    if (existing) {
+      return { batchId: existing.id, created: false, lineCount: 0 };
+    }
+
+    // Check if any payroll run already has a source link
+    const existingLinks = await this.prisma.client.remittanceSourceLink.findMany({
+      where: { payrollRunId: { in: sortedRunIds } },
+    });
+    if (existingLinks.length > 0) {
+      throw new ConflictException({
+        message: 'One or more payroll runs already linked to a remittance batch',
+        linkedRunIds: existingLinks.map((l) => l.payrollRunId),
+      });
+    }
+
+    // Fetch payroll runs
+    const runs = await this.prisma.client.payrollRun.findMany({
+      where: {
+        id: { in: sortedRunIds },
+        orgId,
+        status: { in: ['POSTED', 'PAID'] },
+      },
+      include: {
+        journalLinks: {
+          include: {
+            journalEntry: {
+              include: { lines: { include: { account: true } } },
+            },
+          },
+        },
+      },
+    });
+
+    if (runs.length !== sortedRunIds.length) {
+      throw new BadRequestException('Some payroll runs not found or not in valid status');
+    }
+
+    // Aggregate liabilities from journal entries
+    const liabilityTotals = new Map<string, { accountId: string; amount: Prisma.Decimal; name: string }>();
+
+    for (const run of runs) {
+      for (const link of run.journalLinks) {
+        for (const line of link.journalEntry.lines) {
+          // Credit lines on payroll posting are liabilities
+          if (line.credit.gt(0) && line.account.type === 'LIABILITY') {
+            const existing = liabilityTotals.get(line.accountId);
+            if (existing) {
+              existing.amount = existing.amount.add(line.credit);
+            } else {
+              liabilityTotals.set(line.accountId, {
+                accountId: line.accountId,
+                amount: line.credit,
+                name: line.account.name,
+              });
+            }
+          }
+        }
+      }
+    }
+
+    if (liabilityTotals.size === 0) {
+      throw new BadRequestException('No liabilities found in payroll runs');
+    }
+
+    // Find default cash account
+    const cashAccount = await this.prisma.client.account.findFirst({
+      where: { orgId, code: '1000' },
+    });
+    if (!cashAccount) {
+      throw new BadRequestException('Cash account (1000) not found');
+    }
+
+    // Create batch with lines and source links in transaction
+    const batch = await this.prisma.client.$transaction(async (tx) => {
+      const created = await tx.remittanceBatch.create({
+        data: {
+          orgId,
+          branchId: dto.branchId || null,
+          type: 'MIXED',
+          idempotencyKey,
+          memo: `Generated from ${runs.length} payroll run(s)`,
+          createdById: userId,
+          lines: {
+            create: Array.from(liabilityTotals.values()).map((l) => ({
+              liabilityAccountId: l.accountId,
+              counterAccountId: cashAccount.id,
+              amount: l.amount,
+              payeeName: l.name,
+            })),
+          },
+          sourceLinks: {
+            create: sortedRunIds.map((runId) => ({ payrollRunId: runId })),
+          },
+        },
+        include: { lines: true, sourceLinks: true },
+      });
+
+      // Update total
+      const total = created.lines.reduce((sum, l) => sum.add(l.amount), new Prisma.Decimal(0));
+      await tx.remittanceBatch.update({
+        where: { id: created.id },
+        data: { totalAmount: total },
+      });
+
+      return created;
+    });
+
+    return { batchId: batch.id, created: true, lineCount: liabilityTotals.size };
+  }
+
+  /**
+   * Compute deterministic idempotency key
+   */
+  private computeIdempotencyKey(
+    orgId: string,
+    branchId: string | undefined,
+    sortedRunIds: string[],
+    type: string,
+  ): string {
+    const payload = JSON.stringify({ orgId, branchId: branchId || null, runIds: sortedRunIds, type });
+    return crypto.createHash('sha256').update(payload).digest('hex').substring(0, 32);
+  }
+
+  // ============== M10.10: Mark Settled (Reconciliation) ==============
+
+  /**
+   * Mark a PAID batch as settled with reconciliation metadata
+   * L5 only operation
+   */
+  async markSettled(orgId: string, batchId: string, dto: MarkSettledDto): Promise<any> {
+    const batch = await this.getBatch(orgId, batchId);
+
+    if (batch.status !== 'PAID') {
+      throw new BadRequestException('Can only mark PAID batches as settled');
+    }
+
+    if (batch.settledAt) {
+      throw new BadRequestException('Batch is already marked as settled');
+    }
+
+    return this.prisma.client.remittanceBatch.update({
+      where: { id: batchId },
+      data: {
+        externalReference: dto.externalReference || null,
+        settlementMethod: dto.settlementMethod,
+        settledAt: new Date(),
+        receiptNote: dto.receiptNote || null,
+      },
+      include: { lines: true },
+    });
+  }
+
+  // ============== M10.10: Bank Upload Export (Stub) ==============
+
+  /**
+   * Export batch as bank upload CSV (stub format)
+   * Returns: payeeName, referenceCode, amount, currencyCode
+   */
+  async exportBankUploadCsv(orgId: string, batchId: string): Promise<string> {
+    const batch = await this.getBatch(orgId, batchId);
+
+    const headers = ['payeeName', 'referenceCode', 'amount', 'currencyCode'];
+    const rows = batch.lines.map((l: any) => [
+      l.payeeName || 'Unknown',
+      l.referenceCode || '',
+      l.amount.toString(),
+      batch.currencyCode,
+    ]);
+
+    return [headers.join(','), ...rows.map((r: string[]) => r.join(','))].join('\n');
   }
 }

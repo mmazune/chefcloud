@@ -1,14 +1,14 @@
 /**
  * M10.9: Remittance Controller
+ * M10.10: Extended with Provider Directory, Mappings, Reconciliation, Generate
  *
  * REST endpoints for remittance batch management.
- * RBAC: L4+ for CRUD/approve/export, L5 only for post/pay/void.
+ * RBAC: L4+ for CRUD/approve/export, L5 only for post/pay/void/markSettled.
  */
 import {
   Controller,
   Get,
   Post,
-  Put,
   Patch,
   Delete,
   Param,
@@ -21,7 +21,17 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
-import { RemittanceService, CreateBatchDto, AddLineDto, BatchListFilters } from './remittance.service';
+import {
+  RemittanceService,
+  CreateBatchDto,
+  AddLineDto,
+  BatchListFilters,
+  CreateProviderDto,
+  UpdateProviderDto,
+  CreateMappingDto,
+  MarkSettledDto,
+  GenerateFromPayrollDto,
+} from './remittance.service';
 import { Response } from 'express';
 
 @Controller('orgs/:orgId/remittances')
@@ -190,6 +200,163 @@ export class RemittanceController {
     @Request() req: any,
   ): Promise<any> {
     return this.remittanceService.generateFromPayrollRuns(orgId, req.user.sub, body);
+  }
+
+  /**
+   * M10.10: Generate batch from payroll runs (idempotent with source links)
+   */
+  @Post('generate')
+  @Roles('L4', 'L5')
+  async generate(
+    @Param('orgId') orgId: string,
+    @Body() dto: GenerateFromPayrollDto,
+    @Request() req: any,
+  ): Promise<any> {
+    return this.remittanceService.generateFromPayrollRunsV2(orgId, req.user.sub, dto);
+  }
+
+  /**
+   * M10.10: Mark batch as settled
+   */
+  @Post(':id/mark-settled')
+  @Roles('L5')
+  async markSettled(
+    @Param('orgId') orgId: string,
+    @Param('id') id: string,
+    @Body() dto: MarkSettledDto,
+  ): Promise<any> {
+    return this.remittanceService.markSettled(orgId, id, dto);
+  }
+
+  /**
+   * M10.10: Export bank upload CSV
+   */
+  @Get(':id/bank-upload')
+  @Roles('L4', 'L5')
+  async exportBankUpload(
+    @Param('orgId') orgId: string,
+    @Param('id') id: string,
+    @Res() res: Response,
+  ) {
+    const csv = await this.remittanceService.exportBankUploadCsv(orgId, id);
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename=bank-upload-${id}.csv`);
+    return res.send(csv);
+  }
+}
+
+/**
+ * M10.10: Provider Controller
+ */
+@Controller('orgs/:orgId/remittance-providers')
+@UseGuards(AuthGuard('jwt'), RolesGuard)
+export class RemittanceProviderController {
+  constructor(private readonly remittanceService: RemittanceService) {}
+
+  /**
+   * List providers
+   */
+  @Get()
+  @Roles('L4', 'L5')
+  async listProviders(
+    @Param('orgId') orgId: string,
+    @Query('branchId') branchId?: string,
+  ): Promise<any> {
+    return this.remittanceService.listProviders(orgId, branchId);
+  }
+
+  /**
+   * Create provider
+   */
+  @Post()
+  @Roles('L4', 'L5')
+  async createProvider(
+    @Param('orgId') orgId: string,
+    @Body() dto: CreateProviderDto,
+  ): Promise<any> {
+    return this.remittanceService.createProvider(orgId, dto);
+  }
+
+  /**
+   * Get provider by ID
+   */
+  @Get(':id')
+  @Roles('L4', 'L5')
+  async getProvider(
+    @Param('orgId') orgId: string,
+    @Param('id') id: string,
+  ): Promise<any> {
+    return this.remittanceService.getProvider(orgId, id);
+  }
+
+  /**
+   * Update provider
+   */
+  @Patch(':id')
+  @Roles('L4', 'L5')
+  async updateProvider(
+    @Param('orgId') orgId: string,
+    @Param('id') id: string,
+    @Body() dto: UpdateProviderDto,
+  ): Promise<any> {
+    return this.remittanceService.updateProvider(orgId, id, dto);
+  }
+
+  /**
+   * Delete provider
+   */
+  @Delete(':id')
+  @Roles('L4', 'L5')
+  async deleteProvider(
+    @Param('orgId') orgId: string,
+    @Param('id') id: string,
+  ): Promise<any> {
+    return this.remittanceService.deleteProvider(orgId, id);
+  }
+}
+
+/**
+ * M10.10: Component Mapping Controller
+ */
+@Controller('orgs/:orgId/remittance-mappings')
+@UseGuards(AuthGuard('jwt'), RolesGuard)
+export class RemittanceMappingController {
+  constructor(private readonly remittanceService: RemittanceService) {}
+
+  /**
+   * List mappings
+   */
+  @Get()
+  @Roles('L4', 'L5')
+  async listMappings(
+    @Param('orgId') orgId: string,
+    @Query('providerId') providerId?: string,
+  ): Promise<any> {
+    return this.remittanceService.listMappings(orgId, providerId);
+  }
+
+  /**
+   * Create or update mapping
+   */
+  @Post()
+  @Roles('L4', 'L5')
+  async upsertMapping(
+    @Param('orgId') orgId: string,
+    @Body() dto: CreateMappingDto,
+  ): Promise<any> {
+    return this.remittanceService.upsertMapping(orgId, dto);
+  }
+
+  /**
+   * Delete mapping
+   */
+  @Delete(':id')
+  @Roles('L4', 'L5')
+  async deleteMapping(
+    @Param('orgId') orgId: string,
+    @Param('id') id: string,
+  ): Promise<any> {
+    return this.remittanceService.deleteMapping(orgId, id);
   }
 }
 
