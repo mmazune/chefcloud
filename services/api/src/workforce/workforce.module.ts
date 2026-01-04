@@ -53,6 +53,10 @@ import { PayslipsController } from './payslips.controller';
 import { PayrollMappingService } from './payroll-mapping.service';
 import { PayrollMappingController } from './payroll-mapping.controller';
 
+// M10.9: Remittances (Liability Settlements)
+import { RemittanceService } from './remittance.service';
+import { RemittanceController, RemittanceReportsController } from './remittance.controller';
+
 @Module({
   imports: [
     forwardRef(() => AccountingModule), // E43-s2
@@ -72,6 +76,8 @@ import { PayrollMappingController } from './payroll-mapping.controller';
     CompensationController, // M10.7
     PayslipsController, // M10.7
     PayrollMappingController, // M10.8
+    RemittanceController, // M10.9
+    RemittanceReportsController, // M10.9
   ],
   providers: [
     WorkforceService,
@@ -92,6 +98,7 @@ import { PayrollMappingController } from './payroll-mapping.controller';
     PayrollExportService, // M10.7
     PayrollGlStubService, // M10.7
     PayrollMappingService, // M10.8
+    RemittanceService, // M10.9
     PrismaService,
   ],
   exports: [
@@ -113,6 +120,7 @@ import { PayrollMappingController } from './payroll-mapping.controller';
     PayrollExportService, // M10.7
     PayrollGlStubService, // M10.7
     PayrollMappingService, // M10.8
+    RemittanceService, // M10.9
   ],
 })
 export class WorkforceModule {}

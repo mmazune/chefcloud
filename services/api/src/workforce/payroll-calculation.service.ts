@@ -275,11 +275,12 @@ export class PayrollCalculationService {
         }
         break;
 
-      case 'PER_HOUR':
+      case 'PER_HOUR': {
         // rate is per-hour rate, or use baseHourlyRate if provided
         const hourlyRate = rate > 0 ? rate : (baseHourlyRate ?? 0);
         result = new Decimal(hourlyRate).mul(paidHours);
         break;
+      }
 
       default:
         result = new Decimal(0);

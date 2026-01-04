@@ -395,6 +395,7 @@ model Org {
   employeeCompensationProfiles EmployeeCompensationProfile[] // M10.7: Employee compensation profiles
   payslips                    Payslip[]                     // M10.7: Payslips
   payrollPostingMappings      PayrollPostingMapping[]       // M10.8: Payroll posting mappings
+  remittanceBatches           RemittanceBatch[]             // M10.9: Remittance batches
 
   @@map("orgs")
 }
@@ -491,6 +492,7 @@ model Branch {
   payrollRuns          PayrollRun[]           // M10.6: Payroll runs
   compensationComponents CompensationComponent[] // M10.7: Branch compensation overrides
   payrollPostingMappings PayrollPostingMapping[] // M10.8: Branch payroll posting mappings
+  remittanceBatches      RemittanceBatch[]       // M10.9: Branch remittance batches
 
   @@index([orgId, id])
   @@map("branches")
@@ -585,6 +587,11 @@ model User {
   payrollRunLines           PayrollRunLine[]         // M10.6: Payroll run lines
   compensationProfiles      EmployeeCompensationProfile[] // M10.7: Compensation profiles
   payslips                  Payslip[]                // M10.7: Payslips
+  createdRemittanceBatches  RemittanceBatch[]        @relation("CreatedRemittanceBatches")  // M10.9
+  approvedRemittanceBatches RemittanceBatch[]        @relation("ApprovedRemittanceBatches") // M10.9
+  postedRemittanceBatches   RemittanceBatch[]        @relation("PostedRemittanceBatches")   // M10.9
+  paidRemittanceBatches     RemittanceBatch[]        @relation("PaidRemittanceBatches")     // M10.9
+  voidedRemittanceBatches   RemittanceBatch[]        @relation("VoidedRemittanceBatches")   // M10.9
 
   @@index([orgId, id])
   @@map("users")
@@ -2302,6 +2309,9 @@ model Account {
   employerContribExpenseMappings PayrollPostingMapping[] @relation("EmployerContribExpenseAccount")
   employerContribPayableMappings PayrollPostingMapping[] @relation("EmployerContribPayableAccount")
   cashAccountMappings         PayrollPostingMapping[] @relation("CashAccount")
+  // M10.9: Remittance line reverse relations
+  remittanceLiabilityLines    RemittanceLine[] @relation("RemittanceLiabilityAccount")
+  remittanceCounterLines      RemittanceLine[] @relation("RemittanceCounterAccount")
 
   @@unique([orgId, code])
   @@index([orgId, type])
@@ -2359,6 +2369,8 @@ model JournalEntry {
   depositApplyJournals     ReservationDeposit[]       @relation("DepositApplyJournal")
   // M10.6: Payroll run journal links
   payrollRunJournalLinks   PayrollRunJournalLink[]
+  // M10.9: Remittance journal links
+  remittanceJournalLinks   RemittanceJournalLink[]
 
   @@index([orgId, date])
   @@index([orgId, branchId])
@@ -4167,6 +4179,102 @@ model PayrollPostingMapping {
   @@map("payroll_posting_mappings")
 }
 
+// ===== M10.9: Remittance Batches (Liability Settlements) =====
+
+enum RemittanceBatchStatus {
+  DRAFT
+  APPROVED
+  POSTED
+  PAID
+  VOID
+}
+
+enum RemittanceBatchType {
+  TAX
+  DEDUCTION
+  EMPLOYER_CONTRIB
+  MIXED
+}
+
+model RemittanceBatch {
+  id             String               @id @default(cuid())
+  orgId          String
+  branchId       String?              // NULL = org-wide
+  status         RemittanceBatchStatus @default(DRAFT)
+  type           RemittanceBatchType
+  currencyCode   String               @default("UGX")
+  periodId       String?              // Optional link to FiscalPeriod
+  idempotencyKey String?              // Unique per org to prevent duplicates
+  memo           String?
+  totalAmount    Decimal              @default(0) @db.Decimal(12, 2)
+  
+  createdById    String
+  approvedById   String?
+  approvedAt     DateTime?
+  postedById     String?
+  postedAt       DateTime?
+  paidById       String?
+  paidAt         DateTime?
+  voidedById     String?
+  voidedAt       DateTime?
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+
+  org          Org     @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  branch       Branch? @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  createdBy    User    @relation("CreatedRemittanceBatches", fields: [createdById], references: [id])
+  approvedBy   User?   @relation("ApprovedRemittanceBatches", fields: [approvedById], references: [id])
+  postedBy     User?   @relation("PostedRemittanceBatches", fields: [postedById], references: [id])
+  paidBy       User?   @relation("PaidRemittanceBatches", fields: [paidById], references: [id])
+  voidedBy     User?   @relation("VoidedRemittanceBatches", fields: [voidedById], references: [id])
+  
+  lines        RemittanceLine[]
+  journalLinks RemittanceJournalLink[]
+
+  @@unique([orgId, idempotencyKey])
+  @@index([orgId, status])
+  @@index([branchId])
+  @@map("remittance_batches")
+}
+
+model RemittanceLine {
+  id                String   @id @default(cuid())
+  batchId           String
+  componentId       String?  // Optional link to CompensationComponent
+  liabilityAccountId String  // GL account being settled (e.g., Taxes Payable)
+  counterAccountId  String   // Cash/bank account for payment
+  amount            Decimal  @db.Decimal(12, 2)
+  payeeName         String?  // Name of tax authority/benefits provider
+  referenceCode     String?  // External reference (e.g., tax filing ID)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  batch            RemittanceBatch        @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  component        CompensationComponent? @relation(fields: [componentId], references: [id], onDelete: SetNull)
+  liabilityAccount Account                @relation("RemittanceLiabilityAccount", fields: [liabilityAccountId], references: [id])
+  counterAccount   Account                @relation("RemittanceCounterAccount", fields: [counterAccountId], references: [id])
+
+  @@index([batchId])
+  @@index([componentId])
+  @@map("remittance_lines")
+}
+
+model RemittanceJournalLink {
+  id             String   @id @default(cuid())
+  batchId        String
+  journalEntryId String
+  type           String   // "PAYMENT" or "REVERSAL"
+  createdAt      DateTime @default(now())
+
+  batch        RemittanceBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  journalEntry JournalEntry    @relation(fields: [journalEntryId], references: [id], onDelete: Restrict)
+
+  @@unique([batchId, journalEntryId])
+  @@index([batchId])
+  @@index([journalEntryId])
+  @@map("remittance_journal_links")
+}
+
 // ===== M10.7: Compensation Components & Payslips =====
 
 enum CompensationComponentType {
@@ -4212,6 +4320,7 @@ model CompensationComponent {
   branch Branch? @relation(fields: [branchId], references: [id], onDelete: SetNull)
   employeeComponents EmployeeCompensationComponent[]
   payslipLineItems   PayslipLineItem[]
+  remittanceLines    RemittanceLine[]  // M10.9: Remittance lines linked to this component
 
   @@unique([orgId, code, branchId])
   @@index([orgId, enabled])

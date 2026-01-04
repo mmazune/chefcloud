@@ -4,6 +4,25 @@ This document tracks issues that predate the current milestone and are not cause
 
 ---
 
+## PRE-009: no-case-declarations in payroll-calculation.service.ts (FIXED)
+
+**Category**: lint-error  
+**First Observed**: M10.9 Baseline (2026-01-04)  
+**Impact**: HIGH - Blocks lint pass  
+**Status**: FIXED (M10.9)
+
+**Summary**: Line 280 had `const hourlyRate` in case block without braces.
+
+**Evidence**:
+```
+services/api/src/workforce/payroll-calculation.service.ts
+  280:9  error  Unexpected lexical declaration in case block  no-case-declarations
+```
+
+**Fix Applied**: Added braces around PER_HOUR case block.
+
+---
+
 ## PRE-007: API Lint Warnings (123 total)
 
 **Category**: lint-warning  
