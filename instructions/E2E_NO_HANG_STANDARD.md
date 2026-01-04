@@ -1,7 +1,8 @@
 # E2E No-Hang Standard
 
-> **Version:** 1.0  
+> **Version:** 2.0  
 > **Created:** 2026-01-03  
+> **Updated:** 2026-01-05 (M10.15 - Timer/Interval policy)  
 > **Purpose:** Prevent hanging tests, ensure clean exits, maintain CI stability
 
 ---
@@ -12,8 +13,8 @@
 
 - **Never rely on Ctrl+C** to stop tests
 - Tests must complete within defined timeouts
-- Use `--forceExit` for problematic suites during debugging only
-- CI must use `--forceExit` as safety net
+- **`--forceExit` is NOT allowed in CI gates** (M10.15)
+- If tests don't exit cleanly, fix the root cause (open handles)
 
 ### 1.2 Three-Layer Timeout Architecture
 
@@ -162,22 +163,74 @@ afterAll(async () => {
 // ✅ GOOD: Polling with max attempts
 const result = await pollWithTimeout(check, { maxAttempts: 50, intervalMs: 100 });
 
-// ✅ GOOD: forceExit in scripts (safety net)
-jest --forceExit --runInBand
+// ✅ GOOD: forceExit only for LOCAL debugging (never in CI)
+jest --forceExit --runInBand  # Local debugging only!
 ```
 
 ---
 
-## 4. Debugging Hangs
+## 4. Timers and Intervals (M10.15)
 
-### 4.1 Detect Open Handles
+### 4.1 The Problem
+
+Background timers (`setInterval`, `setTimeout`) keep Node's event loop alive, preventing Jest from exiting even after all tests complete.
+
+### 4.2 Prohibited Patterns
+
+```typescript
+// ❌ BAD: Background timer without .unref()
+setInterval(() => this.cleanup(), 60000);
+
+// ❌ BAD: Module-level singleton with timer
+export const GlobalGuard = new RateLimitGuard(); // Created at import time
+
+// ❌ BAD: Timer without OnModuleDestroy
+constructor() {
+  this.timer = setInterval(fn, 1000); // Never cleared
+}
+```
+
+### 4.3 Approved Patterns
+
+```typescript
+// ✅ GOOD: On-demand cleanup (no timer needed)
+canActivate(context) {
+  this.maybeCleanup(Date.now()); // Cleanup opportunistically
+  // ...
+}
+
+// ✅ GOOD: Timer with .unref() + OnModuleDestroy
+constructor() {
+  this.timer = setInterval(fn, 60000);
+  this.timer.unref(); // Won't keep process alive
+}
+
+onModuleDestroy() {
+  clearInterval(this.timer);
+}
+
+// ✅ GOOD: Nest DI manages lifecycle
+@Module({
+  providers: [{ provide: APP_GUARD, useClass: RateLimitGuard }]
+})
+```
+
+### 4.4 Reference
+
+See [E2E_OPEN_HANDLE_POLICY.md](./E2E_OPEN_HANDLE_POLICY.md) for complete policy.
+
+---
+
+## 5. Debugging Hangs
+
+### 5.1 Detect Open Handles
 
 ```bash
 # Show what's keeping Jest alive
 pnpm test:e2e -- --detectOpenHandles --runTestsByPath test/e2e/problematic.e2e-spec.ts
 ```
 
-### 4.2 Common Causes
+### 5.2 Common Causes
 
 | Symptom | Cause | Fix |
 |---------|-------|-----|
@@ -186,7 +239,7 @@ pnpm test:e2e -- --detectOpenHandles --runTestsByPath test/e2e/problematic.e2e-s
 | Timeout in beforeAll | Slow module compilation | Check circular imports |
 | Random hangs | Redis/event listeners | Unsubscribe in afterAll |
 
-### 4.3 Tracing
+### 5.3 Tracing
 
 ```typescript
 import { trace, traceSpan } from '../helpers/e2e-trace';
@@ -202,30 +255,32 @@ beforeAll(async () => {
 
 ---
 
-## 5. CI Configuration
+## 6. CI Configuration
 
-### 5.1 Script Pattern
+### 6.1 Script Pattern
 
 ```json
 {
   "scripts": {
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "test:e2e:strict": "node scripts/e2e-strict-runner.mjs"
+    "test:e2e:strict": "node scripts/e2e-strict-runner.mjs",
+    "test:e2e:open-handles": "jest --config ./test/jest-e2e.json --runInBand --detectOpenHandles"
   }
 }
 ```
 
-### 5.2 Strict Runner Script
+### 6.2 Strict Runner Script (M10.15 - No forceExit)
 
 ```javascript
 // scripts/e2e-strict-runner.mjs
 import { spawn } from 'child_process';
 import { setTimeout } from 'timers/promises';
 
-const TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes
+const TIMEOUT_MS = 15 * 60 * 1000; // 15 minutes
 
 async function run() {
-  const args = ['test:e2e', '--', '--forceExit', '--detectOpenHandles', ...process.argv.slice(2)];
+  // M10.15: --forceExit removed - tests must exit cleanly
+  const args = ['test:e2e', '--', '--detectOpenHandles', '--runInBand', ...process.argv.slice(2)];
   
   const proc = spawn('pnpm', args, { stdio: 'inherit', shell: true });
   
@@ -252,17 +307,17 @@ run().catch((err) => {
 
 ---
 
-## 6. Gate Requirements
+## 7. Gate Requirements
 
-### 6.1 test:e2e:strict Gate
+### 7.1 test:e2e:strict Gate
 
 The strict gate MUST:
 1. Run teardown-check first
-2. Run E2E with --forceExit and --detectOpenHandles
+2. Run E2E with --detectOpenHandles (no --forceExit)
 3. Timeout after 15 minutes
-4. Fail if any "open handles" warnings appear
+4. Fail if tests don't exit cleanly
 
-### 6.2 PR Merge Criteria
+### 7.2 PR Merge Criteria
 
 - [ ] All E2E tests pass
 - [ ] No "Jest did not exit" warnings
@@ -271,7 +326,7 @@ The strict gate MUST:
 
 ---
 
-## 7. Checklist for New E2E Files
+## 8. Checklist for New E2E Files
 
 - [ ] `jest.setTimeout()` at file top (Layer B)
 - [ ] `withTimeout()` around createE2EApp (Layer C)
@@ -283,4 +338,4 @@ The strict gate MUST:
 
 ---
 
-*Last Updated: 2026-01-03*
+*Last Updated: 2026-01-05 (M10.15)*

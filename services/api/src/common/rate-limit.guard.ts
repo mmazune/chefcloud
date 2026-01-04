@@ -3,6 +3,9 @@
  * 
  * Simple in-memory rate limiter for public endpoints
  * Uses sliding window counter algorithm
+ * 
+ * M10.15: Removed background timer to prevent open handles in tests.
+ * Uses on-demand (opportunistic) cleanup during each request instead.
  */
 import {
   Injectable,
@@ -18,12 +21,18 @@ interface RateLimitEntry {
   windowStart: number;
 }
 
+/**
+ * Cleanup threshold: prune expired entries when store exceeds this size
+ * This ensures memory doesn't grow unbounded without needing a background timer
+ */
+const CLEANUP_THRESHOLD = 100;
+
 @Injectable()
 export class RateLimitGuard implements CanActivate {
   private readonly store = new Map<string, RateLimitEntry>();
   private readonly windowMs: number;
   private readonly maxRequests: number;
-  private cleanupInterval: NodeJS.Timeout | null = null;
+  private lastCleanup: number = Date.now();
 
   constructor(
     maxRequests: number = 5,
@@ -31,15 +40,16 @@ export class RateLimitGuard implements CanActivate {
   ) {
     this.maxRequests = maxRequests;
     this.windowMs = windowMs;
-
-    // Cleanup expired entries every 5 minutes
-    this.cleanupInterval = setInterval(() => this.cleanup(), 5 * 60 * 1000);
+    // M10.15: No background timer - uses on-demand cleanup instead
   }
 
   canActivate(context: ExecutionContext): boolean {
     const request = context.switchToHttp().getRequest<Request>();
     const ip = this.getClientIp(request);
     const now = Date.now();
+
+    // M10.15: Opportunistic cleanup - no background timer needed
+    this.maybeCleanup(now);
 
     const entry = this.store.get(ip);
 
@@ -87,10 +97,26 @@ export class RateLimitGuard implements CanActivate {
   }
 
   /**
+   * M10.15: On-demand cleanup - runs during request processing
+   * Triggers when store exceeds threshold or enough time has passed (5 min)
+   * This replaces the background setInterval to avoid open handles in tests
+   */
+  private maybeCleanup(now: number): void {
+    const timeSinceLastCleanup = now - this.lastCleanup;
+    const shouldCleanup = 
+      this.store.size > CLEANUP_THRESHOLD || 
+      timeSinceLastCleanup >= 5 * 60 * 1000; // 5 minutes
+
+    if (shouldCleanup) {
+      this.cleanup(now);
+      this.lastCleanup = now;
+    }
+  }
+
+  /**
    * Cleanup expired entries
    */
-  private cleanup(): void {
-    const now = Date.now();
+  private cleanup(now: number = Date.now()): void {
     for (const [ip, entry] of this.store.entries()) {
       if (now - entry.windowStart >= this.windowMs) {
         this.store.delete(ip);
@@ -126,12 +152,10 @@ export class RateLimitGuard implements CanActivate {
   }
 
   /**
-   * Cleanup on module destroy
+   * Clear all entries (for testing cleanup)
    */
-  onModuleDestroy(): void {
-    if (this.cleanupInterval) {
-      clearInterval(this.cleanupInterval);
-    }
+  clear(): void {
+    this.store.clear();
   }
 }
 

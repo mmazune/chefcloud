@@ -98,23 +98,40 @@ C:\Users\arman\Desktop\nimbusPOS\nimbuspos\services\api\test\m1-kds-enterprise.e
 **Category**: test-infrastructure  
 **First Observed**: M10.14 Finalization (2025-01-04)  
 **Impact**: LOW - Requires --forceExit flag for E2E tests  
-**Status**: OPEN
+**Status**: RESOLVED (M10.15)
 
 **Summary**: RateLimitGuard creates a setInterval for cleanup that is not stopped on module teardown, causing Jest to detect open handles.
 
-**Evidence**:
+**Evidence (Before Fix)**:
 ```
 services/api/src/common/rate-limit.guard.ts:36
   this.cleanupInterval = setInterval(() => this.cleanup(), 5 * 60 * 1000);
   
 Jest output:
-  A worker process has failed to exit gracefully and has been force exited.
-  This is likely caused by tests leaking due to improper teardown.
+  Jest has detected the following 2 open handles potentially keeping Jest from exiting:
+    ●  Timeout
+      35 |     // Cleanup expired entries every 5 minutes
+    > 36 |     this.cleanupInterval = setInterval(() => this.cleanup(), 5 * 60 * 1000);
 ```
 
-**Workaround**: Use `--forceExit` flag with Jest E2E tests.
+**Fix Applied (M10.15)**: Replaced background setInterval with on-demand (opportunistic) cleanup.
+- Removed the timer entirely
+- Added `maybeCleanup()` that runs during each request
+- Cleanup triggers when store exceeds 100 entries OR 5 minutes have passed
+- No background timers = no open handles
 
-**Future Fix**: Add `onModuleDestroy()` lifecycle hook to clear the interval.
+**Evidence (After Fix)**:
+```
+# Test completes and exits cleanly without --forceExit
+npx jest --detectOpenHandles --testPathPatterns="workforce-m1014"
+...
+Test Suites: 1 passed, 1 total
+Tests:       9 passed, 9 total
+Time:        61.172 s
+# No "open handles" warning - process exits normally
+```
+
+**Commit**: M10.15 (pending)
 
 ---
 

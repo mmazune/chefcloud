@@ -5,6 +5,8 @@
  * Runs E2E tests with strict timeout and open handle detection.
  * Part of the no-hang enforcement standard.
  * 
+ * M10.15: Removed --forceExit - tests must exit cleanly on their own.
+ * 
  * Usage:
  *   node scripts/e2e-strict-runner.mjs [test-file-pattern]
  * 
@@ -22,16 +24,15 @@ const TIMEOUT_MS = 15 * 60 * 1000; // 15 minutes
 async function run() {
   const pattern = process.argv[2] || '';
   
-  console.log('🔒 E2E Strict Runner');
+  console.log('🔒 E2E Strict Runner (M10.15 - No forceExit)');
   console.log(`   Timeout: ${TIMEOUT_MS / 60000} minutes`);
   console.log(`   Pattern: ${pattern || 'all recent milestone E2E files'}`);
   console.log('');
 
-  // Build Jest args
+  // Build Jest args - M10.15: removed --forceExit
   const jestArgs = [
     '--config', './test/jest-e2e.json',
     '--runInBand',
-    '--forceExit',
     '--detectOpenHandles',
   ];
 
