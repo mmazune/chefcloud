@@ -76,6 +76,11 @@ import { WorkforcePlanningService } from './workforce-planning.service';
 import { WorkforcePlanningExportService } from './workforce-planning-export.service';
 import { WorkforcePlanningController } from './workforce-planning.controller';
 
+// M10.13: Auto-Scheduler (Generate Shifts from Staffing Plan)
+import { WorkforceAutoSchedulerService } from './workforce-auto-scheduler.service';
+import { WorkforceAutoScheduleApplyService } from './workforce-auto-schedule-apply.service';
+import { WorkforceAutoSchedulerController } from './workforce-auto-scheduler.controller';
+
 @Module({
   imports: [
     forwardRef(() => AccountingModule), // E43-s2
@@ -108,6 +113,7 @@ import { WorkforcePlanningController } from './workforce-planning.controller';
     SelfNotificationsController, // M10.11
     NotificationsController, // M10.11
     WorkforcePlanningController, // M10.12
+    WorkforceAutoSchedulerController, // M10.13
   ],
   providers: [
     WorkforceService,
@@ -136,6 +142,8 @@ import { WorkforcePlanningController } from './workforce-planning.controller';
     WorkforceNotificationsService, // M10.11
     WorkforcePlanningService, // M10.12
     WorkforcePlanningExportService, // M10.12
+    WorkforceAutoSchedulerService, // M10.13
+    WorkforceAutoScheduleApplyService, // M10.13
     PrismaService,
   ],
   exports: [
@@ -165,6 +173,8 @@ import { WorkforcePlanningController } from './workforce-planning.controller';
     WorkforceNotificationsService, // M10.11
     WorkforcePlanningService, // M10.12
     WorkforcePlanningExportService, // M10.12
+    WorkforceAutoSchedulerService, // M10.13
+    WorkforceAutoScheduleApplyService, // M10.13
   ],
 })
 export class WorkforceModule {}

@@ -31,6 +31,7 @@ import {
   Hand,
   Target,
   AlertTriangle,
+  Zap,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -131,6 +132,7 @@ export const ROLE_CAPABILITIES: Record<JobRole, RoleCapability> = {
           { label: 'Labor Targets', href: '/workforce/labor-targets', icon: Target },
           { label: 'Staffing Planner', href: '/workforce/staffing-planner', icon: CalendarClock },
           { label: 'Staffing Alerts', href: '/workforce/staffing-alerts', icon: AlertTriangle },
+          { label: 'Auto-Scheduler', href: '/workforce/auto-scheduler', icon: Zap },
         ],
       },
       {
@@ -190,6 +192,7 @@ export const ROLE_CAPABILITIES: Record<JobRole, RoleCapability> = {
           { label: 'Labor Targets', href: '/workforce/labor-targets', icon: Target },
           { label: 'Staffing Planner', href: '/workforce/staffing-planner', icon: CalendarClock },
           { label: 'Staffing Alerts', href: '/workforce/staffing-alerts', icon: AlertTriangle },
+          { label: 'Auto-Scheduler', href: '/workforce/auto-scheduler', icon: Zap },
         ],
       },
       {

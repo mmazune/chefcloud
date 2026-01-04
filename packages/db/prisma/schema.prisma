@@ -442,6 +442,8 @@ model Org {
   laborForecastSnapshots         LaborForecastSnapshot[]
   staffingPlans                  StaffingPlan[]
   staffingAlerts                 StaffingAlert[]
+  // M10.13: Auto-Scheduler
+  autoScheduleRuns               AutoScheduleRun[]
 
   @@map("orgs")
 }
@@ -546,6 +548,8 @@ model Branch {
   laborForecastSnapshots LaborForecastSnapshot[]
   staffingPlans          StaffingPlan[]
   staffingAlerts         StaffingAlert[]
+  // M10.13: Auto-Scheduler
+  autoScheduleRuns       AutoScheduleRun[]
 
   @@index([orgId, id])
   @@map("branches")
@@ -661,6 +665,8 @@ model User {
   // M10.12: Labor Forecasting + Staffing Planner
   publishedStaffingPlans          StaffingPlan[]                   @relation("PlanPublisher")
   resolvedStaffingAlerts          StaffingAlert[]                  @relation("AlertResolver")
+  // M10.13: Auto-Scheduler
+  appliedAutoScheduleRuns         AutoScheduleRun[]                @relation("RunApplier")
 
   @@index([orgId, id])
   @@map("users")
@@ -4795,8 +4801,10 @@ model StaffingPlan {
   org              Org                   @relation(fields: [orgId], references: [id], onDelete: Cascade)
   branch           Branch                @relation(fields: [branchId], references: [id], onDelete: Cascade)
   forecastSnapshot LaborForecastSnapshot @relation(fields: [forecastSnapshotId], references: [id], onDelete: Cascade)
-  publishedBy      User?                 @relation("PlanPublisher", fields: [publishedById], references: [id], onDelete: SetNull)
-  lines            StaffingPlanLine[]
+  publishedBy       User?                 @relation("PlanPublisher", fields: [publishedById], references: [id], onDelete: SetNull)
+  lines             StaffingPlanLine[]
+  // M10.13: Auto-Scheduler
+  autoScheduleRuns  AutoScheduleRun[]
 
   @@unique([orgId, branchId, date, forecastSnapshotId])
   @@index([orgId, branchId, date])
@@ -4842,3 +4850,59 @@ model StaffingAlert {
   @@index([resolvedAt])
   @@map("staffing_alerts")
 }
+
+// ===== M10.13: Auto-Scheduler (Generate Shifts from Staffing Plan) =====
+
+enum AutoScheduleRunStatus {
+  DRAFT
+  APPLIED
+  VOID
+}
+
+// M10.13: Auto-schedule run (represents one generation attempt)
+model AutoScheduleRun {
+  id               String                @id @default(cuid())
+  orgId            String
+  branchId         String
+  date             DateTime              @db.Date
+  timezone         String
+  staffingPlanId   String
+  inputsHash       String                // SHA256 of canonicalized inputs for idempotency
+  algorithmVersion String                @default("v1.0")
+  status           AutoScheduleRunStatus @default(DRAFT)
+  generatedAt      DateTime              @default(now())
+  appliedAt        DateTime?
+  appliedById      String?
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+
+  org          Org                      @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  branch       Branch                   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  staffingPlan StaffingPlan             @relation(fields: [staffingPlanId], references: [id], onDelete: Cascade)
+  appliedBy    User?                    @relation("RunApplier", fields: [appliedById], references: [id], onDelete: SetNull)
+  suggestions  AutoScheduleSuggestion[]
+
+  @@unique([orgId, branchId, date, inputsHash])
+  @@index([orgId, branchId, date])
+  @@index([status])
+  @@map("auto_schedule_runs")
+}
+
+// M10.13: Auto-schedule suggestion (shift block with candidates)
+model AutoScheduleSuggestion {
+  id               String   @id @default(cuid())
+  runId            String
+  roleKey          String
+  startAt          DateTime
+  endAt            DateTime
+  headcount        Int
+  candidateUserIds Json?    // string[] of user IDs who are available
+  score            Int?     // optional priority score
+  createdAt        DateTime @default(now())
+
+  run AutoScheduleRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@index([runId, roleKey])
+  @@map("auto_schedule_suggestions")
+}
+
