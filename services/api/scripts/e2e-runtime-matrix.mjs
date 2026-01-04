@@ -10,6 +10,7 @@
  * - Captures pass/fail/timeout status for each file
  * - Generates ranked list of slowest files
  * - Produces partial report if budget is reached
+ * - M10.16: Cross-platform support (Windows + Linux)
  *
  * Usage:
  *   node scripts/e2e-runtime-matrix.mjs
@@ -19,6 +20,11 @@
 import { spawn } from 'child_process';
 import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { join } from 'path';
+import { platform } from 'os';
+
+// M10.16: Cross-platform command resolution
+const IS_WINDOWS = platform() === 'win32';
+const PNPM = IS_WINDOWS ? 'pnpm.cmd' : 'pnpm';
 
 // Parse CLI args
 const args = process.argv.slice(2);
@@ -91,7 +97,7 @@ async function runTestFile(filePath, index, total) {
 
   return new Promise((resolve) => {
     const child = spawn(
-      'pnpm',
+      PNPM,
       [
         'test:e2e',
         '--',
@@ -105,8 +111,8 @@ async function runTestFile(filePath, index, total) {
       {
         cwd: process.cwd(),
         stdio: ['ignore', 'pipe', 'pipe'],
-        shell: false,
-        detached: process.platform !== 'win32',
+        shell: IS_WINDOWS,
+        detached: !IS_WINDOWS,
       },
     );
 
@@ -128,7 +134,7 @@ async function runTestFile(filePath, index, total) {
       console.log(`         ⏰ TIMEOUT (${PER_FILE_TIMEOUT_SECONDS}s) - killing process`);
 
       try {
-        if (process.platform !== 'win32') {
+        if (!IS_WINDOWS) {
           process.kill(-child.pid, 'SIGTERM');
         } else {
           child.kill('SIGTERM');
@@ -140,7 +146,7 @@ async function runTestFile(filePath, index, total) {
       // Hard kill after 5s
       setTimeout(() => {
         try {
-          if (process.platform !== 'win32') {
+          if (!IS_WINDOWS) {
             process.kill(-child.pid, 'SIGKILL');
           } else {
             child.kill('SIGKILL');
@@ -271,10 +277,11 @@ async function main() {
     const setupLogStream = createWriteStream(SETUP_LOG, { flags: 'w' });
 
     const setupResult = await new Promise((resolve) => {
-      const child = spawn('pnpm', ['test:e2e:setup'], {
+      const child = spawn(PNPM, ['test:e2e:setup'], {
         cwd: process.cwd(),
         stdio: ['ignore', 'pipe', 'pipe'],
-        shell: false,
+        shell: IS_WINDOWS,
+        detached: !IS_WINDOWS,
         env: {
           ...process.env,
           E2E_DATASET: process.env.E2E_DATASET || 'ALL',

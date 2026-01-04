@@ -1,7 +1,7 @@
 # Milestone Definition of Done (DoD)
 
-> **Last updated:** 2026-01-02  
-> **Version:** 1.0  
+> **Last updated:** 2026-01-05  
+> **Version:** 1.1  
 > **Purpose:** Mandatory completion criteria for every milestone
 
 ---
@@ -57,7 +57,18 @@ Per [E2E_EXPANSION_CONTRACT.md](E2E_EXPANSION_CONTRACT.md):
 - [ ] **Templates followed** per [E2E_TEST_TEMPLATES.md](E2E_TEST_TEMPLATES.md)
 - [ ] **Dataset rules followed** per [E2E_DATASET_RULES.md](E2E_DATASET_RULES.md)
 
-### 4. Security Requirements
+### 4. Cross-Platform Gate (M10.16)
+
+- [ ] **E2E gate runs on both Windows AND Linux:**
+  - [ ] `pnpm -C services/api test:e2e:gate:self-check` passes
+  - [ ] `pnpm -C services/api test:e2e:gate` completes without ENOENT/spawn errors
+- [ ] **No platform-specific commands in scripts:**
+  - [ ] No hardcoded `pnpm` spawn (use `pnpm.cmd` on Windows)
+  - [ ] No GNU `timeout` dependency
+  - [ ] No `bash -c` requirement
+- [ ] See [E2E_CROSS_PLATFORM_GATE_RUNBOOK.md](E2E_CROSS_PLATFORM_GATE_RUNBOOK.md) for details
+
+### 5. Security Requirements
 
 Per [security/SECURITY_GATES.md](security/SECURITY_GATES.md):
 
@@ -67,10 +78,20 @@ Per [security/SECURITY_GATES.md](security/SECURITY_GATES.md):
 - [ ] No secrets in code
 - [ ] Audit logging for sensitive operations
 
-### 5. CI Gates
+### 6. CI Gates
 
 All commands must pass before milestone completion:
 
+**Cross-Platform Commands (Windows + Linux):**
+```powershell
+# Self-check gate runner (max 60s)
+pnpm -C services/api test:e2e:gate:self-check
+
+# E2E gate (full matrix, max 30m)
+pnpm -C services/api test:e2e:gate
+```
+
+**Linux/CI Commands (with GNU timeout):**
 ```bash
 # Lint (max 120s)
 timeout 120s pnpm lint
@@ -91,7 +112,7 @@ timeout 30s pnpm -C services/api run test:e2e:teardown-check
 timeout 600s pnpm -C services/api run test:e2e:gate
 ```
 
-### 6. Code Review
+### 7. Code Review
 
 - [ ] PR created with descriptive title and body
 - [ ] Linked to milestone/issue
@@ -99,7 +120,7 @@ timeout 600s pnpm -C services/api run test:e2e:gate
 - [ ] Security-sensitive changes reviewed by security lead
 - [ ] No unresolved comments
 
-### 7. Documentation Updates
+### 8. Documentation Updates
 
 - [ ] API documentation updated (Swagger annotations if applicable)
 - [ ] README updated if user-facing behavior changed
@@ -109,8 +130,20 @@ timeout 600s pnpm -C services/api run test:e2e:gate
 
 ## Gate Commands Reference
 
-### Quick Local Verification
+### Quick Local Verification (Cross-Platform)
 
+**Windows PowerShell:**
+```powershell
+cd services/api
+
+# 1. Self-check gate runner
+pnpm test:e2e:gate:self-check
+
+# 2. E2E gate
+pnpm test:e2e:gate
+```
+
+**Linux/macOS:**
 ```bash
 # Run all gates locally before PR
 cd /workspaces/chefcloud/services/api

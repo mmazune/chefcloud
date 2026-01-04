@@ -7,6 +7,7 @@
  * - Clean JSON output
  * - Status file with unambiguous outcome
  * - Progress heartbeat during long runs
+ * - M10.16: Cross-platform support (Windows + Linux)
  *
  * Usage:
  *   node scripts/run-e2e-with-deadline.mjs --minutes=25
@@ -16,6 +17,11 @@
 import { spawn } from 'child_process';
 import { writeFileSync } from 'fs';
 import { join } from 'path';
+import { platform } from 'os';
+
+// M10.16: Cross-platform command resolution
+const IS_WINDOWS = platform() === 'win32';
+const PNPM = IS_WINDOWS ? 'pnpm.cmd' : 'pnpm';
 
 // Parse CLI args
 const args = process.argv.slice(2);
@@ -38,6 +44,7 @@ if (!process.env.E2E_DEMO_DATASET) {
 // Run setup first, then start tests
 (async () => {
   console.log(`🚀 Starting E2E test runner with ${DEADLINE_MINUTES}m deadline`);
+  console.log(`📍 Platform: ${platform()} | PNPM: ${PNPM}`);
   if (PATTERN) {
     console.log(`📁 Pattern: ${PATTERN}`);
   }
@@ -49,7 +56,7 @@ if (!process.env.E2E_DEMO_DATASET) {
   // Run E2E setup first
   console.log('🔧 Running E2E database setup...');
   const setupStart = Date.now();
-  const setupChild = spawn('pnpm', ['test:e2e:setup'], {
+  const setupChild = spawn(PNPM, ['test:e2e:setup'], {
     cwd: process.cwd(),
     stdio: 'inherit',
     shell: false,

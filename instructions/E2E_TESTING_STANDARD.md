@@ -10,6 +10,49 @@ This standard applies to:
 
 ---
 
+## 0) Cross-Platform Gate (M10.16) — MANDATORY
+
+The E2E gate must work on **both Linux (CI/Codespaces) and Windows (local PowerShell)**.
+
+### 0.1 Use the Cross-Platform Gate Runner
+
+**Primary command (cross-platform):**
+```powershell
+pnpm -C services/api test:e2e:gate
+```
+
+This uses `scripts/e2e-gate-runner.mjs` which:
+- Resolves `pnpm.cmd` on Windows, `pnpm` on Unix
+- Implements Node-based deadlines (no OS `timeout` dependency)
+- Handles process group kills correctly per platform
+- Produces consistent `.e2e-gate.log` and `.e2e-matrix.json`
+
+### 0.2 Self-Check Before Running Gate
+
+Always verify the runner can spawn correctly:
+```powershell
+pnpm -C services/api test:e2e:gate:self-check
+```
+
+### 0.3 Prohibited Patterns
+
+❌ **Do NOT use:**
+- `spawn('pnpm', ...)` — fails on Windows (use `spawn(PNPM, ...)` with platform resolution)
+- `timeout 5m ...` — GNU timeout not available on Windows
+- `bash -c "..."` — not available in PowerShell
+- Hardcoded path separators (`/`) — use `path.join()`
+
+✅ **Use instead:**
+- `const PNPM = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm'`
+- Node-based deadline runners
+- Platform-agnostic path handling
+
+### 0.4 Reference
+
+See [E2E_CROSS_PLATFORM_GATE_RUNBOOK.md](E2E_CROSS_PLATFORM_GATE_RUNBOOK.md) for detailed commands and troubleshooting.
+
+---
+
 ## 1) The 3-Layer Timeout Contract (MANDATORY)
 
 E2E timeouts must exist at **three layers**. Missing any layer is considered a test defect.
