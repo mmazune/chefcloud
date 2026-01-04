@@ -38,13 +38,20 @@ export enum WorkforceAuditAction {
   OVERTIME_VIOLATION_LOGGED = 'OVERTIME_VIOLATION_LOGGED',
   DOUBLE_CLOCKIN_BLOCKED = 'DOUBLE_CLOCKIN_BLOCKED',
   MAX_SHIFT_EXCEEDED = 'MAX_SHIFT_EXCEEDED',
+  // M10.6: Payroll Runs
+  PAYROLL_RUN_CREATED = 'PAYROLL_RUN_CREATED',
+  PAYROLL_RUN_CALCULATED = 'PAYROLL_RUN_CALCULATED',
+  PAYROLL_RUN_APPROVED = 'PAYROLL_RUN_APPROVED',
+  PAYROLL_RUN_POSTED = 'PAYROLL_RUN_POSTED',
+  PAYROLL_RUN_PAID = 'PAYROLL_RUN_PAID',
+  PAYROLL_RUN_VOIDED = 'PAYROLL_RUN_VOIDED',
 }
 
 interface AuditLogData {
   orgId: string;
   performedById: string;
   action: WorkforceAuditAction;
-  entityType: 'SHIFT' | 'TIME_ENTRY' | 'BREAK' | 'TEMPLATE' | 'WorkforcePolicy' | 'PayPeriod' | 'TimesheetApproval' | 'PayrollExport' | 'TimeEntryAdjustment' | 'TimeEntry';
+  entityType: 'SHIFT' | 'TIME_ENTRY' | 'BREAK' | 'TEMPLATE' | 'WorkforcePolicy' | 'PayPeriod' | 'TimesheetApproval' | 'PayrollExport' | 'TimeEntryAdjustment' | 'TimeEntry' | 'PayrollRun';
   entityId: string;
   payload?: Record<string, unknown>;
 }

@@ -390,6 +390,7 @@ model Org {
   payPeriods           PayPeriod[]            // M10.3: Pay periods
   timesheetApprovals   TimesheetApproval[]    // M10.3: Timesheet approvals
   timeEntryAdjustments TimeEntryAdjustment[]  // M10.5: Time entry adjustments
+  payrollRuns          PayrollRun[]           // M10.6: Payroll runs
 
   @@map("orgs")
 }
@@ -483,6 +484,7 @@ model Branch {
   scheduledShifts      ScheduledShift[]       @relation("ScheduledShifts") // M10.1: Scheduled shifts
   shiftTemplates       ShiftTemplate[]        // M10.1: Branch-level shift templates
   payPeriods           PayPeriod[]            // M10.3: Pay periods
+  payrollRuns          PayrollRun[]           // M10.6: Payroll runs
 
   @@index([orgId, id])
   @@map("branches")
@@ -569,6 +571,12 @@ model User {
   rejectedTimesheets        TimesheetApproval[]      @relation("RejectedTimesheets")  // M10.3: Rejected timesheets
   requestedAdjustments      TimeEntryAdjustment[]    @relation("RequestedAdjustments")  // M10.5: Adjustments requested
   approvedAdjustments       TimeEntryAdjustment[]    @relation("ApprovedAdjustments")   // M10.5: Adjustments approved
+  createdPayrollRuns        PayrollRun[]             @relation("CreatedPayrollRuns")    // M10.6: Created payroll runs
+  approvedPayrollRuns       PayrollRun[]             @relation("ApprovedPayrollRuns")   // M10.6: Approved payroll runs
+  postedPayrollRuns         PayrollRun[]             @relation("PostedPayrollRuns")     // M10.6: Posted payroll runs
+  paidPayrollRuns           PayrollRun[]             @relation("PaidPayrollRuns")       // M10.6: Paid payroll runs
+  voidedPayrollRuns         PayrollRun[]             @relation("VoidedPayrollRuns")     // M10.6: Voided payroll runs
+  payrollRunLines           PayrollRunLine[]         // M10.6: Payroll run lines
 
   @@index([orgId, id])
   @@map("users")
@@ -2333,6 +2341,8 @@ model JournalEntry {
   depositJournals          ReservationDeposit[]       @relation("DepositJournal")
   depositRefundJournals    ReservationDeposit[]       @relation("DepositRefundJournal")
   depositApplyJournals     ReservationDeposit[]       @relation("DepositApplyJournal")
+  // M10.6: Payroll run journal links
+  payrollRunJournalLinks   PayrollRunJournalLink[]
 
   @@index([orgId, date])
   @@index([orgId, branchId])
@@ -3949,10 +3959,11 @@ model PayPeriod {
   createdAt    DateTime        @default(now())
   updatedAt    DateTime        @updatedAt
 
-  org        Org     @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  branch     Branch? @relation(fields: [branchId], references: [id], onDelete: SetNull)
-  closedBy   User?   @relation("ClosedPayPeriods", fields: [closedById], references: [id])
-  exportedBy User?   @relation("ExportedPayPeriods", fields: [exportedById], references: [id])
+  org         Org          @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  branch      Branch?      @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  closedBy    User?        @relation("ClosedPayPeriods", fields: [closedById], references: [id])
+  exportedBy  User?        @relation("ExportedPayPeriods", fields: [exportedById], references: [id])
+  payrollRuns PayrollRun[] // M10.6: Payroll runs for this period
 
   @@unique([orgId, branchId, startDate, endDate])
   @@index([orgId, status])
@@ -4008,4 +4019,95 @@ model TimeEntryAdjustment {
   @@index([orgId, status])
   @@index([timeEntryId])
   @@map("time_entry_adjustments")
+}
+
+// M10.6: Payroll Run Status
+enum PayrollRunStatus {
+  DRAFT
+  CALCULATED
+  APPROVED
+  POSTED
+  PAID
+  VOID
+}
+
+// M10.6: Payroll Run (batch payroll for a pay period)
+model PayrollRun {
+  id             String           @id @default(cuid())
+  orgId          String
+  branchId       String?                              // NULL = org-wide
+  payPeriodId    String
+  status         PayrollRunStatus @default(DRAFT)
+  regularHours   Decimal          @default(0) @db.Decimal(10, 2)
+  overtimeHours  Decimal          @default(0) @db.Decimal(10, 2)
+  breakHours     Decimal          @default(0) @db.Decimal(10, 2)
+  paidHours      Decimal          @default(0) @db.Decimal(10, 2)
+  grossAmount    Decimal?         @db.Decimal(12, 2)  // If wage rates configured
+  createdById    String
+  calculatedAt   DateTime?
+  approvedById   String?
+  approvedAt     DateTime?
+  postedById     String?
+  postedAt       DateTime?
+  paidById       String?
+  paidAt         DateTime?
+  voidedById     String?
+  voidedAt       DateTime?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  org         Org         @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  branch      Branch?     @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  payPeriod   PayPeriod   @relation(fields: [payPeriodId], references: [id], onDelete: Restrict)
+  createdBy   User        @relation("CreatedPayrollRuns", fields: [createdById], references: [id])
+  approvedBy  User?       @relation("ApprovedPayrollRuns", fields: [approvedById], references: [id])
+  postedBy    User?       @relation("PostedPayrollRuns", fields: [postedById], references: [id])
+  paidBy      User?       @relation("PaidPayrollRuns", fields: [paidById], references: [id])
+  voidedBy    User?       @relation("VoidedPayrollRuns", fields: [voidedById], references: [id])
+  lines       PayrollRunLine[]
+  journalLinks PayrollRunJournalLink[]
+
+  @@unique([payPeriodId, branchId])
+  @@index([orgId, status])
+  @@index([payPeriodId])
+  @@map("payroll_runs")
+}
+
+// M10.6: Payroll Run Line Item (per employee)
+model PayrollRunLine {
+  id            String      @id @default(cuid())
+  payrollRunId  String
+  userId        String
+  regularHours  Decimal     @default(0) @db.Decimal(10, 2)
+  overtimeHours Decimal     @default(0) @db.Decimal(10, 2)
+  breakHours    Decimal     @default(0) @db.Decimal(10, 2)
+  paidHours     Decimal     @default(0) @db.Decimal(10, 2)
+  hourlyRate    Decimal?    @db.Decimal(8, 2)
+  grossAmount   Decimal?    @db.Decimal(12, 2)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  payrollRun PayrollRun @relation(fields: [payrollRunId], references: [id], onDelete: Cascade)
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([payrollRunId, userId])
+  @@index([payrollRunId])
+  @@map("payroll_run_lines")
+}
+
+// M10.6: Links payroll run to journal entries for traceability
+model PayrollRunJournalLink {
+  id             String       @id @default(cuid())
+  payrollRunId   String
+  journalEntryId String
+  type           String       // "ACCRUAL" or "PAYMENT"
+  createdAt      DateTime     @default(now())
+
+  payrollRun   PayrollRun   @relation(fields: [payrollRunId], references: [id], onDelete: Cascade)
+  journalEntry JournalEntry @relation(fields: [journalEntryId], references: [id], onDelete: Restrict)
+
+  @@unique([payrollRunId, journalEntryId])
+  @@index([payrollRunId])
+  @@index([journalEntryId])
+  @@map("payroll_run_journal_links")
 }

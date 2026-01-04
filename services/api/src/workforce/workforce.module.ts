@@ -34,6 +34,12 @@ import { AdjustmentsService } from './adjustments.service';
 import { SelfController } from './self.controller';
 import { AdjustmentsController } from './adjustments.controller';
 
+// M10.6: Payroll Runs + GL Posting
+import { PayrollRunService } from './payroll-run.service';
+import { PayrollPostingService } from './payroll-posting.service';
+import { PayrollReportingService } from './payroll-reporting.service';
+import { PayrollRunsController } from './payroll-runs.controller';
+
 @Module({
   imports: [
     forwardRef(() => AccountingModule), // E43-s2
@@ -49,6 +55,7 @@ import { AdjustmentsController } from './adjustments.controller';
     EnterpriseController, // M10.3
     SelfController, // M10.5
     AdjustmentsController, // M10.5
+    PayrollRunsController, // M10.6
   ],
   providers: [
     WorkforceService,
@@ -60,6 +67,9 @@ import { AdjustmentsController } from './adjustments.controller';
     WorkforceEnterpriseService, // M10.3
     WorkforceSelfService, // M10.5
     AdjustmentsService, // M10.5
+    PayrollRunService, // M10.6
+    PayrollPostingService, // M10.6
+    PayrollReportingService, // M10.6
     PrismaService,
   ],
   exports: [
@@ -72,6 +82,9 @@ import { AdjustmentsController } from './adjustments.controller';
     WorkforceEnterpriseService, // M10.3
     WorkforceSelfService, // M10.5
     AdjustmentsService, // M10.5
+    PayrollRunService, // M10.6
+    PayrollPostingService, // M10.6
+    PayrollReportingService, // M10.6
   ],
 })
 export class WorkforceModule {}
