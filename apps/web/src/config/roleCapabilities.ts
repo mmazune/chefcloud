@@ -29,6 +29,8 @@ import {
   ArrowLeftRight,
   CalendarClock,
   Hand,
+  Target,
+  AlertTriangle,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -126,6 +128,9 @@ export const ROLE_CAPABILITIES: Record<JobRole, RoleCapability> = {
           { label: 'Approvals', href: '/workforce/approvals', icon: CheckCircle },
           { label: 'Swap Approvals', href: '/workforce/swaps', icon: ArrowLeftRight },
           { label: 'Labor Reports', href: '/workforce/labor', icon: BarChart3 },
+          { label: 'Labor Targets', href: '/workforce/labor-targets', icon: Target },
+          { label: 'Staffing Planner', href: '/workforce/staffing-planner', icon: CalendarClock },
+          { label: 'Staffing Alerts', href: '/workforce/staffing-alerts', icon: AlertTriangle },
         ],
       },
       {
@@ -182,6 +187,9 @@ export const ROLE_CAPABILITIES: Record<JobRole, RoleCapability> = {
           { label: 'Approvals', href: '/workforce/approvals', icon: CheckCircle },
           { label: 'Swap Approvals', href: '/workforce/swaps', icon: ArrowLeftRight },
           { label: 'Labor Reports', href: '/workforce/labor', icon: BarChart3 },
+          { label: 'Labor Targets', href: '/workforce/labor-targets', icon: Target },
+          { label: 'Staffing Planner', href: '/workforce/staffing-planner', icon: CalendarClock },
+          { label: 'Staffing Alerts', href: '/workforce/staffing-alerts', icon: AlertTriangle },
         ],
       },
       {

@@ -1,11 +1,12 @@
 /**
- * E43-s1 + M10.1 + M10.3 + M10.5 + M10.11: Workforce Module
+ * E43-s1 + M10.1 + M10.3 + M10.5 + M10.11 + M10.12: Workforce Module
  *
  * Provides leave management, roster, time clock, payroll export,
  * M10.1 shift scheduling, timeclock, approvals, and reporting.
  * M10.3 enterprise controls: policy, pay periods, timesheet approvals.
  * M10.5 self-service: my-schedule, my-time, adjustments.
  * M10.11 availability, swaps, open shifts, conflicts, notifications.
+ * M10.12 labor forecasting, staffing planner, variance, alerts, exports.
  */
 
 import { Module, forwardRef } from '@nestjs/common';
@@ -70,6 +71,11 @@ import { SelfSwapsController, SwapsController } from './swaps.controller';
 import { SelfOpenShiftsController, OpenShiftsController } from './open-shifts.controller';
 import { SelfNotificationsController, NotificationsController } from './notifications.controller';
 
+// M10.12: Labor Forecasting + Staffing Planner + Variance + Alerts + Exports
+import { WorkforcePlanningService } from './workforce-planning.service';
+import { WorkforcePlanningExportService } from './workforce-planning-export.service';
+import { WorkforcePlanningController } from './workforce-planning.controller';
+
 @Module({
   imports: [
     forwardRef(() => AccountingModule), // E43-s2
@@ -101,6 +107,7 @@ import { SelfNotificationsController, NotificationsController } from './notifica
     OpenShiftsController, // M10.11
     SelfNotificationsController, // M10.11
     NotificationsController, // M10.11
+    WorkforcePlanningController, // M10.12
   ],
   providers: [
     WorkforceService,
@@ -127,6 +134,8 @@ import { SelfNotificationsController, NotificationsController } from './notifica
     OpenShiftsService, // M10.11
     WorkforceConflictsService, // M10.11
     WorkforceNotificationsService, // M10.11
+    WorkforcePlanningService, // M10.12
+    WorkforcePlanningExportService, // M10.12
     PrismaService,
   ],
   exports: [
@@ -154,6 +163,8 @@ import { SelfNotificationsController, NotificationsController } from './notifica
     OpenShiftsService, // M10.11
     WorkforceConflictsService, // M10.11
     WorkforceNotificationsService, // M10.11
+    WorkforcePlanningService, // M10.12
+    WorkforcePlanningExportService, // M10.12
   ],
 })
 export class WorkforceModule {}

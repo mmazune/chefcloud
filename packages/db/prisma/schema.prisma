@@ -437,6 +437,11 @@ model Org {
   shiftSwapRequests              ShiftSwapRequest[]
   openShiftClaims                OpenShiftClaim[]
   workforceNotifications         WorkforceNotificationLog[]
+  // M10.12: Labor Forecasting + Staffing Planner
+  laborTargets                   LaborTarget[]
+  laborForecastSnapshots         LaborForecastSnapshot[]
+  staffingPlans                  StaffingPlan[]
+  staffingAlerts                 StaffingAlert[]
 
   @@map("orgs")
 }
@@ -536,6 +541,11 @@ model Branch {
   remittanceBatches      RemittanceBatch[] // M10.9: Branch remittance batches
   remittanceProviders    RemittanceProvider[] // M10.10: Branch remittance providers
   shiftSwapRequests      ShiftSwapRequest[] // M10.11: Shift swap requests
+  // M10.12: Labor Forecasting + Staffing Planner
+  laborTargets           LaborTarget[]
+  laborForecastSnapshots LaborForecastSnapshot[]
+  staffingPlans          StaffingPlan[]
+  staffingAlerts         StaffingAlert[]
 
   @@index([orgId, id])
   @@map("branches")
@@ -648,6 +658,9 @@ model User {
   rejectedOpenShiftClaims         OpenShiftClaim[]                 @relation("ClaimRejecter")
   workforceNotificationsReceived  WorkforceNotificationLog[]       @relation("NotificationTarget")
   workforceNotificationsPerformed WorkforceNotificationLog[]       @relation("NotificationPerformer")
+  // M10.12: Labor Forecasting + Staffing Planner
+  publishedStaffingPlans          StaffingPlan[]                   @relation("PlanPublisher")
+  resolvedStaffingAlerts          StaffingAlert[]                  @relation("AlertResolver")
 
   @@index([orgId, id])
   @@map("users")
@@ -4700,4 +4713,132 @@ model WorkforceNotificationLog {
   @@index([targetUserId])
   @@index([type])
   @@map("workforce_notification_logs")
+}
+
+// ===== M10.12: Labor Forecasting + Staffing Planner =====
+
+enum StaffingPlanStatus {
+  DRAFT
+  PUBLISHED
+}
+
+enum AlertSeverity {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum StaffingAlertType {
+  UNDERSTAFFED
+  OVERSTAFFED
+}
+
+// M10.12: Labor targets configuration
+model LaborTarget {
+  id                   String   @id @default(cuid())
+  orgId                String
+  branchId             String?  // null = org-level default; branch-level overrides org-level
+  roleKey              String   // jobRole slug (e.g., "WAITER", "COOK", "BARTENDER")
+  dayOfWeek            Int      // 0=Sunday..6=Saturday
+  hourStart            Int      // 0..23
+  hourEnd              Int      // 0..24 (exclusive)
+  targetCoversPerStaff Int?     // e.g., 20 covers per waiter per hour
+  targetLaborPct       Decimal? @db.Decimal(5, 2) // e.g., 30% of hourly revenue
+  enabled              Boolean  @default(true)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  org    Org     @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  branch Branch? @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  @@unique([orgId, branchId, roleKey, dayOfWeek, hourStart])
+  @@index([orgId, branchId])
+  @@map("labor_targets")
+}
+
+// M10.12: Labor forecast snapshot (point-in-time demand forecast)
+model LaborForecastSnapshot {
+  id          String   @id @default(cuid())
+  orgId       String
+  branchId    String
+  date        DateTime @db.Date
+  timezone    String   @default("UTC")
+  inputsHash  String   // sha256 of sorted inputs JSON for idempotency
+  generatedAt DateTime @default(now())
+  totalsJson  Json     // { coversForecast: number[], ordersForecast: number[], dataSources: string[] }
+  createdAt   DateTime @default(now())
+
+  org           Org            @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  branch        Branch         @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  staffingPlans StaffingPlan[]
+
+  @@unique([orgId, branchId, date, inputsHash])
+  @@index([orgId, branchId, date])
+  @@map("labor_forecast_snapshots")
+}
+
+// M10.12: Staffing plan (generated staffing recommendations)
+model StaffingPlan {
+  id                 String             @id @default(cuid())
+  orgId              String
+  branchId           String
+  date               DateTime           @db.Date
+  timezone           String             @default("UTC")
+  forecastSnapshotId String
+  status             StaffingPlanStatus @default(DRAFT)
+  generatedAt        DateTime           @default(now())
+  publishedAt        DateTime?
+  publishedById      String?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  org              Org                   @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  branch           Branch                @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  forecastSnapshot LaborForecastSnapshot @relation(fields: [forecastSnapshotId], references: [id], onDelete: Cascade)
+  publishedBy      User?                 @relation("PlanPublisher", fields: [publishedById], references: [id], onDelete: SetNull)
+  lines            StaffingPlanLine[]
+
+  @@unique([orgId, branchId, date, forecastSnapshotId])
+  @@index([orgId, branchId, date])
+  @@index([status])
+  @@map("staffing_plans")
+}
+
+// M10.12: Staffing plan lines (hourly role headcount)
+model StaffingPlanLine {
+  id                 String  @id @default(cuid())
+  staffingPlanId     String
+  hour               Int     // 0..23
+  roleKey            String
+  suggestedHeadcount Int
+  rationale          Json?   // { basedOn: 'covers', targetValue: 20, forecastedCovers: 80 }
+
+  staffingPlan StaffingPlan @relation(fields: [staffingPlanId], references: [id], onDelete: Cascade)
+
+  @@index([staffingPlanId])
+  @@map("staffing_plan_lines")
+}
+
+// M10.12: Staffing alerts (under/over staffing warnings)
+model StaffingAlert {
+  id           String            @id @default(cuid())
+  orgId        String
+  branchId     String
+  date         DateTime          @db.Date
+  hour         Int               // 0..23
+  severity     AlertSeverity
+  type         StaffingAlertType
+  payloadJson  Json              // { scheduledCount, suggestedCount, delta, roleKey }
+  resolvedAt   DateTime?
+  resolvedById String?
+  createdAt    DateTime          @default(now())
+
+  org        Org     @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  branch     Branch  @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  resolvedBy User?   @relation("AlertResolver", fields: [resolvedById], references: [id], onDelete: SetNull)
+
+  @@unique([orgId, branchId, date, hour, type])
+  @@index([orgId, branchId, date])
+  @@index([resolvedAt])
+  @@map("staffing_alerts")
 }
