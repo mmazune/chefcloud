@@ -1,10 +1,11 @@
 /**
- * E43-s1 + M10.1 + M10.3 + M10.5: Workforce Module
+ * E43-s1 + M10.1 + M10.3 + M10.5 + M10.11: Workforce Module
  *
  * Provides leave management, roster, time clock, payroll export,
  * M10.1 shift scheduling, timeclock, approvals, and reporting.
  * M10.3 enterprise controls: policy, pay periods, timesheet approvals.
  * M10.5 self-service: my-schedule, my-time, adjustments.
+ * M10.11 availability, swaps, open shifts, conflicts, notifications.
  */
 
 import { Module, forwardRef } from '@nestjs/common';
@@ -58,6 +59,17 @@ import { PayrollMappingController } from './payroll-mapping.controller';
 import { RemittanceService } from './remittance.service';
 import { RemittanceController, RemittanceReportsController, RemittanceProviderController, RemittanceMappingController } from './remittance.controller';
 
+// M10.11: Availability + Swaps + Open Shifts + Conflicts + Notifications
+import { AvailabilityService } from './availability.service';
+import { SwapsService } from './swaps.service';
+import { OpenShiftsService } from './open-shifts.service';
+import { WorkforceConflictsService } from './workforce-conflicts.service';
+import { WorkforceNotificationsService } from './workforce-notifications.service';
+import { SelfAvailabilityController, AvailabilityController } from './availability.controller';
+import { SelfSwapsController, SwapsController } from './swaps.controller';
+import { SelfOpenShiftsController, OpenShiftsController } from './open-shifts.controller';
+import { SelfNotificationsController, NotificationsController } from './notifications.controller';
+
 @Module({
   imports: [
     forwardRef(() => AccountingModule), // E43-s2
@@ -81,6 +93,14 @@ import { RemittanceController, RemittanceReportsController, RemittanceProviderCo
     RemittanceReportsController, // M10.9
     RemittanceProviderController, // M10.10
     RemittanceMappingController, // M10.10
+    SelfAvailabilityController, // M10.11
+    AvailabilityController, // M10.11
+    SelfSwapsController, // M10.11
+    SwapsController, // M10.11
+    SelfOpenShiftsController, // M10.11
+    OpenShiftsController, // M10.11
+    SelfNotificationsController, // M10.11
+    NotificationsController, // M10.11
   ],
   providers: [
     WorkforceService,
@@ -102,6 +122,11 @@ import { RemittanceController, RemittanceReportsController, RemittanceProviderCo
     PayrollGlStubService, // M10.7
     PayrollMappingService, // M10.8
     RemittanceService, // M10.9
+    AvailabilityService, // M10.11
+    SwapsService, // M10.11
+    OpenShiftsService, // M10.11
+    WorkforceConflictsService, // M10.11
+    WorkforceNotificationsService, // M10.11
     PrismaService,
   ],
   exports: [
@@ -124,6 +149,11 @@ import { RemittanceController, RemittanceReportsController, RemittanceProviderCo
     PayrollGlStubService, // M10.7
     PayrollMappingService, // M10.8
     RemittanceService, // M10.9
+    AvailabilityService, // M10.11
+    SwapsService, // M10.11
+    OpenShiftsService, // M10.11
+    WorkforceConflictsService, // M10.11
+    WorkforceNotificationsService, // M10.11
   ],
 })
 export class WorkforceModule {}

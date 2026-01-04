@@ -203,7 +203,7 @@ enum CreditNoteStatus {
   DRAFT
   OPEN
   PARTIALLY_APPLIED // Some credits allocated
-  APPLIED           // All credits exhausted
+  APPLIED // All credits exhausted
   VOID
 }
 
@@ -244,6 +244,39 @@ enum ShiftSwapStatus {
   CANCELLED
 }
 
+// M10.11: Enhanced shift swap request status lifecycle
+enum ShiftSwapRequestStatus {
+  DRAFT
+  REQUESTED
+  ACCEPTED
+  DECLINED
+  APPROVED
+  REJECTED
+  APPLIED
+  CANCELLED
+}
+
+// M10.11: Shift swap request type
+enum ShiftSwapRequestType {
+  DIRECT_SWAP
+  OFFER_SHIFT
+}
+
+// M10.11: Workforce notification types
+enum WorkforceNotificationType {
+  SWAP_REQUESTED
+  SWAP_ACCEPTED
+  SWAP_DECLINED
+  SWAP_APPROVED
+  SWAP_REJECTED
+  SWAP_APPLIED
+  SWAP_CANCELLED
+  SHIFT_OPENED
+  OPEN_SHIFT_CLAIMED
+  OPEN_SHIFT_CLAIM_APPROVED
+  AVAILABILITY_UPDATED
+}
+
 // M10.1: Shift Scheduling Status Lifecycle
 enum ShiftStatus {
   DRAFT
@@ -278,11 +311,11 @@ enum NpsCategory {
 
 // M9.2: Deposit Management
 enum DepositStatus {
-  REQUIRED   // Deposit requested but not paid
-  PAID       // Deposit captured (posted to liability)
-  REFUNDED   // Deposit refunded (reversal posted)
-  APPLIED    // Deposit applied to bill (liability → revenue)
-  FORFEITED  // No-show deposit kept
+  REQUIRED // Deposit requested but not paid
+  PAID // Deposit captured (posted to liability)
+  REFUNDED // Deposit refunded (reversal posted)
+  APPLIED // Deposit applied to bill (liability → revenue)
+  FORFEITED // No-show deposit kept
 }
 
 // M9.5: Webhook Delivery Status
@@ -307,8 +340,8 @@ enum NotificationType {
   EMAIL
   SMS
   IN_APP
-  WHATSAPP  // M9.5
-  PUSH      // M9.5
+  WHATSAPP // M9.5
+  PUSH // M9.5
 }
 
 enum NotificationEvent {
@@ -320,9 +353,9 @@ enum NotificationEvent {
   DEPOSIT_APPLIED
   REMINDER
   WAITLIST_READY
-  BOOKING_CREATED   // M9.4: Public booking created
+  BOOKING_CREATED // M9.4: Public booking created
   BOOKING_CANCELLED // M9.4: Public booking cancelled
-  BOOKING_MODIFIED  // M9.4: Public booking rescheduled
+  BOOKING_MODIFIED // M9.4: Public booking rescheduled
 }
 
 enum NotificationStatus {
@@ -340,64 +373,70 @@ model Org {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  branches            Branch[]
-  users               User[]
-  settings            OrgSettings?
-  devices             Device[]
-  floorPlans          FloorPlan[]
-  taxCategories       TaxCategory[]
-  modifierGroups      ModifierGroup[]
-  anomalyEvents       AnomalyEvent[]
-  alertChannels       AlertChannel[]
-  scheduledAlerts     ScheduledAlert[]
-  reservations        Reservation[]
-  supportSessions     SupportSession[]
-  spoutDevices        SpoutDevice[]
-  spoutEvents         SpoutEvent[]
-  ownerDigests        OwnerDigest[]
-  apiKeys             ApiKey[]
-  subscription        OrgSubscription?
-  branchBudgets       BranchBudget[]
-  forecastProfiles    ForecastProfile[]
-  forecastPoints      ForecastPoint[]
-  franchiseRanks      FranchiseRank[]
-  franchiseBudgets    FranchiseBudget[] // E22-S3: Franchise budgets
-  badgeAssets         BadgeAsset[]
-  kdsSlaConfigs       KdsSlaConfig[] // M1-KDS: SLA configuration per station
-  shiftTemplates      ShiftTemplate[] // M2-SHIFTS: Shift templates
-  reportSubscriptions ReportSubscription[] // M4: Report subscriptions
-  serviceProviders    ServiceProvider[] // M7: Service providers
-  serviceReminders    ServicePayableReminder[] // M7: Payable reminders
-  opsBudgets          OpsBudget[] // M7: Operations budgets
-  costInsights        CostInsight[] // M7: Cost-cutting insights
-  sessions            Session[] // M10: Auth sessions
-  documents            Document[]            // M18: Document storage
-  staffAwards          StaffAward[]          // M19: Staff awards
-  Feedback             Feedback[]
-  promotionSuggestions PromotionSuggestion[] // M22: Promotion suggestions
-  waitlistEntries      WaitlistEntry[]       // M9.1: Waitlist
-  reservationPolicies  ReservationPolicy[]   // M9.2: Reservation policies
-  webhookEndpoints     WebhookEndpoint[]     // M9.5: Webhook endpoints
-  notificationTemplates NotificationTemplate[] // M9.5: Notification templates
-  notificationOutbox   NotificationOutbox[]  // M9.5: Notification outbox
-  branchOperatingHours BranchOperatingHours[] // M9.6: Operating hours
-  branchBlackouts      BranchBlackout[]       // M9.6: Blackout windows
-  branchCapacityRules  BranchCapacityRule[]   // M9.6: Capacity rules
-  opsIncidents         OpsIncident[]          // M9.6: Ops incidents
-  scheduledShifts      ScheduledShift[]       // M10.1: Scheduled shifts
-  workforceAuditLogs   WorkforceAuditLog[]    // M10.1: Audit logs
-  workforcePolicy      WorkforcePolicy?       // M10.3: Workforce policy
-  payPeriods           PayPeriod[]            // M10.3: Pay periods
-  timesheetApprovals   TimesheetApproval[]    // M10.3: Timesheet approvals
-  timeEntryAdjustments TimeEntryAdjustment[]  // M10.5: Time entry adjustments
-  payrollRuns          PayrollRun[]           // M10.6: Payroll runs
-  compensationComponents      CompensationComponent[]       // M10.7: Compensation components
-  employeeCompensationProfiles EmployeeCompensationProfile[] // M10.7: Employee compensation profiles
-  payslips                    Payslip[]                     // M10.7: Payslips
-  payrollPostingMappings      PayrollPostingMapping[]       // M10.8: Payroll posting mappings
-  remittanceBatches           RemittanceBatch[]             // M10.9: Remittance batches
-  remittanceProviders         RemittanceProvider[]          // M10.10: Remittance providers
+  branches                       Branch[]
+  users                          User[]
+  settings                       OrgSettings?
+  devices                        Device[]
+  floorPlans                     FloorPlan[]
+  taxCategories                  TaxCategory[]
+  modifierGroups                 ModifierGroup[]
+  anomalyEvents                  AnomalyEvent[]
+  alertChannels                  AlertChannel[]
+  scheduledAlerts                ScheduledAlert[]
+  reservations                   Reservation[]
+  supportSessions                SupportSession[]
+  spoutDevices                   SpoutDevice[]
+  spoutEvents                    SpoutEvent[]
+  ownerDigests                   OwnerDigest[]
+  apiKeys                        ApiKey[]
+  subscription                   OrgSubscription?
+  branchBudgets                  BranchBudget[]
+  forecastProfiles               ForecastProfile[]
+  forecastPoints                 ForecastPoint[]
+  franchiseRanks                 FranchiseRank[]
+  franchiseBudgets               FranchiseBudget[] // E22-S3: Franchise budgets
+  badgeAssets                    BadgeAsset[]
+  kdsSlaConfigs                  KdsSlaConfig[] // M1-KDS: SLA configuration per station
+  shiftTemplates                 ShiftTemplate[] // M2-SHIFTS: Shift templates
+  reportSubscriptions            ReportSubscription[] // M4: Report subscriptions
+  serviceProviders               ServiceProvider[] // M7: Service providers
+  serviceReminders               ServicePayableReminder[] // M7: Payable reminders
+  opsBudgets                     OpsBudget[] // M7: Operations budgets
+  costInsights                   CostInsight[] // M7: Cost-cutting insights
+  sessions                       Session[] // M10: Auth sessions
+  documents                      Document[] // M18: Document storage
+  staffAwards                    StaffAward[] // M19: Staff awards
+  Feedback                       Feedback[]
+  promotionSuggestions           PromotionSuggestion[] // M22: Promotion suggestions
+  waitlistEntries                WaitlistEntry[] // M9.1: Waitlist
+  reservationPolicies            ReservationPolicy[] // M9.2: Reservation policies
+  webhookEndpoints               WebhookEndpoint[] // M9.5: Webhook endpoints
+  notificationTemplates          NotificationTemplate[] // M9.5: Notification templates
+  notificationOutbox             NotificationOutbox[] // M9.5: Notification outbox
+  branchOperatingHours           BranchOperatingHours[] // M9.6: Operating hours
+  branchBlackouts                BranchBlackout[] // M9.6: Blackout windows
+  branchCapacityRules            BranchCapacityRule[] // M9.6: Capacity rules
+  opsIncidents                   OpsIncident[] // M9.6: Ops incidents
+  scheduledShifts                ScheduledShift[] // M10.1: Scheduled shifts
+  workforceAuditLogs             WorkforceAuditLog[] // M10.1: Audit logs
+  workforcePolicy                WorkforcePolicy? // M10.3: Workforce policy
+  payPeriods                     PayPeriod[] // M10.3: Pay periods
+  timesheetApprovals             TimesheetApproval[] // M10.3: Timesheet approvals
+  timeEntryAdjustments           TimeEntryAdjustment[] // M10.5: Time entry adjustments
+  payrollRuns                    PayrollRun[] // M10.6: Payroll runs
+  compensationComponents         CompensationComponent[] // M10.7: Compensation components
+  employeeCompensationProfiles   EmployeeCompensationProfile[] // M10.7: Employee compensation profiles
+  payslips                       Payslip[] // M10.7: Payslips
+  payrollPostingMappings         PayrollPostingMapping[] // M10.8: Payroll posting mappings
+  remittanceBatches              RemittanceBatch[] // M10.9: Remittance batches
+  remittanceProviders            RemittanceProvider[] // M10.10: Remittance providers
   compensationRemittanceMappings CompensationRemittanceMapping[] // M10.10: Component mappings
+  // M10.11: Availability + Swaps + Open Shifts
+  workforceAvailability          WorkforceAvailability[]
+  availabilityExceptions         WorkforceAvailabilityException[]
+  shiftSwapRequests              ShiftSwapRequest[]
+  openShiftClaims                OpenShiftClaim[]
+  workforceNotifications         WorkforceNotificationLog[]
 
   @@map("orgs")
 }
@@ -436,66 +475,67 @@ model Branch {
   name                 String
   address              String?
   timezone             String   @default("Africa/Kampala")
-  currencyCode         String?  // E39-s1: Branch-specific currency (falls back to org base)
+  currencyCode         String? // E39-s1: Branch-specific currency (falls back to org base)
   publicBookingEnabled Boolean  @default(false) // M9.4: Public booking enabled
-  publicBookingSlug    String?  @unique          // M9.4: URL slug for public booking
+  publicBookingSlug    String?  @unique // M9.4: URL slug for public booking
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
 
-  org                 Org                      @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  tables              Table[]
-  orders              Order[]
-  auditEvents         AuditEvent[]
-  menuItems           MenuItem[]
-  categories          Category[]
-  users               User[]
-  devices             Device[]
-  shifts              Shift[]
-  tillSessions        TillSession[]
-  stockBatches        StockBatch[]
-  purchaseOrders      PurchaseOrder[]
-  goodsReceipts       GoodsReceipt[]
-  wastageRecords      Wastage[]
-  anomalyEvents       AnomalyEvent[]
-  reservations        Reservation[]
-  spoutDevices        SpoutDevice[]
-  spoutEvents         SpoutEvent[]
-  adjustments         Adjustment[]
-  branchBudgets       BranchBudget[]
-  forecastProfiles    ForecastProfile[]
-  forecastPoints      ForecastPoint[]
-  franchiseRanks      FranchiseRank[]
-  franchiseBudgets    FranchiseBudget[] // E22-S3: Franchise budgets
-  shiftSchedules      ShiftSchedule[] // M2-SHIFTS: Shift schedules
-  stockMovements      StockMovement[] // M3: All stock movements at this branch
-  reportSubscriptions ReportSubscription[] // M4: Report subscriptions
-  serviceProviders    ServiceProvider[] // M7: Service providers
-  serviceContracts    ServiceContract[] // M7: Service contracts
-  serviceReminders    ServicePayableReminder[] // M7: Payable reminders
-  opsBudgets          OpsBudget[] // M7: Operations budgets
-  costInsights        CostInsight[] // M7: Cost-cutting insights
-  sessions            Session[] // M10: Auth sessions
-  documents            Document[]            // M18: Document storage
-  staffAwards          StaffAward[]          // M19: Staff awards
-  Feedback             Feedback[]
-  promotionSuggestions PromotionSuggestion[] // M22: Promotion suggestions
-  waitlistEntries      WaitlistEntry[]       // M9.1: Waitlist
-  reservationPolicy    ReservationPolicy?    // M9.2: Branch policy
-  webhookEndpoints     WebhookEndpoint[]     // M9.5: Webhook endpoints
-  notificationTemplates NotificationTemplate[] // M9.5: Notification templates
-  calendarFeedTokens   CalendarFeedToken[]   // M9.5: Calendar feed tokens
-  operatingHours       BranchOperatingHours[] // M9.6: Operating hours
-  blackouts            BranchBlackout[]       // M9.6: Blackout windows
-  capacityRule         BranchCapacityRule?    // M9.6: Capacity rules
-  opsIncidents         OpsIncident[]          // M9.6: Ops incidents
-  scheduledShifts      ScheduledShift[]       @relation("ScheduledShifts") // M10.1: Scheduled shifts
-  shiftTemplates       ShiftTemplate[]        // M10.1: Branch-level shift templates
-  payPeriods           PayPeriod[]            // M10.3: Pay periods
-  payrollRuns          PayrollRun[]           // M10.6: Payroll runs
+  org                    Org                      @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  tables                 Table[]
+  orders                 Order[]
+  auditEvents            AuditEvent[]
+  menuItems              MenuItem[]
+  categories             Category[]
+  users                  User[]
+  devices                Device[]
+  shifts                 Shift[]
+  tillSessions           TillSession[]
+  stockBatches           StockBatch[]
+  purchaseOrders         PurchaseOrder[]
+  goodsReceipts          GoodsReceipt[]
+  wastageRecords         Wastage[]
+  anomalyEvents          AnomalyEvent[]
+  reservations           Reservation[]
+  spoutDevices           SpoutDevice[]
+  spoutEvents            SpoutEvent[]
+  adjustments            Adjustment[]
+  branchBudgets          BranchBudget[]
+  forecastProfiles       ForecastProfile[]
+  forecastPoints         ForecastPoint[]
+  franchiseRanks         FranchiseRank[]
+  franchiseBudgets       FranchiseBudget[] // E22-S3: Franchise budgets
+  shiftSchedules         ShiftSchedule[] // M2-SHIFTS: Shift schedules
+  stockMovements         StockMovement[] // M3: All stock movements at this branch
+  reportSubscriptions    ReportSubscription[] // M4: Report subscriptions
+  serviceProviders       ServiceProvider[] // M7: Service providers
+  serviceContracts       ServiceContract[] // M7: Service contracts
+  serviceReminders       ServicePayableReminder[] // M7: Payable reminders
+  opsBudgets             OpsBudget[] // M7: Operations budgets
+  costInsights           CostInsight[] // M7: Cost-cutting insights
+  sessions               Session[] // M10: Auth sessions
+  documents              Document[] // M18: Document storage
+  staffAwards            StaffAward[] // M19: Staff awards
+  Feedback               Feedback[]
+  promotionSuggestions   PromotionSuggestion[] // M22: Promotion suggestions
+  waitlistEntries        WaitlistEntry[] // M9.1: Waitlist
+  reservationPolicy      ReservationPolicy? // M9.2: Branch policy
+  webhookEndpoints       WebhookEndpoint[] // M9.5: Webhook endpoints
+  notificationTemplates  NotificationTemplate[] // M9.5: Notification templates
+  calendarFeedTokens     CalendarFeedToken[] // M9.5: Calendar feed tokens
+  operatingHours         BranchOperatingHours[] // M9.6: Operating hours
+  blackouts              BranchBlackout[] // M9.6: Blackout windows
+  capacityRule           BranchCapacityRule? // M9.6: Capacity rules
+  opsIncidents           OpsIncident[] // M9.6: Ops incidents
+  scheduledShifts        ScheduledShift[]         @relation("ScheduledShifts") // M10.1: Scheduled shifts
+  shiftTemplates         ShiftTemplate[] // M10.1: Branch-level shift templates
+  payPeriods             PayPeriod[] // M10.3: Pay periods
+  payrollRuns            PayrollRun[] // M10.6: Payroll runs
   compensationComponents CompensationComponent[] // M10.7: Branch compensation overrides
   payrollPostingMappings PayrollPostingMapping[] // M10.8: Branch payroll posting mappings
-  remittanceBatches      RemittanceBatch[]       // M10.9: Branch remittance batches
-  remittanceProviders    RemittanceProvider[]    // M10.10: Branch remittance providers
+  remittanceBatches      RemittanceBatch[] // M10.9: Branch remittance batches
+  remittanceProviders    RemittanceProvider[] // M10.10: Branch remittance providers
+  shiftSwapRequests      ShiftSwapRequest[] // M10.11: Shift swap requests
 
   @@index([orgId, id])
   @@map("branches")
@@ -519,82 +559,95 @@ model User {
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
-  org                       Org                      @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  branch                    Branch?                  @relation(fields: [branchId], references: [id], onDelete: SetNull)
-  roles                     Role[]
-  orders                    Order[]
-  auditEvents               AuditEvent[]
-  employeeProfile           EmployeeProfile?
-  sessions                  Session[]
-  openedShifts              Shift[]                  @relation("ShiftOpenedBy")
-  closedShifts              Shift[]                  @relation("ShiftClosedBy")
-  openedTillSessions        TillSession[]            @relation("TillSessionOpenedBy")
-  closedTillSessions        TillSession[]            @relation("TillSessionClosedBy")
-  cashMovements             CashMovement[]           @relation("CashMovementCreatedBy")
-  discounts                 Discount[]               @relation("DiscountCreatedBy")
-  approvedDiscounts         Discount[]               @relation("DiscountApprovedBy")
-  createdRefunds            Refund[]                 @relation("CreatedRefunds")
-  approvedRefunds           Refund[]                 @relation("ApprovedRefunds")
-  webAuthnCredentials       WebAuthnCredential[]
-  anomalyEvents             AnomalyEvent[]
-  supportSessions           SupportSession[]
-  assignedBadges            BadgeAsset[]
-  procurementJobs           ProcurementJob[]
-  approvedPromotions        Promotion[]              @relation("PromotionApprovals")
-  leaveRequests             LeaveRequest[]
-  approvedLeaves            LeaveRequest[]           @relation("ApprovedLeave")
-  dutyShifts                DutyShift[]
-  assignedDutyShifts        DutyShift[]              @relation("AssignedShifts")
-  swapsFrom                 ShiftSwap[]              @relation("SwapFrom")
-  swapsTo                   ShiftSwap[]              @relation("SwapTo")
-  approvedSwaps             ShiftSwap[]              @relation("ApprovedSwaps")
-  timeEntries               TimeEntry[]
-  approvedTimeEntries       TimeEntry[]              @relation("ApprovedTimeEntries")
-  stockCounts               StockCount[] // E45-s1: Stock counts performed by user
-  paySlips                  PaySlip[] // E43-s2: Payslips for user
-  approvedPaySlips          PaySlip[]                @relation("ApprovedPaySlips") // E43-s2: Payslips approved by user
-  createdFlags              FeatureFlag[]            @relation("CreatedFlags") // E49-s1: Feature flags created by user
-  updatedFlags              FeatureFlag[]            @relation("UpdatedFlags") // E49-s1: Feature flags updated by user
-  createdMaintenanceWindows MaintenanceWindow[]      @relation("CreatedMaintenanceWindows") // E49-s1: Maintenance windows created by user
-  flagAudits                FlagAudit[] // E49-s1: Flag audit trail
-  shiftAssignments          ShiftAssignment[] // M2-SHIFTS: Shift assignments
-  overriddenShifts          Shift[]                  @relation("ShiftOverrideBy") // M2-SHIFTS: Shifts overridden by manager
-  reportedWastage           Wastage[]                @relation("WastageReportedBy") // M3: Wastage reported by this user
-  reportSubscriptions       ReportSubscription[] // M4: User-specific report subscriptions
-  acknowledgedReminders     ServicePayableReminder[] // M7: Reminders acknowledged by this user
-  employee                  Employee? // M9: Employee record for this user
-  revokedSessions           Session[]                @relation("SessionRevokedBy") // M10: Sessions revoked by this user
-  assignedMsrCards          MsrCard[]                @relation("MsrCardAssignedBy") // M10: MSR cards assigned by this user
-  revokedMsrCards           MsrCard[]                @relation("MsrCardRevokedBy") // M10: MSR cards revoked by this user
-  uploadedDocuments         Document[]               @relation("DocumentUploader") // M18: Documents uploaded by this user
-  createdAwards             StaffAward[]             @relation("CreatedAwards") // M19: Staff awards created by this user
-  feedbackSubmitted         Feedback[]               @relation("UserFeedback") // M20: Feedback submitted by this user
-  suggestionsCreated        PromotionSuggestion[]    @relation("SuggestionCreators") // M22: Promotion suggestions created by this user
-  suggestionsDecided        PromotionSuggestion[]    @relation("SuggestionDecisions") // M22: Promotion suggestions decided by this user
-  assignedScheduledShifts   ScheduledShift[]         @relation("AssignedScheduledShifts") // M10.1: Scheduled shifts
-  publishedScheduledShifts  ScheduledShift[]         @relation("PublishedScheduledShifts") // M10.1: Published shifts
-  approvedScheduledShifts   ScheduledShift[]         @relation("ApprovedScheduledShifts") // M10.1: Approved shifts
-  cancelledScheduledShifts  ScheduledShift[]         @relation("CancelledScheduledShifts") // M10.1: Cancelled shifts
-  workforceAuditLogs        WorkforceAuditLog[]      // M10.1: Audit log entries
-  closedPayPeriods          PayPeriod[]              @relation("ClosedPayPeriods")    // M10.3: Pay periods closed
-  exportedPayPeriods        PayPeriod[]              @relation("ExportedPayPeriods")  // M10.3: Pay periods exported
-  approvedTimesheets        TimesheetApproval[]      @relation("ApprovedTimesheets")  // M10.3: Approved timesheets
-  rejectedTimesheets        TimesheetApproval[]      @relation("RejectedTimesheets")  // M10.3: Rejected timesheets
-  requestedAdjustments      TimeEntryAdjustment[]    @relation("RequestedAdjustments")  // M10.5: Adjustments requested
-  approvedAdjustments       TimeEntryAdjustment[]    @relation("ApprovedAdjustments")   // M10.5: Adjustments approved
-  createdPayrollRuns        PayrollRun[]             @relation("CreatedPayrollRuns")    // M10.6: Created payroll runs
-  approvedPayrollRuns       PayrollRun[]             @relation("ApprovedPayrollRuns")   // M10.6: Approved payroll runs
-  postedPayrollRuns         PayrollRun[]             @relation("PostedPayrollRuns")     // M10.6: Posted payroll runs
-  paidPayrollRuns           PayrollRun[]             @relation("PaidPayrollRuns")       // M10.6: Paid payroll runs
-  voidedPayrollRuns         PayrollRun[]             @relation("VoidedPayrollRuns")     // M10.6: Voided payroll runs
-  payrollRunLines           PayrollRunLine[]         // M10.6: Payroll run lines
-  compensationProfiles      EmployeeCompensationProfile[] // M10.7: Compensation profiles
-  payslips                  Payslip[]                // M10.7: Payslips
-  createdRemittanceBatches  RemittanceBatch[]        @relation("CreatedRemittanceBatches")  // M10.9
-  approvedRemittanceBatches RemittanceBatch[]        @relation("ApprovedRemittanceBatches") // M10.9
-  postedRemittanceBatches   RemittanceBatch[]        @relation("PostedRemittanceBatches")   // M10.9
-  paidRemittanceBatches     RemittanceBatch[]        @relation("PaidRemittanceBatches")     // M10.9
-  voidedRemittanceBatches   RemittanceBatch[]        @relation("VoidedRemittanceBatches")   // M10.9
+  org                             Org                              @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  branch                          Branch?                          @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  roles                           Role[]
+  orders                          Order[]
+  auditEvents                     AuditEvent[]
+  employeeProfile                 EmployeeProfile?
+  sessions                        Session[]
+  openedShifts                    Shift[]                          @relation("ShiftOpenedBy")
+  closedShifts                    Shift[]                          @relation("ShiftClosedBy")
+  openedTillSessions              TillSession[]                    @relation("TillSessionOpenedBy")
+  closedTillSessions              TillSession[]                    @relation("TillSessionClosedBy")
+  cashMovements                   CashMovement[]                   @relation("CashMovementCreatedBy")
+  discounts                       Discount[]                       @relation("DiscountCreatedBy")
+  approvedDiscounts               Discount[]                       @relation("DiscountApprovedBy")
+  createdRefunds                  Refund[]                         @relation("CreatedRefunds")
+  approvedRefunds                 Refund[]                         @relation("ApprovedRefunds")
+  webAuthnCredentials             WebAuthnCredential[]
+  anomalyEvents                   AnomalyEvent[]
+  supportSessions                 SupportSession[]
+  assignedBadges                  BadgeAsset[]
+  procurementJobs                 ProcurementJob[]
+  approvedPromotions              Promotion[]                      @relation("PromotionApprovals")
+  leaveRequests                   LeaveRequest[]
+  approvedLeaves                  LeaveRequest[]                   @relation("ApprovedLeave")
+  dutyShifts                      DutyShift[]
+  assignedDutyShifts              DutyShift[]                      @relation("AssignedShifts")
+  swapsFrom                       ShiftSwap[]                      @relation("SwapFrom")
+  swapsTo                         ShiftSwap[]                      @relation("SwapTo")
+  approvedSwaps                   ShiftSwap[]                      @relation("ApprovedSwaps")
+  timeEntries                     TimeEntry[]
+  approvedTimeEntries             TimeEntry[]                      @relation("ApprovedTimeEntries")
+  stockCounts                     StockCount[] // E45-s1: Stock counts performed by user
+  paySlips                        PaySlip[] // E43-s2: Payslips for user
+  approvedPaySlips                PaySlip[]                        @relation("ApprovedPaySlips") // E43-s2: Payslips approved by user
+  createdFlags                    FeatureFlag[]                    @relation("CreatedFlags") // E49-s1: Feature flags created by user
+  updatedFlags                    FeatureFlag[]                    @relation("UpdatedFlags") // E49-s1: Feature flags updated by user
+  createdMaintenanceWindows       MaintenanceWindow[]              @relation("CreatedMaintenanceWindows") // E49-s1: Maintenance windows created by user
+  flagAudits                      FlagAudit[] // E49-s1: Flag audit trail
+  shiftAssignments                ShiftAssignment[] // M2-SHIFTS: Shift assignments
+  overriddenShifts                Shift[]                          @relation("ShiftOverrideBy") // M2-SHIFTS: Shifts overridden by manager
+  reportedWastage                 Wastage[]                        @relation("WastageReportedBy") // M3: Wastage reported by this user
+  reportSubscriptions             ReportSubscription[] // M4: User-specific report subscriptions
+  acknowledgedReminders           ServicePayableReminder[] // M7: Reminders acknowledged by this user
+  employee                        Employee? // M9: Employee record for this user
+  revokedSessions                 Session[]                        @relation("SessionRevokedBy") // M10: Sessions revoked by this user
+  assignedMsrCards                MsrCard[]                        @relation("MsrCardAssignedBy") // M10: MSR cards assigned by this user
+  revokedMsrCards                 MsrCard[]                        @relation("MsrCardRevokedBy") // M10: MSR cards revoked by this user
+  uploadedDocuments               Document[]                       @relation("DocumentUploader") // M18: Documents uploaded by this user
+  createdAwards                   StaffAward[]                     @relation("CreatedAwards") // M19: Staff awards created by this user
+  feedbackSubmitted               Feedback[]                       @relation("UserFeedback") // M20: Feedback submitted by this user
+  suggestionsCreated              PromotionSuggestion[]            @relation("SuggestionCreators") // M22: Promotion suggestions created by this user
+  suggestionsDecided              PromotionSuggestion[]            @relation("SuggestionDecisions") // M22: Promotion suggestions decided by this user
+  assignedScheduledShifts         ScheduledShift[]                 @relation("AssignedScheduledShifts") // M10.1: Scheduled shifts
+  publishedScheduledShifts        ScheduledShift[]                 @relation("PublishedScheduledShifts") // M10.1: Published shifts
+  approvedScheduledShifts         ScheduledShift[]                 @relation("ApprovedScheduledShifts") // M10.1: Approved shifts
+  cancelledScheduledShifts        ScheduledShift[]                 @relation("CancelledScheduledShifts") // M10.1: Cancelled shifts
+  workforceAuditLogs              WorkforceAuditLog[] // M10.1: Audit log entries
+  closedPayPeriods                PayPeriod[]                      @relation("ClosedPayPeriods") // M10.3: Pay periods closed
+  exportedPayPeriods              PayPeriod[]                      @relation("ExportedPayPeriods") // M10.3: Pay periods exported
+  approvedTimesheets              TimesheetApproval[]              @relation("ApprovedTimesheets") // M10.3: Approved timesheets
+  rejectedTimesheets              TimesheetApproval[]              @relation("RejectedTimesheets") // M10.3: Rejected timesheets
+  requestedAdjustments            TimeEntryAdjustment[]            @relation("RequestedAdjustments") // M10.5: Adjustments requested
+  approvedAdjustments             TimeEntryAdjustment[]            @relation("ApprovedAdjustments") // M10.5: Adjustments approved
+  createdPayrollRuns              PayrollRun[]                     @relation("CreatedPayrollRuns") // M10.6: Created payroll runs
+  approvedPayrollRuns             PayrollRun[]                     @relation("ApprovedPayrollRuns") // M10.6: Approved payroll runs
+  postedPayrollRuns               PayrollRun[]                     @relation("PostedPayrollRuns") // M10.6: Posted payroll runs
+  paidPayrollRuns                 PayrollRun[]                     @relation("PaidPayrollRuns") // M10.6: Paid payroll runs
+  voidedPayrollRuns               PayrollRun[]                     @relation("VoidedPayrollRuns") // M10.6: Voided payroll runs
+  payrollRunLines                 PayrollRunLine[] // M10.6: Payroll run lines
+  compensationProfiles            EmployeeCompensationProfile[] // M10.7: Compensation profiles
+  payslips                        Payslip[] // M10.7: Payslips
+  createdRemittanceBatches        RemittanceBatch[]                @relation("CreatedRemittanceBatches") // M10.9
+  approvedRemittanceBatches       RemittanceBatch[]                @relation("ApprovedRemittanceBatches") // M10.9
+  postedRemittanceBatches         RemittanceBatch[]                @relation("PostedRemittanceBatches") // M10.9
+  paidRemittanceBatches           RemittanceBatch[]                @relation("PaidRemittanceBatches") // M10.9
+  voidedRemittanceBatches         RemittanceBatch[]                @relation("VoidedRemittanceBatches") // M10.9
+  // M10.11: Availability + Swaps + Open Shifts
+  workforceAvailability           WorkforceAvailability[]
+  availabilityExceptions          WorkforceAvailabilityException[]
+  swapRequestsAsRequester         ShiftSwapRequest[]               @relation("SwapRequester")
+  swapRequestsAsTarget            ShiftSwapRequest[]               @relation("SwapTarget")
+  swapRequestsAsClaimer           ShiftSwapRequest[]               @relation("SwapClaimer")
+  swapRequestsApproved            ShiftSwapRequest[]               @relation("SwapApprover")
+  swapRequestsRejected            ShiftSwapRequest[]               @relation("SwapRejecter")
+  openShiftClaims                 OpenShiftClaim[]                 @relation("ShiftClaimant")
+  approvedOpenShiftClaims         OpenShiftClaim[]                 @relation("ClaimApprover")
+  rejectedOpenShiftClaims         OpenShiftClaim[]                 @relation("ClaimRejecter")
+  workforceNotificationsReceived  WorkforceNotificationLog[]       @relation("NotificationTarget")
+  workforceNotificationsPerformed WorkforceNotificationLog[]       @relation("NotificationPerformer")
 
   @@index([orgId, id])
   @@map("users")
@@ -860,17 +913,17 @@ model Reservation {
   createdAt          DateTime          @default(now())
   updatedAt          DateTime          @updatedAt
 
-  org               Org                    @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  branch            Branch                 @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  floorPlan         FloorPlan?             @relation(fields: [floorPlanId], references: [id], onDelete: SetNull)
-  table             Table?                 @relation(fields: [tableId], references: [id], onDelete: SetNull)
-  paymentIntent     PaymentIntent?         @relation(fields: [paymentIntentId], references: [id], onDelete: SetNull)
-  reminders         ReservationReminder[]
-  documents         Document[]
-  feedback          Feedback?              // M20: Customer feedback for this reservation
-  deposits          ReservationDeposit[]   // M9.2: Deposit records
-  notificationLogs  NotificationLog[]      // M9.2: Notification audit trail
-  accessTokens      ReservationAccessToken[] // M9.4: Public access tokens
+  org              Org                      @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  branch           Branch                   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  floorPlan        FloorPlan?               @relation(fields: [floorPlanId], references: [id], onDelete: SetNull)
+  table            Table?                   @relation(fields: [tableId], references: [id], onDelete: SetNull)
+  paymentIntent    PaymentIntent?           @relation(fields: [paymentIntentId], references: [id], onDelete: SetNull)
+  reminders        ReservationReminder[]
+  documents        Document[]
+  feedback         Feedback? // M20: Customer feedback for this reservation
+  deposits         ReservationDeposit[] // M9.2: Deposit records
+  notificationLogs NotificationLog[] // M9.2: Notification audit trail
+  accessTokens     ReservationAccessToken[] // M9.4: Public access tokens
 
   @@index([orgId])
   @@index([branchId])
@@ -885,12 +938,12 @@ model ReservationAccessToken {
   id            String    @id @default(cuid())
   reservationId String
   token         String    @unique
-  scope         String    // "CANCEL" | "RESCHEDULE" | "VIEW" | "ALL"
+  scope         String // "CANCEL" | "RESCHEDULE" | "VIEW" | "ALL"
   expiresAt     DateTime
   usedAt        DateTime?
   createdAt     DateTime  @default(now())
 
-  reservation   Reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  reservation Reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
 
   @@index([token])
   @@index([reservationId])
@@ -913,23 +966,23 @@ model ReservationReminder {
 }
 
 model WaitlistEntry {
-  id                 String            @id @default(cuid())
-  orgId              String
-  branchId           String
-  name               String
-  phone              String?
-  partySize          Int
-  notes              String?
-  quotedWaitMinutes  Int?
-  status             WaitlistStatus    @default(WAITING)
-  addedById          String?
-  seatedById         String?
-  seatedAt           DateTime?
-  droppedAt          DateTime?
-  droppedReason      String?
-  promotedToResId    String?           // M9.3: Linked reservation ID if auto-promoted
-  createdAt          DateTime          @default(now())
-  updatedAt          DateTime          @updatedAt
+  id                String         @id @default(cuid())
+  orgId             String
+  branchId          String
+  name              String
+  phone             String?
+  partySize         Int
+  notes             String?
+  quotedWaitMinutes Int?
+  status            WaitlistStatus @default(WAITING)
+  addedById         String?
+  seatedById        String?
+  seatedAt          DateTime?
+  droppedAt         DateTime?
+  droppedReason     String?
+  promotedToResId   String? // M9.3: Linked reservation ID if auto-promoted
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
 
   org              Org               @relation(fields: [orgId], references: [id], onDelete: Cascade)
   branch           Branch            @relation(fields: [branchId], references: [id], onDelete: Cascade)
@@ -960,7 +1013,7 @@ model ReservationPolicy {
   waitlistAutoPromote   Boolean  @default(false)
   reminderEnabled       Boolean  @default(true)
   reminderLeadMinutes   Int      @default(1440) // 24 hours before
-  maxCapacityPerSlot    Int?     // null = unlimited
+  maxCapacityPerSlot    Int? // null = unlimited
   noShowGraceMinutes    Int      @default(15)
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
@@ -974,25 +1027,25 @@ model ReservationPolicy {
 
 // M9.2: Reservation Deposit
 model ReservationDeposit {
-  id               String        @id @default(cuid())
-  orgId            String
-  reservationId    String
-  amount           Decimal       @db.Decimal(10, 2)
-  status           DepositStatus @default(REQUIRED)
-  paymentMethod    PaymentMethod?
-  journalEntryId   String?
-  refundJournalId  String?
-  applyJournalId   String?
-  paidAt           DateTime?
-  refundedAt       DateTime?
-  appliedAt        DateTime?
-  refundReason     String?
-  createdById      String?
-  paidById         String?
-  refundedById     String?
-  appliedById      String?
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
+  id              String         @id @default(cuid())
+  orgId           String
+  reservationId   String
+  amount          Decimal        @db.Decimal(10, 2)
+  status          DepositStatus  @default(REQUIRED)
+  paymentMethod   PaymentMethod?
+  journalEntryId  String?
+  refundJournalId String?
+  applyJournalId  String?
+  paidAt          DateTime?
+  refundedAt      DateTime?
+  appliedAt       DateTime?
+  refundReason    String?
+  createdById     String?
+  paidById        String?
+  refundedById    String?
+  appliedById     String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
 
   reservation   Reservation   @relation(fields: [reservationId], references: [id], onDelete: Cascade)
   journalEntry  JournalEntry? @relation("DepositJournal", fields: [journalEntryId], references: [id])
@@ -1033,18 +1086,18 @@ model NotificationLog {
 
 // M9.3: Automation Audit Log
 model AutomationLog {
-  id            String   @id @default(cuid())
-  orgId         String
-  branchId      String?
-  action        String   // e.g., "HOLD_EXPIRED", "WAITLIST_PROMOTED", "REMINDER_SCHEDULED"
-  entityType    String   // "Reservation" | "WaitlistEntry"
-  entityId      String
-  actorType     String   @default("SYSTEM") // "SYSTEM" or userId
-  actorId       String?  // null for SYSTEM
-  beforeState   Json?
-  afterState    Json?
-  metadata      Json?
-  createdAt     DateTime @default(now())
+  id          String   @id @default(cuid())
+  orgId       String
+  branchId    String?
+  action      String // e.g., "HOLD_EXPIRED", "WAITLIST_PROMOTED", "REMINDER_SCHEDULED"
+  entityType  String // "Reservation" | "WaitlistEntry"
+  entityId    String
+  actorType   String   @default("SYSTEM") // "SYSTEM" or userId
+  actorId     String? // null for SYSTEM
+  beforeState Json?
+  afterState  Json?
+  metadata    Json?
+  createdAt   DateTime @default(now())
 
   @@index([orgId])
   @@index([branchId])
@@ -1228,12 +1281,12 @@ model KdsSlaConfig {
 model ShiftTemplate {
   id           String   @id @default(cuid())
   orgId        String
-  branchId     String?  // M10.1: null = org-wide template
-  name         String   // e.g. "Lunch Service", "Dinner Service"
-  role         String?  // M10.1: jobRole slug
-  startTime    String   // Time of day, e.g. "11:00"
-  endTime      String   // Time of day, e.g. "16:00"
-  breakMinutes Int?     // M10.1: default break duration
+  branchId     String? // M10.1: null = org-wide template
+  name         String // e.g. "Lunch Service", "Dinner Service"
+  role         String? // M10.1: jobRole slug
+  startTime    String // Time of day, e.g. "11:00"
+  endTime      String // Time of day, e.g. "16:00"
+  breakMinutes Int? // M10.1: default break duration
   description  String?
   isActive     Boolean  @default(true)
   createdAt    DateTime @default(now())
@@ -2300,24 +2353,24 @@ model Account {
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
 
-  parent                Account?               @relation("AccountHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
-  children              Account[]              @relation("AccountHierarchy")
-  journalLines          JournalLine[]
-  paymentMethodMappings PaymentMethodMapping[] // M8.4: Reverse relation
+  parent                         Account?                @relation("AccountHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children                       Account[]               @relation("AccountHierarchy")
+  journalLines                   JournalLine[]
+  paymentMethodMappings          PaymentMethodMapping[] // M8.4: Reverse relation
   // M10.8: Payroll posting mapping reverse relations
-  laborExpenseMappings        PayrollPostingMapping[] @relation("LaborExpenseAccount")
-  wagesPayableMappings        PayrollPostingMapping[] @relation("WagesPayableAccount")
-  taxesPayableMappings        PayrollPostingMapping[] @relation("TaxesPayableAccount")
-  deductionsPayableMappings   PayrollPostingMapping[] @relation("DeductionsPayableAccount")
+  laborExpenseMappings           PayrollPostingMapping[] @relation("LaborExpenseAccount")
+  wagesPayableMappings           PayrollPostingMapping[] @relation("WagesPayableAccount")
+  taxesPayableMappings           PayrollPostingMapping[] @relation("TaxesPayableAccount")
+  deductionsPayableMappings      PayrollPostingMapping[] @relation("DeductionsPayableAccount")
   employerContribExpenseMappings PayrollPostingMapping[] @relation("EmployerContribExpenseAccount")
   employerContribPayableMappings PayrollPostingMapping[] @relation("EmployerContribPayableAccount")
-  cashAccountMappings         PayrollPostingMapping[] @relation("CashAccount")
+  cashAccountMappings            PayrollPostingMapping[] @relation("CashAccount")
   // M10.9: Remittance line reverse relations
-  remittanceLiabilityLines    RemittanceLine[] @relation("RemittanceLiabilityAccount")
-  remittanceCounterLines      RemittanceLine[] @relation("RemittanceCounterAccount")
+  remittanceLiabilityLines       RemittanceLine[]        @relation("RemittanceLiabilityAccount")
+  remittanceCounterLines         RemittanceLine[]        @relation("RemittanceCounterAccount")
   // M10.10: Remittance provider default account relations
-  providerLiabilityAccounts   RemittanceProvider[] @relation("ProviderLiabilityAccount")
-  providerCashAccounts        RemittanceProvider[] @relation("ProviderCashAccount")
+  providerLiabilityAccounts      RemittanceProvider[]    @relation("ProviderLiabilityAccount")
+  providerCashAccounts           RemittanceProvider[]    @relation("ProviderCashAccount")
 
   @@unique([orgId, code])
   @@index([orgId, type])
@@ -2356,27 +2409,27 @@ model JournalEntry {
   reversesEntryId String? // M8.2b: Links reversal to original entry
   createdAt       DateTime           @default(now())
 
-  lines            JournalLine[]
-  reversalOf       JournalEntry?      @relation("JournalReversal", fields: [reversesEntryId], references: [id])
-  reversedBy       JournalEntry[]     @relation("JournalReversal")
+  lines                     JournalLine[]
+  reversalOf                JournalEntry?              @relation("JournalReversal", fields: [reversesEntryId], references: [id])
+  reversedBy                JournalEntry[]             @relation("JournalReversal")
   // M8.3: Reverse relations for AP/AR documents
-  vendorBills      VendorBill[]       @relation("VendorBillJournal")
-  vendorPayments   VendorPayment[]    @relation("VendorPaymentJournal")
-  customerInvoices CustomerInvoice[]  @relation("CustomerInvoiceJournal")
-  customerReceipts CustomerReceipt[]  @relation("CustomerReceiptJournal")
+  vendorBills               VendorBill[]               @relation("VendorBillJournal")
+  vendorPayments            VendorPayment[]            @relation("VendorPaymentJournal")
+  customerInvoices          CustomerInvoice[]          @relation("CustomerInvoiceJournal")
+  customerReceipts          CustomerReceipt[]          @relation("CustomerReceiptJournal")
   // M8.5: Credit note relations
   customerCreditNotes       CustomerCreditNote[]       @relation("CustomerCreditNoteJournal")
   customerCreditNoteRefunds CustomerCreditNoteRefund[] @relation("CustomerCreditNoteRefundJournal")
   vendorCreditNotes         VendorCreditNote[]         @relation("VendorCreditNoteJournal")
   vendorCreditNoteRefunds   VendorCreditNoteRefund[]   @relation("VendorCreditNoteRefundJournal")
   // M9.2: Reservation deposit relations
-  depositJournals          ReservationDeposit[]       @relation("DepositJournal")
-  depositRefundJournals    ReservationDeposit[]       @relation("DepositRefundJournal")
-  depositApplyJournals     ReservationDeposit[]       @relation("DepositApplyJournal")
+  depositJournals           ReservationDeposit[]       @relation("DepositJournal")
+  depositRefundJournals     ReservationDeposit[]       @relation("DepositRefundJournal")
+  depositApplyJournals      ReservationDeposit[]       @relation("DepositApplyJournal")
   // M10.6: Payroll run journal links
-  payrollRunJournalLinks   PayrollRunJournalLink[]
+  payrollRunJournalLinks    PayrollRunJournalLink[]
   // M10.9: Remittance journal links
-  remittanceJournalLinks   RemittanceJournalLink[]
+  remittanceJournalLinks    RemittanceJournalLink[]
 
   @@index([orgId, date])
   @@index([orgId, branchId])
@@ -2439,9 +2492,9 @@ model VendorBill {
   updatedAt  DateTime   @updatedAt
 
   // M8.3: GL Integration
-  journalEntryId String?       // Links to GL entry when OPEN
-  openedAt       DateTime?     // When bill was opened
-  openedById     String?       // User who opened the bill
+  journalEntryId String? // Links to GL entry when OPEN
+  openedAt       DateTime? // When bill was opened
+  openedById     String? // User who opened the bill
 
   vendor            Vendor                       @relation(fields: [vendorId], references: [id], onDelete: Restrict)
   payments          VendorPayment[]
@@ -2468,7 +2521,7 @@ model VendorPayment {
   createdAt DateTime @default(now())
 
   // M8.3: GL Integration
-  journalEntryId String?       // Links to GL entry
+  journalEntryId String? // Links to GL entry
 
   vendor       Vendor        @relation(fields: [vendorId], references: [id], onDelete: Restrict)
   bill         VendorBill?   @relation(fields: [billId], references: [id], onDelete: SetNull)
@@ -2518,9 +2571,9 @@ model CustomerInvoice {
   updatedAt   DateTime      @updatedAt
 
   // M8.3: GL Integration
-  journalEntryId String?       // Links to GL entry when OPEN
-  openedAt       DateTime?     // When invoice was opened
-  openedById     String?       // User who opened the invoice
+  journalEntryId String? // Links to GL entry when OPEN
+  openedAt       DateTime? // When invoice was opened
+  openedById     String? // User who opened the invoice
 
   customer          CustomerAccount                @relation(fields: [customerId], references: [id], onDelete: Restrict)
   receipts          CustomerReceipt[]
@@ -2568,21 +2621,21 @@ model CustomerCreditNote {
   id              String           @id @default(cuid())
   orgId           String
   customerId      String
-  number          String?          // Credit note number
+  number          String? // Credit note number
   creditDate      DateTime         @default(now())
   amount          Decimal          @db.Decimal(12, 2)
   allocatedAmount Decimal          @default(0) @db.Decimal(12, 2) // Sum of allocations
   refundedAmount  Decimal          @default(0) @db.Decimal(12, 2) // Sum of refunds
   status          CreditNoteStatus @default(DRAFT)
-  reason          String?          // Reason for credit
+  reason          String? // Reason for credit
   memo            String?
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
 
   // GL Integration
-  journalEntryId String?   // Links to GL entry when OPEN
+  journalEntryId String? // Links to GL entry when OPEN
   openedAt       DateTime? // When credit note was opened
-  openedById     String?   // User who opened
+  openedById     String? // User who opened
 
   customer     CustomerAccount                @relation(fields: [customerId], references: [id], onDelete: Restrict)
   journalEntry JournalEntry?                  @relation("CustomerCreditNoteJournal", fields: [journalEntryId], references: [id])
@@ -2618,8 +2671,8 @@ model CustomerCreditNoteRefund {
   creditNoteId String
   amount       Decimal  @db.Decimal(12, 2)
   refundDate   DateTime @default(now())
-  method       String   // CASH, BANK, CHECK
-  ref          String?  // Reference number
+  method       String // CASH, BANK, CHECK
+  ref          String? // Reference number
   memo         String?
   createdAt    DateTime @default(now())
 
@@ -2639,7 +2692,7 @@ model VendorCreditNote {
   id              String           @id @default(cuid())
   orgId           String
   vendorId        String
-  number          String?          // Credit note number
+  number          String? // Credit note number
   creditDate      DateTime         @default(now())
   amount          Decimal          @db.Decimal(12, 2)
   allocatedAmount Decimal          @default(0) @db.Decimal(12, 2)
@@ -2689,7 +2742,7 @@ model VendorCreditNoteRefund {
   creditNoteId String
   amount       Decimal  @db.Decimal(12, 2)
   refundDate   DateTime @default(now())
-  method       String   // CASH, BANK, CHECK
+  method       String // CASH, BANK, CHECK
   ref          String?
   memo         String?
   createdAt    DateTime @default(now())
@@ -2933,7 +2986,7 @@ model TimeEntry {
   orgId           String
   branchId        String
   userId          String
-  shiftId         String?         // M10.1: Link to scheduled shift
+  shiftId         String? // M10.1: Link to scheduled shift
   clockInAt       DateTime
   clockOutAt      DateTime?
   method          TimeClockMethod
@@ -2943,12 +2996,12 @@ model TimeEntry {
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
 
-  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  approvedBy     User?           @relation("ApprovedTimeEntries", fields: [approvedById], references: [id], onDelete: SetNull)
-  scheduledShift ScheduledShift? @relation(fields: [shiftId], references: [id], onDelete: SetNull)
-  breakEntries   BreakEntry[]
+  user              User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  approvedBy        User?                 @relation("ApprovedTimeEntries", fields: [approvedById], references: [id], onDelete: SetNull)
+  scheduledShift    ScheduledShift?       @relation(fields: [shiftId], references: [id], onDelete: SetNull)
+  breakEntries      BreakEntry[]
   timesheetApproval TimesheetApproval? // M10.3: Timesheet approval record
-  adjustments    TimeEntryAdjustment[]  // M10.5: Adjustment requests
+  adjustments       TimeEntryAdjustment[] // M10.5: Adjustment requests
 
   @@index([orgId, branchId, clockInAt])
   @@index([userId, clockInAt])
@@ -2962,8 +3015,8 @@ model ScheduledShift {
   id              String      @id @default(cuid())
   orgId           String
   branchId        String
-  userId          String
-  role            String      // jobRole slug
+  userId          String? // M10.11: Nullable for open shifts
+  role            String // jobRole slug
   startAt         DateTime
   endAt           DateTime
   plannedMinutes  Int
@@ -2972,6 +3025,7 @@ model ScheduledShift {
   overtimeMinutes Int?
   notes           String?
   status          ShiftStatus @default(DRAFT)
+  isOpen          Boolean     @default(false) // M10.11: Open shift flag
   publishedAt     DateTime?
   publishedById   String?
   approvedAt      DateTime?
@@ -2982,17 +3036,22 @@ model ScheduledShift {
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
 
-  org         Org              @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  branch      Branch           @relation("ScheduledShifts", fields: [branchId], references: [id], onDelete: Cascade)
-  user        User             @relation("AssignedScheduledShifts", fields: [userId], references: [id], onDelete: Cascade)
-  publishedBy User?            @relation("PublishedScheduledShifts", fields: [publishedById], references: [id], onDelete: SetNull)
-  approvedBy  User?            @relation("ApprovedScheduledShifts", fields: [approvedById], references: [id], onDelete: SetNull)
-  cancelledBy User?            @relation("CancelledScheduledShifts", fields: [cancelledById], references: [id], onDelete: SetNull)
-  timeEntries TimeEntry[]
+  org                     Org                @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  branch                  Branch             @relation("ScheduledShifts", fields: [branchId], references: [id], onDelete: Cascade)
+  user                    User?              @relation("AssignedScheduledShifts", fields: [userId], references: [id], onDelete: Cascade)
+  publishedBy             User?              @relation("PublishedScheduledShifts", fields: [publishedById], references: [id], onDelete: SetNull)
+  approvedBy              User?              @relation("ApprovedScheduledShifts", fields: [approvedById], references: [id], onDelete: SetNull)
+  cancelledBy             User?              @relation("CancelledScheduledShifts", fields: [cancelledById], references: [id], onDelete: SetNull)
+  timeEntries             TimeEntry[]
+  // M10.11: Swap relations
+  swapRequestsAsRequester ShiftSwapRequest[] @relation("RequesterShift")
+  swapRequestsAsTarget    ShiftSwapRequest[] @relation("TargetShift")
+  openShiftClaims         OpenShiftClaim[]
 
   @@index([orgId, branchId, startAt])
   @@index([userId, startAt])
   @@index([status])
+  @@index([isOpen])
   @@map("scheduled_shifts")
 }
 
@@ -3013,8 +3072,8 @@ model BreakEntry {
 model WorkforceAuditLog {
   id            String   @id @default(cuid())
   orgId         String
-  action        String   // SHIFT_CREATED, CLOCK_IN, etc.
-  entityType    String   // Shift, TimeEntry, etc.
+  action        String // SHIFT_CREATED, CLOCK_IN, etc.
+  entityType    String // Shift, TimeEntry, etc.
   entityId      String
   performedById String
   payload       Json?
@@ -3113,15 +3172,15 @@ model Employee {
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
 
-  user                 User?                  @relation(fields: [userId], references: [id], onDelete: SetNull)
+  user                 User?                 @relation(fields: [userId], references: [id], onDelete: SetNull)
   contracts            EmploymentContract[]
   attendanceRecords    AttendanceRecord[]
-  coveredAttendance    AttendanceRecord[]     @relation("CoveredAttendance") // M9: Attendance records where this employee covered for someone
-  sessions             Session[]              // M10: Auth sessions for this employee
-  msrCard              MsrCard?               // M10: MSR card assignment for this employee
+  coveredAttendance    AttendanceRecord[]    @relation("CoveredAttendance") // M9: Attendance records where this employee covered for someone
+  sessions             Session[] // M10: Auth sessions for this employee
+  msrCard              MsrCard? // M10: MSR card assignment for this employee
   documents            Document[]
-  awards               StaffAward[]           // M19: Awards received by this employee
-  promotionSuggestions PromotionSuggestion[]  @relation("PromotionSuggestions") // M22: Promotion suggestions for this employee
+  awards               StaffAward[] // M19: Awards received by this employee
+  promotionSuggestions PromotionSuggestion[] @relation("PromotionSuggestions") // M22: Promotion suggestions for this employee
 
   @@index([orgId, status])
   @@index([branchId, status])
@@ -3213,7 +3272,7 @@ model StaffAward {
 
 // M22: Promotion Suggestions
 model PromotionSuggestion {
-  id                String              @id @default(cuid())
+  id                String             @id @default(cuid())
   orgId             String
   branchId          String? // NULL for org-level suggestions
   employeeId        String
@@ -3221,21 +3280,21 @@ model PromotionSuggestion {
   periodStart       DateTime
   periodEnd         DateTime
   category          SuggestionCategory
-  scoreAtSuggestion Decimal             @db.Decimal(10, 4) // Composite score 0-1
+  scoreAtSuggestion Decimal            @db.Decimal(10, 4) // Composite score 0-1
   insightsSnapshot  Json? // Full M19 metrics at suggestion time
   reason            String // Why suggested (auto-generated or manual)
-  status            SuggestionStatus    @default(PENDING)
+  status            SuggestionStatus   @default(PENDING)
   statusUpdatedAt   DateTime?
   statusUpdatedById String?
   decisionNotes     String? // Why accepted/rejected (freetext)
-  createdAt         DateTime            @default(now())
+  createdAt         DateTime           @default(now())
   createdById       String? // User who generated (NULL if auto-generated)
 
-  org             Org       @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  branch          Branch?   @relation(fields: [branchId], references: [id], onDelete: SetNull)
-  employee        Employee  @relation("PromotionSuggestions", fields: [employeeId], references: [id], onDelete: Cascade)
-  statusUpdatedBy User?     @relation("SuggestionDecisions", fields: [statusUpdatedById], references: [id])
-  createdBy       User?     @relation("SuggestionCreators", fields: [createdById], references: [id])
+  org             Org      @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  branch          Branch?  @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  employee        Employee @relation("PromotionSuggestions", fields: [employeeId], references: [id], onDelete: Cascade)
+  statusUpdatedBy User?    @relation("SuggestionDecisions", fields: [statusUpdatedById], references: [id])
+  createdBy       User?    @relation("SuggestionCreators", fields: [createdById], references: [id])
 
   @@unique([orgId, employeeId, periodType, periodStart, category])
   @@index([orgId, branchId, periodStart])
@@ -3737,9 +3796,9 @@ model BranchOperatingHours {
   id        String   @id @default(cuid())
   orgId     String
   branchId  String
-  dayOfWeek Int      // 0=Sunday, 6=Saturday
-  openTime  String   // "09:00" (24h format)
-  closeTime String   // "22:00" (24h format)
+  dayOfWeek Int // 0=Sunday, 6=Saturday
+  openTime  String // "09:00" (24h format)
+  closeTime String // "22:00" (24h format)
   enabled   Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -3759,7 +3818,7 @@ model BranchBlackout {
   id        String   @id @default(cuid())
   orgId     String
   branchId  String
-  title     String   // "Private Event", "Maintenance", etc.
+  title     String // "Private Event", "Maintenance", etc.
   startAt   DateTime
   endAt     DateTime
   reason    String?
@@ -3782,8 +3841,8 @@ model BranchCapacityRule {
   id                String   @id @default(cuid())
   orgId             String
   branchId          String   @unique
-  maxPartiesPerHour Int?     // null = unlimited
-  maxCoversPerHour  Int?     // null = unlimited (covers = total guests)
+  maxPartiesPerHour Int? // null = unlimited
+  maxCoversPerHour  Int? // null = unlimited (covers = total guests)
   enabled           Boolean  @default(true)
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
@@ -3801,8 +3860,8 @@ model OpsIncident {
   id         String    @id @default(cuid())
   orgId      String
   branchId   String?
-  type       String    // "WEBHOOK_CIRCUIT_OPEN", "HOLD_EXPIRY_SPIKE", "NOTIFICATION_FAILURE_SPIKE"
-  severity   String    // "LOW", "MEDIUM", "HIGH", "CRITICAL"
+  type       String // "WEBHOOK_CIRCUIT_OPEN", "HOLD_EXPIRY_SPIKE", "NOTIFICATION_FAILURE_SPIKE"
+  severity   String // "LOW", "MEDIUM", "HIGH", "CRITICAL"
   title      String
   payload    Json?
   resolved   Boolean   @default(false)
@@ -3827,8 +3886,8 @@ model WebhookEndpoint {
   orgId                 String
   branchId              String?
   url                   String
-  secret                String    // HMAC secret (stored hashed in production)
-  eventTypes            String[]  // Array of event type strings
+  secret                String // HMAC secret (stored hashed in production)
+  eventTypes            String[] // Array of event type strings
   enabled               Boolean   @default(true)
   maxRetries            Int       @default(3)
   timeoutMs             Int       @default(5000)
@@ -3840,8 +3899,8 @@ model WebhookEndpoint {
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
 
-  org        Org                @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  branch     Branch?            @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  org        Org               @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  branch     Branch?           @relation(fields: [branchId], references: [id], onDelete: Cascade)
   deliveries WebhookDelivery[]
 
   @@index([orgId])
@@ -3859,7 +3918,7 @@ model WebhookDelivery {
   attempts      Int                   @default(0)
   lastAttemptAt DateTime?
   responseCode  Int?
-  responseBody  String?               // Truncated to 1000 chars
+  responseBody  String? // Truncated to 1000 chars
   createdAt     DateTime              @default(now())
   updatedAt     DateTime              @updatedAt
 
@@ -3878,9 +3937,9 @@ model NotificationTemplate {
   orgId     String
   branchId  String?
   type      NotificationType
-  event     String           // e.g., "reservation.confirmed"
-  subject   String?          // For email
-  body      String           // Template with {{variables}}
+  event     String // e.g., "reservation.confirmed"
+  subject   String? // For email
+  body      String // Template with {{variables}}
   enabled   Boolean          @default(true)
   createdAt DateTime         @default(now())
   updatedAt DateTime         @updatedAt
@@ -3898,15 +3957,15 @@ model NotificationTemplate {
 model NotificationOutbox {
   id          String                   @id @default(cuid())
   orgId       String
-  recipientId String?                  // User ID or external identifier
+  recipientId String? // User ID or external identifier
   type        NotificationType
   event       String
   subject     String?
-  body        String                   // Rendered body
+  body        String // Rendered body
   status      NotificationOutboxStatus @default(PENDING)
   attempts    Int                      @default(0)
   lastError   String?
-  metadata    Json?                    // Additional context
+  metadata    Json? // Additional context
   createdAt   DateTime                 @default(now())
   updatedAt   DateTime                 @updatedAt
 
@@ -3920,12 +3979,12 @@ model NotificationOutbox {
 // ===== M9.5: Calendar Feed Tokens =====
 
 model CalendarFeedToken {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   branchId  String
-  token     String   @unique
-  scope     String   @default("CALENDAR_READ")
+  token     String    @unique
+  scope     String    @default("CALENDAR_READ")
   expiresAt DateTime?
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
 
   branch Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
 
@@ -3962,16 +4021,17 @@ enum AdjustmentStatus {
 }
 
 model WorkforcePolicy {
-  id                    String       @id @default(cuid())
-  orgId                 String       @unique
-  dailyOtThresholdMins  Int          @default(480)      // 8 hours
-  weeklyOtThresholdMins Int          @default(2400)     // 40 hours
-  roundingIntervalMins  Int          @default(15)       // Round to 15-min blocks
-  roundingMode          RoundingMode @default(NEAREST)
-  requireApproval       Boolean      @default(true)
-  autoLockDays          Int          @default(7)        // Auto-lock after N days
-  createdAt             DateTime     @default(now())
-  updatedAt             DateTime     @updatedAt
+  id                        String       @id @default(cuid())
+  orgId                     String       @unique
+  dailyOtThresholdMins      Int          @default(480) // 8 hours
+  weeklyOtThresholdMins     Int          @default(2400) // 40 hours
+  roundingIntervalMins      Int          @default(15) // Round to 15-min blocks
+  roundingMode              RoundingMode @default(NEAREST)
+  requireApproval           Boolean      @default(true)
+  autoLockDays              Int          @default(7) // Auto-lock after N days
+  openShiftRequiresApproval Boolean      @default(true) // M10.11: Require approval for open shift claims
+  createdAt                 DateTime     @default(now())
+  updatedAt                 DateTime     @updatedAt
 
   org Org @relation(fields: [orgId], references: [id], onDelete: Cascade)
 
@@ -3981,8 +4041,8 @@ model WorkforcePolicy {
 model PayPeriod {
   id           String          @id @default(cuid())
   orgId        String
-  branchId     String?                              // NULL = org-wide
-  periodType   String                               // WEEKLY, BIWEEKLY, MONTHLY
+  branchId     String? // NULL = org-wide
+  periodType   String // WEEKLY, BIWEEKLY, MONTHLY
   startDate    DateTime        @db.Date
   endDate      DateTime        @db.Date
   status       PayPeriodStatus @default(OPEN)
@@ -4005,18 +4065,18 @@ model PayPeriod {
 }
 
 model TimesheetApproval {
-  id              String                   @id @default(cuid())
-  timeEntryId     String                   @unique
+  id              String                  @id @default(cuid())
+  timeEntryId     String                  @unique
   orgId           String
-  status          TimesheetApprovalStatus  @default(PENDING)
+  status          TimesheetApprovalStatus @default(PENDING)
   approvedById    String?
   approvedAt      DateTime?
   rejectedById    String?
   rejectedAt      DateTime?
   rejectionReason String?
-  lockedAt        DateTime?                // Once locked, cannot be changed
-  createdAt       DateTime                 @default(now())
-  updatedAt       DateTime                 @updatedAt
+  lockedAt        DateTime? // Once locked, cannot be changed
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
 
   timeEntry  TimeEntry @relation(fields: [timeEntryId], references: [id], onDelete: Cascade)
   org        Org       @relation(fields: [orgId], references: [id], onDelete: Cascade)
@@ -4067,40 +4127,40 @@ enum PayrollRunStatus {
 
 // M10.6: Payroll Run (batch payroll for a pay period)
 model PayrollRun {
-  id             String           @id @default(cuid())
-  orgId          String
-  branchId       String?                              // NULL = org-wide
-  payPeriodId    String
-  status         PayrollRunStatus @default(DRAFT)
-  regularHours   Decimal          @default(0) @db.Decimal(10, 2)
-  overtimeHours  Decimal          @default(0) @db.Decimal(10, 2)
-  breakHours     Decimal          @default(0) @db.Decimal(10, 2)
-  paidHours      Decimal          @default(0) @db.Decimal(10, 2)
-  grossAmount    Decimal?         @db.Decimal(12, 2)  // If wage rates configured
-  createdById    String
-  calculatedAt   DateTime?
-  approvedById   String?
-  approvedAt     DateTime?
-  postedById     String?
-  postedAt       DateTime?
-  paidById       String?
-  paidAt         DateTime?
-  voidedById     String?
-  voidedAt       DateTime?
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
+  id            String           @id @default(cuid())
+  orgId         String
+  branchId      String? // NULL = org-wide
+  payPeriodId   String
+  status        PayrollRunStatus @default(DRAFT)
+  regularHours  Decimal          @default(0) @db.Decimal(10, 2)
+  overtimeHours Decimal          @default(0) @db.Decimal(10, 2)
+  breakHours    Decimal          @default(0) @db.Decimal(10, 2)
+  paidHours     Decimal          @default(0) @db.Decimal(10, 2)
+  grossAmount   Decimal?         @db.Decimal(12, 2) // If wage rates configured
+  createdById   String
+  calculatedAt  DateTime?
+  approvedById  String?
+  approvedAt    DateTime?
+  postedById    String?
+  postedAt      DateTime?
+  paidById      String?
+  paidAt        DateTime?
+  voidedById    String?
+  voidedAt      DateTime?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
 
-  org         Org         @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  branch      Branch?     @relation(fields: [branchId], references: [id], onDelete: SetNull)
-  payPeriod   PayPeriod   @relation(fields: [payPeriodId], references: [id], onDelete: Restrict)
-  createdBy   User        @relation("CreatedPayrollRuns", fields: [createdById], references: [id])
-  approvedBy  User?       @relation("ApprovedPayrollRuns", fields: [approvedById], references: [id])
-  postedBy    User?       @relation("PostedPayrollRuns", fields: [postedById], references: [id])
-  paidBy      User?       @relation("PaidPayrollRuns", fields: [paidById], references: [id])
-  voidedBy    User?       @relation("VoidedPayrollRuns", fields: [voidedById], references: [id])
-  lines       PayrollRunLine[]
-  journalLinks PayrollRunJournalLink[]
-  payslips    Payslip[]             // M10.7: Payslips generated from this run
+  org                  Org                     @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  branch               Branch?                 @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  payPeriod            PayPeriod               @relation(fields: [payPeriodId], references: [id], onDelete: Restrict)
+  createdBy            User                    @relation("CreatedPayrollRuns", fields: [createdById], references: [id])
+  approvedBy           User?                   @relation("ApprovedPayrollRuns", fields: [approvedById], references: [id])
+  postedBy             User?                   @relation("PostedPayrollRuns", fields: [postedById], references: [id])
+  paidBy               User?                   @relation("PaidPayrollRuns", fields: [paidById], references: [id])
+  voidedBy             User?                   @relation("VoidedPayrollRuns", fields: [voidedById], references: [id])
+  lines                PayrollRunLine[]
+  journalLinks         PayrollRunJournalLink[]
+  payslips             Payslip[] // M10.7: Payslips generated from this run
   remittanceSourceLink RemittanceSourceLink? // M10.10: Link to generated remittance batch
 
   @@unique([payPeriodId, branchId])
@@ -4111,21 +4171,21 @@ model PayrollRun {
 
 // M10.6: Payroll Run Line Item (per employee)
 model PayrollRunLine {
-  id            String      @id @default(cuid())
+  id            String   @id @default(cuid())
   payrollRunId  String
   userId        String
-  regularHours  Decimal     @default(0) @db.Decimal(10, 2)
-  overtimeHours Decimal     @default(0) @db.Decimal(10, 2)
-  breakHours    Decimal     @default(0) @db.Decimal(10, 2)
-  paidHours     Decimal     @default(0) @db.Decimal(10, 2)
-  hourlyRate    Decimal?    @db.Decimal(8, 2)
-  grossAmount   Decimal?    @db.Decimal(12, 2)
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  regularHours  Decimal  @default(0) @db.Decimal(10, 2)
+  overtimeHours Decimal  @default(0) @db.Decimal(10, 2)
+  breakHours    Decimal  @default(0) @db.Decimal(10, 2)
+  paidHours     Decimal  @default(0) @db.Decimal(10, 2)
+  hourlyRate    Decimal? @db.Decimal(8, 2)
+  grossAmount   Decimal? @db.Decimal(12, 2)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   payrollRun PayrollRun @relation(fields: [payrollRunId], references: [id], onDelete: Cascade)
   user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  payslip    Payslip?              // M10.7: One-to-one with payslip
+  payslip    Payslip? // M10.7: One-to-one with payslip
 
   @@unique([payrollRunId, userId])
   @@index([payrollRunId])
@@ -4134,11 +4194,11 @@ model PayrollRunLine {
 
 // M10.6: Links payroll run to journal entries for traceability
 model PayrollRunJournalLink {
-  id             String       @id @default(cuid())
+  id             String   @id @default(cuid())
   payrollRunId   String
   journalEntryId String
-  type           String       // "ACCRUAL" or "PAYMENT"
-  createdAt      DateTime     @default(now())
+  type           String // "ACCRUAL" or "PAYMENT"
+  createdAt      DateTime @default(now())
 
   payrollRun   PayrollRun   @relation(fields: [payrollRunId], references: [id], onDelete: Cascade)
   journalEntry JournalEntry @relation(fields: [journalEntryId], references: [id], onDelete: Restrict)
@@ -4152,34 +4212,34 @@ model PayrollRunJournalLink {
 // ===== M10.8: Payroll Posting Mapping (Configurable GL Accounts) =====
 
 model PayrollPostingMapping {
-  id                          String   @id @default(cuid())
-  orgId                       String
-  branchId                    String?  // Optional for branch-specific overrides
-  
+  id       String  @id @default(cuid())
+  orgId    String
+  branchId String? // Optional for branch-specific overrides
+
   // Account mappings
-  laborExpenseAccountId       String
-  wagesPayableAccountId       String
-  taxesPayableAccountId       String
-  deductionsPayableAccountId  String
+  laborExpenseAccountId           String
+  wagesPayableAccountId           String
+  taxesPayableAccountId           String
+  deductionsPayableAccountId      String
   employerContribExpenseAccountId String
   employerContribPayableAccountId String
-  cashAccountId               String
-  
-  enabled                     Boolean  @default(true)
-  createdAt                   DateTime @default(now())
-  updatedAt                   DateTime @updatedAt
+  cashAccountId                   String
+
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   org    Org     @relation(fields: [orgId], references: [id], onDelete: Cascade)
   branch Branch? @relation(fields: [branchId], references: [id], onDelete: Cascade)
 
   // Account relations
-  laborExpenseAccount       Account @relation("LaborExpenseAccount", fields: [laborExpenseAccountId], references: [id])
-  wagesPayableAccount       Account @relation("WagesPayableAccount", fields: [wagesPayableAccountId], references: [id])
-  taxesPayableAccount       Account @relation("TaxesPayableAccount", fields: [taxesPayableAccountId], references: [id])
-  deductionsPayableAccount  Account @relation("DeductionsPayableAccount", fields: [deductionsPayableAccountId], references: [id])
+  laborExpenseAccount           Account @relation("LaborExpenseAccount", fields: [laborExpenseAccountId], references: [id])
+  wagesPayableAccount           Account @relation("WagesPayableAccount", fields: [wagesPayableAccountId], references: [id])
+  taxesPayableAccount           Account @relation("TaxesPayableAccount", fields: [taxesPayableAccountId], references: [id])
+  deductionsPayableAccount      Account @relation("DeductionsPayableAccount", fields: [deductionsPayableAccountId], references: [id])
   employerContribExpenseAccount Account @relation("EmployerContribExpenseAccount", fields: [employerContribExpenseAccountId], references: [id])
   employerContribPayableAccount Account @relation("EmployerContribPayableAccount", fields: [employerContribPayableAccountId], references: [id])
-  cashAccount               Account @relation("CashAccount", fields: [cashAccountId], references: [id])
+  cashAccount                   Account @relation("CashAccount", fields: [cashAccountId], references: [id])
 
   @@unique([orgId, branchId]) // One mapping per org+branch combo
   @@index([orgId])
@@ -4222,24 +4282,24 @@ enum RemittanceProviderType {
 
 // M10.10: Provider directory for remittance payees
 model RemittanceProvider {
-  id                      String                  @id @default(cuid())
-  orgId                   String
-  branchId                String?                 // NULL = org-wide, set = branch-specific
-  name                    String
-  type                    RemittanceProviderType
-  referenceFormatHint     String?                 // e.g., "TIN-XXXXXX"
+  id                        String                 @id @default(cuid())
+  orgId                     String
+  branchId                  String? // NULL = org-wide, set = branch-specific
+  name                      String
+  type                      RemittanceProviderType
+  referenceFormatHint       String? // e.g., "TIN-XXXXXX"
   defaultLiabilityAccountId String?
-  defaultCashAccountId    String?
-  enabled                 Boolean                 @default(true)
-  createdAt               DateTime                @default(now())
-  updatedAt               DateTime                @updatedAt
+  defaultCashAccountId      String?
+  enabled                   Boolean                @default(true)
+  createdAt                 DateTime               @default(now())
+  updatedAt                 DateTime               @updatedAt
 
-  org                Org      @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  branch             Branch?  @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  org                     Org      @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  branch                  Branch?  @relation(fields: [branchId], references: [id], onDelete: SetNull)
   defaultLiabilityAccount Account? @relation("ProviderLiabilityAccount", fields: [defaultLiabilityAccountId], references: [id])
-  defaultCashAccount Account? @relation("ProviderCashAccount", fields: [defaultCashAccountId], references: [id])
-  
-  componentMappings  CompensationRemittanceMapping[]
+  defaultCashAccount      Account? @relation("ProviderCashAccount", fields: [defaultCashAccountId], references: [id])
+
+  componentMappings CompensationRemittanceMapping[]
 
   @@index([orgId])
   @@index([branchId])
@@ -4248,12 +4308,12 @@ model RemittanceProvider {
 
 // M10.10: Mapping from compensation component to remittance provider
 model CompensationRemittanceMapping {
-  id           String              @id @default(cuid())
-  orgId        String
-  componentId  String
-  providerId   String
+  id             String              @id @default(cuid())
+  orgId          String
+  componentId    String
+  providerId     String
   remittanceType RemittanceBatchType // TAX, DEDUCTION, EMPLOYER_CONTRIB
-  createdAt    DateTime            @default(now())
+  createdAt      DateTime            @default(now())
 
   org       Org                   @relation(fields: [orgId], references: [id], onDelete: Cascade)
   component CompensationComponent @relation(fields: [componentId], references: [id], onDelete: Cascade)
@@ -4266,46 +4326,46 @@ model CompensationRemittanceMapping {
 }
 
 model RemittanceBatch {
-  id             String               @id @default(cuid())
+  id             String                @id @default(cuid())
   orgId          String
-  branchId       String?              // NULL = org-wide
+  branchId       String? // NULL = org-wide
   status         RemittanceBatchStatus @default(DRAFT)
   type           RemittanceBatchType
-  currencyCode   String               @default("UGX")
-  periodId       String?              // Optional link to FiscalPeriod
-  idempotencyKey String?              // Unique per org to prevent duplicates
+  currencyCode   String                @default("UGX")
+  periodId       String? // Optional link to FiscalPeriod
+  idempotencyKey String? // Unique per org to prevent duplicates
   memo           String?
-  totalAmount    Decimal              @default(0) @db.Decimal(12, 2)
-  
-  // M10.10: Reconciliation fields
-  externalReference String?           // Bank transfer reference, etc.
-  settledAt         DateTime?         // When actually paid externally
-  settlementMethod  SettlementMethod? // How it was paid
-  receiptNote       String?           // Receipt or settlement note
-  
-  createdById    String
-  approvedById   String?
-  approvedAt     DateTime?
-  postedById     String?
-  postedAt       DateTime?
-  paidById       String?
-  paidAt         DateTime?
-  voidedById     String?
-  voidedAt       DateTime?
-  createdAt      DateTime             @default(now())
-  updatedAt      DateTime             @updatedAt
+  totalAmount    Decimal               @default(0) @db.Decimal(12, 2)
 
-  org          Org     @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  branch       Branch? @relation(fields: [branchId], references: [id], onDelete: SetNull)
-  createdBy    User    @relation("CreatedRemittanceBatches", fields: [createdById], references: [id])
-  approvedBy   User?   @relation("ApprovedRemittanceBatches", fields: [approvedById], references: [id])
-  postedBy     User?   @relation("PostedRemittanceBatches", fields: [postedById], references: [id])
-  paidBy       User?   @relation("PaidRemittanceBatches", fields: [paidById], references: [id])
-  voidedBy     User?   @relation("VoidedRemittanceBatches", fields: [voidedById], references: [id])
-  
+  // M10.10: Reconciliation fields
+  externalReference String? // Bank transfer reference, etc.
+  settledAt         DateTime? // When actually paid externally
+  settlementMethod  SettlementMethod? // How it was paid
+  receiptNote       String? // Receipt or settlement note
+
+  createdById  String
+  approvedById String?
+  approvedAt   DateTime?
+  postedById   String?
+  postedAt     DateTime?
+  paidById     String?
+  paidAt       DateTime?
+  voidedById   String?
+  voidedAt     DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  org        Org     @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  branch     Branch? @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  createdBy  User    @relation("CreatedRemittanceBatches", fields: [createdById], references: [id])
+  approvedBy User?   @relation("ApprovedRemittanceBatches", fields: [approvedById], references: [id])
+  postedBy   User?   @relation("PostedRemittanceBatches", fields: [postedById], references: [id])
+  paidBy     User?   @relation("PaidRemittanceBatches", fields: [paidById], references: [id])
+  voidedBy   User?   @relation("VoidedRemittanceBatches", fields: [voidedById], references: [id])
+
   lines        RemittanceLine[]
   journalLinks RemittanceJournalLink[]
-  sourceLinks  RemittanceSourceLink[]  // M10.10: Links to source payroll runs
+  sourceLinks  RemittanceSourceLink[] // M10.10: Links to source payroll runs
 
   @@unique([orgId, idempotencyKey])
   @@index([orgId, status])
@@ -4323,22 +4383,22 @@ model RemittanceSourceLink {
   batch      RemittanceBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
   payrollRun PayrollRun      @relation(fields: [payrollRunId], references: [id], onDelete: Cascade)
 
-  @@unique([payrollRunId])  // A payroll run can only be linked to ONE batch
+  @@unique([payrollRunId]) // A payroll run can only be linked to ONE batch
   @@index([batchId])
   @@map("remittance_source_links")
 }
 
 model RemittanceLine {
-  id                String   @id @default(cuid())
-  batchId           String
-  componentId       String?  // Optional link to CompensationComponent
-  liabilityAccountId String  // GL account being settled (e.g., Taxes Payable)
-  counterAccountId  String   // Cash/bank account for payment
-  amount            Decimal  @db.Decimal(12, 2)
-  payeeName         String?  // Name of tax authority/benefits provider
-  referenceCode     String?  // External reference (e.g., tax filing ID)
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  id                 String   @id @default(cuid())
+  batchId            String
+  componentId        String? // Optional link to CompensationComponent
+  liabilityAccountId String // GL account being settled (e.g., Taxes Payable)
+  counterAccountId   String // Cash/bank account for payment
+  amount             Decimal  @db.Decimal(12, 2)
+  payeeName          String? // Name of tax authority/benefits provider
+  referenceCode      String? // External reference (e.g., tax filing ID)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
   batch            RemittanceBatch        @relation(fields: [batchId], references: [id], onDelete: Cascade)
   component        CompensationComponent? @relation(fields: [componentId], references: [id], onDelete: SetNull)
@@ -4354,7 +4414,7 @@ model RemittanceJournalLink {
   id             String   @id @default(cuid())
   batchId        String
   journalEntryId String
-  type           String   // "PAYMENT" or "REVERSAL"
+  type           String // "PAYMENT" or "REVERSAL"
   createdAt      DateTime @default(now())
 
   batch        RemittanceBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
@@ -4392,14 +4452,14 @@ enum RoundingRule {
 model CompensationComponent {
   id           String                    @id @default(cuid())
   orgId        String
-  branchId     String?                   // NULL = org-level, set = branch override
+  branchId     String? // NULL = org-level, set = branch override
   code         String
   name         String
   type         CompensationComponentType
   calcMethod   CalcMethod
   rate         Decimal                   @default(0) @db.Decimal(10, 4)
   amount       Decimal                   @default(0) @db.Decimal(12, 2)
-  earningsCode String?                   // For PERCENT_OF_EARNINGS_CODE method
+  earningsCode String? // For PERCENT_OF_EARNINGS_CODE method
   capMin       Decimal?                  @db.Decimal(12, 2)
   capMax       Decimal?                  @db.Decimal(12, 2)
   roundingRule RoundingRule              @default(HALF_UP_CENTS)
@@ -4407,11 +4467,11 @@ model CompensationComponent {
   createdAt    DateTime                  @default(now())
   updatedAt    DateTime                  @updatedAt
 
-  org    Org     @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  branch Branch? @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  org                Org                             @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  branch             Branch?                         @relation(fields: [branchId], references: [id], onDelete: SetNull)
   employeeComponents EmployeeCompensationComponent[]
   payslipLineItems   PayslipLineItem[]
-  remittanceLines    RemittanceLine[]  // M10.9: Remittance lines linked to this component
+  remittanceLines    RemittanceLine[] // M10.9: Remittance lines linked to this component
   remittanceMapping  CompensationRemittanceMapping? // M10.10: Provider mapping
 
   @@unique([orgId, code, branchId])
@@ -4430,8 +4490,8 @@ model EmployeeCompensationProfile {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
-  org        Org    @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  user       User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  org        Org                             @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  user       User                            @relation(fields: [userId], references: [id], onDelete: Cascade)
   components EmployeeCompensationComponent[]
 
   @@index([orgId, userId])
@@ -4456,27 +4516,27 @@ model EmployeeCompensationComponent {
 
 // M10.7: Payslip generated from payroll run line
 model Payslip {
-  id                  String   @id @default(cuid())
-  orgId               String
-  payrollRunId        String
-  payrollRunLineId    String   @unique
-  userId              String
-  payPeriodStart      DateTime
-  payPeriodEnd        DateTime
-  grossEarnings       Decimal  @db.Decimal(12, 2)
-  preTaxDeductions    Decimal  @db.Decimal(12, 2)
-  taxableWages        Decimal  @db.Decimal(12, 2)
-  taxesWithheld       Decimal  @db.Decimal(12, 2)
-  postTaxDeductions   Decimal  @db.Decimal(12, 2)
-  netPay              Decimal  @db.Decimal(12, 2)
-  employerContribTotal Decimal @db.Decimal(12, 2)
-  totalEmployerCost   Decimal  @db.Decimal(12, 2)
-  createdAt           DateTime @default(now())
+  id                   String   @id @default(cuid())
+  orgId                String
+  payrollRunId         String
+  payrollRunLineId     String   @unique
+  userId               String
+  payPeriodStart       DateTime
+  payPeriodEnd         DateTime
+  grossEarnings        Decimal  @db.Decimal(12, 2)
+  preTaxDeductions     Decimal  @db.Decimal(12, 2)
+  taxableWages         Decimal  @db.Decimal(12, 2)
+  taxesWithheld        Decimal  @db.Decimal(12, 2)
+  postTaxDeductions    Decimal  @db.Decimal(12, 2)
+  netPay               Decimal  @db.Decimal(12, 2)
+  employerContribTotal Decimal  @db.Decimal(12, 2)
+  totalEmployerCost    Decimal  @db.Decimal(12, 2)
+  createdAt            DateTime @default(now())
 
-  org            Org            @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  payrollRun     PayrollRun     @relation(fields: [payrollRunId], references: [id], onDelete: Cascade)
-  payrollRunLine PayrollRunLine @relation(fields: [payrollRunLineId], references: [id], onDelete: Cascade)
-  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  org            Org               @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  payrollRun     PayrollRun        @relation(fields: [payrollRunId], references: [id], onDelete: Cascade)
+  payrollRunLine PayrollRunLine    @relation(fields: [payrollRunLineId], references: [id], onDelete: Cascade)
+  user           User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   lineItems      PayslipLineItem[]
 
   @@index([orgId, userId])
@@ -4499,4 +4559,145 @@ model PayslipLineItem {
 
   @@index([payslipId])
   @@map("payslip_line_items")
+}
+
+// ===== M10.11: Workforce Availability + Shift Swaps + Open Shifts =====
+
+// M10.11: Weekly recurring availability per user
+model WorkforceAvailability {
+  id        String   @id @default(cuid())
+  orgId     String
+  userId    String
+  dayOfWeek Int // 0=Sunday, 6=Saturday
+  startTime String // HH:MM format
+  endTime   String // HH:MM format
+  timezone  String? // Optional timezone override
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  org  Org  @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, dayOfWeek, startTime])
+  @@index([orgId])
+  @@index([userId])
+  @@map("workforce_availability")
+}
+
+// M10.11: Date-based availability exceptions
+model WorkforceAvailabilityException {
+  id          String   @id @default(cuid())
+  orgId       String
+  userId      String
+  date        DateTime @db.Date
+  isAvailable Boolean  @default(false)
+  startTime   String? // HH:MM if available
+  endTime     String? // HH:MM if available
+  reason      String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  org  Org  @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@index([orgId])
+  @@index([userId])
+  @@map("workforce_availability_exceptions")
+}
+
+// M10.11: Enhanced shift swap request with lifecycle
+model ShiftSwapRequest {
+  id               String                 @id @default(cuid())
+  orgId            String
+  branchId         String
+  type             ShiftSwapRequestType
+  status           ShiftSwapRequestStatus @default(DRAFT)
+  requesterId      String
+  requesterShiftId String
+  targetUserId     String? // For DIRECT_SWAP
+  targetShiftId    String? // For DIRECT_SWAP
+  claimerId        String? // For OFFER_SHIFT when claimed
+  reason           String?
+  declineReason    String?
+  rejectReason     String?
+  requestedAt      DateTime?
+  acceptedAt       DateTime?
+  declinedAt       DateTime?
+  approvedAt       DateTime?
+  approvedById     String?
+  rejectedAt       DateTime?
+  rejectedById     String?
+  appliedAt        DateTime?
+  cancelledAt      DateTime?
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
+
+  org            Org             @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  branch         Branch          @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  requester      User            @relation("SwapRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+  requesterShift ScheduledShift  @relation("RequesterShift", fields: [requesterShiftId], references: [id], onDelete: Cascade)
+  targetUser     User?           @relation("SwapTarget", fields: [targetUserId], references: [id], onDelete: SetNull)
+  targetShift    ScheduledShift? @relation("TargetShift", fields: [targetShiftId], references: [id], onDelete: SetNull)
+  claimer        User?           @relation("SwapClaimer", fields: [claimerId], references: [id], onDelete: SetNull)
+  approvedBy     User?           @relation("SwapApprover", fields: [approvedById], references: [id], onDelete: SetNull)
+  rejectedBy     User?           @relation("SwapRejecter", fields: [rejectedById], references: [id], onDelete: SetNull)
+
+  @@index([orgId])
+  @@index([branchId])
+  @@index([requesterId])
+  @@index([targetUserId])
+  @@index([status])
+  @@map("shift_swap_requests")
+}
+
+// M10.11: Open shift claims
+model OpenShiftClaim {
+  id           String    @id @default(cuid())
+  orgId        String
+  shiftId      String
+  claimerId    String
+  status       String    @default("PENDING") // PENDING, APPROVED, REJECTED, WITHDRAWN
+  approvedById String?
+  approvedAt   DateTime?
+  rejectedById String?
+  rejectedAt   DateTime?
+  rejectReason String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  org        Org            @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  shift      ScheduledShift @relation(fields: [shiftId], references: [id], onDelete: Cascade)
+  claimer    User           @relation("ShiftClaimant", fields: [claimerId], references: [id], onDelete: Cascade)
+  approvedBy User?          @relation("ClaimApprover", fields: [approvedById], references: [id], onDelete: SetNull)
+  rejectedBy User?          @relation("ClaimRejecter", fields: [rejectedById], references: [id], onDelete: SetNull)
+
+  @@unique([shiftId, claimerId])
+  @@index([orgId])
+  @@index([shiftId])
+  @@index([claimerId])
+  @@map("open_shift_claims")
+}
+
+// M10.11: Workforce notification log
+model WorkforceNotificationLog {
+  id            String                    @id @default(cuid())
+  orgId         String
+  type          WorkforceNotificationType
+  targetUserId  String
+  performedById String?
+  entityType    String // SwapRequest, OpenShift, Availability
+  entityId      String
+  payload       Json?
+  readAt        DateTime?
+  createdAt     DateTime                  @default(now())
+
+  org         Org   @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  targetUser  User  @relation("NotificationTarget", fields: [targetUserId], references: [id], onDelete: Cascade)
+  performedBy User? @relation("NotificationPerformer", fields: [performedById], references: [id], onDelete: SetNull)
+
+  @@index([orgId])
+  @@index([targetUserId])
+  @@index([type])
+  @@map("workforce_notification_logs")
 }

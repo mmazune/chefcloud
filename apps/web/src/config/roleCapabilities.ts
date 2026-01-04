@@ -26,6 +26,9 @@ import {
   TrendingUp,
   Clock,
   CheckCircle,
+  ArrowLeftRight,
+  CalendarClock,
+  Hand,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -121,7 +124,16 @@ export const ROLE_CAPABILITIES: Record<JobRole, RoleCapability> = {
           { label: 'Schedule', href: '/workforce/schedule', icon: Calendar },
           { label: 'Timeclock', href: '/workforce/timeclock', icon: Clock },
           { label: 'Approvals', href: '/workforce/approvals', icon: CheckCircle },
+          { label: 'Swap Approvals', href: '/workforce/swaps', icon: ArrowLeftRight },
           { label: 'Labor Reports', href: '/workforce/labor', icon: BarChart3 },
+        ],
+      },
+      {
+        title: 'My Schedule',
+        items: [
+          { label: 'My Availability', href: '/workforce/my-availability', icon: CalendarClock },
+          { label: 'My Swaps', href: '/workforce/my-swaps', icon: ArrowLeftRight },
+          { label: 'Open Shifts', href: '/workforce/open-shifts', icon: Hand },
         ],
       },
       {
@@ -168,7 +180,16 @@ export const ROLE_CAPABILITIES: Record<JobRole, RoleCapability> = {
           { label: 'Schedule', href: '/workforce/schedule', icon: Calendar },
           { label: 'Timeclock', href: '/workforce/timeclock', icon: Clock },
           { label: 'Approvals', href: '/workforce/approvals', icon: CheckCircle },
+          { label: 'Swap Approvals', href: '/workforce/swaps', icon: ArrowLeftRight },
           { label: 'Labor Reports', href: '/workforce/labor', icon: BarChart3 },
+        ],
+      },
+      {
+        title: 'My Schedule',
+        items: [
+          { label: 'My Availability', href: '/workforce/my-availability', icon: CalendarClock },
+          { label: 'My Swaps', href: '/workforce/my-swaps', icon: ArrowLeftRight },
+          { label: 'Open Shifts', href: '/workforce/open-shifts', icon: Hand },
         ],
       },
       {
@@ -218,6 +239,14 @@ export const ROLE_CAPABILITIES: Record<JobRole, RoleCapability> = {
           { label: 'Analytics', href: '/analytics', icon: BarChart3, description: 'Financial analytics' },
         ],
       },
+      {
+        title: 'My Schedule',
+        items: [
+          { label: 'My Availability', href: '/workforce/my-availability', icon: CalendarClock },
+          { label: 'My Swaps', href: '/workforce/my-swaps', icon: ArrowLeftRight },
+          { label: 'Open Shifts', href: '/workforce/open-shifts', icon: Hand },
+        ],
+      },
     ],
   },
 
@@ -245,6 +274,14 @@ export const ROLE_CAPABILITIES: Record<JobRole, RoleCapability> = {
         title: 'Settings',
         items: [
           { label: 'Settings', href: '/settings', icon: Settings },
+        ],
+      },
+      {
+        title: 'My Schedule',
+        items: [
+          { label: 'My Availability', href: '/workforce/my-availability', icon: CalendarClock },
+          { label: 'My Swaps', href: '/workforce/my-swaps', icon: ArrowLeftRight },
+          { label: 'Open Shifts', href: '/workforce/open-shifts', icon: Hand },
         ],
       },
     ],
@@ -275,6 +312,14 @@ export const ROLE_CAPABILITIES: Record<JobRole, RoleCapability> = {
           { label: 'Settings', href: '/settings', icon: Settings },
         ],
       },
+      {
+        title: 'My Schedule',
+        items: [
+          { label: 'My Availability', href: '/workforce/my-availability', icon: CalendarClock },
+          { label: 'My Swaps', href: '/workforce/my-swaps', icon: ArrowLeftRight },
+          { label: 'Open Shifts', href: '/workforce/open-shifts', icon: Hand },
+        ],
+      },
     ],
   },
 
@@ -296,12 +341,21 @@ export const ROLE_CAPABILITIES: Record<JobRole, RoleCapability> = {
         title: 'Workforce',
         items: [
           { label: 'Timeclock', href: '/workforce/timeclock', icon: Clock },
+          { label: 'Swap Approvals', href: '/workforce/swaps', icon: ArrowLeftRight },
         ],
       },
       {
         title: 'Overview',
         items: [
           { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+        ],
+      },
+      {
+        title: 'My Schedule',
+        items: [
+          { label: 'My Availability', href: '/workforce/my-availability', icon: CalendarClock },
+          { label: 'My Swaps', href: '/workforce/my-swaps', icon: ArrowLeftRight },
+          { label: 'Open Shifts', href: '/workforce/open-shifts', icon: Hand },
         ],
       },
       {
@@ -333,6 +387,14 @@ export const ROLE_CAPABILITIES: Record<JobRole, RoleCapability> = {
         ],
       },
       {
+        title: 'My Schedule',
+        items: [
+          { label: 'My Availability', href: '/workforce/my-availability', icon: CalendarClock },
+          { label: 'My Swaps', href: '/workforce/my-swaps', icon: ArrowLeftRight },
+          { label: 'Open Shifts', href: '/workforce/open-shifts', icon: Hand },
+        ],
+      },
+      {
         title: 'Settings',
         items: [
           { label: 'Settings', href: '/settings', icon: Settings },
@@ -361,6 +423,14 @@ export const ROLE_CAPABILITIES: Record<JobRole, RoleCapability> = {
         ],
       },
       {
+        title: 'My Schedule',
+        items: [
+          { label: 'My Availability', href: '/workforce/my-availability', icon: CalendarClock },
+          { label: 'My Swaps', href: '/workforce/my-swaps', icon: ArrowLeftRight },
+          { label: 'Open Shifts', href: '/workforce/open-shifts', icon: Hand },
+        ],
+      },
+      {
         title: 'Settings',
         items: [
           { label: 'Settings', href: '/settings', icon: Settings },
@@ -383,6 +453,14 @@ export const ROLE_CAPABILITIES: Record<JobRole, RoleCapability> = {
         ],
       },
       {
+        title: 'My Schedule',
+        items: [
+          { label: 'My Availability', href: '/workforce/my-availability', icon: CalendarClock },
+          { label: 'My Swaps', href: '/workforce/my-swaps', icon: ArrowLeftRight },
+          { label: 'Open Shifts', href: '/workforce/open-shifts', icon: Hand },
+        ],
+      },
+      {
         title: 'Settings',
         items: [
           { label: 'Settings', href: '/settings', icon: Settings },
@@ -402,6 +480,14 @@ export const ROLE_CAPABILITIES: Record<JobRole, RoleCapability> = {
         items: [
           { label: 'POS', href: '/pos', icon: ShoppingCart },
           { label: 'Inventory', href: '/inventory', icon: Package },
+        ],
+      },
+      {
+        title: 'My Schedule',
+        items: [
+          { label: 'My Availability', href: '/workforce/my-availability', icon: CalendarClock },
+          { label: 'My Swaps', href: '/workforce/my-swaps', icon: ArrowLeftRight },
+          { label: 'Open Shifts', href: '/workforce/open-shifts', icon: Hand },
         ],
       },
       {
@@ -431,6 +517,14 @@ export const ROLE_CAPABILITIES: Record<JobRole, RoleCapability> = {
         items: [
           { label: 'POS', href: '/pos', icon: ShoppingCart },
           { label: 'Staff', href: '/staff', icon: Users },
+        ],
+      },
+      {
+        title: 'My Schedule',
+        items: [
+          { label: 'My Availability', href: '/workforce/my-availability', icon: CalendarClock },
+          { label: 'My Swaps', href: '/workforce/my-swaps', icon: ArrowLeftRight },
+          { label: 'Open Shifts', href: '/workforce/open-shifts', icon: Hand },
         ],
       },
       {
