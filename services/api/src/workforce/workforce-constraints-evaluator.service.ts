@@ -307,7 +307,7 @@ export class WorkforceConstraintsEvaluatorService {
     shiftDate.setUTCHours(0, 0, 0, 0);
 
     let consecutiveDays = 0;
-    let checkDate = new Date(shiftDate);
+    const checkDate = new Date(shiftDate);
     checkDate.setUTCDate(checkDate.getUTCDate() - 1); // Start from yesterday
 
     // Count backwards up to 7 days

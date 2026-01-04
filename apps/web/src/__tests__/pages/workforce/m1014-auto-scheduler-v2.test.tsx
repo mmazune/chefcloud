@@ -24,6 +24,22 @@ jest.mock('next/router', () => ({
   }),
 }));
 
+// Mock useAuth for L4+ role (top-level default)
+jest.mock('@/contexts/AuthContext', () => ({
+  useAuth: () => ({
+    user: {
+      id: 'manager-1',
+      email: 'manager@test.com',
+      displayName: 'Manager',
+      roleLevel: 'L4',
+      org: { id: 'org-1', name: 'Test Org' },
+      branchId: 'branch-1',
+    },
+    loading: false,
+    error: null,
+  }),
+}));
+
 // Mock API client
 const mockGet = jest.fn();
 const mockPost = jest.fn();
@@ -53,22 +69,6 @@ const createWrapper = () => {
 describe('Auto-Scheduler v2 - ASSIGNED Mode (M10.14)', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-
-    // Mock L4 user
-    jest.doMock('@/contexts/AuthContext', () => ({
-      useAuth: () => ({
-        user: {
-          id: 'manager-1',
-          email: 'manager@test.com',
-          displayName: 'Manager',
-          roleLevel: 'L4',
-          org: { id: 'org-1', name: 'Test Org' },
-          branchId: 'branch-1',
-        },
-        loading: false,
-        error: null,
-      }),
-    }));
 
     // Mock branches
     mockGet.mockImplementation((url: string) => {
@@ -168,22 +168,6 @@ describe('Auto-Scheduler v2 - Publish Workflow (M10.14)', () => {
   beforeEach(() => {
     jest.clearAllMocks();
 
-    // Mock L4 user
-    jest.doMock('@/contexts/AuthContext', () => ({
-      useAuth: () => ({
-        user: {
-          id: 'manager-1',
-          email: 'manager@test.com',
-          displayName: 'Manager',
-          roleLevel: 'L4',
-          org: { id: 'org-1', name: 'Test Org' },
-          branchId: 'branch-1',
-        },
-        loading: false,
-        error: null,
-      }),
-    }));
-
     // Mock applied run (ready for publish)
     mockGet.mockImplementation((url: string) => {
       if (url.includes('/orgs/branches')) {
@@ -271,22 +255,6 @@ describe('Auto-Scheduler v2 - Published Run Display (M10.14)', () => {
   beforeEach(() => {
     jest.clearAllMocks();
 
-    // Mock L3 user (read-only)
-    jest.doMock('@/contexts/AuthContext', () => ({
-      useAuth: () => ({
-        user: {
-          id: 'chef-1',
-          email: 'chef@test.com',
-          displayName: 'Chef',
-          roleLevel: 'L3',
-          org: { id: 'org-1', name: 'Test Org' },
-          branchId: 'branch-1',
-        },
-        loading: false,
-        error: null,
-      }),
-    }));
-
     // Mock published run
     mockGet.mockImplementation((url: string) => {
       if (url.includes('/orgs/branches')) {
@@ -354,22 +322,6 @@ describe('Auto-Scheduler v2 - Mode Selector (M10.14)', () => {
   beforeEach(() => {
     jest.clearAllMocks();
 
-    // Mock L4 user
-    jest.doMock('@/contexts/AuthContext', () => ({
-      useAuth: () => ({
-        user: {
-          id: 'manager-1',
-          email: 'manager@test.com',
-          displayName: 'Manager',
-          roleLevel: 'L4',
-          org: { id: 'org-1', name: 'Test Org' },
-          branchId: 'branch-1',
-        },
-        loading: false,
-        error: null,
-      }),
-    }));
-
     mockGet.mockImplementation((url: string) => {
       if (url.includes('/orgs/branches')) {
         return Promise.resolve({
@@ -396,7 +348,7 @@ describe('Auto-Scheduler v2 - Mode Selector (M10.14)', () => {
       // Look for mode selector or toggle
       const assignedOption = screen.queryByText(/ASSIGNED/i);
       const modeToggle = screen.queryByRole('checkbox', { name: /assign/i });
-      const modeSelect = screen.queryByRole('combobox');
+      // Note: modeSelect check removed - not needed for this test
 
       // If mode selector exists, interact with it
       if (modeToggle) {
@@ -416,10 +368,10 @@ describe('Auto-Scheduler v2 - Mode Selector (M10.14)', () => {
 
     // Check if post was called with mode parameter
     await waitFor(() => {
-      const generateCalls = mockPost.mock.calls.filter(
+      const _generateCalls = mockPost.mock.calls.filter(
         (call: unknown[]) => typeof call[0] === 'string' && call[0].includes('/generate')
       );
-      // Note: May be empty if UI hasn't been updated yet
+      // Note: Prefixed with _ to indicate intentionally unused for future assertions
     });
   });
 });

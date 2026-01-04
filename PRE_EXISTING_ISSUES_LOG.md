@@ -93,6 +93,31 @@ C:\Users\arman\Desktop\nimbusPOS\nimbuspos\services\api\test\m1-kds-enterprise.e
 
 ---
 
+## PRE-011: RateLimitGuard setInterval Open Handle
+
+**Category**: test-infrastructure  
+**First Observed**: M10.14 Finalization (2025-01-04)  
+**Impact**: LOW - Requires --forceExit flag for E2E tests  
+**Status**: OPEN
+
+**Summary**: RateLimitGuard creates a setInterval for cleanup that is not stopped on module teardown, causing Jest to detect open handles.
+
+**Evidence**:
+```
+services/api/src/common/rate-limit.guard.ts:36
+  this.cleanupInterval = setInterval(() => this.cleanup(), 5 * 60 * 1000);
+  
+Jest output:
+  A worker process has failed to exit gracefully and has been force exited.
+  This is likely caused by tests leaking due to improper teardown.
+```
+
+**Workaround**: Use `--forceExit` flag with Jest E2E tests.
+
+**Future Fix**: Add `onModuleDestroy()` lifecycle hook to clear the interval.
+
+---
+
 ## Previously Logged Issues (Reference)
 
 - PRE-001 through PRE-006: See git history for M8.x milestones
