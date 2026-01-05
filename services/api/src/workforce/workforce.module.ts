@@ -1,5 +1,5 @@
 /**
- * E43-s1 + M10.1 + M10.3 + M10.5 + M10.11 + M10.12 + M10.17: Workforce Module
+ * E43-s1 + M10.1 + M10.3 + M10.5 + M10.11 + M10.12 + M10.17 + M10.20: Workforce Module
  *
  * Provides leave management, roster, time clock, payroll export,
  * M10.1 shift scheduling, timeclock, approvals, and reporting.
@@ -8,6 +8,7 @@
  * M10.11 availability, swaps, open shifts, conflicts, notifications.
  * M10.12 labor forecasting, staffing planner, variance, alerts, exports.
  * M10.17 leave management: types, policies, accrual, requests, approvals, exports.
+ * M10.20 geo-fencing: enforcement, manager overrides, reporting, exports.
  */
 
 import { Module, forwardRef } from '@nestjs/common';
@@ -105,6 +106,11 @@ import { WorkforceComplianceService } from './workforce-compliance.service';
 import { ComplianceExportService } from './compliance-export.service';
 import { ComplianceController, MyComplianceController, TimeclockExportController } from './compliance.controller';
 
+// M10.20: Geo-Fencing Enforcement + Manager Overrides + Reporting
+import { GeoFenceService } from './geofence.service';
+import { GeoFenceReportingService } from './geofence-reporting.service';
+import { GeoFenceController } from './geofence.controller';
+
 @Module({
   imports: [
     forwardRef(() => AccountingModule), // E43-s2
@@ -144,6 +150,7 @@ import { ComplianceController, MyComplianceController, TimeclockExportController
     ComplianceController, // M10.19
     MyComplianceController, // M10.19
     TimeclockExportController, // M10.19
+    GeoFenceController, // M10.20
   ],
   providers: [
     WorkforceService,
@@ -186,6 +193,8 @@ import { ComplianceController, MyComplianceController, TimeclockExportController
     LeaveProjectionService, // M10.18
     WorkforceComplianceService, // M10.19
     ComplianceExportService, // M10.19
+    GeoFenceService, // M10.20
+    GeoFenceReportingService, // M10.20
     PrismaService,
   ],
   exports: [
@@ -229,6 +238,8 @@ import { ComplianceController, MyComplianceController, TimeclockExportController
     LeaveProjectionService, // M10.18
     WorkforceComplianceService, // M10.19
     ComplianceExportService, // M10.19
+    GeoFenceService, // M10.20
+    GeoFenceReportingService, // M10.20
   ],
 })
 export class WorkforceModule {}

@@ -475,6 +475,9 @@ model Org {
   staffingAlerts                 StaffingAlert[]
   // M10.13: Auto-Scheduler
   autoScheduleRuns               AutoScheduleRun[]
+  // M10.20: Geo-Fencing
+  branchGeoFences                BranchGeoFence[]
+  geoFenceEvents                 GeoFenceEvent[]
 
   @@map("orgs")
 }
@@ -581,6 +584,9 @@ model Branch {
   staffingAlerts         StaffingAlert[]
   // M10.13: Auto-Scheduler
   autoScheduleRuns       AutoScheduleRun[]
+  // M10.20: Geo-fence
+  geoFence               BranchGeoFence?
+  geoFenceEvents         GeoFenceEvent[]
 
   @@index([orgId, id])
   @@map("branches")
@@ -710,6 +716,13 @@ model User {
   assignedScheduleSuggestions     AutoScheduleSuggestion[]         @relation("SuggestionAssignee")
   // M10.19: Compliance Incidents
   complianceIncidents             OpsIncident[]                    @relation("ComplianceIncidents")
+  // M10.20: Geo-Fencing
+  clockInOverridesGiven           TimeEntry[]                      @relation("ClockInOverrideBy")
+  clockOutOverridesGiven          TimeEntry[]                      @relation("ClockOutOverrideBy")
+  createdGeoFences                BranchGeoFence[]                 @relation("GeoFenceCreatedBy")
+  updatedGeoFences                BranchGeoFence[]                 @relation("GeoFenceUpdatedBy")
+  geoFenceEvents                  GeoFenceEvent[]                  @relation("GeoFenceEventUser")
+  geoFenceEventOverrides          GeoFenceEvent[]                  @relation("GeoFenceEventOverrideBy")
 
   @@index([orgId, id])
   @@map("users")
@@ -3204,11 +3217,20 @@ model TimeEntry {
   clockOutLng             Float?   // Longitude of clock-out
   clockOutAccuracyMeters  Float?   // GPS accuracy in meters
   clockOutSource          String?  // GPS, WIFI, MANUAL
+  // M10.20: Geo-fence Override Fields
+  clockInOverride           Boolean?  // True if clock-in was overridden
+  clockInOverrideReason     String?   // Manager's reason for override
+  clockInOverrideById       String?   // Manager who approved override
+  clockOutOverride          Boolean?  // True if clock-out was overridden
+  clockOutOverrideReason    String?   // Manager's reason for override
+  clockOutOverrideById      String?   // Manager who approved override
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
 
   user              User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
   approvedBy        User?                 @relation("ApprovedTimeEntries", fields: [approvedById], references: [id], onDelete: SetNull)
+  clockInOverrideBy User?                 @relation("ClockInOverrideBy", fields: [clockInOverrideById], references: [id], onDelete: SetNull)
+  clockOutOverrideBy User?                @relation("ClockOutOverrideBy", fields: [clockOutOverrideById], references: [id], onDelete: SetNull)
   scheduledShift    ScheduledShift?       @relation(fields: [shiftId], references: [id], onDelete: SetNull)
   breakEntries      BreakEntry[]
   timesheetApproval TimesheetApproval? // M10.3: Timesheet approval record
@@ -3221,7 +3243,67 @@ model TimeEntry {
   @@map("time_entries")
 }
 
+// ===== M10.20: Branch Geo-Fence Configuration =====
+
+model BranchGeoFence {
+  id                   String   @id @default(cuid())
+  orgId                String
+  branchId             String   @unique // One geo-fence per branch
+  enabled              Boolean  @default(false)
+  centerLat            Float    // Center latitude
+  centerLng            Float    // Center longitude
+  radiusMeters         Int      @default(100) // Enforcement radius
+  enforceClockIn       Boolean  @default(true)
+  enforceClockOut      Boolean  @default(true)
+  allowManagerOverride Boolean  @default(true)
+  maxAccuracyMeters    Int      @default(200) // H7: Reject readings worse than this
+  createdById          String?
+  updatedById          String?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  org       Org     @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  branch    Branch  @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  createdBy User?   @relation("GeoFenceCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedBy User?   @relation("GeoFenceUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+
+  @@index([orgId])
+  @@index([branchId])
+  @@map("branch_geo_fences")
+}
+
+// ===== M10.20: Geo-fence Event Log =====
+
+model GeoFenceEvent {
+  id           String   @id @default(cuid())
+  orgId        String
+  branchId     String
+  userId       String
+  eventType    String   // BLOCKED, OVERRIDE_APPROVED, ACCURACY_FAILURE
+  reasonCode   String?  // OUTSIDE_GEOFENCE, ACCURACY_TOO_LOW, MISSING_LOCATION
+  clockAction  String   // CLOCK_IN, CLOCK_OUT
+  lat          Float?
+  lng          Float?
+  accuracyMeters Float?
+  distanceMeters Float?
+  radiusMeters   Int?
+  overrideById   String?
+  overrideReason String?
+  createdAt    DateTime @default(now())
+
+  org      Org    @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  branch   Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  user     User   @relation("GeoFenceEventUser", fields: [userId], references: [id], onDelete: Cascade)
+  overrideBy User? @relation("GeoFenceEventOverrideBy", fields: [overrideById], references: [id], onDelete: SetNull)
+
+  @@index([orgId, branchId, createdAt])
+  @@index([userId])
+  @@index([eventType])
+  @@map("geo_fence_events")
+}
+
 // ===== M10.1: Workforce Core - Shift Scheduling =====
+
 
 model ScheduledShift {
   id              String      @id @default(cuid())

@@ -52,13 +52,19 @@ export enum WorkforceAuditAction {
   LEAVE_REJECTED = 'LEAVE_REJECTED',
   LEAVE_CANCELLED = 'LEAVE_CANCELLED',
   LEAVE_CONFLICT_OVERRIDE = 'LEAVE_CONFLICT_OVERRIDE',
+  // M10.20: Geo-Fencing
+  GEOFENCE_CONFIG_CREATED = 'GEOFENCE_CONFIG_CREATED',
+  GEOFENCE_CONFIG_UPDATED = 'GEOFENCE_CONFIG_UPDATED',
+  GEOFENCE_CONFIG_DELETED = 'GEOFENCE_CONFIG_DELETED',
+  GEOFENCE_OVERRIDE_CLOCKIN = 'GEOFENCE_OVERRIDE_CLOCKIN',
+  GEOFENCE_OVERRIDE_CLOCKOUT = 'GEOFENCE_OVERRIDE_CLOCKOUT',
 }
 
 interface AuditLogData {
   orgId: string;
   performedById: string;
   action: WorkforceAuditAction;
-  entityType: 'SHIFT' | 'TIME_ENTRY' | 'BREAK' | 'TEMPLATE' | 'WorkforcePolicy' | 'PayPeriod' | 'TimesheetApproval' | 'PayrollExport' | 'TimeEntryAdjustment' | 'TimeEntry' | 'PayrollRun' | 'LeaveRequest';
+  entityType: 'SHIFT' | 'TIME_ENTRY' | 'BREAK' | 'TEMPLATE' | 'WorkforcePolicy' | 'PayPeriod' | 'TimesheetApproval' | 'PayrollExport' | 'TimeEntryAdjustment' | 'TimeEntry' | 'PayrollRun' | 'LeaveRequest' | 'BranchGeoFence';
   entityId: string;
   payload?: Record<string, unknown>;
 }
