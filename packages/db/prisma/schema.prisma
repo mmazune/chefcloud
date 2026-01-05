@@ -223,18 +223,42 @@ enum EventBookingStatus {
   CANCELLED
 }
 
+// M10.17: Leave Management Enums
+enum LeaveTypeCode {
+  ANNUAL
+  SICK
+  UNPAID
+  PARENTAL
+  BEREAVEMENT
+  JURY_DUTY
+  OTHER
+}
+
+enum LeaveRequestStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum AccrualMethod {
+  NONE
+  FIXED_MONTHLY
+  HOURS_WORKED_RATE
+}
+
+enum LedgerEntryType {
+  CREDIT
+  DEBIT
+}
+
+// Legacy enum kept for backward compatibility
 enum LeaveType {
   ANNUAL
   SICK
   UNPAID
   OTHER
-}
-
-enum LeaveRequestStatus {
-  PENDING
-  APPROVED
-  REJECTED
-  CANCELLED
 }
 
 enum ShiftSwapStatus {
@@ -596,8 +620,11 @@ model User {
   assignedBadges                  BadgeAsset[]
   procurementJobs                 ProcurementJob[]
   approvedPromotions              Promotion[]                      @relation("PromotionApprovals")
-  leaveRequests                   LeaveRequest[]
-  approvedLeaves                  LeaveRequest[]                   @relation("ApprovedLeave")
+  leaveRequests                   LegacyLeaveRequest[] // Legacy leave requests
+  approvedLeaves                  LegacyLeaveRequest[]             @relation("ApprovedLeave")
+  leaveRequestsV2                 LeaveRequestV2[]                 @relation("LeaveRequestsV2") // M10.17
+  approvedLeavesV2                LeaveRequestV2[]                 @relation("ApprovedLeaveV2") // M10.17
+  leaveBalanceLedger              LeaveBalanceLedger[] // M10.17
   dutyShifts                      DutyShift[]
   assignedDutyShifts              DutyShift[]                      @relation("AssignedShifts")
   swapsFrom                       ShiftSwap[]                      @relation("SwapFrom")
@@ -2921,30 +2948,118 @@ model PrepaidCredit {
   @@map("prepaid_credits")
 }
 
-// ===== E43-s1: Workforce Management =====
+// ===== M10.17: Enhanced Workforce Leave Management =====
 
+// M10.17: Leave Type Definition (org-level)
+model LeaveTypeDefinition {
+  id                 String        @id @default(cuid())
+  orgId              String
+  name               String // e.g., "Annual Leave", "Sick Leave"
+  code               LeaveTypeCode
+  isPaid             Boolean       @default(true)
+  requiresApproval   Boolean       @default(true)
+  minNoticeHours     Int           @default(0) // Minimum notice required
+  maxConsecutiveDays Int           @default(30) // Maximum consecutive days
+  isActive           Boolean       @default(true)
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  policies         LeavePolicy[]
+  leaveRequests    LeaveRequestV2[]
+  balanceLedger    LeaveBalanceLedger[]
+
+  @@unique([orgId, code])
+  @@index([orgId, isActive])
+  @@map("leave_type_definitions")
+}
+
+// M10.17: Leave Policy with accrual rules
 model LeavePolicy {
-  id                    String   @id @default(cuid())
+  id                    String        @id @default(cuid())
   orgId                 String
+  branchId              String? // Optional branch override
+  leaveTypeId           String
   name                  String
-  accrualHoursPerMonth  Decimal  @default(0) @db.Decimal(10, 2)
-  maxCarryOverHours     Decimal  @default(0) @db.Decimal(10, 2)
-  maxUninformedAbsences Int      @default(0)
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
+  accrualMethod         AccrualMethod @default(NONE)
+  accrualRate           Decimal       @default(0) @db.Decimal(10, 4) // Hours per unit
+  carryoverMaxHours     Decimal       @default(0) @db.Decimal(10, 2)
+  maxBalanceHours       Decimal       @default(480) @db.Decimal(10, 2) // Cap at ~60 days
+  roundingPrecision     Int           @default(2) // Decimal places for rounding
+  maxUninformedAbsences Int           @default(0)
+  isActive              Boolean       @default(true)
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
 
-  @@index([orgId])
+  leaveType LeaveTypeDefinition @relation(fields: [leaveTypeId], references: [id], onDelete: Cascade)
+
+  @@unique([orgId, leaveTypeId, branchId])
+  @@index([orgId, isActive])
   @@map("leave_policies")
 }
 
-model LeaveRequest {
+// M10.17: Enhanced Leave Request with workflow states
+model LeaveRequestV2 {
+  id               String             @id @default(cuid())
+  orgId            String
+  branchId         String
+  userId           String
+  leaveTypeId      String
+  startDate        DateTime
+  endDate          DateTime
+  totalHours       Decimal            @db.Decimal(10, 2)
+  status           LeaveRequestStatus @default(DRAFT)
+  reason           String?
+  approvedById     String?
+  approvedAt       DateTime?
+  rejectionReason  String?
+  overrideConflict Boolean            @default(false) // M10.17: Override shift conflict
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  user       User                 @relation("LeaveRequestsV2", fields: [userId], references: [id], onDelete: Cascade)
+  approvedBy User?                @relation("ApprovedLeaveV2", fields: [approvedById], references: [id], onDelete: SetNull)
+  leaveType  LeaveTypeDefinition  @relation(fields: [leaveTypeId], references: [id], onDelete: Restrict)
+  ledgerEntries LeaveBalanceLedger[]
+
+  @@index([orgId, branchId, status])
+  @@index([userId, startDate, endDate])
+  @@index([leaveTypeId])
+  @@map("leave_requests_v2")
+}
+
+// M10.17: Leave Balance Ledger for accrual tracking
+model LeaveBalanceLedger {
+  id            String          @id @default(cuid())
+  orgId         String
+  userId        String
+  leaveTypeId   String
+  entryType     LedgerEntryType
+  deltaHours    Decimal         @db.Decimal(10, 4) // Can be negative for corrections
+  balanceAfter  Decimal         @db.Decimal(10, 4) // Running balance
+  reason        String // e.g., "Monthly accrual", "Leave approved", "Manual adjustment"
+  referenceId   String? // Link to LeaveRequestV2 or accrual run
+  referenceType String? // "LEAVE_REQUEST" | "ACCRUAL" | "MANUAL" | "CARRYOVER"
+  createdAt     DateTime        @default(now())
+
+  user      User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  leaveType LeaveTypeDefinition  @relation(fields: [leaveTypeId], references: [id], onDelete: Restrict)
+  leaveRequest LeaveRequestV2?   @relation(fields: [referenceId], references: [id], onDelete: SetNull)
+
+  @@index([orgId, userId, leaveTypeId])
+  @@index([createdAt])
+  @@index([referenceId])
+  @@map("leave_balance_ledger")
+}
+
+// Legacy model kept for backward compatibility
+model LegacyLeaveRequest {
   id           String             @id @default(cuid())
   orgId        String
   userId       String
   type         LeaveType
   startDate    DateTime
   endDate      DateTime
-  status       LeaveRequestStatus @default(PENDING)
+  status       LeaveRequestStatus @default(DRAFT)
   approvedById String?
   approvedAt   DateTime?
   reason       String?

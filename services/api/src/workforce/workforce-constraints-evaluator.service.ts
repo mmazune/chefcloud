@@ -1,5 +1,5 @@
 /**
- * M10.14: Workforce Constraints Evaluator Service
+ * M10.14 + M10.17: Workforce Constraints Evaluator Service
  *
  * Evaluates scheduling constraints for candidate assignment:
  * - OVERLAP: User already has a shift overlapping the time slot
@@ -7,6 +7,7 @@
  * - MAX_WEEKLY: Maximum weekly hours exceeded
  * - MAX_CONSEC_DAYS: Maximum consecutive work days exceeded
  * - PAY_PERIOD_LOCKED: Pay period is locked for edits
+ * - LEAVE_APPROVED: User has approved leave during the shift period (M10.17)
  */
 
 import { Injectable } from '@nestjs/common';
@@ -19,6 +20,7 @@ export const CONSTRAINT_REASONS = {
   MAX_WEEKLY: 'MAX_WEEKLY',
   MAX_CONSEC_DAYS: 'MAX_CONSEC_DAYS',
   PAY_PERIOD_LOCKED: 'PAY_PERIOD_LOCKED',
+  LEAVE_APPROVED: 'LEAVE_APPROVED', // M10.17
 } as const;
 
 export type ConstraintReason = (typeof CONSTRAINT_REASONS)[keyof typeof CONSTRAINT_REASONS];
@@ -164,6 +166,15 @@ export class WorkforceConstraintsEvaluatorService {
       violations.push({
         reason: CONSTRAINT_REASONS.PAY_PERIOD_LOCKED,
         message: 'Pay period is locked',
+      });
+    }
+
+    // 6. Check for approved leave (M10.17)
+    const hasApprovedLeave = await this.checkApprovedLeave(userId, shiftStart, shiftEnd);
+    if (hasApprovedLeave) {
+      violations.push({
+        reason: CONSTRAINT_REASONS.LEAVE_APPROVED,
+        message: 'User has approved leave during this period',
       });
     }
 
@@ -351,6 +362,41 @@ export class WorkforceConstraintsEvaluatorService {
     });
 
     return period !== null;
+  }
+
+  /**
+   * M10.17: Check if user has approved leave during the shift period.
+   */
+  private async checkApprovedLeave(
+    userId: string,
+    shiftStart: Date,
+    shiftEnd: Date,
+  ): Promise<boolean> {
+    const overlappingLeave = await this.prisma.client.leaveRequestV2.findFirst({
+      where: {
+        userId,
+        status: 'APPROVED',
+        OR: [
+          // Shift starts during leave
+          {
+            startDate: { lte: shiftStart },
+            endDate: { gt: shiftStart },
+          },
+          // Shift ends during leave
+          {
+            startDate: { lt: shiftEnd },
+            endDate: { gte: shiftEnd },
+          },
+          // Shift contains leave
+          {
+            startDate: { gte: shiftStart },
+            endDate: { lte: shiftEnd },
+          },
+        ],
+      },
+    });
+
+    return overlappingLeave !== null;
   }
 
   // ===== HELPERS =====

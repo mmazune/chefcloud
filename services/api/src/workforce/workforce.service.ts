@@ -26,15 +26,19 @@ export class WorkforceService {
     endDate: Date;
     reason?: string;
   }): Promise<any> {
-    return this.prisma.client.leaveRequest.create({
+    // M10.17: Legacy shim - routes to new LeaveRequestV2
+    // In production, should use LeaveRequestsService directly
+    return this.prisma.client.leaveRequestV2.create({
       data: {
         orgId: data.orgId,
+        branchId: '', // Legacy: no branch scoping
         userId: data.userId,
-        type: data.type,
+        leaveTypeId: '', // Legacy: needs migration to use leaveTypeId
         startDate: data.startDate,
         endDate: data.endDate,
+        totalHours: 0, // Legacy: not calculated
         reason: data.reason,
-        status: 'PENDING',
+        status: 'SUBMITTED',
       },
       include: {
         user: {
@@ -51,13 +55,14 @@ export class WorkforceService {
 
   /**
    * Approve or reject leave request (L3+)
+   * @deprecated Use LeaveRequestsService.approve() from M10.17
    */
   async approveLeaveRequest(
     id: string,
     approverId: string,
     action: 'APPROVED' | 'REJECTED',
   ): Promise<any> {
-    const leaveRequest = await this.prisma.client.leaveRequest.findUnique({
+    const leaveRequest = await this.prisma.client.leaveRequestV2.findUnique({
       where: { id },
     });
 
@@ -65,11 +70,11 @@ export class WorkforceService {
       throw new NotFoundException('Leave request not found');
     }
 
-    if (leaveRequest.status !== 'PENDING') {
+    if (leaveRequest.status !== 'SUBMITTED') {
       throw new BadRequestException(`Leave request already ${leaveRequest.status.toLowerCase()}`);
     }
 
-    return this.prisma.client.leaveRequest.update({
+    return this.prisma.client.leaveRequestV2.update({
       where: { id },
       data: {
         status: action,
@@ -353,7 +358,7 @@ export class WorkforceService {
     });
 
     // Get leave requests in the same period (for future integration)
-    await this.prisma.client.leaveRequest.findMany({
+    await this.prisma.client.leaveRequestV2.findMany({
       where: {
         orgId: filters.orgId,
         status: 'APPROVED',
@@ -465,11 +470,10 @@ export class WorkforceService {
     // Get all users with leave/absence issues
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
-    const leaveRequests = await this.prisma.client.leaveRequest.findMany({
+    const leaveRequests = await this.prisma.client.leaveRequestV2.findMany({
       where: {
         orgId,
         startDate: { gte: thirtyDaysAgo },
-        type: 'UNPAID', // Focus on uninformed absences
       },
       include: {
         user: {

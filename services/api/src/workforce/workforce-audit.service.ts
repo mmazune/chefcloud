@@ -45,13 +45,20 @@ export enum WorkforceAuditAction {
   PAYROLL_RUN_POSTED = 'PAYROLL_RUN_POSTED',
   PAYROLL_RUN_PAID = 'PAYROLL_RUN_PAID',
   PAYROLL_RUN_VOIDED = 'PAYROLL_RUN_VOIDED',
+  // M10.17: Leave Management
+  LEAVE_REQUESTED = 'LEAVE_REQUESTED',
+  LEAVE_SUBMITTED = 'LEAVE_SUBMITTED',
+  LEAVE_APPROVED = 'LEAVE_APPROVED',
+  LEAVE_REJECTED = 'LEAVE_REJECTED',
+  LEAVE_CANCELLED = 'LEAVE_CANCELLED',
+  LEAVE_CONFLICT_OVERRIDE = 'LEAVE_CONFLICT_OVERRIDE',
 }
 
 interface AuditLogData {
   orgId: string;
   performedById: string;
   action: WorkforceAuditAction;
-  entityType: 'SHIFT' | 'TIME_ENTRY' | 'BREAK' | 'TEMPLATE' | 'WorkforcePolicy' | 'PayPeriod' | 'TimesheetApproval' | 'PayrollExport' | 'TimeEntryAdjustment' | 'TimeEntry' | 'PayrollRun';
+  entityType: 'SHIFT' | 'TIME_ENTRY' | 'BREAK' | 'TEMPLATE' | 'WorkforcePolicy' | 'PayPeriod' | 'TimesheetApproval' | 'PayrollExport' | 'TimeEntryAdjustment' | 'TimeEntry' | 'PayrollRun' | 'LeaveRequest';
   entityId: string;
   payload?: Record<string, unknown>;
 }

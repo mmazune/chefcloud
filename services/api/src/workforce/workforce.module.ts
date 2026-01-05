@@ -1,5 +1,5 @@
 /**
- * E43-s1 + M10.1 + M10.3 + M10.5 + M10.11 + M10.12: Workforce Module
+ * E43-s1 + M10.1 + M10.3 + M10.5 + M10.11 + M10.12 + M10.17: Workforce Module
  *
  * Provides leave management, roster, time clock, payroll export,
  * M10.1 shift scheduling, timeclock, approvals, and reporting.
@@ -7,6 +7,7 @@
  * M10.5 self-service: my-schedule, my-time, adjustments.
  * M10.11 availability, swaps, open shifts, conflicts, notifications.
  * M10.12 labor forecasting, staffing planner, variance, alerts, exports.
+ * M10.17 leave management: types, policies, accrual, requests, approvals, exports.
  */
 
 import { Module, forwardRef } from '@nestjs/common';
@@ -84,6 +85,14 @@ import { WorkforceAutoSchedulerController } from './workforce-auto-scheduler.con
 // M10.14: Constraints Evaluator (Assignment + Constraint Enforcement)
 import { WorkforceConstraintsEvaluatorService } from './workforce-constraints-evaluator.service';
 
+// M10.17: Leave Management (Types + Policies + Accrual + Requests + Approvals + Exports)
+import { LeaveTypesService } from './leave-types.service';
+import { LeavePolicyService } from './leave-policy.service';
+import { LeaveRequestsService } from './leave-requests.service';
+import { LeaveAccrualService } from './leave-accrual.service';
+import { LeaveReportingService } from './leave-reporting.service';
+import { LeaveController } from './leave.controller';
+
 @Module({
   imports: [
     forwardRef(() => AccountingModule), // E43-s2
@@ -117,6 +126,7 @@ import { WorkforceConstraintsEvaluatorService } from './workforce-constraints-ev
     NotificationsController, // M10.11
     WorkforcePlanningController, // M10.12
     WorkforceAutoSchedulerController, // M10.13
+    LeaveController, // M10.17
   ],
   providers: [
     WorkforceService,
@@ -148,6 +158,11 @@ import { WorkforceConstraintsEvaluatorService } from './workforce-constraints-ev
     WorkforceAutoSchedulerService, // M10.13
     WorkforceAutoScheduleApplyService, // M10.13
     WorkforceConstraintsEvaluatorService, // M10.14
+    LeaveTypesService, // M10.17
+    LeavePolicyService, // M10.17
+    LeaveRequestsService, // M10.17
+    LeaveAccrualService, // M10.17
+    LeaveReportingService, // M10.17
     PrismaService,
   ],
   exports: [
@@ -180,6 +195,11 @@ import { WorkforceConstraintsEvaluatorService } from './workforce-constraints-ev
     WorkforceAutoSchedulerService, // M10.13
     WorkforceAutoScheduleApplyService, // M10.13
     WorkforceConstraintsEvaluatorService, // M10.14
+    LeaveTypesService, // M10.17
+    LeavePolicyService, // M10.17
+    LeaveRequestsService, // M10.17
+    LeaveAccrualService, // M10.17
+    LeaveReportingService, // M10.17
   ],
 })
 export class WorkforceModule {}
