@@ -484,6 +484,8 @@ model Org {
   kioskClockEvents               KioskClockEvent[]
   // M10.22: Kiosk Events
   kioskEvents                    KioskEvent[]
+  // M11.4: Recipes
+  recipes                        Recipe[]
 
   @@map("orgs")
 }
@@ -517,18 +519,20 @@ model OrgSettings {
 }
 
 model Branch {
-  id                   String   @id @default(cuid())
-  orgId                String
-  name                 String
-  address              String?
-  timezone             String   @default("Africa/Kampala")
-  currencyCode         String? // E39-s1: Branch-specific currency (falls back to org base)
-  publicBookingEnabled Boolean  @default(false) // M9.4: Public booking enabled
-  publicBookingSlug    String?  @unique // M9.4: URL slug for public booking
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
+  id                     String   @id @default(cuid())
+  orgId                  String
+  name                   String
+  address                String?
+  timezone               String   @default("Africa/Kampala")
+  currencyCode           String? // E39-s1: Branch-specific currency (falls back to org base)
+  publicBookingEnabled   Boolean  @default(false) // M9.4: Public booking enabled
+  publicBookingSlug      String?  @unique // M9.4: URL slug for public booking
+  depletionLocationId    String?  // M11.4: Default location for POS depletion
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
 
   org                    Org                      @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  depletionLocation      InventoryLocation?       @relation("BranchDepletionLocation", fields: [depletionLocationId], references: [id], onDelete: SetNull)
   tables                 Table[]
   orders                 Order[]
   auditEvents            AuditEvent[]
@@ -611,6 +615,8 @@ model Branch {
   transfersFrom          InventoryTransfer[] @relation("TransferFromBranch")
   transfersTo            InventoryTransfer[] @relation("TransferToBranch")
   wasteDocuments         InventoryWaste[]    @relation("WasteBranch")
+  // M11.4: Depletions
+  inventoryDepletions    OrderInventoryDepletion[] @relation("DepletionBranch")
 
   @@index([orgId, id])
   @@map("branches")
@@ -770,6 +776,9 @@ model User {
   transfersReceived               InventoryTransfer[]              @relation("TransferReceiver")
   wasteCreated                    InventoryWaste[]                 @relation("WasteCreator")
   wastePosted                     InventoryWaste[]                 @relation("WastePoster")
+  // M11.4: Recipes
+  recipesCreated                  Recipe[]                         @relation("RecipeCreator")
+  recipesUpdated                  Recipe[]                         @relation("RecipeUpdater")
 
   @@index([orgId, id])
   @@map("users")
@@ -1349,16 +1358,17 @@ model Order {
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
 
-  branch         Branch          @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  table          Table?          @relation(fields: [tableId], references: [id], onDelete: SetNull)
-  user           User            @relation(fields: [userId], references: [id], onDelete: Restrict)
-  orderItems     OrderItem[]
-  payments       Payment[]
-  refunds        Refund[]
-  kdsTickets     KdsTicket[]
-  discounts      Discount[]
-  stockMovements StockMovement[] // M3: Stock movements from this order
-  Feedback       Feedback?
+  branch               Branch                    @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  table                Table?                    @relation(fields: [tableId], references: [id], onDelete: SetNull)
+  user                 User                      @relation(fields: [userId], references: [id], onDelete: Restrict)
+  orderItems           OrderItem[]
+  payments             Payment[]
+  refunds              Refund[]
+  kdsTickets           KdsTicket[]
+  discounts            Discount[]
+  stockMovements       StockMovement[]           // M3: Stock movements from this order
+  Feedback             Feedback?
+  inventoryDepletion   OrderInventoryDepletion?  // M11.4: POS depletion record
 
   @@unique([branchId, orderNumber])
   @@index([branchId])
@@ -2035,6 +2045,8 @@ model InventoryItem {
   // M11.3: Transfers + Waste
   transferLines     InventoryTransferLine[] @relation("TransferLineItem")
   wasteLines        InventoryWasteLine[]    @relation("WasteLineItem")
+  // M11.4: Recipes
+  recipeLines       RecipeLine[]            @relation("RecipeLineItem")
 
   @@unique([orgId, sku])
   @@index([orgId])
@@ -5450,6 +5462,9 @@ model UnitOfMeasure {
   // M11.2: Purchasing & Receiving
   poLinesV2Input       PurchaseOrderLineV2[] @relation("POLineInputUom")
   receiptLinesV2Input  GoodsReceiptLineV2[]  @relation("ReceiptLineInputUom")
+  // M11.4: Recipes
+  recipeOutputUom      Recipe[]              @relation("RecipeOutputUom")
+  recipeLineInputUom   RecipeLine[]          @relation("RecipeLineInputUom")
 
   @@unique([orgId, code])
   @@index([orgId])
@@ -5477,16 +5492,17 @@ model UnitConversion {
 
 // Inventory Location - warehouse/storage locations per branch
 model InventoryLocation {
-  id          String   @id @default(cuid())
-  orgId       String
-  branchId    String
-  code        String   // MAIN, COLD, DRY, BAR, etc.
-  name        String   // Main Storage, Cold Room, Dry Storage, etc.
-  parentId    String?  // Optional parent location for hierarchy
-  isActive    Boolean  @default(true)
-  metadata    Json?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id           String   @id @default(cuid())
+  orgId        String
+  branchId     String
+  code         String   // MAIN, COLD, DRY, BAR, KITCHEN, etc.
+  name         String   // Main Storage, Cold Room, Dry Storage, Kitchen, etc.
+  parentId     String?  // Optional parent location for hierarchy
+  locationType String?  // STORAGE, PRODUCTION, RECEIVING, etc.
+  isActive     Boolean  @default(true)
+  metadata     Json?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   branch         Branch             @relation(fields: [branchId], references: [id], onDelete: Cascade)
   parent         InventoryLocation? @relation("LocationHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
@@ -5501,6 +5517,9 @@ model InventoryLocation {
   transferLinesFrom InventoryTransferLine[] @relation("TransferLineFromLocation")
   transferLinesTo   InventoryTransferLine[] @relation("TransferLineToLocation")
   wasteLines        InventoryWasteLine[]    @relation("WasteLineLocation")
+  // M11.4: Depletion + Recipes
+  branchesDefaultDepletion Branch[]  @relation("BranchDepletionLocation")
+  depletions               OrderInventoryDepletion[] @relation("DepletionLocation")
 
   @@unique([branchId, code])
   @@index([orgId])
@@ -5886,4 +5905,95 @@ model InventoryWasteLine {
   @@index([wasteId])
   @@index([itemId])
   @@map("inventory_waste_lines")
+}
+// ========================================
+// M11.4: Recipes/BOM + POS Depletion
+// ========================================
+
+enum RecipeTargetType {
+  MENU_ITEM
+  INVENTORY_ITEM
+}
+
+enum DepletionStatus {
+  PENDING
+  POSTED
+  FAILED
+  SKIPPED
+}
+
+// Recipe Header - links sellable items to ingredient lists
+model Recipe {
+  id              String           @id @default(cuid())
+  orgId           String
+  name            String
+  targetType      RecipeTargetType // MENU_ITEM or INVENTORY_ITEM
+  targetId        String           // menuItemId or inventoryItemId
+  outputQtyBase   Decimal          @default(1) @db.Decimal(12, 4)
+  outputUomId     String?          // Optional: for advanced yield tracking
+  isActive        Boolean          @default(true)
+  createdById     String
+  updatedById     String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  // Relations
+  org       Org            @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  lines     RecipeLine[]
+  createdBy User           @relation("RecipeCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  updatedBy User?          @relation("RecipeUpdater", fields: [updatedById], references: [id], onDelete: SetNull)
+  outputUom UnitOfMeasure? @relation("RecipeOutputUom", fields: [outputUomId], references: [id], onDelete: SetNull)
+
+  @@unique([orgId, targetType, targetId])
+  @@index([orgId])
+  @@index([targetType, targetId])
+  @@map("recipes")
+}
+
+// Recipe Line - ingredient with quantity in input UOM + pre-computed base qty
+model RecipeLine {
+  id              String   @id @default(cuid())
+  recipeId        String
+  inventoryItemId String
+  qtyInput        Decimal  @db.Decimal(12, 4) // Quantity in input UOM
+  inputUomId      String
+  qtyBase         Decimal  @db.Decimal(12, 4) // Pre-computed in item's base UOM
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  recipe        Recipe         @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  inventoryItem InventoryItem  @relation("RecipeLineItem", fields: [inventoryItemId], references: [id], onDelete: Restrict)
+  inputUom      UnitOfMeasure  @relation("RecipeLineInputUom", fields: [inputUomId], references: [id], onDelete: Restrict)
+
+  @@index([recipeId])
+  @@index([inventoryItemId])
+  @@map("recipe_lines")
+}
+
+// Order Inventory Depletion - idempotency record for POS depletion
+model OrderInventoryDepletion {
+  id               String          @id @default(cuid())
+  orgId            String
+  orderId          String          @unique
+  branchId         String
+  locationId       String
+  status           DepletionStatus @default(PENDING)
+  errorCode        String?
+  errorMessage     String?
+  ledgerEntryCount Int             @default(0)
+  metadata         Json?           // Store details like itemsProcessed, itemsSkipped, etc.
+  createdAt        DateTime        @default(now())
+  postedAt         DateTime?
+
+  // Relations
+  order    Order             @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  branch   Branch            @relation("DepletionBranch", fields: [branchId], references: [id], onDelete: Cascade)
+  location InventoryLocation @relation("DepletionLocation", fields: [locationId], references: [id], onDelete: Restrict)
+
+  @@unique([orgId, orderId])
+  @@index([orderId])
+  @@index([branchId, status])
+  @@map("order_inventory_depletions")
 }

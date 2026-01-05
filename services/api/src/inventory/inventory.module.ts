@@ -41,6 +41,12 @@ import { InventoryTransfersService } from './inventory-transfers.service';
 import { InventoryWasteController } from './inventory-waste.controller';
 import { InventoryWasteService } from './inventory-waste.service';
 
+// M11.4 Recipes + Depletion imports
+import { InventoryRecipesController } from './inventory-recipes.controller';
+import { InventoryRecipesService } from './inventory-recipes.service';
+import { InventoryDepletionController } from './inventory-depletion.controller';
+import { InventoryDepletionService } from './inventory-depletion.service';
+
 @Module({
   imports: [KpisModule, AuditModule],
   controllers: [
@@ -49,6 +55,8 @@ import { InventoryWasteService } from './inventory-waste.service';
     ProcurementController, // M11.2
     InventoryTransfersController, // M11.3
     InventoryWasteController, // M11.3
+    InventoryRecipesController, // M11.4
+    InventoryDepletionController, // M11.4
     RecipesController,
     WastageController,
     CountsController,
@@ -70,6 +78,8 @@ import { InventoryWasteService } from './inventory-waste.service';
     ProcurementReportingService, // M11.2
     InventoryTransfersService, // M11.3
     InventoryWasteService, // M11.3
+    InventoryRecipesService, // M11.4
+    InventoryDepletionService, // M11.4
     RecipesService,
     WastageService,
     CountsService,
@@ -94,6 +104,8 @@ import { InventoryWasteService } from './inventory-waste.service';
     ProcurementReportingService, // M11.2
     InventoryTransfersService, // M11.3
     InventoryWasteService, // M11.3
+    InventoryRecipesService, // M11.4
+    InventoryDepletionService, // M11.4
     RecipesService,
     WastageService,
     CountsService,

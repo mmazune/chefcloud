@@ -6,6 +6,7 @@ import {
   ForbiddenException,
   NotFoundException,
   Optional,
+  Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import {
@@ -24,9 +25,12 @@ import { PostingService } from '../accounting/posting.service';
 import { PromotionsService } from '../promotions/promotions.service';
 import { KpisService } from '../kpis/kpis.service';
 import { StockMovementsService, StockMovementType } from '../inventory/stock-movements.service';
+import { InventoryDepletionService } from '../inventory/inventory-depletion.service';
 
 @Injectable()
 export class PosService {
+  private readonly logger = new Logger(PosService.name);
+
   constructor(
     private prisma: PrismaService,
     private efrisService: EfrisService,
@@ -37,6 +41,7 @@ export class PosService {
     private stockMovementsService: StockMovementsService,
     @Optional() private promotionsService?: PromotionsService,
     @Optional() private kpisService?: KpisService,
+    @Optional() private depletionService?: InventoryDepletionService,
   ) {}
 
   private markKpisDirty(orgId: string, branchId?: string) {
@@ -803,6 +808,14 @@ export class PosService {
         },
       });
     });
+
+    // M11.4: Inventory ledger depletion (fire-and-forget, idempotent)
+    if (this.depletionService && orgId) {
+      this.depletionService.depleteForOrder(orgId, orderId, branchId, userId).catch((err) => {
+        this.logger.error(`Ledger depletion failed for order ${orderId}: ${err.message}`);
+        // Depletion service already creates audit log on failure
+      });
+    }
 
     // Mark KPIs dirty
     const orgId = (await this.prisma.client.branch.findUnique({ where: { id: branchId } }))?.orgId;

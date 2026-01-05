@@ -33,6 +33,8 @@ import {
   Target,
   AlertTriangle,
   Zap,
+  ClipboardList,
+  ArchiveRestore,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -276,6 +278,8 @@ export const ROLE_CAPABILITIES: Record<JobRole, RoleCapability> = {
           { label: 'Receipts', href: '/inventory/receipts', icon: Truck },
           { label: 'Transfers', href: '/inventory/transfers', icon: ArrowLeftRight },
           { label: 'Waste', href: '/inventory/waste', icon: Trash2 },
+          { label: 'Recipes', href: '/inventory/recipes', icon: ClipboardList },
+          { label: 'Depletions', href: '/inventory/depletions', icon: ArchiveRestore },
           { label: 'Service Providers', href: '/service-providers', icon: Truck },
         ],
       },
@@ -317,6 +321,8 @@ export const ROLE_CAPABILITIES: Record<JobRole, RoleCapability> = {
           { label: 'Receipts', href: '/inventory/receipts', icon: Truck },
           { label: 'Transfers', href: '/inventory/transfers', icon: ArrowLeftRight },
           { label: 'Waste', href: '/inventory/waste', icon: Trash2 },
+          { label: 'Recipes', href: '/inventory/recipes', icon: ClipboardList },
+          { label: 'Depletions', href: '/inventory/depletions', icon: ArchiveRestore },
           { label: 'Reports', href: '/reports', icon: FileText },
         ],
       },

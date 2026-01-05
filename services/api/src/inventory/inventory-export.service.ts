@@ -496,6 +496,230 @@ export class InventoryExportService {
   }
 
   /**
+   * Export recipes with lines
+   */
+  async exportRecipes(
+    orgId: string,
+    options?: ExportOptions & { includeInactive?: boolean },
+  ): Promise<ExportResult> {
+    const format = options?.format ?? ExportFormat.CSV;
+
+    this.logger.log(`Exporting recipes: org=${orgId}, format=${format}`);
+
+    const where: any = { orgId };
+    if (!options?.includeInactive) {
+      where.isActive = true;
+    }
+
+    const recipes = await this.prisma.client.recipe.findMany({
+      where,
+      include: {
+        lines: {
+          include: {
+            inventoryItem: { select: { sku: true, name: true } },
+            inputUom: { select: { code: true } },
+          },
+        },
+        outputUom: { select: { code: true } },
+        createdBy: { select: { firstName: true, lastName: true } },
+      },
+      orderBy: { name: 'asc' },
+    });
+
+    // Flatten to lines for CSV
+    const flatLines: any[] = [];
+    for (const recipe of recipes) {
+      for (const line of recipe.lines) {
+        flatLines.push({
+          recipeName: recipe.name,
+          targetType: recipe.targetType,
+          targetId: recipe.targetId,
+          outputQty: recipe.outputQtyBase.toString(),
+          outputUom: recipe.outputUom?.code ?? '',
+          isActive: recipe.isActive ? 'Yes' : 'No',
+          ingredientSku: line.inventoryItem.sku,
+          ingredientName: line.inventoryItem.name,
+          qtyInput: line.qtyInput.toString(),
+          inputUom: line.inputUom.code,
+          qtyBase: line.qtyBase.toString(),
+          notes: line.notes ?? '',
+        });
+      }
+    }
+
+    const now = new Date();
+    let data: string;
+    let contentType: string;
+    let filename: string;
+
+    if (format === ExportFormat.JSON) {
+      data = JSON.stringify({
+        exportedAt: now.toISOString(),
+        orgId,
+        recordCount: recipes.length,
+        recipes: recipes.map((r) => ({
+          id: r.id,
+          name: r.name,
+          targetType: r.targetType,
+          targetId: r.targetId,
+          outputQtyBase: r.outputQtyBase.toString(),
+          outputUom: r.outputUom?.code,
+          isActive: r.isActive,
+          lines: r.lines.map((l) => ({
+            ingredientSku: l.inventoryItem.sku,
+            ingredientName: l.inventoryItem.name,
+            qtyInput: l.qtyInput.toString(),
+            inputUom: l.inputUom.code,
+            qtyBase: l.qtyBase.toString(),
+            notes: l.notes,
+          })),
+        })),
+      }, null, 2);
+      contentType = 'application/json';
+      filename = `recipes-${now.toISOString().slice(0, 10)}.json`;
+    } else {
+      // CSV format with UTF-8 BOM
+      const BOM = '\uFEFF';
+      const headers = [
+        'Recipe Name', 'Target Type', 'Target ID', 'Output Qty', 'Output UOM', 'Active',
+        'Ingredient SKU', 'Ingredient Name', 'Qty Input', 'Input UOM', 'Qty Base', 'Notes',
+      ];
+      const rows = flatLines.map((l) => [
+        this.escapeCsv(l.recipeName),
+        l.targetType,
+        l.targetId,
+        l.outputQty,
+        l.outputUom,
+        l.isActive,
+        l.ingredientSku,
+        this.escapeCsv(l.ingredientName),
+        l.qtyInput,
+        l.inputUom,
+        l.qtyBase,
+        this.escapeCsv(l.notes),
+      ].join(','));
+
+      data = BOM + [headers.join(','), ...rows].join('\n');
+      contentType = 'text/csv; charset=utf-8';
+      filename = `recipes-${now.toISOString().slice(0, 10)}.csv`;
+    }
+
+    const hash = createHash('sha256').update(data).digest('hex');
+
+    this.logger.log(`Recipes export complete: ${recipes.length} recipes, ${flatLines.length} lines, hash=${hash.slice(0, 16)}...`);
+
+    return {
+      data,
+      format,
+      contentType,
+      filename,
+      hash,
+      recordCount: flatLines.length,
+      generatedAt: now,
+    };
+  }
+
+  /**
+   * Export inventory depletions
+   */
+  async exportDepletions(
+    orgId: string,
+    branchId: string,
+    options?: ExportOptions,
+  ): Promise<ExportResult> {
+    const format = options?.format ?? ExportFormat.CSV;
+
+    this.logger.log(`Exporting depletions: org=${orgId}, branch=${branchId}, format=${format}`);
+
+    const where: any = { orgId, branchId };
+    if (options?.startDate || options?.endDate) {
+      where.createdAt = {};
+      if (options.startDate) where.createdAt.gte = options.startDate;
+      if (options.endDate) where.createdAt.lte = options.endDate;
+    }
+
+    const depletions = await this.prisma.client.orderInventoryDepletion.findMany({
+      where,
+      include: {
+        order: {
+          select: { orderNumber: true, total: true },
+        },
+        branch: { select: { name: true } },
+        location: { select: { code: true, name: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    const now = new Date();
+    let data: string;
+    let contentType: string;
+    let filename: string;
+
+    if (format === ExportFormat.JSON) {
+      data = JSON.stringify({
+        exportedAt: now.toISOString(),
+        orgId,
+        branchId,
+        recordCount: depletions.length,
+        depletions: depletions.map((d) => ({
+          id: d.id,
+          orderNumber: d.order.orderNumber,
+          orderTotal: d.order.total?.toString(),
+          branchName: d.branch.name,
+          locationCode: d.location.code,
+          status: d.status,
+          errorCode: d.errorCode,
+          errorMessage: d.errorMessage,
+          ledgerEntryCount: d.ledgerEntryCount,
+          createdAt: d.createdAt.toISOString(),
+          postedAt: d.postedAt?.toISOString(),
+          metadata: d.metadata,
+        })),
+      }, null, 2);
+      contentType = 'application/json';
+      filename = `depletions-${branchId}-${now.toISOString().slice(0, 10)}.json`;
+    } else {
+      // CSV format with UTF-8 BOM
+      const BOM = '\uFEFF';
+      const headers = [
+        'Depletion ID', 'Order Number', 'Order Total', 'Branch', 'Location Code',
+        'Status', 'Error Code', 'Error Message', 'Ledger Entry Count', 'Created At', 'Posted At',
+      ];
+      const rows = depletions.map((d) => [
+        d.id,
+        d.order.orderNumber,
+        d.order.total?.toString() ?? '',
+        this.escapeCsv(d.branch.name),
+        d.location.code,
+        d.status,
+        d.errorCode ?? '',
+        this.escapeCsv(d.errorMessage ?? ''),
+        d.ledgerEntryCount.toString(),
+        d.createdAt.toISOString(),
+        d.postedAt?.toISOString() ?? '',
+      ].join(','));
+
+      data = BOM + [headers.join(','), ...rows].join('\n');
+      contentType = 'text/csv; charset=utf-8';
+      filename = `depletions-${branchId}-${now.toISOString().slice(0, 10)}.csv`;
+    }
+
+    const hash = createHash('sha256').update(data).digest('hex');
+
+    this.logger.log(`Depletions export complete: ${depletions.length} records, hash=${hash.slice(0, 16)}...`);
+
+    return {
+      data,
+      format,
+      contentType,
+      filename,
+      hash,
+      recordCount: depletions.length,
+      generatedAt: now,
+    };
+  }
+
+  /**
    * Escape CSV field value
    */
   private escapeCsv(value: string): string {

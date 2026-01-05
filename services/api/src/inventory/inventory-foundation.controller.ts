@@ -658,4 +658,52 @@ export class InventoryFoundationController {
     res.setHeader('X-Record-Count', result.recordCount.toString());
     res.send(result.data);
   }
+
+  // M11.4: Recipes export
+  @Get('exports/recipes')
+  @Roles('L2')
+  async exportRecipes(
+    @Req() req: any,
+    @Res() res: Response,
+    @Query('format') format?: string,
+    @Query('includeInactive') includeInactive?: string,
+  ): Promise<void> {
+    const result = await this.exportService.exportRecipes(req.user.orgId, {
+      format: format === 'json' ? ExportFormat.JSON : ExportFormat.CSV,
+      includeInactive: includeInactive === 'true',
+    });
+
+    res.setHeader('Content-Type', result.contentType);
+    res.setHeader('Content-Disposition', `attachment; filename="${result.filename}"`);
+    res.setHeader('X-Nimbus-Export-Hash', result.hash);
+    res.setHeader('X-Record-Count', result.recordCount.toString());
+    res.send(result.data);
+  }
+
+  // M11.4: Depletions export
+  @Get('exports/depletions')
+  @Roles('L3')
+  async exportDepletions(
+    @Req() req: any,
+    @Res() res: Response,
+    @Query('format') format?: string,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ): Promise<void> {
+    const result = await this.exportService.exportDepletions(
+      req.user.orgId,
+      req.user.branchId,
+      {
+        format: format === 'json' ? ExportFormat.JSON : ExportFormat.CSV,
+        startDate: startDate ? new Date(startDate) : undefined,
+        endDate: endDate ? new Date(endDate) : undefined,
+      },
+    );
+
+    res.setHeader('Content-Type', result.contentType);
+    res.setHeader('Content-Disposition', `attachment; filename="${result.filename}"`);
+    res.setHeader('X-Nimbus-Export-Hash', result.hash);
+    res.setHeader('X-Record-Count', result.recordCount.toString());
+    res.send(result.data);
+  }
 }
