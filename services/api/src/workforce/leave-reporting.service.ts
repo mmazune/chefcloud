@@ -363,4 +363,147 @@ export class LeaveReportingService {
       approvedThisMonth,
     };
   }
+
+  // ===== M10.18: Extended Reporting =====
+
+  /**
+   * Get approval stats report (counts by status, branch, date range)
+   */
+  async getApprovalStats(
+    orgId: string,
+    branchIds?: string[],
+    startDate?: Date,
+    endDate?: Date,
+  ): Promise<any> {
+    const branchFilter = branchIds?.length ? { branchId: { in: branchIds } } : {};
+    const dateFilter: any = {};
+    if (startDate) dateFilter.createdAt = { ...(dateFilter.createdAt || {}), gte: startDate };
+    if (endDate) dateFilter.createdAt = { ...(dateFilter.createdAt || {}), lte: endDate };
+
+    const [submitted, step1, approved, rejected] = await Promise.all([
+      this.prisma.client.leaveRequestV2.count({
+        where: { orgId, ...branchFilter, ...dateFilter, status: 'SUBMITTED' },
+      }),
+      this.prisma.client.leaveRequestV2.count({
+        where: { orgId, ...branchFilter, ...dateFilter, status: 'APPROVED_STEP1' },
+      }),
+      this.prisma.client.leaveRequestV2.count({
+        where: { orgId, ...branchFilter, ...dateFilter, status: 'APPROVED' },
+      }),
+      this.prisma.client.leaveRequestV2.count({
+        where: { orgId, ...branchFilter, ...dateFilter, status: 'REJECTED' },
+      }),
+    ]);
+
+    // By branch breakdown
+    const byBranch = await this.prisma.client.leaveRequestV2.groupBy({
+      by: ['branchId', 'status'],
+      where: { orgId, ...branchFilter, ...dateFilter },
+      _count: true,
+    });
+
+    return {
+      totals: { submitted, step1, approved, rejected },
+      byBranch: byBranch.map((b) => ({
+        branchId: b.branchId,
+        status: b.status,
+        count: b._count,
+      })),
+    };
+  }
+
+  /**
+   * Export calendar as CSV
+   */
+  async exportCalendarCsv(
+    orgId: string,
+    branchIds?: string[],
+    startDate?: Date,
+    endDate?: Date,
+  ): Promise<string> {
+    const branchFilter = branchIds?.length ? { branchId: { in: branchIds } } : {};
+    const dateFilter: any = {};
+    if (startDate) {
+      dateFilter.OR = [
+        { startDate: { gte: startDate, lte: endDate || new Date('2099-12-31') } },
+        { endDate: { gte: startDate, lte: endDate || new Date('2099-12-31') } },
+      ];
+    }
+
+    const requests = await this.prisma.client.leaveRequestV2.findMany({
+      where: {
+        orgId,
+        ...branchFilter,
+        ...dateFilter,
+        status: { in: ['APPROVED', 'APPROVED_STEP1'] },
+      },
+      include: {
+        user: { select: { firstName: true, lastName: true } },
+        leaveType: { select: { name: true, code: true } },
+      },
+      orderBy: { startDate: 'asc' },
+    });
+
+    const rows = [
+      ['Employee', 'Leave Type', 'Start Date', 'End Date', 'Hours', 'Status'],
+      ...requests.map((r) => [
+        `${r.user.firstName} ${r.user.lastName}`,
+        r.leaveType.name,
+        r.startDate.toISOString().split('T')[0],
+        r.endDate.toISOString().split('T')[0],
+        r.totalHours.toString(),
+        r.status,
+      ]),
+    ];
+
+    // Add UTF-8 BOM for Excel
+    const BOM = '\uFEFF';
+    return BOM + rows.map((r) => r.map((c) => `"${c}"`).join(',')).join('\n');
+  }
+
+  /**
+   * Export approvals report as CSV
+   */
+  async exportApprovalsCsv(
+    orgId: string,
+    branchIds?: string[],
+    startDate?: Date,
+    endDate?: Date,
+  ): Promise<string> {
+    const branchFilter = branchIds?.length ? { branchId: { in: branchIds } } : {};
+    const dateFilter: any = {};
+    if (startDate) dateFilter.createdAt = { ...(dateFilter.createdAt || {}), gte: startDate };
+    if (endDate) dateFilter.createdAt = { ...(dateFilter.createdAt || {}), lte: endDate };
+
+    const requests = await this.prisma.client.leaveRequestV2.findMany({
+      where: { orgId, ...branchFilter, ...dateFilter },
+      include: {
+        user: { select: { firstName: true, lastName: true } },
+        leaveType: { select: { name: true } },
+        approvedBy: { select: { firstName: true, lastName: true } },
+        approvedStep1By: { select: { firstName: true, lastName: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    const rows = [
+      ['Employee', 'Leave Type', 'Start', 'End', 'Hours', 'Status', 'Step1 By', 'Step1 At', 'Final By', 'Final At', 'Rejected Reason'],
+      ...requests.map((r) => [
+        `${r.user.firstName} ${r.user.lastName}`,
+        r.leaveType.name,
+        r.startDate.toISOString().split('T')[0],
+        r.endDate.toISOString().split('T')[0],
+        r.totalHours.toString(),
+        r.status,
+        r.approvedStep1By ? `${r.approvedStep1By.firstName} ${r.approvedStep1By.lastName}` : '',
+        r.approvedStep1At?.toISOString() || '',
+        r.approvedBy ? `${r.approvedBy.firstName} ${r.approvedBy.lastName}` : '',
+        r.approvedAt?.toISOString() || '',
+        r.rejectionReason || '',
+      ]),
+    ];
+
+    const BOM = '\uFEFF';
+    return BOM + rows.map((r) => r.map((c) => `"${c}"`).join(',')).join('\n');
+  }
 }

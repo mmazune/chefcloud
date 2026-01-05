@@ -93,6 +93,13 @@ import { LeaveAccrualService } from './leave-accrual.service';
 import { LeaveReportingService } from './leave-reporting.service';
 import { LeaveController } from './leave.controller';
 
+// M10.18: Leave Enterprise (Calendar + Delegation + Two-Step + Attachments + Projections)
+import { LeaveCalendarService } from './leave-calendar.service';
+import { LeaveDelegationService } from './leave-delegation.service';
+import { LeaveAttachmentsService } from './leave-attachments.service';
+import { LeaveProjectionService } from './leave-projection.service';
+import { LeaveCalendarController, LeaveDelegationController } from './leave-enterprise.controller';
+
 @Module({
   imports: [
     forwardRef(() => AccountingModule), // E43-s2
@@ -127,6 +134,8 @@ import { LeaveController } from './leave.controller';
     WorkforcePlanningController, // M10.12
     WorkforceAutoSchedulerController, // M10.13
     LeaveController, // M10.17
+    LeaveCalendarController, // M10.18
+    LeaveDelegationController, // M10.18
   ],
   providers: [
     WorkforceService,
@@ -163,6 +172,10 @@ import { LeaveController } from './leave.controller';
     LeaveRequestsService, // M10.17
     LeaveAccrualService, // M10.17
     LeaveReportingService, // M10.17
+    LeaveCalendarService, // M10.18
+    LeaveDelegationService, // M10.18
+    LeaveAttachmentsService, // M10.18
+    LeaveProjectionService, // M10.18
     PrismaService,
   ],
   exports: [
@@ -200,6 +213,10 @@ import { LeaveController } from './leave.controller';
     LeaveRequestsService, // M10.17
     LeaveAccrualService, // M10.17
     LeaveReportingService, // M10.17
+    LeaveCalendarService, // M10.18
+    LeaveDelegationService, // M10.18
+    LeaveAttachmentsService, // M10.18
+    LeaveProjectionService, // M10.18
   ],
 })
 export class WorkforceModule {}

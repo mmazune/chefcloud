@@ -457,4 +457,172 @@ export class LeaveRequestsService {
 
     return balances;
   }
+
+  // ===== M10.18: Two-Step Approval Methods =====
+
+  /**
+   * Approve Step 1 (Supervisor approval for TWO_STEP policies)
+   * RBAC: L2/L3 (Supervisor)
+   */
+  async approveStep1(
+    id: string,
+    orgId: string,
+    approverId: string,
+    approverBranchIds: string[],
+  ): Promise<any> {
+    const request = await this.findOne(id, orgId);
+
+    if (request.status !== 'SUBMITTED') {
+      throw new BadRequestException('Only submitted requests can be approved');
+    }
+
+    // RBAC: Check approver has access to the branch
+    if (!approverBranchIds.includes(request.branchId)) {
+      throw new ForbiddenException('You do not have access to approve requests for this branch');
+    }
+
+    // Get policy to check if TWO_STEP is required
+    const policy = await this.policyService.getEffectivePolicy(
+      orgId,
+      request.leaveTypeId,
+      request.branchId,
+    );
+
+    if (!policy || policy.approvalMode !== 'TWO_STEP') {
+      throw new BadRequestException('This leave type does not require two-step approval');
+    }
+
+    return this.prisma.client.leaveRequestV2.update({
+      where: { id },
+      data: {
+        status: 'APPROVED_STEP1',
+        approvedStep1ById: approverId,
+        approvedStep1At: new Date(),
+      },
+      include: {
+        user: { select: { id: true, firstName: true, lastName: true } },
+        leaveType: true,
+      },
+    });
+  }
+
+  /**
+   * Final approval (Step 2 for TWO_STEP, or single-step for SINGLE policies)
+   * RBAC: L4/L5 for TWO_STEP step2, L3+ for SINGLE
+   */
+  async approveWithStep(
+    id: string,
+    orgId: string,
+    dto: ApproveLeaveRequestDto,
+    approverRoleLevel: number,
+  ): Promise<any> {
+    const request = await this.findOne(id, orgId);
+
+    // Get policy to check approval mode
+    const policy = await this.policyService.getEffectivePolicy(
+      orgId,
+      request.leaveTypeId,
+      request.branchId,
+    );
+
+    const approvalMode = policy?.approvalMode || 'SINGLE';
+
+    // Validate status based on approval mode
+    if (approvalMode === 'TWO_STEP') {
+      if (request.status !== 'APPROVED_STEP1') {
+        throw new BadRequestException('Two-step approval requires step 1 to be completed first');
+      }
+      // Step 2 requires L4+
+      if (approverRoleLevel < 4) {
+        throw new ForbiddenException('Step 2 approval requires Manager (L4) or Owner (L5) role');
+      }
+      // Prevent same person from approving both steps (H8)
+      if (request.approvedStep1ById === dto.approverId) {
+        throw new ForbiddenException('Same person cannot approve both steps');
+      }
+    } else {
+      if (request.status !== 'SUBMITTED') {
+        throw new BadRequestException('Only submitted requests can be approved');
+      }
+    }
+
+    // RBAC: Check manager has access to the branch
+    if (!dto.approverBranchIds.includes(request.branchId)) {
+      throw new ForbiddenException('You do not have access to approve requests for this branch');
+    }
+
+    // Use existing approve logic for the actual approval
+    return this.approve(id, orgId, dto);
+  }
+
+  /**
+   * Reject at any step (with step context)
+   */
+  async rejectWithStep(
+    id: string,
+    orgId: string,
+    approverId: string,
+    approverBranchIds: string[],
+    reason?: string,
+  ): Promise<any> {
+    const request = await this.findOne(id, orgId);
+
+    // Determine which step is being rejected
+    let rejectedStep: number | null = null;
+    if (request.status === 'SUBMITTED') {
+      rejectedStep = 1;
+    } else if (request.status === 'APPROVED_STEP1') {
+      rejectedStep = 2;
+    } else {
+      throw new BadRequestException('Request cannot be rejected in its current status');
+    }
+
+    // RBAC: Check approver has access to the branch
+    if (!approverBranchIds.includes(request.branchId)) {
+      throw new ForbiddenException('You do not have access to reject requests for this branch');
+    }
+
+    return this.prisma.client.leaveRequestV2.update({
+      where: { id },
+      data: {
+        status: 'REJECTED',
+        rejectionReason: reason,
+        rejectedStep,
+      },
+      include: {
+        user: { select: { id: true, firstName: true, lastName: true } },
+        leaveType: true,
+      },
+    });
+  }
+
+  /**
+   * Find pending approvals (including step1 pending for L4+)
+   */
+  async findPendingApprovalsWithSteps(
+    orgId: string,
+    branchIds: string[],
+    roleLevel: number,
+  ): Promise<any[]> {
+    const statusFilter: string[] = ['SUBMITTED'];
+    
+    // L4+ can also see APPROVED_STEP1 for step 2 approval
+    if (roleLevel >= 4) {
+      statusFilter.push('APPROVED_STEP1');
+    }
+
+    return this.prisma.client.leaveRequestV2.findMany({
+      where: {
+        orgId,
+        branchId: { in: branchIds },
+        status: { in: statusFilter as any },
+      },
+      include: {
+        user: { select: { id: true, firstName: true, lastName: true } },
+        leaveType: true,
+        approvedStep1By: { select: { id: true, firstName: true, lastName: true } },
+      },
+      orderBy: { createdAt: 'asc' },
+    });
+  }
 }

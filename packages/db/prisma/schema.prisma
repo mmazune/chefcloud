@@ -237,9 +237,15 @@ enum LeaveTypeCode {
 enum LeaveRequestStatus {
   DRAFT
   SUBMITTED
+  APPROVED_STEP1 // M10.18: First approval in two-step process
   APPROVED
   REJECTED
   CANCELLED
+}
+
+enum ApprovalMode {
+  SINGLE    // Default: one approver
+  TWO_STEP  // Supervisor then Manager/Owner
 }
 
 enum AccrualMethod {
@@ -624,7 +630,11 @@ model User {
   approvedLeaves                  LegacyLeaveRequest[]             @relation("ApprovedLeave")
   leaveRequestsV2                 LeaveRequestV2[]                 @relation("LeaveRequestsV2") // M10.17
   approvedLeavesV2                LeaveRequestV2[]                 @relation("ApprovedLeaveV2") // M10.17
+  approvedLeavesStep1             LeaveRequestV2[]                 @relation("ApprovedLeaveStep1") // M10.18
   leaveBalanceLedger              LeaveBalanceLedger[] // M10.17
+  leaveAttachmentsAdded           LeaveRequestAttachment[]         @relation("LeaveAttachmentAddedBy") // M10.18
+  delegatingApprovals             ApprovalDelegate[]               @relation("DelegatingUser") // M10.18
+  delegatedApprovals              ApprovalDelegate[]               @relation("DelegateUser") // M10.18
   dutyShifts                      DutyShift[]
   assignedDutyShifts              DutyShift[]                      @relation("AssignedShifts")
   swapsFrom                       ShiftSwap[]                      @relation("SwapFrom")
@@ -2974,6 +2984,7 @@ model LeaveTypeDefinition {
 }
 
 // M10.17: Leave Policy with accrual rules
+// M10.18: Added approvalMode for multi-step approvals
 model LeavePolicy {
   id                    String        @id @default(cuid())
   orgId                 String
@@ -2986,6 +2997,7 @@ model LeavePolicy {
   maxBalanceHours       Decimal       @default(480) @db.Decimal(10, 2) // Cap at ~60 days
   roundingPrecision     Int           @default(2) // Decimal places for rounding
   maxUninformedAbsences Int           @default(0)
+  approvalMode          ApprovalMode  @default(SINGLE) // M10.18: SINGLE or TWO_STEP
   isActive              Boolean       @default(true)
   createdAt             DateTime      @default(now())
   updatedAt             DateTime      @updatedAt
@@ -2997,7 +3009,9 @@ model LeavePolicy {
   @@map("leave_policies")
 }
 
+
 // M10.17: Enhanced Leave Request with workflow states
+// M10.18: Added two-step approval fields and attachments
 model LeaveRequestV2 {
   id               String             @id @default(cuid())
   orgId            String
@@ -3009,17 +3023,23 @@ model LeaveRequestV2 {
   totalHours       Decimal            @db.Decimal(10, 2)
   status           LeaveRequestStatus @default(DRAFT)
   reason           String?
-  approvedById     String?
-  approvedAt       DateTime?
-  rejectionReason  String?
-  overrideConflict Boolean            @default(false) // M10.17: Override shift conflict
-  createdAt        DateTime           @default(now())
-  updatedAt        DateTime           @updatedAt
+  // M10.18: Two-step approval fields
+  approvedStep1ById String?
+  approvedStep1At   DateTime?
+  approvedById      String?            // Final approver (or step2 approver)
+  approvedAt        DateTime?
+  rejectionReason   String?
+  rejectedStep      Int?               // 1 or 2, which step rejected
+  overrideConflict  Boolean            @default(false) // M10.17: Override shift conflict
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
 
-  user       User                 @relation("LeaveRequestsV2", fields: [userId], references: [id], onDelete: Cascade)
-  approvedBy User?                @relation("ApprovedLeaveV2", fields: [approvedById], references: [id], onDelete: SetNull)
-  leaveType  LeaveTypeDefinition  @relation(fields: [leaveTypeId], references: [id], onDelete: Restrict)
+  user          User                      @relation("LeaveRequestsV2", fields: [userId], references: [id], onDelete: Cascade)
+  approvedBy    User?                     @relation("ApprovedLeaveV2", fields: [approvedById], references: [id], onDelete: SetNull)
+  approvedStep1By User?                   @relation("ApprovedLeaveStep1", fields: [approvedStep1ById], references: [id], onDelete: SetNull)
+  leaveType     LeaveTypeDefinition       @relation(fields: [leaveTypeId], references: [id], onDelete: Restrict)
   ledgerEntries LeaveBalanceLedger[]
+  attachments   LeaveRequestAttachment[]  // M10.18
 
   @@index([orgId, branchId, status])
   @@index([userId, startDate, endDate])
@@ -3049,6 +3069,48 @@ model LeaveBalanceLedger {
   @@index([createdAt])
   @@index([referenceId])
   @@map("leave_balance_ledger")
+}
+
+// M10.18: Leave Request Attachment Metadata
+model LeaveRequestAttachment {
+  id              String          @id @default(cuid())
+  orgId           String
+  leaveRequestId  String
+  label           String          // e.g., "Doctor's note", "Medical certificate"
+  url             String?         // External URL (validated, HTTPS preferred)
+  mimeType        String?         // e.g., "application/pdf", "image/jpeg"
+  sizeBytes       Int?            // File size in bytes
+  addedById       String
+  createdAt       DateTime        @default(now())
+
+  leaveRequest LeaveRequestV2 @relation(fields: [leaveRequestId], references: [id], onDelete: Cascade)
+  addedBy      User           @relation("LeaveAttachmentAddedBy", fields: [addedById], references: [id], onDelete: Cascade)
+
+  @@index([leaveRequestId])
+  @@index([orgId])
+  @@map("leave_request_attachments")
+}
+
+// M10.18: Approval Delegation for managers
+model ApprovalDelegate {
+  id              String    @id @default(cuid())
+  orgId           String
+  principalUserId String    // The manager who is delegating
+  delegateUserId  String    // The user who can act on their behalf
+  branchId        String?   // null = org-wide, specific = branch-only
+  startAt         DateTime
+  endAt           DateTime
+  enabled         Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  principal User @relation("DelegatingUser", fields: [principalUserId], references: [id], onDelete: Cascade)
+  delegate  User @relation("DelegateUser", fields: [delegateUserId], references: [id], onDelete: Cascade)
+
+  @@index([orgId, principalUserId, enabled])
+  @@index([orgId, delegateUserId])
+  @@index([startAt, endAt])
+  @@map("approval_delegates")
 }
 
 // Legacy model kept for backward compatibility
