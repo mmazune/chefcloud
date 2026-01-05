@@ -482,6 +482,8 @@ model Org {
   kioskDevices                   KioskDevice[]
   kioskPinAttempts               KioskPinAttempt[]
   kioskClockEvents               KioskClockEvent[]
+  // M10.22: Kiosk Events
+  kioskEvents                    KioskEvent[]
 
   @@map("orgs")
 }
@@ -595,6 +597,8 @@ model Branch {
   kioskDevices           KioskDevice[]
   kioskPinAttempts       KioskPinAttempt[]
   kioskClockEvents       KioskClockEvent[]
+  // M10.22: Kiosk Events
+  kioskEvents            KioskEvent[]
 
   @@index([orgId, id])
   @@map("branches")
@@ -735,6 +739,8 @@ model User {
   createdKioskDevices             KioskDevice[]                    @relation("KioskDeviceCreatedBy")
   kioskPinAttempts                KioskPinAttempt[]                @relation("KioskPinAttemptUser")
   kioskClockEvents                KioskClockEvent[]                @relation("KioskClockEventUser")
+  // M10.22: Kiosk Events
+  kioskEvents                     KioskEvent[]                     @relation("KioskEventUser")
 
   @@index([orgId, id])
   @@map("users")
@@ -4362,6 +4368,10 @@ model WorkforcePolicy {
   requireGeofenceForKiosk      Boolean   @default(false) // Apply geofence enforcement even for kiosk
   kioskPinRateLimitPerMinute   Int       @default(5) // Max PIN attempts per minute per device
   kioskSessionTimeoutMinutes   Int       @default(720) // 12 hours default session timeout
+  // M10.22: Kiosk Ops Hardening
+  kioskHeartbeatStaleSeconds   Int       @default(120) // 2 minutes before STALE status
+  kioskHeartbeatOfflineSeconds Int       @default(900) // 15 minutes before OFFLINE status
+  kioskMaxInvalidPinsPerMinute Int       @default(10) // Block after this many invalid PINs
   createdAt                 DateTime     @default(now())
   updatedAt                 DateTime     @updatedAt
 
@@ -5249,6 +5259,8 @@ model KioskDevice {
   sessions      KioskDeviceSession[]
   pinAttempts   KioskPinAttempt[]
   clockEvents   KioskClockEvent[]
+  events        KioskEvent[]         @relation("KioskEventDevice") // M10.22
+  eventIngests  KioskEventIngest[]   @relation("KioskEventIngestDevice") // M10.22
 
   @@index([orgId])
   @@index([branchId])
@@ -5326,3 +5338,51 @@ model KioskClockEvent {
   @@map("kiosk_clock_events")
 }
 
+// ===== M10.22: Kiosk Event (Batch Ingest + Idempotency) =====
+
+model KioskEvent {
+  id              String   @id @default(cuid())
+  orgId           String
+  branchId        String
+  kioskDeviceId   String
+  type            String   // CLOCK_IN, CLOCK_OUT, BREAK_START, BREAK_END
+  occurredAt      DateTime // Client event time
+  receivedAt      DateTime @default(now()) // Server receive time
+  idempotencyKey  String   // Client-generated unique key
+  payloadJson     Json?    // Sanitized payload (no secrets)
+  status          String   // ACCEPTED, REJECTED
+  rejectCode      String?  // INVALID_PIN, OUTSIDE_GEOFENCE, DEVICE_DISABLED, SEQUENCE_VIOLATION, etc.
+  timeEntryId     String?  // Linked time entry if created
+  breakEntryId    String?  // Linked break entry if created
+  userId          String?  // Resolved user from PIN
+
+  org         Org         @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  branch      Branch      @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  kioskDevice KioskDevice @relation("KioskEventDevice", fields: [kioskDeviceId], references: [id], onDelete: Cascade)
+  user        User?       @relation("KioskEventUser", fields: [userId], references: [id], onDelete: SetNull)
+
+  @@unique([kioskDeviceId, idempotencyKey])
+  @@index([orgId, branchId, receivedAt])
+  @@index([kioskDeviceId, receivedAt])
+  @@map("kiosk_events")
+}
+
+// ===== M10.22: Kiosk Event Ingest Batch =====
+
+model KioskEventIngest {
+  id              String   @id @default(cuid())
+  kioskDeviceId   String
+  batchId         String   // Client-provided batch ID
+  eventCount      Int
+  acceptedCount   Int      @default(0)
+  rejectedCount   Int      @default(0)
+  status          String   // RECEIVED, PROCESSED
+  diagnostics     String?  // Truncated diagnostic info
+  createdAt       DateTime @default(now())
+
+  kioskDevice KioskDevice @relation("KioskEventIngestDevice", fields: [kioskDeviceId], references: [id], onDelete: Cascade)
+
+  @@unique([kioskDeviceId, batchId])
+  @@index([kioskDeviceId, createdAt])
+  @@map("kiosk_event_ingests")
+}

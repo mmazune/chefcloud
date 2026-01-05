@@ -119,6 +119,12 @@ import { KioskReportingService } from './kiosk-reporting.service';
 import { KioskDeviceController } from './kiosk-device.controller';
 import { PublicKioskController } from './public-kiosk.controller';
 
+// M10.22: Kiosk Ops Hardening (Offline Queue + Health + Fraud + Reporting)
+import { KioskBatchIngestService } from './kiosk-batch-ingest.service';
+import { KioskHealthService } from './kiosk-health.service';
+import { KioskFraudService } from './kiosk-fraud.service';
+import { KioskOpsReportingService } from './kiosk-ops-reporting.service';
+
 @Module({
   imports: [
     forwardRef(() => AccountingModule), // E43-s2
@@ -209,6 +215,10 @@ import { PublicKioskController } from './public-kiosk.controller';
     KioskSessionService, // M10.21
     KioskTimeclockService, // M10.21
     KioskReportingService, // M10.21
+    KioskBatchIngestService, // M10.22
+    KioskHealthService, // M10.22
+    KioskFraudService, // M10.22
+    KioskOpsReportingService, // M10.22
     PrismaService,
   ],
   exports: [
@@ -258,6 +268,10 @@ import { PublicKioskController } from './public-kiosk.controller';
     KioskSessionService, // M10.21
     KioskTimeclockService, // M10.21
     KioskReportingService, // M10.21
+    KioskBatchIngestService, // M10.22
+    KioskHealthService, // M10.22
+    KioskFraudService, // M10.22
+    KioskOpsReportingService, // M10.22
   ],
 })
 export class WorkforceModule {}

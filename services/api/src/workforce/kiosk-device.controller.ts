@@ -1,7 +1,8 @@
 /**
- * M10.21: Kiosk Device Controller
+ * M10.21 + M10.22: Kiosk Device Controller
  *
  * Admin endpoints for kiosk device management (L4+ only).
+ * M10.22 additions: Device health, fraud metrics, exports.
  */
 
 import {
@@ -15,13 +16,18 @@ import {
   Query,
   Request,
   UseGuards,
+  Res,
 } from '@nestjs/common';
+import { Response } from 'express';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 import { KioskDeviceService } from './kiosk-device.service';
 import { KioskSessionService } from './kiosk-session.service';
 import { KioskReportingService } from './kiosk-reporting.service';
+import { KioskHealthService } from './kiosk-health.service';
+import { KioskFraudService } from './kiosk-fraud.service';
+import { KioskOpsReportingService } from './kiosk-ops-reporting.service';
 
 @Controller('workforce/kiosk')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
@@ -30,6 +36,9 @@ export class KioskDeviceController {
     private readonly deviceService: KioskDeviceService,
     private readonly sessionService: KioskSessionService,
     private readonly reportingService: KioskReportingService,
+    private readonly healthService: KioskHealthService,
+    private readonly fraudService: KioskFraudService,
+    private readonly opsReportingService: KioskOpsReportingService,
   ) {}
 
   // ===== Device CRUD =====
@@ -249,5 +258,161 @@ export class KioskDeviceController {
       startDate: startDate ? new Date(startDate) : undefined,
       endDate: endDate ? new Date(endDate) : undefined,
     });
+  }
+
+  // ===== M10.22: Device Health =====
+
+  /**
+   * GET /workforce/kiosk/health
+   * Get device health status for all devices.
+   * H3: Computed status (ONLINE/STALE/OFFLINE/DISABLED) via DB query, no timers.
+   */
+  @Get('health')
+  @Roles('L4', 'L5')
+  async getDevicesHealth(
+    @Query('branchId') branchId: string | undefined,
+    @Request() req: any,
+  ) {
+    return this.healthService.getDevicesHealth(req.user.orgId, branchId);
+  }
+
+  /**
+   * GET /workforce/kiosk/health/metrics
+   * Get aggregated health metrics by branch.
+   */
+  @Get('health/metrics')
+  @Roles('L4', 'L5')
+  async getHealthMetrics(
+    @Query('branchId') branchId: string | undefined,
+    @Request() req: any,
+  ) {
+    return this.healthService.getHealthMetrics(req.user.orgId, branchId);
+  }
+
+  /**
+   * GET /workforce/kiosk/devices/:id/health
+   * Get health status for a specific device.
+   */
+  @Get('devices/:id/health')
+  @Roles('L4', 'L5')
+  async getDeviceHealth(
+    @Param('id') deviceId: string,
+    @Request() req: any,
+  ) {
+    return this.healthService.getDeviceHealth(deviceId, req.user.orgId);
+  }
+
+  // ===== M10.22: Fraud Metrics =====
+
+  /**
+   * GET /workforce/kiosk/fraud
+   * Get fraud metrics with anomaly detection.
+   * H6: Fair rate limiting per user using DB sliding window.
+   */
+  @Get('fraud')
+  @Roles('L4', 'L5')
+  async getFraudMetrics(
+    @Query('branchId') branchId: string | undefined,
+    @Query('startDate') startDate: string | undefined,
+    @Query('endDate') endDate: string | undefined,
+    @Request() req: any,
+  ) {
+    return this.fraudService.getFraudMetrics(req.user.orgId, {
+      branchId,
+      startDate: startDate ? new Date(startDate) : undefined,
+      endDate: endDate ? new Date(endDate) : undefined,
+    });
+  }
+
+  /**
+   * GET /workforce/kiosk/fraud/export
+   * Export PIN attempts to CSV with SHA-256 hash.
+   * H5: Normalized LF line endings for consistent hash.
+   */
+  @Get('fraud/export')
+  @Roles('L4', 'L5')
+  async exportFraudAttempts(
+    @Query('branchId') branchId: string | undefined,
+    @Query('startDate') startDate: string | undefined,
+    @Query('endDate') endDate: string | undefined,
+    @Request() req: any,
+    @Res() res: Response,
+  ) {
+    const result = await this.fraudService.exportAttempts(req.user.orgId, {
+      branchId,
+      startDate: startDate ? new Date(startDate) : undefined,
+      endDate: endDate ? new Date(endDate) : undefined,
+    });
+
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename=kiosk-pin-attempts.csv');
+    res.setHeader('X-Content-SHA256', result.sha256);
+    res.send(result.csv);
+  }
+
+  // ===== M10.22: Event Batch History =====
+
+  /**
+   * GET /workforce/kiosk/devices/:id/batch-history
+   * Get batch ingest history for a device.
+   */
+  @Get('devices/:id/batch-history')
+  @Roles('L4', 'L5')
+  async getBatchHistory(
+    @Param('id') deviceId: string,
+    @Query('limit') limit: string | undefined,
+    @Request() req: any,
+  ) {
+    return this.opsReportingService.getBatchHistory(
+      deviceId,
+      req.user.orgId,
+      limit ? parseInt(limit, 10) : undefined,
+    );
+  }
+
+  /**
+   * GET /workforce/kiosk/devices/:id/events
+   * Get recent events for a device.
+   */
+  @Get('devices/:id/events')
+  @Roles('L4', 'L5')
+  async getDeviceEvents(
+    @Param('id') deviceId: string,
+    @Query('limit') limit: string | undefined,
+    @Query('status') status: 'ACCEPTED' | 'REJECTED' | 'PENDING' | undefined,
+    @Request() req: any,
+  ) {
+    return this.opsReportingService.getDeviceEvents(
+      deviceId,
+      req.user.orgId,
+      limit ? parseInt(limit, 10) : undefined,
+      status,
+    );
+  }
+
+  /**
+   * GET /workforce/kiosk/export/batch-events
+   * Export batch events to CSV with SHA-256 hash.
+   * H5: Normalized LF line endings for consistent hash.
+   */
+  @Get('export/batch-events')
+  @Roles('L4', 'L5')
+  async exportBatchEvents(
+    @Query('branchId') branchId: string | undefined,
+    @Query('startDate') startDate: string | undefined,
+    @Query('endDate') endDate: string | undefined,
+    @Request() req: any,
+    @Res() res: Response,
+  ) {
+    const result = await this.opsReportingService.exportEvents(req.user.orgId, {
+      branchId,
+      startDate: startDate ? new Date(startDate) : undefined,
+      endDate: endDate ? new Date(endDate) : undefined,
+    });
+
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename=kiosk-batch-events.csv');
+    res.setHeader('X-Content-SHA256', result.sha256);
+    res.send(result.csv);
   }
 }

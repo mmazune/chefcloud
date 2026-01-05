@@ -73,13 +73,20 @@ export enum WorkforceAuditAction {
   KIOSK_BREAK_END = 'KIOSK_BREAK_END',
   KIOSK_PIN_RATE_LIMITED = 'KIOSK_PIN_RATE_LIMITED',
   KIOSK_GEOFENCE_BLOCKED = 'KIOSK_GEOFENCE_BLOCKED',
+  // M10.22: Kiosk Ops Hardening
+  KIOSK_EVENT_BATCH_RECEIVED = 'KIOSK_EVENT_BATCH_RECEIVED',
+  KIOSK_EVENT_ACCEPTED = 'KIOSK_EVENT_ACCEPTED',
+  KIOSK_EVENT_REJECTED = 'KIOSK_EVENT_REJECTED',
+  KIOSK_HEARTBEAT = 'KIOSK_HEARTBEAT',
+  KIOSK_OFFLINE_QUEUE_USED = 'KIOSK_OFFLINE_QUEUE_USED',
+  KIOSK_FRAUD_BLOCKED = 'KIOSK_FRAUD_BLOCKED',
 }
 
 interface AuditLogData {
   orgId: string;
   performedById: string;
   action: WorkforceAuditAction;
-  entityType: 'SHIFT' | 'TIME_ENTRY' | 'BREAK' | 'TEMPLATE' | 'WorkforcePolicy' | 'PayPeriod' | 'TimesheetApproval' | 'PayrollExport' | 'TimeEntryAdjustment' | 'TimeEntry' | 'PayrollRun' | 'LeaveRequest' | 'BranchGeoFence' | 'KioskDevice' | 'KioskDeviceSession' | 'KioskClockEvent';
+  entityType: 'SHIFT' | 'TIME_ENTRY' | 'BREAK' | 'TEMPLATE' | 'WorkforcePolicy' | 'PayPeriod' | 'TimesheetApproval' | 'PayrollExport' | 'TimeEntryAdjustment' | 'TimeEntry' | 'PayrollRun' | 'LeaveRequest' | 'BranchGeoFence' | 'KioskDevice' | 'KioskDeviceSession' | 'KioskClockEvent' | 'KioskEvent' | 'KioskEventIngest' | 'KioskPinAttempt';
   entityId: string;
   payload?: Record<string, unknown>;
 }

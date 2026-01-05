@@ -1,9 +1,13 @@
 /**
- * M10.21: Public Kiosk Controller
+ * M10.21 + M10.22: Public Kiosk Controller
  *
  * Public endpoints for kiosk timeclock operations.
  * No JWT auth - uses device secret + session token.
  * H7: Branch is derived from enrolled device, never from client.
+ *
+ * M10.22 additions:
+ * - POST /events/batch: Offline queue replay with idempotency (H1)
+ * - Enhanced heartbeat with health tracking (H3)
  */
 
 import {
@@ -15,10 +19,13 @@ import {
   Headers,
   Ip,
   UnauthorizedException,
+  BadRequestException,
 } from '@nestjs/common';
 import { KioskDeviceService } from './kiosk-device.service';
 import { KioskSessionService } from './kiosk-session.service';
 import { KioskTimeclockService } from './kiosk-timeclock.service';
+import { KioskBatchIngestService } from './kiosk-batch-ingest.service';
+import { KioskHealthService } from './kiosk-health.service';
 
 @Controller('public/workforce/kiosk')
 export class PublicKioskController {
@@ -26,6 +33,8 @@ export class PublicKioskController {
     private readonly deviceService: KioskDeviceService,
     private readonly sessionService: KioskSessionService,
     private readonly timeclockService: KioskTimeclockService,
+    private readonly batchIngestService: KioskBatchIngestService,
+    private readonly healthService: KioskHealthService,
   ) {}
 
   // ===== Device Authentication =====
@@ -90,18 +99,101 @@ export class PublicKioskController {
     };
   }
 
+  // ===== M10.22: Batch Event Ingest =====
+
+  /**
+   * POST /public/workforce/kiosk/:publicId/events/batch
+   * Process batch of offline-queued events with idempotency.
+   * H1: Idempotency via unique (kioskDeviceId, idempotencyKey).
+   * H2: Sequence validation for clock state transitions.
+   * H8: UI calls this on user action, not timer.
+   */
+  @Post(':publicId/events/batch')
+  async processBatch(
+    @Param('publicId') publicId: string,
+    @Headers('x-kiosk-session') sessionId: string | undefined,
+    @Body() body: {
+      batchId: string;
+      events: Array<{
+        type: 'CLOCK_IN' | 'CLOCK_OUT' | 'BREAK_START' | 'BREAK_END';
+        idempotencyKey: string;
+        occurredAt: string;
+        pin: string;
+      }>;
+    },
+    @Ip() ipAddress: string,
+  ) {
+    if (!sessionId) {
+      throw new UnauthorizedException('Session ID required');
+    }
+
+    // Validate body
+    if (!body.batchId || !body.events || !Array.isArray(body.events)) {
+      throw new BadRequestException('batchId and events array required');
+    }
+
+    if (body.events.length === 0) {
+      throw new BadRequestException('events array cannot be empty');
+    }
+
+    if (body.events.length > 100) {
+      throw new BadRequestException('Maximum 100 events per batch');
+    }
+
+    // Validate session
+    const validated = await this.sessionService.validateSession(sessionId);
+    if (!validated) {
+      throw new UnauthorizedException('Invalid or expired session');
+    }
+
+    // Verify publicId matches session device
+    const device = await this.deviceService.getDeviceByPublicId(publicId);
+    if (!device || device.id !== validated.device.id) {
+      throw new UnauthorizedException('Device mismatch');
+    }
+
+    // Process batch
+    const result = await this.batchIngestService.processBatch(
+      {
+        id: device.id,
+        orgId: device.orgId,
+        branchId: device.branchId,
+        name: device.name,
+      },
+      body.batchId,
+      body.events.map(e => ({
+        type: e.type,
+        idempotencyKey: e.idempotencyKey,
+        occurredAt: new Date(e.occurredAt),
+        pin: e.pin,
+      })),
+      ipAddress,
+    );
+
+    return result;
+  }
+
   // ===== Session Management =====
 
   /**
    * POST /public/workforce/kiosk/:publicId/heartbeat
-   * Keep session alive.
+   * Keep session alive and update device health.
+   * M10.22: Also updates device lastSeenAt for health tracking (H3).
    */
   @Post(':publicId/heartbeat')
   async heartbeat(
+    @Param('publicId') publicId: string,
     @Headers('x-kiosk-session') sessionId: string | undefined,
   ) {
     if (!sessionId) {
       throw new UnauthorizedException('Session ID required');
+    }
+
+    // Get device to update its lastSeenAt
+    const device = await this.deviceService.getDeviceByPublicId(publicId);
+    if (device) {
+      // M10.22: Update device health status
+      await this.healthService.updateHeartbeat(device.id, sessionId);
     }
 
     return this.sessionService.heartbeat(sessionId);
