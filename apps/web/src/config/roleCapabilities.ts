@@ -271,6 +271,8 @@ export const ROLE_CAPABILITIES: Record<JobRole, RoleCapability> = {
         title: 'Procurement',
         items: [
           { label: 'Inventory', href: '/inventory', icon: Package },
+          { label: 'Purchase Orders', href: '/inventory/purchase-orders', icon: ShoppingCart },
+          { label: 'Receipts', href: '/inventory/receipts', icon: Truck },
           { label: 'Service Providers', href: '/service-providers', icon: Truck },
         ],
       },
@@ -308,6 +310,8 @@ export const ROLE_CAPABILITIES: Record<JobRole, RoleCapability> = {
         title: 'Inventory',
         items: [
           { label: 'Inventory', href: '/inventory', icon: Package },
+          { label: 'Purchase Orders', href: '/inventory/purchase-orders', icon: ShoppingCart },
+          { label: 'Receipts', href: '/inventory/receipts', icon: Truck },
           { label: 'Reports', href: '/reports', icon: FileText },
         ],
       },
