@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { InventoryController } from './inventory.controller';
 import { InventoryService } from './inventory.service';
 import { RecipesController } from './recipes.controller';
@@ -18,6 +18,7 @@ import { CsvImportService } from './csv-import.service';
 import { TemplatesController, ImportController } from './templates.controller';
 import { PrismaService } from '../prisma.service';
 import { KpisModule } from '../kpis/kpis.module';
+import { AuditModule } from '../audit/audit.module';
 
 // M11.1 Inventory Foundation imports
 import { InventoryFoundationController } from './inventory-foundation.controller';
@@ -28,11 +29,18 @@ import { InventoryAdjustmentsService } from './inventory-adjustments.service';
 import { InventoryCountsService } from './inventory-counts.service';
 import { InventoryExportService } from './inventory-export.service';
 
+// M11.2 Procurement imports
+import { ProcurementController } from './procurement.controller';
+import { PurchaseOrdersService } from './purchase-orders.service';
+import { ReceiptsService } from './receipts.service';
+import { ProcurementReportingService } from './procurement-reporting.service';
+
 @Module({
-  imports: [KpisModule],
+  imports: [KpisModule, AuditModule],
   controllers: [
     InventoryController,
     InventoryFoundationController, // M11.1
+    ProcurementController, // M11.2
     RecipesController,
     WastageController,
     CountsController,
@@ -49,6 +57,9 @@ import { InventoryExportService } from './inventory-export.service';
     InventoryAdjustmentsService, // M11.1
     InventoryCountsService, // M11.1
     InventoryExportService, // M11.1
+    PurchaseOrdersService, // M11.2
+    ReceiptsService, // M11.2
+    ProcurementReportingService, // M11.2
     RecipesService,
     WastageService,
     CountsService,
@@ -68,6 +79,9 @@ import { InventoryExportService } from './inventory-export.service';
     InventoryAdjustmentsService, // M11.1
     InventoryCountsService, // M11.1
     InventoryExportService, // M11.1
+    PurchaseOrdersService, // M11.2
+    ReceiptsService, // M11.2
+    ProcurementReportingService, // M11.2
     RecipesService,
     WastageService,
     CountsService,

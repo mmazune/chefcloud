@@ -604,6 +604,9 @@ model Branch {
   inventoryLedgerEntries InventoryLedgerEntry[]
   stockAdjustments       StockAdjustment[]
   countSessions          CountSession[]
+  // M11.2: Purchasing & Receiving
+  purchaseOrdersV2       PurchaseOrderV2[] @relation("BranchPurchaseOrdersV2")
+  goodsReceiptsV2        GoodsReceiptV2[]  @relation("BranchGoodsReceiptsV2")
 
   @@index([orgId, id])
   @@map("branches")
@@ -753,6 +756,10 @@ model User {
   countSessionsCreated            CountSession[]                   @relation("CountSessionCreator")
   countSessionsFinalized          CountSession[]                   @relation("CountSessionFinalizer")
   countSessionLinesCounted        CountSessionLine[]               @relation("CountSessionLineCounter")
+  // M11.2: Purchasing & Receiving
+  purchaseOrdersCreated           PurchaseOrderV2[]                @relation("POCreator")
+  purchaseOrdersApproved          PurchaseOrderV2[]                @relation("POApprover")
+  receiptsPosted                  GoodsReceiptV2[]                 @relation("ReceiptPostedBy")
 
   @@index([orgId, id])
   @@map("users")
@@ -2012,6 +2019,9 @@ model InventoryItem {
   ledgerEntries     InventoryLedgerEntry[] // M11.1: Ledger entries
   stockAdjustments  StockAdjustment[] @relation("StockAdjustmentItem") // M11.1: Stock adjustments
   countSessionLines CountSessionLine[] @relation("CountSessionLineItem") // M11.1: Count lines
+  // M11.2: Purchasing & Receiving
+  poLinesV2         PurchaseOrderLineV2[] @relation("POLineItem")
+  receiptLinesV2    GoodsReceiptLineV2[]  @relation("ReceiptLineItem")
 
   @@unique([orgId, sku])
   @@index([orgId])
@@ -2580,6 +2590,7 @@ model Vendor {
   bills       VendorBill[]
   payments    VendorPayment[]
   creditNotes VendorCreditNote[] // M8.5
+  purchaseOrdersV2 PurchaseOrderV2[] @relation("VendorPurchaseOrders") // M11.2
 
   @@index([orgId])
   @@map("vendors")
@@ -5423,6 +5434,9 @@ model UnitOfMeasure {
   conversionsFrom UnitConversion[] @relation("ConversionFrom")
   conversionsTo   UnitConversion[] @relation("ConversionTo")
   inventoryItems  InventoryItem[] @relation("ItemUom")
+  // M11.2: Purchasing & Receiving
+  poLinesV2Input       PurchaseOrderLineV2[] @relation("POLineInputUom")
+  receiptLinesV2Input  GoodsReceiptLineV2[]  @relation("ReceiptLineInputUom")
 
   @@unique([orgId, code])
   @@index([orgId])
@@ -5468,6 +5482,8 @@ model InventoryLocation {
   adjustments    StockAdjustment[]
   countLines     CountSessionLine[]
   countSessions  CountSession[]     @relation("CountSessionLocation")
+  // M11.2: Purchasing & Receiving
+  receiptLinesV2 GoodsReceiptLineV2[] @relation("ReceiptLineLocation")
 
   @@unique([branchId, code])
   @@index([orgId])
@@ -5585,4 +5601,140 @@ model CountSessionLine {
   @@index([sessionId])
   @@index([itemId])
   @@map("count_session_lines")
+}
+
+// ============================================
+// M11.2 Purchasing & Receiving Core
+// ============================================
+
+enum PurchaseOrderStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  PARTIALLY_RECEIVED
+  RECEIVED
+  CANCELLED
+}
+
+enum GoodsReceiptStatus {
+  DRAFT
+  POSTED
+  VOID
+}
+
+// Enterprise Purchase Order with Vendor from accounting
+model PurchaseOrderV2 {
+  id              String              @id @default(cuid())
+  orgId           String
+  branchId        String
+  vendorId        String              // FK to Vendor (accounting)
+  poNumber        String              // Auto-generated or user-provided
+  status          PurchaseOrderStatus @default(DRAFT)
+  expectedAt      DateTime?           // Expected delivery date
+  notes           String?
+  totalAmount     Decimal             @default(0) @db.Decimal(12, 2)
+  createdById     String
+  approvedById    String?
+  approvedAt      DateTime?
+  idempotencyKey  String?             // For integration-based creation
+  metadata        Json?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  branch      Branch                 @relation("BranchPurchaseOrdersV2", fields: [branchId], references: [id], onDelete: Cascade)
+  vendor      Vendor                 @relation("VendorPurchaseOrders", fields: [vendorId], references: [id], onDelete: Restrict)
+  createdBy   User                   @relation("POCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  approvedBy  User?                  @relation("POApprover", fields: [approvedById], references: [id], onDelete: SetNull)
+  lines       PurchaseOrderLineV2[]
+  receipts    GoodsReceiptV2[]
+
+  @@unique([orgId, poNumber])
+  @@unique([orgId, idempotencyKey])
+  @@index([orgId, branchId])
+  @@index([vendorId])
+  @@index([status])
+  @@map("purchase_orders_v2")
+}
+
+// Purchase Order Line with UOM conversion and over-receipt policy
+model PurchaseOrderLineV2 {
+  id                String   @id @default(cuid())
+  purchaseOrderId   String
+  itemId            String
+  qtyOrderedInput   Decimal  @db.Decimal(12, 4) // Quantity in input UOM
+  inputUomId        String                       // UOM of input quantity
+  qtyOrderedBase    Decimal  @db.Decimal(12, 4) // Converted to item's base UOM
+  unitCost          Decimal  @db.Decimal(12, 4) // Cost per unit (in org currency)
+  qtyReceivedBase   Decimal  @default(0) @db.Decimal(12, 4) // Total received in base UOM
+  allowOverReceipt  Boolean  @default(false)    // Policy: allow receiving more than ordered
+  notes             String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  purchaseOrder PurchaseOrderV2     @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  item          InventoryItem       @relation("POLineItem", fields: [itemId], references: [id], onDelete: Restrict)
+  inputUom      UnitOfMeasure       @relation("POLineInputUom", fields: [inputUomId], references: [id], onDelete: Restrict)
+  receiptLines  GoodsReceiptLineV2[]
+
+  @@index([purchaseOrderId])
+  @@index([itemId])
+  @@map("purchase_order_lines_v2")
+}
+
+// Goods Receipt with idempotent posting
+model GoodsReceiptV2 {
+  id                String             @id @default(cuid())
+  orgId             String
+  branchId          String
+  purchaseOrderId   String
+  receiptNumber     String             // Auto-generated
+  status            GoodsReceiptStatus @default(DRAFT)
+  receivedAt        DateTime           @default(now())
+  postedAt          DateTime?
+  postedById        String?
+  idempotencyKey    String?            // UNIQUE per org - prevents double posting
+  referenceNumber   String?            // External reference (e.g., delivery note)
+  notes             String?
+  metadata          Json?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  branch        Branch              @relation("BranchGoodsReceiptsV2", fields: [branchId], references: [id], onDelete: Cascade)
+  purchaseOrder PurchaseOrderV2     @relation(fields: [purchaseOrderId], references: [id], onDelete: Restrict)
+  postedBy      User?               @relation("ReceiptPostedBy", fields: [postedById], references: [id], onDelete: SetNull)
+  lines         GoodsReceiptLineV2[]
+
+  @@unique([orgId, receiptNumber])
+  @@unique([orgId, idempotencyKey])
+  @@index([orgId, branchId])
+  @@index([purchaseOrderId])
+  @@index([status])
+  @@map("goods_receipts_v2")
+}
+
+// Goods Receipt Line with ledger posting
+model GoodsReceiptLineV2 {
+  id                String    @id @default(cuid())
+  goodsReceiptId    String
+  itemId            String
+  locationId        String                        // Receiving location
+  poLineId          String?                       // Link to PO line
+  qtyReceivedInput  Decimal   @db.Decimal(12, 4) // Quantity in input UOM
+  inputUomId        String                        // UOM of input quantity
+  qtyReceivedBase   Decimal   @db.Decimal(12, 4) // Converted to item's base UOM
+  unitCost          Decimal   @db.Decimal(12, 4) // Cost per unit (may override PO line)
+  notes             String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  goodsReceipt GoodsReceiptV2    @relation(fields: [goodsReceiptId], references: [id], onDelete: Cascade)
+  item         InventoryItem     @relation("ReceiptLineItem", fields: [itemId], references: [id], onDelete: Restrict)
+  location     InventoryLocation @relation("ReceiptLineLocation", fields: [locationId], references: [id], onDelete: Restrict)
+  poLine       PurchaseOrderLineV2? @relation(fields: [poLineId], references: [id], onDelete: SetNull)
+  inputUom     UnitOfMeasure     @relation("ReceiptLineInputUom", fields: [inputUomId], references: [id], onDelete: Restrict)
+
+  @@index([goodsReceiptId])
+  @@index([itemId])
+  @@index([poLineId])
+  @@map("goods_receipt_lines_v2")
 }
