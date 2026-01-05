@@ -100,6 +100,11 @@ import { LeaveAttachmentsService } from './leave-attachments.service';
 import { LeaveProjectionService } from './leave-projection.service';
 import { LeaveCalendarController, LeaveDelegationController } from './leave-enterprise.controller';
 
+// M10.19: Compliance (Break Rules + Penalties + Geo-fencing + Audit Exports)
+import { WorkforceComplianceService } from './workforce-compliance.service';
+import { ComplianceExportService } from './compliance-export.service';
+import { ComplianceController, MyComplianceController, TimeclockExportController } from './compliance.controller';
+
 @Module({
   imports: [
     forwardRef(() => AccountingModule), // E43-s2
@@ -136,6 +141,9 @@ import { LeaveCalendarController, LeaveDelegationController } from './leave-ente
     LeaveController, // M10.17
     LeaveCalendarController, // M10.18
     LeaveDelegationController, // M10.18
+    ComplianceController, // M10.19
+    MyComplianceController, // M10.19
+    TimeclockExportController, // M10.19
   ],
   providers: [
     WorkforceService,
@@ -176,6 +184,8 @@ import { LeaveCalendarController, LeaveDelegationController } from './leave-ente
     LeaveDelegationService, // M10.18
     LeaveAttachmentsService, // M10.18
     LeaveProjectionService, // M10.18
+    WorkforceComplianceService, // M10.19
+    ComplianceExportService, // M10.19
     PrismaService,
   ],
   exports: [
@@ -217,6 +227,8 @@ import { LeaveCalendarController, LeaveDelegationController } from './leave-ente
     LeaveDelegationService, // M10.18
     LeaveAttachmentsService, // M10.18
     LeaveProjectionService, // M10.18
+    WorkforceComplianceService, // M10.19
+    ComplianceExportService, // M10.19
   ],
 })
 export class WorkforceModule {}

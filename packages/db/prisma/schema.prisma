@@ -708,6 +708,8 @@ model User {
   // M10.14: Auto-Scheduler v2 (Publish + Assignment)
   publishedAutoScheduleRuns       AutoScheduleRun[]                @relation("RunPublisher")
   assignedScheduleSuggestions     AutoScheduleSuggestion[]         @relation("SuggestionAssignee")
+  // M10.19: Compliance Incidents
+  complianceIncidents             OpsIncident[]                    @relation("ComplianceIncidents")
 
   @@index([orgId, id])
   @@map("users")
@@ -3193,6 +3195,15 @@ model TimeEntry {
   approved        Boolean         @default(false)
   approvedById    String?
   overtimeMinutes Int             @default(0)
+  // M10.19: Geo-fencing Metadata (optional)
+  clockInLat              Float?   // Latitude of clock-in
+  clockInLng              Float?   // Longitude of clock-in
+  clockInAccuracyMeters   Float?   // GPS accuracy in meters
+  clockInSource           String?  // GPS, WIFI, MANUAL
+  clockOutLat             Float?   // Latitude of clock-out
+  clockOutLng             Float?   // Longitude of clock-out
+  clockOutAccuracyMeters  Float?   // GPS accuracy in meters
+  clockOutSource          String?  // GPS, WIFI, MANUAL
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
 
@@ -3202,6 +3213,7 @@ model TimeEntry {
   breakEntries      BreakEntry[]
   timesheetApproval TimesheetApproval? // M10.3: Timesheet approval record
   adjustments       TimeEntryAdjustment[] // M10.5: Adjustment requests
+  complianceIncidents OpsIncident[] // M10.19: Break compliance incidents
 
   @@index([orgId, branchId, clockInAt])
   @@index([userId, clockInAt])
@@ -4060,22 +4072,34 @@ model OpsIncident {
   id         String    @id @default(cuid())
   orgId      String
   branchId   String?
-  type       String // "WEBHOOK_CIRCUIT_OPEN", "HOLD_EXPIRY_SPIKE", "NOTIFICATION_FAILURE_SPIKE"
+  type       String // "WEBHOOK_CIRCUIT_OPEN", "HOLD_EXPIRY_SPIKE", "MEAL_BREAK_MISSED", "MEAL_BREAK_SHORT", "REST_BREAK_MISSED", "REST_BREAK_SHORT"
   severity   String // "LOW", "MEDIUM", "HIGH", "CRITICAL"
   title      String
   payload    Json?
   resolved   Boolean   @default(false)
   resolvedAt DateTime?
   resolvedBy String?
+  // M10.19: Compliance incident extensions
+  timeEntryId       String?  // Link to time entry for break incidents
+  userId            String?  // User involved in the incident
+  incidentDate      DateTime? // Date of the incident
+  penaltyMinutes    Int?     // Penalty minutes for meal/rest break violations
+  penaltyAmountCents Int?    // Optional monetary penalty in cents
+  currency          String?  @default("USD") // Currency code
   createdAt  DateTime  @default(now())
 
-  org    Org     @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  branch Branch? @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  org       Org        @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  branch    Branch?    @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  timeEntry TimeEntry? @relation(fields: [timeEntryId], references: [id], onDelete: Cascade)
+  user      User?      @relation("ComplianceIncidents", fields: [userId], references: [id], onDelete: Cascade)
 
+  @@unique([orgId, timeEntryId, type]) // M10.19: Idempotency constraint
   @@index([orgId])
   @@index([branchId])
   @@index([type, createdAt])
   @@index([resolved, createdAt])
+  @@index([userId, createdAt])
+  @@index([timeEntryId])
   @@map("ops_incidents")
 }
 
@@ -4233,6 +4257,12 @@ model WorkforcePolicy {
   minRestHoursBetweenShifts Int          @default(10) // M10.14: Minimum rest hours between shifts
   maxWeeklyHours            Int          @default(48) // M10.14: Maximum weekly hours
   maxConsecutiveDays        Int          @default(6) // M10.14: Maximum consecutive work days
+  // M10.19: Break/Meal Compliance Rules
+  mealBreakRequiredAfterHours  Int       @default(6) // Meal break required after X hours
+  mealBreakMinimumMinutes      Int       @default(30) // Minimum meal break duration
+  restBreakRequiredAfterHours  Int       @default(4) // Rest break required after X hours
+  restBreakMinimumMinutes      Int       @default(10) // Minimum rest break duration
+  allowWaiveMealBreak          Boolean   @default(false) // Allow employees to waive meal break
   createdAt                 DateTime     @default(now())
   updatedAt                 DateTime     @updatedAt
 
