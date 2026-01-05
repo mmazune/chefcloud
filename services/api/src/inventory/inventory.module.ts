@@ -35,12 +35,20 @@ import { PurchaseOrdersService } from './purchase-orders.service';
 import { ReceiptsService } from './receipts.service';
 import { ProcurementReportingService } from './procurement-reporting.service';
 
+// M11.3 Transfers + Waste imports
+import { InventoryTransfersController } from './inventory-transfers.controller';
+import { InventoryTransfersService } from './inventory-transfers.service';
+import { InventoryWasteController } from './inventory-waste.controller';
+import { InventoryWasteService } from './inventory-waste.service';
+
 @Module({
   imports: [KpisModule, AuditModule],
   controllers: [
     InventoryController,
     InventoryFoundationController, // M11.1
     ProcurementController, // M11.2
+    InventoryTransfersController, // M11.3
+    InventoryWasteController, // M11.3
     RecipesController,
     WastageController,
     CountsController,
@@ -60,6 +68,8 @@ import { ProcurementReportingService } from './procurement-reporting.service';
     PurchaseOrdersService, // M11.2
     ReceiptsService, // M11.2
     ProcurementReportingService, // M11.2
+    InventoryTransfersService, // M11.3
+    InventoryWasteService, // M11.3
     RecipesService,
     WastageService,
     CountsService,
@@ -82,6 +92,8 @@ import { ProcurementReportingService } from './procurement-reporting.service';
     PurchaseOrdersService, // M11.2
     ReceiptsService, // M11.2
     ProcurementReportingService, // M11.2
+    InventoryTransfersService, // M11.3
+    InventoryWasteService, // M11.3
     RecipesService,
     WastageService,
     CountsService,

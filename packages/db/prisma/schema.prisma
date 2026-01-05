@@ -607,6 +607,10 @@ model Branch {
   // M11.2: Purchasing & Receiving
   purchaseOrdersV2       PurchaseOrderV2[] @relation("BranchPurchaseOrdersV2")
   goodsReceiptsV2        GoodsReceiptV2[]  @relation("BranchGoodsReceiptsV2")
+  // M11.3: Transfers + Waste
+  transfersFrom          InventoryTransfer[] @relation("TransferFromBranch")
+  transfersTo            InventoryTransfer[] @relation("TransferToBranch")
+  wasteDocuments         InventoryWaste[]    @relation("WasteBranch")
 
   @@index([orgId, id])
   @@map("branches")
@@ -760,6 +764,12 @@ model User {
   purchaseOrdersCreated           PurchaseOrderV2[]                @relation("POCreator")
   purchaseOrdersApproved          PurchaseOrderV2[]                @relation("POApprover")
   receiptsPosted                  GoodsReceiptV2[]                 @relation("ReceiptPostedBy")
+  // M11.3: Transfers + Waste
+  transfersCreated                InventoryTransfer[]              @relation("TransferCreator")
+  transfersShipped                InventoryTransfer[]              @relation("TransferShipper")
+  transfersReceived               InventoryTransfer[]              @relation("TransferReceiver")
+  wasteCreated                    InventoryWaste[]                 @relation("WasteCreator")
+  wastePosted                     InventoryWaste[]                 @relation("WastePoster")
 
   @@index([orgId, id])
   @@map("users")
@@ -2022,6 +2032,9 @@ model InventoryItem {
   // M11.2: Purchasing & Receiving
   poLinesV2         PurchaseOrderLineV2[] @relation("POLineItem")
   receiptLinesV2    GoodsReceiptLineV2[]  @relation("ReceiptLineItem")
+  // M11.3: Transfers + Waste
+  transferLines     InventoryTransferLine[] @relation("TransferLineItem")
+  wasteLines        InventoryWasteLine[]    @relation("WasteLineItem")
 
   @@unique([orgId, sku])
   @@index([orgId])
@@ -5484,6 +5497,10 @@ model InventoryLocation {
   countSessions  CountSession[]     @relation("CountSessionLocation")
   // M11.2: Purchasing & Receiving
   receiptLinesV2 GoodsReceiptLineV2[] @relation("ReceiptLineLocation")
+  // M11.3: Transfers + Waste
+  transferLinesFrom InventoryTransferLine[] @relation("TransferLineFromLocation")
+  transferLinesTo   InventoryTransferLine[] @relation("TransferLineToLocation")
+  wasteLines        InventoryWasteLine[]    @relation("WasteLineLocation")
 
   @@unique([branchId, code])
   @@index([orgId])
@@ -5737,4 +5754,136 @@ model GoodsReceiptLineV2 {
   @@index([itemId])
   @@index([poLineId])
   @@map("goods_receipt_lines_v2")
+}
+
+// ===== M11.3: Inventory Transfers + Waste =====
+
+enum InventoryTransferStatus {
+  DRAFT
+  IN_TRANSIT
+  RECEIVED
+  VOID
+}
+
+enum InventoryWasteStatus {
+  DRAFT
+  POSTED
+  VOID
+}
+
+enum InventoryWasteReason {
+  DAMAGED
+  EXPIRED
+  THEFT
+  SPOILED
+  SAMPLE
+  OTHER
+}
+
+// Transfer document for inter-branch or intra-branch stock movements
+model InventoryTransfer {
+  id              String                   @id @default(cuid())
+  orgId           String
+  fromBranchId    String
+  toBranchId      String
+  transferNumber  String                   // Auto-generated (TRF-YYMM-XXXXX)
+  status          InventoryTransferStatus  @default(DRAFT)
+  shippedAt       DateTime?
+  shippedById     String?
+  receivedAt      DateTime?
+  receivedById    String?
+  notes           String?
+  idempotencyKey  String?                  // Unique per org - prevents duplicate creation
+  metadata        Json?
+  createdById     String
+  createdAt       DateTime                 @default(now())
+  updatedAt       DateTime                 @updatedAt
+
+  fromBranch  Branch                  @relation("TransferFromBranch", fields: [fromBranchId], references: [id], onDelete: Restrict)
+  toBranch    Branch                  @relation("TransferToBranch", fields: [toBranchId], references: [id], onDelete: Restrict)
+  createdBy   User                    @relation("TransferCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  shippedBy   User?                   @relation("TransferShipper", fields: [shippedById], references: [id], onDelete: SetNull)
+  receivedBy  User?                   @relation("TransferReceiver", fields: [receivedById], references: [id], onDelete: SetNull)
+  lines       InventoryTransferLine[]
+
+  @@unique([orgId, transferNumber])
+  @@unique([orgId, idempotencyKey])
+  @@index([orgId, fromBranchId])
+  @@index([orgId, toBranchId])
+  @@index([status])
+  @@map("inventory_transfers")
+}
+
+// Transfer line items
+model InventoryTransferLine {
+  id              String   @id @default(cuid())
+  transferId      String
+  itemId          String
+  fromLocationId  String                   // Source location (in fromBranch)
+  toLocationId    String                   // Destination location (in toBranch)
+  qtyShipped      Decimal  @db.Decimal(12, 4)
+  qtyReceived     Decimal  @default(0) @db.Decimal(12, 4)
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  transfer      InventoryTransfer  @relation(fields: [transferId], references: [id], onDelete: Cascade)
+  item          InventoryItem      @relation("TransferLineItem", fields: [itemId], references: [id], onDelete: Restrict)
+  fromLocation  InventoryLocation  @relation("TransferLineFromLocation", fields: [fromLocationId], references: [id], onDelete: Restrict)
+  toLocation    InventoryLocation  @relation("TransferLineToLocation", fields: [toLocationId], references: [id], onDelete: Restrict)
+
+  @@index([transferId])
+  @@index([itemId])
+  @@map("inventory_transfer_lines")
+}
+
+// Waste document for recording stock losses
+model InventoryWaste {
+  id              String                @id @default(cuid())
+  orgId           String
+  branchId        String
+  wasteNumber     String                // Auto-generated (WST-YYMM-XXXXX)
+  status          InventoryWasteStatus  @default(DRAFT)
+  reason          InventoryWasteReason  @default(OTHER)
+  postedAt        DateTime?
+  postedById      String?
+  notes           String?
+  idempotencyKey  String?               // Unique per org - prevents duplicate creation
+  metadata        Json?
+  createdById     String
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+
+  branch     Branch              @relation("WasteBranch", fields: [branchId], references: [id], onDelete: Cascade)
+  createdBy  User                @relation("WasteCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  postedBy   User?               @relation("WastePoster", fields: [postedById], references: [id], onDelete: SetNull)
+  lines      InventoryWasteLine[]
+
+  @@unique([orgId, wasteNumber])
+  @@unique([orgId, idempotencyKey])
+  @@index([orgId, branchId])
+  @@index([status])
+  @@map("inventory_waste")
+}
+
+// Waste line items
+model InventoryWasteLine {
+  id          String                 @id @default(cuid())
+  wasteId     String
+  itemId      String
+  locationId  String
+  qty         Decimal                @db.Decimal(12, 4) // Quantity wasted (positive)
+  unitCost    Decimal?               @db.Decimal(12, 4) // Optional cost tracking
+  reason      InventoryWasteReason?  // Line-level override
+  notes       String?
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @updatedAt
+
+  waste     InventoryWaste     @relation(fields: [wasteId], references: [id], onDelete: Cascade)
+  item      InventoryItem      @relation("WasteLineItem", fields: [itemId], references: [id], onDelete: Restrict)
+  location  InventoryLocation  @relation("WasteLineLocation", fields: [locationId], references: [id], onDelete: Restrict)
+
+  @@index([wasteId])
+  @@index([itemId])
+  @@map("inventory_waste_lines")
 }
