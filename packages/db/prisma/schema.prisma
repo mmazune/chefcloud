@@ -478,6 +478,10 @@ model Org {
   // M10.20: Geo-Fencing
   branchGeoFences                BranchGeoFence[]
   geoFenceEvents                 GeoFenceEvent[]
+  // M10.21: Kiosk Devices
+  kioskDevices                   KioskDevice[]
+  kioskPinAttempts               KioskPinAttempt[]
+  kioskClockEvents               KioskClockEvent[]
 
   @@map("orgs")
 }
@@ -587,6 +591,10 @@ model Branch {
   // M10.20: Geo-fence
   geoFence               BranchGeoFence?
   geoFenceEvents         GeoFenceEvent[]
+  // M10.21: Kiosk Devices
+  kioskDevices           KioskDevice[]
+  kioskPinAttempts       KioskPinAttempt[]
+  kioskClockEvents       KioskClockEvent[]
 
   @@index([orgId, id])
   @@map("branches")
@@ -723,6 +731,10 @@ model User {
   updatedGeoFences                BranchGeoFence[]                 @relation("GeoFenceUpdatedBy")
   geoFenceEvents                  GeoFenceEvent[]                  @relation("GeoFenceEventUser")
   geoFenceEventOverrides          GeoFenceEvent[]                  @relation("GeoFenceEventOverrideBy")
+  // M10.21: Kiosk Devices
+  createdKioskDevices             KioskDevice[]                    @relation("KioskDeviceCreatedBy")
+  kioskPinAttempts                KioskPinAttempt[]                @relation("KioskPinAttemptUser")
+  kioskClockEvents                KioskClockEvent[]                @relation("KioskClockEventUser")
 
   @@index([orgId, id])
   @@map("users")
@@ -4345,6 +4357,11 @@ model WorkforcePolicy {
   restBreakRequiredAfterHours  Int       @default(4) // Rest break required after X hours
   restBreakMinimumMinutes      Int       @default(10) // Minimum rest break duration
   allowWaiveMealBreak          Boolean   @default(false) // Allow employees to waive meal break
+  // M10.21: Kiosk Timeclock Controls
+  requireKioskForTimeclock     Boolean   @default(false) // Require kiosk for clock operations
+  requireGeofenceForKiosk      Boolean   @default(false) // Apply geofence enforcement even for kiosk
+  kioskPinRateLimitPerMinute   Int       @default(5) // Max PIN attempts per minute per device
+  kioskSessionTimeoutMinutes   Int       @default(720) // 12 hours default session timeout
   createdAt                 DateTime     @default(now())
   updatedAt                 DateTime     @updatedAt
 
@@ -5208,5 +5225,104 @@ model AutoScheduleSuggestion {
 
   @@index([runId, roleKey])
   @@map("auto_schedule_suggestions")
+}
+
+// ===== M10.21: Kiosk Device Enrollment =====
+
+model KioskDevice {
+  id              String   @id @default(cuid())
+  orgId           String
+  branchId        String
+  name            String   // "Front Entrance Tablet"
+  publicId        String   @unique @db.VarChar(32) // Short public identifier for URL
+  secretHash      String   // Argon2id hash of device secret
+  enabled         Boolean  @default(true)
+  allowedIpCidrs  String[] @default([]) // Optional IP allowlist
+  lastSeenAt      DateTime?
+  createdById     String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  org           Org                  @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  branch        Branch               @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  createdBy     User?                @relation("KioskDeviceCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  sessions      KioskDeviceSession[]
+  pinAttempts   KioskPinAttempt[]
+  clockEvents   KioskClockEvent[]
+
+  @@index([orgId])
+  @@index([branchId])
+  @@index([publicId])
+  @@map("kiosk_devices")
+}
+
+// ===== M10.21: Kiosk Device Sessions =====
+
+model KioskDeviceSession {
+  id              String   @id @default(cuid())
+  kioskDeviceId   String
+  startedAt       DateTime @default(now())
+  endedAt         DateTime?
+  endedReason     String?  // EXPIRED, ROTATED, MANUAL, HEARTBEAT_TIMEOUT
+  lastHeartbeatAt DateTime @default(now())
+  ipAddress       String?
+  userAgent       String?
+  metadata        Json?
+
+  kioskDevice KioskDevice @relation(fields: [kioskDeviceId], references: [id], onDelete: Cascade)
+
+  @@index([kioskDeviceId])
+  @@index([startedAt])
+  @@map("kiosk_device_sessions")
+}
+
+// ===== M10.21: Kiosk PIN Attempts (Rate Limiting) =====
+
+model KioskPinAttempt {
+  id              String   @id @default(cuid())
+  orgId           String
+  branchId        String
+  kioskDeviceId   String
+  pinMasked       String   // Last 2 chars only (e.g., "**34")
+  success         Boolean
+  userId          String?  // Only set if successful
+  ipAddress       String?
+  attemptedAt     DateTime @default(now())
+
+  org         Org         @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  branch      Branch      @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  kioskDevice KioskDevice @relation(fields: [kioskDeviceId], references: [id], onDelete: Cascade)
+  user        User?       @relation("KioskPinAttemptUser", fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([orgId, kioskDeviceId, attemptedAt])
+  @@index([kioskDeviceId, attemptedAt])
+  @@map("kiosk_pin_attempts")
+}
+
+// ===== M10.21: Kiosk Clock Events =====
+
+model KioskClockEvent {
+  id              String   @id @default(cuid())
+  orgId           String
+  branchId        String
+  kioskDeviceId   String
+  userId          String
+  eventType       String   // CLOCK_IN, CLOCK_OUT, BREAK_START, BREAK_END
+  timeEntryId     String?
+  breakEntryId    String?
+  geoBlocked      Boolean  @default(false)
+  geoOverridden   Boolean  @default(false)
+  ipAddress       String?
+  createdAt       DateTime @default(now())
+
+  org         Org         @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  branch      Branch      @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  kioskDevice KioskDevice @relation(fields: [kioskDeviceId], references: [id], onDelete: Cascade)
+  user        User        @relation("KioskClockEventUser", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([orgId, branchId, createdAt])
+  @@index([kioskDeviceId, createdAt])
+  @@index([userId, createdAt])
+  @@map("kiosk_clock_events")
 }
 

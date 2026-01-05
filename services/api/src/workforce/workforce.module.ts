@@ -111,6 +111,14 @@ import { GeoFenceService } from './geofence.service';
 import { GeoFenceReportingService } from './geofence-reporting.service';
 import { GeoFenceController } from './geofence.controller';
 
+// M10.21: Kiosk Timeclock + Device Enrollment + Fraud Controls
+import { KioskDeviceService } from './kiosk-device.service';
+import { KioskSessionService } from './kiosk-session.service';
+import { KioskTimeclockService } from './kiosk-timeclock.service';
+import { KioskReportingService } from './kiosk-reporting.service';
+import { KioskDeviceController } from './kiosk-device.controller';
+import { PublicKioskController } from './public-kiosk.controller';
+
 @Module({
   imports: [
     forwardRef(() => AccountingModule), // E43-s2
@@ -151,6 +159,8 @@ import { GeoFenceController } from './geofence.controller';
     MyComplianceController, // M10.19
     TimeclockExportController, // M10.19
     GeoFenceController, // M10.20
+    KioskDeviceController, // M10.21
+    PublicKioskController, // M10.21
   ],
   providers: [
     WorkforceService,
@@ -195,6 +205,10 @@ import { GeoFenceController } from './geofence.controller';
     ComplianceExportService, // M10.19
     GeoFenceService, // M10.20
     GeoFenceReportingService, // M10.20
+    KioskDeviceService, // M10.21
+    KioskSessionService, // M10.21
+    KioskTimeclockService, // M10.21
+    KioskReportingService, // M10.21
     PrismaService,
   ],
   exports: [
@@ -240,6 +254,10 @@ import { GeoFenceController } from './geofence.controller';
     ComplianceExportService, // M10.19
     GeoFenceService, // M10.20
     GeoFenceReportingService, // M10.20
+    KioskDeviceService, // M10.21
+    KioskSessionService, // M10.21
+    KioskTimeclockService, // M10.21
+    KioskReportingService, // M10.21
   ],
 })
 export class WorkforceModule {}

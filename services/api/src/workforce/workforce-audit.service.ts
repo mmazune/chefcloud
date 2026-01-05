@@ -58,13 +58,28 @@ export enum WorkforceAuditAction {
   GEOFENCE_CONFIG_DELETED = 'GEOFENCE_CONFIG_DELETED',
   GEOFENCE_OVERRIDE_CLOCKIN = 'GEOFENCE_OVERRIDE_CLOCKIN',
   GEOFENCE_OVERRIDE_CLOCKOUT = 'GEOFENCE_OVERRIDE_CLOCKOUT',
+  // M10.21: Kiosk Device Management
+  KIOSK_DEVICE_CREATED = 'KIOSK_DEVICE_CREATED',
+  KIOSK_DEVICE_UPDATED = 'KIOSK_DEVICE_UPDATED',
+  KIOSK_DEVICE_DELETED = 'KIOSK_DEVICE_DELETED',
+  KIOSK_DEVICE_SECRET_ROTATED = 'KIOSK_DEVICE_SECRET_ROTATED',
+  KIOSK_DEVICE_DISABLED = 'KIOSK_DEVICE_DISABLED',
+  KIOSK_SESSION_STARTED = 'KIOSK_SESSION_STARTED',
+  KIOSK_SESSION_ENDED = 'KIOSK_SESSION_ENDED',
+  // M10.21: Kiosk Timeclock Events
+  KIOSK_CLOCK_IN = 'KIOSK_CLOCK_IN',
+  KIOSK_CLOCK_OUT = 'KIOSK_CLOCK_OUT',
+  KIOSK_BREAK_START = 'KIOSK_BREAK_START',
+  KIOSK_BREAK_END = 'KIOSK_BREAK_END',
+  KIOSK_PIN_RATE_LIMITED = 'KIOSK_PIN_RATE_LIMITED',
+  KIOSK_GEOFENCE_BLOCKED = 'KIOSK_GEOFENCE_BLOCKED',
 }
 
 interface AuditLogData {
   orgId: string;
   performedById: string;
   action: WorkforceAuditAction;
-  entityType: 'SHIFT' | 'TIME_ENTRY' | 'BREAK' | 'TEMPLATE' | 'WorkforcePolicy' | 'PayPeriod' | 'TimesheetApproval' | 'PayrollExport' | 'TimeEntryAdjustment' | 'TimeEntry' | 'PayrollRun' | 'LeaveRequest' | 'BranchGeoFence';
+  entityType: 'SHIFT' | 'TIME_ENTRY' | 'BREAK' | 'TEMPLATE' | 'WorkforcePolicy' | 'PayPeriod' | 'TimesheetApproval' | 'PayrollExport' | 'TimeEntryAdjustment' | 'TimeEntry' | 'PayrollRun' | 'LeaveRequest' | 'BranchGeoFence' | 'KioskDevice' | 'KioskDeviceSession' | 'KioskClockEvent';
   entityId: string;
   payload?: Record<string, unknown>;
 }

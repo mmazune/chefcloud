@@ -139,6 +139,8 @@ export class WorkforceTimeclockService {
       accuracyMeters?: number;
       source?: 'GPS' | 'WIFI' | 'MANUAL';
     };
+    // M10.21: Kiosk device ID (for audit trail)
+    kioskDeviceId?: string;
   }) {
     // Check for existing open time entry
     const existingEntry = await this.prisma.client.timeEntry.findFirst({
