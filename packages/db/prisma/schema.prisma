@@ -599,6 +599,11 @@ model Branch {
   kioskClockEvents       KioskClockEvent[]
   // M10.22: Kiosk Events
   kioskEvents            KioskEvent[]
+  // M11.1: Inventory Foundation
+  inventoryLocations     InventoryLocation[]
+  inventoryLedgerEntries InventoryLedgerEntry[]
+  stockAdjustments       StockAdjustment[]
+  countSessions          CountSession[]
 
   @@index([orgId, id])
   @@map("branches")
@@ -741,6 +746,13 @@ model User {
   kioskClockEvents                KioskClockEvent[]                @relation("KioskClockEventUser")
   // M10.22: Kiosk Events
   kioskEvents                     KioskEvent[]                     @relation("KioskEventUser")
+  // M11.1: Inventory Foundation
+  ledgerEntriesCreated            InventoryLedgerEntry[]           @relation("LedgerEntryCreator")
+  stockAdjustmentsCreated         StockAdjustment[]                @relation("StockAdjustmentCreator")
+  stockAdjustmentsApproved        StockAdjustment[]                @relation("StockAdjustmentApprover")
+  countSessionsCreated            CountSession[]                   @relation("CountSessionCreator")
+  countSessionsFinalized          CountSession[]                   @relation("CountSessionFinalizer")
+  countSessionLinesCounted        CountSessionLine[]               @relation("CountSessionLineCounter")
 
   @@index([orgId, id])
   @@map("users")
@@ -1975,7 +1987,8 @@ model InventoryItem {
   orgId        String
   sku          String?
   name         String
-  unit         String // kg, ltr, pcs, etc.
+  unit         String // kg, ltr, pcs, etc. (legacy - prefer uomId)
+  uomId        String?  // M11.1: Reference to UnitOfMeasure
   category     String?
   reorderLevel Decimal  @default(0) @db.Decimal(10, 3)
   reorderQty   Decimal  @default(0) @db.Decimal(10, 3)
@@ -1984,6 +1997,7 @@ model InventoryItem {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
+  uom               UnitOfMeasure?   @relation("ItemUom", fields: [uomId], references: [id], onDelete: SetNull)
   stockBatches      StockBatch[]
   recipeIngredients RecipeIngredient[]
   wastageRecords    Wastage[]
@@ -1995,6 +2009,9 @@ model InventoryItem {
   forecastPoints    ForecastPoint[]
   stockMovements    StockMovement[] // M3: Track all inventory movements
   lowStockConfigs   LowStockConfig[] // M3: Low-stock alert configuration
+  ledgerEntries     InventoryLedgerEntry[] // M11.1: Ledger entries
+  stockAdjustments  StockAdjustment[] @relation("StockAdjustmentItem") // M11.1: Stock adjustments
+  countSessionLines CountSessionLine[] @relation("CountSessionLineItem") // M11.1: Count lines
 
   @@unique([orgId, sku])
   @@index([orgId])
@@ -5385,4 +5402,187 @@ model KioskEventIngest {
   @@unique([kioskDeviceId, batchId])
   @@index([kioskDeviceId, createdAt])
   @@map("kiosk_event_ingests")
+}
+
+// ===== M11.1: Inventory Foundation =====
+
+// Unit of Measure - org-scoped UOM definitions
+model UnitOfMeasure {
+  id           String   @id @default(cuid())
+  orgId        String
+  code         String   // kg, g, L, mL, pcs, etc.
+  name         String   // Kilogram, Gram, Liter, etc.
+  symbol       String?  // Optional display symbol
+  baseUnitId   String?  // Reference to base unit for conversions (null = IS base unit)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  baseUnit    UnitOfMeasure?  @relation("UomToBase", fields: [baseUnitId], references: [id], onDelete: SetNull)
+  derivedUnits UnitOfMeasure[] @relation("UomToBase")
+  conversionsFrom UnitConversion[] @relation("ConversionFrom")
+  conversionsTo   UnitConversion[] @relation("ConversionTo")
+  inventoryItems  InventoryItem[] @relation("ItemUom")
+
+  @@unique([orgId, code])
+  @@index([orgId])
+  @@map("units_of_measure")
+}
+
+// Unit Conversion - conversion factors between UOMs
+model UnitConversion {
+  id         String   @id @default(cuid())
+  orgId      String
+  fromUomId  String
+  toUomId    String
+  factor     Decimal  @db.Decimal(18, 8) // Conversion factor: 1 fromUom = factor toUom
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  fromUom UnitOfMeasure @relation("ConversionFrom", fields: [fromUomId], references: [id], onDelete: Cascade)
+  toUom   UnitOfMeasure @relation("ConversionTo", fields: [toUomId], references: [id], onDelete: Cascade)
+
+  @@unique([orgId, fromUomId, toUomId])
+  @@index([orgId])
+  @@map("unit_conversions")
+}
+
+// Inventory Location - warehouse/storage locations per branch
+model InventoryLocation {
+  id          String   @id @default(cuid())
+  orgId       String
+  branchId    String
+  code        String   // MAIN, COLD, DRY, BAR, etc.
+  name        String   // Main Storage, Cold Room, Dry Storage, etc.
+  parentId    String?  // Optional parent location for hierarchy
+  isActive    Boolean  @default(true)
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  branch         Branch             @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  parent         InventoryLocation? @relation("LocationHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children       InventoryLocation[] @relation("LocationHierarchy")
+  ledgerEntries  InventoryLedgerEntry[]
+  adjustments    StockAdjustment[]
+  countLines     CountSessionLine[]
+  countSessions  CountSession[]     @relation("CountSessionLocation")
+
+  @@unique([branchId, code])
+  @@index([orgId])
+  @@index([branchId])
+  @@map("inventory_locations")
+}
+
+// Append-Only Stock Ledger - IMMUTABLE ledger for all inventory movements
+model InventoryLedgerEntry {
+  id          String   @id @default(cuid())
+  orgId       String
+  branchId    String
+  itemId      String
+  locationId  String
+  qty         Decimal  @db.Decimal(12, 4) // Positive = add, Negative = subtract
+  reason      String   // PURCHASE, SALE, WASTAGE, ADJUSTMENT, COUNT_ADJUSTMENT, TRANSFER_IN, TRANSFER_OUT
+  sourceType  String   // GOODS_RECEIPT, ORDER, WASTAGE, STOCK_ADJUSTMENT, COUNT_SESSION, TRANSFER
+  sourceId    String?  // ID of the source record
+  notes       String?
+  createdById String?
+  metadata    Json?
+  createdAt   DateTime @default(now()) // NEVER updated after creation
+
+  branch   Branch            @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  item     InventoryItem     @relation(fields: [itemId], references: [id], onDelete: Restrict)
+  location InventoryLocation @relation(fields: [locationId], references: [id], onDelete: Restrict)
+  createdBy User?            @relation("LedgerEntryCreator", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([orgId, branchId, itemId])
+  @@index([itemId, locationId])
+  @@index([sourceType, sourceId])
+  @@index([createdAt])
+  @@map("inventory_ledger_entries")
+}
+
+// Stock Adjustment - explicit adjustment records
+model StockAdjustment {
+  id          String   @id @default(cuid())
+  orgId       String
+  branchId    String
+  itemId      String
+  locationId  String
+  qty         Decimal  @db.Decimal(12, 4) // Can be positive or negative
+  reason      String   // DAMAGED, EXPIRED, THEFT, FOUND, CORRECTION, OTHER
+  notes       String?
+  createdById String
+  approvedById String?
+  approvedAt   DateTime?
+  status      String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  branch    Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  item      InventoryItem @relation("StockAdjustmentItem", fields: [itemId], references: [id], onDelete: Restrict)
+  location  InventoryLocation @relation(fields: [locationId], references: [id], onDelete: Restrict)
+  createdBy User   @relation("StockAdjustmentCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  approvedBy User? @relation("StockAdjustmentApprover", fields: [approvedById], references: [id], onDelete: SetNull)
+
+  @@index([orgId, branchId])
+  @@index([itemId])
+  @@index([status])
+  @@map("stock_adjustments")
+}
+
+// Count Session - cycle count sessions
+model CountSession {
+  id           String    @id @default(cuid())
+  orgId        String
+  branchId     String
+  name         String?   // Optional name like "Q1 Full Count"
+  description  String?   // Optional description
+  locationId   String?   // Optional: scope to specific location
+  status       String    @default("OPEN") // OPEN, FINALIZED, CANCELLED
+  createdById  String    // Renamed from startedById for consistency
+  finalizedById String?
+  finalizedAt  DateTime?
+  cancelledAt  DateTime?
+  metadata     Json?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  branch      Branch             @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  location    InventoryLocation? @relation("CountSessionLocation", fields: [locationId], references: [id], onDelete: SetNull)
+  createdBy   User               @relation("CountSessionCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  finalizedBy User?              @relation("CountSessionFinalizer", fields: [finalizedById], references: [id], onDelete: SetNull)
+  lines       CountSessionLine[]
+
+  @@index([orgId, branchId])
+  @@index([status])
+  @@map("count_sessions")
+}
+
+// Count Session Line - individual count entries
+model CountSessionLine {
+  id           String   @id @default(cuid())
+  sessionId    String
+  itemId       String
+  locationId   String
+  expectedQty  Decimal  @db.Decimal(12, 4) // System on-hand at time of count
+  countedQty   Decimal  @db.Decimal(12, 4) // The counted quantity
+  variance     Decimal  @db.Decimal(12, 4) // countedQty - expectedQty
+  notes        String?
+  countedById  String?
+  countedAt    DateTime @default(now())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  session   CountSession       @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  item      InventoryItem      @relation("CountSessionLineItem", fields: [itemId], references: [id], onDelete: Restrict)
+  location  InventoryLocation  @relation(fields: [locationId], references: [id], onDelete: Restrict)
+  countedBy User?              @relation("CountSessionLineCounter", fields: [countedById], references: [id], onDelete: SetNull)
+
+  @@unique([sessionId, itemId, locationId])
+  @@index([sessionId])
+  @@index([itemId])
+  @@map("count_session_lines")
 }

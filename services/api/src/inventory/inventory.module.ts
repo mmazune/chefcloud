@@ -19,10 +19,20 @@ import { TemplatesController, ImportController } from './templates.controller';
 import { PrismaService } from '../prisma.service';
 import { KpisModule } from '../kpis/kpis.module';
 
+// M11.1 Inventory Foundation imports
+import { InventoryFoundationController } from './inventory-foundation.controller';
+import { InventoryUomService } from './inventory-uom.service';
+import { InventoryLocationsService } from './inventory-locations.service';
+import { InventoryLedgerService } from './inventory-ledger.service';
+import { InventoryAdjustmentsService } from './inventory-adjustments.service';
+import { InventoryCountsService } from './inventory-counts.service';
+import { InventoryExportService } from './inventory-export.service';
+
 @Module({
   imports: [KpisModule],
   controllers: [
     InventoryController,
+    InventoryFoundationController, // M11.1
     RecipesController,
     WastageController,
     CountsController,
@@ -33,6 +43,12 @@ import { KpisModule } from '../kpis/kpis.module';
   ],
   providers: [
     InventoryService,
+    InventoryUomService, // M11.1
+    InventoryLocationsService, // M11.1
+    InventoryLedgerService, // M11.1
+    InventoryAdjustmentsService, // M11.1
+    InventoryCountsService, // M11.1
+    InventoryExportService, // M11.1
     RecipesService,
     WastageService,
     CountsService,
@@ -46,6 +62,12 @@ import { KpisModule } from '../kpis/kpis.module';
   ],
   exports: [
     InventoryService,
+    InventoryUomService, // M11.1
+    InventoryLocationsService, // M11.1
+    InventoryLedgerService, // M11.1
+    InventoryAdjustmentsService, // M11.1
+    InventoryCountsService, // M11.1
+    InventoryExportService, // M11.1
     RecipesService,
     WastageService,
     CountsService,
