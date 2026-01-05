@@ -7,6 +7,7 @@
  * - Location resolution cascade: Branch.depletionLocationId → KITCHEN → PRODUCTION → first active
  * - Negative stock handling: mark FAILED, don't block order
  * - Fire-and-forget pattern (non-blocking)
+ * - M11.5: Records COGS breakdown on POSTED depletions
  */
 import {
   Injectable,
@@ -18,6 +19,7 @@ import { PrismaService } from '../prisma.service';
 import { AuditLogService } from '../audit/audit-log.service';
 import { InventoryLedgerService, LedgerEntryReason, LedgerSourceType } from './inventory-ledger.service';
 import { InventoryRecipesService } from './inventory-recipes.service';
+import { InventoryCostingService } from './inventory-costing.service';
 import { Prisma, DepletionStatus, RecipeTargetType } from '@chefcloud/db';
 
 const Decimal = Prisma.Decimal;
@@ -62,6 +64,7 @@ export class InventoryDepletionService {
     private readonly auditLog: AuditLogService,
     private readonly ledgerService: InventoryLedgerService,
     private readonly recipesService: InventoryRecipesService,
+    private readonly costingService: InventoryCostingService,
   ) {}
 
   /**
@@ -183,6 +186,9 @@ export class InventoryDepletionService {
     let itemsSkipped = 0;
     const errors: string[] = [];
     const processedItems: { menuItemId: string; itemsConsumed: number }[] = [];
+    
+    // M11.5: Track depleted items for COGS breakdown
+    const depletedItems: Map<string, Decimal> = new Map(); // itemId -> total qty depleted (positive)
 
     try {
       for (const orderItem of order.orderItems) {
@@ -236,6 +242,11 @@ export class InventoryDepletionService {
 
             ledgerEntryCount++;
             lineCount++;
+            
+            // M11.5: Track depleted qty for COGS breakdown (store as positive)
+            const depletedQty = depletionQty.abs();
+            const existing = depletedItems.get(line.inventoryItemId) ?? new Decimal(0);
+            depletedItems.set(line.inventoryItemId, existing.plus(depletedQty));
           } catch (error: any) {
             // Check if it's an insufficient stock error
             if (error.message?.includes('Insufficient stock')) {
@@ -245,6 +256,11 @@ export class InventoryDepletionService {
               // Still count as processed since we allow negative
               ledgerEntryCount++;
               lineCount++;
+              
+              // M11.5: Still track for COGS even on negative (cost is real)
+              const depletedQty = depletionQty.abs();
+              const existing = depletedItems.get(line.inventoryItemId) ?? new Decimal(0);
+              depletedItems.set(line.inventoryItemId, existing.plus(depletedQty));
             } else {
               throw error; // Re-throw unexpected errors
             }
@@ -261,6 +277,25 @@ export class InventoryDepletionService {
       // Determine final status
       const finalStatus: DepletionStatus = errors.length > 0 ? 'FAILED' : 'POSTED';
 
+      // M11.5: Record COGS breakdown if we have depleted items
+      let cogsTotal: Decimal = new Decimal(0);
+      let cogsBreakdowns = 0;
+      if (depletedItems.size > 0) {
+        const cogsItems = Array.from(depletedItems.entries()).map(([itemId, qtyDepleted]) => ({
+          itemId,
+          qtyDepleted,
+        }));
+        const cogsResult = await this.costingService.recordCogsBreakdown(
+          orgId,
+          depletion.id,
+          orderId,
+          branchId,
+          cogsItems,
+        );
+        cogsTotal = cogsResult.totalCogs;
+        cogsBreakdowns = cogsResult.breakdowns;
+      }
+
       // Update depletion record
       const updated = await this.prisma.client.orderInventoryDepletion.update({
         where: { id: depletion.id },
@@ -274,6 +309,8 @@ export class InventoryDepletionService {
             itemsProcessed,
             itemsSkipped,
             processedItems,
+            cogsTotal: cogsTotal.toString(),
+            cogsBreakdowns,
             errors: errors.length > 0 ? errors : undefined,
           },
         },
@@ -290,6 +327,8 @@ export class InventoryDepletionService {
           ledgerEntryCount,
           itemsProcessed,
           itemsSkipped,
+          cogsTotal: cogsTotal.toString(),
+          cogsBreakdowns,
           errors: errors.length > 0 ? errors : undefined,
         },
       });

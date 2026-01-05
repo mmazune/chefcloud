@@ -7,6 +7,7 @@
  * - Idempotent posting (same receipt cannot double-post)
  * - Over-receipt policy enforcement
  * - Void posted receipts (L4+ only)
+ * - M11.5: Creates cost layers on post for WAC tracking
  */
 import {
   Injectable,
@@ -20,7 +21,8 @@ import { AuditLogService } from '../audit/audit-log.service';
 import { InventoryUomService } from './inventory-uom.service';
 import { InventoryLedgerService, LedgerEntryReason, LedgerSourceType } from './inventory-ledger.service';
 import { PurchaseOrdersService } from './purchase-orders.service';
-import { Prisma, GoodsReceiptStatus } from '@chefcloud/db';
+import { InventoryCostingService } from './inventory-costing.service';
+import { Prisma, GoodsReceiptStatus, CostSourceType } from '@chefcloud/db';
 
 const Decimal = Prisma.Decimal;
 type Decimal = Prisma.Decimal;
@@ -62,6 +64,7 @@ export class ReceiptsService {
     private readonly uomService: InventoryUomService,
     private readonly ledgerService: InventoryLedgerService,
     private readonly poService: PurchaseOrdersService,
+    private readonly costingService: InventoryCostingService,
   ) {}
 
   /**
@@ -332,7 +335,7 @@ export class ReceiptsService {
     branchId: string,
     receiptId: string,
     userId: string,
-  ): Promise<{ receipt: any; isAlreadyPosted: boolean; ledgerEntryCount: number }> {
+  ): Promise<{ receipt: any; isAlreadyPosted: boolean; ledgerEntryCount: number; costLayerCount: number }> {
     // Always get receipt with lines for posting
     const receiptWithLines = await this.prisma.client.goodsReceiptV2.findFirst({
       where: { id: receiptId, orgId, branchId },
@@ -355,7 +358,7 @@ export class ReceiptsService {
     // Idempotency check
     if (receiptWithLines.status === 'POSTED') {
       this.logger.log(`Receipt ${receiptWithLines.receiptNumber} already posted - idempotent return`);
-      return { receipt: receiptWithLines, isAlreadyPosted: true, ledgerEntryCount: 0 };
+      return { receipt: receiptWithLines, isAlreadyPosted: true, ledgerEntryCount: 0, costLayerCount: 0 };
     }
 
     if (receiptWithLines.status === 'VOID') {
@@ -367,6 +370,7 @@ export class ReceiptsService {
 
     // Post in transaction
     let ledgerEntryCount = 0;
+    let costLayerCount = 0;
 
     const postedReceipt = await this.prisma.client.$transaction(async (tx) => {
       // Create ledger entries for each line
@@ -387,6 +391,28 @@ export class ReceiptsService {
           { tx },
         );
         ledgerEntryCount++;
+
+        // M11.5: Create cost layer for WAC tracking
+        await this.costingService.createCostLayer(
+          orgId,
+          branchId,
+          userId,
+          {
+            itemId: line.itemId,
+            locationId: line.locationId,
+            qtyReceived: line.qtyReceivedBase,
+            unitCost: line.unitCost,
+            sourceType: CostSourceType.GOODS_RECEIPT,
+            sourceId: line.id, // Use receipt line ID for granular tracking
+            metadata: {
+              receiptId,
+              receiptNumber: receiptWithLines.receiptNumber,
+              poId: receiptWithLines.purchaseOrderId,
+            },
+          },
+          { tx },
+        );
+        costLayerCount++;
 
         // Update PO line received quantity if linked
         if (line.poLineId) {
@@ -430,11 +456,11 @@ export class ReceiptsService {
       action: 'GOODS_RECEIPT_POSTED',
       resourceType: 'GoodsReceiptV2',
       resourceId: receiptId,
-      metadata: { ledgerEntryCount },
+      metadata: { ledgerEntryCount, costLayerCount },
     });
 
-    this.logger.log(`Posted receipt ${receiptWithLines.receiptNumber}, created ${ledgerEntryCount} ledger entries`);
-    return { receipt: postedReceipt, isAlreadyPosted: false, ledgerEntryCount };
+    this.logger.log(`Posted receipt ${receiptWithLines.receiptNumber}, created ${ledgerEntryCount} ledger entries, ${costLayerCount} cost layers`);
+    return { receipt: postedReceipt, isAlreadyPosted: false, ledgerEntryCount, costLayerCount };
   }
 
   /**

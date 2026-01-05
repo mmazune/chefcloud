@@ -486,6 +486,8 @@ model Org {
   kioskEvents                    KioskEvent[]
   // M11.4: Recipes
   recipes                        Recipe[]
+  // M11.5: Cost Layers
+  costLayers                     InventoryCostLayer[]
 
   @@map("orgs")
 }
@@ -617,6 +619,8 @@ model Branch {
   wasteDocuments         InventoryWaste[]    @relation("WasteBranch")
   // M11.4: Depletions
   inventoryDepletions    OrderInventoryDepletion[] @relation("DepletionBranch")
+  // M11.5: Cost Layers
+  costLayers             InventoryCostLayer[]      @relation("CostLayerBranch")
 
   @@index([orgId, id])
   @@map("branches")
@@ -779,6 +783,8 @@ model User {
   // M11.4: Recipes
   recipesCreated                  Recipe[]                         @relation("RecipeCreator")
   recipesUpdated                  Recipe[]                         @relation("RecipeUpdater")
+  // M11.5: Costing + Valuation + COGS
+  costLayersCreated               InventoryCostLayer[]             @relation("CostLayerCreator")
 
   @@index([orgId, id])
   @@map("users")
@@ -2047,6 +2053,9 @@ model InventoryItem {
   wasteLines        InventoryWasteLine[]    @relation("WasteLineItem")
   // M11.4: Recipes
   recipeLines       RecipeLine[]            @relation("RecipeLineItem")
+  // M11.5: Costing
+  costLayers        InventoryCostLayer[]    @relation("CostLayerItem")
+  depletionCosts    DepletionCostBreakdown[] @relation("DepletionCostItem")
 
   @@unique([orgId, sku])
   @@index([orgId])
@@ -5520,6 +5529,8 @@ model InventoryLocation {
   // M11.4: Depletion + Recipes
   branchesDefaultDepletion Branch[]  @relation("BranchDepletionLocation")
   depletions               OrderInventoryDepletion[] @relation("DepletionLocation")
+  // M11.5: Costing + Valuation + COGS
+  costLayers               InventoryCostLayer[]      @relation("CostLayerLocation")
 
   @@unique([branchId, code])
   @@index([orgId])
@@ -5992,8 +6003,79 @@ model OrderInventoryDepletion {
   branch   Branch            @relation("DepletionBranch", fields: [branchId], references: [id], onDelete: Cascade)
   location InventoryLocation @relation("DepletionLocation", fields: [locationId], references: [id], onDelete: Restrict)
 
+  // M11.5: COGS breakdown
+  costBreakdowns DepletionCostBreakdown[]
+
   @@unique([orgId, orderId])
   @@index([orderId])
   @@index([branchId, status])
   @@map("order_inventory_depletions")
+}
+
+// ===== M11.5: Inventory Costing + Valuation + COGS =====
+
+enum CostMethod {
+  WAC // Weighted Average Cost
+}
+
+enum CostSourceType {
+  GOODS_RECEIPT
+  MANUAL_ADJUSTMENT
+  INITIAL_SEED
+}
+
+// Append-only cost layer - records cost history for audit trail
+model InventoryCostLayer {
+  id          String         @id @default(cuid())
+  orgId       String
+  branchId    String
+  itemId      String
+  locationId  String?                       // Optional: for location-level costing
+  method      CostMethod     @default(WAC)
+  qtyReceived Decimal        @db.Decimal(12, 4)  // Qty added in this layer
+  unitCost    Decimal        @db.Decimal(12, 4)  // Cost per unit in base UOM
+  priorWac    Decimal        @db.Decimal(12, 4)  // WAC before this layer
+  newWac      Decimal        @db.Decimal(12, 4)  // WAC after this layer
+  sourceType  CostSourceType                // GOODS_RECEIPT, MANUAL_ADJUSTMENT, INITIAL_SEED
+  sourceId    String                        // Receipt line ID, adjustment ID, etc.
+  effectiveAt DateTime       @default(now())
+  createdById String
+  metadata    Json?
+  createdAt   DateTime       @default(now())
+
+  // Relations
+  org       Org                @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  branch    Branch             @relation("CostLayerBranch", fields: [branchId], references: [id], onDelete: Cascade)
+  item      InventoryItem      @relation("CostLayerItem", fields: [itemId], references: [id], onDelete: Restrict)
+  location  InventoryLocation? @relation("CostLayerLocation", fields: [locationId], references: [id], onDelete: SetNull)
+  createdBy User               @relation("CostLayerCreator", fields: [createdById], references: [id], onDelete: Restrict)
+
+  @@index([orgId, branchId, itemId])
+  @@index([itemId, effectiveAt])
+  @@index([sourceType, sourceId])
+  @@map("inventory_cost_layers")
+}
+
+// Depletion Cost Breakdown - COGS per depleted item
+model DepletionCostBreakdown {
+  id          String   @id @default(cuid())
+  orgId       String
+  depletionId String
+  orderId     String
+  itemId      String
+  qtyDepleted Decimal  @db.Decimal(12, 4)  // Quantity consumed (positive)
+  unitCost    Decimal  @db.Decimal(12, 4)  // WAC at time of depletion
+  lineCogs    Decimal  @db.Decimal(12, 4)  // qtyDepleted × unitCost
+  computedAt  DateTime @default(now())
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  // Relations
+  depletion OrderInventoryDepletion @relation(fields: [depletionId], references: [id], onDelete: Cascade)
+  item      InventoryItem           @relation("DepletionCostItem", fields: [itemId], references: [id], onDelete: Restrict)
+
+  @@unique([depletionId, itemId])
+  @@index([orgId, orderId])
+  @@index([itemId])
+  @@map("depletion_cost_breakdowns")
 }
