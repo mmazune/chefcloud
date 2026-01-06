@@ -26,17 +26,19 @@
  * 12. Export with hash verification
  */
 import { INestApplication } from '@nestjs/common';
-import * as request from 'supertest';
+import request from 'supertest';
 import { createE2EApp } from '../helpers/e2e-bootstrap';
 import { cleanup } from '../helpers/cleanup';
 import { createOrgWithUsers, FactoryOrg } from './factory';
 import { PrismaService } from '../../src/prisma.service';
 import { AppModule } from '../../src/app.module';
 import { Decimal } from '@prisma/client/runtime/library';
+import { PrismaClient } from '@prisma/client';
 
 describe('M11.8: Vendor Returns + Recall/Quarantine + Expiry E2E', () => {
   let app: INestApplication;
-  let prisma: PrismaService;
+  let prismaService: PrismaService;
+  let prisma: PrismaClient;
   let testOrg: FactoryOrg;
 
   // Test data IDs
@@ -58,7 +60,8 @@ describe('M11.8: Vendor Returns + Recall/Quarantine + Expiry E2E', () => {
 
   beforeAll(async () => {
     app = await createE2EApp({ imports: [AppModule] });
-    prisma = app.get(PrismaService);
+    prismaService = app.get(PrismaService);
+    prisma = prismaService.client;
 
     // Create test org with users
     testOrg = await createOrgWithUsers(prisma, `test-m118-${Date.now()}`);
@@ -67,32 +70,22 @@ describe('M11.8: Vendor Returns + Recall/Quarantine + Expiry E2E', () => {
     // Create base UOM
     const uom = await prisma.unitOfMeasure.create({
       data: {
-        organizationId: testOrg.orgId,
+        orgId: testOrg.orgId,
         code: 'EA',
         name: 'Each',
-        conversionFactor: new Decimal(1),
-      },
-    });
-
-    // Create category
-    const category = await prisma.inventoryCategory.create({
-      data: {
-        organizationId: testOrg.orgId,
-        code: 'CAT-M118',
-        name: 'M118 Test Category',
       },
     });
 
     // Create test item
     const item = await prisma.inventoryItem.create({
       data: {
-        organizationId: testOrg.orgId,
-        categoryId: category.id,
+        orgId: testOrg.orgId,
         sku: 'M118-ITEM-001',
         name: 'M118 Test Item',
-        baseUnitOfMeasureId: uom.id,
+        unit: 'EA',
+        category: 'M118 Test Category',
         isActive: true,
-        trackLots: true,
+        uom: { connect: { id: uom.id } },
       },
     });
     itemId = item.id;
@@ -100,7 +93,7 @@ describe('M11.8: Vendor Returns + Recall/Quarantine + Expiry E2E', () => {
     // Create test location
     const location = await prisma.inventoryLocation.create({
       data: {
-        organizationId: testOrg.orgId,
+        orgId: testOrg.orgId,
         branchId,
         code: 'LOC-M118',
         name: 'M118 Test Location',
@@ -114,9 +107,7 @@ describe('M11.8: Vendor Returns + Recall/Quarantine + Expiry E2E', () => {
     const vendor = await prisma.vendor.create({
       data: {
         orgId: testOrg.orgId,
-        code: 'VND-M118',
         name: 'M118 Test Vendor',
-        isActive: true,
       },
     });
     vendorId = vendor.id;
@@ -182,6 +173,17 @@ describe('M11.8: Vendor Returns + Recall/Quarantine + Expiry E2E', () => {
       },
     });
     lotPastExpiry = lot3.id;
+
+    // Login to get tokens
+    const loginOwner = await request(app.getHttpServer())
+      .post('/auth/login')
+      .send({ email: testOrg.users.owner.email, password: 'Test#123' });
+    testOrg.users.owner.token = loginOwner.body.access_token;
+
+    const loginWaiter = await request(app.getHttpServer())
+      .post('/auth/login')
+      .send({ email: testOrg.users.waiter.email, password: 'Test#123' });
+    testOrg.users.waiter.token = loginWaiter.body.access_token;
   }, 60000);
 
   afterAll(async () => {
@@ -254,7 +256,7 @@ describe('M11.8: Vendor Returns + Recall/Quarantine + Expiry E2E', () => {
     it('H7: L2 user cannot POST vendor return', async () => {
       await request(app.getHttpServer())
         .post(`/inventory/vendor-returns/${vendorReturnId}/post`)
-        .set('Authorization', `Bearer ${testOrg.users.viewer.token}`)
+        .set('Authorization', `Bearer ${testOrg.users.waiter.token}`)
         .expect(403);
     });
 

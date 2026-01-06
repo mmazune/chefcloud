@@ -138,8 +138,7 @@ describe('M11.6: Supplier Catalog + Pricing + Reorder E2E', () => {
   });
 
   afterAll(async () => {
-    await cleanup(prisma, testOrg.orgId);
-    await app.close();
+    await cleanup(app);
   });
 
   // ============================================================================

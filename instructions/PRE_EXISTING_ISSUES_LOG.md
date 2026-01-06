@@ -317,24 +317,33 @@ Please make sure that the argument IdempotencyService at index [0] is available 
 | **Command** | `pnpm -C services/api test:e2e:teardown-check` |
 | **Impact** | Medium |
 | **Suggested Owner** | E2E test infrastructure |
-| **Status** | **OPEN** |
+| **Status** | ✅ **RESOLVED** |
+| **Resolved Date** | 2026-01-06 |
 
-**Summary**: M11.5 and M11.6 E2E test files call both `cleanup()` helper AND `app.close()` in `afterAll`, causing duplicate cleanup errors when running teardown verification.
+**Summary**: M11.5 and M11.6 E2E test files called both `cleanup(prisma, testOrg.orgId)` (incorrect signature) AND `app.close()` in `afterAll`, causing duplicate cleanup errors.
 
 **Affected Files**:
-- `services/api/test/e2e/inventory-m115-stock-audits.e2e-spec.ts`
-- `services/api/test/e2e/inventory-m116-advanced-purchasing.e2e-spec.ts`
+- `services/api/test/e2e/inventory-m115-costing-valuation-cogs.e2e-spec.ts`
+- `services/api/test/e2e/inventory-m116-supplier-reorder.e2e-spec.ts`
 
-**Observed Error**:
-```
-Error: Attempted to log "ERROR [NestApplication] Nest application is not initialized."
+**Root Cause**: Tests were using incorrect cleanup pattern:
+```typescript
+// WRONG (before fix)
+await cleanup(prisma, testOrg.orgId);  // cleanup() only takes app
+await app.close();  // duplicate call
 ```
 
-**Suggested Fix**: Remove redundant `app.close()` call since `cleanup()` already handles teardown.
+**Resolution**: Fixed both files to use correct cleanup pattern:
+```typescript
+// CORRECT (after fix)
+await cleanup(app);  // cleanup() handles app.close() internally
+```
+
+**Evidence**: `pnpm test:e2e:teardown-check` now returns 0 errors (was 4 errors).
 
 ---
 
-### PRE-009: E2E Test Bootstrap Silent Failures – createE2EApp
+### PRE-009: E2E Test Bootstrap Silent Failures – M11.8 Test
 
 | Field | Value |
 |-------|-------|
@@ -344,19 +353,43 @@ Error: Attempted to log "ERROR [NestApplication] Nest application is not initial
 | **Command** | `pnpm -C services/api test:e2e -- --runInBand --runTestsByPath test/e2e/inventory-m118-returns-recall-expiry.e2e-spec.ts` |
 | **Impact** | High |
 | **Suggested Owner** | E2E test infrastructure |
-| **Status** | **OPEN** |
+| **Status** | ✅ **RESOLVED** |
+| **Resolved Date** | 2026-01-06 |
 
-**Summary**: When `createE2EApp` or `createOrgWithUsers` fails during `beforeAll`, Jest continues test execution with undefined variables. Error is thrown at first usage (e.g., `prisma.unitOfMeasure.create`) rather than at actual failure point.
+**Summary**: M11.8 E2E test file had multiple issues causing apparent "silent bootstrap failures":
+1. `prisma` was `PrismaService` wrapper, not raw `PrismaClient`
+2. Used incorrect schema field names (`organizationId` vs `orgId`, nonexistent `inventoryCategory` model)
+3. Wrong supertest import syntax (`import * as request` vs `import request`)
+4. Missing login step to obtain auth tokens
+5. Used nonexistent `viewer` role (should be `waiter`)
 
-**Observed Behavior**:
-- `beforeAll` completes without throwing
-- `prisma` variable remains undefined
-- First test accessing `prisma` throws "Cannot read properties of undefined"
+**Root Cause**: Test file was written with incorrect assumptions about:
+- Prisma model field names (not matching actual schema)
+- PrismaService vs PrismaClient API
+- Factory function return types (tokens not auto-populated)
 
-**Root Cause Hypothesis**: Error in promise chain not properly propagated, or try/catch swallowing errors in helper functions.
+**Resolution**: Fixed M11.8 test file:
+```typescript
+// 1. Get raw PrismaClient from service
+prismaService = app.get(PrismaService);
+prisma = prismaService.client;
 
-**Evidence**: M11.1 tests using identical pattern work correctly, suggesting intermittent or environment-specific issue.
+// 2. Use correct schema field names
+orgId: testOrg.orgId,  // not organizationId
+category: 'M118 Test Category',  // not categoryId
+
+// 3. Fix supertest import
+import request from 'supertest';  // not import * as request
+
+// 4. Add login to get tokens
+const loginOwner = await request(app.getHttpServer())
+  .post('/auth/login')
+  .send({ email: testOrg.users.owner.email, password: 'Test#123' });
+testOrg.users.owner.token = loginOwner.body.access_token;
+```
+
+**Evidence**: M11.8 E2E now boots successfully and executes 24 tests (5 pass, 19 fail due to missing backend routes - separate M11.8 feature gap, not infrastructure issue).
 
 ---
 
-*Last Updated: 2026-01-04 (PRE-008, PRE-009 added)*
+*Last Updated: 2026-01-06 (PRE-008, PRE-009 RESOLVED)*

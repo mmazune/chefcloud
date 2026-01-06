@@ -105,8 +105,7 @@ describe('M11.5: Inventory Costing + Valuation + COGS E2E', () => {
   });
 
   afterAll(async () => {
-    await cleanup(prisma, testOrg.orgId);
-    await app.close();
+    await cleanup(app);
   });
 
   describe('Cost Layer Creation', () => {
