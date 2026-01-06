@@ -35,7 +35,7 @@ export class ReorderPoGeneratorService {
     orgId: string,
     runId: string,
     userId: string,
-  ) {
+  ): Promise<object> {
     // Get the run with lines
     const run = await this.prisma.client.reorderSuggestionRun.findFirst({
       where: { id: runId, orgId },
@@ -258,7 +258,7 @@ export class ReorderPoGeneratorService {
   /**
    * Get POs generated from a run
    */
-  async getPOsForRun(orgId: string, runId: string) {
+  async getPOsForRun(orgId: string, runId: string): Promise<object[]> {
     const run = await this.prisma.client.reorderSuggestionRun.findFirst({
       where: { id: runId, orgId },
     });

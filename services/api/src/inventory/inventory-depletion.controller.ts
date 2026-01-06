@@ -46,7 +46,7 @@ export class InventoryDepletionController {
     @Query('toDate') toDate?: string,
     @Query('limit', new DefaultValuePipe(100), ParseIntPipe) limit?: number,
     @Query('offset', new DefaultValuePipe(0), ParseIntPipe) offset?: number,
-  ) {
+  ): Promise<object> {
     const options: DepletionQueryOptions = {
       branchId: branchId || req.user.branchId,
       limit,
@@ -90,7 +90,7 @@ export class InventoryDepletionController {
   async getDepletion(
     @Request() req: any,
     @Param('depletionId') depletionId: string,
-  ) {
+  ): Promise<object | null> {
     return this.depletionService.getById(req.user.orgId, depletionId);
   }
 
@@ -102,7 +102,7 @@ export class InventoryDepletionController {
   async getDepletionByOrder(
     @Request() req: any,
     @Param('orderId') orderId: string,
-  ) {
+  ): Promise<object | null> {
     return this.depletionService.getByOrderId(req.user.orgId, orderId);
   }
 
@@ -127,7 +127,7 @@ export class InventoryDepletionController {
     @Request() req: any,
     @Param('depletionId') depletionId: string,
     @Body() dto: { reason: string },
-  ) {
+  ): Promise<object> {
     return this.depletionService.skip(
       req.user.orgId,
       depletionId,

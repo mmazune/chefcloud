@@ -128,7 +128,7 @@ export class InventoryDepletionService {
         orgId,
         userId,
         action: 'depletion.failed',
-        resource: 'orders',
+        resourceType: 'Order',
         resourceId: orderId,
         metadata: { errorCode: DepletionErrorCode.LOCATION_NOT_FOUND, error: error.message },
       });
@@ -320,7 +320,7 @@ export class InventoryDepletionService {
         orgId,
         userId,
         action: finalStatus === 'POSTED' ? 'depletion.posted' : 'depletion.partial',
-        resource: 'orders',
+        resourceType: 'Order',
         resourceId: orderId,
         metadata: {
           depletionId: depletion.id,
@@ -367,7 +367,7 @@ export class InventoryDepletionService {
         orgId,
         userId,
         action: 'depletion.failed',
-        resource: 'orders',
+        resourceType: 'Order',
         resourceId: orderId,
         metadata: { depletionId: depletion.id, error: error.message },
       });
@@ -409,7 +409,7 @@ export class InventoryDepletionService {
       orgId,
       userId,
       action: 'depletion.retry',
-      resource: 'orders',
+      resourceType: 'Order',
       resourceId: existing.orderId,
       metadata: { originalDepletionId: depletionId, originalErrorCode: existing.errorCode },
     });
@@ -455,7 +455,7 @@ export class InventoryDepletionService {
       orgId,
       userId,
       action: 'depletion.skipped',
-      resource: 'orders',
+      resourceType: 'Order',
       resourceId: existing.orderId,
       metadata: { depletionId, reason },
     });

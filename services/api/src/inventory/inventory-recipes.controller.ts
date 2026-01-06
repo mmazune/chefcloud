@@ -44,7 +44,7 @@ export class InventoryRecipesController {
    */
   @Post()
   @Roles('L3')
-  async createRecipe(@Request() req: any, @Body() dto: CreateRecipeDto) {
+  async createRecipe(@Request() req: any, @Body() dto: CreateRecipeDto): Promise<object> {
     return this.recipesService.create(req.user.orgId, req.user.userId, dto);
   }
 
@@ -62,7 +62,7 @@ export class InventoryRecipesController {
     @Query('includeLines') includeLines?: string,
     @Query('limit', new DefaultValuePipe(100), ParseIntPipe) limit?: number,
     @Query('offset', new DefaultValuePipe(0), ParseIntPipe) offset?: number,
-  ) {
+  ): Promise<object> {
     return this.recipesService.list(req.user.orgId, {
       targetType: targetType as RecipeTargetType | undefined,
       targetId,
@@ -79,7 +79,7 @@ export class InventoryRecipesController {
    */
   @Get(':recipeId')
   @Roles('L2')
-  async getRecipe(@Request() req: any, @Param('recipeId') recipeId: string) {
+  async getRecipe(@Request() req: any, @Param('recipeId') recipeId: string): Promise<object | null> {
     return this.recipesService.getById(req.user.orgId, recipeId);
   }
 
@@ -92,7 +92,7 @@ export class InventoryRecipesController {
     @Request() req: any,
     @Param('targetType') targetType: 'MENU_ITEM' | 'INVENTORY_ITEM',
     @Param('targetId') targetId: string,
-  ) {
+  ): Promise<object | null> {
     return this.recipesService.getByTarget(
       req.user.orgId,
       targetType as RecipeTargetType,
@@ -109,7 +109,7 @@ export class InventoryRecipesController {
     @Request() req: any,
     @Param('recipeId') recipeId: string,
     @Body() dto: UpdateRecipeDto,
-  ) {
+  ): Promise<object> {
     return this.recipesService.update(req.user.orgId, req.user.userId, recipeId, dto);
   }
 
@@ -118,7 +118,7 @@ export class InventoryRecipesController {
    */
   @Delete(':recipeId')
   @Roles('L4')
-  async deleteRecipe(@Request() req: any, @Param('recipeId') recipeId: string) {
+  async deleteRecipe(@Request() req: any, @Param('recipeId') recipeId: string): Promise<object> {
     return this.recipesService.delete(req.user.orgId, req.user.userId, recipeId);
   }
 
@@ -131,7 +131,7 @@ export class InventoryRecipesController {
     @Request() req: any,
     @Param('recipeId') recipeId: string,
     @Body() dto: { name: string; targetType: 'MENU_ITEM' | 'INVENTORY_ITEM'; targetId: string },
-  ) {
+  ): Promise<object> {
     return this.recipesService.clone(
       req.user.orgId,
       req.user.userId,
@@ -151,7 +151,7 @@ export class InventoryRecipesController {
     @Request() req: any,
     @Param('recipeId') recipeId: string,
     @Body() dto: CreateRecipeLineDto,
-  ) {
+  ): Promise<object> {
     return this.recipesService.addLine(req.user.orgId, req.user.userId, recipeId, dto);
   }
 
@@ -165,7 +165,7 @@ export class InventoryRecipesController {
     @Param('recipeId') recipeId: string,
     @Param('lineId') lineId: string,
     @Body() dto: UpdateRecipeLineDto,
-  ) {
+  ): Promise<object> {
     return this.recipesService.updateLine(
       req.user.orgId,
       req.user.userId,
@@ -184,7 +184,7 @@ export class InventoryRecipesController {
     @Request() req: any,
     @Param('recipeId') recipeId: string,
     @Param('lineId') lineId: string,
-  ) {
+  ): Promise<object> {
     return this.recipesService.deleteLine(req.user.orgId, req.user.userId, recipeId, lineId);
   }
 }

@@ -809,6 +809,9 @@ export class PosService {
       });
     });
 
+    // Get orgId for depletion and KPI
+    const orgId = (await this.prisma.client.branch.findUnique({ where: { id: branchId } }))?.orgId;
+
     // M11.4: Inventory ledger depletion (fire-and-forget, idempotent)
     if (this.depletionService && orgId) {
       this.depletionService.depleteForOrder(orgId, orderId, branchId, userId).catch((err) => {
@@ -818,7 +821,6 @@ export class PosService {
     }
 
     // Mark KPIs dirty
-    const orgId = (await this.prisma.client.branch.findUnique({ where: { id: branchId } }))?.orgId;
     if (orgId) this.markKpisDirty(orgId, branchId);
 
     return closedOrder;

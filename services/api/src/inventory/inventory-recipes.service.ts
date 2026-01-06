@@ -146,7 +146,7 @@ export class InventoryRecipesService {
       orgId,
       userId,
       action: 'recipe.created',
-      resource: 'recipes',
+      resourceType: 'Recipe',
       resourceId: recipe.id,
       metadata: {
         name: dto.name,
@@ -301,7 +301,7 @@ export class InventoryRecipesService {
       orgId,
       userId,
       action: 'recipe.updated',
-      resource: 'recipes',
+      resourceType: 'Recipe',
       resourceId: recipeId,
       metadata: { updates: dto },
     });
@@ -354,7 +354,7 @@ export class InventoryRecipesService {
       orgId,
       userId,
       action: 'recipe.line_added',
-      resource: 'recipes',
+      resourceType: 'Recipe',
       resourceId: recipeId,
       metadata: { lineId: line.id, itemId: dto.inventoryItemId },
     });
@@ -396,7 +396,7 @@ export class InventoryRecipesService {
       // Get item's base unit
       const item = await this.prisma.client.inventoryItem.findUnique({
         where: { id: existingLine.inventoryItemId },
-        select: { baseUomId: true },
+        select: { uomId: true },
       });
 
       if (!item) {
@@ -405,8 +405,8 @@ export class InventoryRecipesService {
 
       // Compute qtyBase
       let qtyBase: Decimal;
-      if (item.baseUomId && inputUomId !== item.baseUomId) {
-        qtyBase = await this.uomService.convert(orgId, inputUomId, item.baseUomId, qtyInput.toString());
+      if (item.uomId && inputUomId !== item.uomId) {
+        qtyBase = await this.uomService.convert(orgId, inputUomId, item.uomId, qtyInput.toString());
       } else {
         qtyBase = qtyInput;
       }
@@ -439,7 +439,7 @@ export class InventoryRecipesService {
       orgId,
       userId,
       action: 'recipe.line_updated',
-      resource: 'recipes',
+      resourceType: 'Recipe',
       resourceId: recipeId,
       metadata: { lineId, updates: dto },
     });
@@ -483,7 +483,7 @@ export class InventoryRecipesService {
       orgId,
       userId,
       action: 'recipe.line_deleted',
-      resource: 'recipes',
+      resourceType: 'Recipe',
       resourceId: recipeId,
       metadata: { lineId },
     });
@@ -512,7 +512,7 @@ export class InventoryRecipesService {
       orgId,
       userId,
       action: 'recipe.deleted',
-      resource: 'recipes',
+      resourceType: 'Recipe',
       resourceId: recipeId,
       metadata: { name: recipe.name },
     });
@@ -591,7 +591,7 @@ export class InventoryRecipesService {
       orgId,
       userId,
       action: 'recipe.cloned',
-      resource: 'recipes',
+      resourceType: 'Recipe',
       resourceId: cloned.id,
       metadata: {
         sourceRecipeId: recipeId,
@@ -610,7 +610,10 @@ export class InventoryRecipesService {
   private async validateTarget(orgId: string, targetType: RecipeTargetType | string, targetId: string) {
     if (targetType === 'MENU_ITEM') {
       const menuItem = await this.prisma.client.menuItem.findFirst({
-        where: { id: targetId, orgId },
+        where: { 
+          id: targetId, 
+          branch: { orgId } 
+        },
       });
       if (!menuItem) {
         throw new BadRequestException('Menu item not found');
@@ -643,7 +646,7 @@ export class InventoryRecipesService {
       // Validate item exists
       const item = await this.prisma.client.inventoryItem.findFirst({
         where: { id: line.inventoryItemId, orgId },
-        select: { id: true, baseUomId: true },
+        select: { id: true, uomId: true },
       });
 
       if (!item) {
@@ -665,11 +668,11 @@ export class InventoryRecipesService {
         throw new BadRequestException('Quantity must be greater than zero');
       }
 
-      // Compute qtyBase by converting from inputUom to item's baseUom
+      // Compute qtyBase by converting from inputUom to item's base uom
       let qtyBase: Decimal;
-      if (item.baseUomId && line.inputUomId !== item.baseUomId) {
+      if (item.uomId && line.inputUomId !== item.uomId) {
         try {
-          qtyBase = await this.uomService.convert(orgId, line.inputUomId, item.baseUomId, qtyInput.toString());
+          qtyBase = await this.uomService.convert(orgId, line.inputUomId, item.uomId, qtyInput.toString());
         } catch (error) {
           // If no conversion available, use input qty as base
           this.logger.warn(`No UOM conversion found, using input qty as base: ${error}`);

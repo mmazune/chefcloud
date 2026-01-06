@@ -9,7 +9,7 @@ import { PrismaService } from '../prisma.service';
 
 export interface AuditLogEntry {
   orgId: string;
-  branchId: string;
+  branchId?: string;
   userId: string;
   action: string;
   resourceType: string;
