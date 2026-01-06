@@ -361,7 +361,7 @@ export default function WaitlistPage() {
                             {Math.round(
                               (new Date(entry.seatedAt).getTime() -
                                 new Date(entry.createdAt).getTime()) /
-                                60000,
+                              60000,
                             )}{' '}
                             min
                           </span>

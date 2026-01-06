@@ -40,7 +40,7 @@ export class KioskTimeclockService {
     private readonly sessionService: KioskSessionService,
     private readonly timeclockService: WorkforceTimeclockService,
     private readonly geoFenceService: GeoFenceService,
-  ) {}
+  ) { }
 
   /**
    * Validate PIN format.

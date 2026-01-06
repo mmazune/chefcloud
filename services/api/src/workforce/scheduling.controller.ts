@@ -26,7 +26,7 @@ import { Roles } from '../auth/roles.decorator';
 @Controller('workforce/scheduling')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 export class SchedulingController {
-  constructor(private readonly schedulingService: WorkforceSchedulingService) {}
+  constructor(private readonly schedulingService: WorkforceSchedulingService) { }
 
   // ===== Shift Templates =====
 

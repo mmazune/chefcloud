@@ -146,13 +146,13 @@ export default function CustomerInvoicesPage() {
   return (
     <RequireRole minRole={RoleLevel.L4}>
       <AppShell>
-        <PageHeader 
-          title="Customer Invoices" 
+        <PageHeader
+          title="Customer Invoices"
           subtitle="Manage accounts receivable"
           actions={
             <div className="flex gap-2">
-              <ExportButton 
-                endpoint="/accounting/export/customer-invoices" 
+              <ExportButton
+                endpoint="/accounting/export/customer-invoices"
                 filename="customer-invoices"
                 params={{ branchId: branchFilter || undefined }}
               />
@@ -205,7 +205,7 @@ export default function CustomerInvoicesPage() {
                   className="pl-10"
                 />
               </div>
-              
+
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-[160px]">
                   <SelectValue placeholder="Status" />
@@ -229,8 +229,8 @@ export default function CustomerInvoicesPage() {
                 </SelectContent>
               </Select>
 
-              <BranchFilter 
-                value={branchFilter} 
+              <BranchFilter
+                value={branchFilter}
                 onChange={setBranchFilter}
                 className="w-[180px]"
               />
@@ -286,7 +286,7 @@ export default function CustomerInvoicesPage() {
                   {filteredInvoices.map(invoice => {
                     const outstanding = Number(invoice.total) - Number(invoice.paidAmount);
                     const isOverdue = new Date(invoice.dueDate) < new Date() && outstanding > 0;
-                    
+
                     return (
                       <TableRow key={invoice.id} className="cursor-pointer hover:bg-muted/50">
                         <TableCell className="font-medium">

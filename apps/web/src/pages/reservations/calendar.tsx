@@ -51,7 +51,7 @@ const STATUS_COLORS: Record<string, string> = {
 export default function CalendarPage() {
   const { user } = useAuth();
   const branchId = user?.branch?.id;
-  
+
   const [selectedDate, setSelectedDate] = useState(() => {
     const today = new Date();
     return today.toISOString().split('T')[0];
@@ -137,7 +137,7 @@ export default function CalendarPage() {
             ⚙️ Policies
           </Button>
         </div>
-        
+
         <div className="flex gap-2 items-center">
           <Button variant="outline" size="sm" onClick={goToPreviousDay}>
             ← Prev
@@ -194,10 +194,10 @@ export default function CalendarPage() {
               <div className="text-2xl font-bold mt-1">
                 {calendarData?.slots && calendarData.slots.length > 0
                   ? formatTime(
-                      calendarData.slots.reduce((prev, curr) =>
-                        curr.reservations.length > prev.reservations.length ? curr : prev
-                      ).startHour
-                    )
+                    calendarData.slots.reduce((prev, curr) =>
+                      curr.reservations.length > prev.reservations.length ? curr : prev
+                    ).startHour
+                  )
                   : '—'}
               </div>
             </Card>
@@ -211,13 +211,13 @@ export default function CalendarPage() {
                 Reservations organized by time slot
               </p>
             </div>
-            
+
             <div className="divide-y">
               {displayHours.map((hour) => {
                 const slot = calendarData?.slots?.find((s) => s.startHour === hour);
                 const reservations = slot?.reservations || [];
                 const hasReservations = reservations.length > 0;
-                
+
                 return (
                   <div
                     key={hour}
@@ -227,7 +227,7 @@ export default function CalendarPage() {
                     <div className="w-24 flex-shrink-0 p-3 border-r bg-muted/30">
                       <span className="text-sm font-medium">{formatTime(hour)}</span>
                     </div>
-                    
+
                     {/* Reservations Column */}
                     <div className="flex-1 p-3 min-h-[60px]">
                       {reservations.length === 0 ? (

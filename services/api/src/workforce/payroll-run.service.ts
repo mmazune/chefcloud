@@ -38,7 +38,7 @@ export class PayrollRunService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly auditService: WorkforceAuditService,
-  ) {}
+  ) { }
 
   /**
    * Create a new payroll run for a pay period
@@ -178,7 +178,7 @@ export class PayrollRunService {
 
       const netWorkedMins = workedMins - breakMins;
       const existing = userTotals.get(entry.userId) ?? { regularMins: 0, overtimeMins: 0, breakMins: 0 };
-      
+
       // Simple daily OT logic
       const dailyRegular = Math.min(netWorkedMins, dailyOtMins);
       const dailyOt = Math.max(0, netWorkedMins - dailyOtMins);
@@ -202,7 +202,7 @@ export class PayrollRunService {
       const weeklyRegularMins = Math.min(totals.regularMins, weeklyOtMins);
       const weeklyOtFromRegular = Math.max(0, totals.regularMins - weeklyOtMins);
       const finalOtMins = totals.overtimeMins + weeklyOtFromRegular;
-      
+
       const regularHours = weeklyRegularMins / 60;
       const overtimeHours = finalOtMins / 60;
       const breakHours = totals.breakMins / 60;
@@ -334,7 +334,7 @@ export class PayrollRunService {
     },
   ): Promise<any[]> {
     const where: any = { orgId };
-    
+
     if (filters?.branchId) {
       where.branchId = filters.branchId;
     }

@@ -19,16 +19,16 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
-import { 
-  AdjustmentsService, 
-  RequestAdjustmentDto, 
-  AdjustmentStatus 
+import {
+  AdjustmentsService,
+  RequestAdjustmentDto,
+  AdjustmentStatus
 } from './adjustments.service';
 
 @Controller('workforce/adjustments')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 export class AdjustmentsController {
-  constructor(private readonly adjustmentsService: AdjustmentsService) {}
+  constructor(private readonly adjustmentsService: AdjustmentsService) { }
 
   /**
    * POST /workforce/adjustments

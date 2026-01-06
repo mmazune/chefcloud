@@ -44,7 +44,7 @@ describe('M10.22 Workforce Kiosk Ops Hardening E2E', () => {
   beforeAll(async () => {
     await traceSpan('beforeAll', async () => {
       trace('creating slice module');
-      
+
       const modRef = await withTimeout(
         createE2ETestingModuleBuilder({
           imports: [
@@ -99,7 +99,7 @@ describe('M10.22 Workforce Kiosk Ops Hardening E2E', () => {
           events: [],
         })
         .ok(() => true);
-      
+
       // Accept 400 (empty array) or 401 (session validation first)
       expect([400, 401]).toContain(res.status);
     });
@@ -120,7 +120,7 @@ describe('M10.22 Workforce Kiosk Ops Hardening E2E', () => {
           events,
         })
         .ok(() => true);
-      
+
       expect([400, 401]).toContain(res.status);
     });
 
@@ -130,7 +130,7 @@ describe('M10.22 Workforce Kiosk Ops Hardening E2E', () => {
         .set('x-kiosk-session', 'test-session-id')
         .send({ events: null }) // Missing batchId
         .ok(() => true);
-      
+
       expect([400, 401]).toContain(res.status);
     });
   });
@@ -148,7 +148,7 @@ describe('M10.22 Workforce Kiosk Ops Hardening E2E', () => {
         .get('/workforce/kiosk/health')
         .set(L4_AUTH)
         .ok(() => true);
-      
+
       // Accept 200 (success) or 401/403 (mock auth limitation)
       expect([200, 401, 403]).toContain(res.status);
     });
@@ -158,7 +158,7 @@ describe('M10.22 Workforce Kiosk Ops Hardening E2E', () => {
         .get('/workforce/kiosk/health/metrics')
         .set(L4_AUTH)
         .ok(() => true);
-      
+
       expect([200, 401, 403]).toContain(res.status);
     });
   });
@@ -176,7 +176,7 @@ describe('M10.22 Workforce Kiosk Ops Hardening E2E', () => {
         .get('/workforce/kiosk/fraud')
         .set(L4_AUTH)
         .ok(() => true);
-      
+
       expect([200, 401, 403]).toContain(res.status);
     });
 
@@ -185,7 +185,7 @@ describe('M10.22 Workforce Kiosk Ops Hardening E2E', () => {
         .get('/workforce/kiosk/fraud/export')
         .set(L4_AUTH)
         .ok(() => true);
-      
+
       // If 200, should have X-Content-SHA256 header (H5)
       if (res.status === 200) {
         expect(res.headers['x-content-sha256']).toBeDefined();
@@ -207,7 +207,7 @@ describe('M10.22 Workforce Kiosk Ops Hardening E2E', () => {
         .get('/workforce/kiosk/export/batch-events')
         .set(L4_AUTH)
         .ok(() => true);
-      
+
       // If 200, should have X-Content-SHA256 header
       if (res.status === 200) {
         expect(res.headers['x-content-sha256']).toBeDefined();
@@ -248,7 +248,7 @@ describe('M10.22 Workforce Kiosk Ops Hardening E2E', () => {
         .post('/public/workforce/kiosk/TEST-PUBLIC-ID/heartbeat')
         .set('x-kiosk-session', 'test-session-id')
         .ok(() => true);
-      
+
       // Accept 200 (success) or 401 (invalid session)
       expect([200, 401]).toContain(res.status);
     });

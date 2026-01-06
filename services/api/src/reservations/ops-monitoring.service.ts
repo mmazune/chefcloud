@@ -55,7 +55,7 @@ export type OpsIncidentRecord = OpsIncident;
 export class OpsMonitoringService {
   private readonly logger = new Logger(OpsMonitoringService.name);
 
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   /**
    * Get SLA metrics for a branch over a time period

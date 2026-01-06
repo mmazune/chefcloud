@@ -48,4 +48,4 @@ import { CommonModule } from '../common/common.module';
     OpsMonitoringService,
   ],
 })
-export class ReservationsModule {}
+export class ReservationsModule { }

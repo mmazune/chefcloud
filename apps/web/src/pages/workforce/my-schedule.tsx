@@ -65,12 +65,12 @@ function formatDuration(minutes: number): string {
 
 export default function MySchedulePage() {
   const { user } = useAuth();
-  
+
   // Default: today to 30 days ahead
   const today = new Date();
   const defaultFrom = format(today, 'yyyy-MM-dd');
   const defaultTo = format(addDays(today, 30), 'yyyy-MM-dd');
-  
+
   const [fromDate, setFromDate] = useState(defaultFrom);
   const [toDate, setToDate] = useState(defaultTo);
 
@@ -111,8 +111,8 @@ export default function MySchedulePage() {
             View your upcoming shifts and work schedule
           </p>
         </div>
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           onClick={() => refetch()}
           disabled={isRefetching}
         >

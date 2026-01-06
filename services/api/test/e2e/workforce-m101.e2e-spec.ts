@@ -57,7 +57,7 @@ describe('M10.1 Workforce Core (e2e)', () => {
     const loginRes = await request(app.getHttpServer())
       .post('/auth/login')
       .send({ email: owner.email, password: 'test123' });
-    
+
     authToken = loginRes.body.accessToken;
     managerUserId = owner.id;
 
@@ -113,7 +113,7 @@ describe('M10.1 Workforce Core (e2e)', () => {
       expect(res.body.name).toBe('Morning Shift E2E');
       expect(res.body.startTime).toBe('09:00');
       expect(res.body.endTime).toBe('17:00');
-      
+
       templateId = res.body.id;
     });
 
@@ -169,7 +169,7 @@ describe('M10.1 Workforce Core (e2e)', () => {
       expect(res.body.id).toBeDefined();
       expect(res.body.status).toBe('DRAFT');
       expect(res.body.plannedMinutes).toBe(480); // 8 hours
-      
+
       shiftId = res.body.id;
     });
 

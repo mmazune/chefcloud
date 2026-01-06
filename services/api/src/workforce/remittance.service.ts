@@ -97,7 +97,7 @@ export interface GenerateFromPayrollDto {
 
 @Injectable()
 export class RemittanceService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   /**
    * Create a new remittance batch in DRAFT status
@@ -425,7 +425,7 @@ export class RemittanceService {
         for (const link of batch.journalLinks) {
           if (link.type === 'PAYMENT') {
             const originalJournal = link.journalEntry;
-            
+
             // Create reversal journal (opposite debits/credits)
             const reversalLines = originalJournal.lines.map((line: any) => ({
               accountId: line.accountId,

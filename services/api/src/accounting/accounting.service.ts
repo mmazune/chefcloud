@@ -14,7 +14,7 @@ import { PrismaService } from '../prisma.service';
 export class AccountingService {
   private readonly logger = new Logger(AccountingService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   /**
    * Create vendor
@@ -88,7 +88,7 @@ export class AccountingService {
     },
   ): Promise<any> {
     const where: any = { orgId };
-    
+
     if (filters?.status) {
       where.status = filters.status;
     }
@@ -490,7 +490,7 @@ export class AccountingService {
         if (currentBill) {
           const newPaidAmount = Number(currentBill.paidAmount) + data.amount;
           const total = Number(currentBill.total);
-          
+
           // Determine new status
           let newStatus: 'OPEN' | 'PARTIALLY_PAID' | 'PAID' = currentBill.status as any;
           if (newPaidAmount >= total - 0.01) {
@@ -501,7 +501,7 @@ export class AccountingService {
 
           await tx.vendorBill.update({
             where: { id: data.billId },
-            data: { 
+            data: {
               paidAmount: newPaidAmount,
               status: newStatus,
             },
@@ -612,9 +612,9 @@ export class AccountingService {
     for (const invoice of openInvoices) {
       // M8.4: Use paidAmount field for balance calculation
       const balance = Number(invoice.total) - Number(invoice.paidAmount);
-      
+
       if (balance <= 0) continue;
-      
+
       const daysOverdue = Math.floor(
         (today.getTime() - invoice.dueDate.getTime()) / (1000 * 60 * 60 * 24),
       );
@@ -721,7 +721,7 @@ export class AccountingService {
     },
   ): Promise<any> {
     const where: any = { orgId };
-    
+
     if (filters?.status) {
       where.status = filters.status;
     }
@@ -1120,7 +1120,7 @@ export class AccountingService {
         if (currentInvoice) {
           const newPaidAmount = Number(currentInvoice.paidAmount) + data.amount;
           const total = Number(currentInvoice.total);
-          
+
           // Determine new status
           let newStatus: 'OPEN' | 'PARTIALLY_PAID' | 'PAID' = currentInvoice.status as any;
           if (newPaidAmount >= total - 0.01) {
@@ -1131,7 +1131,7 @@ export class AccountingService {
 
           await tx.customerInvoice.update({
             where: { id: data.invoiceId },
-            data: { 
+            data: {
               paidAmount: newPaidAmount,
               status: newStatus,
             },
@@ -1354,7 +1354,7 @@ export class AccountingService {
     filters: { type?: string; isActive?: boolean },
   ): Promise<any> {
     const where: any = { orgId };
-    
+
     if (filters.type) {
       where.type = filters.type;
     }

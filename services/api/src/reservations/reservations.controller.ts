@@ -53,7 +53,7 @@ export class ReservationsController {
     private readonly automationService: AutomationService,
     private readonly hostOpsService: HostOpsService,
     private readonly reportingService: ReportingService,
-  ) {}
+  ) { }
 
   @Post()
   @Roles('L2') // Front desk / host
@@ -501,9 +501,9 @@ export class ReservationsController {
     if (!from || !to) {
       throw new BadRequestException('from and to date parameters are required');
     }
-    
+
     const csv = await this.reportingService.exportCSV(req.user.orgId, { from, to, branchId });
-    
+
     const filename = `reservations_${from}_to_${to}.csv`;
     res.setHeader('Content-Type', 'text/csv');
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);

@@ -10,4 +10,4 @@ import { CommonModule } from '../common/common.module';
   providers: [WaitlistService, PrismaService],
   exports: [WaitlistService],
 })
-export class WaitlistModule {}
+export class WaitlistModule { }

@@ -282,8 +282,8 @@ export default function ApprovalsPage() {
                           shift.status === 'APPROVED'
                             ? 'bg-emerald-600 text-white'
                             : shift.status === 'COMPLETED'
-                            ? 'bg-green-500 text-white'
-                            : 'bg-gray-500 text-white'
+                              ? 'bg-green-500 text-white'
+                              : 'bg-gray-500 text-white'
                         }
                       >
                         {shift.status}

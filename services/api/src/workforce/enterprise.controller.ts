@@ -20,11 +20,11 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
-import { 
-  WorkforceEnterpriseService, 
-  PolicyDto, 
-  GeneratePayPeriodsDto, 
-  BulkApprovalDto, 
+import {
+  WorkforceEnterpriseService,
+  PolicyDto,
+  GeneratePayPeriodsDto,
+  BulkApprovalDto,
   PayrollExportDto,
   PayPeriodStatus,
 } from './workforce-enterprise.service';
@@ -32,7 +32,7 @@ import {
 @Controller('workforce')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 export class EnterpriseController {
-  constructor(private readonly enterpriseService: WorkforceEnterpriseService) {}
+  constructor(private readonly enterpriseService: WorkforceEnterpriseService) { }
 
   // ===== Policy Management =====
 

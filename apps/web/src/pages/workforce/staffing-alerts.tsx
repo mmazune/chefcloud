@@ -100,7 +100,7 @@ export default function StaffingAlertsPage() {
       });
       if (selectedDate) params.append('date', selectedDate);
       if (includeResolved) params.append('includeResolved', 'true');
-      
+
       const response = await apiClient.get(`/workforce/planning/alerts?${params.toString()}`);
       return response.data;
     },

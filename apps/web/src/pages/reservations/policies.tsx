@@ -72,7 +72,7 @@ export default function PoliciesPage() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const branchId = user?.branch?.id;
-  
+
   const [editingPolicy, setEditingPolicy] = useState<ReservationPolicy | null>(null);
   const [formData, setFormData] = useState<Partial<ReservationPolicy>>(defaultPolicy);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -174,7 +174,7 @@ export default function PoliciesPage() {
                   Edit
                 </Button>
               </div>
-              
+
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
                 <div>
                   <p className="text-xs text-muted-foreground">Party Size</p>
@@ -195,7 +195,7 @@ export default function PoliciesPage() {
                   </Badge>
                 </div>
               </div>
-              
+
               <div className="border-t mt-4 pt-4">
                 <h4 className="text-sm font-medium mb-2">Deposit Settings</h4>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -228,7 +228,7 @@ export default function PoliciesPage() {
                   )}
                 </div>
               </div>
-              
+
               <div className="border-t mt-4 pt-4">
                 <h4 className="text-sm font-medium mb-2">Cancellation Rules</h4>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -246,7 +246,7 @@ export default function PoliciesPage() {
                   </div>
                 </div>
               </div>
-              
+
               {policy.notes && (
                 <div className="border-t mt-4 pt-4">
                   <p className="text-xs text-muted-foreground">Notes</p>
@@ -265,7 +265,7 @@ export default function PoliciesPage() {
               {editingPolicy ? 'Edit Policy' : 'Create Reservation Policy'}
             </DialogTitle>
           </DialogHeader>
-          
+
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid gap-4 md:grid-cols-2">
               <div className="md:col-span-2">
@@ -278,7 +278,7 @@ export default function PoliciesPage() {
                   required
                 />
               </div>
-              
+
               <div>
                 <Label htmlFor="defaultDuration">Default Duration (min)</Label>
                 <Input
@@ -288,7 +288,7 @@ export default function PoliciesPage() {
                   onChange={(e) => updateField('defaultDurationMinutes', parseInt(e.target.value))}
                 />
               </div>
-              
+
               <div>
                 <Label htmlFor="slotInterval">Slot Interval (min)</Label>
                 <Input
@@ -298,7 +298,7 @@ export default function PoliciesPage() {
                   onChange={(e) => updateField('slotIntervalMinutes', parseInt(e.target.value))}
                 />
               </div>
-              
+
               <div>
                 <Label htmlFor="minPartySize">Min Party Size</Label>
                 <Input
@@ -308,7 +308,7 @@ export default function PoliciesPage() {
                   onChange={(e) => updateField('minPartySize', parseInt(e.target.value))}
                 />
               </div>
-              
+
               <div>
                 <Label htmlFor="maxPartySize">Max Party Size</Label>
                 <Input
@@ -318,7 +318,7 @@ export default function PoliciesPage() {
                   onChange={(e) => updateField('maxPartySize', parseInt(e.target.value))}
                 />
               </div>
-              
+
               <div>
                 <Label htmlFor="advanceBookingDays">Advance Booking (days)</Label>
                 <Input
@@ -328,7 +328,7 @@ export default function PoliciesPage() {
                   onChange={(e) => updateField('advanceBookingDays', parseInt(e.target.value))}
                 />
               </div>
-              
+
               <div>
                 <Label htmlFor="minAdvanceMinutes">Min Advance Notice (min)</Label>
                 <Input
@@ -338,7 +338,7 @@ export default function PoliciesPage() {
                   onChange={(e) => updateField('minAdvanceMinutes', parseInt(e.target.value))}
                 />
               </div>
-              
+
               <div>
                 <Label htmlFor="maxDailyReservations">Max Daily Reservations</Label>
                 <Input
@@ -348,7 +348,7 @@ export default function PoliciesPage() {
                   onChange={(e) => updateField('maxDailyReservations', parseInt(e.target.value))}
                 />
               </div>
-              
+
               <div className="flex items-center gap-2">
                 <input
                   type="checkbox"
@@ -360,7 +360,7 @@ export default function PoliciesPage() {
                 <Label htmlFor="autoConfirm">Auto-Confirm Reservations</Label>
               </div>
             </div>
-            
+
             <div className="border-t pt-4">
               <h3 className="font-medium mb-4">Deposit Settings</h3>
               <div className="grid gap-4 md:grid-cols-2">
@@ -374,7 +374,7 @@ export default function PoliciesPage() {
                   />
                   <Label htmlFor="depositRequired">Require Deposit</Label>
                 </div>
-                
+
                 {formData.depositRequired && (
                   <>
                     <div>
@@ -386,7 +386,7 @@ export default function PoliciesPage() {
                         onChange={(e) => updateField('depositMinPartySize', parseInt(e.target.value))}
                       />
                     </div>
-                    
+
                     <div>
                       <Label htmlFor="depositAmount">Deposit Amount</Label>
                       <Input
@@ -396,7 +396,7 @@ export default function PoliciesPage() {
                         onChange={(e) => updateField('depositAmount', e.target.value)}
                       />
                     </div>
-                    
+
                     <div>
                       <Label htmlFor="depositType">Deposit Type</Label>
                       <select
@@ -410,7 +410,7 @@ export default function PoliciesPage() {
                         <option value="PERCENT">Percentage</option>
                       </select>
                     </div>
-                    
+
                     <div>
                       <Label htmlFor="depositDeadlineMinutes">Deadline (hours before)</Label>
                       <Input
@@ -424,7 +424,7 @@ export default function PoliciesPage() {
                 )}
               </div>
             </div>
-            
+
             <div className="border-t pt-4">
               <h3 className="font-medium mb-4">Cancellation Rules</h3>
               <div className="grid gap-4 md:grid-cols-3">
@@ -437,7 +437,7 @@ export default function PoliciesPage() {
                     onChange={(e) => updateField('lateCancelMinutes', parseInt(e.target.value) * 60)}
                   />
                 </div>
-                
+
                 <div>
                   <Label htmlFor="lateCancelFeePercent">Late Cancel Fee (%)</Label>
                   <Input
@@ -447,7 +447,7 @@ export default function PoliciesPage() {
                     onChange={(e) => updateField('lateCancelFeePercent', e.target.value)}
                   />
                 </div>
-                
+
                 <div>
                   <Label htmlFor="noShowFeePercent">No-Show Fee (%)</Label>
                   <Input
@@ -459,7 +459,7 @@ export default function PoliciesPage() {
                 </div>
               </div>
             </div>
-            
+
             <div className="border-t pt-4">
               <Label htmlFor="notes">Notes</Label>
               <textarea
@@ -470,7 +470,7 @@ export default function PoliciesPage() {
                 placeholder="Internal notes about this policy..."
               />
             </div>
-            
+
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
                 Cancel

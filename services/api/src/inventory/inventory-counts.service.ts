@@ -34,7 +34,7 @@ export class InventoryCountsService {
     private readonly prisma: PrismaService,
     private readonly ledgerService: InventoryLedgerService,
     private readonly locationsService: InventoryLocationsService,
-  ) {}
+  ) { }
 
   /**
    * Create a new count session
@@ -110,7 +110,7 @@ export class InventoryCountsService {
 
     // Verify location exists and matches session scope if set
     const location = await this.locationsService.getLocation(orgId, dto.locationId);
-    
+
     if (session.locationId && session.locationId !== dto.locationId) {
       throw new BadRequestException(
         `Count line location ${dto.locationId} does not match session location ${session.locationId}`,

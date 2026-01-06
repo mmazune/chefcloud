@@ -44,7 +44,7 @@ export class KioskFraudService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly auditService: WorkforceAuditService,
-  ) {}
+  ) { }
 
   /**
    * Log a PIN attempt (never store raw PIN, H4).

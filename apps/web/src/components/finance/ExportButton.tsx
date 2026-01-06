@@ -16,11 +16,11 @@ interface ExportButtonProps {
   className?: string;
 }
 
-export function ExportButton({ 
-  endpoint, 
-  filename, 
+export function ExportButton({
+  endpoint,
+  filename,
   params,
-  className 
+  className
 }: ExportButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
@@ -32,7 +32,7 @@ export function ExportButton({
         params,
         responseType: 'blob',
       });
-      
+
       // Create download link
       const blob = new Blob([response.data], { type: 'text/csv' });
       const url = window.URL.createObjectURL(blob);
@@ -60,8 +60,8 @@ export function ExportButton({
   };
 
   return (
-    <Button 
-      variant="outline" 
+    <Button
+      variant="outline"
       size="sm"
       onClick={handleExport}
       disabled={isLoading}

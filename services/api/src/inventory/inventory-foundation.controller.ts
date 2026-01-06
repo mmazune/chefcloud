@@ -196,7 +196,7 @@ export class InventoryFoundationController {
     private readonly adjustmentsService: InventoryAdjustmentsService,
     private readonly countsService: InventoryCountsService,
     private readonly exportService: InventoryExportService,
-  ) {}
+  ) { }
 
   // ============= UOM Endpoints =============
 

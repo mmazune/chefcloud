@@ -27,7 +27,7 @@ export class KioskOpsReportingService {
     private readonly prisma: PrismaService,
     private readonly healthService: KioskHealthService,
     private readonly fraudService: KioskFraudService,
-  ) {}
+  ) { }
 
   /**
    * Get health report.

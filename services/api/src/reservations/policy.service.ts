@@ -15,7 +15,7 @@ import { UpsertPolicyDto } from './reservations.dto';
 export class PolicyService {
   private readonly logger = new Logger(PolicyService.name);
 
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   /**
    * Get policy for a branch

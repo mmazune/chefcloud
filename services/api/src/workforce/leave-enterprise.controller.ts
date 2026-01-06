@@ -50,7 +50,7 @@ export class LeaveCalendarController {
     private readonly reportingService: LeaveReportingService,
     private readonly projectionService: LeaveProjectionService,
     private readonly attachmentsService: LeaveAttachmentsService,
-  ) {}
+  ) { }
 
   // ===== A) Team Calendar =====
 
@@ -329,7 +329,7 @@ export class LeaveCalendarController {
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('api/v1/workforce/leave/delegates')
 export class LeaveDelegationController {
-  constructor(private readonly delegationService: LeaveDelegationService) {}
+  constructor(private readonly delegationService: LeaveDelegationService) { }
 
   @Get()
   @Roles('MANAGER', 'OWNER')

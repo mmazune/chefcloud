@@ -207,7 +207,7 @@ export default function InventoryTransfersPage() {
 
   const handleSubmit = () => {
     if (!formFromBranchId || !formToBranchId || formLines.length === 0) return;
-    
+
     const validLines = formLines.filter(
       line => line.itemId && line.fromLocationId && line.toLocationId && parseFloat(line.qtyShipped) > 0
     );
@@ -227,8 +227,8 @@ export default function InventoryTransfersPage() {
     });
   };
 
-  const filteredTransfers = transfers?.filter(t => 
-    !search || 
+  const filteredTransfers = transfers?.filter(t =>
+    !search ||
     t.transferNumber.toLowerCase().includes(search.toLowerCase()) ||
     t.fromBranch.name.toLowerCase().includes(search.toLowerCase()) ||
     t.toBranch.name.toLowerCase().includes(search.toLowerCase())
@@ -414,7 +414,7 @@ export default function InventoryTransfersPage() {
                   Add Line
                 </Button>
               </div>
-              
+
               <div className="space-y-3">
                 {formLines.map((line, index) => (
                   <div key={index} className="grid grid-cols-5 gap-2 items-end">

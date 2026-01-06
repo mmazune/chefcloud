@@ -70,7 +70,7 @@ export class WebhookDispatcherService {
   constructor(
     private prisma: PrismaService,
     private webhookService: WebhookService,
-  ) {}
+  ) { }
 
   /**
    * Set custom HTTP client (for testing)

@@ -37,7 +37,7 @@ export class WebhookHardeningService {
   constructor(
     private prisma: PrismaService,
     private opsMonitoring: OpsMonitoringService,
-  ) {}
+  ) { }
 
   // ===== Circuit Breaker =====
 

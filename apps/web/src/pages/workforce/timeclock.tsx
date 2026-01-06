@@ -96,7 +96,7 @@ export default function TimeclockPage() {
     mutationFn: async () => {
       const branchId = activeBranchId || user?.branch?.id;
       if (!branchId) throw new Error('No branch selected');
-      
+
       const response = await apiClient.post('/workforce/timeclock/clock-in', {
         branchId,
         shiftId: status?.todayShift?.id,

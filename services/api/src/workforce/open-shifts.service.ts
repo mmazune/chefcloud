@@ -57,7 +57,7 @@ export class OpenShiftsService {
     private readonly prisma: PrismaService,
     private readonly conflicts: WorkforceConflictsService,
     private readonly notifications: WorkforceNotificationsService,
-  ) {}
+  ) { }
 
   // ===== MANAGER ACTIONS =====
 

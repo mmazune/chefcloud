@@ -367,7 +367,7 @@ describe('Reservations Automation M9.3 (E2E)', () => {
         .set(AUTH)
         .query({ branchId: BRANCH_ID })
         .ok(() => true);
-      
+
       // Keys should be consistent for same state
       const res2 = await request(app.getHttpServer())
         .get('/reservations/calendar-refresh-key')

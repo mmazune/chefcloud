@@ -20,7 +20,7 @@ import { IdempotencyInterceptor } from '../common/idempotency.interceptor';
 @Controller('waitlist')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 export class WaitlistController {
-  constructor(private readonly waitlistService: WaitlistService) {}
+  constructor(private readonly waitlistService: WaitlistService) { }
 
   @Post()
   @Roles('L2') // Front desk / host

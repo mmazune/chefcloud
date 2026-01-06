@@ -54,7 +54,7 @@ export class NotificationDispatcherService {
   constructor(
     private prisma: PrismaService,
     private templateService: TemplateRenderService,
-  ) {}
+  ) { }
 
   /**
    * Set notification provider (for production or testing)

@@ -39,7 +39,7 @@ export class KioskDeviceController {
     private readonly healthService: KioskHealthService,
     private readonly fraudService: KioskFraudService,
     private readonly opsReportingService: KioskOpsReportingService,
-  ) {}
+  ) { }
 
   // ===== Device CRUD =====
 

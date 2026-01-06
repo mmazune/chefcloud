@@ -10,7 +10,7 @@ import { PrismaService } from '../prisma.service';
 import { Prisma } from '@chefcloud/db';
 
 type NotificationType = 'EMAIL' | 'SMS' | 'IN_APP';
-type NotificationEvent = 
+type NotificationEvent =
   | 'CONFIRMED'
   | 'CANCELLED'
   | 'NO_SHOW'
@@ -38,7 +38,7 @@ interface SendNotificationParams {
 export class NotificationService {
   private readonly logger = new Logger(NotificationService.name);
 
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   /**
    * Log a notification event.

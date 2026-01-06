@@ -38,13 +38,13 @@ describe('M10.3 Workforce Enterprise (e2e)', () => {
   beforeAll(async () => {
     await traceSpan('beforeAll', async () => {
       trace('creating E2E app');
-      
+
       // Layer C: Wrap app creation with timeout
       app = await withTimeout(
         createE2EApp({ imports: [AppModule] }),
         { ms: 60_000, label: 'createE2EApp' }
       );
-      
+
       prisma = app.get(PrismaService);
       trace('app created, logging in users');
 
@@ -83,12 +83,12 @@ describe('M10.3 Workforce Enterprise (e2e)', () => {
   afterAll(async () => {
     await traceSpan('afterAll', async () => {
       trace('cleaning up test data');
-      
+
       // Cleanup M10.3 test data - use try/catch for resilience
       if (prisma) {
         try {
           await prisma.client.workforceAuditLog.deleteMany({
-            where: { 
+            where: {
               entityType: { in: ['WorkforcePolicy', 'PayPeriod', 'TimesheetApproval', 'PayrollExport'] },
             },
           });
@@ -131,7 +131,7 @@ describe('M10.3 Workforce Enterprise (e2e)', () => {
         .get('/waitlist/list')
         .set('Authorization', `Bearer ${ownerToken}`)
         .ok(() => true);
-      
+
       // Accept 200 (success with data) or 404 (no waitlist feature) but NOT 500
       expect(res.status).not.toBe(500);
       trace('PRE-007: Waitlist endpoint responds without 500 error', { status: res.status });
@@ -145,7 +145,7 @@ describe('M10.3 Workforce Enterprise (e2e)', () => {
         .get('/workforce/policy')
         .set('Authorization', `Bearer ${ownerToken}`)
         .expect(HttpStatus.OK);
-      
+
       expect(res.body).toHaveProperty('dailyOtThresholdMins');
       expect(res.body).toHaveProperty('weeklyOtThresholdMins');
       trace('H1: Policy retrieved successfully');
@@ -164,7 +164,7 @@ describe('M10.3 Workforce Enterprise (e2e)', () => {
           autoLockDays: 7,
         })
         .expect(HttpStatus.OK);
-      
+
       expect(res.body.dailyOtThresholdMins).toBe(480);
       expect(res.body.weeklyOtThresholdMins).toBe(2400);
       expect(res.body.roundingIntervalMins).toBe(15);
@@ -176,7 +176,7 @@ describe('M10.3 Workforce Enterprise (e2e)', () => {
         .get('/workforce/policy')
         .set('Authorization', `Bearer ${supervisorToken}`)
         .expect(HttpStatus.FORBIDDEN);
-      
+
       trace('H1: L2 correctly denied policy access');
     });
   });
@@ -199,7 +199,7 @@ describe('M10.3 Workforce Enterprise (e2e)', () => {
           branchId,
         })
         .expect(HttpStatus.CREATED);
-      
+
       expect(res.body.periods).toBeDefined();
       expect(res.body.periods.length).toBeGreaterThan(0);
       generatedPeriodId = res.body.periods[0].id;
@@ -211,7 +211,7 @@ describe('M10.3 Workforce Enterprise (e2e)', () => {
         .get('/workforce/pay-periods')
         .set('Authorization', `Bearer ${managerToken}`)
         .expect(HttpStatus.OK);
-      
+
       expect(Array.isArray(res.body)).toBe(true);
       trace('H2: Pay periods listed', { count: res.body.length });
     });
@@ -226,7 +226,7 @@ describe('M10.3 Workforce Enterprise (e2e)', () => {
         .post(`/workforce/pay-periods/${generatedPeriodId}/close`)
         .set('Authorization', `Bearer ${ownerToken}`)
         .expect(HttpStatus.OK);
-      
+
       expect(res.body.status).toBe('CLOSED');
       trace('H2: Pay period closed successfully');
     });
@@ -241,7 +241,7 @@ describe('M10.3 Workforce Enterprise (e2e)', () => {
           endDate: '2024-01-14',
         })
         .expect(HttpStatus.FORBIDDEN);
-      
+
       trace('H2: L2 correctly denied pay period generation');
     });
   });
@@ -253,7 +253,7 @@ describe('M10.3 Workforce Enterprise (e2e)', () => {
         .get('/workforce/timesheets/pending')
         .set('Authorization', `Bearer ${managerToken}`)
         .expect(HttpStatus.OK);
-      
+
       expect(Array.isArray(res.body)).toBe(true);
       trace('H3: Pending timesheets retrieved');
     });
@@ -263,20 +263,20 @@ describe('M10.3 Workforce Enterprise (e2e)', () => {
       const pendingRes = await request(app.getHttpServer())
         .get('/workforce/timesheets/pending')
         .set('Authorization', `Bearer ${managerToken}`);
-      
+
       if (pendingRes.body.length === 0) {
         trace('H3: No pending timesheets to approve, skipping');
         return;
       }
 
       const approvalIds = pendingRes.body.slice(0, 2).map((a: { id: string }) => a.id);
-      
+
       const res = await request(app.getHttpServer())
         .post('/workforce/timesheets/approve')
         .set('Authorization', `Bearer ${managerToken}`)
         .send({ approvalIds })
         .expect(HttpStatus.OK);
-      
+
       expect(res.body.approved).toBe(approvalIds.length);
       trace('H3: Timesheets approved', { count: res.body.approved });
     });
@@ -285,23 +285,23 @@ describe('M10.3 Workforce Enterprise (e2e)', () => {
       const pendingRes = await request(app.getHttpServer())
         .get('/workforce/timesheets/pending')
         .set('Authorization', `Bearer ${managerToken}`);
-      
+
       if (pendingRes.body.length === 0) {
         trace('H3: No pending timesheets to reject, skipping');
         return;
       }
 
       const approvalIds = [pendingRes.body[0].id];
-      
+
       const res = await request(app.getHttpServer())
         .post('/workforce/timesheets/reject')
         .set('Authorization', `Bearer ${managerToken}`)
-        .send({ 
+        .send({
           approvalIds,
           reason: 'E2E test rejection',
         })
         .expect(HttpStatus.OK);
-      
+
       expect(res.body.rejected).toBe(1);
       trace('H3: Timesheet rejected');
     });
@@ -323,7 +323,7 @@ describe('M10.3 Workforce Enterprise (e2e)', () => {
           format: 'CSV', // Service expects uppercase
         })
         .expect(HttpStatus.CREATED); // Export is a creation operation
-      
+
       expect(res.body).toHaveProperty('csv');
       expect(typeof res.body.csv).toBe('string');
       trace('H4: Payroll export generated');
@@ -339,7 +339,7 @@ describe('M10.3 Workforce Enterprise (e2e)', () => {
           format: 'csv',
         })
         .expect(HttpStatus.FORBIDDEN);
-      
+
       trace('H4: L3 correctly denied payroll export');
     });
   });
@@ -353,7 +353,7 @@ describe('M10.3 Workforce Enterprise (e2e)', () => {
         .set('Authorization', `Bearer ${supervisorToken}`)
         .send({ dailyOtThresholdMins: 480 })
         .expect(HttpStatus.FORBIDDEN);
-      
+
       trace('H5: L2 denied policy management');
     });
 
@@ -363,7 +363,7 @@ describe('M10.3 Workforce Enterprise (e2e)', () => {
         .get('/workforce/pay-periods')
         .set('Authorization', `Bearer ${supervisorToken}`)
         .ok(() => true);
-      
+
       // L2 = supervisor should have L3+ access for viewing
       expect([200, 403]).toContain(res.status);
       trace('H5: Access control verified for pay period listing', { status: res.status });
@@ -374,7 +374,7 @@ describe('M10.3 Workforce Enterprise (e2e)', () => {
         .post('/workforce/pay-periods/fake-id/close')
         .set('Authorization', `Bearer ${supervisorToken}`)
         .expect(HttpStatus.FORBIDDEN);
-      
+
       trace('H5: L2 denied pay period closure');
     });
   });
@@ -388,7 +388,7 @@ describe('M10.3 Workforce Enterprise (e2e)', () => {
         .set('Authorization', `Bearer ${ownerToken}`)
         .send({ dailyOtThresholdMins: 510 })
         .expect(HttpStatus.OK);
-      
+
       // Check audit log
       const logs = await prisma.client.workforceAuditLog.findMany({
         where: {
@@ -418,7 +418,7 @@ describe('M10.3 Workforce Enterprise (e2e)', () => {
           endDate: endDate.toISOString().split('T')[0],
         })
         .expect(HttpStatus.CREATED);
-      
+
       const logs = await prisma.client.workforceAuditLog.findMany({
         where: {
           orgId,

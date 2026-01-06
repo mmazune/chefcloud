@@ -9,7 +9,7 @@ import { CreateWaitlistEntryDto, DropWaitlistDto } from '../reservations/reserva
 
 @Injectable()
 export class WaitlistService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   async create(orgId: string, dto: CreateWaitlistEntryDto, userId?: string): Promise<any> {
     return this.prisma.waitlistEntry.create({

@@ -80,7 +80,7 @@ export class PayrollPostingService {
     private readonly prisma: PrismaService,
     private readonly auditService: WorkforceAuditService,
     private readonly mappingService: PayrollMappingService,
-  ) {}
+  ) { }
 
   /**
    * Get posting preview (what journal entries will be created)
@@ -224,7 +224,7 @@ export class PayrollPostingService {
       .sub(totals.preTaxDeductions)
       .sub(totals.taxesWithheld)
       .sub(totals.postTaxDeductions);
-    
+
     if (!totals.netPay.eq(expectedNet)) {
       this.logger.warn(`Net pay invariant failed: expected=${expectedNet}, actual=${totals.netPay}`);
       // Don't throw - allow small rounding differences
@@ -308,7 +308,7 @@ export class PayrollPostingService {
     // Verify balanced: sum(debits) = sum(credits)
     const totalDebits = lines.reduce((sum, l) => sum.add(l.debit), new Decimal(0));
     const totalCredits = lines.reduce((sum, l) => sum.add(l.credit), new Decimal(0));
-    
+
     if (!totalDebits.eq(totalCredits)) {
       throw new BadRequestException(
         `Journal entry unbalanced: debits=${totalDebits}, credits=${totalCredits}`,

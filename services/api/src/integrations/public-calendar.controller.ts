@@ -14,7 +14,7 @@ import { IcsService } from './ics.service';
 export class PublicCalendarController {
   private readonly logger = new Logger(PublicCalendarController.name);
 
-  constructor(private icsService: IcsService) {}
+  constructor(private icsService: IcsService) { }
 
   @Get(':branchSlug/calendar.ics')
   @ApiOperation({ summary: 'Get ICS calendar feed for reservations' })

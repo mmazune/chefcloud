@@ -26,8 +26,8 @@ import {
 } from '@/components/ui/table';
 import { StatusBadge } from '@/components/finance';
 import type { DocumentStatus } from '@/components/finance';
-import { 
-  Users, 
+import {
+  Users,
   ArrowLeft,
   FileText,
   Mail,
@@ -83,7 +83,7 @@ export default function CustomerDetailPage() {
     enabled: !!user && !!id,
   });
 
-  const formatDate = (dateStr: string | null) => 
+  const formatDate = (dateStr: string | null) =>
     dateStr ? new Date(dateStr).toLocaleDateString() : '-';
 
   // Compute summary stats
@@ -143,7 +143,7 @@ export default function CustomerDetailPage() {
           </Link>
         </div>
 
-        <PageHeader 
+        <PageHeader
           title={customer.name}
           subtitle={`Customer Account`}
           actions={

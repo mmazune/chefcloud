@@ -69,7 +69,7 @@ export class GeoFenceService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly auditService: WorkforceAuditService,
-  ) {}
+  ) { }
 
   /**
    * H1: Haversine distance calculation with proper rounding.
@@ -417,15 +417,15 @@ export class GeoFenceService {
     const updateData =
       dto.clockAction === 'CLOCK_IN'
         ? {
-            clockInOverride: true,
-            clockInOverrideReason: dto.reason,
-            clockInOverrideById: managerId,
-          }
+          clockInOverride: true,
+          clockInOverrideReason: dto.reason,
+          clockInOverrideById: managerId,
+        }
         : {
-            clockOutOverride: true,
-            clockOutOverrideReason: dto.reason,
-            clockOutOverrideById: managerId,
-          };
+          clockOutOverride: true,
+          clockOutOverrideReason: dto.reason,
+          clockOutOverrideById: managerId,
+        };
 
     const updated = await this.prisma.client.timeEntry.update({
       where: { id: dto.timeEntryId },

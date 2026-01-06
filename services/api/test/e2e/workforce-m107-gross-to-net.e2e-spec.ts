@@ -38,7 +38,7 @@ describe('M10.7 Workforce Gross-to-Net (e2e)', () => {
   let orgId: string;
   let branchId: string;
   let staffUserId: string;
-  
+
   // Created test data IDs for cleanup
   let createdComponentId: string;
   let createdProfileId: string;
@@ -47,13 +47,13 @@ describe('M10.7 Workforce Gross-to-Net (e2e)', () => {
   beforeAll(async () => {
     await traceSpan('beforeAll', async () => {
       trace('creating E2E app');
-      
+
       // Layer C: Wrap app creation with timeout
       app = await withTimeout(
         createE2EApp({ imports: [AppModule] }),
         { ms: 60_000, label: 'createE2EApp' }
       );
-      
+
       prisma = app.get(PrismaService);
       trace('app created, logging in users');
 
@@ -93,31 +93,31 @@ describe('M10.7 Workforce Gross-to-Net (e2e)', () => {
   afterAll(async () => {
     await traceSpan('afterAll', async () => {
       trace('cleaning up test data');
-      
+
       // Cleanup M10.7 test data - use try/catch for resilience
       if (prisma) {
         // Clean payslip line items first
         try {
           await prisma.client.payslipLineItem.deleteMany({
-            where: { 
+            where: {
               payslip: { payrollRunLine: { payrollRun: { orgId } } }
             },
           });
         } catch (e) {
           trace('Could not clean payslipLineItem', { error: (e as Error).message });
         }
-        
+
         // Clean payslips
         try {
           await prisma.client.payslip.deleteMany({
-            where: { 
+            where: {
               payrollRunLine: { payrollRun: { orgId } }
             },
           });
         } catch (e) {
           trace('Could not clean payslip', { error: (e as Error).message });
         }
-        
+
         // Clean employee compensation components
         try {
           await prisma.client.employeeCompensationComponent.deleteMany({
@@ -126,7 +126,7 @@ describe('M10.7 Workforce Gross-to-Net (e2e)', () => {
         } catch (e) {
           trace('Could not clean employeeCompensationComponent', { error: (e as Error).message });
         }
-        
+
         // Clean employee compensation profiles
         try {
           await prisma.client.employeeCompensationProfile.deleteMany({
@@ -135,11 +135,11 @@ describe('M10.7 Workforce Gross-to-Net (e2e)', () => {
         } catch (e) {
           trace('Could not clean employeeCompensationProfile', { error: (e as Error).message });
         }
-        
+
         // Clean compensation components
         try {
           await prisma.client.compensationComponent.deleteMany({
-            where: { 
+            where: {
               orgId,
               code: { startsWith: 'TEST_' },
             },
@@ -331,7 +331,7 @@ describe('M10.7 Workforce Gross-to-Net (e2e)', () => {
       const payPeriod = await prisma.client.payPeriod.findFirst({
         where: { orgId, status: 'OPEN' },
       });
-      
+
       if (payPeriod) {
         payPeriodId = payPeriod.id;
       }

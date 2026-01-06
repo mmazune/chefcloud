@@ -43,11 +43,11 @@ import {
 import { StatusBadge, ConfirmDialog } from '@/components/finance';
 import type { DocumentStatus } from '@/components/finance';
 import { useToast } from '@/components/ui/use-toast';
-import { 
-  ArrowLeft, 
-  FileText, 
-  DollarSign, 
-  CheckCircle, 
+import {
+  ArrowLeft,
+  FileText,
+  DollarSign,
+  CheckCircle,
   XCircle,
   CreditCard,
   BookOpen,
@@ -233,13 +233,13 @@ export default function CustomerInvoiceDetailPage() {
           </Link>
         </div>
 
-        <PageHeader 
+        <PageHeader
           title={invoice.number || `INV-${invoice.id.slice(0, 8)}`}
           subtitle={`Invoice to ${invoice.customer.name}`}
           actions={
             <div className="flex gap-2">
               {canOpen && (
-                <Button 
+                <Button
                   onClick={() => openMutation.mutate()}
                   disabled={openMutation.isPending}
                 >
@@ -252,7 +252,7 @@ export default function CustomerInvoiceDetailPage() {
                 </Button>
               )}
               {canReceive && (
-                <Button 
+                <Button
                   variant="outline"
                   onClick={() => {
                     setReceiptAmount(outstanding.toFixed(2));
@@ -264,7 +264,7 @@ export default function CustomerInvoiceDetailPage() {
                 </Button>
               )}
               {canVoid && (
-                <Button 
+                <Button
                   variant="destructive"
                   onClick={() => setShowVoidConfirm(true)}
                 >
@@ -481,11 +481,11 @@ export default function CustomerInvoiceDetailPage() {
               <Button variant="outline" onClick={() => setShowReceiptModal(false)}>
                 Cancel
               </Button>
-              <Button 
+              <Button
                 onClick={() => receiptMutation.mutate()}
                 disabled={
-                  receiptMutation.isPending || 
-                  !receiptAmount || 
+                  receiptMutation.isPending ||
+                  !receiptAmount ||
                   parseFloat(receiptAmount) <= 0 ||
                   parseFloat(receiptAmount) > outstanding
                 }

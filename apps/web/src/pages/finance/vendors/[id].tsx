@@ -26,8 +26,8 @@ import {
 } from '@/components/ui/table';
 import { StatusBadge } from '@/components/finance';
 import type { DocumentStatus } from '@/components/finance';
-import { 
-  Truck, 
+import {
+  Truck,
   ArrowLeft,
   FileText,
   Mail,
@@ -83,7 +83,7 @@ export default function VendorDetailPage() {
     enabled: !!user && !!id,
   });
 
-  const formatDate = (dateStr: string | null) => 
+  const formatDate = (dateStr: string | null) =>
     dateStr ? new Date(dateStr).toLocaleDateString() : '-';
 
   // Compute summary stats
@@ -143,7 +143,7 @@ export default function VendorDetailPage() {
           </Link>
         </div>
 
-        <PageHeader 
+        <PageHeader
           title={vendor.name}
           subtitle={`Vendor Account`}
           actions={

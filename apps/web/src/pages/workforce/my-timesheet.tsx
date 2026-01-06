@@ -36,12 +36,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
-import { 
-  ClipboardCheck, 
-  Clock, 
-  Timer, 
-  Coffee, 
-  Lock, 
+import {
+  ClipboardCheck,
+  Clock,
+  Timer,
+  Coffee,
+  Lock,
   AlertCircle,
   RefreshCw,
   FileEdit,
@@ -116,13 +116,13 @@ export default function MyTimesheetPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  
+
   // Date range state (default to current week)
   const today = new Date();
   const dayOfWeek = today.getDay();
   const weekStart = new Date(today);
   weekStart.setDate(today.getDate() - dayOfWeek);
-  
+
   const [selectedPeriodId, setSelectedPeriodId] = useState<string | null>(null);
   const [fromDate, setFromDate] = useState(format(weekStart, 'yyyy-MM-dd'));
   const [toDate, setToDate] = useState(format(today, 'yyyy-MM-dd'));
@@ -208,8 +208,8 @@ export default function MyTimesheetPage() {
             View your computed hours and approval status
           </p>
         </div>
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           onClick={() => refetch()}
           disabled={isRefetching}
         >
@@ -236,7 +236,7 @@ export default function MyTimesheetPage() {
               />
               <label htmlFor="usePayPeriod" className="text-sm">Use Pay Period</label>
             </div>
-            
+
             {usePayPeriod ? (
               <Select
                 value={selectedPeriodId ?? ''}
@@ -340,7 +340,7 @@ export default function MyTimesheetPage() {
               <p className="text-sm text-muted-foreground">{formatDuration(timesheet.regularMinutes)}</p>
             </CardContent>
           </Card>
-          
+
           <Card className={timesheet.overtimeMinutes > 0 ? 'border-orange-500' : ''}>
             <CardHeader className="pb-2">
               <CardDescription className="flex items-center gap-1">
@@ -353,7 +353,7 @@ export default function MyTimesheetPage() {
               <p className="text-sm text-muted-foreground">{formatDuration(timesheet.overtimeMinutes)}</p>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardHeader className="pb-2">
               <CardDescription className="flex items-center gap-1">
@@ -366,7 +366,7 @@ export default function MyTimesheetPage() {
               <p className="text-sm text-muted-foreground">{formatDuration(timesheet.breakMinutes)}</p>
             </CardContent>
           </Card>
-          
+
           <Card className="border-green-500">
             <CardHeader className="pb-2">
               <CardDescription className="flex items-center gap-1">
@@ -396,7 +396,7 @@ export default function MyTimesheetPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button 
+            <Button
               variant="outline"
               onClick={() => window.location.href = '/workforce/my-time'}
             >
@@ -447,7 +447,7 @@ export default function MyTimesheetPage() {
             <Button variant="outline" onClick={() => setAdjustmentOpen(false)}>
               Cancel
             </Button>
-            <Button 
+            <Button
               onClick={() => {
                 // Would need a specific time entry ID here
                 toast({

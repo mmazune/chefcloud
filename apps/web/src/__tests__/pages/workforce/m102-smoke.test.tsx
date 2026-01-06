@@ -28,9 +28,9 @@ jest.mock('@tanstack/react-query', () => ({
 // Mock useAuth
 jest.mock('@/hooks/useAuth', () => ({
   useAuth: () => ({
-    user: { 
-      id: 'test-user-id', 
-      email: 'manager@test.com', 
+    user: {
+      id: 'test-user-id',
+      email: 'manager@test.com',
       roleLevel: 4,
       branchId: 'test-branch-id',
     },
@@ -222,16 +222,16 @@ describe('Labor Page', () => {
     // Re-mock with owner role
     jest.doMock('@/hooks/useAuth', () => ({
       useAuth: () => ({
-        user: { 
-          id: 'test-owner-id', 
-          email: 'owner@test.com', 
+        user: {
+          id: 'test-owner-id',
+          email: 'owner@test.com',
           roleLevel: 5,
           branchId: 'test-branch-id',
         },
         isLoading: false,
       }),
     }));
-    
+
     render(<LaborPage />);
 
     expect(screen.getByText(/audit log/i)).toBeInTheDocument();

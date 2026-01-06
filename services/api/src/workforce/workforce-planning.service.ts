@@ -32,7 +32,7 @@ interface VarianceItem {
 export class WorkforcePlanningService {
   private readonly logger = new Logger(WorkforcePlanningService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   // ===== Labor Targets =====
 

@@ -323,13 +323,12 @@ export default function AutoSchedulerPage() {
             <CardTitle className="flex items-center justify-between">
               <span>Run Status</span>
               <span
-                className={`text-sm px-3 py-1 rounded-full ${
-                  run.status === 'APPLIED'
+                className={`text-sm px-3 py-1 rounded-full ${run.status === 'APPLIED'
                     ? 'bg-green-100 text-green-800'
                     : run.status === 'VOID'
                       ? 'bg-red-100 text-red-800'
                       : 'bg-yellow-100 text-yellow-800'
-                }`}
+                  }`}
               >
                 {run.status}
               </span>

@@ -19,7 +19,7 @@ export class WorkforcePlanningExportService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly planningService: WorkforcePlanningService,
-  ) {}
+  ) { }
 
   /**
    * Export forecast snapshot as CSV

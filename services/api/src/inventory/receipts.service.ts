@@ -67,7 +67,7 @@ export class ReceiptsService {
     private readonly poService: PurchaseOrdersService,
     private readonly costingService: InventoryCostingService,
     private readonly supplierPricingService: SupplierPricingService,
-  ) {}
+  ) { }
 
   /**
    * Generate a unique receipt number

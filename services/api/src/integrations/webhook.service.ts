@@ -48,7 +48,7 @@ export type WebhookEventType = (typeof WEBHOOK_EVENT_TYPES)[number];
 export class WebhookService {
   private readonly logger = new Logger(WebhookService.name);
 
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   /**
    * Create a webhook endpoint

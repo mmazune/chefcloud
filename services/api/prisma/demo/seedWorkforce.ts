@@ -90,26 +90,26 @@ const AUDIT_CAFE_12 = '00000000-0000-4000-8000-001300000112';
  */
 async function cleanupWorkforceData(prisma: PrismaClient): Promise<void> {
   console.log('  🧹 Cleaning up old workforce demo data...');
-  
+
   const demoOrgIds = [ORG_TAPAS_ID, ORG_CAFESSERIE_ID];
 
   // Delete in correct order due to FK constraints
   await prisma.breakEntry.deleteMany({
     where: { timeEntry: { orgId: { in: demoOrgIds } } },
   });
-  
+
   await prisma.workforceAuditLog.deleteMany({
     where: { orgId: { in: demoOrgIds } },
   });
-  
+
   // Delete TimeEntries with shiftId (workforce-linked)
   await prisma.timeEntry.deleteMany({
-    where: { 
+    where: {
       orgId: { in: demoOrgIds },
       shiftId: { not: null },
     },
   });
-  
+
   await prisma.scheduledShift.deleteMany({
     where: { orgId: { in: demoOrgIds } },
   });
@@ -139,13 +139,13 @@ async function getUserIdsByEmail(
  */
 async function seedTapasWorkforce(prisma: PrismaClient): Promise<void> {
   console.log('  📅 Seeding Tapas workforce data...');
-  
+
   const usersByEmail = await getUserIdsByEmail(prisma, ORG_TAPAS_ID);
   const managerId = usersByEmail['manager@tapas.demo.local'];
   const cashierId = usersByEmail['cashier@tapas.demo.local'];
   const waiterId = usersByEmail['waiter@tapas.demo.local'];
   const chefId = usersByEmail['chef@tapas.demo.local'];
-  
+
   if (!managerId || !cashierId || !waiterId || !chefId) {
     console.log('  ⚠️ Missing Tapas users, skipping workforce seed');
     return;
@@ -403,14 +403,14 @@ async function seedTapasWorkforce(prisma: PrismaClient): Promise<void> {
  */
 async function seedCafesserieWorkforce(prisma: PrismaClient): Promise<void> {
   console.log('  📅 Seeding Cafesserie workforce data...');
-  
+
   const usersByEmail = await getUserIdsByEmail(prisma, ORG_CAFESSERIE_ID);
   const managerId = usersByEmail['manager@cafesserie.demo.local'];
   const supervisorId = usersByEmail['supervisor@cafesserie.demo.local'];
   const cashierId = usersByEmail['cashier@cafesserie.demo.local'];
   const waiterId = usersByEmail['waiter@cafesserie.demo.local'];
   const chefId = usersByEmail['chef@cafesserie.demo.local'];
-  
+
   if (!managerId || !supervisorId || !cashierId || !waiterId) {
     console.log('  ⚠️ Missing Cafesserie users, skipping workforce seed');
     return;
@@ -461,11 +461,11 @@ async function seedCafesserieWorkforce(prisma: PrismaClient): Promise<void> {
       role: roles[statusIdx % roles.length],
       startAt: new Date(
         (status === ShiftStatus.COMPLETED ? yesterday : today).getTime() +
-          (9 + statusIdx) * 60 * 60 * 1000,
+        (9 + statusIdx) * 60 * 60 * 1000,
       ),
       endAt: new Date(
         (status === ShiftStatus.COMPLETED ? yesterday : today).getTime() +
-          (17 + statusIdx) * 60 * 60 * 1000,
+        (17 + statusIdx) * 60 * 60 * 1000,
       ),
       plannedMinutes: 480,
       actualMinutes: status === ShiftStatus.COMPLETED ? 485 : null,

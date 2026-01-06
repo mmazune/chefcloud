@@ -46,7 +46,7 @@ export class WorkforceSelfService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly enterpriseService: WorkforceEnterpriseService,
-  ) {}
+  ) { }
 
   /**
    * Get upcoming shifts for the authenticated user
@@ -142,7 +142,7 @@ export class WorkforceSelfService {
 
     return entries.map(entry => {
       const breakMinutes = entry.breakEntries.reduce((sum, b) => sum + (b.minutes ?? 0), 0);
-      const workedMinutes = entry.clockOutAt 
+      const workedMinutes = entry.clockOutAt
         ? Math.floor((entry.clockOutAt.getTime() - entry.clockInAt.getTime()) / 60000) - breakMinutes
         : null;
 
@@ -272,14 +272,14 @@ export class WorkforceSelfService {
 
     for (const entry of entries) {
       const breakMins = entry.breakEntries.reduce((sum, b) => sum + (b.minutes ?? 0), 0);
-      const workedMins = entry.clockOutAt 
+      const workedMins = entry.clockOutAt
         ? Math.floor((entry.clockOutAt.getTime() - entry.clockInAt.getTime()) / 60000)
         : 0;
-      
+
       // Apply rounding
       const roundedWorked = this.applyRounding(
-        workedMins - breakMins, 
-        policy.roundingIntervalMins, 
+        workedMins - breakMins,
+        policy.roundingIntervalMins,
         policy.roundingMode as RoundingMode
       );
 
@@ -330,7 +330,7 @@ export class WorkforceSelfService {
    */
   private applyRounding(minutes: number, interval: number, mode: RoundingMode): number {
     if (interval <= 0) return minutes;
-    
+
     switch (mode) {
       case 'NEAREST':
         return Math.round(minutes / interval) * interval;

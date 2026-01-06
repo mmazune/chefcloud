@@ -89,12 +89,12 @@ function getApprovalBadgeVariant(status: string | null): 'default' | 'secondary'
 
 export default function MyTimePage() {
   const { user } = useAuth();
-  
+
   // Default: last 14 days
   const today = new Date();
   const defaultFrom = format(subDays(today, 14), 'yyyy-MM-dd');
   const defaultTo = format(today, 'yyyy-MM-dd');
-  
+
   const [fromDate, setFromDate] = useState(defaultFrom);
   const [toDate, setToDate] = useState(defaultTo);
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
@@ -162,8 +162,8 @@ export default function MyTimePage() {
             View your time entries and clock status
           </p>
         </div>
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           onClick={() => refetch()}
           disabled={isRefetching}
         >
@@ -341,7 +341,7 @@ export default function MyTimePage() {
                           <TableCell colSpan={8} className="py-2">
                             <div className="pl-8 space-y-2">
                               <p className="text-sm text-muted-foreground">
-                                <strong>Method:</strong> {entry.method} | 
+                                <strong>Method:</strong> {entry.method} |
                                 <strong> Role:</strong> {entry.role ?? 'N/A'} |
                                 <strong> Shift ID:</strong> {entry.shiftId ?? 'Unscheduled'}
                               </p>
@@ -353,8 +353,8 @@ export default function MyTimePage() {
                                   <ul className="text-sm text-muted-foreground ml-4">
                                     {entry.breakEntries.map((b) => (
                                       <li key={b.id}>
-                                        {format(parseISO(b.startedAt), 'h:mm a')} - 
-                                        {b.endedAt ? format(parseISO(b.endedAt), ' h:mm a') : ' (active)'} 
+                                        {format(parseISO(b.startedAt), 'h:mm a')} -
+                                        {b.endedAt ? format(parseISO(b.endedAt), ' h:mm a') : ' (active)'}
                                         {b.minutes && ` (${b.minutes}m)`}
                                       </li>
                                     ))}

@@ -22,7 +22,7 @@ export interface ICSEvent {
 export class IcsService {
   private readonly logger = new Logger(IcsService.name);
 
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   /**
    * Generate a calendar feed token for a branch

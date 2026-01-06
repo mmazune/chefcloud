@@ -42,7 +42,7 @@ export interface CalendarSummary {
 
 @Injectable()
 export class LeaveCalendarService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   /**
    * Get team leave calendar for a branch or org
@@ -162,10 +162,10 @@ export class LeaveCalendarService {
     filter: CalendarFilter,
   ): Promise<CalendarSummary[]> {
     const entries = await this.getTeamCalendar(orgId, filter);
-    
+
     // Build date range
     const summaryMap = new Map<string, { counts: Map<string, number>; userIds: Set<string> }>();
-    
+
     const currentDate = new Date(filter.from);
     while (currentDate <= filter.to) {
       const dateKey = currentDate.toISOString().split('T')[0];
@@ -177,10 +177,10 @@ export class LeaveCalendarService {
     for (const entry of entries) {
       const entryStart = new Date(entry.startDate);
       const entryEnd = new Date(entry.endDate);
-      
+
       const iterDate = new Date(Math.max(entryStart.getTime(), filter.from.getTime()));
       const endDate = new Date(Math.min(entryEnd.getTime(), filter.to.getTime()));
-      
+
       while (iterDate <= endDate) {
         const dateKey = iterDate.toISOString().split('T')[0];
         const daySummary = summaryMap.get(dateKey);

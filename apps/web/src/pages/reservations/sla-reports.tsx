@@ -104,7 +104,7 @@ export default function SlaReportsPage() {
   };
 
   const formatPercent = (rate: number) => `${(rate * 100).toFixed(1)}%`;
-  const formatDuration = (minutes: number | null) => 
+  const formatDuration = (minutes: number | null) =>
     minutes !== null ? `${minutes.toFixed(1)} min` : 'N/A';
 
   if (!branchId) {

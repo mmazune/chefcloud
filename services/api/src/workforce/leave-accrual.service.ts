@@ -31,7 +31,7 @@ export interface AccrualRunResult {
 export class LeaveAccrualService {
   private readonly logger = new Logger(LeaveAccrualService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   /**
    * Run monthly accrual for an org

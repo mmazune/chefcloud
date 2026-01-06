@@ -148,13 +148,13 @@ export default function VendorBillsPage() {
   return (
     <RequireRole minRole={RoleLevel.L4}>
       <AppShell>
-        <PageHeader 
-          title="Vendor Bills" 
+        <PageHeader
+          title="Vendor Bills"
           subtitle="Manage accounts payable"
           actions={
             <div className="flex gap-2">
-              <ExportButton 
-                endpoint="/accounting/export/vendor-bills" 
+              <ExportButton
+                endpoint="/accounting/export/vendor-bills"
                 filename="vendor-bills"
                 params={{ branchId: branchFilter || undefined }}
               />
@@ -207,7 +207,7 @@ export default function VendorBillsPage() {
                   className="pl-10"
                 />
               </div>
-              
+
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-[160px]">
                   <SelectValue placeholder="Status" />
@@ -231,8 +231,8 @@ export default function VendorBillsPage() {
                 </SelectContent>
               </Select>
 
-              <BranchFilter 
-                value={branchFilter} 
+              <BranchFilter
+                value={branchFilter}
                 onChange={setBranchFilter}
                 className="w-[180px]"
               />
@@ -288,7 +288,7 @@ export default function VendorBillsPage() {
                   {filteredBills.map(bill => {
                     const outstanding = Number(bill.total) - Number(bill.paidAmount);
                     const isOverdue = new Date(bill.dueDate) < new Date() && outstanding > 0;
-                    
+
                     return (
                       <TableRow key={bill.id} className="cursor-pointer hover:bg-muted/50">
                         <TableCell className="font-medium">

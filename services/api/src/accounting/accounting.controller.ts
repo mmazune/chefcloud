@@ -28,7 +28,7 @@ interface RequestWithUser extends Request {
 @Controller('accounting')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 export class AccountingController {
-  constructor(private readonly accountingService: AccountingService) {}
+  constructor(private readonly accountingService: AccountingService) { }
 
   @Post('vendors')
   @Roles('L4', 'L5')

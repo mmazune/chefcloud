@@ -27,7 +27,7 @@ import { Roles } from '../auth/roles.decorator';
 @Controller('orgs/:orgId/payroll-mapping')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 export class PayrollMappingController {
-  constructor(private readonly mappingService: PayrollMappingService) {}
+  constructor(private readonly mappingService: PayrollMappingService) { }
 
   /**
    * GET /orgs/:orgId/payroll-mapping

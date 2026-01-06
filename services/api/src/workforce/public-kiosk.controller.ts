@@ -35,7 +35,7 @@ export class PublicKioskController {
     private readonly timeclockService: KioskTimeclockService,
     private readonly batchIngestService: KioskBatchIngestService,
     private readonly healthService: KioskHealthService,
-  ) {}
+  ) { }
 
   // ===== Device Authentication =====
 

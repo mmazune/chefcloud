@@ -40,7 +40,7 @@ interface ReservationKPIs {
 
 @Injectable()
 export class ReportingService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   /**
    * Get reservation KPIs for a branch/date range

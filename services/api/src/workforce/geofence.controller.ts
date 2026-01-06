@@ -32,7 +32,7 @@ export class GeoFenceController {
   constructor(
     private readonly geoFenceService: GeoFenceService,
     private readonly reportingService: GeoFenceReportingService,
-  ) {}
+  ) { }
 
   // ===== Configuration Endpoints =====
 

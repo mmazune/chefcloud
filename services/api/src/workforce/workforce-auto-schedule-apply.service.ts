@@ -23,7 +23,7 @@ import { Prisma } from '@chefcloud/db';
 
 @Injectable()
 export class WorkforceAutoScheduleApplyService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   /**
    * Apply suggestions from a run to create ScheduledShift rows.

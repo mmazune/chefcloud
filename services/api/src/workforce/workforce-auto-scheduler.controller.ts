@@ -28,7 +28,7 @@ export class WorkforceAutoSchedulerController {
   constructor(
     private readonly schedulerService: WorkforceAutoSchedulerService,
     private readonly applyService: WorkforceAutoScheduleApplyService,
-  ) {}
+  ) { }
 
   /**
    * Generate an auto-schedule run from staffing plan.
@@ -55,7 +55,7 @@ export class WorkforceAutoSchedulerController {
     }
 
     // M10.14: Validate mode parameter
-    const assignmentMode: AssignmentMode = 
+    const assignmentMode: AssignmentMode =
       mode === 'ASSIGNED' ? ASSIGNMENT_MODES.ASSIGNED : ASSIGNMENT_MODES.UNASSIGNED;
 
     return this.schedulerService.generateRun(orgId, branchId, date, userId, { mode: assignmentMode });

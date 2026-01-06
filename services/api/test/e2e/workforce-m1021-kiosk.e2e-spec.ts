@@ -43,7 +43,7 @@ describe('M10.21 Workforce Kiosk E2E', () => {
   beforeAll(async () => {
     await traceSpan('beforeAll', async () => {
       trace('creating slice module');
-      
+
       const modRef = await withTimeout(
         createE2ETestingModuleBuilder({
           imports: [
@@ -90,7 +90,7 @@ describe('M10.21 Workforce Kiosk E2E', () => {
         .set(L3_AUTH)
         .send({ branchId: 'test-branch', name: 'Test Device' })
         .ok(() => true);
-      
+
       // Accept 403 (role denied) or 401 (mock auth varies)
       expect([401, 403]).toContain(res.status);
     });
@@ -105,10 +105,10 @@ describe('M10.21 Workforce Kiosk E2E', () => {
           allowedIpCidrs: ['10.0.0.0/8'],
         })
         .ok(() => true);
-      
+
       // 201 = created, 400 = validation, 401/403 = auth mock behavior
       expect([200, 201, 400, 401, 403]).toContain(res.status);
-      
+
       if (res.status === 201) {
         expect(res.body).toHaveProperty('id');
         expect(res.body).toHaveProperty('publicId');
@@ -123,7 +123,7 @@ describe('M10.21 Workforce Kiosk E2E', () => {
         .get('/workforce/kiosk/devices')
         .set(L4_AUTH)
         .ok(() => true);
-      
+
       expect([200, 401, 403]).toContain(res.status);
       if (res.status === 200) {
         expect(Array.isArray(res.body)).toBe(true);
@@ -135,10 +135,10 @@ describe('M10.21 Workforce Kiosk E2E', () => {
         .post('/workforce/kiosk/devices/test-device-id/rotate-secret')
         .set(L4_AUTH)
         .ok(() => true);
-      
+
       // 200 = rotated, 404 = not found, 401/403 = auth
       expect([200, 404, 401, 403]).toContain(res.status);
-      
+
       if (res.status === 200) {
         expect(res.body).toHaveProperty('secret');
         expect(typeof res.body.secret).toBe('string');
@@ -151,7 +151,7 @@ describe('M10.21 Workforce Kiosk E2E', () => {
         .set(L4_AUTH)
         .send({ name: 'Updated Name', enabled: false })
         .ok(() => true);
-      
+
       expect([200, 404, 401, 403]).toContain(res.status);
     });
 
@@ -160,7 +160,7 @@ describe('M10.21 Workforce Kiosk E2E', () => {
         .delete('/workforce/kiosk/devices/test-device-id')
         .set(L4_AUTH)
         .ok(() => true);
-      
+
       expect([200, 204, 404, 401, 403]).toContain(res.status);
     });
   });
@@ -171,10 +171,10 @@ describe('M10.21 Workforce Kiosk E2E', () => {
       const res = await request(app.getHttpServer())
         .get('/public/workforce/kiosk/test-public-id/info')
         .ok(() => true);
-      
+
       // 200 = found, 404 = not found
       expect([200, 404]).toContain(res.status);
-      
+
       if (res.status === 200) {
         expect(res.body).toHaveProperty('publicId');
         expect(res.body).toHaveProperty('name');
@@ -188,7 +188,7 @@ describe('M10.21 Workforce Kiosk E2E', () => {
         .post('/public/workforce/kiosk/test-public-id/authenticate')
         .send({ secret: 'wrong-secret' })
         .ok(() => true);
-      
+
       // 401 = invalid, 404 = device not found
       expect([401, 404]).toContain(res.status);
     });
@@ -198,7 +198,7 @@ describe('M10.21 Workforce Kiosk E2E', () => {
         .post('/public/workforce/kiosk/test-public-id/heartbeat')
         .send({ sessionId: 'test-session-id' })
         .ok(() => true);
-      
+
       // 200 = ok, 401 = session invalid, 404 = device not found
       expect([200, 401, 404]).toContain(res.status);
     });
@@ -208,7 +208,7 @@ describe('M10.21 Workforce Kiosk E2E', () => {
         .post('/public/workforce/kiosk/test-public-id/logout')
         .send({ sessionId: 'test-session-id' })
         .ok(() => true);
-      
+
       expect([200, 401, 404]).toContain(res.status);
     });
   });
@@ -220,7 +220,7 @@ describe('M10.21 Workforce Kiosk E2E', () => {
         .post('/public/workforce/kiosk/test-public-id/clock-in')
         .send({ sessionId: 'test-session', pin: '1234' })
         .ok(() => true);
-      
+
       // 200 = clocked in, 401 = session/PIN invalid, 404 = device not found
       // 429 = rate limited (H3)
       expect([200, 401, 404, 429]).toContain(res.status);
@@ -231,7 +231,7 @@ describe('M10.21 Workforce Kiosk E2E', () => {
         .post('/public/workforce/kiosk/test-public-id/clock-out')
         .send({ sessionId: 'test-session', pin: '1234' })
         .ok(() => true);
-      
+
       expect([200, 401, 404, 429]).toContain(res.status);
     });
 
@@ -240,7 +240,7 @@ describe('M10.21 Workforce Kiosk E2E', () => {
         .post('/public/workforce/kiosk/test-public-id/break/start')
         .send({ sessionId: 'test-session', pin: '1234' })
         .ok(() => true);
-      
+
       expect([200, 401, 404, 429]).toContain(res.status);
     });
 
@@ -249,7 +249,7 @@ describe('M10.21 Workforce Kiosk E2E', () => {
         .post('/public/workforce/kiosk/test-public-id/break/end')
         .send({ sessionId: 'test-session', pin: '1234' })
         .ok(() => true);
-      
+
       expect([200, 401, 404, 429]).toContain(res.status);
     });
 
@@ -258,9 +258,9 @@ describe('M10.21 Workforce Kiosk E2E', () => {
         .post('/public/workforce/kiosk/test-public-id/status')
         .send({ sessionId: 'test-session', pin: '1234' })
         .ok(() => true);
-      
+
       expect([200, 401, 404, 429]).toContain(res.status);
-      
+
       if (res.status === 200) {
         expect(res.body).toHaveProperty('user');
         expect(res.body).toHaveProperty('isClockedIn');
@@ -273,7 +273,7 @@ describe('M10.21 Workforce Kiosk E2E', () => {
         .post('/public/workforce/kiosk/test-public-id/clock-in')
         .send({ sessionId: 'test-session', pin: '12' }) // Too short
         .ok(() => true);
-      
+
       // 400 = validation error, 401 = other auth error
       expect([400, 401, 404]).toContain(res.status);
     });
@@ -285,7 +285,7 @@ describe('M10.21 Workforce Kiosk E2E', () => {
         .post('/public/workforce/kiosk/test-public-id/clock-in')
         .send({ sessionId: 'test-session', pin: '9999' }) // Non-existent PIN
         .ok(() => true);
-      
+
       // Should get 401 (not found), not 200 with wrong user
       expect([401, 404]).toContain(res.status);
     });
@@ -300,7 +300,7 @@ describe('M10.21 Workforce Kiosk E2E', () => {
         .set('X-Forwarded-For', '8.8.8.8') // External IP
         .send({ sessionId: 'test-session', pin: '1234' })
         .ok(() => true);
-      
+
       // Could be 403 GEO_BLOCKED or other status
       expect([200, 401, 403, 404, 429]).toContain(res.status);
     });
@@ -319,9 +319,9 @@ describe('M10.21 Workforce Kiosk E2E', () => {
         .get('/workforce/kiosk/kpis')
         .set(L4_AUTH)
         .ok(() => true);
-      
+
       expect([200, 401, 403]).toContain(res.status);
-      
+
       if (res.status === 200) {
         expect(res.body).toHaveProperty('devices');
         expect(res.body).toHaveProperty('sessions');
@@ -335,7 +335,7 @@ describe('M10.21 Workforce Kiosk E2E', () => {
         .get('/workforce/kiosk/device-activity')
         .set(L4_AUTH)
         .ok(() => true);
-      
+
       expect([200, 401, 403]).toContain(res.status);
     });
 
@@ -344,7 +344,7 @@ describe('M10.21 Workforce Kiosk E2E', () => {
         .get('/workforce/kiosk/top-users')
         .set(L4_AUTH)
         .ok(() => true);
-      
+
       expect([200, 401, 403]).toContain(res.status);
     });
 
@@ -353,9 +353,9 @@ describe('M10.21 Workforce Kiosk E2E', () => {
         .get('/workforce/kiosk/export/events')
         .set(L4_AUTH)
         .ok(() => true);
-      
+
       expect([200, 401, 403]).toContain(res.status);
-      
+
       if (res.status === 200) {
         // Should be CSV with SHA-256 hash trailer
         const contentType = res.headers['content-type'];
@@ -372,9 +372,9 @@ describe('M10.21 Workforce Kiosk E2E', () => {
         .get('/workforce/kiosk/devices/test-device-id/sessions')
         .set(L4_AUTH)
         .ok(() => true);
-      
+
       expect([200, 404, 401, 403]).toContain(res.status);
-      
+
       if (res.status === 200) {
         expect(res.body).toHaveProperty('sessions');
         expect(res.body).toHaveProperty('total');
@@ -400,9 +400,9 @@ describe('M10.21 Workforce Kiosk E2E', () => {
           .send({ sessionId: 'test-session', pin: 'wrong' })
           .ok(() => true)
       );
-      
+
       const results = await Promise.all(attempts);
-      
+
       // At least one should be 429 if rate limiting is working
       // Or all 401/404 if device doesn't exist (acceptable for slice test)
       const statuses = results.map(r => r.status);

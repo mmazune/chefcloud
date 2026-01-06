@@ -24,8 +24,8 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Users, 
+import {
+  Users,
   Search,
   FileText,
   Eye,
@@ -79,8 +79,8 @@ export default function CustomersPage() {
   return (
     <RequireRole minRole={RoleLevel.L4}>
       <AppShell>
-        <PageHeader 
-          title="Customers" 
+        <PageHeader
+          title="Customers"
           subtitle="Manage customer accounts and receivables"
           actions={
             <Button>
@@ -213,8 +213,8 @@ export default function CustomersPage() {
                         </span>
                       </TableCell>
                       <TableCell className="text-right font-medium">
-                        {customer.totalOutstanding 
-                          ? formatCurrency(customer.totalOutstanding) 
+                        {customer.totalOutstanding
+                          ? formatCurrency(customer.totalOutstanding)
                           : '-'}
                       </TableCell>
                       <TableCell>

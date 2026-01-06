@@ -12,9 +12,9 @@ interface SelectContextValue {
 
 const SelectContext = React.createContext<SelectContextValue>({
   value: '',
-  onValueChange: () => {},
+  onValueChange: () => { },
   open: false,
-  setOpen: () => {},
+  setOpen: () => { },
 });
 
 export interface SelectProps {
@@ -29,7 +29,7 @@ export interface SelectProps {
 export function Select({ children, value: controlledValue, defaultValue = '', onValueChange }: SelectProps) {
   const [internalValue, setInternalValue] = React.useState(defaultValue);
   const [open, setOpen] = React.useState(false);
-  
+
   const value = controlledValue ?? internalValue;
   const handleValueChange = onValueChange ?? setInternalValue;
 
@@ -44,7 +44,7 @@ export function Select({ children, value: controlledValue, defaultValue = '', on
 
 export function SelectTrigger({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   const { setOpen, open } = React.useContext(SelectContext);
-  
+
   return (
     <button
       type="button"

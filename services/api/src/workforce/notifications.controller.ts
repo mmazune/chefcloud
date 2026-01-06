@@ -28,7 +28,7 @@ import type { WorkforceNotificationType } from '@chefcloud/db';
 @Controller('workforce/self/notifications')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 export class SelfNotificationsController {
-  constructor(private readonly notificationsService: WorkforceNotificationsService) {}
+  constructor(private readonly notificationsService: WorkforceNotificationsService) { }
 
   /**
    * GET /workforce/self/notifications
@@ -90,7 +90,7 @@ export class SelfNotificationsController {
 @Controller('workforce/notifications')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 export class NotificationsController {
-  constructor(private readonly notificationsService: WorkforceNotificationsService) {}
+  constructor(private readonly notificationsService: WorkforceNotificationsService) { }
 
   /**
    * GET /workforce/notifications

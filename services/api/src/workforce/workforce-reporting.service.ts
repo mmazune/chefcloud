@@ -34,7 +34,7 @@ interface DateRange {
 
 @Injectable()
 export class WorkforceReportingService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   // ===== Labor Metrics =====
 
@@ -347,8 +347,8 @@ export class WorkforceReportingService {
       );
       const totalMinutes = entry.clockOutAt
         ? Math.floor(
-            (entry.clockOutAt.getTime() - entry.clockInAt.getTime()) / (1000 * 60),
-          )
+          (entry.clockOutAt.getTime() - entry.clockInAt.getTime()) / (1000 * 60),
+        )
         : 0;
 
       return [
@@ -418,7 +418,7 @@ export class WorkforceReportingService {
    */
   async getComplianceIncidentCounts(orgId: string, dateRange?: { from: Date; to: Date }, branchId?: string) {
     const baseWhere: Record<string, unknown> = { orgId };
-    
+
     if (dateRange) {
       baseWhere.createdAt = { gte: dateRange.from, lte: dateRange.to };
     }
@@ -451,18 +451,18 @@ export class WorkforceReportingService {
    * Export compliance incidents as CSV
    */
   async exportIncidentsCsv(orgId: string, dateRange?: { from: Date; to: Date }) {
-    const baseWhere: Record<string, unknown> = { 
+    const baseWhere: Record<string, unknown> = {
       orgId,
-      action: { 
+      action: {
         in: [
-          'BREAK_VIOLATION_LOGGED', 
-          'OVERTIME_VIOLATION_LOGGED', 
-          'DOUBLE_CLOCKIN_BLOCKED', 
+          'BREAK_VIOLATION_LOGGED',
+          'OVERTIME_VIOLATION_LOGGED',
+          'DOUBLE_CLOCKIN_BLOCKED',
           'MAX_SHIFT_EXCEEDED'
-        ] 
+        ]
       },
     };
-    
+
     if (dateRange) {
       baseWhere.createdAt = { gte: dateRange.from, lte: dateRange.to };
     }
@@ -505,7 +505,7 @@ export class WorkforceReportingService {
    */
   async exportAdjustmentsCsv(orgId: string, dateRange?: { from: Date; to: Date }) {
     const baseWhere: Record<string, unknown> = { orgId };
-    
+
     if (dateRange) {
       baseWhere.createdAt = { gte: dateRange.from, lte: dateRange.to };
     }

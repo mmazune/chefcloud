@@ -34,7 +34,7 @@ export interface ProjectionResult {
 
 @Injectable()
 export class LeaveProjectionService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   /**
    * Get balance projection for a user and leave type

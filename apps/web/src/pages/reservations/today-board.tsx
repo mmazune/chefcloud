@@ -106,7 +106,7 @@ export default function TodayBoardPage() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const branchId = user?.branch?.id;
-  
+
   const [statusFilter, setStatusFilter] = useState<string>('active');
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean;
@@ -139,7 +139,7 @@ export default function TodayBoardPage() {
         params.append('status', statusFilter);
       }
       params.append('includeWaitlist', 'true');
-      
+
       const response = await apiClient.get(
         `/reservations/today-board?${params.toString()}`
       );
@@ -270,7 +270,7 @@ export default function TodayBoardPage() {
 
   const getActionButtons = (res: Reservation) => {
     const buttons = [];
-    
+
     if (res.status === 'HELD') {
       buttons.push(
         <Button
@@ -294,7 +294,7 @@ export default function TodayBoardPage() {
         </Button>
       );
     }
-    
+
     if (res.status === 'CONFIRMED') {
       buttons.push(
         <Button
@@ -318,7 +318,7 @@ export default function TodayBoardPage() {
         </Button>
       );
     }
-    
+
     if (res.status === 'SEATED') {
       buttons.push(
         <Button
@@ -331,7 +331,7 @@ export default function TodayBoardPage() {
         </Button>
       );
     }
-    
+
     return buttons;
   };
 

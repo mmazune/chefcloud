@@ -64,7 +64,7 @@ export class WorkforceAutoSchedulerService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly constraintsEvaluator: WorkforceConstraintsEvaluatorService,
-  ) {}
+  ) { }
 
   /**
    * Generate an auto-schedule run from a StaffingPlan.

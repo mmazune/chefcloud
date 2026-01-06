@@ -43,11 +43,11 @@ import {
 import { StatusBadge, ConfirmDialog } from '@/components/finance';
 import type { DocumentStatus } from '@/components/finance';
 import { useToast } from '@/components/ui/use-toast';
-import { 
-  ArrowLeft, 
-  FileText, 
-  DollarSign, 
-  CheckCircle, 
+import {
+  ArrowLeft,
+  FileText,
+  DollarSign,
+  CheckCircle,
   XCircle,
   CreditCard,
   BookOpen,
@@ -233,13 +233,13 @@ export default function VendorBillDetailPage() {
           </Link>
         </div>
 
-        <PageHeader 
+        <PageHeader
           title={bill.number || `BILL-${bill.id.slice(0, 8)}`}
           subtitle={`Bill to ${bill.vendor.name}`}
           actions={
             <div className="flex gap-2">
               {canOpen && (
-                <Button 
+                <Button
                   onClick={() => openMutation.mutate()}
                   disabled={openMutation.isPending}
                 >
@@ -252,7 +252,7 @@ export default function VendorBillDetailPage() {
                 </Button>
               )}
               {canPay && (
-                <Button 
+                <Button
                   variant="outline"
                   onClick={() => {
                     setPaymentAmount(outstanding.toFixed(2));
@@ -264,7 +264,7 @@ export default function VendorBillDetailPage() {
                 </Button>
               )}
               {canVoid && (
-                <Button 
+                <Button
                   variant="destructive"
                   onClick={() => setShowVoidConfirm(true)}
                 >
@@ -481,11 +481,11 @@ export default function VendorBillDetailPage() {
               <Button variant="outline" onClick={() => setShowPaymentModal(false)}>
                 Cancel
               </Button>
-              <Button 
+              <Button
                 onClick={() => paymentMutation.mutate()}
                 disabled={
-                  paymentMutation.isPending || 
-                  !paymentAmount || 
+                  paymentMutation.isPending ||
+                  !paymentAmount ||
                   parseFloat(paymentAmount) <= 0 ||
                   parseFloat(paymentAmount) > outstanding
                 }

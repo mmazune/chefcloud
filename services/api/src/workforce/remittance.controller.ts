@@ -37,7 +37,7 @@ import { Response } from 'express';
 @Controller('orgs/:orgId/remittances')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 export class RemittanceController {
-  constructor(private readonly remittanceService: RemittanceService) {}
+  constructor(private readonly remittanceService: RemittanceService) { }
 
   /**
    * List remittance batches
@@ -251,7 +251,7 @@ export class RemittanceController {
 @Controller('orgs/:orgId/remittance-providers')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 export class RemittanceProviderController {
-  constructor(private readonly remittanceService: RemittanceService) {}
+  constructor(private readonly remittanceService: RemittanceService) { }
 
   /**
    * List providers
@@ -321,7 +321,7 @@ export class RemittanceProviderController {
 @Controller('orgs/:orgId/remittance-mappings')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 export class RemittanceMappingController {
-  constructor(private readonly remittanceService: RemittanceService) {}
+  constructor(private readonly remittanceService: RemittanceService) { }
 
   /**
    * List mappings
@@ -366,7 +366,7 @@ export class RemittanceMappingController {
 @Controller('orgs/:orgId/reports')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 export class RemittanceReportsController {
-  constructor(private readonly remittanceService: RemittanceService) {}
+  constructor(private readonly remittanceService: RemittanceService) { }
 
   /**
    * Get remittance KPIs

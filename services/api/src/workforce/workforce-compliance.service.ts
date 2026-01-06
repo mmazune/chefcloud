@@ -61,7 +61,7 @@ export interface ComplianceIncidentDto {
 export class WorkforceComplianceService {
   private readonly logger = new Logger(WorkforceComplianceService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   /**
    * Get org policy with M10.19 break rules, or defaults
@@ -326,11 +326,11 @@ export class WorkforceComplianceService {
       ...(options.resolved !== undefined ? { resolved: options.resolved } : {}),
       ...(options.from || options.to
         ? {
-            createdAt: {
-              ...(options.from ? { gte: options.from } : {}),
-              ...(options.to ? { lte: options.to } : {}),
-            },
-          }
+          createdAt: {
+            ...(options.from ? { gte: options.from } : {}),
+            ...(options.to ? { lte: options.to } : {}),
+          },
+        }
         : {}),
     };
 

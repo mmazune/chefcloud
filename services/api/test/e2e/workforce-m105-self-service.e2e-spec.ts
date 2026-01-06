@@ -41,13 +41,13 @@ describe('M10.5 Workforce Self-Service (e2e)', () => {
   beforeAll(async () => {
     await traceSpan('beforeAll', async () => {
       trace('creating E2E app');
-      
+
       // Layer C: Wrap app creation with timeout
       app = await withTimeout(
         createE2EApp({ imports: [AppModule] }),
         { ms: 60_000, label: 'createE2EApp' }
       );
-      
+
       prisma = app.get(PrismaService);
       trace('app created, logging in users');
 
@@ -76,8 +76,8 @@ describe('M10.5 Workforce Self-Service (e2e)', () => {
 
       // Get or create another user for RBAC tests
       const otherUser = await prisma.client.user.findFirst({
-        where: { 
-          orgId, 
+        where: {
+          orgId,
           id: { not: staffUserId },
           jobRole: { in: ['CASHIER', 'WAITER', 'CHEF'] },
         },
@@ -132,7 +132,7 @@ describe('M10.5 Workforce Self-Service (e2e)', () => {
   afterAll(async () => {
     await traceSpan('afterAll', async () => {
       trace('cleaning up test data');
-      
+
       if (prisma) {
         try {
           // Clean M10.5 test data
@@ -140,7 +140,7 @@ describe('M10.5 Workforce Self-Service (e2e)', () => {
             where: { orgId },
           });
           await prisma.client.workforceAuditLog.deleteMany({
-            where: { 
+            where: {
               entityType: { in: ['TimeEntryAdjustment', 'TimeEntry'] },
               orgId,
             },
@@ -307,7 +307,7 @@ describe('M10.5 Workforce Self-Service (e2e)', () => {
         expect(res.body.status).toBe('APPROVED');
         expect(res.body.approvedBy).toBeDefined();
       } finally {
-        await prisma.client.timeEntryAdjustment.delete({ where: { id: adjustment.id } }).catch(() => {});
+        await prisma.client.timeEntryAdjustment.delete({ where: { id: adjustment.id } }).catch(() => { });
       }
     });
 
@@ -333,7 +333,7 @@ describe('M10.5 Workforce Self-Service (e2e)', () => {
         expect(res.body.status).toBe('REJECTED');
         expect(res.body.rejectionReason).toBe('Insufficient documentation');
       } finally {
-        await prisma.client.timeEntryAdjustment.delete({ where: { id: adjustment.id } }).catch(() => {});
+        await prisma.client.timeEntryAdjustment.delete({ where: { id: adjustment.id } }).catch(() => { });
       }
     });
 
@@ -396,8 +396,8 @@ describe('M10.5 Workforce Self-Service (e2e)', () => {
           })
           .expect(HttpStatus.FORBIDDEN);
       } finally {
-        await prisma.client.timeEntry.delete({ where: { id: lockedEntry.id } }).catch(() => {});
-        await prisma.client.payPeriod.delete({ where: { id: closedPeriod.id } }).catch(() => {});
+        await prisma.client.timeEntry.delete({ where: { id: lockedEntry.id } }).catch(() => { });
+        await prisma.client.payPeriod.delete({ where: { id: closedPeriod.id } }).catch(() => { });
       }
     });
   });
@@ -430,7 +430,7 @@ describe('M10.5 Workforce Self-Service (e2e)', () => {
             })
             .expect(HttpStatus.FORBIDDEN);
         } finally {
-          await prisma.client.timeEntry.delete({ where: { id: otherEntry.id } }).catch(() => {});
+          await prisma.client.timeEntry.delete({ where: { id: otherEntry.id } }).catch(() => { });
         }
       }
     });

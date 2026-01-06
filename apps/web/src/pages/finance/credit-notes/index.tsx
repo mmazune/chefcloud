@@ -25,9 +25,9 @@ import {
 import { StatusBadge, ConfirmDialog } from '@/components/finance';
 import type { DocumentStatus } from '@/components/finance';
 import { useToast } from '@/components/ui/use-toast';
-import { 
-  FileText, 
-  Users, 
+import {
+  FileText,
+  Users,
   Truck,
   CheckCircle,
   XCircle,
@@ -55,7 +55,7 @@ export default function CreditNotesPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  
+
   const [activeTab, setActiveTab] = useState<TabType>('customer');
   const [selectedNote, setSelectedNote] = useState<CreditNote | null>(null);
   const [showVoidConfirm, setShowVoidConfirm] = useState(false);
@@ -140,8 +140,8 @@ export default function CreditNotesPage() {
   return (
     <RequireRole minRole={RoleLevel.L4}>
       <AppShell>
-        <PageHeader 
-          title="Credit Notes" 
+        <PageHeader
+          title="Credit Notes"
           subtitle="Manage customer and vendor credit notes"
         />
 
@@ -213,7 +213,7 @@ export default function CreditNotesPage() {
                 <FileText className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
                 <p className="text-lg font-medium">No credit notes found</p>
                 <p className="text-muted-foreground">
-                  {activeTab === 'customer' 
+                  {activeTab === 'customer'
                     ? 'Customer credit notes will appear here'
                     : 'Vendor credit notes will appear here'}
                 </p>
@@ -241,7 +241,7 @@ export default function CreditNotesPage() {
                     const canVoid = ['DRAFT', 'OPEN'].includes(note.status);
                     const canAllocate = note.status === 'OPEN' && available > 0;
                     const canRefund = note.status === 'OPEN' && available > 0;
-                    
+
                     return (
                       <TableRow key={note.id}>
                         <TableCell className="font-medium">
@@ -261,8 +261,8 @@ export default function CreditNotesPage() {
                         <TableCell>
                           <div className="flex gap-1">
                             {canOpen && (
-                              <Button 
-                                variant="ghost" 
+                              <Button
+                                variant="ghost"
                                 size="sm"
                                 onClick={() => handleOpen(note)}
                                 disabled={actionLoading === note.id}
@@ -275,8 +275,8 @@ export default function CreditNotesPage() {
                               </Button>
                             )}
                             {canAllocate && (
-                              <Button 
-                                variant="ghost" 
+                              <Button
+                                variant="ghost"
                                 size="sm"
                                 onClick={() => toast({ title: 'Allocate', description: 'Allocation modal would open here' })}
                               >
@@ -284,8 +284,8 @@ export default function CreditNotesPage() {
                               </Button>
                             )}
                             {canRefund && (
-                              <Button 
-                                variant="ghost" 
+                              <Button
+                                variant="ghost"
                                 size="sm"
                                 onClick={() => toast({ title: 'Refund', description: 'Refund modal would open here' })}
                               >
@@ -293,8 +293,8 @@ export default function CreditNotesPage() {
                               </Button>
                             )}
                             {canVoid && (
-                              <Button 
-                                variant="ghost" 
+                              <Button
+                                variant="ghost"
                                 size="sm"
                                 onClick={() => {
                                   setSelectedNote(note);

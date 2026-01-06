@@ -53,7 +53,7 @@ export class KioskBatchIngestService {
     private readonly auditService: WorkforceAuditService,
     private readonly kioskTimeclockService: KioskTimeclockService,
     private readonly timeclockService: WorkforceTimeclockService,
-  ) {}
+  ) { }
 
   /**
    * Process a batch of events from a kiosk device.
@@ -393,11 +393,11 @@ export class KioskBatchIngestService {
     // Check for active break
     const activeBreak = activeEntry
       ? await this.prisma.client.breakEntry.findFirst({
-          where: {
-            timeEntryId: activeEntry.id,
-            endedAt: null,
-          },
-        })
+        where: {
+          timeEntryId: activeEntry.id,
+          endedAt: null,
+        },
+      })
       : null;
 
     const isClockedIn = !!activeEntry;

@@ -61,7 +61,7 @@ export class InventoryWasteService {
     private readonly prisma: PrismaService,
     private readonly auditLog: AuditLogService,
     private readonly ledgerService: InventoryLedgerService,
-  ) {}
+  ) { }
 
   /**
    * Generate a unique waste number

@@ -47,7 +47,7 @@ export interface PayrollMappingPreview {
 export class PayrollMappingService {
   private readonly logger = new Logger(PayrollMappingService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   /**
    * Get mapping for org (optionally for specific branch).

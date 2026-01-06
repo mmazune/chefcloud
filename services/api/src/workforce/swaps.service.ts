@@ -63,7 +63,7 @@ export class SwapsService {
     private readonly prisma: PrismaService,
     private readonly conflicts: WorkforceConflictsService,
     private readonly notifications: WorkforceNotificationsService,
-  ) {}
+  ) { }
 
   // ===== REQUESTER ACTIONS =====
 
@@ -857,11 +857,11 @@ export class SwapsService {
         : null,
       targetShift: swap.targetShift
         ? {
-            id: swap.targetShift.id,
-            startAt: swap.targetShift.startAt,
-            endAt: swap.targetShift.endAt,
-            role: swap.targetShift.role,
-          }
+          id: swap.targetShift.id,
+          startAt: swap.targetShift.startAt,
+          endAt: swap.targetShift.endAt,
+          role: swap.targetShift.role,
+        }
         : null,
       claimer: swap.claimer
         ? { id: swap.claimer.id, name: `${swap.claimer.firstName} ${swap.claimer.lastName}` }

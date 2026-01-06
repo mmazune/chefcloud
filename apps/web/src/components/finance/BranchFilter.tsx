@@ -21,11 +21,11 @@ interface BranchFilterProps {
   className?: string;
 }
 
-export function BranchFilter({ 
-  value, 
-  onChange, 
+export function BranchFilter({
+  value,
+  onChange,
   showAllOption = true,
-  className 
+  className
 }: BranchFilterProps) {
   const { branches } = useActiveBranch();
 
@@ -35,8 +35,8 @@ export function BranchFilter({
   }
 
   return (
-    <Select 
-      value={value || 'all'} 
+    <Select
+      value={value || 'all'}
       onValueChange={(v) => onChange(v === 'all' ? null : v)}
     >
       <SelectTrigger className={className}>

@@ -33,7 +33,7 @@ export interface UpdateDelegateDto {
 
 @Injectable()
 export class LeaveDelegationService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   /**
    * Create an approval delegate

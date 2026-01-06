@@ -5,10 +5,10 @@
  * With full audit trail and pay period lock enforcement.
  */
 
-import { 
-  Injectable, 
-  NotFoundException, 
-  BadRequestException, 
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
   ForbiddenException,
   ConflictException,
 } from '@nestjs/common';
@@ -44,14 +44,14 @@ export class AdjustmentsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly auditService: WorkforceAuditService,
-  ) {}
+  ) { }
 
   /**
    * Staff requests an adjustment for their own time entry
    */
   async requestAdjustment(
-    orgId: string, 
-    requestedById: string, 
+    orgId: string,
+    requestedById: string,
     dto: RequestAdjustmentDto
   ) {
     // Verify time entry exists and belongs to requester
@@ -249,7 +249,7 @@ export class AdjustmentsService {
     // Apply the adjustment to the time entry
     const now = new Date();
     const updateData: { clockInAt?: Date; clockOutAt?: Date } = {};
-    
+
     if (adjustment.newClockIn) {
       updateData.clockInAt = adjustment.newClockIn;
     }

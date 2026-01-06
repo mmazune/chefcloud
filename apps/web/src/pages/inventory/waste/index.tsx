@@ -194,8 +194,8 @@ export default function InventoryWastePage() {
     });
   };
 
-  const filteredWaste = wasteRecords?.filter(w => 
-    !search || 
+  const filteredWaste = wasteRecords?.filter(w =>
+    !search ||
     w.wasteNumber.toLowerCase().includes(search.toLowerCase()) ||
     w.branch.name.toLowerCase().includes(search.toLowerCase())
   );
@@ -376,7 +376,7 @@ export default function InventoryWastePage() {
                   Add Line
                 </Button>
               </div>
-              
+
               <div className="space-y-3">
                 {formLines.map((line, index) => (
                   <div key={index} className="grid grid-cols-6 gap-2 items-end">

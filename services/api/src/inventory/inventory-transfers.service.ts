@@ -77,7 +77,7 @@ export class InventoryTransfersService {
     private readonly prisma: PrismaService,
     private readonly auditLog: AuditLogService,
     private readonly ledgerService: InventoryLedgerService,
-  ) {}
+  ) { }
 
   /**
    * Generate a unique transfer number

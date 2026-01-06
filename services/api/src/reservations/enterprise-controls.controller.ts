@@ -40,7 +40,7 @@ export class EnterpriseControlsController {
   constructor(
     private schedulingConstraints: SchedulingConstraintsService,
     private opsMonitoring: OpsMonitoringService,
-  ) {}
+  ) { }
 
   // ===== Operating Hours =====
 

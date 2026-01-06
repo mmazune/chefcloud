@@ -274,4 +274,4 @@ import { KioskOpsReportingService } from './kiosk-ops-reporting.service';
     KioskOpsReportingService, // M10.22
   ],
 })
-export class WorkforceModule {}
+export class WorkforceModule { }

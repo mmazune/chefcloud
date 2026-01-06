@@ -93,7 +93,7 @@ interface AuditLogData {
 
 @Injectable()
 export class WorkforceAuditService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   // ===== Log Action =====
 

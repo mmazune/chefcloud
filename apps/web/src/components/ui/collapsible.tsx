@@ -14,7 +14,7 @@ const CollapsibleContext = React.createContext<{
   setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }>({
   isOpen: false,
-  setIsOpen: () => {},
+  setIsOpen: () => { },
 });
 
 interface CollapsibleProps {

@@ -58,7 +58,7 @@ interface TodayBoardResult {
 export class HostOpsService {
   private readonly logger = new Logger(HostOpsService.name);
 
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   /**
    * AC-07: Get Today Board for host view
@@ -252,9 +252,9 @@ export class HostOpsService {
       if (res.tableId) {
         const existing = tableReservations.get(res.tableId);
         // Prefer SEATED over CONFIRMED over HELD
-        if (!existing || 
-            res.status === 'SEATED' || 
-            (res.status === 'CONFIRMED' && existing.status === 'HELD')) {
+        if (!existing ||
+          res.status === 'SEATED' ||
+          (res.status === 'CONFIRMED' && existing.status === 'HELD')) {
           tableReservations.set(res.tableId, res);
         }
       }
@@ -263,7 +263,7 @@ export class HostOpsService {
     return tables.map((table) => {
       const res = tableReservations.get(table.id);
       let status: 'available' | 'reserved' | 'occupied' = 'available';
-      
+
       if (res) {
         status = res.status === 'SEATED' ? 'occupied' : 'reserved';
       }
@@ -275,11 +275,11 @@ export class HostOpsService {
         status,
         currentReservation: res
           ? {
-              id: res.id,
-              name: res.name,
-              partySize: res.partySize,
-              status: res.status,
-            }
+            id: res.id,
+            name: res.name,
+            partySize: res.partySize,
+            status: res.status,
+          }
           : undefined,
       };
     });

@@ -37,7 +37,7 @@ describe('M10.9 Workforce Remittances (e2e)', () => {
   let staffToken: string;
   let orgId: string;
   let branchId: string;
-  
+
   // Test data IDs
   let createdBatchId: string;
   let createdLineId: string;
@@ -47,13 +47,13 @@ describe('M10.9 Workforce Remittances (e2e)', () => {
   beforeAll(async () => {
     await traceSpan('beforeAll', async () => {
       trace('creating E2E app');
-      
+
       // Layer C: Wrap app creation with timeout
       app = await withTimeout(
         createE2EApp({ imports: [AppModule] }),
         { ms: 60_000, label: 'createE2EApp' }
       );
-      
+
       prisma = app.get(PrismaService);
       trace('app created, logging in users');
 
@@ -107,7 +107,7 @@ describe('M10.9 Workforce Remittances (e2e)', () => {
   afterAll(async () => {
     await traceSpan('afterAll', async () => {
       trace('cleaning up test data');
-      
+
       if (prisma) {
         // Clean remittance journal links
         try {
@@ -117,7 +117,7 @@ describe('M10.9 Workforce Remittances (e2e)', () => {
         } catch (e) {
           trace('Could not clean remittanceJournalLink', { error: (e as Error).message });
         }
-        
+
         // Clean remittance lines
         try {
           await prisma.client.remittanceLine.deleteMany({
@@ -126,7 +126,7 @@ describe('M10.9 Workforce Remittances (e2e)', () => {
         } catch (e) {
           trace('Could not clean remittanceLine', { error: (e as Error).message });
         }
-        
+
         // Clean remittance batches (test only)
         try {
           await prisma.client.remittanceBatch.deleteMany({

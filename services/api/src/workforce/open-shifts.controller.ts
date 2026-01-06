@@ -29,7 +29,7 @@ import { OpenShiftsService, OpenShiftFilters } from './open-shifts.service';
 @Controller('workforce/self/open-shifts')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 export class SelfOpenShiftsController {
-  constructor(private readonly openShiftsService: OpenShiftsService) {}
+  constructor(private readonly openShiftsService: OpenShiftsService) { }
 
   /**
    * GET /workforce/self/open-shifts
@@ -94,7 +94,7 @@ export class SelfOpenShiftsController {
 @Controller('workforce/open-shifts')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 export class OpenShiftsController {
-  constructor(private readonly openShiftsService: OpenShiftsService) {}
+  constructor(private readonly openShiftsService: OpenShiftsService) { }
 
   /**
    * GET /workforce/open-shifts

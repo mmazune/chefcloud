@@ -37,7 +37,7 @@ export class InventoryExportService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly ledgerService: InventoryLedgerService,
-  ) {}
+  ) { }
 
   /**
    * Export current inventory levels
@@ -67,7 +67,7 @@ export class InventoryExportService {
     const snapshot: any[] = [];
     for (const item of items) {
       const itemOnHand = onHandByLocation.filter((oh) => oh.itemId === item.id);
-      
+
       if (itemOnHand.length === 0 && !options?.includeZeroStock) {
         continue;
       }
@@ -307,8 +307,8 @@ export class InventoryExportService {
           status: a.status,
           notes: a.notes,
           createdBy: `${a.createdBy?.firstName ?? ''} ${a.createdBy?.lastName ?? ''}`.trim(),
-          approvedBy: a.approvedBy 
-            ? `${a.approvedBy.firstName ?? ''} ${a.approvedBy.lastName ?? ''}`.trim() 
+          approvedBy: a.approvedBy
+            ? `${a.approvedBy.firstName ?? ''} ${a.approvedBy.lastName ?? ''}`.trim()
             : null,
           approvedAt: a.approvedAt?.toISOString(),
         })),
@@ -331,8 +331,8 @@ export class InventoryExportService {
         a.status,
         this.escapeCsv(a.notes ?? ''),
         `${a.createdBy?.firstName ?? ''} ${a.createdBy?.lastName ?? ''}`.trim(),
-        a.approvedBy 
-          ? `${a.approvedBy.firstName ?? ''} ${a.approvedBy.lastName ?? ''}`.trim() 
+        a.approvedBy
+          ? `${a.approvedBy.firstName ?? ''} ${a.approvedBy.lastName ?? ''}`.trim()
           : '',
         a.approvedAt?.toISOString() ?? '',
       ].join(','));

@@ -54,7 +54,7 @@ export class IntegrationsController {
     private templateService: TemplateRenderService,
     private notificationDispatcher: NotificationDispatcherService,
     private notificationHardening: NotificationHardeningService,
-  ) {}
+  ) { }
 
   // ==================== WEBHOOKS ====================
 

@@ -103,8 +103,8 @@ export class RateLimitGuard implements CanActivate {
    */
   private maybeCleanup(now: number): void {
     const timeSinceLastCleanup = now - this.lastCleanup;
-    const shouldCleanup = 
-      this.store.size > CLEANUP_THRESHOLD || 
+    const shouldCleanup =
+      this.store.size > CLEANUP_THRESHOLD ||
       timeSinceLastCleanup >= 5 * 60 * 1000; // 5 minutes
 
     if (shouldCleanup) {

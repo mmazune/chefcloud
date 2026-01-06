@@ -35,7 +35,7 @@ export class ComplianceController {
   constructor(
     private readonly complianceService: WorkforceComplianceService,
     private readonly exportService: ComplianceExportService,
-  ) {}
+  ) { }
 
   /**
    * GET /workforce/compliance/incidents
@@ -187,7 +187,7 @@ export class ComplianceController {
 export class MyComplianceController {
   constructor(
     private readonly complianceService: WorkforceComplianceService,
-  ) {}
+  ) { }
 
   /**
    * GET /workforce/my-compliance
@@ -218,7 +218,7 @@ export class MyComplianceController {
 export class TimeclockExportController {
   constructor(
     private readonly exportService: ComplianceExportService,
-  ) {}
+  ) { }
 
   /**
    * GET /workforce/timeclock/export/timeentries

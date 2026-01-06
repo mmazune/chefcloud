@@ -39,7 +39,7 @@ export interface BalanceSummary {
 
 @Injectable()
 export class LeaveReportingService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   /**
    * Get balance summary report

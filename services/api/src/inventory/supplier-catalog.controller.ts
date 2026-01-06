@@ -53,7 +53,7 @@ export class SupplierCatalogController {
     private readonly pricingService: SupplierPricingService,
     private readonly reorderEngine: ReorderEngineService,
     private readonly poGenerator: ReorderPoGeneratorService,
-  ) {}
+  ) { }
 
   // ============================================================================
   // Supplier Items

@@ -49,7 +49,7 @@ export class LeaveRequestsService {
     private readonly prisma: PrismaService,
     private readonly policyService: LeavePolicyService,
     private readonly auditService: WorkforceAuditService,
-  ) {}
+  ) { }
 
   /**
    * Create a new leave request (DRAFT status)
@@ -605,7 +605,7 @@ export class LeaveRequestsService {
     roleLevel: number,
   ): Promise<any[]> {
     const statusFilter: string[] = ['SUBMITTED'];
-    
+
     // L4+ can also see APPROVED_STEP1 for step 2 approval
     if (roleLevel >= 4) {
       statusFilter.push('APPROVED_STEP1');

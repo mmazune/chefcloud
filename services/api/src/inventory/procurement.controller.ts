@@ -182,7 +182,7 @@ export class ProcurementController {
     private readonly poService: PurchaseOrdersService,
     private readonly receiptsService: ReceiptsService,
     private readonly reportingService: ProcurementReportingService,
-  ) {}
+  ) { }
 
   // ============= Purchase Orders =============
 

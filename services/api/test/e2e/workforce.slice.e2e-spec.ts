@@ -36,7 +36,7 @@ describe('M10.2 Workforce Slice E2E', () => {
   beforeAll(async () => {
     await traceSpan('beforeAll', async () => {
       trace('creating slice module');
-      
+
       // Layer C: Wrap module creation with timeout
       const modRef = await withTimeout(
         createE2ETestingModuleBuilder({
@@ -82,7 +82,7 @@ describe('M10.2 Workforce Slice E2E', () => {
         .get('/workforce/scheduling/templates')
         .set(AUTH)
         .ok(() => true);
-      
+
       // Accept 200 (success) or 401/403 (auth mock behavior varies)
       expect([200, 401, 403]).toContain(res.status);
       if (res.status === 200) {
@@ -109,7 +109,7 @@ describe('M10.2 Workforce Slice E2E', () => {
           description: 'E2E_SLICE_TEST template',
         })
         .ok(() => true);
-      
+
       expect([200, 201, 401, 403]).toContain(res.status);
     });
   });
@@ -127,7 +127,7 @@ describe('M10.2 Workforce Slice E2E', () => {
         .get('/workforce/scheduling/shifts')
         .set(AUTH)
         .ok(() => true);
-      
+
       expect([200, 401, 403]).toContain(res.status);
     });
 
@@ -179,7 +179,7 @@ describe('M10.2 Workforce Slice E2E', () => {
         .get('/workforce/timeclock/status')
         .set(AUTH)
         .ok(() => true);
-      
+
       expect([200, 401, 403]).toContain(res.status);
     });
 
@@ -219,7 +219,7 @@ describe('M10.2 Workforce Slice E2E', () => {
         })
         .set(AUTH)
         .ok(() => true);
-      
+
       expect([200, 401, 403]).toContain(res.status);
     });
 
@@ -253,7 +253,7 @@ describe('M10.2 Workforce Slice E2E', () => {
         })
         .set(AUTH)
         .ok(() => true);
-      
+
       expect([200, 401, 403]).toContain(res.status);
       if (res.status === 200) {
         expect(res.headers['content-type']).toContain('text/csv');

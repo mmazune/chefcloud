@@ -24,7 +24,7 @@ export interface ExportResult {
 export class ComplianceExportService {
   private readonly logger = new Logger(ComplianceExportService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   /**
    * Escape CSV field value.
@@ -262,9 +262,9 @@ export class ComplianceExportService {
       }),
       shiftIds.length > 0
         ? this.prisma.client.scheduledShift.findMany({
-            where: { id: { in: shiftIds } },
-            select: { id: true, role: true },
-          })
+          where: { id: { in: shiftIds } },
+          select: { id: true, role: true },
+        })
         : Promise.resolve([]),
     ]);
 

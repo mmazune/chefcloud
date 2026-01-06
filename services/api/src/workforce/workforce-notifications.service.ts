@@ -36,7 +36,7 @@ export interface NotificationQuery {
 
 @Injectable()
 export class WorkforceNotificationsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   /**
    * Log a workforce notification

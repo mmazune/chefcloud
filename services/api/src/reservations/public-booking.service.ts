@@ -42,7 +42,7 @@ export class PublicBookingService {
     private readonly automationService: AutomationService,
     private readonly depositService: DepositAccountingService,
     private readonly notificationService: NotificationService,
-  ) {}
+  ) { }
 
   /**
    * Get branch by public booking slug
@@ -107,7 +107,7 @@ export class PublicBookingService {
     // Parse date and generate slots
     const dateObj = new Date(date);
     const slots: TimeSlot[] = [];
-    
+
     // Default business hours (can be extended to use branch hours)
     const openHour = 11;
     const closeHour = 22;
@@ -130,7 +130,7 @@ export class PublicBookingService {
       for (let minute = 0; minute < 60; minute += slotInterval) {
         const slotStart = new Date(dateObj);
         slotStart.setHours(hour, minute, 0, 0);
-        
+
         const slotEnd = new Date(slotStart.getTime() + turnTime * 60 * 1000);
 
         // Skip if slot is in the past or too close
@@ -154,8 +154,8 @@ export class PublicBookingService {
         slots.push({
           startAt: slotStart.toISOString(),
           endAt: slotEnd.toISOString(),
-        available: capacityResult.allowed,
-        remainingCapacity: capacityResult.max ? capacityResult.max - capacityResult.current : 999,
+          available: capacityResult.allowed,
+          remainingCapacity: capacityResult.max ? capacityResult.max - capacityResult.current : 999,
         });
       }
     }

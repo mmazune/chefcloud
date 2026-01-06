@@ -54,7 +54,7 @@ export class KioskHealthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly auditService: WorkforceAuditService,
-  ) {}
+  ) { }
 
   /**
    * Update heartbeat for device and active session.

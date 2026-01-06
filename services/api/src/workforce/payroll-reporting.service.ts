@@ -32,7 +32,7 @@ export interface DateRange {
 export class PayrollReportingService {
   private readonly logger = new Logger(PayrollReportingService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   /**
    * Get payroll summary KPIs
@@ -43,11 +43,11 @@ export class PayrollReportingService {
     branchId?: string,
   ): Promise<PayrollSummary> {
     const where: any = { orgId };
-    
+
     if (branchId) {
       where.branchId = branchId;
     }
-    
+
     if (dateRange) {
       where.createdAt = {
         gte: dateRange.from,
@@ -96,7 +96,7 @@ export class PayrollReportingService {
       summary.totalRegularHours += Number(run.regularHours);
       summary.totalOvertimeHours += Number(run.overtimeHours);
       summary.totalPaidHours += Number(run.paidHours);
-      
+
       if (run.grossAmount != null) {
         hasGrossAmount = true;
         totalGross += Number(run.grossAmount);
@@ -139,7 +139,7 @@ export class PayrollReportingService {
     dateRange?: DateRange,
   ): Promise<string> {
     const where: any = { orgId };
-    
+
     if (dateRange) {
       where.createdAt = {
         gte: dateRange.from,
@@ -216,7 +216,7 @@ export class PayrollReportingService {
     dateRange?: DateRange,
   ): Promise<string> {
     const where: any = { payrollRun: { orgId } };
-    
+
     if (dateRange) {
       where.payrollRun.createdAt = {
         gte: dateRange.from,

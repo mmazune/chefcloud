@@ -39,7 +39,7 @@ export interface AvailabilityCheckResult {
 
 @Injectable()
 export class WorkforceConflictsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   /**
    * Check for all types of conflicts

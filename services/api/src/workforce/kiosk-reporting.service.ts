@@ -11,7 +11,7 @@ import { PrismaService } from '../prisma.service';
 
 @Injectable()
 export class KioskReportingService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   /**
    * Get kiosk usage KPIs.

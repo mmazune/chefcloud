@@ -17,7 +17,7 @@ const UTF8_BOM = '\uFEFF';
 export class PayrollExportService {
   private readonly logger = new Logger(PayrollExportService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   /**
    * Export payroll run summary CSV

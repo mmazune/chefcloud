@@ -73,7 +73,7 @@ const SAMPLE_DATA: TemplateVariables = {
 export class TemplateRenderService {
   private readonly logger = new Logger(TemplateRenderService.name);
 
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   /**
    * Create a notification template

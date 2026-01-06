@@ -21,7 +21,7 @@ import { PayslipService } from './payslip.service';
 @Controller('workforce')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 export class PayslipsController {
-  constructor(private readonly payslipService: PayslipService) {}
+  constructor(private readonly payslipService: PayslipService) { }
 
   // ==================== ADMIN ENDPOINTS (L4+) ====================
 

@@ -28,7 +28,7 @@ export class KioskSessionService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly auditService: WorkforceAuditService,
-  ) {}
+  ) { }
 
   /**
    * Get session timeout from org policy.

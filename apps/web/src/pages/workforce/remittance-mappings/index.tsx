@@ -104,7 +104,7 @@ export default function RemittanceMappingsPage() {
   });
 
   // Filter to components that can be remitted (not earnings)
-  const remittableComponents = components.filter(c => 
+  const remittableComponents = components.filter(c =>
     ['DEDUCTION_PRE', 'DEDUCTION_POST', 'TAX', 'EMPLOYER_CONTRIB'].includes(c.type) && c.enabled
   );
 

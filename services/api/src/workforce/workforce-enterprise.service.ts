@@ -47,7 +47,7 @@ export class WorkforceEnterpriseService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly auditService: WorkforceAuditService,
-  ) {}
+  ) { }
 
   // ===== Policy Management =====
 
@@ -233,7 +233,7 @@ export class WorkforceEnterpriseService {
     });
 
     const now = new Date();
-    
+
     // Lock all timesheet approvals
     await this.prisma.client.timesheetApproval.updateMany({
       where: {

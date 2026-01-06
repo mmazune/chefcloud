@@ -39,4 +39,4 @@ import { ReservationsModule } from '../reservations/reservations.module';
     NotificationHardeningService,
   ],
 })
-export class IntegrationsModule {}
+export class IntegrationsModule { }

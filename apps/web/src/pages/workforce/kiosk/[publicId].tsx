@@ -161,9 +161,9 @@ export default function PublicKioskPage() {
     mutationFn: async ({ action, pin: userPin }: { action: ActionType; pin: string }) => {
       const endpoint = action === 'clock-in' ? 'clock-in'
         : action === 'clock-out' ? 'clock-out'
-        : action === 'break-start' ? 'break/start'
-        : action === 'break-end' ? 'break/end'
-        : 'status';
+          : action === 'break-start' ? 'break/start'
+            : action === 'break-end' ? 'break/end'
+              : 'status';
 
       const res = await publicApi.post(`/public/workforce/kiosk/${publicId}/${endpoint}`, {
         sessionId,
@@ -379,11 +379,10 @@ export default function PublicKioskPage() {
   // Result screen
   if (mode === 'result' && resultMessage) {
     return (
-      <div className={`min-h-screen flex items-center justify-center p-4 ${
-        resultMessage.type === 'success'
+      <div className={`min-h-screen flex items-center justify-center p-4 ${resultMessage.type === 'success'
           ? 'bg-gradient-to-br from-green-900 to-slate-900'
           : 'bg-gradient-to-br from-red-900 to-slate-900'
-      }`}>
+        }`}>
         <Card className="w-full max-w-lg text-center">
           <CardContent className="pt-12 pb-8">
             {resultMessage.type === 'success' ? (
@@ -420,9 +419,8 @@ export default function PublicKioskPage() {
               {[0, 1, 2, 3, 4, 5].map((i) => (
                 <div
                   key={i}
-                  className={`w-10 h-12 rounded-lg border-2 flex items-center justify-center text-2xl font-bold ${
-                    i < pin.length ? 'border-primary bg-primary/10' : 'border-muted'
-                  }`}
+                  className={`w-10 h-12 rounded-lg border-2 flex items-center justify-center text-2xl font-bold ${i < pin.length ? 'border-primary bg-primary/10' : 'border-muted'
+                    }`}
                 >
                   {i < pin.length ? '•' : ''}
                 </div>

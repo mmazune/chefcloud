@@ -351,9 +351,8 @@ export default function PayrollRunDetailPage() {
                   {run.journalLinks.map((link) => (
                     <tr key={link.id}>
                       <td className="px-4 py-2 text-sm">
-                        <span className={`px-2 py-1 rounded text-xs ${
-                          link.type === 'ACCRUAL' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
-                        }`}>
+                        <span className={`px-2 py-1 rounded text-xs ${link.type === 'ACCRUAL' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
+                          }`}>
                           {link.type}
                         </span>
                       </td>

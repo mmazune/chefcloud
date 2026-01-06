@@ -28,9 +28,9 @@ jest.mock('@tanstack/react-query', () => ({
 // Mock useAuth - staff role (L2)
 jest.mock('@/hooks/useAuth', () => ({
   useAuth: () => ({
-    user: { 
-      id: 'test-staff-id', 
-      email: 'waiter@test.com', 
+    user: {
+      id: 'test-staff-id',
+      email: 'waiter@test.com',
       roleLevel: 2,
       branchId: 'test-branch-id',
     },

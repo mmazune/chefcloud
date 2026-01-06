@@ -64,7 +64,7 @@ export interface UpdateProfileDto {
 export class CompensationService {
   private readonly logger = new Logger(CompensationService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   // ==================== COMPONENT CRUD ====================
 

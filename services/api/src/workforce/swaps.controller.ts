@@ -30,7 +30,7 @@ import type { ShiftSwapRequestStatus, ShiftSwapRequestType } from '@chefcloud/db
 @Controller('workforce/self/swaps')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 export class SelfSwapsController {
-  constructor(private readonly swapsService: SwapsService) {}
+  constructor(private readonly swapsService: SwapsService) { }
 
   /**
    * GET /workforce/self/swaps
@@ -177,7 +177,7 @@ export class SelfSwapsController {
 @Controller('workforce/swaps')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 export class SwapsController {
-  constructor(private readonly swapsService: SwapsService) {}
+  constructor(private readonly swapsService: SwapsService) { }
 
   /**
    * GET /workforce/swaps

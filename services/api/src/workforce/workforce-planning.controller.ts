@@ -34,7 +34,7 @@ export class WorkforcePlanningController {
   constructor(
     private readonly planningService: WorkforcePlanningService,
     private readonly exportService: WorkforcePlanningExportService,
-  ) {}
+  ) { }
 
   // ===== Labor Targets =====
 

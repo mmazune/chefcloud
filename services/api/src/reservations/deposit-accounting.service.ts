@@ -51,7 +51,7 @@ interface ApplyDepositParams {
 export class DepositAccountingService {
   private readonly logger = new Logger(DepositAccountingService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   /**
    * Create a deposit requirement for a reservation

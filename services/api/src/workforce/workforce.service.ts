@@ -11,7 +11,7 @@ import { PrismaService } from '../prisma.service';
 
 @Injectable()
 export class WorkforceService {
-  constructor(public readonly prisma: PrismaService) {}
+  constructor(public readonly prisma: PrismaService) { }
 
   // ===== Leave Management =====
 
@@ -397,10 +397,10 @@ export class WorkforceService {
       }
 
       const user = userMap.get(entry.userId);
-      
+
       // Skip if clockOutAt is missing (should not happen due to filter, but be safe)
       if (!entry.clockOutAt) continue;
-      
+
       const totalMinutes = Math.floor(
         (entry.clockOutAt.getTime() - entry.clockInAt.getTime()) / (1000 * 60),
       );

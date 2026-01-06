@@ -11,7 +11,7 @@ export type TokenScope = 'CANCEL' | 'RESCHEDULE' | 'VIEW' | 'ALL';
 
 @Injectable()
 export class AccessTokenService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   /**
    * Generate a secure access token for a reservation

@@ -38,8 +38,8 @@ import {
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
-import { 
-  CreditCard, 
+import {
+  CreditCard,
   Settings,
   Link as LinkIcon,
   Check,
@@ -71,7 +71,7 @@ export default function PaymentMethodsPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  
+
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null);
   const [showMappingDialog, setShowMappingDialog] = useState(false);
   const [selectedAccountId, setSelectedAccountId] = useState<string>('');
@@ -156,8 +156,8 @@ export default function PaymentMethodsPage() {
   return (
     <RequireRole minRole={RoleLevel.L4}>
       <AppShell>
-        <PageHeader 
-          title="Payment Methods" 
+        <PageHeader
+          title="Payment Methods"
           subtitle="Map payment methods to GL accounts"
         />
 
@@ -258,8 +258,8 @@ export default function PaymentMethodsPage() {
                         )}
                       </TableCell>
                       <TableCell>
-                        <Button 
-                          variant="outline" 
+                        <Button
+                          variant="outline"
                           size="sm"
                           onClick={() => handleOpenMapping(method)}
                         >
@@ -285,15 +285,15 @@ export default function PaymentMethodsPage() {
           </CardHeader>
           <CardContent className="text-sm text-muted-foreground space-y-2">
             <p>
-              Payment method GL mapping determines which General Ledger account is credited 
+              Payment method GL mapping determines which General Ledger account is credited
               when payments are received or debited when refunds are issued.
             </p>
             <p>
-              <strong>Best Practice:</strong> Map each payment method to a corresponding 
+              <strong>Best Practice:</strong> Map each payment method to a corresponding
               asset account (e.g., Cash on Hand for cash, Bank Account for cards).
             </p>
             <p>
-              Unmapped payment methods will use the default Cash account if configured in 
+              Unmapped payment methods will use the default Cash account if configured in
               your organization settings.
             </p>
           </CardContent>

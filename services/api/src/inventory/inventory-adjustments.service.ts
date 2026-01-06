@@ -37,7 +37,7 @@ export class InventoryAdjustmentsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly ledgerService: InventoryLedgerService,
-  ) {}
+  ) { }
 
   /**
    * Create a stock adjustment

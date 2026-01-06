@@ -275,7 +275,7 @@ export default function TransferDetailPage() {
                   const qtyShipped = parseFloat(line.qtyShipped);
                   const qtyReceived = parseFloat(line.qtyReceived);
                   const variance = qtyReceived - qtyShipped;
-                  
+
                   return (
                     <tr key={line.id}>
                       <td className="px-4 py-3">

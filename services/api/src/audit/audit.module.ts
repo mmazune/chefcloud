@@ -11,4 +11,4 @@ import { PrismaService } from '../prisma.service';
   providers: [AuditLogService, PrismaService],
   exports: [AuditLogService],
 })
-export class AuditModule {}
+export class AuditModule { }

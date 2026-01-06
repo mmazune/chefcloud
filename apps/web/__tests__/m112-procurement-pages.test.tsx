@@ -133,7 +133,7 @@ describe('M11.2: Procurement Pages UI', () => {
   describe('Purchase Orders List Page', () => {
     it('should render purchase orders page with header', async () => {
       const PurchaseOrdersPage = require('@/pages/inventory/purchase-orders/index').default;
-      
+
       render(<PurchaseOrdersPage />, { wrapper: createWrapper() });
 
       expect(screen.getByTestId('app-shell')).toBeInTheDocument();
@@ -143,7 +143,7 @@ describe('M11.2: Procurement Pages UI', () => {
 
     it('should show create button for L3+ users', async () => {
       const PurchaseOrdersPage = require('@/pages/inventory/purchase-orders/index').default;
-      
+
       render(<PurchaseOrdersPage />, { wrapper: createWrapper() });
 
       // L4 user should see create button
@@ -154,7 +154,7 @@ describe('M11.2: Procurement Pages UI', () => {
   describe('Receipts List Page', () => {
     it('should render receipts page with header', async () => {
       const ReceiptsPage = require('@/pages/inventory/receipts/index').default;
-      
+
       render(<ReceiptsPage />, { wrapper: createWrapper() });
 
       expect(screen.getByTestId('app-shell')).toBeInTheDocument();
@@ -164,7 +164,7 @@ describe('M11.2: Procurement Pages UI', () => {
 
     it('should show create receipt button for L3+ users', async () => {
       const ReceiptsPage = require('@/pages/inventory/receipts/index').default;
-      
+
       render(<ReceiptsPage />, { wrapper: createWrapper() });
 
       expect(screen.getByText(/Create Receipt/i)).toBeInTheDocument();

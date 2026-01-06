@@ -23,7 +23,7 @@ const TIMEOUT_MS = 15 * 60 * 1000; // 15 minutes
 
 async function run() {
   const pattern = process.argv[2] || '';
-  
+
   console.log('🔒 E2E Strict Runner (M10.15 - No forceExit)');
   console.log(`   Timeout: ${TIMEOUT_MS / 60000} minutes`);
   console.log(`   Pattern: ${pattern || 'all recent milestone E2E files'}`);

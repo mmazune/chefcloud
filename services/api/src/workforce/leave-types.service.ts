@@ -32,7 +32,7 @@ export interface UpdateLeaveTypeDto {
 
 @Injectable()
 export class LeaveTypesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   /**
    * Create a new leave type for an organization

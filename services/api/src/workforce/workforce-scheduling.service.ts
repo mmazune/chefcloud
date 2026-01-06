@@ -17,7 +17,7 @@ type ShiftStatus = 'DRAFT' | 'PUBLISHED' | 'IN_PROGRESS' | 'COMPLETED' | 'APPROV
 
 @Injectable()
 export class WorkforceSchedulingService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   // ===== Shift Templates =====
 

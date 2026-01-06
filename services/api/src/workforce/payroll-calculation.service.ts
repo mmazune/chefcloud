@@ -54,7 +54,7 @@ export class PayrollCalculationService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly compensationService: CompensationService,
-  ) {}
+  ) { }
 
   /**
    * Calculate gross-to-net for a single employee line

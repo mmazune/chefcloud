@@ -26,7 +26,7 @@ export class PayslipService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly calculationService: PayrollCalculationService,
-  ) {}
+  ) { }
 
   /**
    * Generate payslips for all lines in a payroll run
@@ -199,7 +199,7 @@ export class PayslipService {
       where: { id: payslipId, orgId },
       include: {
         user: { select: { id: true, email: true, firstName: true, lastName: true } },
-        payrollRun: { 
+        payrollRun: {
           select: { id: true, branchId: true, status: true },
           include: { payPeriod: true },
         },

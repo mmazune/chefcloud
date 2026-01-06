@@ -63,7 +63,7 @@ export interface OnHandResult {
 export class InventoryLedgerService {
   private readonly logger = new Logger(InventoryLedgerService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   /**
    * Record an entry in the inventory ledger

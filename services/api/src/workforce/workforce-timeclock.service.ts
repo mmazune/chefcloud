@@ -20,7 +20,7 @@ const VALID_GEO_SOURCES = ['GPS', 'WIFI', 'MANUAL'] as const;
 
 @Injectable()
 export class WorkforceTimeclockService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   /**
    * M10.19: Validate geo-fencing metadata.

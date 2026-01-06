@@ -270,7 +270,7 @@ export default function WasteDetailPage() {
                   const qty = parseFloat(line.qty);
                   const unitCost = line.unitCost ? parseFloat(line.unitCost) : 0;
                   const extCost = qty * unitCost;
-                  
+
                   return (
                     <tr key={line.id}>
                       <td className="px-4 py-3">

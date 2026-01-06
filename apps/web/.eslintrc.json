@@ -2,7 +2,10 @@
   "extends": "next/core-web-vitals",
   "overrides": [
     {
-      "files": ["**/__tests__/**/*.tsx", "**/*.test.tsx"],
+      "files": [
+        "**/__tests__/**/*.tsx",
+        "**/*.test.tsx"
+      ],
       "rules": {
         "react/display-name": "off",
         "@next/next/no-assign-module-variable": "off"

@@ -13,7 +13,7 @@ export interface CreateLocationDto {
 export class InventoryLocationsService {
   private readonly logger = new Logger(InventoryLocationsService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   /**
    * Create an inventory location

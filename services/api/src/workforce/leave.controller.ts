@@ -47,7 +47,7 @@ export class LeaveController {
     private readonly leaveRequestsService: LeaveRequestsService,
     private readonly leaveAccrualService: LeaveAccrualService,
     private readonly leaveReportingService: LeaveReportingService,
-  ) {}
+  ) { }
 
   // ==================== LEAVE TYPES ====================
 

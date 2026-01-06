@@ -27,7 +27,7 @@ export class TimeclockController {
   constructor(
     private readonly timeclockService: WorkforceTimeclockService,
     private readonly auditService: WorkforceAuditService,
-  ) {}
+  ) { }
 
   // ===== Clock Status =====
 

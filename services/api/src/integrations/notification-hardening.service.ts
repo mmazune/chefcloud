@@ -20,7 +20,7 @@ export interface NotificationReplayResult {
 export class NotificationHardeningService {
   private readonly logger = new Logger(NotificationHardeningService.name);
 
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   /**
    * Get failed notifications for an org

@@ -73,7 +73,7 @@ export class PurchaseOrdersService {
     private readonly prisma: PrismaService,
     private readonly auditLog: AuditLogService,
     private readonly uomService: InventoryUomService,
-  ) {}
+  ) { }
 
   /**
    * Generate a unique PO number

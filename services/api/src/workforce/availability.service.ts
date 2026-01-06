@@ -46,7 +46,7 @@ export class AvailabilityService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly notifications: WorkforceNotificationsService,
-  ) {}
+  ) { }
 
   // ===== SELF-SERVICE AVAILABILITY =====
 

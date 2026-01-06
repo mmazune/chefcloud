@@ -443,13 +443,12 @@ export default function ManageReservationPage() {
                       </p>
                     </div>
                     <span
-                      className={`text-xs px-2 py-1 rounded ${
-                        n.status === 'SENT'
+                      className={`text-xs px-2 py-1 rounded ${n.status === 'SENT'
                           ? 'bg-green-100 text-green-800'
                           : n.status === 'FAILED'
                             ? 'bg-red-100 text-red-800'
                             : 'bg-gray-100 text-gray-800'
-                      }`}
+                        }`}
                     >
                       {n.status}
                     </span>

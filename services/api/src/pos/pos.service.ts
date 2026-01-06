@@ -42,7 +42,7 @@ export class PosService {
     @Optional() private promotionsService?: PromotionsService,
     @Optional() private kpisService?: KpisService,
     @Optional() private depletionService?: InventoryDepletionService,
-  ) {}
+  ) { }
 
   private markKpisDirty(orgId: string, branchId?: string) {
     try {
@@ -568,16 +568,16 @@ export class PosService {
     for (const orderItem of order.orderItems) {
       const modifiers = orderItem.metadata
         ? ((orderItem.metadata as any).modifiers || []).map((m: any) => ({
-            id: m.modifierOptionId,
-            selected: true,
-          }))
+          id: m.modifierOptionId,
+          selected: true,
+        }))
         : [];
 
       const modifiersPrice = orderItem.metadata
         ? ((orderItem.metadata as any).modifiers || []).reduce(
-            (sum: number, m: any) => sum + (m.price || 0),
-            0,
-          )
+          (sum: number, m: any) => sum + (m.price || 0),
+          0,
+        )
         : 0;
 
       const costing = await this.costingService.calculateItemCosting({

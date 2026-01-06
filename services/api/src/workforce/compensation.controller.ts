@@ -25,7 +25,7 @@ import { CompensationService, CreateComponentDto, UpdateComponentDto, CreateProf
 @Controller('workforce/compensation')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 export class CompensationController {
-  constructor(private readonly compensationService: CompensationService) {}
+  constructor(private readonly compensationService: CompensationService) { }
 
   // ==================== COMPONENTS ====================
 

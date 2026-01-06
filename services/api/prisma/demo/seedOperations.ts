@@ -60,46 +60,46 @@ function shuffle<T>(arr: T[]): T[] {
  */
 async function cleanupOperationalData(prisma: PrismaClient) {
   console.log('🧹 Cleaning up existing operational data...');
-  
+
   // FAST CHECK: Count employees to see if cleanup is needed
   const empCount = await prisma.employee.count({
     where: { orgId: { in: [TAPAS_ORG_ID, CAFESSERIE_ORG_ID] } },
   });
-  
+
   if (empCount === 0) {
     console.log('  ℹ️  No existing operational data found - skipping cleanup');
     return;
   }
-  
+
   console.log(`  📊 Found ${empCount} employees - performing cleanup...`);
-  
+
   const demoOrgIds = [TAPAS_ORG_ID, CAFESSERIE_ORG_ID];
-  
+
   // Delete in dependency order - simpler version without nested queries
   await prisma.feedback.deleteMany({ where: { orgId: { in: demoOrgIds } } });
-  
+
   // M9.2: Clean up new models
   await prisma.notificationLog.deleteMany({ where: { orgId: { in: demoOrgIds } } });
   await prisma.reservationDeposit.deleteMany({ where: { reservation: { orgId: { in: demoOrgIds } } } });
   await prisma.reservationPolicy.deleteMany({ where: { orgId: { in: demoOrgIds } } });
-  
+
   await prisma.reservationReminder.deleteMany({ where: { reservation: { orgId: { in: demoOrgIds } } } });
   await prisma.waitlistEntry.deleteMany({ where: { orgId: { in: demoOrgIds } } });
   await prisma.reservation.deleteMany({ where: { orgId: { in: demoOrgIds } } });
-  
+
   await prisma.vendorPayment.deleteMany({ where: { orgId: { in: demoOrgIds } } });
   await prisma.vendorBill.deleteMany({ where: { orgId: { in: demoOrgIds } } });
   await prisma.vendor.deleteMany({ where: { orgId: { in: demoOrgIds } } });
-  
+
   await prisma.serviceContract.deleteMany({ where: { provider: { orgId: { in: demoOrgIds } } } });
   await prisma.serviceProvider.deleteMany({ where: { orgId: { in: demoOrgIds } } });
-  
+
   await prisma.staffAward.deleteMany({ where: { orgId: { in: demoOrgIds } } });
   await prisma.attendanceRecord.deleteMany({ where: { orgId: { in: demoOrgIds } } });
-  
+
   await prisma.employmentContract.deleteMany({ where: { orgId: { in: demoOrgIds } } });
   await prisma.employee.deleteMany({ where: { orgId: { in: demoOrgIds } } });
-  
+
   console.log('  ✅ Cleanup complete');
 }
 
@@ -108,17 +108,17 @@ async function cleanupOperationalData(prisma: PrismaClient) {
  */
 async function seedTapasEmployees(prisma: PrismaClient) {
   console.log('👥 Seeding Tapas employees...');
-  
+
   const employeeData = [
     // Owner/Management (L5)
     { firstName: 'Robert', lastName: 'Mugisha', position: 'Owner & CEO', level: 'L5', salary: 8000000, type: 'PERMANENT' },
     { firstName: 'Sarah', lastName: 'Nakato', position: 'General Manager', level: 'L4', salary: 4500000, type: 'PERMANENT' },
-    
+
     // Back office (L4)
     { firstName: 'David', lastName: 'Okello', position: 'Head Chef', level: 'L4', salary: 3500000, type: 'PERMANENT' },
     { firstName: 'Grace', lastName: 'Namukasa', position: 'Accountant', level: 'L4', salary: 3200000, type: 'PERMANENT' },
     { firstName: 'James', lastName: 'Kiiza', position: 'Procurement Manager', level: 'L4', salary: 2800000, type: 'PERMANENT' },
-    
+
     // Kitchen staff (L3)
     { firstName: 'Peter', lastName: 'Ssemakula', position: 'Sous Chef', level: 'L3', salary: 2200000, type: 'PERMANENT' },
     { firstName: 'Mary', lastName: 'Nabukalu', position: 'Pastry Chef', level: 'L3', salary: 2000000, type: 'PERMANENT' },
@@ -126,13 +126,13 @@ async function seedTapasEmployees(prisma: PrismaClient) {
     { firstName: 'Betty', lastName: 'Akello', position: 'Line Cook', level: 'L3', salary: 1800000, type: 'PERMANENT' },
     { firstName: 'Moses', lastName: 'Wandera', position: 'Prep Cook', level: 'L2', salary: 1400000, type: 'PERMANENT' },
     { firstName: 'Stella', lastName: 'Nabirye', position: 'Kitchen Assistant', level: 'L2', salary: 1200000, type: 'PERMANENT' },
-    
+
     // Bar staff (L3/L2)
     { firstName: 'Richard', lastName: 'Mubiru', position: 'Head Bartender', level: 'L3', salary: 2000000, type: 'PERMANENT' },
     { firstName: 'Catherine', lastName: 'Nantongo', position: 'Bartender', level: 'L2', salary: 1500000, type: 'PERMANENT' },
     { firstName: 'Joseph', lastName: 'Lutalo', position: 'Bartender', level: 'L2', salary: 1500000, type: 'PERMANENT' },
     { firstName: 'Agnes', lastName: 'Nambi', position: 'Bar Assistant', level: 'L1', salary: 1100000, type: 'PERMANENT' },
-    
+
     // Floor staff (L2/L1)
     { firstName: 'Patrick', lastName: 'Mukasa', position: 'Head Waiter', level: 'L2', salary: 1600000, type: 'PERMANENT' },
     { firstName: 'Alice', lastName: 'Nakalembe', position: 'Waiter', level: 'L1', salary: 1200000, type: 'PERMANENT' },
@@ -142,35 +142,35 @@ async function seedTapasEmployees(prisma: PrismaClient) {
     { firstName: 'Rose', lastName: 'Nansubuga', position: 'Waitress', level: 'L1', salary: 1200000, type: 'PERMANENT' },
     { firstName: 'Michael', lastName: 'Kato', position: 'Waiter', level: 'L1', salary: 1200000, type: 'CASUAL', status: 'ACTIVE' },
     { firstName: 'Rebecca', lastName: 'Nalwoga', position: 'Waitress', level: 'L1', salary: 1200000, type: 'CASUAL', status: 'ACTIVE' },
-    
+
     // Cashiers (L2)
     { firstName: 'William', lastName: 'Ssekyewa', position: 'Head Cashier', level: 'L2', salary: 1800000, type: 'PERMANENT' },
     { firstName: 'Dorothy', lastName: 'Nakiwala', position: 'Cashier', level: 'L2', salary: 1400000, type: 'PERMANENT' },
     { firstName: 'Andrew', lastName: 'Kyagulanyi', position: 'Cashier', level: 'L2', salary: 1400000, type: 'PERMANENT' },
-    
+
     // Stock/Inventory (L3)
     { firstName: 'Francis', lastName: 'Lubega', position: 'Stock Manager', level: 'L3', salary: 2200000, type: 'PERMANENT' },
     { firstName: 'Eva', lastName: 'Namusoke', position: 'Stock Clerk', level: 'L2', salary: 1300000, type: 'PERMANENT' },
-    
+
     // Support staff (L1)
     { firstName: 'Daniel', lastName: 'Odongo', position: 'Cleaner', level: 'L1', salary: 900000, type: 'PERMANENT' },
     { firstName: 'Ruth', lastName: 'Namugosa', position: 'Cleaner', level: 'L1', salary: 900000, type: 'PERMANENT' },
     { firstName: 'Samuel', lastName: 'Kiyingi', position: 'Dishwasher', level: 'L1', salary: 950000, type: 'PERMANENT' },
     { firstName: 'Caroline', lastName: 'Namatovu', position: 'Security Guard', level: 'L1', salary: 1000000, type: 'PERMANENT' },
     { firstName: 'George', lastName: 'Musoke', position: 'Security Guard', level: 'L1', salary: 1000000, type: 'PERMANENT' },
-    
+
     // Recently terminated (for realism)
     { firstName: 'Emmanuel', lastName: 'Babirye', position: 'Former Waiter', level: 'L1', salary: 1200000, type: 'PERMANENT', status: 'TERMINATED', terminatedDaysAgo: 45 },
     { firstName: 'Susan', lastName: 'Nankya', position: 'Former Bartender', level: 'L2', salary: 1500000, type: 'PERMANENT', status: 'TERMINATED', terminatedDaysAgo: 22 },
   ];
-  
+
   let employeeCount = 0;
   let contractCount = 0;
-  
+
   for (const emp of employeeData) {
     const hiredDate = new Date(TAPAS_START);
     hiredDate.setDate(hiredDate.getDate() - randomInt(200, 800)); // Hired 200-800 days ago
-    
+
     const employee = await prisma.employee.create({
       data: {
         orgId: TAPAS_ORG_ID,
@@ -185,7 +185,7 @@ async function seedTapasEmployees(prisma: PrismaClient) {
         terminatedAt: emp.terminatedDaysAgo ? new Date(NOW.getTime() - emp.terminatedDaysAgo * 24 * 60 * 60 * 1000) : null,
       },
     });
-    
+
     // Create employment contract
     await prisma.employmentContract.create({
       data: {
@@ -201,11 +201,11 @@ async function seedTapasEmployees(prisma: PrismaClient) {
         isPrimary: true,
       },
     });
-    
+
     employeeCount++;
     contractCount++;
   }
-  
+
   console.log(`  ✅ Created ${employeeCount} employees with ${contractCount} contracts`);
   return employeeCount;
 }
@@ -215,14 +215,14 @@ async function seedTapasEmployees(prisma: PrismaClient) {
  */
 async function seedCafesserieEmployees(prisma: PrismaClient) {
   console.log('👥 Seeding Cafesserie employees...');
-  
+
   // Org-level staff
   const orgStaff = [
     { firstName: 'Jonathan', lastName: 'Kizza', position: 'Regional Manager', level: 'L5', salary: 6000000, branchId: null },
     { firstName: 'Patricia', lastName: 'Namuli', position: 'Finance Director', level: 'L4', salary: 4500000, branchId: null },
     { firstName: 'Vincent', lastName: 'Mukasa', position: 'Regional Procurement', level: 'L4', salary: 3500000, branchId: null },
   ];
-  
+
   // Per-branch staff template
   const branchStaffTemplate = (branchName: string, scale: number) => [
     { position: 'Branch Manager', level: 'L4', salary: Math.floor(3200000 * scale), type: 'PERMANENT' },
@@ -241,25 +241,25 @@ async function seedCafesserieEmployees(prisma: PrismaClient) {
     { position: 'Cleaner', level: 'L1', salary: Math.floor(900000 * scale), type: 'PERMANENT' },
     { position: 'Security Guard', level: 'L1', salary: Math.floor(1000000 * scale), type: 'PERMANENT' },
   ];
-  
+
   // Uganda first names
-  const firstNames = ['John', 'Mary', 'Peter', 'Sarah', 'James', 'Grace', 'David', 'Betty', 'Moses', 'Agnes', 
-                      'Robert', 'Catherine', 'Patrick', 'Alice', 'Joseph', 'Rose', 'Francis', 'Ruth', 'Daniel', 'Eva',
-                      'Samuel', 'Dorothy', 'Isaac', 'Stella', 'William', 'Rebecca', 'Andrew', 'Juliet', 'Richard', 'Caroline'];
-  
-  const lastNames = ['Mukasa', 'Nakato', 'Ssemakula', 'Namukasa', 'Okello', 'Nabukalu', 'Kiiza', 'Akello', 
-                     'Wandera', 'Nabirye', 'Mubiru', 'Nantongo', 'Lutalo', 'Nambi', 'Kabanda', 'Namuyanja',
-                     'Wasswa', 'Nansubuga', 'Kato', 'Nalwoga', 'Ssekyewa', 'Nakiwala', 'Kyagulanyi', 'Lubega',
-                     'Namusoke', 'Odongo', 'Namugosa', 'Kiyingi', 'Namatovu', 'Musoke'];
-  
+  const firstNames = ['John', 'Mary', 'Peter', 'Sarah', 'James', 'Grace', 'David', 'Betty', 'Moses', 'Agnes',
+    'Robert', 'Catherine', 'Patrick', 'Alice', 'Joseph', 'Rose', 'Francis', 'Ruth', 'Daniel', 'Eva',
+    'Samuel', 'Dorothy', 'Isaac', 'Stella', 'William', 'Rebecca', 'Andrew', 'Juliet', 'Richard', 'Caroline'];
+
+  const lastNames = ['Mukasa', 'Nakato', 'Ssemakula', 'Namukasa', 'Okello', 'Nabukalu', 'Kiiza', 'Akello',
+    'Wandera', 'Nabirye', 'Mubiru', 'Nantongo', 'Lutalo', 'Nambi', 'Kabanda', 'Namuyanja',
+    'Wasswa', 'Nansubuga', 'Kato', 'Nalwoga', 'Ssekyewa', 'Nakiwala', 'Kyagulanyi', 'Lubega',
+    'Namusoke', 'Odongo', 'Namugosa', 'Kiyingi', 'Namatovu', 'Musoke'];
+
   let employeeCount = 0;
   let contractCount = 0;
-  
+
   // Seed org-level staff
   for (const emp of orgStaff) {
     const hiredDate = new Date(CAF_START);
     hiredDate.setDate(hiredDate.getDate() - randomInt(300, 1000));
-    
+
     const employee = await prisma.employee.create({
       data: {
         orgId: CAFESSERIE_ORG_ID,
@@ -273,7 +273,7 @@ async function seedCafesserieEmployees(prisma: PrismaClient) {
         hiredAt: hiredDate,
       },
     });
-    
+
     await prisma.employmentContract.create({
       data: {
         employeeId: employee.id,
@@ -288,11 +288,11 @@ async function seedCafesserieEmployees(prisma: PrismaClient) {
         isPrimary: true,
       },
     });
-    
+
     employeeCount++;
     contractCount++;
   }
-  
+
   // Seed per-branch staff
   const branchScales = {
     'Village Mall': 1.1,  // Largest
@@ -300,17 +300,17 @@ async function seedCafesserieEmployees(prisma: PrismaClient) {
     'Arena Mall': 0.95,   // Slightly smaller
     'Mombasa': 0.9,       // Smallest
   };
-  
+
   for (const [branchName, branchId] of Object.entries(CAF_BRANCHES)) {
     const scale = branchScales[branchName as keyof typeof branchScales];
     const staff = branchStaffTemplate(branchName, scale);
-    
+
     for (const role of staff) {
       const firstName = randomElement(firstNames);
       const lastName = randomElement(lastNames);
       const hiredDate = new Date(CAF_START);
       hiredDate.setDate(hiredDate.getDate() - randomInt(150, 600));
-      
+
       const employee = await prisma.employee.create({
         data: {
           orgId: CAFESSERIE_ORG_ID,
@@ -324,7 +324,7 @@ async function seedCafesserieEmployees(prisma: PrismaClient) {
           hiredAt: hiredDate,
         },
       });
-      
+
       await prisma.employmentContract.create({
         data: {
           employeeId: employee.id,
@@ -339,11 +339,11 @@ async function seedCafesserieEmployees(prisma: PrismaClient) {
           isPrimary: true,
         },
       });
-      
+
       employeeCount++;
       contractCount++;
     }
-    
+
     // Add 1-2 terminated staff per branch for realism
     const terminatedCount = randomInt(1, 2);
     for (let i = 0; i < terminatedCount; i++) {
@@ -353,7 +353,7 @@ async function seedCafesserieEmployees(prisma: PrismaClient) {
       hiredDate.setDate(hiredDate.getDate() - randomInt(180, 400));
       const terminatedDate = new Date(CAF_START);
       terminatedDate.setDate(terminatedDate.getDate() + randomInt(0, 120));
-      
+
       const employee = await prisma.employee.create({
         data: {
           orgId: CAFESSERIE_ORG_ID,
@@ -368,7 +368,7 @@ async function seedCafesserieEmployees(prisma: PrismaClient) {
           terminatedAt: terminatedDate,
         },
       });
-      
+
       await prisma.employmentContract.create({
         data: {
           employeeId: employee.id,
@@ -384,12 +384,12 @@ async function seedCafesserieEmployees(prisma: PrismaClient) {
           isPrimary: true,
         },
       });
-      
+
       employeeCount++;
       contractCount++;
     }
   }
-  
+
   console.log(`  ✅ Created ${employeeCount} employees with ${contractCount} contracts`);
   return employeeCount;
 }
@@ -399,7 +399,7 @@ async function seedCafesserieEmployees(prisma: PrismaClient) {
  */
 async function seedServiceProviders(prisma: PrismaClient) {
   console.log('🏢 Seeding service providers...');
-  
+
   // Tapas providers
   const tapasProviders = [
     { name: 'Kampala Property Management', category: 'RENT', contactName: 'Mr. Ssali', phone: '+256-771-123456' },
@@ -409,9 +409,9 @@ async function seedServiceProviders(prisma: PrismaClient) {
     { name: 'SecureGuard Uganda', category: 'SECURITY', contactName: 'Operations', phone: '+256-771-999888' },
     { name: 'CleanPro Services', category: 'CLEANING', contactName: 'Manager', phone: '+256-772-888777' },
   ];
-  
+
   let contractCount = 0;
-  
+
   for (const prov of tapasProviders) {
     const provider = await prisma.serviceProvider.create({
       data: {
@@ -424,7 +424,7 @@ async function seedServiceProviders(prisma: PrismaClient) {
         isActive: true,
       },
     });
-    
+
     // Create monthly contract
     const monthlyAmounts: Record<string, number> = {
       RENT: 12000000,  // 12M UGX/month
@@ -434,7 +434,7 @@ async function seedServiceProviders(prisma: PrismaClient) {
       SECURITY: 2200000,
       CLEANING: 1800000,
     };
-    
+
     await prisma.serviceContract.create({
       data: {
         providerId: provider.id,
@@ -447,15 +447,15 @@ async function seedServiceProviders(prisma: PrismaClient) {
         status: 'ACTIVE',
       },
     });
-    
+
     contractCount++;
   }
-  
+
   // Cafesserie providers (per branch + org-level)
   const cafOrgProviders = [
     { name: 'Capital Coffee Importers', category: 'OTHER', contactName: 'Sales', phone: '+256-414-567890', branchId: null },
   ];
-  
+
   for (const prov of cafOrgProviders) {
     const provider = await prisma.serviceProvider.create({
       data: {
@@ -469,7 +469,7 @@ async function seedServiceProviders(prisma: PrismaClient) {
       },
     });
   }
-  
+
   // Per-branch providers for Cafesserie
   for (const [branchName, branchId] of Object.entries(CAF_BRANCHES)) {
     const branchProviders = [
@@ -479,14 +479,14 @@ async function seedServiceProviders(prisma: PrismaClient) {
       { name: 'Airtel Business', category: 'INTERNET' },
       { name: 'Guardian Security', category: 'SECURITY' },
     ];
-    
+
     const rentAmounts: Record<string, number> = {
       'Village Mall': 8500000,
       'Acacia Mall': 9000000,
       'Arena Mall': 7500000,
       'Mombasa': 6000000,
     };
-    
+
     for (const prov of branchProviders) {
       const provider = await prisma.serviceProvider.create({
         data: {
@@ -499,7 +499,7 @@ async function seedServiceProviders(prisma: PrismaClient) {
           isActive: true,
         },
       });
-      
+
       const monthlyAmounts: Record<string, number> = {
         RENT: rentAmounts[branchName as keyof typeof rentAmounts] || 7000000,
         ELECTRICITY: randomInt(1500000, 3000000),
@@ -507,7 +507,7 @@ async function seedServiceProviders(prisma: PrismaClient) {
         INTERNET: 400000,
         SECURITY: 1800000,
       };
-      
+
       if (prov.category !== 'OTHER') {
         await prisma.serviceContract.create({
           data: {
@@ -521,12 +521,12 @@ async function seedServiceProviders(prisma: PrismaClient) {
             status: 'ACTIVE',
           },
         });
-        
+
         contractCount++;
       }
     }
   }
-  
+
   console.log(`  ✅ Created service providers with ${contractCount} contracts`);
   return contractCount;
 }
@@ -536,7 +536,7 @@ async function seedServiceProviders(prisma: PrismaClient) {
  */
 async function seedVendorsAndBills(prisma: PrismaClient) {
   console.log('📦 Seeding vendors, bills, and payments...');
-  
+
   // Tapas vendors
   const tapasVendors = [
     { name: 'Fresh Foods Uganda', email: 'orders@freshfoods.ug', phone: '+256-772-111222', terms: 'NET30' },
@@ -545,10 +545,10 @@ async function seedVendorsAndBills(prisma: PrismaClient) {
     { name: 'Bell Lager Distributors', email: 'b2b@bell.ug', phone: '+256-772-444555', terms: 'NET14' },
     { name: 'Wines & Spirits Co.', email: 'wholesale@wines.co.ug', phone: '+256-772-555666', terms: 'NET14' },
   ];
-  
+
   let billCount = 0;
   let paymentCount = 0;
-  
+
   for (const vend of tapasVendors) {
     const vendor = await prisma.vendor.create({
       data: {
@@ -559,22 +559,22 @@ async function seedVendorsAndBills(prisma: PrismaClient) {
         defaultTerms: vend.terms as any,
       },
     });
-    
+
     // Create 3-6 monthly bills
     const numBills = randomInt(3, 6);
     for (let i = 0; i < numBills; i++) {
       const billDate = new Date(TAPAS_START);
       billDate.setDate(billDate.getDate() + i * 25 + randomInt(0, 10));
-      
+
       const dueDate = new Date(billDate);
       dueDate.setDate(dueDate.getDate() + (vend.terms === 'NET14' ? 14 : 30));
-      
+
       const subtotal = randomInt(1500000, 8000000);
       const tax = subtotal * 0.18;
       const total = subtotal + tax;
-      
+
       const isPaid = billDate < new Date(NOW.getTime() - 7 * 24 * 60 * 60 * 1000) && seededRng.next() > 0.1;
-      
+
       const bill = await prisma.vendorBill.create({
         data: {
           orgId: TAPAS_ORG_ID,
@@ -588,14 +588,14 @@ async function seedVendorsAndBills(prisma: PrismaClient) {
           status: isPaid ? 'PAID' : 'OPEN',
         },
       });
-      
+
       billCount++;
-      
+
       // Create payment if paid
       if (isPaid) {
         const paidDate = new Date(dueDate);
         paidDate.setDate(paidDate.getDate() - randomInt(0, 7));
-        
+
         await prisma.vendorPayment.create({
           data: {
             orgId: TAPAS_ORG_ID,
@@ -607,12 +607,12 @@ async function seedVendorsAndBills(prisma: PrismaClient) {
             ref: `PAY-${randomInt(1000, 9999)}`,
           },
         });
-        
+
         paymentCount++;
       }
     }
   }
-  
+
   // Cafesserie vendors (shared across branches)
   const cafVendors = [
     { name: 'Uganda Coffee Traders', email: 'b2b@ugcoffee.com', phone: '+256-772-777888', terms: 'NET30' },
@@ -620,7 +620,7 @@ async function seedVendorsAndBills(prisma: PrismaClient) {
     { name: 'Fresh Milk Cooperative', email: 'wholesale@freshmilk.co.ug', phone: '+256-772-999000', terms: 'NET14' },
     { name: 'Café Equipment Ltd', email: 'sales@cafeequip.com', phone: '+256-772-000111', terms: 'NET30' },
   ];
-  
+
   for (const vend of cafVendors) {
     const vendor = await prisma.vendor.create({
       data: {
@@ -631,22 +631,22 @@ async function seedVendorsAndBills(prisma: PrismaClient) {
         defaultTerms: vend.terms as any,
       },
     });
-    
+
     // Create 4-8 bills over 180 days
     const numBills = randomInt(4, 8);
     for (let i = 0; i < numBills; i++) {
       const billDate = new Date(CAF_START);
       billDate.setDate(billDate.getDate() + i * 22 + randomInt(0, 10));
-      
+
       const dueDate = new Date(billDate);
       dueDate.setDate(dueDate.getDate() + (vend.terms === 'NET14' ? 14 : 30));
-      
+
       const subtotal = randomInt(2000000, 12000000);
       const tax = subtotal * 0.18;
       const total = subtotal + tax;
-      
+
       const isPaid = billDate < new Date(NOW.getTime() - 7 * 24 * 60 * 60 * 1000) && seededRng.next() > 0.08;
-      
+
       const bill = await prisma.vendorBill.create({
         data: {
           orgId: CAFESSERIE_ORG_ID,
@@ -660,13 +660,13 @@ async function seedVendorsAndBills(prisma: PrismaClient) {
           status: isPaid ? 'PAID' : 'OPEN',
         },
       });
-      
+
       billCount++;
-      
+
       if (isPaid) {
         const paidDate = new Date(dueDate);
         paidDate.setDate(paidDate.getDate() - randomInt(0, 7));
-        
+
         await prisma.vendorPayment.create({
           data: {
             orgId: CAFESSERIE_ORG_ID,
@@ -678,12 +678,12 @@ async function seedVendorsAndBills(prisma: PrismaClient) {
             ref: `PAY-${randomInt(1000, 9999)}`,
           },
         });
-        
+
         paymentCount++;
       }
     }
   }
-  
+
   console.log(`  ✅ Created ${billCount} bills with ${paymentCount} payments`);
   return { billCount, paymentCount };
 }
@@ -693,43 +693,43 @@ async function seedVendorsAndBills(prisma: PrismaClient) {
  */
 async function seedReservations(prisma: PrismaClient) {
   console.log('📅 Seeding reservations for Tapas...');
-  
+
   const customerNames = [
     'John Mugisha', 'Sarah Nakato', 'David Okello', 'Grace Namukasa', 'Peter Ssemakula',
     'Mary Nabukalu', 'James Kiiza', 'Betty Akello', 'Robert Mubiru', 'Catherine Nantongo',
     'Patrick Mukasa', 'Alice Nakalembe', 'Joseph Lutalo', 'Rose Nansubuga', 'William Ssekyewa',
     'Dorothy Nakiwala', 'Francis Lubega', 'Eva Namusoke', 'Daniel Odongo', 'Ruth Namugosa',
   ];
-  
+
   let reservationCount = 0;
   let confirmedCount = 0;
   let cancelledCount = 0;
   let noShowCount = 0;
-  
+
   // Create 8-25 reservations per week for 90 days (~13 weeks)
   const weeks = 13;
   for (let week = 0; week < weeks; week++) {
     const reservationsThisWeek = randomInt(8, 25);
-    
+
     for (let i = 0; i < reservationsThisWeek; i++) {
       const dayOffset = week * 7 + randomInt(0, 6);
       const resDate = new Date(TAPAS_START);
       resDate.setDate(resDate.getDate() + dayOffset);
-      
+
       // More reservations Thu-Sun
       const dayOfWeek = resDate.getDay();
       if (dayOfWeek < 4 && seededRng.next() < 0.6) continue; // Skip some weekday reservations
-      
+
       const hour = randomInt(18, 22); // 6pm-10pm
       const minute = randomElement([0, 15, 30, 45]);
       resDate.setHours(hour, minute, 0, 0);
-      
+
       const endDate = new Date(resDate);
       endDate.setHours(hour + 2, minute, 0, 0);
-      
+
       const partySize = randomInt(2, 12);
       const needsDeposit = partySize >= 6;
-      
+
       // Status distribution - use new M9.1 statuses
       let status: string;
       let depositAmt = 0;
@@ -737,14 +737,14 @@ async function seedReservations(prisma: PrismaClient) {
       let seatedAt: Date | null = null;
       let completedAt: Date | null = null;
       let cancellationReason: string | null = null;
-      
+
       // Random source
       const sourceRand = seededRng.next();
       if (sourceRand < 0.5) source = 'PHONE';
       else if (sourceRand < 0.75) source = 'ONLINE';
       else if (sourceRand < 0.9) source = 'WALK_IN';
       else source = 'INTERNAL';
-      
+
       if (resDate < new Date(NOW.getTime() - 7 * 24 * 60 * 60 * 1000)) {
         // Past reservation
         const rand = seededRng.next();
@@ -772,11 +772,11 @@ async function seedReservations(prisma: PrismaClient) {
         status = 'CONFIRMED';
         confirmedCount++;
       }
-      
+
       if (needsDeposit && !['CANCELLED', 'NO_SHOW'].includes(status)) {
         depositAmt = partySize * 50000; // 50k per person
       }
-      
+
       const notes = seededRng.next() < 0.3 ? randomElement([
         'Birthday celebration',
         'Anniversary dinner',
@@ -786,7 +786,7 @@ async function seedReservations(prisma: PrismaClient) {
         'Quiet area please',
         'Vegetarian options needed',
       ]) : null;
-      
+
       await prisma.reservation.create({
         data: {
           orgId: TAPAS_ORG_ID,
@@ -806,16 +806,16 @@ async function seedReservations(prisma: PrismaClient) {
           depositStatus: depositAmt > 0 ? 'CAPTURED' : 'NONE',
         },
       });
-      
+
       reservationCount++;
     }
   }
-  
+
   console.log(`  ✅ Created ${reservationCount} reservations`);
   console.log(`     - Confirmed/Seated: ${confirmedCount}`);
   console.log(`     - Cancelled: ${cancelledCount}`);
   console.log(`     - No-shows: ${noShowCount}`);
-  
+
   return reservationCount;
 }
 
@@ -824,33 +824,33 @@ async function seedReservations(prisma: PrismaClient) {
  */
 async function seedWaitlist(prisma: PrismaClient) {
   console.log('📋 Seeding waitlist entries...');
-  
+
   const customerNames = [
     'John Mugisha', 'Sarah Nakato', 'David Okello', 'Grace Namukasa', 'Peter Ssemakula',
     'Mary Nabukalu', 'James Kiiza', 'Betty Akello', 'Robert Mubiru', 'Catherine Nantongo',
   ];
-  
+
   let waitingCount = 0;
   let seatedCount = 0;
   let droppedCount = 0;
-  
+
   // Create waitlist entries for the past week
   for (let day = 0; day < 7; day++) {
     const entriesPerDay = randomInt(3, 8);
-    
+
     for (let i = 0; i < entriesPerDay; i++) {
       const entryDate = new Date(NOW);
       entryDate.setDate(entryDate.getDate() - day);
       entryDate.setHours(randomInt(18, 21), randomInt(0, 59), 0, 0);
-      
+
       const partySize = randomInt(2, 6);
       const quotedWait = randomInt(10, 45);
-      
+
       let status: string;
       let seatedAt: Date | null = null;
       let droppedAt: Date | null = null;
       let droppedReason: string | null = null;
-      
+
       if (day === 0) {
         // Today: some still waiting
         if (i < 2) {
@@ -875,14 +875,14 @@ async function seedWaitlist(prisma: PrismaClient) {
           droppedCount++;
         }
       }
-      
+
       const notes = seededRng.next() < 0.2 ? randomElement([
         'High chair needed',
         'Wheelchair access',
         'Birthday surprise',
         'Prefers patio',
       ]) : null;
-      
+
       await prisma.waitlistEntry.create({
         data: {
           orgId: TAPAS_ORG_ID,
@@ -901,12 +901,12 @@ async function seedWaitlist(prisma: PrismaClient) {
       });
     }
   }
-  
+
   console.log(`  ✅ Created ${waitingCount + seatedCount + droppedCount} waitlist entries`);
   console.log(`     - Waiting: ${waitingCount}`);
   console.log(`     - Seated: ${seatedCount}`);
   console.log(`     - Dropped: ${droppedCount}`);
-  
+
   return { waitingCount, seatedCount, droppedCount };
 }
 
@@ -916,9 +916,9 @@ async function seedWaitlist(prisma: PrismaClient) {
  */
 async function seedReservationPolicies(prisma: PrismaClient) {
   console.log('📋 Seeding reservation policies...');
-  
+
   let policyCount = 0;
-  
+
   // Tapas: Single branch policy - upscale restaurant requires deposit for 6+ party
   await prisma.reservationPolicy.create({
     data: {
@@ -945,7 +945,7 @@ async function seedReservationPolicies(prisma: PrismaClient) {
     },
   });
   policyCount++;
-  
+
   // Cafesserie: Different policies per branch based on size/clientele
   const cafPolicies = [
     {
@@ -997,7 +997,7 @@ async function seedReservationPolicies(prisma: PrismaClient) {
       notes: 'Coastal branch. Tourist focus.',
     },
   ];
-  
+
   for (const p of cafPolicies) {
     await prisma.reservationPolicy.create({
       data: {
@@ -1025,11 +1025,11 @@ async function seedReservationPolicies(prisma: PrismaClient) {
     });
     policyCount++;
   }
-  
+
   console.log(`  ✅ Created ${policyCount} reservation policies`);
   console.log(`     - Tapas: 1 policy`);
   console.log(`     - Cafesserie: ${policyCount - 1} policies (per branch)`);
-  
+
   return policyCount;
 }
 
@@ -1039,7 +1039,7 @@ async function seedReservationPolicies(prisma: PrismaClient) {
  */
 async function seedReservationDeposits(prisma: PrismaClient) {
   console.log('💳 Seeding reservation deposits...');
-  
+
   // Find reservations eligible for deposits (party size >= 6)
   const eligibleReservations = await prisma.reservation.findMany({
     where: {
@@ -1048,20 +1048,20 @@ async function seedReservationDeposits(prisma: PrismaClient) {
     },
     orderBy: { startAt: 'asc' },
   });
-  
+
   let depositCount = 0;
   let paidCount = 0;
   let appliedCount = 0;
   let refundedCount = 0;
   let forfeitedCount = 0;
-  
+
   for (const res of eligibleReservations) {
     const depositAmount = res.partySize * 50000; // 50k per person
     const now = new Date();
-    
+
     // Determine deposit status based on reservation status
     let depositStatus: 'REQUIRED' | 'PAID' | 'APPLIED' | 'REFUNDED' | 'FORFEITED';
-    
+
     if (res.status === 'CANCELLED' || res.status === 'NO_SHOW') {
       // Cancelled/No-show: Some forfeited, some refunded
       depositStatus = seededRng.next() < 0.6 ? 'FORFEITED' : 'REFUNDED';
@@ -1075,13 +1075,13 @@ async function seedReservationDeposits(prisma: PrismaClient) {
       // Future: Required or Paid
       depositStatus = seededRng.next() < 0.6 ? 'PAID' : 'REQUIRED';
     }
-    
+
     // Create deposit record
     const depositCreatedAt = new Date(res.createdAt);
     depositCreatedAt.setHours(depositCreatedAt.getHours() + 1);
-    
+
     const paidAt = depositStatus !== 'REQUIRED' ? new Date(depositCreatedAt.getTime() + randomInt(1, 24) * 60 * 60 * 1000) : null;
-    
+
     await prisma.reservationDeposit.create({
       data: {
         reservationId: res.id,
@@ -1091,13 +1091,13 @@ async function seedReservationDeposits(prisma: PrismaClient) {
         paidAt: paidAt,
         paymentMethod: paidAt ? randomElement(['MOBILE_MONEY', 'CARD', 'BANK_TRANSFER']) : null,
         paymentReference: paidAt ? `DEP-${res.id.substring(0, 8).toUpperCase()}` : null,
-        notes: depositStatus === 'FORFEITED' ? 'Customer no-show - deposit forfeited' : 
-               depositStatus === 'REFUNDED' ? 'Cancelled with notice - deposit refunded' : null,
+        notes: depositStatus === 'FORFEITED' ? 'Customer no-show - deposit forfeited' :
+          depositStatus === 'REFUNDED' ? 'Cancelled with notice - deposit refunded' : null,
       },
     });
-    
+
     depositCount++;
-    
+
     switch (depositStatus) {
       case 'PAID': paidCount++; break;
       case 'APPLIED': appliedCount++; break;
@@ -1105,13 +1105,13 @@ async function seedReservationDeposits(prisma: PrismaClient) {
       case 'FORFEITED': forfeitedCount++; break;
     }
   }
-  
+
   console.log(`  ✅ Created ${depositCount} reservation deposits`);
   console.log(`     - Paid: ${paidCount}`);
   console.log(`     - Applied: ${appliedCount}`);
   console.log(`     - Refunded: ${refundedCount}`);
   console.log(`     - Forfeited: ${forfeitedCount}`);
-  
+
   return { depositCount, paidCount, appliedCount, refundedCount, forfeitedCount };
 }
 
@@ -1121,22 +1121,22 @@ async function seedReservationDeposits(prisma: PrismaClient) {
  */
 async function seedNotificationLogs(prisma: PrismaClient) {
   console.log('📧 Seeding notification logs...');
-  
+
   // Get some reservations to attach notifications to
   const reservations = await prisma.reservation.findMany({
     where: { orgId: { in: [TAPAS_ORG_ID, CAFESSERIE_ORG_ID] } },
     take: 50,
     orderBy: { startAt: 'desc' },
   });
-  
+
   // Get some waitlist entries
   const waitlistEntries = await prisma.waitlistEntry.findMany({
     where: { orgId: TAPAS_ORG_ID },
     take: 20,
   });
-  
+
   let logCount = 0;
-  
+
   // Reservation notifications
   for (const res of reservations) {
     // Confirmation notification
@@ -1154,7 +1154,7 @@ async function seedNotificationLogs(prisma: PrismaClient) {
       },
     });
     logCount++;
-    
+
     // Reminder for future/past reservations
     if (res.status !== 'CANCELLED') {
       const reminderSentAt = new Date(res.startAt.getTime() - 24 * 60 * 60 * 1000);
@@ -1175,7 +1175,7 @@ async function seedNotificationLogs(prisma: PrismaClient) {
         logCount++;
       }
     }
-    
+
     // Cancellation notification
     if (res.status === 'CANCELLED') {
       await prisma.notificationLog.create({
@@ -1193,7 +1193,7 @@ async function seedNotificationLogs(prisma: PrismaClient) {
       });
       logCount++;
     }
-    
+
     // No-show notification
     if (res.status === 'NO_SHOW') {
       await prisma.notificationLog.create({
@@ -1211,7 +1211,7 @@ async function seedNotificationLogs(prisma: PrismaClient) {
       });
       logCount++;
     }
-    
+
     // Add some failed notifications for realism
     if (seededRng.next() < 0.1) {
       await prisma.notificationLog.create({
@@ -1230,7 +1230,7 @@ async function seedNotificationLogs(prisma: PrismaClient) {
       logCount++;
     }
   }
-  
+
   // Waitlist notifications
   for (const entry of waitlistEntries) {
     await prisma.notificationLog.create({
@@ -1247,7 +1247,7 @@ async function seedNotificationLogs(prisma: PrismaClient) {
       },
     });
     logCount++;
-    
+
     if (entry.status === 'SEATED' && entry.seatedAt) {
       await prisma.notificationLog.create({
         data: {
@@ -1265,9 +1265,9 @@ async function seedNotificationLogs(prisma: PrismaClient) {
       logCount++;
     }
   }
-  
+
   console.log(`  ✅ Created ${logCount} notification logs`);
-  
+
   return logCount;
 }
 
@@ -1276,12 +1276,12 @@ async function seedNotificationLogs(prisma: PrismaClient) {
  */
 async function seedFeedback(prisma: PrismaClient) {
   console.log('⭐ Seeding customer feedback...');
-  
+
   const channels: string[] = ['POS', 'QR', 'EMAIL', 'SMS', 'PORTAL'];
   const positiveTags = ['great_food', 'excellent_service', 'good_value', 'clean', 'fast'];
   const negativeTags = ['slow_service', 'cold_food', 'noisy', 'expensive', 'dirty'];
   const neutralTags = ['average', 'okay', 'acceptable'];
-  
+
   const positiveComments = [
     'Amazing food and service!',
     'Best restaurant in Kampala!',
@@ -1293,7 +1293,7 @@ async function seedFeedback(prisma: PrismaClient) {
     'Quick service, impressive.',
     'Highly recommend!',
   ];
-  
+
   const neutralComments = [
     'It was okay.',
     'Average experience.',
@@ -1301,7 +1301,7 @@ async function seedFeedback(prisma: PrismaClient) {
     'Decent place.',
     'Nothing special but fine.',
   ];
-  
+
   const negativeComments = [
     'Service was too slow.',
     'Food arrived cold.',
@@ -1311,34 +1311,34 @@ async function seedFeedback(prisma: PrismaClient) {
     'Staff seemed rushed.',
     'Disappointed with quality.',
   ];
-  
+
   let tapasFeedbackCount = 0;
   let cafFeedbackCount = 0;
-  
+
   // Tapas: 300-900 feedback over 90 days
   const tapasFeedbackTarget = randomInt(300, 900);
   const tapasFeedbackPerDay = tapasFeedbackTarget / 90;
-  
+
   for (let day = 0; day < 90; day++) {
     const feedbackToday = Math.round(tapasFeedbackPerDay + (seededRng.next() - 0.5) * 5);
-    
+
     for (let i = 0; i < feedbackToday; i++) {
       const feedbackDate = new Date(TAPAS_START);
       feedbackDate.setDate(feedbackDate.getDate() + day);
       feedbackDate.setHours(randomInt(10, 22), randomInt(0, 59), 0, 0);
-      
+
       // Mild improvement trend over time
       const improvementFactor = day / 90 * 0.15; // +15% improvement by day 90
       let score = randomInt(0, 10);
       if (seededRng.next() < improvementFactor) {
         score = Math.min(10, score + randomInt(1, 2));
       }
-      
+
       const npsCategory = score >= 9 ? 'PROMOTER' : (score >= 7 ? 'PASSIVE' : 'DETRACTOR');
-      
+
       let tags: string[];
       let comment: string | null;
-      
+
       if (score >= 8) {
         tags = shuffle(positiveTags).slice(0, randomInt(1, 3));
         comment = seededRng.next() < 0.7 ? randomElement(positiveComments) : null;
@@ -1349,7 +1349,7 @@ async function seedFeedback(prisma: PrismaClient) {
         tags = shuffle(negativeTags).slice(0, randomInt(1, 3));
         comment = seededRng.next() < 0.8 ? randomElement(negativeComments) : null;
       }
-      
+
       await prisma.feedback.create({
         data: {
           orgId: TAPAS_ORG_ID,
@@ -1362,22 +1362,22 @@ async function seedFeedback(prisma: PrismaClient) {
           createdAt: feedbackDate,
         },
       });
-      
+
       tapasFeedbackCount++;
     }
   }
-  
+
   // Cafesserie: 2,000-6,000 feedback over 180 days across 4 branches
   const cafFeedbackTarget = randomInt(2000, 6000);
   const cafFeedbackPerDay = cafFeedbackTarget / 180;
-  
+
   const branchWeights = {
     'Village Mall': 0.30,  // 30% of feedback
     'Acacia Mall': 0.28,   // 28%
     'Arena Mall': 0.24,    // 24%
     'Mombasa': 0.18,       // 18%
   };
-  
+
   // Branch-specific quality bias (for leaderboard differentiation)
   const branchQualityBoost = {
     'Village Mall': 0.10,  // Best performing
@@ -1385,21 +1385,21 @@ async function seedFeedback(prisma: PrismaClient) {
     'Arena Mall': 0.00,    // Average
     'Mombasa': -0.05,      // Needs improvement
   };
-  
+
   for (let day = 0; day < 180; day++) {
     const feedbackToday = Math.round(cafFeedbackPerDay + (seededRng.next() - 0.5) * 10);
-    
+
     for (let i = 0; i < feedbackToday; i++) {
       const feedbackDate = new Date(CAF_START);
       feedbackDate.setDate(feedbackDate.getDate() + day);
       feedbackDate.setHours(randomInt(7, 20), randomInt(0, 59), 0, 0);
-      
+
       // Assign to branch based on weights
       const branchRoll = seededRng.next();
       let cumulative = 0;
       let selectedBranch = 'Village Mall';
       let selectedBranchId = CAF_BRANCHES['Village Mall'];
-      
+
       for (const [branch, weight] of Object.entries(branchWeights)) {
         cumulative += weight;
         if (branchRoll < cumulative) {
@@ -1408,11 +1408,11 @@ async function seedFeedback(prisma: PrismaClient) {
           break;
         }
       }
-      
+
       // Score with branch quality bias + improvement trend
       const improvementFactor = day / 180 * 0.12; // +12% improvement by day 180
       const qualityBoost = branchQualityBoost[selectedBranch as keyof typeof branchQualityBoost];
-      
+
       let score = randomInt(0, 10);
       if (seededRng.next() < (improvementFactor + qualityBoost)) {
         score = Math.min(10, score + randomInt(1, 2));
@@ -1420,12 +1420,12 @@ async function seedFeedback(prisma: PrismaClient) {
       if (qualityBoost < 0 && seededRng.next() < Math.abs(qualityBoost)) {
         score = Math.max(0, score - 1);
       }
-      
+
       const npsCategory = score >= 9 ? 'PROMOTER' : (score >= 7 ? 'PASSIVE' : 'DETRACTOR');
-      
+
       let tags: string[];
       let comment: string | null;
-      
+
       if (score >= 8) {
         tags = shuffle(positiveTags).slice(0, randomInt(1, 3));
         comment = seededRng.next() < 0.6 ? randomElement(positiveComments) : null;
@@ -1436,7 +1436,7 @@ async function seedFeedback(prisma: PrismaClient) {
         tags = shuffle(negativeTags).slice(0, randomInt(1, 3));
         comment = seededRng.next() < 0.7 ? randomElement(negativeComments) : null;
       }
-      
+
       await prisma.feedback.create({
         data: {
           orgId: CAFESSERIE_ORG_ID,
@@ -1449,15 +1449,15 @@ async function seedFeedback(prisma: PrismaClient) {
           createdAt: feedbackDate,
         },
       });
-      
+
       cafFeedbackCount++;
     }
   }
-  
+
   console.log(`  ✅ Created ${tapasFeedbackCount + cafFeedbackCount} feedback records`);
   console.log(`     - Tapas: ${tapasFeedbackCount}`);
   console.log(`     - Cafesserie: ${cafFeedbackCount}`);
-  
+
   return { tapasFeedbackCount, cafFeedbackCount };
 }
 
@@ -1468,24 +1468,24 @@ export async function seedOperations(prisma: PrismaClient) {
   console.log('═══════════════════════════════════════════');
   console.log('🎯 Milestone 5: Operational Data Seeding');
   console.log('═══════════════════════════════════════════\n');
-  
+
   await cleanupOperationalData(prisma);
-  
+
   const tapasEmployees = await seedTapasEmployees(prisma);
   const cafEmployees = await seedCafesserieEmployees(prisma);
-  
+
   const contracts = await seedServiceProviders(prisma);
   const { billCount, paymentCount } = await seedVendorsAndBills(prisma);
   const reservations = await seedReservations(prisma);
   const waitlist = await seedWaitlist(prisma);
-  
+
   // M9.2: Reservation Policies, Deposits, and Notifications
   const policyCount = await seedReservationPolicies(prisma);
   const deposits = await seedReservationDeposits(prisma);
   const notificationLogs = await seedNotificationLogs(prisma);
-  
+
   const { tapasFeedbackCount, cafFeedbackCount } = await seedFeedback(prisma);
-  
+
   console.log('\n═══════════════════════════════════════════');
   console.log('✅ Operational Data Seeding Complete');
   console.log('═══════════════════════════════════════════');

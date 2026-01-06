@@ -206,9 +206,8 @@ export default function AdjustmentsPage() {
       header: 'Qty Delta',
       accessor: (row: StockAdjustment) => (
         <span
-          className={`font-mono ${
-            row.qtyDelta >= 0 ? 'text-green-600' : 'text-red-600'
-          }`}
+          className={`font-mono ${row.qtyDelta >= 0 ? 'text-green-600' : 'text-red-600'
+            }`}
         >
           {row.qtyDelta >= 0 ? '+' : ''}
           {row.qtyDelta}

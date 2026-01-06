@@ -37,7 +37,7 @@ export class PayrollRunsController {
     private readonly payrollReportingService: PayrollReportingService,
     private readonly payrollExportService: PayrollExportService,
     private readonly payslipService: PayslipService,
-  ) {}
+  ) { }
 
   // ===== CRUD Endpoints =====
 
@@ -176,8 +176,8 @@ export class PayrollRunsController {
     @Body() body: { paymentMethod?: string; bankAccountCode?: string },
     @Request() req: any,
   ) {
-    const dto: PayPayrollDto = { 
-      runId: id, 
+    const dto: PayPayrollDto = {
+      runId: id,
       paymentMethod: body.paymentMethod,
       bankAccountCode: body.bankAccountCode,
     };
@@ -221,7 +221,7 @@ export class PayrollRunsController {
     @Res() res: Response,
   ) {
     const csv = await this.payrollRunService.exportPayrollRunCsv(req.user.orgId, id);
-    
+
     res.setHeader('Content-Type', 'text/csv');
     res.setHeader('Content-Disposition', `attachment; filename="payroll-run-${id}.csv"`);
     res.send(csv);
@@ -261,7 +261,7 @@ export class PayrollRunsController {
   ) {
     const dateRange = from && to ? { from: new Date(from), to: new Date(to) } : undefined;
     const csv = await this.payrollReportingService.exportPayrollSummaryCsv(req.user.orgId, dateRange);
-    
+
     res!.setHeader('Content-Type', 'text/csv');
     res!.setHeader('Content-Disposition', 'attachment; filename="payroll-summary.csv"');
     res!.send(csv);
@@ -282,7 +282,7 @@ export class PayrollRunsController {
   ) {
     const dateRange = from && to ? { from: new Date(from), to: new Date(to) } : undefined;
     const csv = await this.payrollReportingService.exportPayrollLinesCsv(req.user.orgId, dateRange);
-    
+
     res!.setHeader('Content-Type', 'text/csv');
     res!.setHeader('Content-Disposition', 'attachment; filename="payroll-lines.csv"');
     res!.send(csv);
@@ -303,7 +303,7 @@ export class PayrollRunsController {
   ) {
     const dateRange = from && to ? { from: new Date(from), to: new Date(to) } : undefined;
     const csv = await this.payrollReportingService.exportPayrollAuditCsv(req.user.orgId, dateRange);
-    
+
     res!.setHeader('Content-Type', 'text/csv');
     res!.setHeader('Content-Disposition', 'attachment; filename="payroll-audit.csv"');
     res!.send(csv);
@@ -335,7 +335,7 @@ export class PayrollRunsController {
     @Res() res: Response,
   ) {
     const csv = await this.payrollExportService.exportRunSummaryCsv(req.user.orgId, id);
-    
+
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', `attachment; filename="payroll-run-${id}-summary.csv"`);
     res.send(csv);
@@ -354,7 +354,7 @@ export class PayrollRunsController {
     @Res() res: Response,
   ) {
     const csv = await this.payrollExportService.exportPayslipDetailsCsv(req.user.orgId, id);
-    
+
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', `attachment; filename="payroll-run-${id}-payslips.csv"`);
     res.send(csv);
@@ -373,7 +373,7 @@ export class PayrollRunsController {
     @Res() res: Response,
   ) {
     const csv = await this.payrollExportService.exportEmployerCostCsv(req.user.orgId, id);
-    
+
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', `attachment; filename="payroll-run-${id}-employer-cost.csv"`);
     res.send(csv);

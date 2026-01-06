@@ -27,7 +27,7 @@ export class KioskDeviceService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly auditService: WorkforceAuditService,
-  ) {}
+  ) { }
 
   /**
    * Generate a URL-safe public ID

@@ -35,7 +35,7 @@ export interface UpdateLeavePolicyDto {
 
 @Injectable()
 export class LeavePolicyService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   /**
    * Create a new leave policy

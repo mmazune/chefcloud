@@ -258,7 +258,7 @@ describe('Reservations Enterprise M9.2 (E2E)', () => {
       // 4. Pay the deposit
       // 5. Complete the reservation
       // 6. Apply the deposit
-      
+
       // For now, just verify endpoints exist
       const policyRes = await request(app.getHttpServer())
         .get('/reservations/policies')

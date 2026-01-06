@@ -45,7 +45,7 @@ const getFullName = (user: { firstName?: string; lastName?: string } | null | un
 export class ProcurementReportingService {
   private readonly logger = new Logger(ProcurementReportingService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   /**
    * Get procurement KPIs for a branch

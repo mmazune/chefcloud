@@ -223,11 +223,10 @@ export default function PayrollMappingPage() {
                 setSelectedBranchId(null);
                 initForm(mappingsData?.find((m) => m.branchId === null));
               }}
-              className={`px-4 py-2 rounded border ${
-                selectedBranchId === null
+              className={`px-4 py-2 rounded border ${selectedBranchId === null
                   ? 'bg-blue-600 text-white border-blue-600'
                   : 'bg-white hover:bg-gray-50'
-              }`}
+                }`}
             >
               Organization Default
             </button>
@@ -238,11 +237,10 @@ export default function PayrollMappingPage() {
                   setSelectedBranchId(branch.id);
                   initForm(mappingsData?.find((m) => m.branchId === branch.id));
                 }}
-                className={`px-4 py-2 rounded border ${
-                  selectedBranchId === branch.id
+                className={`px-4 py-2 rounded border ${selectedBranchId === branch.id
                     ? 'bg-blue-600 text-white border-blue-600'
                     : 'bg-white hover:bg-gray-50'
-                }`}
+                  }`}
               >
                 {branch.name}
               </button>
@@ -255,9 +253,8 @@ export default function PayrollMappingPage() {
           <div className="flex justify-between items-center">
             <div>
               <span className="text-sm text-gray-500">Current Status:</span>
-              <span className={`ml-2 px-2 py-1 rounded text-sm ${
-                selectedMapping ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-              }`}>
+              <span className={`ml-2 px-2 py-1 rounded text-sm ${selectedMapping ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                }`}>
                 {selectedMapping ? 'Configured' : 'Not Configured'}
               </span>
             </div>
@@ -361,9 +358,8 @@ export default function PayrollMappingPage() {
                         {mapping.taxesPayableAccount.code}
                       </td>
                       <td className="px-4 py-3 text-sm">
-                        <span className={`px-2 py-1 rounded text-xs ${
-                          mapping.enabled ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'
-                        }`}>
+                        <span className={`px-2 py-1 rounded text-xs ${mapping.enabled ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'
+                          }`}>
                           {mapping.enabled ? 'Enabled' : 'Disabled'}
                         </span>
                       </td>

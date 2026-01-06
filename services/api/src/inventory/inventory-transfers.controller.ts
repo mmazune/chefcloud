@@ -43,7 +43,7 @@ interface AuthenticatedRequest {
 export class InventoryTransfersController {
   constructor(
     private readonly transfersService: InventoryTransfersService,
-  ) {}
+  ) { }
 
   /**
    * List transfers

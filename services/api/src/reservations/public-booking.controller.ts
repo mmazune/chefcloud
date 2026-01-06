@@ -38,7 +38,7 @@ class PublicCancelDto {
 @Controller('public/reservations')
 @UseGuards(new RateLimitGuard(10, 60000)) // 10 req/min for public endpoints
 export class PublicBookingController {
-  constructor(private readonly publicBookingService: PublicBookingService) {}
+  constructor(private readonly publicBookingService: PublicBookingService) { }
 
   /**
    * Get available time slots for a branch
@@ -153,12 +153,12 @@ export class PublicBookingController {
       orgName: branch.org.name,
       policy: branch.reservationPolicy
         ? {
-            minPartySize: branch.reservationPolicy.minPartySize,
-            maxPartySize: branch.reservationPolicy.maxPartySize,
-            advanceBookingDays: branch.reservationPolicy.advanceBookingDays,
-            depositRequired: branch.reservationPolicy.depositRequired,
-            depositMinPartySize: branch.reservationPolicy.depositMinPartySize,
-          }
+          minPartySize: branch.reservationPolicy.minPartySize,
+          maxPartySize: branch.reservationPolicy.maxPartySize,
+          advanceBookingDays: branch.reservationPolicy.advanceBookingDays,
+          depositRequired: branch.reservationPolicy.depositRequired,
+          depositMinPartySize: branch.reservationPolicy.depositMinPartySize,
+        }
         : null,
     };
   }

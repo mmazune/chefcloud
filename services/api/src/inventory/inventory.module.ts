@@ -171,4 +171,4 @@ import { InventoryProductionService } from './inventory-production.service';
     CsvImportService,
   ],
 })
-export class InventoryModule {}
+export class InventoryModule { }

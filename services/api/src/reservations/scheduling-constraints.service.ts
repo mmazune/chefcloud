@@ -38,7 +38,7 @@ export interface CapacityRuleDto {
 export class SchedulingConstraintsService {
   private readonly logger = new Logger(SchedulingConstraintsService.name);
 
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   // ===== Operating Hours CRUD =====
 

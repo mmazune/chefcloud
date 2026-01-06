@@ -77,7 +77,7 @@ export default function BranchHoursPage() {
 
   const saveMutation = useMutation({
     mutationFn: async (hoursData: Omit<OperatingHours, 'id'>[]) => {
-      const res = await apiClient.put('/reservations/branch-hours', 
+      const res = await apiClient.put('/reservations/branch-hours',
         { hours: hoursData },
         { params: { branchId } }
       );
@@ -145,14 +145,14 @@ export default function BranchHoursPage() {
                 className="flex items-center gap-4 p-4 border rounded-lg"
               >
                 <div className="w-32 font-medium">{DAYS_OF_WEEK[h.dayOfWeek]}</div>
-                
+
                 <input
                   type="checkbox"
                   checked={h.enabled}
                   onChange={(e) => handleEnabledChange(h.dayOfWeek, e.target.checked)}
                   className="h-4 w-4"
                 />
-                
+
                 <div className="flex items-center gap-2 flex-1">
                   <Label className="sr-only">Open Time</Label>
                   <Input

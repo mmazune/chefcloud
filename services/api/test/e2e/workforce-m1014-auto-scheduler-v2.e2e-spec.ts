@@ -172,12 +172,12 @@ describe('M10.14: Workforce Auto-Scheduler v2 (E2E)', () => {
         expect(response.body).toHaveProperty('status', 'DRAFT');
         expect(response.body).toHaveProperty('assignmentMode', 'UNASSIGNED');
         expect(response.body).toHaveProperty('suggestions');
-        
+
         // Suggestions should not have assignedUserId
         for (const s of response.body.suggestions || []) {
           expect(s.assignedUserId).toBeNull();
         }
-        
+
         runId = response.body.id;
       } else {
         expect([201, 400, 404, 500]).toContain(response.status);

@@ -555,13 +555,12 @@ export default function StaffingPlannerPage() {
                             <TableCell>{v.suggestedCount}</TableCell>
                             <TableCell>
                               <div
-                                className={`flex items-center gap-1 ${
-                                  v.delta > 0
+                                className={`flex items-center gap-1 ${v.delta > 0
                                     ? 'text-green-600'
                                     : v.delta < 0
-                                    ? 'text-red-600'
-                                    : ''
-                                }`}
+                                      ? 'text-red-600'
+                                      : ''
+                                  }`}
                               >
                                 {v.delta > 0 ? (
                                   <TrendingUp className="h-4 w-4" />

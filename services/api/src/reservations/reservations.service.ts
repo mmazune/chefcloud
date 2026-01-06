@@ -16,7 +16,7 @@ import {
 
 @Injectable()
 export class ReservationsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   async create(orgId: string, dto: CreateReservationDto, userId?: string): Promise<any> {
     const { deposit, tableId, startAt, endAt, source, notes, ...rest } = dto;
@@ -262,7 +262,7 @@ export class ReservationsService {
             status: 'CANCELLED',
             metadata: {
               ...(typeof reservation.paymentIntent?.metadata === 'object' &&
-              reservation.paymentIntent.metadata !== null
+                reservation.paymentIntent.metadata !== null
                 ? reservation.paymentIntent.metadata
                 : {}),
               refund_reason: 'reservation_cancelled',

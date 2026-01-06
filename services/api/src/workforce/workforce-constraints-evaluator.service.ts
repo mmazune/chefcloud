@@ -52,7 +52,7 @@ const DEFAULT_POLICY: WorkforcePolicySettings = {
 
 @Injectable()
 export class WorkforceConstraintsEvaluatorService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   /**
    * Get workforce policy for org, or defaults if not set.

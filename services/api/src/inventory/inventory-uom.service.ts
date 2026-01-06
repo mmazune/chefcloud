@@ -22,7 +22,7 @@ export interface CreateConversionDto {
 export class InventoryUomService {
   private readonly logger = new Logger(InventoryUomService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   /**
    * Create a Unit of Measure

@@ -41,7 +41,7 @@ const INTERNAL_IP_PATTERNS = [
 
 @Injectable()
 export class LeaveAttachmentsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   /**
    * Validate URL for security

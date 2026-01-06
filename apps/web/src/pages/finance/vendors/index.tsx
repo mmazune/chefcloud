@@ -24,8 +24,8 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Truck, 
+import {
+  Truck,
   Search,
   FileText,
   Eye,
@@ -78,8 +78,8 @@ export default function VendorsPage() {
   return (
     <RequireRole minRole={RoleLevel.L4}>
       <AppShell>
-        <PageHeader 
-          title="Vendors" 
+        <PageHeader
+          title="Vendors"
           subtitle="Manage vendor accounts and payables"
           actions={
             <Button>
@@ -209,8 +209,8 @@ export default function VendorsPage() {
                         {vendor._count?.creditNotes || 0}
                       </TableCell>
                       <TableCell className="text-right font-medium">
-                        {vendor.totalOutstanding 
-                          ? formatCurrency(vendor.totalOutstanding) 
+                        {vendor.totalOutstanding
+                          ? formatCurrency(vendor.totalOutstanding)
                           : '-'}
                       </TableCell>
                       <TableCell>

@@ -38,7 +38,7 @@ export interface GeoFenceReportRow {
 
 @Injectable()
 export class GeoFenceReportingService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   /**
    * Get detailed geo-fence enforcement report data.

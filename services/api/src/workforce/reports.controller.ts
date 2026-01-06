@@ -27,7 +27,7 @@ export class ReportsController {
   constructor(
     private readonly reportingService: WorkforceReportingService,
     private readonly auditService: WorkforceAuditService,
-  ) {}
+  ) { }
 
   // ===== Labor Metrics =====
 

@@ -30,7 +30,7 @@ import { AvailabilityService, AvailabilitySlot, AvailabilityExceptionInput } fro
 @Controller('workforce/self/availability')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 export class SelfAvailabilityController {
-  constructor(private readonly availabilityService: AvailabilityService) {}
+  constructor(private readonly availabilityService: AvailabilityService) { }
 
   /**
    * GET /workforce/self/availability
@@ -164,7 +164,7 @@ export class SelfAvailabilityController {
 @Controller('workforce/availability')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 export class AvailabilityController {
-  constructor(private readonly availabilityService: AvailabilityService) {}
+  constructor(private readonly availabilityService: AvailabilityService) { }
 
   /**
    * GET /workforce/availability/team

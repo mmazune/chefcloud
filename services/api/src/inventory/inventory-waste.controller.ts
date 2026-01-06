@@ -42,7 +42,7 @@ interface AuthenticatedRequest {
 export class InventoryWasteController {
   constructor(
     private readonly wasteService: InventoryWasteService,
-  ) {}
+  ) { }
 
   /**
    * List waste documents
@@ -76,7 +76,7 @@ export class InventoryWasteController {
 
     // Use query param branchId if provided, otherwise use user's branch
     const effectiveBranchId = branchId || req.user.branchId;
-    
+
     return this.wasteService.findMany(req.user.orgId, effectiveBranchId, options);
   }
 
