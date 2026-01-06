@@ -15,6 +15,11 @@ export enum LedgerEntryReason {
   TRANSFER_IN = 'TRANSFER_IN',
   TRANSFER_OUT = 'TRANSFER_OUT',
   INITIAL = 'INITIAL',
+  // M11.8: Vendor Returns
+  VENDOR_RETURN = 'VENDOR_RETURN',
+  // M11.9: Production Batches
+  PRODUCTION_CONSUME = 'PRODUCTION_CONSUME', // Negative - inputs consumed
+  PRODUCTION_PRODUCE = 'PRODUCTION_PRODUCE', // Positive - output created
 }
 
 export enum LedgerSourceType {
@@ -25,6 +30,10 @@ export enum LedgerSourceType {
   COUNT_SESSION = 'COUNT_SESSION',
   TRANSFER = 'TRANSFER',
   MANUAL = 'MANUAL',
+  // M11.8: Vendor Returns
+  VENDOR_RETURN = 'VENDOR_RETURN',
+  // M11.9: Production Batches
+  PRODUCTION = 'PRODUCTION',
 }
 
 export interface RecordLedgerEntryDto {

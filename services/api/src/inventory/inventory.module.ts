@@ -70,6 +70,10 @@ import { InventoryRecallsService } from './inventory-recalls.service';
 import { InventoryExpiryController } from './inventory-expiry.controller';
 import { InventoryExpiryService } from './inventory-expiry.service';
 
+// M11.9 Production Batches imports
+import { InventoryProductionController } from './inventory-production.controller';
+import { InventoryProductionService } from './inventory-production.service';
+
 @Module({
   imports: [KpisModule, AuditModule],
   controllers: [
@@ -86,6 +90,7 @@ import { InventoryExpiryService } from './inventory-expiry.service';
     InventoryVendorReturnsController, // M11.8
     InventoryRecallsController, // M11.8
     InventoryExpiryController, // M11.8
+    InventoryProductionController, // M11.9
     RecipesController,
     WastageController,
     CountsController,
@@ -118,6 +123,7 @@ import { InventoryExpiryService } from './inventory-expiry.service';
     InventoryVendorReturnsService, // M11.8
     InventoryRecallsService, // M11.8
     InventoryExpiryService, // M11.8
+    InventoryProductionService, // M11.9
     RecipesService,
     WastageService,
     CountsService,
@@ -153,6 +159,7 @@ import { InventoryExpiryService } from './inventory-expiry.service';
     InventoryVendorReturnsService, // M11.8
     InventoryRecallsService, // M11.8
     InventoryExpiryService, // M11.8
+    InventoryProductionService, // M11.9
     RecipesService,
     WastageService,
     CountsService,

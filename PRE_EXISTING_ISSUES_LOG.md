@@ -135,6 +135,86 @@ Time:        61.172 s
 
 ---
 
+## PRE-012: transfer.invalidation.slice.e2e-spec.ts - CacheInvalidationService dependency missing
+
+**Category**: test-failure  
+**First Observed**: M11.8 Post-fix Gate (2026-01-06)  
+**Impact**: MEDIUM - 5 slice tests fail, blocks strict gate 100%  
+**Status**: OPEN
+
+**Summary**: TransferEventsTestModule fails to compile because CacheInvalidationService is not provided in the test module context.
+
+**Command Run**:
+```bash
+timeout 30m pnpm -C services/api test:e2e -- --runInBand --detectOpenHandles --testPathPatterns="slice"
+```
+
+**Error Snippet** (first 15 lines):
+```
+FAIL  test/e2e/transfer.invalidation.slice.e2e-spec.ts (5.564 s)
+  ● Transfer Invalidation (Slice E2E) — E22.D › POST /transfer-test/event -> 401 without token
+    Nest can't resolve dependencies of the TransferEventsTestController (?). 
+    Please make sure that the argument CacheInvalidationService at index [0] 
+    is available in the TransferEventsTestModule context.
+    
+    Potential solutions:
+    - If CacheInvalidationService is a provider, is it part of the current TransferEventsTestModule?
+    - If CacheInvalidationService is exported from a separate @Module, is that module imported?
+      @Module({
+        imports: [ /* the Module containing CacheInvalidationService */ ]
+      })
+```
+
+**Tests Affected** (all 5 in suite):
+1. POST /transfer-test/event -> 401 without token
+2. POST /transfer-test/event -> 200 {ok:false} on invalid payload
+3. HIT → transfer.changed → MISS (forecast cache proves invalidation)
+4. Idempotency: repeating same event still returns ok:true
+5. Deterministic rate limit: >= one 429 on /forecast-test/sales
+
+**Why Pre-Existing**: This test file uses E22.D feature (cache invalidation) infrastructure that predates M11.8. M11.8 only modified inventory-vendor-returns, inventory-recalls, and inventory-expiry controllers - no changes to transfer events or cache invalidation modules.
+
+**Suggested Next Action**:
+- Import CacheInvalidationModule into TransferEventsTestModule
+- Or mock CacheInvalidationService in test setup
+
+---
+
+## PRE-013: devportal.prod.slice.e2e-spec.ts - Missing dev-portal/ports module
+
+**Category**: test-failure  
+**First Observed**: M11.8 Post-fix Gate (2026-01-06)  
+**Impact**: LOW - 1 test suite fails to run, blocks strict gate  
+**Status**: OPEN
+
+**Summary**: Test file imports from `../../src/dev-portal/ports/devportal.port` but this module does not exist (dev-portal was moved to dev-portal.disabled).
+
+**Command Run**:
+```bash
+timeout 30m pnpm -C services/api test:e2e -- --runInBand --detectOpenHandles --testPathPatterns="slice"
+```
+
+**Error Snippet**:
+```
+FAIL  test/e2e/devportal.prod.slice.e2e-spec.ts
+  ● Test suite failed to run
+
+    Cannot find module '../../src/dev-portal/ports/devportal.port' from 'e2e/devportal.prod.slice.e2e-spec.ts'
+
+      15 | import { SuperDevGuard } from '../../src/dev-portal.disabled/guards/super-dev.guard';
+      16 | import { signBody } from '../payments/webhook.hmac';
+    > 17 | import { DevPortalKeyRepo } from '../../src/dev-portal/ports/devportal.port';
+         | ^
+```
+
+**Why Pre-Existing**: The dev-portal module was disabled/moved prior to M11.8. This test file has stale imports that reference the old path. M11.8 did not touch any dev-portal files.
+
+**Suggested Next Action**:
+- Update import to use `dev-portal.disabled` path
+- Or skip/disable this test file until dev-portal feature is re-enabled
+
+---
+
 ## Previously Logged Issues (Reference)
 
 - PRE-001 through PRE-006: See git history for M8.x milestones
