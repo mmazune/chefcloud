@@ -23,6 +23,8 @@ export enum LedgerEntryReason {
   // M11.10: Stocktake Variance
   COUNT_VARIANCE = 'COUNT_VARIANCE', // Variance adjustment from stocktake
   COUNT_VARIANCE_REVERSAL = 'COUNT_VARIANCE_REVERSAL', // Reversal when stocktake voided
+  // M11.11: Fast Ops
+  RECEIVE = 'RECEIVE', // Fast receive via barcode
 }
 
 export enum LedgerSourceType {
@@ -39,6 +41,10 @@ export enum LedgerSourceType {
   PRODUCTION = 'PRODUCTION',
   // M11.10: Stocktake v2
   STOCKTAKE = 'STOCKTAKE',
+  // M11.11: Fast Ops
+  FAST_RECEIVE = 'FAST_RECEIVE',
+  FAST_WASTE = 'FAST_WASTE',
+  FAST_TRANSFER = 'FAST_TRANSFER',
 }
 
 export interface RecordLedgerEntryDto {

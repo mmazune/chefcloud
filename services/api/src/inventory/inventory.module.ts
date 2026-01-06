@@ -78,6 +78,12 @@ import { InventoryProductionService } from './inventory-production.service';
 import { InventoryStocktakeController } from './inventory-stocktake.controller';
 import { InventoryStocktakeService } from './inventory-stocktake.service';
 
+// M11.11 Barcodes + Fast Ops imports
+import { InventoryBarcodesController } from './inventory-barcodes.controller';
+import { InventoryBarcodesService } from './inventory-barcodes.service';
+import { InventoryFastOpsController } from './inventory-fast-ops.controller';
+import { InventoryFastOpsService } from './inventory-fast-ops.service';
+
 @Module({
   imports: [KpisModule, AuditModule],
   controllers: [
@@ -96,6 +102,8 @@ import { InventoryStocktakeService } from './inventory-stocktake.service';
     InventoryExpiryController, // M11.8
     InventoryProductionController, // M11.9
     InventoryStocktakeController, // M11.10
+    InventoryBarcodesController, // M11.11
+    InventoryFastOpsController, // M11.11
     RecipesController,
     WastageController,
     CountsController,
@@ -130,6 +138,8 @@ import { InventoryStocktakeService } from './inventory-stocktake.service';
     InventoryExpiryService, // M11.8
     InventoryProductionService, // M11.9
     InventoryStocktakeService, // M11.10
+    InventoryBarcodesService, // M11.11
+    InventoryFastOpsService, // M11.11
     RecipesService,
     WastageService,
     CountsService,
@@ -167,6 +177,8 @@ import { InventoryStocktakeService } from './inventory-stocktake.service';
     InventoryExpiryService, // M11.8
     InventoryProductionService, // M11.9
     InventoryStocktakeService, // M11.10
+    InventoryBarcodesService, // M11.11
+    InventoryFastOpsService, // M11.11
     RecipesService,
     WastageService,
     CountsService,

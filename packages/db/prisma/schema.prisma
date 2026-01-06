@@ -505,6 +505,9 @@ model Org {
   recallCases                    RecallCase[]
   // M11.9: Production Batches
   productionBatches              ProductionBatch[]
+  // M11.11: Barcodes
+  itemBarcodes                   InventoryItemBarcode[]
+  lotBarcodes                    InventoryLotBarcode[]
 
   @@map("orgs")
 }
@@ -838,6 +841,9 @@ model User {
   stocktakeSessionsPosted         StocktakeSession[]               @relation("StocktakeSessionPoster")
   stocktakeSessionsVoided         StocktakeSession[]               @relation("StocktakeSessionVoider")
   stocktakeLinesCounted           StocktakeLine[]                  @relation("StocktakeLineCounter")
+  // M11.11: Barcodes
+  itemBarcodesCreated             InventoryItemBarcode[]           @relation("BarcodeCreator")
+  lotBarcodesCreated              InventoryLotBarcode[]            @relation("LotBarcodeCreator")
 
   @@index([orgId, id])
   @@map("users")
@@ -2122,6 +2128,8 @@ model InventoryItem {
   productionBatchLines   ProductionBatchLine[]    @relation("ProductionLineItem")
   // M11.10: Stocktake Lines v2
   stocktakeLines         StocktakeLine[]          @relation("StocktakeLineItem")
+  // M11.11: Barcodes
+  barcodes               InventoryItemBarcode[]   @relation("ItemBarcodes")
 
   @@unique([orgId, sku])
   @@index([orgId])
@@ -6468,6 +6476,8 @@ model InventoryLot {
   recallLinks          RecallLotLink[]       @relation("RecallLotLinkLot")
   // M11.9: Production Batch Lines
   productionBatchLines ProductionBatchLine[] @relation("ProductionLineLot")
+  // M11.11: Lot Barcodes
+  lotBarcodes          InventoryLotBarcode[] @relation("LotBarcodes")
 
   @@unique([orgId, branchId, itemId, locationId, lotNumber])
   @@index([orgId, branchId, itemId])
@@ -6714,4 +6724,59 @@ model ProductionBatchLine {
   @@index([itemId])
   @@index([lotId])
   @@map("production_batch_lines")
+}
+
+// ============================================================================
+// M11.11: Barcode + Scanner Fast Ops
+// ============================================================================
+
+enum BarcodeFormat {
+  EAN13
+  UPC_A
+  CODE128
+  QR
+  OTHER
+}
+
+// Inventory Item Barcode - Multiple barcodes per item, unique per org
+model InventoryItemBarcode {
+  id          String        @id @default(cuid())
+  orgId       String
+  itemId      String
+  format      BarcodeFormat @default(OTHER)
+  value       String        // Normalized barcode value
+  isPrimary   Boolean       @default(false)
+  createdById String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  // Relations
+  org       Org           @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  item      InventoryItem @relation("ItemBarcodes", fields: [itemId], references: [id], onDelete: Cascade)
+  createdBy User?         @relation("BarcodeCreator", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@unique([orgId, value]) // Barcode value unique within org
+  @@index([itemId])
+  @@index([value])
+  @@map("inventory_item_barcodes")
+}
+
+// Inventory Lot Barcode - Direct lot selection for FEFO/traceability workflows
+model InventoryLotBarcode {
+  id          String        @id @default(cuid())
+  orgId       String
+  lotId       String
+  format      BarcodeFormat @default(OTHER)
+  value       String
+  createdById String?
+  createdAt   DateTime      @default(now())
+
+  // Relations
+  org       Org          @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  lot       InventoryLot @relation("LotBarcodes", fields: [lotId], references: [id], onDelete: Cascade)
+  createdBy User?        @relation("LotBarcodeCreator", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@unique([orgId, value])
+  @@index([lotId])
+  @@map("inventory_lot_barcodes")
 }
