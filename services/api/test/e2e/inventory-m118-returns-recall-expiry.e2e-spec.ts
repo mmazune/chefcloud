@@ -27,7 +27,7 @@
  */
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
-import { createE2ETestingModule } from '../helpers/module';
+import { createE2EApp } from '../helpers/e2e-bootstrap';
 import { cleanup } from '../helpers/cleanup';
 import { createOrgWithUsers, FactoryOrg } from './factory';
 import { PrismaService } from '../../src/prisma.service';
@@ -57,12 +57,8 @@ describe('M11.8: Vendor Returns + Recall/Quarantine + Expiry E2E', () => {
   let recallCaseId: string;
 
   beforeAll(async () => {
-    const moduleRef = await createE2ETestingModule({
-      imports: [AppModule],
-    });
-    app = moduleRef.createNestApplication();
-    prisma = moduleRef.get(PrismaService);
-    await app.init();
+    app = await createE2EApp({ imports: [AppModule] });
+    prisma = app.get(PrismaService);
 
     // Create test org with users
     testOrg = await createOrgWithUsers(prisma, `test-m118-${Date.now()}`);

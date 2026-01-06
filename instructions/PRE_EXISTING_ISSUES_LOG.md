@@ -307,4 +307,56 @@ Please make sure that the argument IdempotencyService at index [0] is available 
 
 ---
 
-*Last Updated: 2026-01-03 (PRE-007 RESOLVED)*
+### PRE-008: E2E Teardown Duplicate Cleanup – M11.5/M11.6 Tests
+
+| Field | Value |
+|-------|-------|
+| **ID** | PRE-008 |
+| **Category** | test-error |
+| **First Seen** | 2026-01-04 |
+| **Command** | `pnpm -C services/api test:e2e:teardown-check` |
+| **Impact** | Medium |
+| **Suggested Owner** | E2E test infrastructure |
+| **Status** | **OPEN** |
+
+**Summary**: M11.5 and M11.6 E2E test files call both `cleanup()` helper AND `app.close()` in `afterAll`, causing duplicate cleanup errors when running teardown verification.
+
+**Affected Files**:
+- `services/api/test/e2e/inventory-m115-stock-audits.e2e-spec.ts`
+- `services/api/test/e2e/inventory-m116-advanced-purchasing.e2e-spec.ts`
+
+**Observed Error**:
+```
+Error: Attempted to log "ERROR [NestApplication] Nest application is not initialized."
+```
+
+**Suggested Fix**: Remove redundant `app.close()` call since `cleanup()` already handles teardown.
+
+---
+
+### PRE-009: E2E Test Bootstrap Silent Failures – createE2EApp
+
+| Field | Value |
+|-------|-------|
+| **ID** | PRE-009 |
+| **Category** | test-error |
+| **First Seen** | 2026-01-04 |
+| **Command** | `pnpm -C services/api test:e2e -- --runInBand --runTestsByPath test/e2e/inventory-m118-returns-recall-expiry.e2e-spec.ts` |
+| **Impact** | High |
+| **Suggested Owner** | E2E test infrastructure |
+| **Status** | **OPEN** |
+
+**Summary**: When `createE2EApp` or `createOrgWithUsers` fails during `beforeAll`, Jest continues test execution with undefined variables. Error is thrown at first usage (e.g., `prisma.unitOfMeasure.create`) rather than at actual failure point.
+
+**Observed Behavior**:
+- `beforeAll` completes without throwing
+- `prisma` variable remains undefined
+- First test accessing `prisma` throws "Cannot read properties of undefined"
+
+**Root Cause Hypothesis**: Error in promise chain not properly propagated, or try/catch swallowing errors in helper functions.
+
+**Evidence**: M11.1 tests using identical pattern work correctly, suggesting intermittent or environment-specific issue.
+
+---
+
+*Last Updated: 2026-01-04 (PRE-008, PRE-009 added)*
