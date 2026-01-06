@@ -621,6 +621,9 @@ model Branch {
   inventoryDepletions    OrderInventoryDepletion[] @relation("DepletionBranch")
   // M11.5: Cost Layers
   costLayers             InventoryCostLayer[]      @relation("CostLayerBranch")
+  // M11.6: Reorder Automation
+  reorderPolicies        ReorderPolicy[]           @relation("BranchReorderPolicies")
+  reorderRuns            ReorderSuggestionRun[]    @relation("BranchReorderRuns")
 
   @@index([orgId, id])
   @@map("branches")
@@ -785,6 +788,8 @@ model User {
   recipesUpdated                  Recipe[]                         @relation("RecipeUpdater")
   // M11.5: Costing + Valuation + COGS
   costLayersCreated               InventoryCostLayer[]             @relation("CostLayerCreator")
+  // M11.6: Reorder Automation
+  reorderRunsCreated              ReorderSuggestionRun[]           @relation("ReorderRunCreator")
 
   @@index([orgId, id])
   @@map("users")
@@ -2056,6 +2061,10 @@ model InventoryItem {
   // M11.5: Costing
   costLayers        InventoryCostLayer[]    @relation("CostLayerItem")
   depletionCosts    DepletionCostBreakdown[] @relation("DepletionCostItem")
+  // M11.6: Supplier Catalog + Reorder
+  supplierItems       SupplierItem[]          @relation("ItemSupplierItems")
+  reorderPolicies     ReorderPolicy[]         @relation("ItemReorderPolicies")
+  reorderSuggestions  ReorderSuggestionLine[] @relation("ItemReorderSuggestions")
 
   @@unique([orgId, sku])
   @@index([orgId])
@@ -2625,6 +2634,10 @@ model Vendor {
   payments    VendorPayment[]
   creditNotes VendorCreditNote[] // M8.5
   purchaseOrdersV2 PurchaseOrderV2[] @relation("VendorPurchaseOrders") // M11.2
+  // M11.6: Supplier Catalog
+  supplierItems       SupplierItem[]          @relation("VendorSupplierItems")
+  reorderPolicies     ReorderPolicy[]         @relation("PolicyPreferredVendor")
+  suggestionLines     ReorderSuggestionLine[] @relation("SuggestionVendor")
 
   @@index([orgId])
   @@map("vendors")
@@ -5474,6 +5487,8 @@ model UnitOfMeasure {
   // M11.4: Recipes
   recipeOutputUom      Recipe[]              @relation("RecipeOutputUom")
   recipeLineInputUom   RecipeLine[]          @relation("RecipeLineInputUom")
+  // M11.6: Supplier Catalog
+  supplierItemVendorUom SupplierItem[]       @relation("SupplierItemVendorUom")
 
   @@unique([orgId, code])
   @@index([orgId])
@@ -5684,6 +5699,7 @@ model PurchaseOrderV2 {
   approvedById    String?
   approvedAt      DateTime?
   idempotencyKey  String?             // For integration-based creation
+  reorderRunId    String?             // M11.6: Reference to reorder run that generated this PO
   metadata        Json?
   createdAt       DateTime            @default(now())
   updatedAt       DateTime            @updatedAt
@@ -5692,6 +5708,7 @@ model PurchaseOrderV2 {
   vendor      Vendor                 @relation("VendorPurchaseOrders", fields: [vendorId], references: [id], onDelete: Restrict)
   createdBy   User                   @relation("POCreator", fields: [createdById], references: [id], onDelete: Restrict)
   approvedBy  User?                  @relation("POApprover", fields: [approvedById], references: [id], onDelete: SetNull)
+  reorderRun  ReorderSuggestionRun?  @relation("ReorderRunPOs", fields: [reorderRunId], references: [id], onDelete: SetNull)
   lines       PurchaseOrderLineV2[]
   receipts    GoodsReceiptV2[]
 
@@ -5700,6 +5717,7 @@ model PurchaseOrderV2 {
   @@index([orgId, branchId])
   @@index([vendorId])
   @@index([status])
+  @@index([reorderRunId])
   @@map("purchase_orders_v2")
 }
 
@@ -6078,4 +6096,145 @@ model DepletionCostBreakdown {
   @@index([orgId, orderId])
   @@index([itemId])
   @@map("depletion_cost_breakdowns")
+}
+
+// ============================================================================
+// M11.6: Supplier Catalog + Price Lists + Reorder Automation
+// ============================================================================
+
+// Supplier Item - Maps vendor items to inventory items
+model SupplierItem {
+  id                        String   @id @default(cuid())
+  orgId                     String
+  vendorId                  String   // FK to Vendor (accounting)
+  inventoryItemId           String   // FK to InventoryItem
+  vendorSku                 String   // Vendor's SKU/part number
+  vendorUomId               String?  // FK to UnitOfMeasure (ordering unit, e.g., "case")
+  uomConversionFactorToBase Decimal  @default(1) @db.Decimal(12, 6) // vendorQty × factor = baseQty
+  packSizeLabel             String?  // Human-readable, e.g., "12x500ml"
+  leadTimeDays              Int      @default(0)
+  minOrderQtyVendorUom      Decimal  @default(0) @db.Decimal(12, 4)
+  isPreferred               Boolean  @default(false)
+  isActive                  Boolean  @default(true)
+  metadata                  Json?
+  createdAt                 DateTime @default(now())
+  updatedAt                 DateTime @updatedAt
+
+  // Relations
+  vendor        Vendor          @relation("VendorSupplierItems", fields: [vendorId], references: [id], onDelete: Restrict)
+  inventoryItem InventoryItem   @relation("ItemSupplierItems", fields: [inventoryItemId], references: [id], onDelete: Restrict)
+  vendorUom     UnitOfMeasure?  @relation("SupplierItemVendorUom", fields: [vendorUomId], references: [id], onDelete: SetNull)
+  prices        SupplierPrice[]
+
+  @@unique([orgId, vendorId, inventoryItemId])
+  @@unique([orgId, vendorId, vendorSku])
+  @@index([orgId])
+  @@index([vendorId])
+  @@index([inventoryItemId])
+  @@map("supplier_items")
+}
+
+// Supplier Price - Price history for supplier items
+enum SupplierPriceSource {
+  MANUAL
+  RECEIPT_DERIVED
+}
+
+model SupplierPrice {
+  id                  String              @id @default(cuid())
+  orgId               String
+  supplierItemId      String              // FK to SupplierItem
+  currency            String              @default("USD")
+  unitPriceVendorUom  Decimal             @db.Decimal(12, 4) // Price per vendor UOM
+  effectiveFrom       DateTime
+  effectiveTo         DateTime?           // null = currently active
+  source              SupplierPriceSource @default(MANUAL)
+  sourceReceiptLineId String?             // For RECEIPT_DERIVED idempotency
+  note                String?
+  createdAt           DateTime            @default(now())
+
+  // Relations
+  supplierItem SupplierItem @relation(fields: [supplierItemId], references: [id], onDelete: Cascade)
+
+  @@unique([supplierItemId, sourceReceiptLineId]) // Idempotency for receipt-derived
+  @@index([supplierItemId])
+  @@index([orgId])
+  @@map("supplier_prices")
+}
+
+// Reorder Policy - Branch-scoped override for reorder points
+model ReorderPolicy {
+  id                  String   @id @default(cuid())
+  orgId               String
+  branchId            String
+  inventoryItemId     String
+  reorderPointBaseQty Decimal  @db.Decimal(12, 4)
+  reorderQtyBaseQty   Decimal  @db.Decimal(12, 4)
+  preferredLocationId String?
+  preferredVendorId   String?
+  isActive            Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  // Relations
+  branch          Branch             @relation("BranchReorderPolicies", fields: [branchId], references: [id], onDelete: Cascade)
+  inventoryItem   InventoryItem      @relation("ItemReorderPolicies", fields: [inventoryItemId], references: [id], onDelete: Restrict)
+  preferredVendor Vendor?            @relation("PolicyPreferredVendor", fields: [preferredVendorId], references: [id], onDelete: SetNull)
+
+  @@unique([orgId, branchId, inventoryItemId])
+  @@index([orgId, branchId])
+  @@map("reorder_policies")
+}
+
+// Reorder Suggestion Run - Batch of suggestions
+model ReorderSuggestionRun {
+  id                String   @id @default(cuid())
+  orgId             String
+  branchId          String
+  asOf              DateTime @default(now())
+  deterministicHash String   // SHA256 of sorted inputs for idempotency
+  createdById       String
+  createdAt         DateTime @default(now())
+
+  // Relations
+  branch    Branch                   @relation("BranchReorderRuns", fields: [branchId], references: [id], onDelete: Cascade)
+  createdBy User                     @relation("ReorderRunCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  lines     ReorderSuggestionLine[]
+  generatedPOs PurchaseOrderV2[]     @relation("ReorderRunPOs")
+
+  @@unique([orgId, branchId, deterministicHash])
+  @@index([orgId, branchId])
+  @@map("reorder_suggestion_runs")
+}
+
+// Reorder Reason Code
+enum ReorderReasonCode {
+  BELOW_REORDER_POINT
+  NEGATIVE_ON_HAND
+  MANUAL_TRIGGER
+}
+
+// Reorder Suggestion Line - Individual item suggestion
+model ReorderSuggestionLine {
+  id                   String            @id @default(cuid())
+  orgId                String
+  runId                String
+  inventoryItemId      String
+  onHandBaseQty        Decimal           @db.Decimal(12, 4)
+  reorderPointBaseQty  Decimal           @db.Decimal(12, 4)
+  suggestedBaseQty     Decimal           @db.Decimal(12, 4)
+  suggestedVendorId    String?
+  suggestedVendorUomId String?
+  suggestedVendorQty   Decimal?          @db.Decimal(12, 4)
+  reasonCode           ReorderReasonCode
+  createdAt            DateTime          @default(now())
+
+  // Relations
+  run             ReorderSuggestionRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+  inventoryItem   InventoryItem        @relation("ItemReorderSuggestions", fields: [inventoryItemId], references: [id], onDelete: Restrict)
+  suggestedVendor Vendor?              @relation("SuggestionVendor", fields: [suggestedVendorId], references: [id], onDelete: SetNull)
+
+  @@unique([runId, inventoryItemId])
+  @@index([runId])
+  @@map("reorder_suggestion_lines")
 }

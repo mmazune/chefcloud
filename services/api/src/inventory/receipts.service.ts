@@ -22,6 +22,7 @@ import { InventoryUomService } from './inventory-uom.service';
 import { InventoryLedgerService, LedgerEntryReason, LedgerSourceType } from './inventory-ledger.service';
 import { PurchaseOrdersService } from './purchase-orders.service';
 import { InventoryCostingService } from './inventory-costing.service';
+import { SupplierPricingService } from './supplier-pricing.service';
 import { Prisma, GoodsReceiptStatus, CostSourceType } from '@chefcloud/db';
 
 const Decimal = Prisma.Decimal;
@@ -65,6 +66,7 @@ export class ReceiptsService {
     private readonly ledgerService: InventoryLedgerService,
     private readonly poService: PurchaseOrdersService,
     private readonly costingService: InventoryCostingService,
+    private readonly supplierPricingService: SupplierPricingService,
   ) {}
 
   /**
@@ -413,6 +415,23 @@ export class ReceiptsService {
           { tx },
         );
         costLayerCount++;
+
+        // M11.6: Record receipt-derived supplier price (if supplier item exists)
+        if (receiptWithLines.purchaseOrder?.vendorId) {
+          try {
+            await this.supplierPricingService.addReceiptDerivedPrice(
+              orgId,
+              receiptWithLines.purchaseOrder.vendorId,
+              line.itemId,
+              line.unitCost,
+              line.id, // receiptLineId for idempotency
+              { tx },
+            );
+          } catch (err: any) {
+            // Log but don't fail - price inference is best-effort
+            this.logger.warn(`Failed to record receipt-derived price: ${err.message}`);
+          }
+        }
 
         // Update PO line received quantity if linked
         if (line.poLineId) {

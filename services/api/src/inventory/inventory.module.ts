@@ -1,4 +1,4 @@
-import { Module, forwardRef } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { InventoryController } from './inventory.controller';
 import { InventoryService } from './inventory.service';
 import { RecipesController } from './recipes.controller';
@@ -51,6 +51,13 @@ import { InventoryDepletionService } from './inventory-depletion.service';
 import { InventoryCostingController } from './inventory-costing.controller';
 import { InventoryCostingService } from './inventory-costing.service';
 
+// M11.6 Supplier Catalog + Pricing + Reorder imports
+import { SupplierCatalogController } from './supplier-catalog.controller';
+import { SupplierCatalogService } from './supplier-catalog.service';
+import { SupplierPricingService } from './supplier-pricing.service';
+import { ReorderEngineService } from './reorder-engine.service';
+import { ReorderPoGeneratorService } from './reorder-po-generator.service';
+
 @Module({
   imports: [KpisModule, AuditModule],
   controllers: [
@@ -62,6 +69,7 @@ import { InventoryCostingService } from './inventory-costing.service';
     InventoryRecipesController, // M11.4
     InventoryDepletionController, // M11.4
     InventoryCostingController, // M11.5
+    SupplierCatalogController, // M11.6
     RecipesController,
     WastageController,
     CountsController,
@@ -86,6 +94,10 @@ import { InventoryCostingService } from './inventory-costing.service';
     InventoryRecipesService, // M11.4
     InventoryDepletionService, // M11.4
     InventoryCostingService, // M11.5
+    SupplierCatalogService, // M11.6
+    SupplierPricingService, // M11.6
+    ReorderEngineService, // M11.6
+    ReorderPoGeneratorService, // M11.6
     RecipesService,
     WastageService,
     CountsService,
@@ -113,6 +125,10 @@ import { InventoryCostingService } from './inventory-costing.service';
     InventoryRecipesService, // M11.4
     InventoryDepletionService, // M11.4
     InventoryCostingService, // M11.5
+    SupplierCatalogService, // M11.6
+    SupplierPricingService, // M11.6
+    ReorderEngineService, // M11.6
+    ReorderPoGeneratorService, // M11.6
     RecipesService,
     WastageService,
     CountsService,
