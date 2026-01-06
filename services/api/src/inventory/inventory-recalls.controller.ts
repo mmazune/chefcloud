@@ -29,6 +29,7 @@ import {
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 import { InventoryRecallsService } from './inventory-recalls.service';
 import { RecallCaseStatus } from '@chefcloud/db';
@@ -60,7 +61,7 @@ interface RecalledLotsQuery {
 }
 
 @Controller('inventory/recalls')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class InventoryRecallsController {
   constructor(private readonly recallsService: InventoryRecallsService) {}
 
@@ -203,7 +204,7 @@ export class InventoryRecallsController {
     @Body() body: CreateRecallDto,
   ): Promise<object> {
     const orgId = (req as any).user?.orgId;
-    const userId = (req as any).user?.sub;
+    const userId = (req as any).user?.userId;
     if (!orgId) throw new NotFoundException('Organization not found');
 
     if (!body.reason || body.reason.trim().length === 0) {
@@ -238,7 +239,7 @@ export class InventoryRecallsController {
     @Body() body: LinkLotDto,
   ): Promise<object> {
     const orgId = (req as any).user?.orgId;
-    const userId = (req as any).user?.sub;
+    const userId = (req as any).user?.userId;
     if (!orgId) throw new NotFoundException('Organization not found');
 
     if (!body.lotId) {
@@ -263,7 +264,7 @@ export class InventoryRecallsController {
     @Body() body: LinkLotDto,
   ): Promise<object> {
     const orgId = (req as any).user?.orgId;
-    const userId = (req as any).user?.sub;
+    const userId = (req as any).user?.userId;
     if (!orgId) throw new NotFoundException('Organization not found');
 
     if (!body.lotId) {
@@ -288,7 +289,7 @@ export class InventoryRecallsController {
     @Body() body: CloseRecallDto,
   ): Promise<object> {
     const orgId = (req as any).user?.orgId;
-    const userId = (req as any).user?.sub;
+    const userId = (req as any).user?.userId;
     if (!orgId) throw new NotFoundException('Organization not found');
 
     await this.recallsService.closeRecallCase(id, orgId, userId, body.notes);

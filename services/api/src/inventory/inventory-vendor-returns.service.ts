@@ -147,7 +147,7 @@ export class InventoryVendorReturnsService {
             uomId: line.uomId,
             lotId: line.lotId,
             unitCost: line.unitCost ? new Decimal(line.unitCost.toString()) : null,
-            reason: line.reason,
+            notes: line.reason, // Map reason to notes field in schema
           })),
         },
       },
@@ -337,17 +337,6 @@ export class InventoryVendorReturnsService {
     userId: string,
     idempotencyKey?: string,
   ): Promise<{ posted: boolean; allocations: { lineId: string; lotId: string; qty: Decimal }[] }> {
-    // Idempotency check
-    if (idempotencyKey) {
-      const existing = await this.prisma.client.vendorReturn.findFirst({
-        where: { id, orgId, status: 'POSTED' },
-      });
-      if (existing) {
-        this.logger.log(`Idempotent POST: Return ${id} already posted`);
-        return { posted: false, allocations: [] };
-      }
-    }
-
     const vendorReturn = await this.prisma.client.vendorReturn.findFirst({
       where: { id, orgId },
       include: {
@@ -421,6 +410,18 @@ export class InventoryVendorReturnsService {
             data: { postedBaseQty: qtyToReturn },
           });
 
+          // Create allocation record for void traceability
+          await tx.lotLedgerAllocation.create({
+            data: {
+              orgId,
+              lotId: line.lotId,
+              allocatedQty: qtyToReturn,
+              sourceType: 'VENDOR_RETURN',
+              sourceId: line.id,
+              allocationOrder: 1,
+            },
+          });
+
           allocations.push({ lineId: line.id, lotId: line.lotId, qty: qtyToReturn });
         } else {
           // FEFO allocation - use lots service
@@ -456,12 +457,25 @@ export class InventoryVendorReturnsService {
             }
           }
 
-          // Decrement each allocated lot
+          // Decrement each allocated lot and create allocation records
+          let allocOrder = 1;
           for (const alloc of fefoAllocations) {
             await tx.inventoryLot.update({
               where: { id: alloc.lotId },
               data: {
                 remainingQty: { decrement: alloc.allocatedQty },
+              },
+            });
+
+            // Create allocation record for void traceability
+            await tx.lotLedgerAllocation.create({
+              data: {
+                orgId,
+                lotId: alloc.lotId,
+                allocatedQty: alloc.allocatedQty,
+                sourceType: 'VENDOR_RETURN',
+                sourceId: line.id,
+                allocationOrder: allocOrder++,
               },
             });
 

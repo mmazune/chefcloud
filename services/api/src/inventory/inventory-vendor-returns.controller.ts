@@ -27,6 +27,7 @@ import {
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 import {
   InventoryVendorReturnsService,
@@ -69,7 +70,7 @@ interface ExportQuery {
 }
 
 @Controller('inventory/vendor-returns')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class InventoryVendorReturnsController {
   constructor(
     private readonly vendorReturnsService: InventoryVendorReturnsService,
@@ -120,6 +121,44 @@ export class InventoryVendorReturnsController {
   }
 
   /**
+   * GET /inventory/vendor-returns/export
+   * Export vendor returns to CSV
+   * NOTE: Must be defined BEFORE :id route to avoid matching 'export' as an ID
+   */
+  @Get('export')
+  @Roles('L4', 'L5') // L4+ can export
+  async exportReturns(
+    @Req() req: Request,
+    @Res() res: Response,
+    @Query() query: ExportQuery,
+  ): Promise<void> {
+    const orgId = (req as any).user?.orgId;
+    if (!orgId) throw new NotFoundException('Organization not found');
+
+    const statusInput = query.status;
+    let status: VendorReturnStatus[] | undefined;
+    if (statusInput) {
+      status = statusInput.split(',').map((s) => s.trim() as VendorReturnStatus);
+    }
+
+    const { csv, hash } = await this.vendorReturnsService.exportReturns({
+      orgId,
+      branchId: query.branchId,
+      startDate: query.startDate ? new Date(query.startDate) : undefined,
+      endDate: query.endDate ? new Date(query.endDate) : undefined,
+      status,
+    });
+
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="vendor-returns-${Date.now()}.csv"`,
+    );
+    res.setHeader('X-Content-Hash', hash);
+    res.send(csv);
+  }
+
+  /**
    * GET /inventory/vendor-returns/:id
    * Get vendor return details
    */
@@ -162,7 +201,7 @@ export class InventoryVendorReturnsController {
     @Body() body: CreateReturnDto,
   ): Promise<object> {
     const orgId = (req as any).user?.orgId;
-    const userId = (req as any).user?.sub;
+    const userId = (req as any).user?.userId;
     if (!orgId) throw new NotFoundException('Organization not found');
 
     if (!body.lines || body.lines.length === 0) {
@@ -207,7 +246,7 @@ export class InventoryVendorReturnsController {
     @Param('id') id: string,
   ): Promise<object> {
     const orgId = (req as any).user?.orgId;
-    const userId = (req as any).user?.sub;
+    const userId = (req as any).user?.userId;
     if (!orgId) throw new NotFoundException('Organization not found');
 
     await this.vendorReturnsService.submitReturn(id, orgId, userId);
@@ -227,7 +266,7 @@ export class InventoryVendorReturnsController {
     @Param('id') id: string,
   ): Promise<object> {
     const orgId = (req as any).user?.orgId;
-    const userId = (req as any).user?.sub;
+    const userId = (req as any).user?.userId;
     const idempotencyKey = req.headers['x-idempotency-key'] as string | undefined;
 
     if (!orgId) throw new NotFoundException('Organization not found');
@@ -268,7 +307,7 @@ export class InventoryVendorReturnsController {
     @Body() body: VoidReturnDto,
   ): Promise<object> {
     const orgId = (req as any).user?.orgId;
-    const userId = (req as any).user?.sub;
+    const userId = (req as any).user?.userId;
     if (!orgId) throw new NotFoundException('Organization not found');
 
     if (!body.reason || body.reason.trim().length === 0) {
@@ -278,42 +317,5 @@ export class InventoryVendorReturnsController {
     await this.vendorReturnsService.voidReturn(id, orgId, userId, body.reason);
 
     return { success: true, status: 'VOID' };
-  }
-
-  /**
-   * GET /inventory/vendor-returns/export
-   * Export vendor returns to CSV
-   */
-  @Get('export')
-  @Roles('L4', 'L5') // L4+ can export
-  async exportReturns(
-    @Req() req: Request,
-    @Res() res: Response,
-    @Query() query: ExportQuery,
-  ): Promise<void> {
-    const orgId = (req as any).user?.orgId;
-    if (!orgId) throw new NotFoundException('Organization not found');
-
-    const statusInput = query.status;
-    let status: VendorReturnStatus[] | undefined;
-    if (statusInput) {
-      status = statusInput.split(',').map((s) => s.trim() as VendorReturnStatus);
-    }
-
-    const { csv, hash } = await this.vendorReturnsService.exportReturns({
-      orgId,
-      branchId: query.branchId,
-      startDate: query.startDate ? new Date(query.startDate) : undefined,
-      endDate: query.endDate ? new Date(query.endDate) : undefined,
-      status,
-    });
-
-    res.setHeader('Content-Type', 'text/csv');
-    res.setHeader(
-      'Content-Disposition',
-      `attachment; filename="vendor-returns-${Date.now()}.csv"`,
-    );
-    res.setHeader('X-Content-Hash', hash);
-    res.send(csv);
   }
 }
