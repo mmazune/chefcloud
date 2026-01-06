@@ -74,6 +74,10 @@ import { InventoryExpiryService } from './inventory-expiry.service';
 import { InventoryProductionController } from './inventory-production.controller';
 import { InventoryProductionService } from './inventory-production.service';
 
+// M11.10 Stocktake v2 imports
+import { InventoryStocktakeController } from './inventory-stocktake.controller';
+import { InventoryStocktakeService } from './inventory-stocktake.service';
+
 @Module({
   imports: [KpisModule, AuditModule],
   controllers: [
@@ -91,6 +95,7 @@ import { InventoryProductionService } from './inventory-production.service';
     InventoryRecallsController, // M11.8
     InventoryExpiryController, // M11.8
     InventoryProductionController, // M11.9
+    InventoryStocktakeController, // M11.10
     RecipesController,
     WastageController,
     CountsController,
@@ -124,6 +129,7 @@ import { InventoryProductionService } from './inventory-production.service';
     InventoryRecallsService, // M11.8
     InventoryExpiryService, // M11.8
     InventoryProductionService, // M11.9
+    InventoryStocktakeService, // M11.10
     RecipesService,
     WastageService,
     CountsService,
@@ -160,6 +166,7 @@ import { InventoryProductionService } from './inventory-production.service';
     InventoryRecallsService, // M11.8
     InventoryExpiryService, // M11.8
     InventoryProductionService, // M11.9
+    InventoryStocktakeService, // M11.10
     RecipesService,
     WastageService,
     CountsService,

@@ -20,6 +20,9 @@ export enum LedgerEntryReason {
   // M11.9: Production Batches
   PRODUCTION_CONSUME = 'PRODUCTION_CONSUME', // Negative - inputs consumed
   PRODUCTION_PRODUCE = 'PRODUCTION_PRODUCE', // Positive - output created
+  // M11.10: Stocktake Variance
+  COUNT_VARIANCE = 'COUNT_VARIANCE', // Variance adjustment from stocktake
+  COUNT_VARIANCE_REVERSAL = 'COUNT_VARIANCE_REVERSAL', // Reversal when stocktake voided
 }
 
 export enum LedgerSourceType {
@@ -34,6 +37,8 @@ export enum LedgerSourceType {
   VENDOR_RETURN = 'VENDOR_RETURN',
   // M11.9: Production Batches
   PRODUCTION = 'PRODUCTION',
+  // M11.10: Stocktake v2
+  STOCKTAKE = 'STOCKTAKE',
 }
 
 export interface RecordLedgerEntryDto {
@@ -140,8 +145,14 @@ export class InventoryLedgerService {
    * Get on-hand quantity for an item at a location
    * Computed as SUM(qty) from ledger entries
    */
-  async getOnHand(itemId: string, locationId: string, branchId: string): Promise<Decimal> {
-    return this.getOnHandRaw(this.prisma.client, itemId, locationId, branchId);
+  async getOnHand(
+    itemId: string,
+    locationId: string,
+    branchId: string,
+    options?: { tx?: Prisma.TransactionClient },
+  ): Promise<Decimal> {
+    const client = options?.tx ?? this.prisma.client;
+    return this.getOnHandRaw(client, itemId, locationId, branchId);
   }
 
   /**
