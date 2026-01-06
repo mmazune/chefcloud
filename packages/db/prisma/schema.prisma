@@ -490,6 +490,9 @@ model Org {
   costLayers                     InventoryCostLayer[]
   // M11.7: Lots
   inventoryLots                  InventoryLot[]
+  // M11.8: Vendor Returns + Recalls
+  vendorReturns                  VendorReturn[]
+  recallCases                    RecallCase[]
 
   @@map("orgs")
 }
@@ -628,6 +631,9 @@ model Branch {
   reorderRuns            ReorderSuggestionRun[]    @relation("BranchReorderRuns")
   // M11.7: Lots
   inventoryLots          InventoryLot[]            @relation("LotBranch")
+  // M11.8: Vendor Returns + Recalls
+  vendorReturns          VendorReturn[]            @relation("VendorReturnBranch")
+  recallCases            RecallCase[]              @relation("RecallCaseBranch")
 
   @@index([orgId, id])
   @@map("branches")
@@ -796,6 +802,14 @@ model User {
   reorderRunsCreated              ReorderSuggestionRun[]           @relation("ReorderRunCreator")
   // M11.7: Lots
   lotsCreated                     InventoryLot[]                   @relation("LotCreator")
+  // M11.8: Vendor Returns + Recalls
+  vendorReturnsCreated            VendorReturn[]                   @relation("VendorReturnCreator")
+  vendorReturnsSubmitted          VendorReturn[]                   @relation("VendorReturnSubmitter")
+  vendorReturnsPosted             VendorReturn[]                   @relation("VendorReturnPoster")
+  vendorReturnsVoided             VendorReturn[]                   @relation("VendorReturnVoider")
+  recallCasesCreated              RecallCase[]                     @relation("RecallCaseCreator")
+  recallCasesClosed               RecallCase[]                     @relation("RecallCaseCloser")
+  recallLotLinks                  RecallLotLink[]                  @relation("RecallLotLinker")
 
   @@index([orgId, id])
   @@map("users")
@@ -2073,6 +2087,8 @@ model InventoryItem {
   reorderSuggestions ReorderSuggestionLine[]  @relation("ItemReorderSuggestions")
   // M11.7: Lots + Expiry + Traceability
   lots               InventoryLot[]           @relation("LotItem")
+  // M11.8: Vendor Return Lines
+  vendorReturnLines  VendorReturnLine[]       @relation("VendorReturnLineItem")
 
   @@unique([orgId, sku])
   @@index([orgId])
@@ -2646,6 +2662,8 @@ model Vendor {
   supplierItems    SupplierItem[]          @relation("VendorSupplierItems")
   reorderPolicies  ReorderPolicy[]         @relation("PolicyPreferredVendor")
   suggestionLines  ReorderSuggestionLine[] @relation("SuggestionVendor")
+  // M11.8: Vendor Returns
+  vendorReturns    VendorReturn[]          @relation("VendorReturns")
 
   @@index([orgId])
   @@map("vendors")
@@ -5495,6 +5513,8 @@ model UnitOfMeasure {
   recipeLineInputUom    RecipeLine[]          @relation("RecipeLineInputUom")
   // M11.6: Supplier Catalog
   supplierItemVendorUom SupplierItem[]        @relation("SupplierItemVendorUom")
+  // M11.8: Vendor Returns
+  vendorReturnLines     VendorReturnLine[]    @relation("VendorReturnLineUOM")
 
   @@unique([orgId, code])
   @@index([orgId])
@@ -5554,6 +5574,8 @@ model InventoryLocation {
   costLayers               InventoryCostLayer[]      @relation("CostLayerLocation")
   // M11.7: Lots
   inventoryLots            InventoryLot[]            @relation("LotLocation")
+  // M11.8: Vendor Return Lines
+  vendorReturnLines        VendorReturnLine[]        @relation("VendorReturnLineLocation")
 
   @@unique([branchId, code])
   @@index([orgId])
@@ -6305,6 +6327,10 @@ model InventoryLot {
   transferLinesFrom InventoryTransferLine[] @relation("TransferLineLot")
   wasteLines        InventoryWasteLine[]    @relation("WasteLineLot")
 
+  // M11.8: Vendor returns + Recall links
+  vendorReturnLines VendorReturnLine[] @relation("VendorReturnLineLot")
+  recallLinks       RecallLotLink[]    @relation("RecallLotLinkLot")
+
   @@unique([orgId, branchId, itemId, locationId, lotNumber])
   @@index([orgId, branchId, itemId])
   @@index([itemId, locationId])
@@ -6334,4 +6360,138 @@ model LotLedgerAllocation {
   @@index([ledgerEntryId])
   @@index([sourceType, sourceId])
   @@map("lot_ledger_allocations")
+}
+
+// ============================================================================
+// M11.8: Vendor Returns + Recall/Quarantine Ops + Expiry Enforcement
+// ============================================================================
+
+enum VendorReturnStatus {
+  DRAFT // Created, not yet submitted
+  SUBMITTED // Awaiting approval
+  POSTED // Finalized, ledger entries created
+  VOID // Cancelled after post
+}
+
+// Vendor Return - Return of inventory items to vendor (RMA)
+model VendorReturn {
+  id            String             @id @default(cuid())
+  orgId         String
+  branchId      String
+  vendorId      String
+  returnNumber  String // Auto-generated return reference
+  status        VendorReturnStatus @default(DRAFT)
+  notes         String?
+  createdById   String
+  submittedAt   DateTime?
+  submittedById String?
+  postedAt      DateTime?
+  postedById    String?
+  voidedAt      DateTime?
+  voidedById    String?
+  voidReason    String?
+  metadata      Json?
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  // Relations
+  org         Org                @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  branch      Branch             @relation("VendorReturnBranch", fields: [branchId], references: [id], onDelete: Cascade)
+  vendor      Vendor             @relation("VendorReturns", fields: [vendorId], references: [id], onDelete: Restrict)
+  createdBy   User               @relation("VendorReturnCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  submittedBy User?              @relation("VendorReturnSubmitter", fields: [submittedById], references: [id], onDelete: SetNull)
+  postedBy    User?              @relation("VendorReturnPoster", fields: [postedById], references: [id], onDelete: SetNull)
+  voidedBy    User?              @relation("VendorReturnVoider", fields: [voidedById], references: [id], onDelete: SetNull)
+  lines       VendorReturnLine[]
+
+  @@unique([orgId, returnNumber])
+  @@index([orgId, branchId])
+  @@index([vendorId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("vendor_returns")
+}
+
+// Vendor Return Line - Individual items being returned
+model VendorReturnLine {
+  id               String   @id @default(cuid())
+  vendorReturnId   String
+  itemId           String
+  locationId       String
+  requestedBaseQty Decimal  @db.Decimal(12, 4) // Qty requested to return
+  postedBaseQty    Decimal? @db.Decimal(12, 4) // Actual qty returned (set on POST)
+  uomId            String? // Input UOM (optional, for display)
+  lotId            String? // If specified, return from this lot; else FEFO
+  unitCost         Decimal? @db.Decimal(12, 4) // For reporting only
+  notes            String?
+  metadata         Json?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // Relations
+  vendorReturn VendorReturn      @relation(fields: [vendorReturnId], references: [id], onDelete: Cascade)
+  item         InventoryItem     @relation("VendorReturnLineItem", fields: [itemId], references: [id], onDelete: Restrict)
+  location     InventoryLocation @relation("VendorReturnLineLocation", fields: [locationId], references: [id], onDelete: Restrict)
+  uom          UnitOfMeasure?    @relation("VendorReturnLineUOM", fields: [uomId], references: [id], onDelete: SetNull)
+  lot          InventoryLot?     @relation("VendorReturnLineLot", fields: [lotId], references: [id], onDelete: SetNull)
+
+  @@index([vendorReturnId])
+  @@index([itemId])
+  @@index([lotId])
+  @@map("vendor_return_lines")
+}
+
+enum RecallCaseStatus {
+  OPEN // Active recall, blocks allocations
+  CLOSED // Resolved, no longer blocks
+}
+
+// Recall Case - Enterprise recall management
+model RecallCase {
+  id          String           @id @default(cuid())
+  orgId       String
+  branchId    String? // Null = org-wide recall
+  caseNumber  String // Auto-generated recall reference
+  status      RecallCaseStatus @default(OPEN)
+  reason      String // Reason for recall
+  notes       String?
+  createdById String
+  closedAt    DateTime?
+  closedById  String?
+  closeNotes  String?
+  metadata    Json?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  // Relations
+  org       Org             @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  branch    Branch?         @relation("RecallCaseBranch", fields: [branchId], references: [id], onDelete: Cascade)
+  createdBy User            @relation("RecallCaseCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  closedBy  User?           @relation("RecallCaseCloser", fields: [closedById], references: [id], onDelete: SetNull)
+  lotLinks  RecallLotLink[]
+
+  @@unique([orgId, caseNumber])
+  @@index([orgId, branchId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("recall_cases")
+}
+
+// Recall Lot Link - Links lots to recall cases
+model RecallLotLink {
+  id           String   @id @default(cuid())
+  recallCaseId String
+  lotId        String
+  linkedAt     DateTime @default(now())
+  linkedById   String
+  notes        String?
+
+  // Relations
+  recallCase RecallCase   @relation(fields: [recallCaseId], references: [id], onDelete: Cascade)
+  lot        InventoryLot @relation("RecallLotLinkLot", fields: [lotId], references: [id], onDelete: Cascade)
+  linkedBy   User         @relation("RecallLotLinker", fields: [linkedById], references: [id], onDelete: Restrict)
+
+  @@unique([recallCaseId, lotId]) // Each lot can only be linked once per recall
+  @@index([lotId])
+  @@map("recall_lot_links")
 }

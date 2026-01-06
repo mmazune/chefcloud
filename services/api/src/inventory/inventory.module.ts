@@ -62,6 +62,14 @@ import { ReorderPoGeneratorService } from './reorder-po-generator.service';
 import { InventoryLotsController } from './inventory-lots.controller';
 import { InventoryLotsService } from './inventory-lots.service';
 
+// M11.8 Vendor Returns + Recalls + Expiry Enforcement imports
+import { InventoryVendorReturnsController } from './inventory-vendor-returns.controller';
+import { InventoryVendorReturnsService } from './inventory-vendor-returns.service';
+import { InventoryRecallsController } from './inventory-recalls.controller';
+import { InventoryRecallsService } from './inventory-recalls.service';
+import { InventoryExpiryController } from './inventory-expiry.controller';
+import { InventoryExpiryService } from './inventory-expiry.service';
+
 @Module({
   imports: [KpisModule, AuditModule],
   controllers: [
@@ -75,6 +83,9 @@ import { InventoryLotsService } from './inventory-lots.service';
     InventoryCostingController, // M11.5
     SupplierCatalogController, // M11.6
     InventoryLotsController, // M11.7
+    InventoryVendorReturnsController, // M11.8
+    InventoryRecallsController, // M11.8
+    InventoryExpiryController, // M11.8
     RecipesController,
     WastageController,
     CountsController,
@@ -104,6 +115,9 @@ import { InventoryLotsService } from './inventory-lots.service';
     ReorderEngineService, // M11.6
     ReorderPoGeneratorService, // M11.6
     InventoryLotsService, // M11.7
+    InventoryVendorReturnsService, // M11.8
+    InventoryRecallsService, // M11.8
+    InventoryExpiryService, // M11.8
     RecipesService,
     WastageService,
     CountsService,
@@ -136,6 +150,9 @@ import { InventoryLotsService } from './inventory-lots.service';
     ReorderEngineService, // M11.6
     ReorderPoGeneratorService, // M11.6
     InventoryLotsService, // M11.7
+    InventoryVendorReturnsService, // M11.8
+    InventoryRecallsService, // M11.8
+    InventoryExpiryService, // M11.8
     RecipesService,
     WastageService,
     CountsService,
