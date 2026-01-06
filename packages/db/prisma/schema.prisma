@@ -244,8 +244,8 @@ enum LeaveRequestStatus {
 }
 
 enum ApprovalMode {
-  SINGLE    // Default: one approver
-  TWO_STEP  // Supervisor then Manager/Owner
+  SINGLE // Default: one approver
+  TWO_STEP // Supervisor then Manager/Owner
 }
 
 enum AccrualMethod {
@@ -488,6 +488,8 @@ model Org {
   recipes                        Recipe[]
   // M11.5: Cost Layers
   costLayers                     InventoryCostLayer[]
+  // M11.7: Lots
+  inventoryLots                  InventoryLot[]
 
   @@map("orgs")
 }
@@ -521,20 +523,20 @@ model OrgSettings {
 }
 
 model Branch {
-  id                     String   @id @default(cuid())
-  orgId                  String
-  name                   String
-  address                String?
-  timezone               String   @default("Africa/Kampala")
-  currencyCode           String? // E39-s1: Branch-specific currency (falls back to org base)
-  publicBookingEnabled   Boolean  @default(false) // M9.4: Public booking enabled
-  publicBookingSlug      String?  @unique // M9.4: URL slug for public booking
-  depletionLocationId    String?  // M11.4: Default location for POS depletion
-  createdAt              DateTime @default(now())
-  updatedAt              DateTime @updatedAt
+  id                   String   @id @default(cuid())
+  orgId                String
+  name                 String
+  address              String?
+  timezone             String   @default("Africa/Kampala")
+  currencyCode         String? // E39-s1: Branch-specific currency (falls back to org base)
+  publicBookingEnabled Boolean  @default(false) // M9.4: Public booking enabled
+  publicBookingSlug    String?  @unique // M9.4: URL slug for public booking
+  depletionLocationId  String? // M11.4: Default location for POS depletion
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
 
-  org                    Org                      @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  depletionLocation      InventoryLocation?       @relation("BranchDepletionLocation", fields: [depletionLocationId], references: [id], onDelete: SetNull)
+  org                    Org                       @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  depletionLocation      InventoryLocation?        @relation("BranchDepletionLocation", fields: [depletionLocationId], references: [id], onDelete: SetNull)
   tables                 Table[]
   orders                 Order[]
   auditEvents            AuditEvent[]
@@ -580,7 +582,7 @@ model Branch {
   blackouts              BranchBlackout[] // M9.6: Blackout windows
   capacityRule           BranchCapacityRule? // M9.6: Capacity rules
   opsIncidents           OpsIncident[] // M9.6: Ops incidents
-  scheduledShifts        ScheduledShift[]         @relation("ScheduledShifts") // M10.1: Scheduled shifts
+  scheduledShifts        ScheduledShift[]          @relation("ScheduledShifts") // M10.1: Scheduled shifts
   shiftTemplates         ShiftTemplate[] // M10.1: Branch-level shift templates
   payPeriods             PayPeriod[] // M10.3: Pay periods
   payrollRuns            PayrollRun[] // M10.6: Payroll runs
@@ -611,12 +613,12 @@ model Branch {
   stockAdjustments       StockAdjustment[]
   countSessions          CountSession[]
   // M11.2: Purchasing & Receiving
-  purchaseOrdersV2       PurchaseOrderV2[] @relation("BranchPurchaseOrdersV2")
-  goodsReceiptsV2        GoodsReceiptV2[]  @relation("BranchGoodsReceiptsV2")
+  purchaseOrdersV2       PurchaseOrderV2[]         @relation("BranchPurchaseOrdersV2")
+  goodsReceiptsV2        GoodsReceiptV2[]          @relation("BranchGoodsReceiptsV2")
   // M11.3: Transfers + Waste
-  transfersFrom          InventoryTransfer[] @relation("TransferFromBranch")
-  transfersTo            InventoryTransfer[] @relation("TransferToBranch")
-  wasteDocuments         InventoryWaste[]    @relation("WasteBranch")
+  transfersFrom          InventoryTransfer[]       @relation("TransferFromBranch")
+  transfersTo            InventoryTransfer[]       @relation("TransferToBranch")
+  wasteDocuments         InventoryWaste[]          @relation("WasteBranch")
   // M11.4: Depletions
   inventoryDepletions    OrderInventoryDepletion[] @relation("DepletionBranch")
   // M11.5: Cost Layers
@@ -624,6 +626,8 @@ model Branch {
   // M11.6: Reorder Automation
   reorderPolicies        ReorderPolicy[]           @relation("BranchReorderPolicies")
   reorderRuns            ReorderSuggestionRun[]    @relation("BranchReorderRuns")
+  // M11.7: Lots
+  inventoryLots          InventoryLot[]            @relation("LotBranch")
 
   @@index([orgId, id])
   @@map("branches")
@@ -790,6 +794,8 @@ model User {
   costLayersCreated               InventoryCostLayer[]             @relation("CostLayerCreator")
   // M11.6: Reorder Automation
   reorderRunsCreated              ReorderSuggestionRun[]           @relation("ReorderRunCreator")
+  // M11.7: Lots
+  lotsCreated                     InventoryLot[]                   @relation("LotCreator")
 
   @@index([orgId, id])
   @@map("users")
@@ -1369,17 +1375,17 @@ model Order {
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
 
-  branch               Branch                    @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  table                Table?                    @relation(fields: [tableId], references: [id], onDelete: SetNull)
-  user                 User                      @relation(fields: [userId], references: [id], onDelete: Restrict)
-  orderItems           OrderItem[]
-  payments             Payment[]
-  refunds              Refund[]
-  kdsTickets           KdsTicket[]
-  discounts            Discount[]
-  stockMovements       StockMovement[]           // M3: Stock movements from this order
-  Feedback             Feedback?
-  inventoryDepletion   OrderInventoryDepletion?  // M11.4: POS depletion record
+  branch             Branch                   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  table              Table?                   @relation(fields: [tableId], references: [id], onDelete: SetNull)
+  user               User                     @relation(fields: [userId], references: [id], onDelete: Restrict)
+  orderItems         OrderItem[]
+  payments           Payment[]
+  refunds            Refund[]
+  kdsTickets         KdsTicket[]
+  discounts          Discount[]
+  stockMovements     StockMovement[] // M3: Stock movements from this order
+  Feedback           Feedback?
+  inventoryDepletion OrderInventoryDepletion? // M11.4: POS depletion record
 
   @@unique([branchId, orderNumber])
   @@index([branchId])
@@ -2026,7 +2032,7 @@ model InventoryItem {
   sku          String?
   name         String
   unit         String // kg, ltr, pcs, etc. (legacy - prefer uomId)
-  uomId        String?  // M11.1: Reference to UnitOfMeasure
+  uomId        String? // M11.1: Reference to UnitOfMeasure
   category     String?
   reorderLevel Decimal  @default(0) @db.Decimal(10, 3)
   reorderQty   Decimal  @default(0) @db.Decimal(10, 3)
@@ -2035,36 +2041,38 @@ model InventoryItem {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  uom               UnitOfMeasure?   @relation("ItemUom", fields: [uomId], references: [id], onDelete: SetNull)
-  stockBatches      StockBatch[]
-  recipeIngredients RecipeIngredient[]
-  wastageRecords    Wastage[]
-  adjustments       Adjustment[]
-  poItems           PurchaseOrderItem[]
-  receiptLines      GoodsReceiptLine[]
-  spoutCalibrations SpoutCalibration[]
-  forecastProfiles  ForecastProfile[]
-  forecastPoints    ForecastPoint[]
-  stockMovements    StockMovement[] // M3: Track all inventory movements
-  lowStockConfigs   LowStockConfig[] // M3: Low-stock alert configuration
-  ledgerEntries     InventoryLedgerEntry[] // M11.1: Ledger entries
-  stockAdjustments  StockAdjustment[] @relation("StockAdjustmentItem") // M11.1: Stock adjustments
-  countSessionLines CountSessionLine[] @relation("CountSessionLineItem") // M11.1: Count lines
+  uom                UnitOfMeasure?           @relation("ItemUom", fields: [uomId], references: [id], onDelete: SetNull)
+  stockBatches       StockBatch[]
+  recipeIngredients  RecipeIngredient[]
+  wastageRecords     Wastage[]
+  adjustments        Adjustment[]
+  poItems            PurchaseOrderItem[]
+  receiptLines       GoodsReceiptLine[]
+  spoutCalibrations  SpoutCalibration[]
+  forecastProfiles   ForecastProfile[]
+  forecastPoints     ForecastPoint[]
+  stockMovements     StockMovement[] // M3: Track all inventory movements
+  lowStockConfigs    LowStockConfig[] // M3: Low-stock alert configuration
+  ledgerEntries      InventoryLedgerEntry[] // M11.1: Ledger entries
+  stockAdjustments   StockAdjustment[]        @relation("StockAdjustmentItem") // M11.1: Stock adjustments
+  countSessionLines  CountSessionLine[]       @relation("CountSessionLineItem") // M11.1: Count lines
   // M11.2: Purchasing & Receiving
-  poLinesV2         PurchaseOrderLineV2[] @relation("POLineItem")
-  receiptLinesV2    GoodsReceiptLineV2[]  @relation("ReceiptLineItem")
+  poLinesV2          PurchaseOrderLineV2[]    @relation("POLineItem")
+  receiptLinesV2     GoodsReceiptLineV2[]     @relation("ReceiptLineItem")
   // M11.3: Transfers + Waste
-  transferLines     InventoryTransferLine[] @relation("TransferLineItem")
-  wasteLines        InventoryWasteLine[]    @relation("WasteLineItem")
+  transferLines      InventoryTransferLine[]  @relation("TransferLineItem")
+  wasteLines         InventoryWasteLine[]     @relation("WasteLineItem")
   // M11.4: Recipes
-  recipeLines       RecipeLine[]            @relation("RecipeLineItem")
+  recipeLines        RecipeLine[]             @relation("RecipeLineItem")
   // M11.5: Costing
-  costLayers        InventoryCostLayer[]    @relation("CostLayerItem")
-  depletionCosts    DepletionCostBreakdown[] @relation("DepletionCostItem")
+  costLayers         InventoryCostLayer[]     @relation("CostLayerItem")
+  depletionCosts     DepletionCostBreakdown[] @relation("DepletionCostItem")
   // M11.6: Supplier Catalog + Reorder
-  supplierItems       SupplierItem[]          @relation("ItemSupplierItems")
-  reorderPolicies     ReorderPolicy[]         @relation("ItemReorderPolicies")
-  reorderSuggestions  ReorderSuggestionLine[] @relation("ItemReorderSuggestions")
+  supplierItems      SupplierItem[]           @relation("ItemSupplierItems")
+  reorderPolicies    ReorderPolicy[]          @relation("ItemReorderPolicies")
+  reorderSuggestions ReorderSuggestionLine[]  @relation("ItemReorderSuggestions")
+  // M11.7: Lots + Expiry + Traceability
+  lots               InventoryLot[]           @relation("LotItem")
 
   @@unique([orgId, sku])
   @@index([orgId])
@@ -2630,14 +2638,14 @@ model Vendor {
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 
-  bills       VendorBill[]
-  payments    VendorPayment[]
-  creditNotes VendorCreditNote[] // M8.5
-  purchaseOrdersV2 PurchaseOrderV2[] @relation("VendorPurchaseOrders") // M11.2
+  bills            VendorBill[]
+  payments         VendorPayment[]
+  creditNotes      VendorCreditNote[] // M8.5
+  purchaseOrdersV2 PurchaseOrderV2[]       @relation("VendorPurchaseOrders") // M11.2
   // M11.6: Supplier Catalog
-  supplierItems       SupplierItem[]          @relation("VendorSupplierItems")
-  reorderPolicies     ReorderPolicy[]         @relation("PolicyPreferredVendor")
-  suggestionLines     ReorderSuggestionLine[] @relation("SuggestionVendor")
+  supplierItems    SupplierItem[]          @relation("VendorSupplierItems")
+  reorderPolicies  ReorderPolicy[]         @relation("PolicyPreferredVendor")
+  suggestionLines  ReorderSuggestionLine[] @relation("SuggestionVendor")
 
   @@index([orgId])
   @@map("vendors")
@@ -3082,9 +3090,9 @@ model LeaveTypeDefinition {
   createdAt          DateTime      @default(now())
   updatedAt          DateTime      @updatedAt
 
-  policies         LeavePolicy[]
-  leaveRequests    LeaveRequestV2[]
-  balanceLedger    LeaveBalanceLedger[]
+  policies      LeavePolicy[]
+  leaveRequests LeaveRequestV2[]
+  balanceLedger LeaveBalanceLedger[]
 
   @@unique([orgId, code])
   @@index([orgId, isActive])
@@ -3117,37 +3125,36 @@ model LeavePolicy {
   @@map("leave_policies")
 }
 
-
 // M10.17: Enhanced Leave Request with workflow states
 // M10.18: Added two-step approval fields and attachments
 model LeaveRequestV2 {
-  id               String             @id @default(cuid())
-  orgId            String
-  branchId         String
-  userId           String
-  leaveTypeId      String
-  startDate        DateTime
-  endDate          DateTime
-  totalHours       Decimal            @db.Decimal(10, 2)
-  status           LeaveRequestStatus @default(DRAFT)
-  reason           String?
+  id                String             @id @default(cuid())
+  orgId             String
+  branchId          String
+  userId            String
+  leaveTypeId       String
+  startDate         DateTime
+  endDate           DateTime
+  totalHours        Decimal            @db.Decimal(10, 2)
+  status            LeaveRequestStatus @default(DRAFT)
+  reason            String?
   // M10.18: Two-step approval fields
   approvedStep1ById String?
   approvedStep1At   DateTime?
-  approvedById      String?            // Final approver (or step2 approver)
+  approvedById      String? // Final approver (or step2 approver)
   approvedAt        DateTime?
   rejectionReason   String?
-  rejectedStep      Int?               // 1 or 2, which step rejected
+  rejectedStep      Int? // 1 or 2, which step rejected
   overrideConflict  Boolean            @default(false) // M10.17: Override shift conflict
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
 
-  user          User                      @relation("LeaveRequestsV2", fields: [userId], references: [id], onDelete: Cascade)
-  approvedBy    User?                     @relation("ApprovedLeaveV2", fields: [approvedById], references: [id], onDelete: SetNull)
-  approvedStep1By User?                   @relation("ApprovedLeaveStep1", fields: [approvedStep1ById], references: [id], onDelete: SetNull)
-  leaveType     LeaveTypeDefinition       @relation(fields: [leaveTypeId], references: [id], onDelete: Restrict)
-  ledgerEntries LeaveBalanceLedger[]
-  attachments   LeaveRequestAttachment[]  // M10.18
+  user            User                     @relation("LeaveRequestsV2", fields: [userId], references: [id], onDelete: Cascade)
+  approvedBy      User?                    @relation("ApprovedLeaveV2", fields: [approvedById], references: [id], onDelete: SetNull)
+  approvedStep1By User?                    @relation("ApprovedLeaveStep1", fields: [approvedStep1ById], references: [id], onDelete: SetNull)
+  leaveType       LeaveTypeDefinition      @relation(fields: [leaveTypeId], references: [id], onDelete: Restrict)
+  ledgerEntries   LeaveBalanceLedger[]
+  attachments     LeaveRequestAttachment[] // M10.18
 
   @@index([orgId, branchId, status])
   @@index([userId, startDate, endDate])
@@ -3169,9 +3176,9 @@ model LeaveBalanceLedger {
   referenceType String? // "LEAVE_REQUEST" | "ACCRUAL" | "MANUAL" | "CARRYOVER"
   createdAt     DateTime        @default(now())
 
-  user      User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
-  leaveType LeaveTypeDefinition  @relation(fields: [leaveTypeId], references: [id], onDelete: Restrict)
-  leaveRequest LeaveRequestV2?   @relation(fields: [referenceId], references: [id], onDelete: SetNull)
+  user         User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  leaveType    LeaveTypeDefinition @relation(fields: [leaveTypeId], references: [id], onDelete: Restrict)
+  leaveRequest LeaveRequestV2?     @relation(fields: [referenceId], references: [id], onDelete: SetNull)
 
   @@index([orgId, userId, leaveTypeId])
   @@index([createdAt])
@@ -3181,15 +3188,15 @@ model LeaveBalanceLedger {
 
 // M10.18: Leave Request Attachment Metadata
 model LeaveRequestAttachment {
-  id              String          @id @default(cuid())
-  orgId           String
-  leaveRequestId  String
-  label           String          // e.g., "Doctor's note", "Medical certificate"
-  url             String?         // External URL (validated, HTTPS preferred)
-  mimeType        String?         // e.g., "application/pdf", "image/jpeg"
-  sizeBytes       Int?            // File size in bytes
-  addedById       String
-  createdAt       DateTime        @default(now())
+  id             String   @id @default(cuid())
+  orgId          String
+  leaveRequestId String
+  label          String // e.g., "Doctor's note", "Medical certificate"
+  url            String? // External URL (validated, HTTPS preferred)
+  mimeType       String? // e.g., "application/pdf", "image/jpeg"
+  sizeBytes      Int? // File size in bytes
+  addedById      String
+  createdAt      DateTime @default(now())
 
   leaveRequest LeaveRequestV2 @relation(fields: [leaveRequestId], references: [id], onDelete: Cascade)
   addedBy      User           @relation("LeaveAttachmentAddedBy", fields: [addedById], references: [id], onDelete: Cascade)
@@ -3201,16 +3208,16 @@ model LeaveRequestAttachment {
 
 // M10.18: Approval Delegation for managers
 model ApprovalDelegate {
-  id              String    @id @default(cuid())
+  id              String   @id @default(cuid())
   orgId           String
-  principalUserId String    // The manager who is delegating
-  delegateUserId  String    // The user who can act on their behalf
-  branchId        String?   // null = org-wide, specific = branch-only
+  principalUserId String // The manager who is delegating
+  delegateUserId  String // The user who can act on their behalf
+  branchId        String? // null = org-wide, specific = branch-only
   startAt         DateTime
   endAt           DateTime
-  enabled         Boolean   @default(true)
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  enabled         Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   principal User @relation("DelegatingUser", fields: [principalUserId], references: [id], onDelete: Cascade)
   delegate  User @relation("DelegateUser", fields: [delegateUserId], references: [id], onDelete: Cascade)
@@ -3290,44 +3297,44 @@ model ShiftSwap {
 }
 
 model TimeEntry {
-  id              String          @id @default(cuid())
-  orgId           String
-  branchId        String
-  userId          String
-  shiftId         String? // M10.1: Link to scheduled shift
-  clockInAt       DateTime
-  clockOutAt      DateTime?
-  method          TimeClockMethod
-  approved        Boolean         @default(false)
-  approvedById    String?
-  overtimeMinutes Int             @default(0)
+  id                     String          @id @default(cuid())
+  orgId                  String
+  branchId               String
+  userId                 String
+  shiftId                String? // M10.1: Link to scheduled shift
+  clockInAt              DateTime
+  clockOutAt             DateTime?
+  method                 TimeClockMethod
+  approved               Boolean         @default(false)
+  approvedById           String?
+  overtimeMinutes        Int             @default(0)
   // M10.19: Geo-fencing Metadata (optional)
-  clockInLat              Float?   // Latitude of clock-in
-  clockInLng              Float?   // Longitude of clock-in
-  clockInAccuracyMeters   Float?   // GPS accuracy in meters
-  clockInSource           String?  // GPS, WIFI, MANUAL
-  clockOutLat             Float?   // Latitude of clock-out
-  clockOutLng             Float?   // Longitude of clock-out
-  clockOutAccuracyMeters  Float?   // GPS accuracy in meters
-  clockOutSource          String?  // GPS, WIFI, MANUAL
+  clockInLat             Float? // Latitude of clock-in
+  clockInLng             Float? // Longitude of clock-in
+  clockInAccuracyMeters  Float? // GPS accuracy in meters
+  clockInSource          String? // GPS, WIFI, MANUAL
+  clockOutLat            Float? // Latitude of clock-out
+  clockOutLng            Float? // Longitude of clock-out
+  clockOutAccuracyMeters Float? // GPS accuracy in meters
+  clockOutSource         String? // GPS, WIFI, MANUAL
   // M10.20: Geo-fence Override Fields
-  clockInOverride           Boolean?  // True if clock-in was overridden
-  clockInOverrideReason     String?   // Manager's reason for override
-  clockInOverrideById       String?   // Manager who approved override
-  clockOutOverride          Boolean?  // True if clock-out was overridden
-  clockOutOverrideReason    String?   // Manager's reason for override
-  clockOutOverrideById      String?   // Manager who approved override
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
+  clockInOverride        Boolean? // True if clock-in was overridden
+  clockInOverrideReason  String? // Manager's reason for override
+  clockInOverrideById    String? // Manager who approved override
+  clockOutOverride       Boolean? // True if clock-out was overridden
+  clockOutOverrideReason String? // Manager's reason for override
+  clockOutOverrideById   String? // Manager who approved override
+  createdAt              DateTime        @default(now())
+  updatedAt              DateTime        @updatedAt
 
-  user              User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  approvedBy        User?                 @relation("ApprovedTimeEntries", fields: [approvedById], references: [id], onDelete: SetNull)
-  clockInOverrideBy User?                 @relation("ClockInOverrideBy", fields: [clockInOverrideById], references: [id], onDelete: SetNull)
-  clockOutOverrideBy User?                @relation("ClockOutOverrideBy", fields: [clockOutOverrideById], references: [id], onDelete: SetNull)
-  scheduledShift    ScheduledShift?       @relation(fields: [shiftId], references: [id], onDelete: SetNull)
-  breakEntries      BreakEntry[]
-  timesheetApproval TimesheetApproval? // M10.3: Timesheet approval record
-  adjustments       TimeEntryAdjustment[] // M10.5: Adjustment requests
+  user                User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  approvedBy          User?                 @relation("ApprovedTimeEntries", fields: [approvedById], references: [id], onDelete: SetNull)
+  clockInOverrideBy   User?                 @relation("ClockInOverrideBy", fields: [clockInOverrideById], references: [id], onDelete: SetNull)
+  clockOutOverrideBy  User?                 @relation("ClockOutOverrideBy", fields: [clockOutOverrideById], references: [id], onDelete: SetNull)
+  scheduledShift      ScheduledShift?       @relation(fields: [shiftId], references: [id], onDelete: SetNull)
+  breakEntries        BreakEntry[]
+  timesheetApproval   TimesheetApproval? // M10.3: Timesheet approval record
+  adjustments         TimeEntryAdjustment[] // M10.5: Adjustment requests
   complianceIncidents OpsIncident[] // M10.19: Break compliance incidents
 
   @@index([orgId, branchId, clockInAt])
@@ -3343,8 +3350,8 @@ model BranchGeoFence {
   orgId                String
   branchId             String   @unique // One geo-fence per branch
   enabled              Boolean  @default(false)
-  centerLat            Float    // Center latitude
-  centerLng            Float    // Center longitude
+  centerLat            Float // Center latitude
+  centerLng            Float // Center longitude
   radiusMeters         Int      @default(100) // Enforcement radius
   enforceClockIn       Boolean  @default(true)
   enforceClockOut      Boolean  @default(true)
@@ -3355,10 +3362,10 @@ model BranchGeoFence {
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
 
-  org       Org     @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  branch    Branch  @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  createdBy User?   @relation("GeoFenceCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
-  updatedBy User?   @relation("GeoFenceUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  org       Org    @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  branch    Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  createdBy User?  @relation("GeoFenceCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedBy User?  @relation("GeoFenceUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
 
   @@index([orgId])
   @@index([branchId])
@@ -3368,26 +3375,26 @@ model BranchGeoFence {
 // ===== M10.20: Geo-fence Event Log =====
 
 model GeoFenceEvent {
-  id           String   @id @default(cuid())
-  orgId        String
-  branchId     String
-  userId       String
-  eventType    String   // BLOCKED, OVERRIDE_APPROVED, ACCURACY_FAILURE
-  reasonCode   String?  // OUTSIDE_GEOFENCE, ACCURACY_TOO_LOW, MISSING_LOCATION
-  clockAction  String   // CLOCK_IN, CLOCK_OUT
-  lat          Float?
-  lng          Float?
+  id             String   @id @default(cuid())
+  orgId          String
+  branchId       String
+  userId         String
+  eventType      String // BLOCKED, OVERRIDE_APPROVED, ACCURACY_FAILURE
+  reasonCode     String? // OUTSIDE_GEOFENCE, ACCURACY_TOO_LOW, MISSING_LOCATION
+  clockAction    String // CLOCK_IN, CLOCK_OUT
+  lat            Float?
+  lng            Float?
   accuracyMeters Float?
   distanceMeters Float?
   radiusMeters   Int?
   overrideById   String?
   overrideReason String?
-  createdAt    DateTime @default(now())
+  createdAt      DateTime @default(now())
 
-  org      Org    @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  branch   Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  user     User   @relation("GeoFenceEventUser", fields: [userId], references: [id], onDelete: Cascade)
-  overrideBy User? @relation("GeoFenceEventOverrideBy", fields: [overrideById], references: [id], onDelete: SetNull)
+  org        Org    @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  branch     Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  user       User   @relation("GeoFenceEventUser", fields: [userId], references: [id], onDelete: Cascade)
+  overrideBy User?  @relation("GeoFenceEventOverrideBy", fields: [overrideById], references: [id], onDelete: SetNull)
 
   @@index([orgId, branchId, createdAt])
   @@index([userId])
@@ -3396,7 +3403,6 @@ model GeoFenceEvent {
 }
 
 // ===== M10.1: Workforce Core - Shift Scheduling =====
-
 
 model ScheduledShift {
   id              String      @id @default(cuid())
@@ -4244,24 +4250,24 @@ model BranchCapacityRule {
 // ===== M9.6: OpsIncident =====
 
 model OpsIncident {
-  id         String    @id @default(cuid())
-  orgId      String
-  branchId   String?
-  type       String // "WEBHOOK_CIRCUIT_OPEN", "HOLD_EXPIRY_SPIKE", "MEAL_BREAK_MISSED", "MEAL_BREAK_SHORT", "REST_BREAK_MISSED", "REST_BREAK_SHORT"
-  severity   String // "LOW", "MEDIUM", "HIGH", "CRITICAL"
-  title      String
-  payload    Json?
-  resolved   Boolean   @default(false)
-  resolvedAt DateTime?
-  resolvedBy String?
+  id                 String    @id @default(cuid())
+  orgId              String
+  branchId           String?
+  type               String // "WEBHOOK_CIRCUIT_OPEN", "HOLD_EXPIRY_SPIKE", "MEAL_BREAK_MISSED", "MEAL_BREAK_SHORT", "REST_BREAK_MISSED", "REST_BREAK_SHORT"
+  severity           String // "LOW", "MEDIUM", "HIGH", "CRITICAL"
+  title              String
+  payload            Json?
+  resolved           Boolean   @default(false)
+  resolvedAt         DateTime?
+  resolvedBy         String?
   // M10.19: Compliance incident extensions
-  timeEntryId       String?  // Link to time entry for break incidents
-  userId            String?  // User involved in the incident
-  incidentDate      DateTime? // Date of the incident
-  penaltyMinutes    Int?     // Penalty minutes for meal/rest break violations
-  penaltyAmountCents Int?    // Optional monetary penalty in cents
-  currency          String?  @default("USD") // Currency code
-  createdAt  DateTime  @default(now())
+  timeEntryId        String? // Link to time entry for break incidents
+  userId             String? // User involved in the incident
+  incidentDate       DateTime? // Date of the incident
+  penaltyMinutes     Int? // Penalty minutes for meal/rest break violations
+  penaltyAmountCents Int? // Optional monetary penalty in cents
+  currency           String?   @default("USD") // Currency code
+  createdAt          DateTime  @default(now())
 
   org       Org        @relation(fields: [orgId], references: [id], onDelete: Cascade)
   branch    Branch?    @relation(fields: [branchId], references: [id], onDelete: Cascade)
@@ -4420,35 +4426,35 @@ enum AdjustmentStatus {
 }
 
 model WorkforcePolicy {
-  id                        String       @id @default(cuid())
-  orgId                     String       @unique
-  dailyOtThresholdMins      Int          @default(480) // 8 hours
-  weeklyOtThresholdMins     Int          @default(2400) // 40 hours
-  roundingIntervalMins      Int          @default(15) // Round to 15-min blocks
-  roundingMode              RoundingMode @default(NEAREST)
-  requireApproval           Boolean      @default(true)
-  autoLockDays              Int          @default(7) // Auto-lock after N days
-  openShiftRequiresApproval Boolean      @default(true) // M10.11: Require approval for open shift claims
-  minRestHoursBetweenShifts Int          @default(10) // M10.14: Minimum rest hours between shifts
-  maxWeeklyHours            Int          @default(48) // M10.14: Maximum weekly hours
-  maxConsecutiveDays        Int          @default(6) // M10.14: Maximum consecutive work days
+  id                           String       @id @default(cuid())
+  orgId                        String       @unique
+  dailyOtThresholdMins         Int          @default(480) // 8 hours
+  weeklyOtThresholdMins        Int          @default(2400) // 40 hours
+  roundingIntervalMins         Int          @default(15) // Round to 15-min blocks
+  roundingMode                 RoundingMode @default(NEAREST)
+  requireApproval              Boolean      @default(true)
+  autoLockDays                 Int          @default(7) // Auto-lock after N days
+  openShiftRequiresApproval    Boolean      @default(true) // M10.11: Require approval for open shift claims
+  minRestHoursBetweenShifts    Int          @default(10) // M10.14: Minimum rest hours between shifts
+  maxWeeklyHours               Int          @default(48) // M10.14: Maximum weekly hours
+  maxConsecutiveDays           Int          @default(6) // M10.14: Maximum consecutive work days
   // M10.19: Break/Meal Compliance Rules
-  mealBreakRequiredAfterHours  Int       @default(6) // Meal break required after X hours
-  mealBreakMinimumMinutes      Int       @default(30) // Minimum meal break duration
-  restBreakRequiredAfterHours  Int       @default(4) // Rest break required after X hours
-  restBreakMinimumMinutes      Int       @default(10) // Minimum rest break duration
-  allowWaiveMealBreak          Boolean   @default(false) // Allow employees to waive meal break
+  mealBreakRequiredAfterHours  Int          @default(6) // Meal break required after X hours
+  mealBreakMinimumMinutes      Int          @default(30) // Minimum meal break duration
+  restBreakRequiredAfterHours  Int          @default(4) // Rest break required after X hours
+  restBreakMinimumMinutes      Int          @default(10) // Minimum rest break duration
+  allowWaiveMealBreak          Boolean      @default(false) // Allow employees to waive meal break
   // M10.21: Kiosk Timeclock Controls
-  requireKioskForTimeclock     Boolean   @default(false) // Require kiosk for clock operations
-  requireGeofenceForKiosk      Boolean   @default(false) // Apply geofence enforcement even for kiosk
-  kioskPinRateLimitPerMinute   Int       @default(5) // Max PIN attempts per minute per device
-  kioskSessionTimeoutMinutes   Int       @default(720) // 12 hours default session timeout
+  requireKioskForTimeclock     Boolean      @default(false) // Require kiosk for clock operations
+  requireGeofenceForKiosk      Boolean      @default(false) // Apply geofence enforcement even for kiosk
+  kioskPinRateLimitPerMinute   Int          @default(5) // Max PIN attempts per minute per device
+  kioskSessionTimeoutMinutes   Int          @default(720) // 12 hours default session timeout
   // M10.22: Kiosk Ops Hardening
-  kioskHeartbeatStaleSeconds   Int       @default(120) // 2 minutes before STALE status
-  kioskHeartbeatOfflineSeconds Int       @default(900) // 15 minutes before OFFLINE status
-  kioskMaxInvalidPinsPerMinute Int       @default(10) // Block after this many invalid PINs
-  createdAt                 DateTime     @default(now())
-  updatedAt                 DateTime     @updatedAt
+  kioskHeartbeatStaleSeconds   Int          @default(120) // 2 minutes before STALE status
+  kioskHeartbeatOfflineSeconds Int          @default(900) // 15 minutes before OFFLINE status
+  kioskMaxInvalidPinsPerMinute Int          @default(10) // Block after this many invalid PINs
+  createdAt                    DateTime     @default(now())
+  updatedAt                    DateTime     @updatedAt
 
   org Org @relation(fields: [orgId], references: [id], onDelete: Cascade)
 
@@ -5141,12 +5147,12 @@ enum StaffingAlertType {
 model LaborTarget {
   id                   String   @id @default(cuid())
   orgId                String
-  branchId             String?  // null = org-level default; branch-level overrides org-level
-  roleKey              String   // jobRole slug (e.g., "WAITER", "COOK", "BARTENDER")
-  dayOfWeek            Int      // 0=Sunday..6=Saturday
-  hourStart            Int      // 0..23
-  hourEnd              Int      // 0..24 (exclusive)
-  targetCoversPerStaff Int?     // e.g., 20 covers per waiter per hour
+  branchId             String? // null = org-level default; branch-level overrides org-level
+  roleKey              String // jobRole slug (e.g., "WAITER", "COOK", "BARTENDER")
+  dayOfWeek            Int // 0=Sunday..6=Saturday
+  hourStart            Int // 0..23
+  hourEnd              Int // 0..24 (exclusive)
+  targetCoversPerStaff Int? // e.g., 20 covers per waiter per hour
   targetLaborPct       Decimal? @db.Decimal(5, 2) // e.g., 30% of hourly revenue
   enabled              Boolean  @default(true)
   createdAt            DateTime @default(now())
@@ -5167,9 +5173,9 @@ model LaborForecastSnapshot {
   branchId    String
   date        DateTime @db.Date
   timezone    String   @default("UTC")
-  inputsHash  String   // sha256 of sorted inputs JSON for idempotency
+  inputsHash  String // sha256 of sorted inputs JSON for idempotency
   generatedAt DateTime @default(now())
-  totalsJson  Json     // { coversForecast: number[], ordersForecast: number[], dataSources: string[] }
+  totalsJson  Json // { coversForecast: number[], ordersForecast: number[], dataSources: string[] }
   createdAt   DateTime @default(now())
 
   org           Org            @relation(fields: [orgId], references: [id], onDelete: Cascade)
@@ -5199,10 +5205,10 @@ model StaffingPlan {
   org              Org                   @relation(fields: [orgId], references: [id], onDelete: Cascade)
   branch           Branch                @relation(fields: [branchId], references: [id], onDelete: Cascade)
   forecastSnapshot LaborForecastSnapshot @relation(fields: [forecastSnapshotId], references: [id], onDelete: Cascade)
-  publishedBy       User?                 @relation("PlanPublisher", fields: [publishedById], references: [id], onDelete: SetNull)
-  lines             StaffingPlanLine[]
+  publishedBy      User?                 @relation("PlanPublisher", fields: [publishedById], references: [id], onDelete: SetNull)
+  lines            StaffingPlanLine[]
   // M10.13: Auto-Scheduler
-  autoScheduleRuns  AutoScheduleRun[]
+  autoScheduleRuns AutoScheduleRun[]
 
   @@unique([orgId, branchId, date, forecastSnapshotId])
   @@index([orgId, branchId, date])
@@ -5212,12 +5218,12 @@ model StaffingPlan {
 
 // M10.12: Staffing plan lines (hourly role headcount)
 model StaffingPlanLine {
-  id                 String  @id @default(cuid())
+  id                 String @id @default(cuid())
   staffingPlanId     String
-  hour               Int     // 0..23
+  hour               Int // 0..23
   roleKey            String
   suggestedHeadcount Int
-  rationale          Json?   // { basedOn: 'covers', targetValue: 20, forecastedCovers: 80 }
+  rationale          Json? // { basedOn: 'covers', targetValue: 20, forecastedCovers: 80 }
 
   staffingPlan StaffingPlan @relation(fields: [staffingPlanId], references: [id], onDelete: Cascade)
 
@@ -5231,17 +5237,17 @@ model StaffingAlert {
   orgId        String
   branchId     String
   date         DateTime          @db.Date
-  hour         Int               // 0..23
+  hour         Int // 0..23
   severity     AlertSeverity
   type         StaffingAlertType
-  payloadJson  Json              // { scheduledCount, suggestedCount, delta, roleKey }
+  payloadJson  Json // { scheduledCount, suggestedCount, delta, roleKey }
   resolvedAt   DateTime?
   resolvedById String?
   createdAt    DateTime          @default(now())
 
-  org        Org     @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  branch     Branch  @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  resolvedBy User?   @relation("AlertResolver", fields: [resolvedById], references: [id], onDelete: SetNull)
+  org        Org    @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  branch     Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  resolvedBy User?  @relation("AlertResolver", fields: [resolvedById], references: [id], onDelete: SetNull)
 
   @@unique([orgId, branchId, date, hour, type])
   @@index([orgId, branchId, date])
@@ -5265,7 +5271,7 @@ model AutoScheduleRun {
   date             DateTime              @db.Date
   timezone         String
   staffingPlanId   String
-  inputsHash       String                // SHA256 of canonicalized inputs for idempotency
+  inputsHash       String // SHA256 of canonicalized inputs for idempotency
   algorithmVersion String                @default("v1.0")
   status           AutoScheduleRunStatus @default(DRAFT)
   assignmentMode   String                @default("UNASSIGNED") // M10.14: UNASSIGNED | ASSIGNED
@@ -5298,11 +5304,11 @@ model AutoScheduleSuggestion {
   startAt          DateTime
   endAt            DateTime
   headcount        Int
-  candidateUserIds Json?    // string[] of user IDs who are available
-  score            Int?     // optional priority score
-  assignedUserId   String?  // M10.14: Deterministically assigned user ID
-  assignmentReason String?  // M10.14: Why this user was assigned or constraint reason
-  assignmentScore  Int?     // M10.14: Assignment score for ranking
+  candidateUserIds Json? // string[] of user IDs who are available
+  score            Int? // optional priority score
+  assignedUserId   String? // M10.14: Deterministically assigned user ID
+  assignmentReason String? // M10.14: Why this user was assigned or constraint reason
+  assignmentScore  Int? // M10.14: Assignment score for ranking
   createdAt        DateTime @default(now())
 
   run          AutoScheduleRun @relation(fields: [runId], references: [id], onDelete: Cascade)
@@ -5315,27 +5321,27 @@ model AutoScheduleSuggestion {
 // ===== M10.21: Kiosk Device Enrollment =====
 
 model KioskDevice {
-  id              String   @id @default(cuid())
-  orgId           String
-  branchId        String
-  name            String   // "Front Entrance Tablet"
-  publicId        String   @unique @db.VarChar(32) // Short public identifier for URL
-  secretHash      String   // Argon2id hash of device secret
-  enabled         Boolean  @default(true)
-  allowedIpCidrs  String[] @default([]) // Optional IP allowlist
-  lastSeenAt      DateTime?
-  createdById     String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id             String    @id @default(cuid())
+  orgId          String
+  branchId       String
+  name           String // "Front Entrance Tablet"
+  publicId       String    @unique @db.VarChar(32) // Short public identifier for URL
+  secretHash     String // Argon2id hash of device secret
+  enabled        Boolean   @default(true)
+  allowedIpCidrs String[]  @default([]) // Optional IP allowlist
+  lastSeenAt     DateTime?
+  createdById    String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
-  org           Org                  @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  branch        Branch               @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  createdBy     User?                @relation("KioskDeviceCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
-  sessions      KioskDeviceSession[]
-  pinAttempts   KioskPinAttempt[]
-  clockEvents   KioskClockEvent[]
-  events        KioskEvent[]         @relation("KioskEventDevice") // M10.22
-  eventIngests  KioskEventIngest[]   @relation("KioskEventIngestDevice") // M10.22
+  org          Org                  @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  branch       Branch               @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  createdBy    User?                @relation("KioskDeviceCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  sessions     KioskDeviceSession[]
+  pinAttempts  KioskPinAttempt[]
+  clockEvents  KioskClockEvent[]
+  events       KioskEvent[]         @relation("KioskEventDevice") // M10.22
+  eventIngests KioskEventIngest[]   @relation("KioskEventIngestDevice") // M10.22
 
   @@index([orgId])
   @@index([branchId])
@@ -5346,12 +5352,12 @@ model KioskDevice {
 // ===== M10.21: Kiosk Device Sessions =====
 
 model KioskDeviceSession {
-  id              String   @id @default(cuid())
+  id              String    @id @default(cuid())
   kioskDeviceId   String
-  startedAt       DateTime @default(now())
+  startedAt       DateTime  @default(now())
   endedAt         DateTime?
-  endedReason     String?  // EXPIRED, ROTATED, MANUAL, HEARTBEAT_TIMEOUT
-  lastHeartbeatAt DateTime @default(now())
+  endedReason     String? // EXPIRED, ROTATED, MANUAL, HEARTBEAT_TIMEOUT
+  lastHeartbeatAt DateTime  @default(now())
   ipAddress       String?
   userAgent       String?
   metadata        Json?
@@ -5366,15 +5372,15 @@ model KioskDeviceSession {
 // ===== M10.21: Kiosk PIN Attempts (Rate Limiting) =====
 
 model KioskPinAttempt {
-  id              String   @id @default(cuid())
-  orgId           String
-  branchId        String
-  kioskDeviceId   String
-  pinMasked       String   // Last 2 chars only (e.g., "**34")
-  success         Boolean
-  userId          String?  // Only set if successful
-  ipAddress       String?
-  attemptedAt     DateTime @default(now())
+  id            String   @id @default(cuid())
+  orgId         String
+  branchId      String
+  kioskDeviceId String
+  pinMasked     String // Last 2 chars only (e.g., "**34")
+  success       Boolean
+  userId        String? // Only set if successful
+  ipAddress     String?
+  attemptedAt   DateTime @default(now())
 
   org         Org         @relation(fields: [orgId], references: [id], onDelete: Cascade)
   branch      Branch      @relation(fields: [branchId], references: [id], onDelete: Cascade)
@@ -5389,18 +5395,18 @@ model KioskPinAttempt {
 // ===== M10.21: Kiosk Clock Events =====
 
 model KioskClockEvent {
-  id              String   @id @default(cuid())
-  orgId           String
-  branchId        String
-  kioskDeviceId   String
-  userId          String
-  eventType       String   // CLOCK_IN, CLOCK_OUT, BREAK_START, BREAK_END
-  timeEntryId     String?
-  breakEntryId    String?
-  geoBlocked      Boolean  @default(false)
-  geoOverridden   Boolean  @default(false)
-  ipAddress       String?
-  createdAt       DateTime @default(now())
+  id            String   @id @default(cuid())
+  orgId         String
+  branchId      String
+  kioskDeviceId String
+  userId        String
+  eventType     String // CLOCK_IN, CLOCK_OUT, BREAK_START, BREAK_END
+  timeEntryId   String?
+  breakEntryId  String?
+  geoBlocked    Boolean  @default(false)
+  geoOverridden Boolean  @default(false)
+  ipAddress     String?
+  createdAt     DateTime @default(now())
 
   org         Org         @relation(fields: [orgId], references: [id], onDelete: Cascade)
   branch      Branch      @relation(fields: [branchId], references: [id], onDelete: Cascade)
@@ -5416,20 +5422,20 @@ model KioskClockEvent {
 // ===== M10.22: Kiosk Event (Batch Ingest + Idempotency) =====
 
 model KioskEvent {
-  id              String   @id @default(cuid())
-  orgId           String
-  branchId        String
-  kioskDeviceId   String
-  type            String   // CLOCK_IN, CLOCK_OUT, BREAK_START, BREAK_END
-  occurredAt      DateTime // Client event time
-  receivedAt      DateTime @default(now()) // Server receive time
-  idempotencyKey  String   // Client-generated unique key
-  payloadJson     Json?    // Sanitized payload (no secrets)
-  status          String   // ACCEPTED, REJECTED
-  rejectCode      String?  // INVALID_PIN, OUTSIDE_GEOFENCE, DEVICE_DISABLED, SEQUENCE_VIOLATION, etc.
-  timeEntryId     String?  // Linked time entry if created
-  breakEntryId    String?  // Linked break entry if created
-  userId          String?  // Resolved user from PIN
+  id             String   @id @default(cuid())
+  orgId          String
+  branchId       String
+  kioskDeviceId  String
+  type           String // CLOCK_IN, CLOCK_OUT, BREAK_START, BREAK_END
+  occurredAt     DateTime // Client event time
+  receivedAt     DateTime @default(now()) // Server receive time
+  idempotencyKey String // Client-generated unique key
+  payloadJson    Json? // Sanitized payload (no secrets)
+  status         String // ACCEPTED, REJECTED
+  rejectCode     String? // INVALID_PIN, OUTSIDE_GEOFENCE, DEVICE_DISABLED, SEQUENCE_VIOLATION, etc.
+  timeEntryId    String? // Linked time entry if created
+  breakEntryId   String? // Linked break entry if created
+  userId         String? // Resolved user from PIN
 
   org         Org         @relation(fields: [orgId], references: [id], onDelete: Cascade)
   branch      Branch      @relation(fields: [branchId], references: [id], onDelete: Cascade)
@@ -5445,15 +5451,15 @@ model KioskEvent {
 // ===== M10.22: Kiosk Event Ingest Batch =====
 
 model KioskEventIngest {
-  id              String   @id @default(cuid())
-  kioskDeviceId   String
-  batchId         String   // Client-provided batch ID
-  eventCount      Int
-  acceptedCount   Int      @default(0)
-  rejectedCount   Int      @default(0)
-  status          String   // RECEIVED, PROCESSED
-  diagnostics     String?  // Truncated diagnostic info
-  createdAt       DateTime @default(now())
+  id            String   @id @default(cuid())
+  kioskDeviceId String
+  batchId       String // Client-provided batch ID
+  eventCount    Int
+  acceptedCount Int      @default(0)
+  rejectedCount Int      @default(0)
+  status        String // RECEIVED, PROCESSED
+  diagnostics   String? // Truncated diagnostic info
+  createdAt     DateTime @default(now())
 
   kioskDevice KioskDevice @relation("KioskEventIngestDevice", fields: [kioskDeviceId], references: [id], onDelete: Cascade)
 
@@ -5466,29 +5472,29 @@ model KioskEventIngest {
 
 // Unit of Measure - org-scoped UOM definitions
 model UnitOfMeasure {
-  id           String   @id @default(cuid())
-  orgId        String
-  code         String   // kg, g, L, mL, pcs, etc.
-  name         String   // Kilogram, Gram, Liter, etc.
-  symbol       String?  // Optional display symbol
-  baseUnitId   String?  // Reference to base unit for conversions (null = IS base unit)
-  isActive     Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id         String   @id @default(cuid())
+  orgId      String
+  code       String // kg, g, L, mL, pcs, etc.
+  name       String // Kilogram, Gram, Liter, etc.
+  symbol     String? // Optional display symbol
+  baseUnitId String? // Reference to base unit for conversions (null = IS base unit)
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
-  baseUnit    UnitOfMeasure?  @relation("UomToBase", fields: [baseUnitId], references: [id], onDelete: SetNull)
-  derivedUnits UnitOfMeasure[] @relation("UomToBase")
-  conversionsFrom UnitConversion[] @relation("ConversionFrom")
-  conversionsTo   UnitConversion[] @relation("ConversionTo")
-  inventoryItems  InventoryItem[] @relation("ItemUom")
+  baseUnit              UnitOfMeasure?        @relation("UomToBase", fields: [baseUnitId], references: [id], onDelete: SetNull)
+  derivedUnits          UnitOfMeasure[]       @relation("UomToBase")
+  conversionsFrom       UnitConversion[]      @relation("ConversionFrom")
+  conversionsTo         UnitConversion[]      @relation("ConversionTo")
+  inventoryItems        InventoryItem[]       @relation("ItemUom")
   // M11.2: Purchasing & Receiving
-  poLinesV2Input       PurchaseOrderLineV2[] @relation("POLineInputUom")
-  receiptLinesV2Input  GoodsReceiptLineV2[]  @relation("ReceiptLineInputUom")
+  poLinesV2Input        PurchaseOrderLineV2[] @relation("POLineInputUom")
+  receiptLinesV2Input   GoodsReceiptLineV2[]  @relation("ReceiptLineInputUom")
   // M11.4: Recipes
-  recipeOutputUom      Recipe[]              @relation("RecipeOutputUom")
-  recipeLineInputUom   RecipeLine[]          @relation("RecipeLineInputUom")
+  recipeOutputUom       Recipe[]              @relation("RecipeOutputUom")
+  recipeLineInputUom    RecipeLine[]          @relation("RecipeLineInputUom")
   // M11.6: Supplier Catalog
-  supplierItemVendorUom SupplierItem[]       @relation("SupplierItemVendorUom")
+  supplierItemVendorUom SupplierItem[]        @relation("SupplierItemVendorUom")
 
   @@unique([orgId, code])
   @@index([orgId])
@@ -5497,14 +5503,14 @@ model UnitOfMeasure {
 
 // Unit Conversion - conversion factors between UOMs
 model UnitConversion {
-  id         String   @id @default(cuid())
-  orgId      String
-  fromUomId  String
-  toUomId    String
-  factor     Decimal  @db.Decimal(18, 8) // Conversion factor: 1 fromUom = factor toUom
-  isActive   Boolean  @default(true)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id        String   @id @default(cuid())
+  orgId     String
+  fromUomId String
+  toUomId   String
+  factor    Decimal  @db.Decimal(18, 8) // Conversion factor: 1 fromUom = factor toUom
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   fromUom UnitOfMeasure @relation("ConversionFrom", fields: [fromUomId], references: [id], onDelete: Cascade)
   toUom   UnitOfMeasure @relation("ConversionTo", fields: [toUomId], references: [id], onDelete: Cascade)
@@ -5519,33 +5525,35 @@ model InventoryLocation {
   id           String   @id @default(cuid())
   orgId        String
   branchId     String
-  code         String   // MAIN, COLD, DRY, BAR, KITCHEN, etc.
-  name         String   // Main Storage, Cold Room, Dry Storage, Kitchen, etc.
-  parentId     String?  // Optional parent location for hierarchy
-  locationType String?  // STORAGE, PRODUCTION, RECEIVING, etc.
+  code         String // MAIN, COLD, DRY, BAR, KITCHEN, etc.
+  name         String // Main Storage, Cold Room, Dry Storage, Kitchen, etc.
+  parentId     String? // Optional parent location for hierarchy
+  locationType String? // STORAGE, PRODUCTION, RECEIVING, etc.
   isActive     Boolean  @default(true)
   metadata     Json?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  branch         Branch             @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  parent         InventoryLocation? @relation("LocationHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
-  children       InventoryLocation[] @relation("LocationHierarchy")
-  ledgerEntries  InventoryLedgerEntry[]
-  adjustments    StockAdjustment[]
-  countLines     CountSessionLine[]
-  countSessions  CountSession[]     @relation("CountSessionLocation")
+  branch                   Branch                    @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  parent                   InventoryLocation?        @relation("LocationHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children                 InventoryLocation[]       @relation("LocationHierarchy")
+  ledgerEntries            InventoryLedgerEntry[]
+  adjustments              StockAdjustment[]
+  countLines               CountSessionLine[]
+  countSessions            CountSession[]            @relation("CountSessionLocation")
   // M11.2: Purchasing & Receiving
-  receiptLinesV2 GoodsReceiptLineV2[] @relation("ReceiptLineLocation")
+  receiptLinesV2           GoodsReceiptLineV2[]      @relation("ReceiptLineLocation")
   // M11.3: Transfers + Waste
-  transferLinesFrom InventoryTransferLine[] @relation("TransferLineFromLocation")
-  transferLinesTo   InventoryTransferLine[] @relation("TransferLineToLocation")
-  wasteLines        InventoryWasteLine[]    @relation("WasteLineLocation")
+  transferLinesFrom        InventoryTransferLine[]   @relation("TransferLineFromLocation")
+  transferLinesTo          InventoryTransferLine[]   @relation("TransferLineToLocation")
+  wasteLines               InventoryWasteLine[]      @relation("WasteLineLocation")
   // M11.4: Depletion + Recipes
-  branchesDefaultDepletion Branch[]  @relation("BranchDepletionLocation")
+  branchesDefaultDepletion Branch[]                  @relation("BranchDepletionLocation")
   depletions               OrderInventoryDepletion[] @relation("DepletionLocation")
   // M11.5: Costing + Valuation + COGS
   costLayers               InventoryCostLayer[]      @relation("CostLayerLocation")
+  // M11.7: Lots
+  inventoryLots            InventoryLot[]            @relation("LotLocation")
 
   @@unique([branchId, code])
   @@index([orgId])
@@ -5561,18 +5569,21 @@ model InventoryLedgerEntry {
   itemId      String
   locationId  String
   qty         Decimal  @db.Decimal(12, 4) // Positive = add, Negative = subtract
-  reason      String   // PURCHASE, SALE, WASTAGE, ADJUSTMENT, COUNT_ADJUSTMENT, TRANSFER_IN, TRANSFER_OUT
-  sourceType  String   // GOODS_RECEIPT, ORDER, WASTAGE, STOCK_ADJUSTMENT, COUNT_SESSION, TRANSFER
-  sourceId    String?  // ID of the source record
+  reason      String // PURCHASE, SALE, WASTAGE, ADJUSTMENT, COUNT_ADJUSTMENT, TRANSFER_IN, TRANSFER_OUT
+  sourceType  String // GOODS_RECEIPT, ORDER, WASTAGE, STOCK_ADJUSTMENT, COUNT_SESSION, TRANSFER
+  sourceId    String? // ID of the source record
   notes       String?
   createdById String?
   metadata    Json?
   createdAt   DateTime @default(now()) // NEVER updated after creation
 
-  branch   Branch            @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  item     InventoryItem     @relation(fields: [itemId], references: [id], onDelete: Restrict)
-  location InventoryLocation @relation(fields: [locationId], references: [id], onDelete: Restrict)
-  createdBy User?            @relation("LedgerEntryCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  branch    Branch            @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  item      InventoryItem     @relation(fields: [itemId], references: [id], onDelete: Restrict)
+  location  InventoryLocation @relation(fields: [locationId], references: [id], onDelete: Restrict)
+  createdBy User?             @relation("LedgerEntryCreator", fields: [createdById], references: [id], onDelete: SetNull)
+
+  // M11.7: Lot allocation tracking
+  lotAllocations LotLedgerAllocation[]
 
   @@index([orgId, branchId, itemId])
   @@index([itemId, locationId])
@@ -5583,27 +5594,27 @@ model InventoryLedgerEntry {
 
 // Stock Adjustment - explicit adjustment records
 model StockAdjustment {
-  id          String   @id @default(cuid())
-  orgId       String
-  branchId    String
-  itemId      String
-  locationId  String
-  qty         Decimal  @db.Decimal(12, 4) // Can be positive or negative
-  reason      String   // DAMAGED, EXPIRED, THEFT, FOUND, CORRECTION, OTHER
-  notes       String?
-  createdById String
+  id           String    @id @default(cuid())
+  orgId        String
+  branchId     String
+  itemId       String
+  locationId   String
+  qty          Decimal   @db.Decimal(12, 4) // Can be positive or negative
+  reason       String // DAMAGED, EXPIRED, THEFT, FOUND, CORRECTION, OTHER
+  notes        String?
+  createdById  String
   approvedById String?
   approvedAt   DateTime?
-  status      String   @default("PENDING") // PENDING, APPROVED, REJECTED
-  metadata    Json?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  status       String    @default("PENDING") // PENDING, APPROVED, REJECTED
+  metadata     Json?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
-  branch    Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  item      InventoryItem @relation("StockAdjustmentItem", fields: [itemId], references: [id], onDelete: Restrict)
-  location  InventoryLocation @relation(fields: [locationId], references: [id], onDelete: Restrict)
-  createdBy User   @relation("StockAdjustmentCreator", fields: [createdById], references: [id], onDelete: Restrict)
-  approvedBy User? @relation("StockAdjustmentApprover", fields: [approvedById], references: [id], onDelete: SetNull)
+  branch     Branch            @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  item       InventoryItem     @relation("StockAdjustmentItem", fields: [itemId], references: [id], onDelete: Restrict)
+  location   InventoryLocation @relation(fields: [locationId], references: [id], onDelete: Restrict)
+  createdBy  User              @relation("StockAdjustmentCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  approvedBy User?             @relation("StockAdjustmentApprover", fields: [approvedById], references: [id], onDelete: SetNull)
 
   @@index([orgId, branchId])
   @@index([itemId])
@@ -5613,20 +5624,20 @@ model StockAdjustment {
 
 // Count Session - cycle count sessions
 model CountSession {
-  id           String    @id @default(cuid())
-  orgId        String
-  branchId     String
-  name         String?   // Optional name like "Q1 Full Count"
-  description  String?   // Optional description
-  locationId   String?   // Optional: scope to specific location
-  status       String    @default("OPEN") // OPEN, FINALIZED, CANCELLED
-  createdById  String    // Renamed from startedById for consistency
+  id            String    @id @default(cuid())
+  orgId         String
+  branchId      String
+  name          String? // Optional name like "Q1 Full Count"
+  description   String? // Optional description
+  locationId    String? // Optional: scope to specific location
+  status        String    @default("OPEN") // OPEN, FINALIZED, CANCELLED
+  createdById   String // Renamed from startedById for consistency
   finalizedById String?
-  finalizedAt  DateTime?
-  cancelledAt  DateTime?
-  metadata     Json?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  finalizedAt   DateTime?
+  cancelledAt   DateTime?
+  metadata      Json?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   branch      Branch             @relation(fields: [branchId], references: [id], onDelete: Cascade)
   location    InventoryLocation? @relation("CountSessionLocation", fields: [locationId], references: [id], onDelete: SetNull)
@@ -5641,23 +5652,23 @@ model CountSession {
 
 // Count Session Line - individual count entries
 model CountSessionLine {
-  id           String   @id @default(cuid())
-  sessionId    String
-  itemId       String
-  locationId   String
-  expectedQty  Decimal  @db.Decimal(12, 4) // System on-hand at time of count
-  countedQty   Decimal  @db.Decimal(12, 4) // The counted quantity
-  variance     Decimal  @db.Decimal(12, 4) // countedQty - expectedQty
-  notes        String?
-  countedById  String?
-  countedAt    DateTime @default(now())
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id          String   @id @default(cuid())
+  sessionId   String
+  itemId      String
+  locationId  String
+  expectedQty Decimal  @db.Decimal(12, 4) // System on-hand at time of count
+  countedQty  Decimal  @db.Decimal(12, 4) // The counted quantity
+  variance    Decimal  @db.Decimal(12, 4) // countedQty - expectedQty
+  notes       String?
+  countedById String?
+  countedAt   DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  session   CountSession       @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  item      InventoryItem      @relation("CountSessionLineItem", fields: [itemId], references: [id], onDelete: Restrict)
-  location  InventoryLocation  @relation(fields: [locationId], references: [id], onDelete: Restrict)
-  countedBy User?              @relation("CountSessionLineCounter", fields: [countedById], references: [id], onDelete: SetNull)
+  session   CountSession      @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  item      InventoryItem     @relation("CountSessionLineItem", fields: [itemId], references: [id], onDelete: Restrict)
+  location  InventoryLocation @relation(fields: [locationId], references: [id], onDelete: Restrict)
+  countedBy User?             @relation("CountSessionLineCounter", fields: [countedById], references: [id], onDelete: SetNull)
 
   @@unique([sessionId, itemId, locationId])
   @@index([sessionId])
@@ -5686,31 +5697,31 @@ enum GoodsReceiptStatus {
 
 // Enterprise Purchase Order with Vendor from accounting
 model PurchaseOrderV2 {
-  id              String              @id @default(cuid())
-  orgId           String
-  branchId        String
-  vendorId        String              // FK to Vendor (accounting)
-  poNumber        String              // Auto-generated or user-provided
-  status          PurchaseOrderStatus @default(DRAFT)
-  expectedAt      DateTime?           // Expected delivery date
-  notes           String?
-  totalAmount     Decimal             @default(0) @db.Decimal(12, 2)
-  createdById     String
-  approvedById    String?
-  approvedAt      DateTime?
-  idempotencyKey  String?             // For integration-based creation
-  reorderRunId    String?             // M11.6: Reference to reorder run that generated this PO
-  metadata        Json?
-  createdAt       DateTime            @default(now())
-  updatedAt       DateTime            @updatedAt
+  id             String              @id @default(cuid())
+  orgId          String
+  branchId       String
+  vendorId       String // FK to Vendor (accounting)
+  poNumber       String // Auto-generated or user-provided
+  status         PurchaseOrderStatus @default(DRAFT)
+  expectedAt     DateTime? // Expected delivery date
+  notes          String?
+  totalAmount    Decimal             @default(0) @db.Decimal(12, 2)
+  createdById    String
+  approvedById   String?
+  approvedAt     DateTime?
+  idempotencyKey String? // For integration-based creation
+  reorderRunId   String? // M11.6: Reference to reorder run that generated this PO
+  metadata       Json?
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
 
-  branch      Branch                 @relation("BranchPurchaseOrdersV2", fields: [branchId], references: [id], onDelete: Cascade)
-  vendor      Vendor                 @relation("VendorPurchaseOrders", fields: [vendorId], references: [id], onDelete: Restrict)
-  createdBy   User                   @relation("POCreator", fields: [createdById], references: [id], onDelete: Restrict)
-  approvedBy  User?                  @relation("POApprover", fields: [approvedById], references: [id], onDelete: SetNull)
-  reorderRun  ReorderSuggestionRun?  @relation("ReorderRunPOs", fields: [reorderRunId], references: [id], onDelete: SetNull)
-  lines       PurchaseOrderLineV2[]
-  receipts    GoodsReceiptV2[]
+  branch     Branch                @relation("BranchPurchaseOrdersV2", fields: [branchId], references: [id], onDelete: Cascade)
+  vendor     Vendor                @relation("VendorPurchaseOrders", fields: [vendorId], references: [id], onDelete: Restrict)
+  createdBy  User                  @relation("POCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  approvedBy User?                 @relation("POApprover", fields: [approvedById], references: [id], onDelete: SetNull)
+  reorderRun ReorderSuggestionRun? @relation("ReorderRunPOs", fields: [reorderRunId], references: [id], onDelete: SetNull)
+  lines      PurchaseOrderLineV2[]
+  receipts   GoodsReceiptV2[]
 
   @@unique([orgId, poNumber])
   @@unique([orgId, idempotencyKey])
@@ -5723,22 +5734,22 @@ model PurchaseOrderV2 {
 
 // Purchase Order Line with UOM conversion and over-receipt policy
 model PurchaseOrderLineV2 {
-  id                String   @id @default(cuid())
-  purchaseOrderId   String
-  itemId            String
-  qtyOrderedInput   Decimal  @db.Decimal(12, 4) // Quantity in input UOM
-  inputUomId        String                       // UOM of input quantity
-  qtyOrderedBase    Decimal  @db.Decimal(12, 4) // Converted to item's base UOM
-  unitCost          Decimal  @db.Decimal(12, 4) // Cost per unit (in org currency)
-  qtyReceivedBase   Decimal  @default(0) @db.Decimal(12, 4) // Total received in base UOM
-  allowOverReceipt  Boolean  @default(false)    // Policy: allow receiving more than ordered
-  notes             String?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  id               String   @id @default(cuid())
+  purchaseOrderId  String
+  itemId           String
+  qtyOrderedInput  Decimal  @db.Decimal(12, 4) // Quantity in input UOM
+  inputUomId       String // UOM of input quantity
+  qtyOrderedBase   Decimal  @db.Decimal(12, 4) // Converted to item's base UOM
+  unitCost         Decimal  @db.Decimal(12, 4) // Cost per unit (in org currency)
+  qtyReceivedBase  Decimal  @default(0) @db.Decimal(12, 4) // Total received in base UOM
+  allowOverReceipt Boolean  @default(false) // Policy: allow receiving more than ordered
+  notes            String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
-  purchaseOrder PurchaseOrderV2     @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
-  item          InventoryItem       @relation("POLineItem", fields: [itemId], references: [id], onDelete: Restrict)
-  inputUom      UnitOfMeasure       @relation("POLineInputUom", fields: [inputUomId], references: [id], onDelete: Restrict)
+  purchaseOrder PurchaseOrderV2      @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  item          InventoryItem        @relation("POLineItem", fields: [itemId], references: [id], onDelete: Restrict)
+  inputUom      UnitOfMeasure        @relation("POLineInputUom", fields: [inputUomId], references: [id], onDelete: Restrict)
   receiptLines  GoodsReceiptLineV2[]
 
   @@index([purchaseOrderId])
@@ -5748,25 +5759,25 @@ model PurchaseOrderLineV2 {
 
 // Goods Receipt with idempotent posting
 model GoodsReceiptV2 {
-  id                String             @id @default(cuid())
-  orgId             String
-  branchId          String
-  purchaseOrderId   String
-  receiptNumber     String             // Auto-generated
-  status            GoodsReceiptStatus @default(DRAFT)
-  receivedAt        DateTime           @default(now())
-  postedAt          DateTime?
-  postedById        String?
-  idempotencyKey    String?            // UNIQUE per org - prevents double posting
-  referenceNumber   String?            // External reference (e.g., delivery note)
-  notes             String?
-  metadata          Json?
-  createdAt         DateTime           @default(now())
-  updatedAt         DateTime           @updatedAt
+  id              String             @id @default(cuid())
+  orgId           String
+  branchId        String
+  purchaseOrderId String
+  receiptNumber   String // Auto-generated
+  status          GoodsReceiptStatus @default(DRAFT)
+  receivedAt      DateTime           @default(now())
+  postedAt        DateTime?
+  postedById      String?
+  idempotencyKey  String? // UNIQUE per org - prevents double posting
+  referenceNumber String? // External reference (e.g., delivery note)
+  notes           String?
+  metadata        Json?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
 
-  branch        Branch              @relation("BranchGoodsReceiptsV2", fields: [branchId], references: [id], onDelete: Cascade)
-  purchaseOrder PurchaseOrderV2     @relation(fields: [purchaseOrderId], references: [id], onDelete: Restrict)
-  postedBy      User?               @relation("ReceiptPostedBy", fields: [postedById], references: [id], onDelete: SetNull)
+  branch        Branch               @relation("BranchGoodsReceiptsV2", fields: [branchId], references: [id], onDelete: Cascade)
+  purchaseOrder PurchaseOrderV2      @relation(fields: [purchaseOrderId], references: [id], onDelete: Restrict)
+  postedBy      User?                @relation("ReceiptPostedBy", fields: [postedById], references: [id], onDelete: SetNull)
   lines         GoodsReceiptLineV2[]
 
   @@unique([orgId, receiptNumber])
@@ -5779,24 +5790,24 @@ model GoodsReceiptV2 {
 
 // Goods Receipt Line with ledger posting
 model GoodsReceiptLineV2 {
-  id                String    @id @default(cuid())
-  goodsReceiptId    String
-  itemId            String
-  locationId        String                        // Receiving location
-  poLineId          String?                       // Link to PO line
-  qtyReceivedInput  Decimal   @db.Decimal(12, 4) // Quantity in input UOM
-  inputUomId        String                        // UOM of input quantity
-  qtyReceivedBase   Decimal   @db.Decimal(12, 4) // Converted to item's base UOM
-  unitCost          Decimal   @db.Decimal(12, 4) // Cost per unit (may override PO line)
-  notes             String?
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
+  id               String   @id @default(cuid())
+  goodsReceiptId   String
+  itemId           String
+  locationId       String // Receiving location
+  poLineId         String? // Link to PO line
+  qtyReceivedInput Decimal  @db.Decimal(12, 4) // Quantity in input UOM
+  inputUomId       String // UOM of input quantity
+  qtyReceivedBase  Decimal  @db.Decimal(12, 4) // Converted to item's base UOM
+  unitCost         Decimal  @db.Decimal(12, 4) // Cost per unit (may override PO line)
+  notes            String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
-  goodsReceipt GoodsReceiptV2    @relation(fields: [goodsReceiptId], references: [id], onDelete: Cascade)
-  item         InventoryItem     @relation("ReceiptLineItem", fields: [itemId], references: [id], onDelete: Restrict)
-  location     InventoryLocation @relation("ReceiptLineLocation", fields: [locationId], references: [id], onDelete: Restrict)
+  goodsReceipt GoodsReceiptV2       @relation(fields: [goodsReceiptId], references: [id], onDelete: Cascade)
+  item         InventoryItem        @relation("ReceiptLineItem", fields: [itemId], references: [id], onDelete: Restrict)
+  location     InventoryLocation    @relation("ReceiptLineLocation", fields: [locationId], references: [id], onDelete: Restrict)
   poLine       PurchaseOrderLineV2? @relation(fields: [poLineId], references: [id], onDelete: SetNull)
-  inputUom     UnitOfMeasure     @relation("ReceiptLineInputUom", fields: [inputUomId], references: [id], onDelete: Restrict)
+  inputUom     UnitOfMeasure        @relation("ReceiptLineInputUom", fields: [inputUomId], references: [id], onDelete: Restrict)
 
   @@index([goodsReceiptId])
   @@index([itemId])
@@ -5830,29 +5841,29 @@ enum InventoryWasteReason {
 
 // Transfer document for inter-branch or intra-branch stock movements
 model InventoryTransfer {
-  id              String                   @id @default(cuid())
-  orgId           String
-  fromBranchId    String
-  toBranchId      String
-  transferNumber  String                   // Auto-generated (TRF-YYMM-XXXXX)
-  status          InventoryTransferStatus  @default(DRAFT)
-  shippedAt       DateTime?
-  shippedById     String?
-  receivedAt      DateTime?
-  receivedById    String?
-  notes           String?
-  idempotencyKey  String?                  // Unique per org - prevents duplicate creation
-  metadata        Json?
-  createdById     String
-  createdAt       DateTime                 @default(now())
-  updatedAt       DateTime                 @updatedAt
+  id             String                  @id @default(cuid())
+  orgId          String
+  fromBranchId   String
+  toBranchId     String
+  transferNumber String // Auto-generated (TRF-YYMM-XXXXX)
+  status         InventoryTransferStatus @default(DRAFT)
+  shippedAt      DateTime?
+  shippedById    String?
+  receivedAt     DateTime?
+  receivedById   String?
+  notes          String?
+  idempotencyKey String? // Unique per org - prevents duplicate creation
+  metadata       Json?
+  createdById    String
+  createdAt      DateTime                @default(now())
+  updatedAt      DateTime                @updatedAt
 
-  fromBranch  Branch                  @relation("TransferFromBranch", fields: [fromBranchId], references: [id], onDelete: Restrict)
-  toBranch    Branch                  @relation("TransferToBranch", fields: [toBranchId], references: [id], onDelete: Restrict)
-  createdBy   User                    @relation("TransferCreator", fields: [createdById], references: [id], onDelete: Restrict)
-  shippedBy   User?                   @relation("TransferShipper", fields: [shippedById], references: [id], onDelete: SetNull)
-  receivedBy  User?                   @relation("TransferReceiver", fields: [receivedById], references: [id], onDelete: SetNull)
-  lines       InventoryTransferLine[]
+  fromBranch Branch                  @relation("TransferFromBranch", fields: [fromBranchId], references: [id], onDelete: Restrict)
+  toBranch   Branch                  @relation("TransferToBranch", fields: [toBranchId], references: [id], onDelete: Restrict)
+  createdBy  User                    @relation("TransferCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  shippedBy  User?                   @relation("TransferShipper", fields: [shippedById], references: [id], onDelete: SetNull)
+  receivedBy User?                   @relation("TransferReceiver", fields: [receivedById], references: [id], onDelete: SetNull)
+  lines      InventoryTransferLine[]
 
   @@unique([orgId, transferNumber])
   @@unique([orgId, idempotencyKey])
@@ -5864,48 +5875,51 @@ model InventoryTransfer {
 
 // Transfer line items
 model InventoryTransferLine {
-  id              String   @id @default(cuid())
-  transferId      String
-  itemId          String
-  fromLocationId  String                   // Source location (in fromBranch)
-  toLocationId    String                   // Destination location (in toBranch)
-  qtyShipped      Decimal  @db.Decimal(12, 4)
-  qtyReceived     Decimal  @default(0) @db.Decimal(12, 4)
-  notes           String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id             String   @id @default(cuid())
+  transferId     String
+  itemId         String
+  fromLocationId String // Source location (in fromBranch)
+  toLocationId   String // Destination location (in toBranch)
+  lotId          String? // M11.7: Optional lot reference for lot-aware transfers
+  qtyShipped     Decimal  @db.Decimal(12, 4)
+  qtyReceived    Decimal  @default(0) @db.Decimal(12, 4)
+  notes          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  transfer      InventoryTransfer  @relation(fields: [transferId], references: [id], onDelete: Cascade)
-  item          InventoryItem      @relation("TransferLineItem", fields: [itemId], references: [id], onDelete: Restrict)
-  fromLocation  InventoryLocation  @relation("TransferLineFromLocation", fields: [fromLocationId], references: [id], onDelete: Restrict)
-  toLocation    InventoryLocation  @relation("TransferLineToLocation", fields: [toLocationId], references: [id], onDelete: Restrict)
+  transfer     InventoryTransfer @relation(fields: [transferId], references: [id], onDelete: Cascade)
+  item         InventoryItem     @relation("TransferLineItem", fields: [itemId], references: [id], onDelete: Restrict)
+  fromLocation InventoryLocation @relation("TransferLineFromLocation", fields: [fromLocationId], references: [id], onDelete: Restrict)
+  toLocation   InventoryLocation @relation("TransferLineToLocation", fields: [toLocationId], references: [id], onDelete: Restrict)
+  lot          InventoryLot?     @relation("TransferLineLot", fields: [lotId], references: [id], onDelete: SetNull)
 
   @@index([transferId])
   @@index([itemId])
+  @@index([lotId])
   @@map("inventory_transfer_lines")
 }
 
 // Waste document for recording stock losses
 model InventoryWaste {
-  id              String                @id @default(cuid())
-  orgId           String
-  branchId        String
-  wasteNumber     String                // Auto-generated (WST-YYMM-XXXXX)
-  status          InventoryWasteStatus  @default(DRAFT)
-  reason          InventoryWasteReason  @default(OTHER)
-  postedAt        DateTime?
-  postedById      String?
-  notes           String?
-  idempotencyKey  String?               // Unique per org - prevents duplicate creation
-  metadata        Json?
-  createdById     String
-  createdAt       DateTime              @default(now())
-  updatedAt       DateTime              @updatedAt
+  id             String               @id @default(cuid())
+  orgId          String
+  branchId       String
+  wasteNumber    String // Auto-generated (WST-YYMM-XXXXX)
+  status         InventoryWasteStatus @default(DRAFT)
+  reason         InventoryWasteReason @default(OTHER)
+  postedAt       DateTime?
+  postedById     String?
+  notes          String?
+  idempotencyKey String? // Unique per org - prevents duplicate creation
+  metadata       Json?
+  createdById    String
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
 
-  branch     Branch              @relation("WasteBranch", fields: [branchId], references: [id], onDelete: Cascade)
-  createdBy  User                @relation("WasteCreator", fields: [createdById], references: [id], onDelete: Restrict)
-  postedBy   User?               @relation("WastePoster", fields: [postedById], references: [id], onDelete: SetNull)
-  lines      InventoryWasteLine[]
+  branch    Branch               @relation("WasteBranch", fields: [branchId], references: [id], onDelete: Cascade)
+  createdBy User                 @relation("WasteCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  postedBy  User?                @relation("WastePoster", fields: [postedById], references: [id], onDelete: SetNull)
+  lines     InventoryWasteLine[]
 
   @@unique([orgId, wasteNumber])
   @@unique([orgId, idempotencyKey])
@@ -5916,25 +5930,29 @@ model InventoryWaste {
 
 // Waste line items
 model InventoryWasteLine {
-  id          String                 @id @default(cuid())
-  wasteId     String
-  itemId      String
-  locationId  String
-  qty         Decimal                @db.Decimal(12, 4) // Quantity wasted (positive)
-  unitCost    Decimal?               @db.Decimal(12, 4) // Optional cost tracking
-  reason      InventoryWasteReason?  // Line-level override
-  notes       String?
-  createdAt   DateTime               @default(now())
-  updatedAt   DateTime               @updatedAt
+  id         String                @id @default(cuid())
+  wasteId    String
+  itemId     String
+  locationId String
+  lotId      String? // M11.7: Optional lot reference for lot-aware waste
+  qty        Decimal               @db.Decimal(12, 4) // Quantity wasted (positive)
+  unitCost   Decimal?              @db.Decimal(12, 4) // Optional cost tracking
+  reason     InventoryWasteReason? // Line-level override
+  notes      String?
+  createdAt  DateTime              @default(now())
+  updatedAt  DateTime              @updatedAt
 
-  waste     InventoryWaste     @relation(fields: [wasteId], references: [id], onDelete: Cascade)
-  item      InventoryItem      @relation("WasteLineItem", fields: [itemId], references: [id], onDelete: Restrict)
-  location  InventoryLocation  @relation("WasteLineLocation", fields: [locationId], references: [id], onDelete: Restrict)
+  waste    InventoryWaste    @relation(fields: [wasteId], references: [id], onDelete: Cascade)
+  item     InventoryItem     @relation("WasteLineItem", fields: [itemId], references: [id], onDelete: Restrict)
+  location InventoryLocation @relation("WasteLineLocation", fields: [locationId], references: [id], onDelete: Restrict)
+  lot      InventoryLot?     @relation("WasteLineLot", fields: [lotId], references: [id], onDelete: SetNull)
 
   @@index([wasteId])
   @@index([itemId])
+  @@index([lotId])
   @@map("inventory_waste_lines")
 }
+
 // ========================================
 // M11.4: Recipes/BOM + POS Depletion
 // ========================================
@@ -5953,18 +5971,18 @@ enum DepletionStatus {
 
 // Recipe Header - links sellable items to ingredient lists
 model Recipe {
-  id              String           @id @default(cuid())
-  orgId           String
-  name            String
-  targetType      RecipeTargetType // MENU_ITEM or INVENTORY_ITEM
-  targetId        String           // menuItemId or inventoryItemId
-  outputQtyBase   Decimal          @default(1) @db.Decimal(12, 4)
-  outputUomId     String?          // Optional: for advanced yield tracking
-  isActive        Boolean          @default(true)
-  createdById     String
-  updatedById     String?
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
+  id            String           @id @default(cuid())
+  orgId         String
+  name          String
+  targetType    RecipeTargetType // MENU_ITEM or INVENTORY_ITEM
+  targetId      String // menuItemId or inventoryItemId
+  outputQtyBase Decimal          @default(1) @db.Decimal(12, 4)
+  outputUomId   String? // Optional: for advanced yield tracking
+  isActive      Boolean          @default(true)
+  createdById   String
+  updatedById   String?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
 
   // Relations
   org       Org            @relation(fields: [orgId], references: [id], onDelete: Cascade)
@@ -5992,9 +6010,9 @@ model RecipeLine {
   updatedAt       DateTime @updatedAt
 
   // Relations
-  recipe        Recipe         @relation(fields: [recipeId], references: [id], onDelete: Cascade)
-  inventoryItem InventoryItem  @relation("RecipeLineItem", fields: [inventoryItemId], references: [id], onDelete: Restrict)
-  inputUom      UnitOfMeasure  @relation("RecipeLineInputUom", fields: [inputUomId], references: [id], onDelete: Restrict)
+  recipe        Recipe        @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  inventoryItem InventoryItem @relation("RecipeLineItem", fields: [inventoryItemId], references: [id], onDelete: Restrict)
+  inputUom      UnitOfMeasure @relation("RecipeLineInputUom", fields: [inputUomId], references: [id], onDelete: Restrict)
 
   @@index([recipeId])
   @@index([inventoryItemId])
@@ -6012,7 +6030,7 @@ model OrderInventoryDepletion {
   errorCode        String?
   errorMessage     String?
   ledgerEntryCount Int             @default(0)
-  metadata         Json?           // Store details like itemsProcessed, itemsSkipped, etc.
+  metadata         Json? // Store details like itemsProcessed, itemsSkipped, etc.
   createdAt        DateTime        @default(now())
   postedAt         DateTime?
 
@@ -6048,14 +6066,14 @@ model InventoryCostLayer {
   orgId       String
   branchId    String
   itemId      String
-  locationId  String?                       // Optional: for location-level costing
+  locationId  String? // Optional: for location-level costing
   method      CostMethod     @default(WAC)
-  qtyReceived Decimal        @db.Decimal(12, 4)  // Qty added in this layer
-  unitCost    Decimal        @db.Decimal(12, 4)  // Cost per unit in base UOM
-  priorWac    Decimal        @db.Decimal(12, 4)  // WAC before this layer
-  newWac      Decimal        @db.Decimal(12, 4)  // WAC after this layer
-  sourceType  CostSourceType                // GOODS_RECEIPT, MANUAL_ADJUSTMENT, INITIAL_SEED
-  sourceId    String                        // Receipt line ID, adjustment ID, etc.
+  qtyReceived Decimal        @db.Decimal(12, 4) // Qty added in this layer
+  unitCost    Decimal        @db.Decimal(12, 4) // Cost per unit in base UOM
+  priorWac    Decimal        @db.Decimal(12, 4) // WAC before this layer
+  newWac      Decimal        @db.Decimal(12, 4) // WAC after this layer
+  sourceType  CostSourceType // GOODS_RECEIPT, MANUAL_ADJUSTMENT, INITIAL_SEED
+  sourceId    String // Receipt line ID, adjustment ID, etc.
   effectiveAt DateTime       @default(now())
   createdById String
   metadata    Json?
@@ -6081,9 +6099,9 @@ model DepletionCostBreakdown {
   depletionId String
   orderId     String
   itemId      String
-  qtyDepleted Decimal  @db.Decimal(12, 4)  // Quantity consumed (positive)
-  unitCost    Decimal  @db.Decimal(12, 4)  // WAC at time of depletion
-  lineCogs    Decimal  @db.Decimal(12, 4)  // qtyDepleted × unitCost
+  qtyDepleted Decimal  @db.Decimal(12, 4) // Quantity consumed (positive)
+  unitCost    Decimal  @db.Decimal(12, 4) // WAC at time of depletion
+  lineCogs    Decimal  @db.Decimal(12, 4) // qtyDepleted × unitCost
   computedAt  DateTime @default(now())
   metadata    Json?
   createdAt   DateTime @default(now())
@@ -6106,12 +6124,12 @@ model DepletionCostBreakdown {
 model SupplierItem {
   id                        String   @id @default(cuid())
   orgId                     String
-  vendorId                  String   // FK to Vendor (accounting)
-  inventoryItemId           String   // FK to InventoryItem
-  vendorSku                 String   // Vendor's SKU/part number
-  vendorUomId               String?  // FK to UnitOfMeasure (ordering unit, e.g., "case")
+  vendorId                  String // FK to Vendor (accounting)
+  inventoryItemId           String // FK to InventoryItem
+  vendorSku                 String // Vendor's SKU/part number
+  vendorUomId               String? // FK to UnitOfMeasure (ordering unit, e.g., "case")
   uomConversionFactorToBase Decimal  @default(1) @db.Decimal(12, 6) // vendorQty × factor = baseQty
-  packSizeLabel             String?  // Human-readable, e.g., "12x500ml"
+  packSizeLabel             String? // Human-readable, e.g., "12x500ml"
   leadTimeDays              Int      @default(0)
   minOrderQtyVendorUom      Decimal  @default(0) @db.Decimal(12, 4)
   isPreferred               Boolean  @default(false)
@@ -6143,13 +6161,13 @@ enum SupplierPriceSource {
 model SupplierPrice {
   id                  String              @id @default(cuid())
   orgId               String
-  supplierItemId      String              // FK to SupplierItem
+  supplierItemId      String // FK to SupplierItem
   currency            String              @default("USD")
   unitPriceVendorUom  Decimal             @db.Decimal(12, 4) // Price per vendor UOM
   effectiveFrom       DateTime
-  effectiveTo         DateTime?           // null = currently active
+  effectiveTo         DateTime? // null = currently active
   source              SupplierPriceSource @default(MANUAL)
-  sourceReceiptLineId String?             // For RECEIPT_DERIVED idempotency
+  sourceReceiptLineId String? // For RECEIPT_DERIVED idempotency
   note                String?
   createdAt           DateTime            @default(now())
 
@@ -6177,9 +6195,9 @@ model ReorderPolicy {
   updatedAt           DateTime @updatedAt
 
   // Relations
-  branch          Branch             @relation("BranchReorderPolicies", fields: [branchId], references: [id], onDelete: Cascade)
-  inventoryItem   InventoryItem      @relation("ItemReorderPolicies", fields: [inventoryItemId], references: [id], onDelete: Restrict)
-  preferredVendor Vendor?            @relation("PolicyPreferredVendor", fields: [preferredVendorId], references: [id], onDelete: SetNull)
+  branch          Branch        @relation("BranchReorderPolicies", fields: [branchId], references: [id], onDelete: Cascade)
+  inventoryItem   InventoryItem @relation("ItemReorderPolicies", fields: [inventoryItemId], references: [id], onDelete: Restrict)
+  preferredVendor Vendor?       @relation("PolicyPreferredVendor", fields: [preferredVendorId], references: [id], onDelete: SetNull)
 
   @@unique([orgId, branchId, inventoryItemId])
   @@index([orgId, branchId])
@@ -6192,15 +6210,15 @@ model ReorderSuggestionRun {
   orgId             String
   branchId          String
   asOf              DateTime @default(now())
-  deterministicHash String   // SHA256 of sorted inputs for idempotency
+  deterministicHash String // SHA256 of sorted inputs for idempotency
   createdById       String
   createdAt         DateTime @default(now())
 
   // Relations
-  branch    Branch                   @relation("BranchReorderRuns", fields: [branchId], references: [id], onDelete: Cascade)
-  createdBy User                     @relation("ReorderRunCreator", fields: [createdById], references: [id], onDelete: Restrict)
-  lines     ReorderSuggestionLine[]
-  generatedPOs PurchaseOrderV2[]     @relation("ReorderRunPOs")
+  branch       Branch                  @relation("BranchReorderRuns", fields: [branchId], references: [id], onDelete: Cascade)
+  createdBy    User                    @relation("ReorderRunCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  lines        ReorderSuggestionLine[]
+  generatedPOs PurchaseOrderV2[]       @relation("ReorderRunPOs")
 
   @@unique([orgId, branchId, deterministicHash])
   @@index([orgId, branchId])
@@ -6237,4 +6255,83 @@ model ReorderSuggestionLine {
   @@unique([runId, inventoryItemId])
   @@index([runId])
   @@map("reorder_suggestion_lines")
+}
+
+// ============================================================================
+// M11.7: Lot/Batch + Expiry + Traceability (FEFO Allocation)
+// ============================================================================
+
+enum LotStatus {
+  ACTIVE // Available for allocation
+  QUARANTINE // Held for inspection, not allocable
+  EXPIRED // Past expiry date, auto-set by system
+  DEPLETED // remainingQty = 0
+}
+
+// Inventory Lot - Tracks individual lots/batches per item+branch+location
+model InventoryLot {
+  id                String    @id @default(cuid())
+  orgId             String
+  branchId          String
+  itemId            String
+  locationId        String
+  lotNumber         String // User-visible lot/batch number
+  receivedQty       Decimal   @db.Decimal(12, 4) // Original received qty
+  remainingQty      Decimal   @db.Decimal(12, 4) // Current qty available
+  unitCost          Decimal?  @db.Decimal(12, 4) // Cost at time of receipt
+  expiryDate        DateTime? // Optional expiry date
+  status            LotStatus @default(ACTIVE)
+  manufacturingDate DateTime? // Optional manufacturing date
+  supplierLotRef    String? // Supplier's lot reference (for traceability)
+  sourceType        String // GOODS_RECEIPT, TRANSFER_IN, ADJUSTMENT
+  sourceId          String? // ID of source record
+  notes             String?
+  metadata          Json?
+  createdById       String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  // Relations
+  org       Org               @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  branch    Branch            @relation("LotBranch", fields: [branchId], references: [id], onDelete: Cascade)
+  item      InventoryItem     @relation("LotItem", fields: [itemId], references: [id], onDelete: Restrict)
+  location  InventoryLocation @relation("LotLocation", fields: [locationId], references: [id], onDelete: Restrict)
+  createdBy User?             @relation("LotCreator", fields: [createdById], references: [id], onDelete: SetNull)
+
+  // Allocation tracking
+  allocations LotLedgerAllocation[]
+
+  // Transfer/Waste line relations
+  transferLinesFrom InventoryTransferLine[] @relation("TransferLineLot")
+  wasteLines        InventoryWasteLine[]    @relation("WasteLineLot")
+
+  @@unique([orgId, branchId, itemId, locationId, lotNumber])
+  @@index([orgId, branchId, itemId])
+  @@index([itemId, locationId])
+  @@index([status])
+  @@index([expiryDate])
+  @@map("inventory_lots")
+}
+
+// Lot Ledger Allocation - Links ledger entries to specific lots for traceability
+model LotLedgerAllocation {
+  id              String   @id @default(cuid())
+  orgId           String
+  lotId           String
+  ledgerEntryId   String? // FK to InventoryLedgerEntry (can be null for waste/transfer pre-ledger)
+  allocatedQty    Decimal  @db.Decimal(12, 4) // Quantity allocated from this lot (positive)
+  sourceType      String // ORDER, WASTE, TRANSFER_OUT, ADJUSTMENT
+  sourceId        String // orderId, wasteId, transferId, etc.
+  allocationOrder Int // 1, 2, 3... for FEFO sequence tracking
+  metadata        Json?
+  createdAt       DateTime @default(now())
+
+  // Relations
+  lot         InventoryLot          @relation(fields: [lotId], references: [id], onDelete: Cascade)
+  ledgerEntry InventoryLedgerEntry? @relation(fields: [ledgerEntryId], references: [id], onDelete: SetNull)
+
+  @@index([lotId])
+  @@index([ledgerEntryId])
+  @@index([sourceType, sourceId])
+  @@map("lot_ledger_allocations")
 }

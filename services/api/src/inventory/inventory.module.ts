@@ -58,6 +58,10 @@ import { SupplierPricingService } from './supplier-pricing.service';
 import { ReorderEngineService } from './reorder-engine.service';
 import { ReorderPoGeneratorService } from './reorder-po-generator.service';
 
+// M11.7 Lots + Expiry + Traceability imports
+import { InventoryLotsController } from './inventory-lots.controller';
+import { InventoryLotsService } from './inventory-lots.service';
+
 @Module({
   imports: [KpisModule, AuditModule],
   controllers: [
@@ -70,6 +74,7 @@ import { ReorderPoGeneratorService } from './reorder-po-generator.service';
     InventoryDepletionController, // M11.4
     InventoryCostingController, // M11.5
     SupplierCatalogController, // M11.6
+    InventoryLotsController, // M11.7
     RecipesController,
     WastageController,
     CountsController,
@@ -98,6 +103,7 @@ import { ReorderPoGeneratorService } from './reorder-po-generator.service';
     SupplierPricingService, // M11.6
     ReorderEngineService, // M11.6
     ReorderPoGeneratorService, // M11.6
+    InventoryLotsService, // M11.7
     RecipesService,
     WastageService,
     CountsService,
@@ -129,6 +135,7 @@ import { ReorderPoGeneratorService } from './reorder-po-generator.service';
     SupplierPricingService, // M11.6
     ReorderEngineService, // M11.6
     ReorderPoGeneratorService, // M11.6
+    InventoryLotsService, // M11.7
     RecipesService,
     WastageService,
     CountsService,
