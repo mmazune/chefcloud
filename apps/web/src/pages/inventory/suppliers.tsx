@@ -21,9 +21,9 @@ import { Card } from '@/components/ui/card';
 import { Dialog } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { useToast } from '@/components/ui/use-toast';
 import { apiClient } from '@/lib/api';
 import { Plus, Search, Edit, History, DollarSign } from 'lucide-react';
-import { toast } from 'sonner';
 
 interface Vendor {
   id: string;
@@ -61,6 +61,7 @@ interface SupplierPrice {
 
 export default function SuppliersPage() {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   const [search, setSearch] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<SupplierItem | null>(null);
@@ -136,10 +137,10 @@ export default function SuppliersPage() {
       setDialogOpen(false);
       setEditingItem(null);
       resetForm();
-      toast.success(editingItem ? 'Supplier item updated' : 'Supplier item created');
+      toast({ title: 'Success', description: editingItem ? 'Supplier item updated' : 'Supplier item created' });
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Failed to save supplier item');
+      toast({ title: 'Error', description: error.response?.data?.message || 'Failed to save supplier item', variant: 'destructive' });
     },
   });
 
@@ -152,10 +153,10 @@ export default function SuppliersPage() {
       queryClient.invalidateQueries({ queryKey: ['supplier-prices', selectedItemForPrices?.id] });
       setPriceDialogOpen(false);
       setPriceAmount('');
-      toast.success('Price added');
+      toast({ title: 'Success', description: 'Price added' });
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Failed to add price');
+      toast({ title: 'Error', description: error.response?.data?.message || 'Failed to add price', variant: 'destructive' });
     },
   });
 
@@ -276,7 +277,7 @@ export default function SuppliersPage() {
       <div className="p-6 space-y-6">
         <PageHeader
           title="Supplier Catalog"
-          description="Manage vendor item mappings, UOM conversions, and pricing"
+          subtitle="Manage vendor item mappings, UOM conversions, and pricing"
         />
 
         <Card className="p-4">

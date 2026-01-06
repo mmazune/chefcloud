@@ -260,8 +260,8 @@ describe('M11.5 Inventory Costing Pages', () => {
     let ValuationPage: React.ComponentType;
 
     beforeAll(async () => {
-      const module = await import('@/pages/inventory/valuation');
-      ValuationPage = module.default;
+      const pageModule = await import('@/pages/inventory/valuation');
+      ValuationPage = pageModule.default;
     });
 
     it('should render page header with title', () => {
@@ -312,8 +312,8 @@ describe('M11.5 Inventory Costing Pages', () => {
     let CogsPage: React.ComponentType;
 
     beforeAll(async () => {
-      const module = await import('@/pages/inventory/cogs');
-      CogsPage = module.default;
+      const pageModule = await import('@/pages/inventory/cogs');
+      CogsPage = pageModule.default;
     });
 
     it('should render page header with title', () => {

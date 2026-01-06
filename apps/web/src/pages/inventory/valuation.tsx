@@ -207,7 +207,7 @@ export default function ValuationPage() {
       <div className="flex flex-col gap-6 p-6">
         <PageHeader
           title="Inventory Valuation"
-          description="On-hand value at Weighted Average Cost (WAC)"
+          subtitle="On-hand value at Weighted Average Cost (WAC)"
         />
 
         {/* Summary Cards */}

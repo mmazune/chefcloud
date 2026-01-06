@@ -204,7 +204,7 @@ export default function InventoryWastePage() {
     <AppShell>
       <PageHeader
         title="Inventory Waste"
-        description="Document and track inventory losses"
+        subtitle="Document and track inventory losses"
         actions={
           isL3OrAbove && (
             <Button onClick={() => setDialogOpen(true)}>

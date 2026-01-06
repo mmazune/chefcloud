@@ -226,7 +226,7 @@ export default function CogsPage() {
       <div className="flex flex-col gap-6 p-6">
         <PageHeader
           title="Cost of Goods Sold"
-          description="COGS calculated from order depletions at WAC"
+          subtitle="COGS calculated from order depletions at WAC"
         />
 
         {/* Summary Cards */}

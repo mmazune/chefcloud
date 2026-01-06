@@ -238,7 +238,7 @@ export default function InventoryTransfersPage() {
     <AppShell>
       <PageHeader
         title="Inventory Transfers"
-        description="Manage inter-branch and intra-branch stock transfers"
+        subtitle="Manage inter-branch and intra-branch stock transfers"
         actions={
           isL3OrAbove && (
             <Button onClick={() => setDialogOpen(true)}>

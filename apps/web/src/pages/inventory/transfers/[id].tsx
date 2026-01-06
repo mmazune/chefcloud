@@ -144,7 +144,7 @@ export default function TransferDetailPage() {
             </Badge>
           </div>
         }
-        description={`Created ${new Date(transfer.createdAt).toLocaleString()}`}
+        subtitle={`Created ${new Date(transfer.createdAt).toLocaleString()}`}
         actions={
           <div className="flex gap-2">
             {isL3OrAbove && transfer.status === 'DRAFT' && (

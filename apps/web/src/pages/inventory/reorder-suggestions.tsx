@@ -18,9 +18,9 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { useToast } from '@/components/ui/use-toast';
 import { apiClient } from '@/lib/api';
 import { Plus, Eye, FileSpreadsheet, ShoppingCart, RefreshCw } from 'lucide-react';
-import { toast } from 'sonner';
 
 interface ReorderRun {
   id: string;
@@ -80,6 +80,7 @@ interface GeneratePOsResult {
 
 export default function ReorderSuggestionsPage() {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selectedRunId, setSelectedRunId] = useState<string | null>(null);
 
@@ -113,10 +114,10 @@ export default function ReorderSuggestionsPage() {
       queryClient.invalidateQueries({ queryKey: ['reorder-runs'] });
       setSelectedRunId(data.id);
       setDrawerOpen(true);
-      toast.success('Reorder run created');
+      toast({ title: 'Success', description: 'Reorder run created' });
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Failed to create run');
+      toast({ title: 'Error', description: error.response?.data?.message || 'Failed to create run', variant: 'destructive' });
     },
   });
 
@@ -133,13 +134,13 @@ export default function ReorderSuggestionsPage() {
       queryClient.invalidateQueries({ queryKey: ['reorder-run', selectedRunId] });
       queryClient.invalidateQueries({ queryKey: ['reorder-runs'] });
       if (data.isNew) {
-        toast.success(`Generated ${data.purchaseOrders.length} draft PO(s)`);
+        toast({ title: 'Success', description: `Generated ${data.purchaseOrders.length} draft PO(s)` });
       } else {
-        toast.info('POs already exist for this run');
+        toast({ title: 'Info', description: 'POs already exist for this run' });
       }
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Failed to generate POs');
+      toast({ title: 'Error', description: error.response?.data?.message || 'Failed to generate POs', variant: 'destructive' });
     },
   });
 
@@ -260,7 +261,7 @@ export default function ReorderSuggestionsPage() {
       <div className="p-6 space-y-6">
         <PageHeader
           title="Reorder Suggestions"
-          description="Generate and review reorder suggestions based on current stock levels"
+          subtitle="Generate and review reorder suggestions based on current stock levels"
         />
 
         <Card className="p-4">

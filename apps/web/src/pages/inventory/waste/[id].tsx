@@ -147,7 +147,7 @@ export default function WasteDetailPage() {
             </Badge>
           </div>
         }
-        description={`Created ${new Date(waste.createdAt).toLocaleString()}`}
+        subtitle={`Created ${new Date(waste.createdAt).toLocaleString()}`}
         actions={
           <div className="flex gap-2">
             {isL3OrAbove && waste.status === 'DRAFT' && (

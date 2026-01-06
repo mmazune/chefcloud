@@ -22,6 +22,8 @@ export interface SelectProps {
   value?: string;
   defaultValue?: string;
   onValueChange?: (value: string) => void;
+  placeholder?: string;
+  disabled?: boolean;
 }
 
 export function Select({ children, value: controlledValue, defaultValue = '', onValueChange }: SelectProps) {
@@ -124,3 +126,6 @@ export function SelectLabel({ children, className = '' }: { children: React.Reac
 export function SelectSeparator({ className = '' }: { className?: string }) {
   return <div className={`my-1 h-px bg-gray-200 ${className}`} />;
 }
+
+// Convenience alias for SelectItem
+Select.Option = SelectItem;

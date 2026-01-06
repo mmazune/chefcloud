@@ -18,9 +18,9 @@ import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Dialog } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import { useToast } from '@/components/ui/use-toast';
 import { apiClient } from '@/lib/api';
 import { Plus, Search, Edit } from 'lucide-react';
-import { toast } from 'sonner';
 
 interface Vendor {
   id: string;
@@ -49,6 +49,7 @@ interface ReorderPolicy {
 
 export default function ReorderPoliciesPage() {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   const [search, setSearch] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingPolicy, setEditingPolicy] = useState<ReorderPolicy | null>(null);
@@ -97,10 +98,10 @@ export default function ReorderPoliciesPage() {
       setDialogOpen(false);
       setEditingPolicy(null);
       resetForm();
-      toast.success('Reorder policy saved');
+      toast({ title: 'Success', description: 'Reorder policy saved' });
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Failed to save policy');
+      toast({ title: 'Error', description: error.response?.data?.message || 'Failed to save policy', variant: 'destructive' });
     },
   });
 
@@ -186,7 +187,7 @@ export default function ReorderPoliciesPage() {
       <div className="p-6 space-y-6">
         <PageHeader
           title="Reorder Policies"
-          description="Configure branch-level reorder points and quantities"
+          subtitle="Configure branch-level reorder points and quantities"
         />
 
         <Card className="p-4">
