@@ -1,11 +1,12 @@
 /**
- * M12.1 Inventory Period Service
+ * M12.1 + M12.2 Inventory Period Service
  *
  * Manages inventory period lifecycle:
  * - Create/list/close periods
  * - Lock enforcement for posting within closed periods
  * - Blocking state validation before close
  * - Valuation snapshot + movement summary generation
+ * - M12.2: Reopen workflow with revision tracking
  */
 import {
   Injectable,
@@ -18,6 +19,7 @@ import {
 import { PrismaService } from '../prisma.service';
 import { AuditLogService } from '../audit/audit-log.service';
 import { InventoryCostingService } from './inventory-costing.service';
+import { InventoryPeriodEventsService } from './inventory-period-events.service';
 import { Prisma, InventoryPeriodStatus } from '@chefcloud/db';
 
 const Decimal = Prisma.Decimal;
@@ -37,6 +39,21 @@ export interface ClosePeriodDto {
   startDate: Date;
   endDate: Date;
   lockReason?: string;
+}
+
+export interface ReopenPeriodDto {
+  periodId: string;
+  reason: string;
+}
+
+export interface ReopenResult {
+  periodId: string;
+  previousStatus: InventoryPeriodStatus;
+  newStatus: InventoryPeriodStatus;
+  reopenedAt: Date;
+  reopenedById: string;
+  reason: string;
+  eventId: string;
 }
 
 export interface PeriodListResult {
@@ -101,6 +118,7 @@ export class InventoryPeriodsService {
     private readonly prisma: PrismaService,
     private readonly auditLog: AuditLogService,
     private readonly costingService: InventoryCostingService,
+    private readonly periodEventsService: InventoryPeriodEventsService,
   ) {}
 
   /**
@@ -448,21 +466,27 @@ export class InventoryPeriodsService {
     const endBoundary = new Date(dto.endDate);
     endBoundary.setHours(23, 59, 59, 999);
 
-    // Generate valuation snapshots
+    // M12.2: Get current revision and increment for re-close scenario
+    const currentRevision = await this.getCurrentRevision(period.id);
+    const newRevision = currentRevision + 1;
+
+    // Generate valuation snapshots with revision
     await this.generateValuationSnapshots(
       orgId,
       dto.branchId,
       period.id,
       endBoundary,
+      newRevision,
     );
 
-    // Generate movement summaries
+    // Generate movement summaries with revision
     await this.generateMovementSummaries(
       orgId,
       dto.branchId,
       period.id,
       dto.startDate,
       endBoundary,
+      newRevision,
     );
 
     // Mark period as CLOSED
@@ -495,17 +519,136 @@ export class InventoryPeriodsService {
       },
     });
 
+    // Log period event for audit trail (M12.2)
+    await this.periodEventsService.logEvent({
+      orgId,
+      branchId: dto.branchId,
+      periodId: closedPeriod.id,
+      type: 'CLOSED',
+      actorUserId: userId,
+      reason: dto.lockReason ?? 'Period closed',
+      metadataJson: {
+        snapshotCount: closedPeriod._count.valuationSnapshots,
+        summaryCount: closedPeriod._count.movementSummaries,
+      },
+    });
+
     return closedPeriod;
   }
 
   /**
+   * M12.2: Reopen a closed period (L5 only).
+   * 
+   * Behavior:
+   * - Only CLOSED periods can be reopened
+   * - Changes status to OPEN
+   * - Logs REOPENED event with reason (required)
+   * - Does NOT delete existing snapshots (kept for audit)
+   * - On next close, generates new snapshots with revision+1
+   */
+  async reopenPeriod(
+    orgId: string,
+    userId: string,
+    dto: ReopenPeriodDto,
+  ): Promise<ReopenResult> {
+    // Get period
+    const period = await this.prisma.client.inventoryPeriod.findFirst({
+      where: { id: dto.periodId, orgId },
+      include: { branch: { select: { id: true, name: true } } },
+    });
+
+    if (!period) {
+      throw new NotFoundException('Period not found');
+    }
+
+    if (period.status !== 'CLOSED') {
+      throw new BadRequestException({
+        code: 'PERIOD_NOT_CLOSED',
+        message: `Cannot reopen period with status ${period.status}. Only CLOSED periods can be reopened.`,
+      });
+    }
+
+    if (!dto.reason || dto.reason.trim().length < 10) {
+      throw new BadRequestException({
+        code: 'REOPEN_REASON_REQUIRED',
+        message: 'A reason of at least 10 characters is required to reopen a period.',
+      });
+    }
+
+    // Update status to OPEN
+    const reopenedAt = new Date();
+    await this.prisma.client.inventoryPeriod.update({
+      where: { id: period.id },
+      data: {
+        status: 'OPEN',
+        // Keep closedAt/closedById for audit trail - they show when it was last closed
+      },
+    });
+
+    // Log REOPENED event
+    const event = await this.periodEventsService.logEvent({
+      orgId,
+      branchId: period.branchId,
+      periodId: period.id,
+      type: 'REOPENED',
+      actorUserId: userId,
+      reason: dto.reason.trim(),
+      metadataJson: {
+        previousClosedAt: period.closedAt?.toISOString(),
+        previousClosedById: period.closedById,
+      },
+    });
+
+    // Audit log
+    await this.auditLog.log({
+      orgId,
+      userId,
+      action: 'INVENTORY_PERIOD_REOPENED',
+      resourceType: 'InventoryPeriod',
+      resourceId: period.id,
+      metadata: {
+        branchId: period.branchId,
+        branchName: period.branch.name,
+        startDate: period.startDate.toISOString(),
+        endDate: period.endDate.toISOString(),
+        reason: dto.reason.trim(),
+      },
+    });
+
+    this.logger.log(`Period ${period.id} reopened by user ${userId}: ${dto.reason.trim()}`);
+
+    return {
+      periodId: period.id,
+      previousStatus: 'CLOSED',
+      newStatus: 'OPEN',
+      reopenedAt,
+      reopenedById: userId,
+      reason: dto.reason.trim(),
+      eventId: event.id,
+    };
+  }
+
+  /**
+   * M12.2: Get the current revision number for a period's snapshots.
+   */
+  async getCurrentRevision(periodId: string): Promise<number> {
+    const maxRevision = await this.prisma.client.inventoryValuationSnapshot.aggregate({
+      where: { periodId },
+      _max: { revision: true },
+    });
+    return maxRevision._max.revision ?? 0;
+  }
+
+  /**
    * Generate valuation snapshots for all items/locations at period end.
+   * M12.2: Added revision parameter for re-close workflow.
    */
   private async generateValuationSnapshots(
     orgId: string,
     branchId: string,
     periodId: string,
     asOf: Date,
+    revision: number = 1,
   ): Promise<number> {
     // Get all item/location combinations with ledger entries up to asOf
     const locations = await this.prisma.client.inventoryLocation.findMany({
@@ -547,7 +690,7 @@ export class InventoryPeriodsService {
         // Calculate value (H10: use Decimal throughout)
         const value = qtyOnHand.times(wac);
 
-        // Create snapshot (idempotent via unique constraint)
+        // Create snapshot with revision (M12.2: unique constraint includes revision)
         try {
           await this.prisma.client.inventoryValuationSnapshot.create({
             data: {
@@ -560,13 +703,14 @@ export class InventoryPeriodsService {
               wac,
               value,
               asOf,
+              revision,
             },
           });
           snapshotCount++;
         } catch (e) {
           // Unique constraint violation = already exists (idempotent)
           if ((e as any)?.code === 'P2002') {
-            this.logger.debug(`Snapshot already exists for item ${item.id} location ${location.id}`);
+            this.logger.debug(`Snapshot already exists for item ${item.id} location ${location.id} revision ${revision}`);
           } else {
             throw e;
           }
@@ -579,6 +723,7 @@ export class InventoryPeriodsService {
 
   /**
    * Generate movement summaries for the period.
+   * M12.2: Added revision parameter for re-close workflow.
    */
   private async generateMovementSummaries(
     orgId: string,
@@ -586,6 +731,7 @@ export class InventoryPeriodsService {
     periodId: string,
     startDate: Date,
     endDate: Date,
+    revision: number = 1,
   ): Promise<number> {
     // Aggregate ledger entries by item and reason
     const ledgerEntries = await this.prisma.client.inventoryLedgerEntry.groupBy({
@@ -666,7 +812,7 @@ export class InventoryPeriodsService {
       }
     }
 
-    // Create per-item summaries
+    // Create per-item summaries with revision
     let summaryCount = 0;
     for (const [itemId, summary] of itemSummaries) {
       try {
@@ -676,6 +822,7 @@ export class InventoryPeriodsService {
             branchId,
             periodId,
             itemId,
+            revision,
             ...summary,
             // Values are 0 for now - could compute from cost layers
             receiveValue: ZERO,
@@ -690,14 +837,14 @@ export class InventoryPeriodsService {
         summaryCount++;
       } catch (e) {
         if ((e as any)?.code === 'P2002') {
-          this.logger.debug(`Summary already exists for item ${itemId}`);
+          this.logger.debug(`Summary already exists for item ${itemId} revision ${revision}`);
         } else {
           throw e;
         }
       }
     }
 
-    // Create branch total row (itemId = null)
+    // Create branch total row (itemId = null) with revision
     const branchTotal = {
       receiveQty: ZERO,
       depletionQty: ZERO,
@@ -729,6 +876,7 @@ export class InventoryPeriodsService {
           branchId,
           periodId,
           itemId: null,
+          revision,
           ...branchTotal,
           receiveValue: ZERO,
           depletionValue: ZERO,
@@ -748,16 +896,22 @@ export class InventoryPeriodsService {
   }
 
   /**
-   * Get valuation snapshots for a period.
+   * Get valuation snapshots for a period (latest revision by default).
+   * M12.2: Added optional revision parameter to query specific revision.
    */
   async getValuationSnapshots(
     orgId: string,
     periodId: string,
+    revision?: number,
   ): Promise<ValuationSnapshotLine[]> {
-    const period = await this.getPeriod(orgId, periodId);
+    // Validate period exists and belongs to org
+    await this.getPeriod(orgId, periodId);
+
+    // If no revision specified, get the latest
+    const targetRevision = revision ?? await this.getCurrentRevision(periodId);
 
     const snapshots = await this.prisma.client.inventoryValuationSnapshot.findMany({
-      where: { periodId, orgId },
+      where: { periodId, orgId, revision: targetRevision },
       include: {
         item: { select: { sku: true, name: true } },
         location: { select: { code: true } },
@@ -779,12 +933,17 @@ export class InventoryPeriodsService {
 
   /**
    * Get movement summaries for a period.
+   * M12.2: Updated to query latest revision by default.
    */
-  async getMovementSummaries(orgId: string, periodId: string) {
-    const period = await this.getPeriod(orgId, periodId);
+  async getMovementSummaries(orgId: string, periodId: string, revision?: number) {
+    // Validate period exists and belongs to org
+    await this.getPeriod(orgId, periodId);
+
+    // If no revision specified, get the latest
+    const targetRevision = revision ?? await this.getCurrentRevision(periodId);
 
     const summaries = await this.prisma.client.inventoryPeriodMovementSummary.findMany({
-      where: { periodId, orgId },
+      where: { periodId, orgId, revision: targetRevision },
       include: {
         item: { select: { sku: true, name: true } },
       },
@@ -795,6 +954,7 @@ export class InventoryPeriodsService {
       itemId: s.itemId,
       itemCode: s.item?.sku ?? (s.itemId ? s.itemId.substring(0, 8) : 'TOTAL'),
       itemName: s.item?.name ?? 'Branch Total',
+      revision: s.revision,
       receiveQty: new Decimal(s.receiveQty),
       depletionQty: new Decimal(s.depletionQty),
       wasteQty: new Decimal(s.wasteQty),
@@ -805,6 +965,23 @@ export class InventoryPeriodsService {
       productionConsumeQty: new Decimal(s.productionConsumeQty),
       productionProduceQty: new Decimal(s.productionProduceQty),
     }));
+  }
+
+  /**
+   * M12.2: Get all revisions for a period.
+   */
+  async getRevisionHistory(orgId: string, periodId: string): Promise<number[]> {
+    // Validate period exists and belongs to org
+    await this.getPeriod(orgId, periodId);
+
+    const revisions = await this.prisma.client.inventoryValuationSnapshot.findMany({
+      where: { periodId, orgId },
+      select: { revision: true },
+      distinct: ['revision'],
+      orderBy: { revision: 'asc' },
+    });
+
+    return revisions.map((r) => r.revision);
   }
 
   /**

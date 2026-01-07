@@ -512,6 +512,8 @@ model Org {
   inventoryAlerts                InventoryAlert[]
   // M12.1: Inventory Periods
   inventoryPeriods               InventoryPeriod[]
+  // M12.2: Inventory Period Events
+  inventoryPeriodEvents          InventoryPeriodEvent[]
 
   @@map("orgs")
 }
@@ -666,6 +668,8 @@ model Branch {
   optimizationRuns         ForecastOptimizationRun[] @relation("BranchOptimizationRuns")
   // M12.1: Inventory Periods
   inventoryPeriods         InventoryPeriod[]         @relation("InventoryPeriodBranch")
+  // M12.2: Inventory Period Events
+  inventoryPeriodEvents    InventoryPeriodEvent[]
 
   @@index([orgId, id])
   @@map("branches")
@@ -867,6 +871,8 @@ model User {
   optimizationRunsCreated         ForecastOptimizationRun[]        @relation("OptimizationRunCreator")
   // M12.1: Inventory Periods
   inventoryPeriodsClosed          InventoryPeriod[]                @relation("InventoryPeriodCloser")
+  // M12.2: Inventory Period Events
+  inventoryPeriodEvents           InventoryPeriodEvent[]           @relation("PeriodEventActor")
 
   @@index([orgId, id])
   @@map("users")
@@ -7126,6 +7132,7 @@ model InventoryPeriod {
 
   valuationSnapshots InventoryValuationSnapshot[]
   movementSummaries  InventoryPeriodMovementSummary[]
+  events             InventoryPeriodEvent[]
 
   @@unique([orgId, branchId, startDate, endDate])
   @@index([orgId, branchId])
@@ -7141,6 +7148,7 @@ model InventoryValuationSnapshot {
   periodId   String
   itemId     String
   locationId String
+  revision   Int      @default(1)  // M12.2: Revision for reopen/re-close
   qtyOnHand  Decimal  @db.Decimal(12, 4)
   wac        Decimal  @db.Decimal(12, 4)
   value      Decimal  @db.Decimal(12, 2)
@@ -7152,7 +7160,7 @@ model InventoryValuationSnapshot {
   item     InventoryItem     @relation("ValuationSnapshotItem", fields: [itemId], references: [id], onDelete: Restrict)
   location InventoryLocation @relation("ValuationSnapshotLocation", fields: [locationId], references: [id], onDelete: Restrict)
 
-  @@unique([periodId, itemId, locationId])
+  @@unique([periodId, itemId, locationId, revision])
   @@index([periodId])
   @@index([orgId, branchId])
   @@map("inventory_valuation_snapshots")
@@ -7165,6 +7173,7 @@ model InventoryPeriodMovementSummary {
   branchId  String
   periodId  String
   itemId    String? // null = branch total row
+  revision  Int     @default(1)  // M12.2: Revision for reopen/re-close
   // Receive
   receiveQty   Decimal @default(0) @db.Decimal(12, 4)
   receiveValue Decimal @default(0) @db.Decimal(12, 2)
@@ -7194,8 +7203,40 @@ model InventoryPeriodMovementSummary {
   period InventoryPeriod @relation(fields: [periodId], references: [id], onDelete: Cascade)
   item   InventoryItem?  @relation("MovementSummaryItem", fields: [itemId], references: [id], onDelete: Restrict)
 
-  @@unique([periodId, itemId])
+  @@unique([periodId, itemId, revision])
   @@index([periodId])
   @@index([orgId, branchId])
   @@map("inventory_period_movement_summaries")
+}
+
+// M12.2: Inventory Period Event Types
+enum InventoryPeriodEventType {
+  CREATED
+  CLOSED
+  REOPENED
+  OVERRIDE_USED
+  EXPORT_GENERATED
+}
+
+// M12.2: Inventory Period Event - Audit-grade append-only event log
+model InventoryPeriodEvent {
+  id           String                     @id @default(cuid())
+  orgId        String
+  branchId     String
+  periodId     String
+  type         InventoryPeriodEventType
+  actorUserId  String
+  occurredAt   DateTime                   @default(now())
+  reason       String?
+  metadataJson Json?
+
+  // Relations
+  org    Org             @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  branch Branch          @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  period InventoryPeriod @relation(fields: [periodId], references: [id], onDelete: Cascade)
+  actor  User            @relation("PeriodEventActor", fields: [actorUserId], references: [id], onDelete: Restrict)
+
+  @@index([orgId, branchId])
+  @@index([periodId])
+  @@map("inventory_period_events")
 }

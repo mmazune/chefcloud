@@ -1,11 +1,13 @@
 /**
- * M12.1 Inventory Periods Controller
+ * M12.1 + M12.2 Inventory Periods Controller
  *
  * REST endpoints for inventory period management:
- * - List/create/close periods
+ * - List/create/close/reopen periods
  * - View valuation/movements/reconciliation
- * - Export CSV
+ * - Export CSV + close pack
  * - Override lock (L5 only)
+ * - Pre-close check + period generation
+ * - Period event log
  */
 import {
   Controller,
@@ -33,9 +35,13 @@ import {
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
-import { InventoryPeriodsService, ClosePeriodDto, CreatePeriodDto } from './inventory-periods.service';
+import { InventoryPeriodsService, ClosePeriodDto, CreatePeriodDto, ReopenPeriodDto } from './inventory-periods.service';
 import { InventoryReconciliationService } from './inventory-reconciliation.service';
 import { InventoryPeriodExportService } from './inventory-period-export.service';
+import { InventoryPreCloseCheckService } from './inventory-preclose-check.service';
+import { InventoryPeriodGenerationService } from './inventory-period-generation.service';
+import { InventoryPeriodEventsService } from './inventory-period-events.service';
+import { InventoryClosePackService } from './inventory-close-pack.service';
 
 // DTO classes for Swagger
 class CreatePeriodBody {
@@ -59,6 +65,23 @@ class OverridePostBody {
   entityId: string;
 }
 
+// M12.2 DTOs
+class ReopenPeriodBody {
+  reason: string;
+}
+
+class GeneratePeriodsBody {
+  branchId: string;
+  fromMonth: string; // YYYY-MM
+  toMonth: string;   // YYYY-MM
+}
+
+class PreCloseCheckQuery {
+  branchId: string;
+  startDate: string;
+  endDate: string;
+}
+
 @ApiTags('Inventory Periods')
 @ApiBearerAuth()
 @Controller('inventory/periods')
@@ -68,6 +91,10 @@ export class InventoryPeriodsController {
     private readonly periodsService: InventoryPeriodsService,
     private readonly reconciliationService: InventoryReconciliationService,
     private readonly exportService: InventoryPeriodExportService,
+    private readonly preCloseCheckService: InventoryPreCloseCheckService,
+    private readonly periodGenerationService: InventoryPeriodGenerationService,
+    private readonly periodEventsService: InventoryPeriodEventsService,
+    private readonly closePackService: InventoryClosePackService,
   ) {}
 
   /**
@@ -309,5 +336,145 @@ export class InventoryPeriodsController {
       message: 'Override logged. Proceed with blocked action.',
       periodId: id,
     };
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // M12.2: Pre-Close Check, Generation, Reopen, Close Pack, Events
+  // ═══════════════════════════════════════════════════════════════════
+
+  /**
+   * M12.2: Run pre-close check.
+   * Returns READY/BLOCKED/WARNING status with details.
+   */
+  @Get('preclose-check')
+  @Roles('OWNER', 'ADMIN', 'MANAGER')
+  @ApiOperation({ summary: 'M12.2: Run pre-close validation check' })
+  @ApiQuery({ name: 'branchId', required: true })
+  @ApiQuery({ name: 'startDate', required: true })
+  @ApiQuery({ name: 'endDate', required: true })
+  @ApiResponse({ status: 200, description: 'Pre-close check result' })
+  async preCloseCheck(
+    @Request() req,
+    @Query('branchId') branchId: string,
+    @Query('startDate') startDate: string,
+    @Query('endDate') endDate: string,
+  ) {
+    return this.preCloseCheckService.runCheck(
+      req.user.orgId,
+      branchId,
+      new Date(startDate),
+      new Date(endDate),
+    );
+  }
+
+  /**
+   * M12.2: Generate monthly periods.
+   */
+  @Post('generate')
+  @Roles('OWNER', 'ADMIN', 'MANAGER')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'M12.2: Auto-generate monthly periods' })
+  @ApiBody({ type: GeneratePeriodsBody })
+  @ApiResponse({ status: 200, description: 'Periods generated' })
+  async generatePeriods(@Request() req, @Body() body: GeneratePeriodsBody) {
+    return this.periodGenerationService.generatePeriods(
+      req.user.orgId,
+      req.user.sub,
+      {
+        branchId: body.branchId,
+        fromMonth: body.fromMonth,
+        toMonth: body.toMonth,
+      },
+    );
+  }
+
+  /**
+   * M12.2: Reopen a closed period (L5 only).
+   */
+  @Post(':id/reopen')
+  @Roles('OWNER', 'ADMIN')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'M12.2: Reopen closed period (L5 only)' })
+  @ApiParam({ name: 'id', description: 'Period ID' })
+  @ApiBody({ type: ReopenPeriodBody })
+  @ApiResponse({ status: 200, description: 'Period reopened' })
+  @ApiResponse({ status: 400, description: 'Period not closed or reason too short' })
+  @ApiResponse({ status: 404, description: 'Period not found' })
+  async reopenPeriod(
+    @Request() req,
+    @Param('id') id: string,
+    @Body() body: ReopenPeriodBody,
+  ) {
+    const dto: ReopenPeriodDto = {
+      periodId: id,
+      reason: body.reason,
+    };
+    return this.periodsService.reopenPeriod(req.user.orgId, req.user.sub, dto);
+  }
+
+  /**
+   * M12.2: Get close pack summary.
+   */
+  @Get(':id/close-pack')
+  @Roles('OWNER', 'ADMIN', 'MANAGER', 'STOCK_MANAGER')
+  @ApiOperation({ summary: 'M12.2: Get close pack summary with export URLs' })
+  @ApiParam({ name: 'id', description: 'Period ID' })
+  @ApiResponse({ status: 200, description: 'Close pack summary' })
+  async getClosePack(@Request() req, @Param('id') id: string) {
+    return this.closePackService.getClosePack(req.user.orgId, req.user.sub, id);
+  }
+
+  /**
+   * M12.2: Export close pack index CSV.
+   */
+  @Get(':id/export/close-pack-index.csv')
+  @Roles('OWNER', 'ADMIN', 'MANAGER', 'STOCK_MANAGER')
+  @ApiOperation({ summary: 'M12.2: Export close pack index CSV' })
+  @ApiParam({ name: 'id', description: 'Period ID' })
+  @ApiResponse({ status: 200, description: 'CSV file' })
+  async exportClosePackIndex(
+    @Request() req,
+    @Param('id') id: string,
+    @Res() res: Response,
+  ) {
+    const result = await this.closePackService.exportIndex(
+      req.user.orgId,
+      req.user.sub,
+      id,
+    );
+
+    res.setHeader('Content-Type', result.contentType);
+    res.setHeader('Content-Disposition', `attachment; filename="${result.filename}"`);
+    res.setHeader('X-Nimbus-Export-Hash', result.hash);
+    res.setHeader('X-Nimbus-Bundle-Hash', result.bundleHash);
+    res.send(result.content);
+  }
+
+  /**
+   * M12.2: Get period events (audit log).
+   */
+  @Get(':id/events')
+  @Roles('OWNER', 'ADMIN', 'MANAGER')
+  @ApiOperation({ summary: 'M12.2: Get period event log' })
+  @ApiParam({ name: 'id', description: 'Period ID' })
+  @ApiResponse({ status: 200, description: 'List of events' })
+  async getPeriodEvents(@Request() req, @Param('id') id: string) {
+    return this.periodEventsService.getEventsForPeriod(req.user.orgId, id);
+  }
+
+  /**
+   * M12.2: Get revision history for a period.
+   */
+  @Get(':id/revisions')
+  @Roles('OWNER', 'ADMIN', 'MANAGER', 'STOCK_MANAGER')
+  @ApiOperation({ summary: 'M12.2: Get snapshot revision history' })
+  @ApiParam({ name: 'id', description: 'Period ID' })
+  @ApiResponse({ status: 200, description: 'List of revision numbers' })
+  async getRevisionHistory(@Request() req, @Param('id') id: string) {
+    const revisions = await this.periodsService.getRevisionHistory(
+      req.user.orgId,
+      id,
+    );
+    return { periodId: id, revisions };
   }
 }

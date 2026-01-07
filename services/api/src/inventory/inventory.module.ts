@@ -111,6 +111,12 @@ import { InventoryPeriodsService } from './inventory-periods.service';
 import { InventoryReconciliationService as InventoryPeriodReconciliationService } from './inventory-reconciliation.service';
 import { InventoryPeriodExportService } from './inventory-period-export.service';
 
+// M12.2 Close Ops v2 imports
+import { InventoryPreCloseCheckService } from './inventory-preclose-check.service';
+import { InventoryPeriodGenerationService } from './inventory-period-generation.service';
+import { InventoryPeriodEventsService } from './inventory-period-events.service';
+import { InventoryClosePackService } from './inventory-close-pack.service';
+
 @Module({
   imports: [KpisModule, AuditModule],
   controllers: [
@@ -184,6 +190,10 @@ import { InventoryPeriodExportService } from './inventory-period-export.service'
     InventoryPeriodsService, // M12.1
     InventoryPeriodReconciliationService, // M12.1
     InventoryPeriodExportService, // M12.1
+    InventoryPreCloseCheckService, // M12.2
+    InventoryPeriodGenerationService, // M12.2
+    InventoryPeriodEventsService, // M12.2
+    InventoryClosePackService, // M12.2
     RecipesService,
     WastageService,
     CountsService,
@@ -234,6 +244,10 @@ import { InventoryPeriodExportService } from './inventory-period-export.service'
     InventoryPeriodsService, // M12.1
     InventoryPeriodReconciliationService, // M12.1
     InventoryPeriodExportService, // M12.1
+    InventoryPreCloseCheckService, // M12.2
+    InventoryPeriodGenerationService, // M12.2
+    InventoryPeriodEventsService, // M12.2
+    InventoryClosePackService, // M12.2
     RecipesService,
     WastageService,
     CountsService,
