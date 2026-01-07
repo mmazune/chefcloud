@@ -508,6 +508,8 @@ model Org {
   // M11.11: Barcodes
   itemBarcodes                   InventoryItemBarcode[]
   lotBarcodes                    InventoryLotBarcode[]
+  // M11.12: Inventory Alerts
+  inventoryAlerts                InventoryAlert[]
 
   @@map("orgs")
 }
@@ -653,6 +655,8 @@ model Branch {
   productionBatches      ProductionBatch[]         @relation("ProductionBatchBranch")
   // M11.10: Stocktake Sessions v2
   stocktakeSessions      StocktakeSession[]        @relation("StocktakeSessionBranch")
+  // M11.12: Inventory Alerts
+  inventoryAlerts        InventoryAlert[]
 
   @@index([orgId, id])
   @@map("branches")
@@ -844,6 +848,9 @@ model User {
   // M11.11: Barcodes
   itemBarcodesCreated             InventoryItemBarcode[]           @relation("BarcodeCreator")
   lotBarcodesCreated              InventoryLotBarcode[]            @relation("LotBarcodeCreator")
+  // M11.12: Inventory Alerts
+  alertsAcknowledged              InventoryAlert[]                 @relation("AlertAcknowledger")
+  alertsResolved                  InventoryAlert[]                 @relation("AlertResolver")
 
   @@index([orgId, id])
   @@map("users")
@@ -6779,4 +6786,64 @@ model InventoryLotBarcode {
   @@unique([orgId, value])
   @@index([lotId])
   @@map("inventory_lot_barcodes")
+}
+
+// ============================================================================
+// M11.12: Inventory Analytics + Alerts
+// ============================================================================
+
+enum InventoryAlertType {
+  DEAD_STOCK
+  EXPIRY_SOON
+  EXPIRED
+  BELOW_REORDER_POINT
+  HIGH_WASTE
+  HIGH_VARIANCE
+}
+
+enum InventoryAlertSeverity {
+  INFO
+  WARN
+  CRITICAL
+}
+
+enum InventoryAlertStatus {
+  OPEN
+  ACKNOWLEDGED
+  RESOLVED
+}
+
+model InventoryAlert {
+  id           String                 @id @default(cuid())
+  orgId        String
+  branchId     String?                // Nullable for org-wide alerts
+  type         InventoryAlertType
+  severity     InventoryAlertSeverity @default(WARN)
+  entityType   String                 // ITEM, LOT, LOCATION, etc.
+  entityId     String                 // ID of the linked entity
+  title        String
+  detailsJson  Json?                  // Additional details
+  status       InventoryAlertStatus   @default(OPEN)
+  
+  // Lifecycle tracking
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  acknowledgedAt  DateTime?
+  acknowledgedById String?
+  resolvedAt      DateTime?
+  resolvedById    String?
+
+  // Relations
+  org           Org    @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  branch        Branch? @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  acknowledgedBy User?  @relation("AlertAcknowledger", fields: [acknowledgedById], references: [id], onDelete: SetNull)
+  resolvedBy    User?   @relation("AlertResolver", fields: [resolvedById], references: [id], onDelete: SetNull)
+
+  // H1: Unique constraint to prevent duplicate OPEN alerts per entity
+  @@unique([orgId, branchId, type, entityType, entityId, status])
+  @@index([orgId, status])
+  @@index([branchId])
+  @@index([type])
+  @@index([entityType, entityId])
+  @@map("inventory_alerts")
 }
