@@ -659,6 +659,9 @@ model Branch {
   inventoryAlerts          InventoryAlert[]
   // M11.13: Inventory Posting Mappings
   inventoryPostingMappings InventoryPostingMapping[] @relation("InventoryPostingMappingBranch")
+  // M11.14: Demand Forecasting + Reorder Optimization
+  forecastSnapshots        DemandForecastSnapshot[]  @relation("BranchForecastSnapshots")
+  optimizationRuns         ForecastOptimizationRun[] @relation("BranchOptimizationRuns")
 
   @@index([orgId, id])
   @@map("branches")
@@ -855,6 +858,9 @@ model User {
   alertsResolved                  InventoryAlert[]                 @relation("AlertResolver")
   // M11.13: Inventory Posting Mappings
   inventoryPostingMappingsCreated InventoryPostingMapping[]        @relation("InventoryPostingMappingCreator")
+  // M11.14: Demand Forecasting + Reorder Optimization
+  forecastSnapshotsGenerated      DemandForecastSnapshot[]         @relation("ForecastSnapshotCreator")
+  optimizationRunsCreated         ForecastOptimizationRun[]        @relation("OptimizationRunCreator")
 
   @@index([orgId, id])
   @@map("users")
@@ -2100,7 +2106,7 @@ model InventoryItem {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  uom                    UnitOfMeasure?           @relation("ItemUom", fields: [uomId], references: [id], onDelete: SetNull)
+  uom                    UnitOfMeasure?             @relation("ItemUom", fields: [uomId], references: [id], onDelete: SetNull)
   stockBatches           StockBatch[]
   recipeIngredients      RecipeIngredient[]
   wastageRecords         Wastage[]
@@ -2113,34 +2119,37 @@ model InventoryItem {
   stockMovements         StockMovement[] // M3: Track all inventory movements
   lowStockConfigs        LowStockConfig[] // M3: Low-stock alert configuration
   ledgerEntries          InventoryLedgerEntry[] // M11.1: Ledger entries
-  stockAdjustments       StockAdjustment[]        @relation("StockAdjustmentItem") // M11.1: Stock adjustments
-  countSessionLines      CountSessionLine[]       @relation("CountSessionLineItem") // M11.1: Count lines
+  stockAdjustments       StockAdjustment[]          @relation("StockAdjustmentItem") // M11.1: Stock adjustments
+  countSessionLines      CountSessionLine[]         @relation("CountSessionLineItem") // M11.1: Count lines
   // M11.2: Purchasing & Receiving
-  poLinesV2              PurchaseOrderLineV2[]    @relation("POLineItem")
-  receiptLinesV2         GoodsReceiptLineV2[]     @relation("ReceiptLineItem")
+  poLinesV2              PurchaseOrderLineV2[]      @relation("POLineItem")
+  receiptLinesV2         GoodsReceiptLineV2[]       @relation("ReceiptLineItem")
   // M11.3: Transfers + Waste
-  transferLines          InventoryTransferLine[]  @relation("TransferLineItem")
-  wasteLines             InventoryWasteLine[]     @relation("WasteLineItem")
+  transferLines          InventoryTransferLine[]    @relation("TransferLineItem")
+  wasteLines             InventoryWasteLine[]       @relation("WasteLineItem")
   // M11.4: Recipes
-  recipeLines            RecipeLine[]             @relation("RecipeLineItem")
+  recipeLines            RecipeLine[]               @relation("RecipeLineItem")
   // M11.5: Costing
-  costLayers             InventoryCostLayer[]     @relation("CostLayerItem")
-  depletionCosts         DepletionCostBreakdown[] @relation("DepletionCostItem")
+  costLayers             InventoryCostLayer[]       @relation("CostLayerItem")
+  depletionCosts         DepletionCostBreakdown[]   @relation("DepletionCostItem")
   // M11.6: Supplier Catalog + Reorder
-  supplierItems          SupplierItem[]           @relation("ItemSupplierItems")
-  reorderPolicies        ReorderPolicy[]          @relation("ItemReorderPolicies")
-  reorderSuggestions     ReorderSuggestionLine[]  @relation("ItemReorderSuggestions")
+  supplierItems          SupplierItem[]             @relation("ItemSupplierItems")
+  reorderPolicies        ReorderPolicy[]            @relation("ItemReorderPolicies")
+  reorderSuggestions     ReorderSuggestionLine[]    @relation("ItemReorderSuggestions")
   // M11.7: Lots + Expiry + Traceability
-  lots                   InventoryLot[]           @relation("LotItem")
+  lots                   InventoryLot[]             @relation("LotItem")
   // M11.8: Vendor Return Lines
-  vendorReturnLines      VendorReturnLine[]       @relation("VendorReturnLineItem")
+  vendorReturnLines      VendorReturnLine[]         @relation("VendorReturnLineItem")
   // M11.9: Production Batches
-  productionBatchOutputs ProductionBatch[]        @relation("ProductionBatchOutputItem")
-  productionBatchLines   ProductionBatchLine[]    @relation("ProductionLineItem")
+  productionBatchOutputs ProductionBatch[]          @relation("ProductionBatchOutputItem")
+  productionBatchLines   ProductionBatchLine[]      @relation("ProductionLineItem")
   // M11.10: Stocktake Lines v2
-  stocktakeLines         StocktakeLine[]          @relation("StocktakeLineItem")
+  stocktakeLines         StocktakeLine[]            @relation("StocktakeLineItem")
   // M11.11: Barcodes
-  barcodes               InventoryItemBarcode[]   @relation("ItemBarcodes")
+  barcodes               InventoryItemBarcode[]     @relation("ItemBarcodes")
+  // M11.14: Demand Forecasting + Reorder Optimization
+  forecastSnapshots      DemandForecastSnapshot[]   @relation("ItemForecastSnapshots")
+  optimizationLines      ForecastOptimizationLine[] @relation("ItemOptimizationLines")
 
   @@unique([orgId, sku])
   @@index([orgId])
@@ -2751,16 +2760,18 @@ model Vendor {
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 
-  bills            VendorBill[]
-  payments         VendorPayment[]
-  creditNotes      VendorCreditNote[] // M8.5
-  purchaseOrdersV2 PurchaseOrderV2[]       @relation("VendorPurchaseOrders") // M11.2
+  bills                       VendorBill[]
+  payments                    VendorPayment[]
+  creditNotes                 VendorCreditNote[] // M8.5
+  purchaseOrdersV2            PurchaseOrderV2[]          @relation("VendorPurchaseOrders") // M11.2
   // M11.6: Supplier Catalog
-  supplierItems    SupplierItem[]          @relation("VendorSupplierItems")
-  reorderPolicies  ReorderPolicy[]         @relation("PolicyPreferredVendor")
-  suggestionLines  ReorderSuggestionLine[] @relation("SuggestionVendor")
+  supplierItems               SupplierItem[]             @relation("VendorSupplierItems")
+  reorderPolicies             ReorderPolicy[]            @relation("PolicyPreferredVendor")
+  suggestionLines             ReorderSuggestionLine[]    @relation("SuggestionVendor")
   // M11.8: Vendor Returns
-  vendorReturns    VendorReturn[]          @relation("VendorReturns")
+  vendorReturns               VendorReturn[]             @relation("VendorReturns")
+  // M11.14: Optimization Line Vendor Suggestions
+  optimizationLineSuggestions ForecastOptimizationLine[] @relation("OptimizationLineVendor")
 
   @@index([orgId])
   @@map("vendors")
@@ -5921,31 +5932,33 @@ enum GoodsReceiptStatus {
 
 // Enterprise Purchase Order with Vendor from accounting
 model PurchaseOrderV2 {
-  id             String              @id @default(cuid())
-  orgId          String
-  branchId       String
-  vendorId       String // FK to Vendor (accounting)
-  poNumber       String // Auto-generated or user-provided
-  status         PurchaseOrderStatus @default(DRAFT)
-  expectedAt     DateTime? // Expected delivery date
-  notes          String?
-  totalAmount    Decimal             @default(0) @db.Decimal(12, 2)
-  createdById    String
-  approvedById   String?
-  approvedAt     DateTime?
-  idempotencyKey String? // For integration-based creation
-  reorderRunId   String? // M11.6: Reference to reorder run that generated this PO
-  metadata       Json?
-  createdAt      DateTime            @default(now())
-  updatedAt      DateTime            @updatedAt
+  id                String              @id @default(cuid())
+  orgId             String
+  branchId          String
+  vendorId          String // FK to Vendor (accounting)
+  poNumber          String // Auto-generated or user-provided
+  status            PurchaseOrderStatus @default(DRAFT)
+  expectedAt        DateTime? // Expected delivery date
+  notes             String?
+  totalAmount       Decimal             @default(0) @db.Decimal(12, 2)
+  createdById       String
+  approvedById      String?
+  approvedAt        DateTime?
+  idempotencyKey    String? // For integration-based creation
+  reorderRunId      String? // M11.6: Reference to reorder run that generated this PO
+  optimizationRunId String? // M11.14: Reference to forecast optimization run
+  metadata          Json?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
 
-  branch     Branch                @relation("BranchPurchaseOrdersV2", fields: [branchId], references: [id], onDelete: Cascade)
-  vendor     Vendor                @relation("VendorPurchaseOrders", fields: [vendorId], references: [id], onDelete: Restrict)
-  createdBy  User                  @relation("POCreator", fields: [createdById], references: [id], onDelete: Restrict)
-  approvedBy User?                 @relation("POApprover", fields: [approvedById], references: [id], onDelete: SetNull)
-  reorderRun ReorderSuggestionRun? @relation("ReorderRunPOs", fields: [reorderRunId], references: [id], onDelete: SetNull)
-  lines      PurchaseOrderLineV2[]
-  receipts   GoodsReceiptV2[]
+  branch          Branch                   @relation("BranchPurchaseOrdersV2", fields: [branchId], references: [id], onDelete: Cascade)
+  vendor          Vendor                   @relation("VendorPurchaseOrders", fields: [vendorId], references: [id], onDelete: Restrict)
+  createdBy       User                     @relation("POCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  approvedBy      User?                    @relation("POApprover", fields: [approvedById], references: [id], onDelete: SetNull)
+  reorderRun      ReorderSuggestionRun?    @relation("ReorderRunPOs", fields: [reorderRunId], references: [id], onDelete: SetNull)
+  optimizationRun ForecastOptimizationRun? @relation("OptimizationRunPOs", fields: [optimizationRunId], references: [id], onDelete: SetNull)
+  lines           PurchaseOrderLineV2[]
+  receipts        GoodsReceiptV2[]
 
   @@unique([orgId, poNumber])
   @@unique([orgId, idempotencyKey])
@@ -5953,6 +5966,7 @@ model PurchaseOrderV2 {
   @@index([vendorId])
   @@index([status])
   @@index([reorderRunId])
+  @@index([optimizationRunId])
   @@map("purchase_orders_v2")
 }
 
@@ -6432,17 +6446,25 @@ model SupplierPrice {
 
 // Reorder Policy - Branch-scoped override for reorder points
 model ReorderPolicy {
-  id                  String   @id @default(cuid())
-  orgId               String
-  branchId            String
-  inventoryItemId     String
-  reorderPointBaseQty Decimal  @db.Decimal(12, 4)
-  reorderQtyBaseQty   Decimal  @db.Decimal(12, 4)
-  preferredLocationId String?
-  preferredVendorId   String?
-  isActive            Boolean  @default(true)
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  id                       String   @id @default(cuid())
+  orgId                    String
+  branchId                 String
+  inventoryItemId          String
+  reorderPointBaseQty      Decimal  @db.Decimal(12, 4)
+  reorderQtyBaseQty        Decimal  @db.Decimal(12, 4)
+  preferredLocationId      String?
+  preferredVendorId        String?
+  isActive                 Boolean  @default(true)
+  // M11.14: Forecasting + Optimization fields
+  leadTimeDays             Int      @default(3)
+  safetyStockDays          Int      @default(2)
+  minOrderQty              Decimal? @db.Decimal(12, 4)
+  includeInTransit         Boolean  @default(true)
+  includeOpenPOs           Boolean  @default(true)
+  includeQuarantinedLots   Boolean  @default(false)
+  includeRecallBlockedLots Boolean  @default(false)
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
 
   // Relations
   branch          Branch        @relation("BranchReorderPolicies", fields: [branchId], references: [id], onDelete: Cascade)
@@ -6505,6 +6527,141 @@ model ReorderSuggestionLine {
   @@unique([runId, inventoryItemId])
   @@index([runId])
   @@map("reorder_suggestion_lines")
+}
+
+// ============================================================================
+// M11.14: Demand Forecasting + Reorder Optimization
+// ============================================================================
+
+// Forecast model type
+enum ForecastModelType {
+  TRAILING_MOVING_AVG // Simple moving average
+  EXPONENTIAL_SMOOTH // Simple exponential smoothing
+}
+
+// Forecast optimization run status
+enum ForecastOptimizationStatus {
+  DRAFT // Created but not finalized
+  GENERATED // Optimization complete
+  PO_CREATED // Draft PO(s) created from this run
+}
+
+// Forecast reason codes
+enum ForecastReasonCode {
+  BELOW_REORDER_POINT // Current on-hand < reorder point
+  FORECAST_DRIVEN // Forecast demand exceeds available
+  STOCKOUT_RISK // Available < (lead time * avg daily)
+  LEAD_TIME_BUFFER // Adding safety stock buffer
+}
+
+// Demand Forecast Snapshot - Point-in-time forecast for an item at a branch
+model DemandForecastSnapshot {
+  id                String            @id @default(cuid())
+  orgId             String
+  branchId          String
+  inventoryItemId   String
+  windowDays        Int               @default(14) // Lookback window
+  horizonDays       Int               @default(14) // Forward projection
+  model             ForecastModelType @default(TRAILING_MOVING_AVG)
+  modelVersion      String            @default("1.0.0")
+  // Aggregate outputs
+  avgDailyQty       Decimal           @db.Decimal(12, 4)
+  forecastTotalQty  Decimal           @db.Decimal(12, 4)
+  confidenceLow     Decimal           @db.Decimal(12, 4)
+  confidenceHigh    Decimal           @db.Decimal(12, 4)
+  lastObservedDate  DateTime?
+  dataPoints        Int               @default(0) // Number of days with data
+  // Idempotency
+  deterministicHash String            @unique
+  // Metadata
+  generatedById     String?
+  generatedAt       DateTime          @default(now())
+  createdAt         DateTime          @default(now())
+
+  // Daily breakdown (JSON for simplicity - stable ordering ensured)
+  dailyForecast Json? // Array of {date, qty, low, high}
+
+  // Relations
+  branch        Branch        @relation("BranchForecastSnapshots", fields: [branchId], references: [id], onDelete: Cascade)
+  inventoryItem InventoryItem @relation("ItemForecastSnapshots", fields: [inventoryItemId], references: [id], onDelete: Restrict)
+  generatedBy   User?         @relation("ForecastSnapshotCreator", fields: [generatedById], references: [id], onDelete: SetNull)
+
+  // Linked optimization runs
+  optimizationRuns ForecastOptimizationRun[] @relation("OptimizationForecastSnapshot")
+
+  @@index([orgId, branchId])
+  @@index([orgId, branchId, inventoryItemId])
+  @@index([generatedAt])
+  @@map("demand_forecast_snapshots")
+}
+
+// Forecast Optimization Run - Batch of optimized reorder suggestions
+model ForecastOptimizationRun {
+  id                      String                     @id @default(cuid())
+  orgId                   String
+  branchId                String
+  horizonDays             Int                        @default(14)
+  leadTimeDaysOverride    Int? // Override policy default
+  safetyStockDaysOverride Int? // Override policy default
+  status                  ForecastOptimizationStatus @default(GENERATED)
+  // Linked forecast snapshot (primary reference)
+  usedSnapshotId          String?
+  // Idempotency
+  deterministicHash       String
+  // Totals
+  itemCount               Int                        @default(0)
+  totalSuggestedQty       Decimal                    @default(0) @db.Decimal(12, 4)
+  // Metadata
+  createdById             String
+  createdAt               DateTime                   @default(now())
+
+  // Relations
+  branch       Branch                     @relation("BranchOptimizationRuns", fields: [branchId], references: [id], onDelete: Cascade)
+  createdBy    User                       @relation("OptimizationRunCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  usedSnapshot DemandForecastSnapshot?    @relation("OptimizationForecastSnapshot", fields: [usedSnapshotId], references: [id], onDelete: SetNull)
+  lines        ForecastOptimizationLine[]
+  generatedPOs PurchaseOrderV2[]          @relation("OptimizationRunPOs")
+
+  @@unique([orgId, branchId, deterministicHash])
+  @@index([orgId, branchId])
+  @@index([createdAt])
+  @@map("forecast_optimization_runs")
+}
+
+// Forecast Optimization Line - Per-item suggestion with breakdown
+model ForecastOptimizationLine {
+  id                String               @id @default(cuid())
+  orgId             String
+  runId             String
+  inventoryItemId   String
+  // Current state
+  onHandQty         Decimal              @db.Decimal(12, 4)
+  inTransitQty      Decimal              @default(0) @db.Decimal(12, 4)
+  onOrderQty        Decimal              @default(0) @db.Decimal(12, 4)
+  quarantinedQty    Decimal              @default(0) @db.Decimal(12, 4)
+  availableQty      Decimal              @db.Decimal(12, 4)
+  // Forecast inputs
+  avgDailyQty       Decimal              @db.Decimal(12, 4)
+  forecastDemandQty Decimal              @db.Decimal(12, 4)
+  // Optimization outputs
+  targetStockQty    Decimal              @db.Decimal(12, 4)
+  reorderPointQty   Decimal              @db.Decimal(12, 4)
+  suggestedQty      Decimal              @db.Decimal(12, 4)
+  // Explainability
+  reasonCodes       ForecastReasonCode[]
+  explanation       String
+  // Vendor suggestion (from policy)
+  suggestedVendorId String?
+  createdAt         DateTime             @default(now())
+
+  // Relations
+  run             ForecastOptimizationRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+  inventoryItem   InventoryItem           @relation("ItemOptimizationLines", fields: [inventoryItemId], references: [id], onDelete: Restrict)
+  suggestedVendor Vendor?                 @relation("OptimizationLineVendor", fields: [suggestedVendorId], references: [id], onDelete: SetNull)
+
+  @@unique([runId, inventoryItemId])
+  @@index([runId])
+  @@map("forecast_optimization_lines")
 }
 
 // ============================================================================

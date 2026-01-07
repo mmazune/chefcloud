@@ -95,6 +95,12 @@ import { InventoryGlController } from './inventory-gl.controller';
 import { InventoryPostingMappingService } from './inventory-posting-mapping.service';
 import { InventoryGlPostingService } from './inventory-gl-posting.service';
 
+// M11.14 Demand Forecasting + Reorder Optimization imports
+import { InventoryForecastingController } from './inventory-forecasting.controller';
+import { InventoryDemandSeriesService } from './inventory-demand-series.service';
+import { InventoryForecastingService } from './inventory-forecasting.service';
+import { InventoryReorderOptimizationService } from './inventory-reorder-optimization.service';
+
 @Module({
   imports: [KpisModule, AuditModule],
   controllers: [
@@ -118,6 +124,7 @@ import { InventoryGlPostingService } from './inventory-gl-posting.service';
     InventoryAnalyticsController, // M11.12
     InventoryAlertsController, // M11.12
     InventoryGlController, // M11.13
+    InventoryForecastingController, // M11.14
     RecipesController,
     WastageController,
     CountsController,
@@ -158,6 +165,9 @@ import { InventoryGlPostingService } from './inventory-gl-posting.service';
     InventoryAlertsService, // M11.12
     InventoryPostingMappingService, // M11.13
     InventoryGlPostingService, // M11.13
+    InventoryDemandSeriesService, // M11.14
+    InventoryForecastingService, // M11.14
+    InventoryReorderOptimizationService, // M11.14
     RecipesService,
     WastageService,
     CountsService,
@@ -201,6 +211,9 @@ import { InventoryGlPostingService } from './inventory-gl-posting.service';
     InventoryAlertsService, // M11.12
     InventoryPostingMappingService, // M11.13
     InventoryGlPostingService, // M11.13
+    InventoryDemandSeriesService, // M11.14
+    InventoryForecastingService, // M11.14
+    InventoryReorderOptimizationService, // M11.14
     RecipesService,
     WastageService,
     CountsService,
