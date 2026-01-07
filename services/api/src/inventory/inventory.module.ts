@@ -101,6 +101,10 @@ import { InventoryDemandSeriesService } from './inventory-demand-series.service'
 import { InventoryForecastingService } from './inventory-forecasting.service';
 import { InventoryReorderOptimizationService } from './inventory-reorder-optimization.service';
 
+// M11.15 Inventory Health Report imports
+import { InventoryHealthController } from './inventory-health.controller';
+import { InventoryHealthService } from './inventory-health.service';
+
 @Module({
   imports: [KpisModule, AuditModule],
   controllers: [
@@ -125,6 +129,7 @@ import { InventoryReorderOptimizationService } from './inventory-reorder-optimiz
     InventoryAlertsController, // M11.12
     InventoryGlController, // M11.13
     InventoryForecastingController, // M11.14
+    InventoryHealthController, // M11.15
     RecipesController,
     WastageController,
     CountsController,
@@ -168,6 +173,7 @@ import { InventoryReorderOptimizationService } from './inventory-reorder-optimiz
     InventoryDemandSeriesService, // M11.14
     InventoryForecastingService, // M11.14
     InventoryReorderOptimizationService, // M11.14
+    InventoryHealthService, // M11.15
     RecipesService,
     WastageService,
     CountsService,
@@ -214,6 +220,7 @@ import { InventoryReorderOptimizationService } from './inventory-reorder-optimiz
     InventoryDemandSeriesService, // M11.14
     InventoryForecastingService, // M11.14
     InventoryReorderOptimizationService, // M11.14
+    InventoryHealthService, // M11.15
     RecipesService,
     WastageService,
     CountsService,

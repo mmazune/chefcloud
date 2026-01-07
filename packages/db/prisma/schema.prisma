@@ -2153,6 +2153,7 @@ model InventoryItem {
 
   @@unique([orgId, sku])
   @@index([orgId])
+  @@index([orgId, isActive]) // M11.15: Filtered active item lists
   @@map("inventory_items")
 }
 
@@ -5731,6 +5732,7 @@ model InventoryLedgerEntry {
   @@index([itemId, locationId])
   @@index([sourceType, sourceId])
   @@index([createdAt])
+  @@index([branchId, createdAt]) // M11.15: Branch-level time-series queries
   @@map("inventory_ledger_entries")
 }
 
@@ -6748,6 +6750,7 @@ model LotLedgerAllocation {
   @@index([lotId])
   @@index([ledgerEntryId])
   @@index([sourceType, sourceId])
+  @@index([orgId, sourceType]) // M11.15: Org-level allocation queries
   @@map("lot_ledger_allocations")
 }
 

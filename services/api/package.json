@@ -20,6 +20,8 @@
     "test:e2e:gate": "node scripts/e2e-gate-runner.mjs",
     "test:e2e:gate:self-check": "node scripts/e2e-gate-runner.mjs --self-check",
     "test:e2e:gate:legacy": "pnpm test:e2e:teardown-check && node scripts/e2e-runtime-matrix.mjs",
+    "test:e2e:inventory": "node scripts/inventory-gate-runner.mjs",
+    "test:e2e:inventory:self-check": "node scripts/inventory-gate-runner.mjs --self-check",
     "test:e2e:strict": "pnpm test:e2e:teardown-check && node scripts/e2e-strict-runner.mjs",
     "pretest:e2e": "pnpm test:e2e:setup",
     "test:e2e": "jest --config ./test/jest-e2e.json",

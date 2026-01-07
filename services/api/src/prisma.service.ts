@@ -1,6 +1,7 @@
 import { Injectable, OnModuleInit, OnModuleDestroy, Logger } from '@nestjs/common';
 import { prisma, PrismaClient } from '@chefcloud/db';
 import { slowQueryMiddleware } from './common/slow-query';
+import { ledgerImmutabilityMiddleware } from './common/ledger-immutability.middleware';
 
 @Injectable()
 export class PrismaService implements OnModuleInit, OnModuleDestroy {
@@ -12,7 +13,10 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
     // E54-s1: Register slow query middleware
     prisma.$use(slowQueryMiddleware(this.logger));
 
-    this.logger.log('Prisma connected with slow-query middleware');
+    // M11.15: Register ledger immutability middleware (append-only enforcement)
+    prisma.$use(ledgerImmutabilityMiddleware(this.logger));
+
+    this.logger.log('Prisma connected with slow-query + ledger-immutability middleware');
   }
 
   async onModuleDestroy() {
