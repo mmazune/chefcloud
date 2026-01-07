@@ -7,6 +7,7 @@
  * - TRANSFER_OUT entries on ship (negative qty at source)
  * - TRANSFER_IN entries on receive (positive qty at destination)
  * - Negative stock prevention by default
+ * - M12.3: Period lock enforcement before shipping/receiving
  */
 import {
   Injectable,
@@ -17,6 +18,7 @@ import {
 import { PrismaService } from '../prisma.service';
 import { AuditLogService } from '../audit/audit-log.service';
 import { InventoryLedgerService, LedgerEntryReason, LedgerSourceType } from './inventory-ledger.service';
+import { InventoryPeriodsService } from './inventory-periods.service';
 import { Prisma, InventoryTransferStatus } from '@chefcloud/db';
 
 const Decimal = Prisma.Decimal;
@@ -77,6 +79,7 @@ export class InventoryTransfersService {
     private readonly prisma: PrismaService,
     private readonly auditLog: AuditLogService,
     private readonly ledgerService: InventoryLedgerService,
+    private readonly periodsService: InventoryPeriodsService,
   ) { }
 
   /**
@@ -323,6 +326,10 @@ export class InventoryTransfersService {
       throw new BadRequestException(`Cannot ship transfer in ${transfer.status} status`);
     }
 
+    // M12.3: Enforce period lock on source branch before shipping
+    const effectiveAt = new Date();
+    await this.periodsService.enforcePeriodLock(orgId, transfer.fromBranchId, effectiveAt);
+
     let ledgerEntryCount = 0;
 
     // Ship in transaction
@@ -409,6 +416,10 @@ export class InventoryTransfersService {
     if (transfer.status !== 'IN_TRANSIT') {
       throw new BadRequestException(`Cannot receive transfer in ${transfer.status} status`);
     }
+
+    // M12.3: Enforce period lock on destination branch before receiving
+    const effectiveAt = new Date();
+    await this.periodsService.enforcePeriodLock(orgId, transfer.toBranchId, effectiveAt);
 
     // Process receive quantities (default to shipped qty if not specified)
     const receiveQtys = new Map<string, Decimal>();

@@ -215,6 +215,66 @@ FAIL  test/e2e/devportal.prod.slice.e2e-spec.ts
 
 ---
 
+## PRE-014: Web Lint Error - no-var-requires in m115-inventory-costing-pages.test.tsx
+
+**Discovered**: M12.3 Baseline (2026-01-07)  
+**Severity**: Error (exits with code 1)  
+**Impact**: Web lint gate fails due to pre-existing test file using require() instead of import
+
+**Command**:
+```bash
+pnpm --filter web lint
+```
+
+**Output**:
+```
+./src/__tests__/pages/inventory/m115-inventory-costing-pages.test.tsx
+  251:16  Error: Require statement not part of import statement.  
+@typescript-eslint/no-var-requires
+```
+
+**Why Pre-Existing**: This error was already present before M12.3. The file `m115-inventory-costing-pages.test.tsx` was created as part of M11.5 (inventory costing) and uses CommonJS `require()` syntax at line 251 which violates the ESLint `no-var-requires` rule. M12.3 does not touch this test file.
+
+**Fix**: Convert `require()` to ES6 `import` syntax in the test file.
+
+---
+
+## PRE-015: E2E Test Failure - M12.1 Tests Use Removed `type` Field
+
+**Discovered**: M12.3 Verification (2026-01-07)  
+**Severity**: Error (E2E tests fail)  
+**Impact**: M12.1 E2E tests fail due to test file referencing removed InventoryLocation.type field
+
+**Command**:
+```bash
+pnpm --filter api test:e2e -- --testPathPattern="inventory-m121-period-close"
+```
+
+**Output**:
+```
+PrismaClientValidationError:
+Invalid `prisma.inventoryLocation.create()` invocation:
+{
+  data: {
+    org: { connect: { id: '...' } },
+    branch: { connect: { id: '...' } },
+    name: 'Freezer',
+    type: 'STORAGE',
+          ~~~~
+    isActive: true
+  }
+}
+
+Unknown argument `type`. Available options are marked with ?.
+```
+
+**Why Pre-Existing**: The InventoryLocation model previously had a `type` field that was removed in an earlier schema migration (likely M11.x or M12.0). The E2E test file `inventory-m121-period-close.e2e-spec.ts` still references this removed field when creating test fixtures. M12.3 does not modify the InventoryLocation model or this test file.
+
+**Fix**: Update the E2E test file to remove references to `type` field in InventoryLocation creation.
+
+---
+
 ## Previously Logged Issues (Reference)
 
 - PRE-001 through PRE-006: See git history for M8.x milestones
+

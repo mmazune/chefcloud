@@ -6,6 +6,7 @@
  * - FEFO allocation on POST (decrement lots, create ledger entries)
  * - Over-allocation prevention with optimistic locking
  * - Traceability via LotLedgerAllocation
+ * - M12.3: Period lock enforcement before posting
  */
 import {
     Injectable,
@@ -18,6 +19,7 @@ import { PrismaService } from '../prisma.service';
 import { AuditLogService } from '../audit/audit-log.service';
 import { InventoryLotsService } from './inventory-lots.service';
 import { InventoryLedgerService } from './inventory-ledger.service';
+import { InventoryPeriodsService } from './inventory-periods.service';
 import { Prisma, VendorReturnStatus } from '@chefcloud/db';
 
 const Decimal = Prisma.Decimal;
@@ -93,6 +95,7 @@ export class InventoryVendorReturnsService {
         private readonly auditLog: AuditLogService,
         private readonly lotsService: InventoryLotsService,
         private readonly ledgerService: InventoryLedgerService,
+        private readonly periodsService: InventoryPeriodsService,
     ) { }
 
     /**
@@ -359,6 +362,10 @@ export class InventoryVendorReturnsService {
             );
         }
 
+        // M12.3: Enforce period lock before posting
+        const effectiveAt = vendorReturn.createdAt;
+        await this.periodsService.enforcePeriodLock(orgId, vendorReturn.branchId, effectiveAt);
+
         const allocations: { lineId: string; lotId: string; qty: Decimal }[] = [];
 
         // Use a transaction for atomicity
@@ -559,6 +566,12 @@ export class InventoryVendorReturnsService {
 
         if (vendorReturn.status === 'VOID') {
             throw new BadRequestException('Vendor return is already voided');
+        }
+
+        // M12.3: Enforce period lock before voiding (if it will create ledger entries)
+        if (vendorReturn.status === 'POSTED') {
+            const effectiveAt = new Date();
+            await this.periodsService.enforcePeriodLock(orgId, vendorReturn.branchId, effectiveAt);
         }
 
         await this.prisma.client.$transaction(async (tx) => {

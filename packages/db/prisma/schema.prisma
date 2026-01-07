@@ -5733,6 +5733,8 @@ model InventoryLedgerEntry {
   createdById String?
   metadata    Json?
   createdAt   DateTime @default(now()) // NEVER updated after creation
+  // M12.3: Business event date (when the transaction occurred) - may differ from createdAt for backdated postings
+  effectiveAt DateTime @default(now())
 
   branch    Branch            @relation(fields: [branchId], references: [id], onDelete: Cascade)
   item      InventoryItem     @relation(fields: [itemId], references: [id], onDelete: Restrict)
@@ -5750,6 +5752,9 @@ model InventoryLedgerEntry {
   @@index([sourceType, sourceId])
   @@index([createdAt])
   @@index([branchId, createdAt]) // M11.15: Branch-level time-series queries
+  @@index([effectiveAt]) // M12.3: Period boundary queries
+  @@index([branchId, effectiveAt]) // M12.3: Branch period queries
+  @@index([orgId, branchId, effectiveAt]) // M12.3: Org+branch period queries
   @@map("inventory_ledger_entries")
 }
 

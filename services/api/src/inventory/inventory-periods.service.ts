@@ -165,14 +165,71 @@ export class InventoryPeriodsService {
   /**
    * Enforce period lock - throws ForbiddenException if locked.
    * Should be called by all posting actions before creating ledger entries.
+   * 
+   * M12.3: Added override support for L5 users.
+   * When override is used, logs OVERRIDE_USED event with reason.
+   * 
+   * @param orgId - Organization ID
+   * @param branchId - Branch ID  
+   * @param timestamp - The effectiveAt date to check against periods
+   * @param override - Optional override with userId and reason (L5 only)
    */
   async enforcePeriodLock(
     orgId: string,
     branchId: string,
     timestamp: Date,
+    override?: { userId: string; reason: string; actionType: string; entityType: string; entityId: string },
   ): Promise<void> {
     const check = await this.checkPeriodLock(orgId, branchId, timestamp);
     if (check.locked) {
+      // If override provided, log event and allow
+      if (override) {
+        // Validate reason length
+        if (!override.reason || override.reason.trim().length < 10) {
+          throw new ForbiddenException({
+            code: 'OVERRIDE_REASON_REQUIRED',
+            message: 'Override reason must be at least 10 characters',
+          });
+        }
+
+        // Log override usage
+        await this.periodEventsService.logEvent({
+          orgId,
+          branchId,
+          periodId: check.periodId!,
+          type: 'OVERRIDE_USED',
+          actorUserId: override.userId,
+          reason: override.reason.trim(),
+          metadataJson: {
+            actionType: override.actionType,
+            targetEntityType: override.entityType,
+            targetEntityId: override.entityId,
+            effectiveAt: timestamp.toISOString(),
+          },
+        });
+
+        // Audit log
+        await this.auditLog.log({
+          orgId,
+          userId: override.userId,
+          action: 'INVENTORY_PERIOD_OVERRIDE_USED',
+          resourceType: 'InventoryPeriod',
+          resourceId: check.periodId!,
+          metadata: {
+            reason: override.reason.trim(),
+            actionType: override.actionType,
+            targetEntityType: override.entityType,
+            targetEntityId: override.entityId,
+            effectiveAt: timestamp.toISOString(),
+          },
+        });
+
+        this.logger.warn(
+          `Period lock override used by ${override.userId} on period ${check.periodId}: ${override.reason}`,
+        );
+        return; // Allow the operation
+      }
+
       throw new ForbiddenException({
         code: 'INVENTORY_PERIOD_LOCKED',
         message: `Cannot post entries to locked inventory period`,
@@ -642,6 +699,7 @@ export class InventoryPeriodsService {
   /**
    * Generate valuation snapshots for all items/locations at period end.
    * M12.2: Added revision parameter for re-close workflow.
+   * M12.3: Uses effectiveAt for period boundary queries.
    */
   private async generateValuationSnapshots(
     orgId: string,
@@ -666,13 +724,14 @@ export class InventoryPeriodsService {
     for (const item of items) {
       for (const location of locations) {
         // Get on-hand at end boundary (H1: inclusive endDate)
+        // M12.3: Use effectiveAt for period boundary - transactions dated within period
         const ledgerAgg = await this.prisma.client.inventoryLedgerEntry.aggregate({
           where: {
             orgId,
             branchId,
             itemId: item.id,
             locationId: location.id,
-            createdAt: { lte: asOf },
+            effectiveAt: { lte: asOf },
           },
           _sum: { qty: true },
         });
@@ -724,6 +783,7 @@ export class InventoryPeriodsService {
   /**
    * Generate movement summaries for the period.
    * M12.2: Added revision parameter for re-close workflow.
+   * M12.3: Uses effectiveAt for period boundary queries.
    */
   private async generateMovementSummaries(
     orgId: string,
@@ -734,12 +794,13 @@ export class InventoryPeriodsService {
     revision: number = 1,
   ): Promise<number> {
     // Aggregate ledger entries by item and reason
+    // M12.3: Use effectiveAt for period boundary - transactions dated within period
     const ledgerEntries = await this.prisma.client.inventoryLedgerEntry.groupBy({
       by: ['itemId', 'reason'],
       where: {
         orgId,
         branchId,
-        createdAt: { gte: startDate, lte: endDate },
+        effectiveAt: { gte: startDate, lte: endDate },
       },
       _sum: { qty: true },
     });

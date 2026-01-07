@@ -477,4 +477,63 @@ export class InventoryPeriodsController {
     );
     return { periodId: id, revisions };
   }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // M12.3: Automation Endpoints
+  // ═══════════════════════════════════════════════════════════════════
+
+  /**
+   * M12.3: Run pre-close check for a specific period.
+   * Automation endpoint - returns structured result.
+   */
+  @Post(':id/run-preclose')
+  @Roles('OWNER', 'ADMIN', 'MANAGER')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'M12.3: Run pre-close check for period' })
+  @ApiParam({ name: 'id', description: 'Period ID' })
+  @ApiResponse({ status: 200, description: 'Pre-close check result' })
+  @ApiResponse({ status: 404, description: 'Period not found' })
+  async runPreclose(@Request() req, @Param('id') id: string) {
+    const period = await this.periodsService.getPeriod(req.user.orgId, id);
+    
+    const result = await this.preCloseCheckService.runCheck(
+      req.user.orgId,
+      period.branchId,
+      period.startDate,
+      period.endDate,
+    );
+
+    return {
+      periodId: id,
+      branchId: period.branchId,
+      startDate: period.startDate,
+      endDate: period.endDate,
+      ...result,
+    };
+  }
+
+  /**
+   * M12.3: Generate close pack for a period.
+   * Creates valuation snapshots and movement summaries.
+   */
+  @Post(':id/generate-close-pack')
+  @Roles('OWNER', 'ADMIN', 'MANAGER')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'M12.3: Generate close pack for period' })
+  @ApiParam({ name: 'id', description: 'Period ID' })
+  @ApiResponse({ status: 200, description: 'Close pack generated' })
+  @ApiResponse({ status: 400, description: 'Period is OPEN - must be closed first' })
+  @ApiResponse({ status: 404, description: 'Period not found' })
+  async generateClosePack(@Request() req, @Param('id') id: string) {
+    const closePack = await this.closePackService.getClosePack(
+      req.user.orgId,
+      req.user.sub,
+      id,
+    );
+
+    return {
+      periodId: id,
+      ...closePack,
+    };
+  }
 }

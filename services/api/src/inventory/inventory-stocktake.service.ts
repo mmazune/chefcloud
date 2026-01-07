@@ -18,6 +18,7 @@ import {
 } from './inventory-ledger.service';
 import { InventoryLocationsService } from './inventory-locations.service';
 import { InventoryGlPostingService } from './inventory-gl-posting.service';
+import { InventoryPeriodsService } from './inventory-periods.service';
 
 // ============================================
 // DTOs
@@ -63,6 +64,7 @@ export class InventoryStocktakeService {
     private readonly ledgerService: InventoryLedgerService,
     private readonly locationsService: InventoryLocationsService,
     private readonly glPostingService: InventoryGlPostingService,
+    private readonly periodsService: InventoryPeriodsService,
   ) {}
 
   // ============================================
@@ -463,6 +465,10 @@ export class InventoryStocktakeService {
         );
       }
 
+      // M12.3: Enforce period lock before posting
+      const effectiveAt = session.createdAt;
+      await this.periodsService.enforcePeriodLock(orgId, branchId, effectiveAt);
+
       // Create ledger entries for each line with variance
       const ledgerEntries: { lineId: string; entryId: string; variance: DecimalType }[] = [];
 
@@ -630,6 +636,10 @@ export class InventoryStocktakeService {
           `Cannot void session with status ${session.status}. Must be POSTED.`,
         );
       }
+
+      // M12.3: Enforce period lock before voiding
+      const effectiveAt = new Date();
+      await this.periodsService.enforcePeriodLock(orgId, branchId, effectiveAt);
 
       // Create reversal ledger entries
       const reversalEntries: { lineId: string; entryId: string; reversedVariance: DecimalType }[] =

@@ -8,6 +8,7 @@
  * - Ledger integration (PRODUCTION_CONSUME, PRODUCTION_PRODUCE)
  * - Lot traceability via LotLedgerAllocation
  * - CSV export with SHA256 hash
+ * - M12.3: Period lock enforcement before posting
  */
 import {
     Injectable,
@@ -19,6 +20,7 @@ import { PrismaService } from '../prisma.service';
 import { InventoryLedgerService, LedgerEntryReason, LedgerSourceType } from './inventory-ledger.service';
 import { InventoryCostingService } from './inventory-costing.service';
 import { InventoryUomService } from './inventory-uom.service';
+import { InventoryPeriodsService } from './inventory-periods.service';
 import { AuditLogService } from '../audit/audit-log.service';
 import { Prisma, ProductionBatchStatus, LotStatus, CostSourceType } from '@chefcloud/db';
 import { createHash } from 'crypto';
@@ -113,6 +115,7 @@ export class InventoryProductionService {
         private readonly costingService: InventoryCostingService,
         private readonly uomService: InventoryUomService,
         private readonly auditLog: AuditLogService,
+        private readonly periodsService: InventoryPeriodsService,
     ) { }
 
     // ==========================================================================
@@ -415,6 +418,10 @@ export class InventoryProductionService {
             throw new BadRequestException('Cannot post batch without input lines');
         }
 
+        // M12.3: Enforce period lock before posting
+        const effectiveAt = batch.createdAt;
+        await this.periodsService.enforcePeriodLock(orgId, branchId, effectiveAt);
+
         // Process in transaction
         return await this.prisma.client.$transaction(async (tx) => {
             let totalInputCost = ZERO;
@@ -654,6 +661,10 @@ export class InventoryProductionService {
         if (batch.status === ProductionBatchStatus.DRAFT) {
             throw new BadRequestException('Cannot void a draft batch - delete it instead');
         }
+
+        // M12.3: Enforce period lock before voiding
+        const effectiveAt = new Date();
+        await this.periodsService.enforcePeriodLock(orgId, branchId, effectiveAt);
 
         // Process in transaction
         return await this.prisma.client.$transaction(async (tx) => {

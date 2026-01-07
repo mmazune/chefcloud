@@ -57,6 +57,9 @@ export interface RecordLedgerEntryDto {
   notes?: string;
   createdById?: string;
   metadata?: Record<string, unknown>;
+  // M12.3: Business event date (when the transaction occurred)
+  // Defaults to now() if not specified. Used for period lock enforcement.
+  effectiveAt?: Date;
 }
 
 export interface OnHandResult {
@@ -124,6 +127,7 @@ export class InventoryLedgerService {
     }
 
     // INSERT-ONLY - no UPDATE or DELETE on ledger entries
+    // M12.3: Use effectiveAt if provided, otherwise defaults to now() via DB default
     const entry = await client.inventoryLedgerEntry.create({
       data: {
         orgId,
@@ -137,6 +141,7 @@ export class InventoryLedgerService {
         notes: dto.notes,
         createdById: dto.createdById,
         metadata: dto.metadata as Prisma.InputJsonValue ?? Prisma.JsonNull,
+        ...(dto.effectiveAt && { effectiveAt: dto.effectiveAt }),
       },
     });
 

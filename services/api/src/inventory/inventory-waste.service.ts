@@ -7,6 +7,7 @@
  * - Idempotent posting (prevents duplicate ledger entries)
  * - Negative stock prevention by default
  * - M11.13: Creates GL journal entries on post (Dr Waste Expense, Cr Inventory)
+ * - M12.3: Period lock enforcement before posting
  */
 import {
   Injectable,
@@ -18,6 +19,7 @@ import { PrismaService } from '../prisma.service';
 import { AuditLogService } from '../audit/audit-log.service';
 import { InventoryLedgerService, LedgerEntryReason, LedgerSourceType } from './inventory-ledger.service';
 import { InventoryGlPostingService } from './inventory-gl-posting.service';
+import { InventoryPeriodsService } from './inventory-periods.service';
 import { Prisma, InventoryWasteStatus, InventoryWasteReason } from '@chefcloud/db';
 
 const Decimal = Prisma.Decimal;
@@ -64,6 +66,7 @@ export class InventoryWasteService {
     private readonly auditLog: AuditLogService,
     private readonly ledgerService: InventoryLedgerService,
     private readonly glPostingService: InventoryGlPostingService,
+    private readonly periodsService: InventoryPeriodsService,
   ) { }
 
   /**
@@ -299,6 +302,10 @@ export class InventoryWasteService {
     if (waste.status !== 'DRAFT') {
       throw new BadRequestException(`Cannot post waste in ${waste.status} status`);
     }
+
+    // M12.3: Enforce period lock before posting
+    const effectiveAt = waste.createdAt;
+    await this.periodsService.enforcePeriodLock(orgId, branchId, effectiveAt);
 
     let ledgerEntryCount = 0;
 

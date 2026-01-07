@@ -9,6 +9,7 @@
  * - Void posted receipts (L4+ only)
  * - M11.5: Creates cost layers on post for WAC tracking
  * - M11.13: Creates GL journal entries on post (Dr Inventory, Cr GRNI)
+ * - M12.3: Period lock enforcement before posting
  */
 import {
   Injectable,
@@ -25,6 +26,7 @@ import { PurchaseOrdersService } from './purchase-orders.service';
 import { InventoryCostingService } from './inventory-costing.service';
 import { SupplierPricingService } from './supplier-pricing.service';
 import { InventoryGlPostingService } from './inventory-gl-posting.service';
+import { InventoryPeriodsService } from './inventory-periods.service';
 import { Prisma, GoodsReceiptStatus, CostSourceType } from '@chefcloud/db';
 
 const Decimal = Prisma.Decimal;
@@ -70,6 +72,7 @@ export class ReceiptsService {
     private readonly costingService: InventoryCostingService,
     private readonly supplierPricingService: SupplierPricingService,
     private readonly glPostingService: InventoryGlPostingService,
+    private readonly periodsService: InventoryPeriodsService,
   ) { }
 
   /**
@@ -370,6 +373,11 @@ export class ReceiptsService {
       throw new BadRequestException('Cannot post a voided receipt');
     }
 
+    // M12.3: Enforce period lock before posting
+    // Use receipt createdAt as the effectiveAt date for the posting
+    const effectiveAt = receiptWithLines.createdAt;
+    await this.periodsService.enforcePeriodLock(orgId, branchId, effectiveAt);
+
     // Validate over-receipt policy
     await this.validateOverReceipt(receiptWithLines);
 
@@ -551,6 +559,11 @@ export class ReceiptsService {
     if (receiptWithLines.status !== 'POSTED') {
       throw new BadRequestException('Can only void posted receipts');
     }
+
+    // M12.3: Enforce period lock before voiding
+    // Use current date as the effectiveAt for the reversing entries
+    const effectiveAt = new Date();
+    await this.periodsService.enforcePeriodLock(orgId, branchId, effectiveAt);
 
     // Void in transaction - create reversing entries
     const voidedReceipt = await this.prisma.client.$transaction(async (tx) => {

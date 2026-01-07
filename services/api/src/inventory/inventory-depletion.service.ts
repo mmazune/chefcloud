@@ -9,6 +9,7 @@
  * - Fire-and-forget pattern (non-blocking)
  * - M11.5: Records COGS breakdown on POSTED depletions
  * - M11.13: Creates GL journal entries for COGS (Dr COGS, Cr Inventory)
+ * - M12.3: Period lock awareness (mark as FAILED if period locked)
  */
 import {
     Injectable,
@@ -22,6 +23,7 @@ import { InventoryLedgerService, LedgerEntryReason, LedgerSourceType } from './i
 import { InventoryRecipesService } from './inventory-recipes.service';
 import { InventoryCostingService } from './inventory-costing.service';
 import { InventoryGlPostingService } from './inventory-gl-posting.service';
+import { InventoryPeriodsService } from './inventory-periods.service';
 import { Prisma, DepletionStatus, RecipeTargetType } from '@chefcloud/db';
 
 const Decimal = Prisma.Decimal;
@@ -34,6 +36,7 @@ export enum DepletionErrorCode {
     NO_RECIPE = 'NO_RECIPE',
     ORDER_NOT_CLOSED = 'ORDER_NOT_CLOSED',
     ALREADY_PROCESSED = 'ALREADY_PROCESSED',
+    PERIOD_LOCKED = 'PERIOD_LOCKED',
     INTERNAL_ERROR = 'INTERNAL_ERROR',
 }
 
@@ -68,6 +71,7 @@ export class InventoryDepletionService {
         private readonly recipesService: InventoryRecipesService,
         private readonly costingService: InventoryCostingService,
         private readonly glPostingService: InventoryGlPostingService,
+        private readonly periodsService: InventoryPeriodsService,
     ) { }
 
     /**
@@ -169,6 +173,46 @@ export class InventoryDepletionService {
             throw new BadRequestException(
                 `Order must be CLOSED to deplete inventory. Current status: ${order.status}`,
             );
+        }
+
+        // M12.3: Check period lock - use current date as the effective date for depletion
+        // Depletions happen when orders close, so we use now() as the effective date
+        const effectiveAt = new Date();
+        const periodLockCheck = await this.periodsService.checkPeriodLock(orgId, branchId, effectiveAt);
+        if (periodLockCheck.locked) {
+            // Create FAILED depletion record with PERIOD_LOCKED error
+            const failed = await this.prisma.client.orderInventoryDepletion.create({
+                data: {
+                    orgId,
+                    orderId,
+                    branchId,
+                    locationId,
+                    status: 'FAILED',
+                    errorCode: DepletionErrorCode.PERIOD_LOCKED,
+                    errorMessage: `Period ${periodLockCheck.periodId} is locked from ${periodLockCheck.startDate?.toISOString()} to ${periodLockCheck.endDate?.toISOString()}`,
+                    metadata: { itemsProcessed: 0, itemsSkipped: 0, periodId: periodLockCheck.periodId },
+                },
+            });
+
+            await this.auditLog.log({
+                orgId,
+                userId,
+                action: 'depletion.failed',
+                resourceType: 'Order',
+                resourceId: orderId,
+                metadata: { errorCode: DepletionErrorCode.PERIOD_LOCKED, periodId: periodLockCheck.periodId },
+            });
+
+            return {
+                depletionId: failed.id,
+                status: 'FAILED',
+                ledgerEntryCount: 0,
+                errorCode: DepletionErrorCode.PERIOD_LOCKED,
+                errorMessage: `Inventory period is locked`,
+                itemsProcessed: 0,
+                itemsSkipped: 0,
+                isIdempotent: false,
+            };
         }
 
         // Create PENDING depletion record
