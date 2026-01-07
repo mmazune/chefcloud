@@ -90,6 +90,11 @@ import { InventoryAnalyticsService } from './inventory-analytics.service';
 import { InventoryAlertsController } from './inventory-alerts.controller';
 import { InventoryAlertsService } from './inventory-alerts.service';
 
+// M11.13 GL Integration imports
+import { InventoryGlController } from './inventory-gl.controller';
+import { InventoryPostingMappingService } from './inventory-posting-mapping.service';
+import { InventoryGlPostingService } from './inventory-gl-posting.service';
+
 @Module({
   imports: [KpisModule, AuditModule],
   controllers: [
@@ -112,6 +117,7 @@ import { InventoryAlertsService } from './inventory-alerts.service';
     InventoryFastOpsController, // M11.11
     InventoryAnalyticsController, // M11.12
     InventoryAlertsController, // M11.12
+    InventoryGlController, // M11.13
     RecipesController,
     WastageController,
     CountsController,
@@ -150,6 +156,8 @@ import { InventoryAlertsService } from './inventory-alerts.service';
     InventoryFastOpsService, // M11.11
     InventoryAnalyticsService, // M11.12
     InventoryAlertsService, // M11.12
+    InventoryPostingMappingService, // M11.13
+    InventoryGlPostingService, // M11.13
     RecipesService,
     WastageService,
     CountsService,
@@ -191,6 +199,8 @@ import { InventoryAlertsService } from './inventory-alerts.service';
     InventoryFastOpsService, // M11.11
     InventoryAnalyticsService, // M11.12
     InventoryAlertsService, // M11.12
+    InventoryPostingMappingService, // M11.13
+    InventoryGlPostingService, // M11.13
     RecipesService,
     WastageService,
     CountsService,

@@ -17,6 +17,7 @@ import {
   LedgerSourceType,
 } from './inventory-ledger.service';
 import { InventoryLocationsService } from './inventory-locations.service';
+import { InventoryGlPostingService } from './inventory-gl-posting.service';
 
 // ============================================
 // DTOs
@@ -61,6 +62,7 @@ export class InventoryStocktakeService {
     private readonly prisma: PrismaService,
     private readonly ledgerService: InventoryLedgerService,
     private readonly locationsService: InventoryLocationsService,
+    private readonly glPostingService: InventoryGlPostingService,
   ) {}
 
   // ============================================
@@ -507,14 +509,76 @@ export class InventoryStocktakeService {
         include: this.getSessionInclude(),
       });
 
+      // M11.13: Create GL journal entry for variance (Dr/Cr Shrink/Gain, Cr/Dr Inventory)
+      // This is done outside the transaction to avoid blocking inventory updates on GL issues
+      let glJournalEntryId: string | null = null;
+      let glPostingStatus: 'PENDING' | 'POSTED' | 'FAILED' | 'SKIPPED' = 'PENDING';
+      let glPostingError: string | null = null;
+
+      // Calculate total variance value
+      const totalVarianceValue = ledgerEntries.reduce((sum, le) => {
+        const line = session.lines.find((l) => l.id === le.lineId);
+        if (line && line.varianceValue) {
+          return sum.plus(line.varianceValue);
+        }
+        return sum;
+      }, new Decimal(0));
+
+      if (!totalVarianceValue.equals(0)) {
+        try {
+          const glResult = await this.glPostingService.postStocktake(
+            orgId,
+            branchId,
+            sessionId,
+            totalVarianceValue,
+            userId,
+          );
+
+          if (glResult.status === 'POSTED' && glResult.journalEntryId) {
+            glJournalEntryId = glResult.journalEntryId;
+            glPostingStatus = 'POSTED';
+            this.logger.log(`GL entry ${glJournalEntryId} created for stocktake ${sessionId}`);
+          } else if (glResult.status === 'SKIPPED') {
+            glPostingStatus = 'SKIPPED';
+            glPostingError = glResult.error || 'No GL mapping configured';
+          } else {
+            glPostingStatus = glResult.status;
+            glPostingError = glResult.error || 'Unknown GL posting error';
+          }
+        } catch (glError: any) {
+          glPostingStatus = 'FAILED';
+          glPostingError = glError.message;
+          this.logger.warn(`GL posting failed for stocktake ${sessionId}: ${glError.message}`);
+        }
+
+        // Update session with GL posting status (outside transaction)
+        await this.prisma.client.stocktakeSession.update({
+          where: { id: sessionId },
+          data: {
+            glJournalEntryId,
+            glPostingStatus,
+            glPostingError,
+          },
+        });
+      } else {
+        glPostingStatus = 'SKIPPED';
+        glPostingError = 'No variance value to post';
+        await this.prisma.client.stocktakeSession.update({
+          where: { id: sessionId },
+          data: { glPostingStatus, glPostingError },
+        });
+      }
+
       this.logger.log(
-        `Posted stocktake session ${session.sessionNumber}: ${ledgerEntries.length} ledger entries created`,
+        `Posted stocktake session ${session.sessionNumber}: ${ledgerEntries.length} ledger entries created, GL status: ${glPostingStatus}`,
       );
 
       return {
         ...updated,
         ledgerEntriesCreated: ledgerEntries.length,
         ledgerEntries,
+        glJournalEntryId,
+        glPostingStatus,
       };
     });
   }
@@ -617,6 +681,22 @@ export class InventoryStocktakeService {
         },
         include: this.getSessionInclude(),
       });
+
+      // M11.13: Create GL reversal entry if original stocktake had GL posting
+      if (session.glJournalEntryId) {
+        try {
+          await this.glPostingService.voidStocktakeGl(
+            orgId,
+            branchId,
+            sessionId,
+            userId,
+          );
+          this.logger.log(`GL reversal entry created for voided stocktake ${sessionId}`);
+        } catch (glError: any) {
+          this.logger.warn(`GL reversal failed for stocktake ${sessionId}: ${glError.message}`);
+          // GL reversal failure doesn't block stocktake void
+        }
+      }
 
       this.logger.log(
         `Voided stocktake session ${session.sessionNumber}: ${reversalEntries.length} reversal entries created`,

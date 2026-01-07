@@ -8,6 +8,7 @@
  * - Negative stock handling: mark FAILED, don't block order
  * - Fire-and-forget pattern (non-blocking)
  * - M11.5: Records COGS breakdown on POSTED depletions
+ * - M11.13: Creates GL journal entries for COGS (Dr COGS, Cr Inventory)
  */
 import {
     Injectable,
@@ -20,6 +21,7 @@ import { AuditLogService } from '../audit/audit-log.service';
 import { InventoryLedgerService, LedgerEntryReason, LedgerSourceType } from './inventory-ledger.service';
 import { InventoryRecipesService } from './inventory-recipes.service';
 import { InventoryCostingService } from './inventory-costing.service';
+import { InventoryGlPostingService } from './inventory-gl-posting.service';
 import { Prisma, DepletionStatus, RecipeTargetType } from '@chefcloud/db';
 
 const Decimal = Prisma.Decimal;
@@ -65,6 +67,7 @@ export class InventoryDepletionService {
         private readonly ledgerService: InventoryLedgerService,
         private readonly recipesService: InventoryRecipesService,
         private readonly costingService: InventoryCostingService,
+        private readonly glPostingService: InventoryGlPostingService,
     ) { }
 
     /**
@@ -296,6 +299,43 @@ export class InventoryDepletionService {
                 cogsBreakdowns = cogsResult.breakdowns;
             }
 
+            // M11.13: Create GL journal entry for COGS (Dr COGS, Cr Inventory Asset)
+            let glJournalEntryId: string | null = null;
+            let glPostingStatus: 'PENDING' | 'POSTED' | 'FAILED' | 'SKIPPED' = 'PENDING';
+            let glPostingError: string | null = null;
+
+            if (finalStatus === 'POSTED' && cogsTotal.gt(0)) {
+                try {
+                    const glResult = await this.glPostingService.postDepletion(
+                        orgId,
+                        branchId,
+                        depletion.id,
+                        cogsTotal,
+                        userId,
+                    );
+
+                    if (glResult.status === 'POSTED' && glResult.journalEntryId) {
+                        glJournalEntryId = glResult.journalEntryId;
+                        glPostingStatus = 'POSTED';
+                        this.logger.log(`GL entry ${glJournalEntryId} created for depletion ${depletion.id}`);
+                    } else if (glResult.status === 'SKIPPED') {
+                        glPostingStatus = 'SKIPPED';
+                        glPostingError = glResult.error || 'No GL mapping configured';
+                    } else {
+                        glPostingStatus = glResult.status;
+                        glPostingError = glResult.error || 'Unknown GL posting error';
+                    }
+                } catch (glError: any) {
+                    glPostingStatus = 'FAILED';
+                    glPostingError = glError.message;
+                    this.logger.warn(`GL posting failed for depletion ${depletion.id}: ${glError.message}`);
+                    // GL failure doesn't block depletion - continue with inventory update
+                }
+            } else if (cogsTotal.lte(0)) {
+                glPostingStatus = 'SKIPPED';
+                glPostingError = 'No COGS value to post';
+            }
+
             // Update depletion record
             const updated = await this.prisma.client.orderInventoryDepletion.update({
                 where: { id: depletion.id },
@@ -305,12 +345,16 @@ export class InventoryDepletionService {
                     errorCode: errors.length > 0 ? DepletionErrorCode.INSUFFICIENT_STOCK : null,
                     errorMessage: errors.length > 0 ? errors.join('; ') : null,
                     postedAt: new Date(),
+                    glJournalEntryId,
+                    glPostingStatus,
+                    glPostingError,
                     metadata: {
                         itemsProcessed,
                         itemsSkipped,
                         processedItems,
                         cogsTotal: cogsTotal.toString(),
                         cogsBreakdowns,
+                        glPostingStatus,
                         errors: errors.length > 0 ? errors : undefined,
                     },
                 },
@@ -329,6 +373,8 @@ export class InventoryDepletionService {
                     itemsSkipped,
                     cogsTotal: cogsTotal.toString(),
                     cogsBreakdowns,
+                    glJournalEntryId,
+                    glPostingStatus,
                     errors: errors.length > 0 ? errors : undefined,
                 },
             });

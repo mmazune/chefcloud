@@ -6,6 +6,7 @@
  * - Post waste to create WASTE ledger entries
  * - Idempotent posting (prevents duplicate ledger entries)
  * - Negative stock prevention by default
+ * - M11.13: Creates GL journal entries on post (Dr Waste Expense, Cr Inventory)
  */
 import {
   Injectable,
@@ -16,6 +17,7 @@ import {
 import { PrismaService } from '../prisma.service';
 import { AuditLogService } from '../audit/audit-log.service';
 import { InventoryLedgerService, LedgerEntryReason, LedgerSourceType } from './inventory-ledger.service';
+import { InventoryGlPostingService } from './inventory-gl-posting.service';
 import { Prisma, InventoryWasteStatus, InventoryWasteReason } from '@chefcloud/db';
 
 const Decimal = Prisma.Decimal;
@@ -61,6 +63,7 @@ export class InventoryWasteService {
     private readonly prisma: PrismaService,
     private readonly auditLog: AuditLogService,
     private readonly ledgerService: InventoryLedgerService,
+    private readonly glPostingService: InventoryGlPostingService,
   ) { }
 
   /**
@@ -331,13 +334,53 @@ export class InventoryWasteService {
         ledgerEntryCount++;
       }
 
-      // Update waste status
+      // M11.13: Calculate total waste value for GL posting
+      const totalWasteValue = waste.lines.reduce(
+        (sum, line) => {
+          const unitCost = line.unitCost ? new Decimal(line.unitCost) : new Decimal(0);
+          return sum.plus(new Decimal(line.qty).times(unitCost));
+        },
+        new Decimal(0),
+      );
+
+      // M11.13: Post GL journal entry (Dr Waste Expense, Cr Inventory Asset)
+      let glJournalEntryId: string | null = null;
+      let glPostingStatus: 'PENDING' | 'POSTED' | 'FAILED' | 'SKIPPED' = 'PENDING';
+      let glPostingError: string | null = null;
+
+      if (!totalWasteValue.isZero()) {
+        try {
+          const glResult = await this.glPostingService.postWaste(
+            orgId,
+            branchId,
+            wasteId,
+            totalWasteValue,
+            userId,
+            tx,
+          );
+          glJournalEntryId = glResult.journalEntryId;
+          glPostingStatus = glResult.status;
+          glPostingError = glResult.error;
+        } catch (err: any) {
+          this.logger.warn(`GL posting failed for waste ${wasteId}: ${err.message}`);
+          glPostingStatus = 'FAILED';
+          glPostingError = err.message;
+        }
+      } else {
+        glPostingStatus = 'SKIPPED';
+        glPostingError = 'Zero waste value';
+      }
+
+      // Update waste status with GL posting info
       return tx.inventoryWaste.update({
         where: { id: wasteId },
         data: {
           status: 'POSTED',
           postedAt: new Date(),
           postedById: userId,
+          glJournalEntryId,
+          glPostingStatus,
+          glPostingError,
         },
         include: {
           lines: { include: { item: true, location: true } },

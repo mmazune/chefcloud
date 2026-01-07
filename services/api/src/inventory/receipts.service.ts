@@ -8,6 +8,7 @@
  * - Over-receipt policy enforcement
  * - Void posted receipts (L4+ only)
  * - M11.5: Creates cost layers on post for WAC tracking
+ * - M11.13: Creates GL journal entries on post (Dr Inventory, Cr GRNI)
  */
 import {
   Injectable,
@@ -23,6 +24,7 @@ import { InventoryLedgerService, LedgerEntryReason, LedgerSourceType } from './i
 import { PurchaseOrdersService } from './purchase-orders.service';
 import { InventoryCostingService } from './inventory-costing.service';
 import { SupplierPricingService } from './supplier-pricing.service';
+import { InventoryGlPostingService } from './inventory-gl-posting.service';
 import { Prisma, GoodsReceiptStatus, CostSourceType } from '@chefcloud/db';
 
 const Decimal = Prisma.Decimal;
@@ -67,6 +69,7 @@ export class ReceiptsService {
     private readonly poService: PurchaseOrdersService,
     private readonly costingService: InventoryCostingService,
     private readonly supplierPricingService: SupplierPricingService,
+    private readonly glPostingService: InventoryGlPostingService,
   ) { }
 
   /**
@@ -448,13 +451,46 @@ export class ReceiptsService {
         }
       }
 
-      // Update receipt status
+      // M11.13: Calculate total receipt value for GL posting
+      const totalReceiptValue = receiptWithLines.lines.reduce(
+        (sum, line) => sum.plus(new Decimal(line.qtyReceivedBase).times(new Decimal(line.unitCost))),
+        new Decimal(0),
+      );
+
+      // M11.13: Post GL journal entry (Dr Inventory Asset, Cr GRNI)
+      let glJournalEntryId: string | null = null;
+      let glPostingStatus: 'PENDING' | 'POSTED' | 'FAILED' | 'SKIPPED' = 'PENDING';
+      let glPostingError: string | null = null;
+
+      try {
+        const glResult = await this.glPostingService.postGoodsReceipt(
+          orgId,
+          branchId,
+          receiptId,
+          totalReceiptValue,
+          userId,
+          tx,
+        );
+        glJournalEntryId = glResult.journalEntryId;
+        glPostingStatus = glResult.status;
+        glPostingError = glResult.error;
+      } catch (err: any) {
+        // Log but don't fail receipt posting - GL is supplementary
+        this.logger.warn(`GL posting failed for receipt ${receiptId}: ${err.message}`);
+        glPostingStatus = 'FAILED';
+        glPostingError = err.message;
+      }
+
+      // Update receipt status with GL posting info
       const updated = await tx.goodsReceiptV2.update({
         where: { id: receiptId },
         data: {
           status: 'POSTED',
           postedAt: new Date(),
           postedById: userId,
+          glJournalEntryId,
+          glPostingStatus,
+          glPostingError,
         },
         include: {
           lines: { include: { item: true, location: true } },
@@ -560,6 +596,15 @@ export class ReceiptsService {
           purchaseOrder: true,
         },
       });
+
+      // M11.13: Create GL reversal if original receipt had GL posting
+      if (receiptWithLines.glJournalEntryId) {
+        try {
+          await this.glPostingService.voidGoodsReceiptGl(orgId, branchId, receiptId, userId, tx);
+        } catch (err: any) {
+          this.logger.warn(`GL reversal failed for receipt ${receiptId}: ${err.message}`);
+        }
+      }
 
       // Update PO status
       await this.poService.updateReceivingStatus(receiptWithLines.purchaseOrderId, tx);
