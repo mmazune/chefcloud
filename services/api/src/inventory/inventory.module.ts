@@ -105,6 +105,12 @@ import { InventoryReorderOptimizationService } from './inventory-reorder-optimiz
 import { InventoryHealthController } from './inventory-health.controller';
 import { InventoryHealthService } from './inventory-health.service';
 
+// M12.1 Inventory Periods imports
+import { InventoryPeriodsController } from './inventory-periods.controller';
+import { InventoryPeriodsService } from './inventory-periods.service';
+import { InventoryReconciliationService as InventoryPeriodReconciliationService } from './inventory-reconciliation.service';
+import { InventoryPeriodExportService } from './inventory-period-export.service';
+
 @Module({
   imports: [KpisModule, AuditModule],
   controllers: [
@@ -130,6 +136,7 @@ import { InventoryHealthService } from './inventory-health.service';
     InventoryGlController, // M11.13
     InventoryForecastingController, // M11.14
     InventoryHealthController, // M11.15
+    InventoryPeriodsController, // M12.1
     RecipesController,
     WastageController,
     CountsController,
@@ -174,6 +181,9 @@ import { InventoryHealthService } from './inventory-health.service';
     InventoryForecastingService, // M11.14
     InventoryReorderOptimizationService, // M11.14
     InventoryHealthService, // M11.15
+    InventoryPeriodsService, // M12.1
+    InventoryPeriodReconciliationService, // M12.1
+    InventoryPeriodExportService, // M12.1
     RecipesService,
     WastageService,
     CountsService,
@@ -221,6 +231,9 @@ import { InventoryHealthService } from './inventory-health.service';
     InventoryForecastingService, // M11.14
     InventoryReorderOptimizationService, // M11.14
     InventoryHealthService, // M11.15
+    InventoryPeriodsService, // M12.1
+    InventoryPeriodReconciliationService, // M12.1
+    InventoryPeriodExportService, // M12.1
     RecipesService,
     WastageService,
     CountsService,

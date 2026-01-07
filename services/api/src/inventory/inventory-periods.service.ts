@@ -1,0 +1,836 @@
+/**
+ * M12.1 Inventory Period Service
+ *
+ * Manages inventory period lifecycle:
+ * - Create/list/close periods
+ * - Lock enforcement for posting within closed periods
+ * - Blocking state validation before close
+ * - Valuation snapshot + movement summary generation
+ */
+import {
+  Injectable,
+  Logger,
+  BadRequestException,
+  NotFoundException,
+  ForbiddenException,
+  ConflictException,
+} from '@nestjs/common';
+import { PrismaService } from '../prisma.service';
+import { AuditLogService } from '../audit/audit-log.service';
+import { InventoryCostingService } from './inventory-costing.service';
+import { Prisma, InventoryPeriodStatus } from '@chefcloud/db';
+
+const Decimal = Prisma.Decimal;
+type Decimal = Prisma.Decimal;
+
+const ZERO = new Decimal(0);
+
+export interface CreatePeriodDto {
+  branchId: string;
+  startDate: Date;
+  endDate: Date;
+  lockReason?: string;
+}
+
+export interface ClosePeriodDto {
+  branchId: string;
+  startDate: Date;
+  endDate: Date;
+  lockReason?: string;
+}
+
+export interface PeriodListResult {
+  id: string;
+  branchId: string;
+  branchName: string;
+  startDate: Date;
+  endDate: Date;
+  status: InventoryPeriodStatus;
+  closedAt: Date | null;
+  closedByName: string | null;
+  lockReason: string | null;
+  snapshotCount: number;
+}
+
+export interface BlockingStateResult {
+  valid: boolean;
+  blockers: {
+    type: string;
+    count: number;
+    message: string;
+  }[];
+}
+
+export interface ValuationSnapshotLine {
+  itemId: string;
+  itemCode: string;
+  itemName: string;
+  locationId: string;
+  locationCode: string;
+  qtyOnHand: Decimal;
+  wac: Decimal;
+  value: Decimal;
+}
+
+export interface PeriodLockCheckResult {
+  locked: boolean;
+  periodId?: string;
+  startDate?: Date;
+  endDate?: Date;
+  lockReason?: string;
+}
+
+// Error thrown when posting into a locked period
+export class InventoryPeriodLockedError extends Error {
+  constructor(
+    public readonly periodId: string,
+    public readonly startDate: Date,
+    public readonly endDate: Date,
+    public readonly reason?: string,
+  ) {
+    super(`Inventory period ${periodId} is locked. Cannot post entries within ${startDate.toISOString()} - ${endDate.toISOString()}`);
+    this.name = 'InventoryPeriodLockedError';
+  }
+}
+
+@Injectable()
+export class InventoryPeriodsService {
+  private readonly logger = new Logger(InventoryPeriodsService.name);
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly auditLog: AuditLogService,
+    private readonly costingService: InventoryCostingService,
+  ) {}
+
+  /**
+   * Check if a timestamp falls within a closed inventory period for a branch.
+   * Used by all posting actions to enforce period locks.
+   * 
+   * CRITICAL: This is the centralized lock check. All posting actions must call this.
+   */
+  async checkPeriodLock(
+    orgId: string,
+    branchId: string,
+    timestamp: Date,
+  ): Promise<PeriodLockCheckResult> {
+    // Find any CLOSED period that contains the timestamp
+    const closedPeriod = await this.prisma.client.inventoryPeriod.findFirst({
+      where: {
+        orgId,
+        branchId,
+        status: 'CLOSED',
+        startDate: { lte: timestamp },
+        endDate: { gte: timestamp },
+      },
+      select: {
+        id: true,
+        startDate: true,
+        endDate: true,
+        lockReason: true,
+      },
+    });
+
+    if (closedPeriod) {
+      return {
+        locked: true,
+        periodId: closedPeriod.id,
+        startDate: closedPeriod.startDate,
+        endDate: closedPeriod.endDate,
+        lockReason: closedPeriod.lockReason ?? undefined,
+      };
+    }
+
+    return { locked: false };
+  }
+
+  /**
+   * Enforce period lock - throws ForbiddenException if locked.
+   * Should be called by all posting actions before creating ledger entries.
+   */
+  async enforcePeriodLock(
+    orgId: string,
+    branchId: string,
+    timestamp: Date,
+  ): Promise<void> {
+    const check = await this.checkPeriodLock(orgId, branchId, timestamp);
+    if (check.locked) {
+      throw new ForbiddenException({
+        code: 'INVENTORY_PERIOD_LOCKED',
+        message: `Cannot post entries to locked inventory period`,
+        periodId: check.periodId,
+        startDate: check.startDate,
+        endDate: check.endDate,
+        lockReason: check.lockReason,
+      });
+    }
+  }
+
+  /**
+   * List periods for a branch.
+   */
+  async listPeriods(
+    orgId: string,
+    branchId?: string,
+    options?: { status?: InventoryPeriodStatus },
+  ): Promise<PeriodListResult[]> {
+    const where: Prisma.InventoryPeriodWhereInput = { orgId };
+    if (branchId) where.branchId = branchId;
+    if (options?.status) where.status = options.status;
+
+    const periods = await this.prisma.client.inventoryPeriod.findMany({
+      where,
+      include: {
+        branch: { select: { name: true } },
+        closedBy: { select: { firstName: true, lastName: true } },
+        _count: { select: { valuationSnapshots: true } },
+      },
+      orderBy: [{ branchId: 'asc' }, { endDate: 'desc' }],
+    });
+
+    return periods.map((p) => ({
+      id: p.id,
+      branchId: p.branchId,
+      branchName: p.branch.name,
+      startDate: p.startDate,
+      endDate: p.endDate,
+      status: p.status,
+      closedAt: p.closedAt,
+      closedByName: p.closedBy
+        ? `${p.closedBy.firstName} ${p.closedBy.lastName}`
+        : null,
+      lockReason: p.lockReason,
+      snapshotCount: p._count.valuationSnapshots,
+    }));
+  }
+
+  /**
+   * Get a single period by ID with full details.
+   */
+  async getPeriod(orgId: string, periodId: string) {
+    const period = await this.prisma.client.inventoryPeriod.findFirst({
+      where: { id: periodId, orgId },
+      include: {
+        branch: { select: { name: true } },
+        closedBy: { select: { firstName: true, lastName: true } },
+        _count: {
+          select: { valuationSnapshots: true, movementSummaries: true },
+        },
+      },
+    });
+
+    if (!period) {
+      throw new NotFoundException('Period not found');
+    }
+
+    return period;
+  }
+
+  /**
+   * Create a new period (OPEN by default).
+   */
+  async createPeriod(
+    orgId: string,
+    userId: string,
+    dto: CreatePeriodDto,
+  ) {
+    // Validate branch belongs to org
+    const branch = await this.prisma.client.branch.findFirst({
+      where: { id: dto.branchId, orgId },
+    });
+    if (!branch) {
+      throw new NotFoundException('Branch not found');
+    }
+
+    // Validate dates
+    if (dto.startDate > dto.endDate) {
+      throw new BadRequestException('Start date must be before end date');
+    }
+
+    // Check for overlapping periods
+    const overlap = await this.prisma.client.inventoryPeriod.findFirst({
+      where: {
+        orgId,
+        branchId: dto.branchId,
+        OR: [
+          // New period starts within existing
+          { startDate: { lte: dto.startDate }, endDate: { gte: dto.startDate } },
+          // New period ends within existing
+          { startDate: { lte: dto.endDate }, endDate: { gte: dto.endDate } },
+          // New period contains existing
+          { startDate: { gte: dto.startDate }, endDate: { lte: dto.endDate } },
+        ],
+      },
+    });
+
+    if (overlap) {
+      throw new ConflictException('Period overlaps with existing period');
+    }
+
+    const period = await this.prisma.client.inventoryPeriod.create({
+      data: {
+        orgId,
+        branchId: dto.branchId,
+        startDate: dto.startDate,
+        endDate: dto.endDate,
+        lockReason: dto.lockReason,
+        status: 'OPEN',
+      },
+    });
+
+    return period;
+  }
+
+  /**
+   * Check blocking states before close.
+   * Returns list of issues that must be resolved before close.
+   */
+  async checkBlockingStates(
+    orgId: string,
+    branchId: string,
+    startDate: Date,
+    endDate: Date,
+  ): Promise<BlockingStateResult> {
+    const blockers: BlockingStateResult['blockers'] = [];
+
+    // Extend endDate to end of day for inclusive boundary (H1)
+    const endBoundary = new Date(endDate);
+    endBoundary.setHours(23, 59, 59, 999);
+
+    // 1. Check stocktakes in SUBMITTED/APPROVED (not POSTED/VOID) within range
+    const pendingStocktakes = await this.prisma.client.stocktakeSession.count({
+      where: {
+        orgId,
+        branchId,
+        status: { in: ['SUBMITTED', 'APPROVED'] },
+        createdAt: { gte: startDate, lte: endBoundary },
+      },
+    });
+    if (pendingStocktakes > 0) {
+      blockers.push({
+        type: 'PENDING_STOCKTAKE',
+        count: pendingStocktakes,
+        message: `${pendingStocktakes} stocktake(s) in SUBMITTED/APPROVED status within period`,
+      });
+    }
+
+    // 2. Check production batches in DRAFT within range
+    const draftProduction = await this.prisma.client.productionBatch.count({
+      where: {
+        orgId,
+        branchId,
+        status: 'DRAFT',
+        createdAt: { gte: startDate, lte: endBoundary },
+      },
+    });
+    if (draftProduction > 0) {
+      blockers.push({
+        type: 'DRAFT_PRODUCTION',
+        count: draftProduction,
+        message: `${draftProduction} production batch(es) in DRAFT status within period`,
+      });
+    }
+
+    // 3. Check transfers IN_TRANSIT older than endDate (H7)
+    const inTransitTransfers = await this.prisma.client.inventoryTransfer.count({
+      where: {
+        orgId,
+        OR: [
+          { fromBranchId: branchId },
+          { toBranchId: branchId },
+        ],
+        status: 'IN_TRANSIT',
+        shippedAt: { lte: endBoundary },
+      },
+    });
+    if (inTransitTransfers > 0) {
+      blockers.push({
+        type: 'IN_TRANSIT_TRANSFER',
+        count: inTransitTransfers,
+        message: `${inTransitTransfers} transfer(s) IN_TRANSIT before period end`,
+      });
+    }
+
+    // 4. Check pending stock adjustments within range
+    const pendingAdjustments = await this.prisma.client.stockAdjustment.count({
+      where: {
+        orgId,
+        branchId,
+        status: 'PENDING',
+        createdAt: { gte: startDate, lte: endBoundary },
+      },
+    });
+    if (pendingAdjustments > 0) {
+      blockers.push({
+        type: 'PENDING_ADJUSTMENT',
+        count: pendingAdjustments,
+        message: `${pendingAdjustments} adjustment(s) PENDING approval within period`,
+      });
+    }
+
+    return {
+      valid: blockers.length === 0,
+      blockers,
+    };
+  }
+
+  /**
+   * Close a period. Idempotent - returns existing if already closed (H2).
+   */
+  async closePeriod(
+    orgId: string,
+    userId: string,
+    dto: ClosePeriodDto,
+  ) {
+    // Validate branch belongs to org (H9)
+    const branch = await this.prisma.client.branch.findFirst({
+      where: { id: dto.branchId, orgId },
+      select: { id: true, name: true },
+    });
+    if (!branch) {
+      throw new NotFoundException('Branch not found');
+    }
+
+    // Check for existing CLOSED period with same range (H2: idempotency)
+    const existingClosed = await this.prisma.client.inventoryPeriod.findFirst({
+      where: {
+        orgId,
+        branchId: dto.branchId,
+        startDate: dto.startDate,
+        endDate: dto.endDate,
+        status: 'CLOSED',
+      },
+      include: {
+        _count: { select: { valuationSnapshots: true, movementSummaries: true } },
+      },
+    });
+
+    if (existingClosed) {
+      this.logger.log(`Period ${existingClosed.id} already closed, returning existing`);
+      return existingClosed;
+    }
+
+    // Check blocking states
+    const blockCheck = await this.checkBlockingStates(
+      orgId,
+      dto.branchId,
+      dto.startDate,
+      dto.endDate,
+    );
+    if (!blockCheck.valid) {
+      throw new BadRequestException({
+        code: 'PERIOD_CLOSE_BLOCKED',
+        message: 'Cannot close period due to blocking states',
+        blockers: blockCheck.blockers,
+      });
+    }
+
+    // Find or create the period
+    let period = await this.prisma.client.inventoryPeriod.findFirst({
+      where: {
+        orgId,
+        branchId: dto.branchId,
+        startDate: dto.startDate,
+        endDate: dto.endDate,
+      },
+    });
+
+    if (!period) {
+      period = await this.createPeriod(orgId, userId, {
+        branchId: dto.branchId,
+        startDate: dto.startDate,
+        endDate: dto.endDate,
+        lockReason: dto.lockReason,
+      });
+    }
+
+    // Extend endDate to end of day for inclusive boundary (H1)
+    const endBoundary = new Date(dto.endDate);
+    endBoundary.setHours(23, 59, 59, 999);
+
+    // Generate valuation snapshots
+    await this.generateValuationSnapshots(
+      orgId,
+      dto.branchId,
+      period.id,
+      endBoundary,
+    );
+
+    // Generate movement summaries
+    await this.generateMovementSummaries(
+      orgId,
+      dto.branchId,
+      period.id,
+      dto.startDate,
+      endBoundary,
+    );
+
+    // Mark period as CLOSED
+    const closedPeriod = await this.prisma.client.inventoryPeriod.update({
+      where: { id: period.id },
+      data: {
+        status: 'CLOSED',
+        closedAt: new Date(),
+        closedById: userId,
+        lockReason: dto.lockReason ?? period.lockReason,
+      },
+      include: {
+        _count: { select: { valuationSnapshots: true, movementSummaries: true } },
+      },
+    });
+
+    // Audit log
+    await this.auditLog.log({
+      orgId,
+      userId,
+      action: 'INVENTORY_PERIOD_CLOSED',
+      resourceType: 'InventoryPeriod',
+      resourceId: closedPeriod.id,
+      metadata: {
+        branchId: dto.branchId,
+        startDate: dto.startDate.toISOString(),
+        endDate: dto.endDate.toISOString(),
+        snapshotCount: closedPeriod._count.valuationSnapshots,
+        summaryCount: closedPeriod._count.movementSummaries,
+      },
+    });
+
+    return closedPeriod;
+  }
+
+  /**
+   * Generate valuation snapshots for all items/locations at period end.
+   */
+  private async generateValuationSnapshots(
+    orgId: string,
+    branchId: string,
+    periodId: string,
+    asOf: Date,
+  ): Promise<number> {
+    // Get all item/location combinations with ledger entries up to asOf
+    const locations = await this.prisma.client.inventoryLocation.findMany({
+      where: { branchId, isActive: true },
+      select: { id: true, code: true },
+    });
+
+    const items = await this.prisma.client.inventoryItem.findMany({
+      where: { orgId, isActive: true },
+      select: { id: true, sku: true, name: true },
+    });
+
+    let snapshotCount = 0;
+
+    for (const item of items) {
+      for (const location of locations) {
+        // Get on-hand at end boundary (H1: inclusive endDate)
+        const ledgerAgg = await this.prisma.client.inventoryLedgerEntry.aggregate({
+          where: {
+            orgId,
+            branchId,
+            itemId: item.id,
+            locationId: location.id,
+            createdAt: { lte: asOf },
+          },
+          _sum: { qty: true },
+        });
+
+        const qtyOnHand = ledgerAgg._sum.qty
+          ? new Decimal(ledgerAgg._sum.qty)
+          : ZERO;
+
+        // Skip if no stock
+        if (qtyOnHand.isZero()) continue;
+
+        // Get WAC at period end
+        const wac = await this.costingService.getCurrentWac(orgId, branchId, item.id);
+
+        // Calculate value (H10: use Decimal throughout)
+        const value = qtyOnHand.times(wac);
+
+        // Create snapshot (idempotent via unique constraint)
+        try {
+          await this.prisma.client.inventoryValuationSnapshot.create({
+            data: {
+              orgId,
+              branchId,
+              periodId,
+              itemId: item.id,
+              locationId: location.id,
+              qtyOnHand,
+              wac,
+              value,
+              asOf,
+            },
+          });
+          snapshotCount++;
+        } catch (e) {
+          // Unique constraint violation = already exists (idempotent)
+          if ((e as any)?.code === 'P2002') {
+            this.logger.debug(`Snapshot already exists for item ${item.id} location ${location.id}`);
+          } else {
+            throw e;
+          }
+        }
+      }
+    }
+
+    return snapshotCount;
+  }
+
+  /**
+   * Generate movement summaries for the period.
+   */
+  private async generateMovementSummaries(
+    orgId: string,
+    branchId: string,
+    periodId: string,
+    startDate: Date,
+    endDate: Date,
+  ): Promise<number> {
+    // Aggregate ledger entries by item and reason
+    const ledgerEntries = await this.prisma.client.inventoryLedgerEntry.groupBy({
+      by: ['itemId', 'reason'],
+      where: {
+        orgId,
+        branchId,
+        createdAt: { gte: startDate, lte: endDate },
+      },
+      _sum: { qty: true },
+    });
+
+    // Build per-item summaries
+    const itemSummaries = new Map<string, {
+      receiveQty: Decimal;
+      depletionQty: Decimal;
+      wasteQty: Decimal;
+      transferInQty: Decimal;
+      transferOutQty: Decimal;
+      adjustmentQty: Decimal;
+      countVarianceQty: Decimal;
+      productionConsumeQty: Decimal;
+      productionProduceQty: Decimal;
+    }>();
+
+    for (const entry of ledgerEntries) {
+      if (!itemSummaries.has(entry.itemId)) {
+        itemSummaries.set(entry.itemId, {
+          receiveQty: ZERO,
+          depletionQty: ZERO,
+          wasteQty: ZERO,
+          transferInQty: ZERO,
+          transferOutQty: ZERO,
+          adjustmentQty: ZERO,
+          countVarianceQty: ZERO,
+          productionConsumeQty: ZERO,
+          productionProduceQty: ZERO,
+        });
+      }
+
+      const summary = itemSummaries.get(entry.itemId)!;
+      const qty = entry._sum.qty ? new Decimal(entry._sum.qty) : ZERO;
+
+      // Map reason codes to summary fields
+      switch (entry.reason) {
+        case 'PURCHASE':
+        case 'GOODS_RECEIPT':
+          summary.receiveQty = summary.receiveQty.plus(qty);
+          break;
+        case 'SALE':
+        case 'DEPLETION':
+          summary.depletionQty = summary.depletionQty.plus(qty.abs());
+          break;
+        case 'WASTAGE':
+        case 'WASTE':
+          summary.wasteQty = summary.wasteQty.plus(qty.abs());
+          break;
+        case 'TRANSFER_IN':
+          summary.transferInQty = summary.transferInQty.plus(qty);
+          break;
+        case 'TRANSFER_OUT':
+          summary.transferOutQty = summary.transferOutQty.plus(qty.abs());
+          break;
+        case 'ADJUSTMENT':
+        case 'STOCK_ADJUSTMENT':
+          summary.adjustmentQty = summary.adjustmentQty.plus(qty);
+          break;
+        case 'COUNT_ADJUSTMENT':
+        case 'STOCKTAKE_VARIANCE':
+          summary.countVarianceQty = summary.countVarianceQty.plus(qty);
+          break;
+        case 'PRODUCTION_CONSUME':
+          summary.productionConsumeQty = summary.productionConsumeQty.plus(qty.abs());
+          break;
+        case 'PRODUCTION_PRODUCE':
+          summary.productionProduceQty = summary.productionProduceQty.plus(qty);
+          break;
+      }
+    }
+
+    // Create per-item summaries
+    let summaryCount = 0;
+    for (const [itemId, summary] of itemSummaries) {
+      try {
+        await this.prisma.client.inventoryPeriodMovementSummary.create({
+          data: {
+            orgId,
+            branchId,
+            periodId,
+            itemId,
+            ...summary,
+            // Values are 0 for now - could compute from cost layers
+            receiveValue: ZERO,
+            depletionValue: ZERO,
+            wasteValue: ZERO,
+            adjustmentValue: ZERO,
+            countVarianceValue: ZERO,
+            productionConsumeValue: ZERO,
+            productionProduceValue: ZERO,
+          },
+        });
+        summaryCount++;
+      } catch (e) {
+        if ((e as any)?.code === 'P2002') {
+          this.logger.debug(`Summary already exists for item ${itemId}`);
+        } else {
+          throw e;
+        }
+      }
+    }
+
+    // Create branch total row (itemId = null)
+    const branchTotal = {
+      receiveQty: ZERO,
+      depletionQty: ZERO,
+      wasteQty: ZERO,
+      transferInQty: ZERO,
+      transferOutQty: ZERO,
+      adjustmentQty: ZERO,
+      countVarianceQty: ZERO,
+      productionConsumeQty: ZERO,
+      productionProduceQty: ZERO,
+    };
+
+    for (const summary of itemSummaries.values()) {
+      branchTotal.receiveQty = branchTotal.receiveQty.plus(summary.receiveQty);
+      branchTotal.depletionQty = branchTotal.depletionQty.plus(summary.depletionQty);
+      branchTotal.wasteQty = branchTotal.wasteQty.plus(summary.wasteQty);
+      branchTotal.transferInQty = branchTotal.transferInQty.plus(summary.transferInQty);
+      branchTotal.transferOutQty = branchTotal.transferOutQty.plus(summary.transferOutQty);
+      branchTotal.adjustmentQty = branchTotal.adjustmentQty.plus(summary.adjustmentQty);
+      branchTotal.countVarianceQty = branchTotal.countVarianceQty.plus(summary.countVarianceQty);
+      branchTotal.productionConsumeQty = branchTotal.productionConsumeQty.plus(summary.productionConsumeQty);
+      branchTotal.productionProduceQty = branchTotal.productionProduceQty.plus(summary.productionProduceQty);
+    }
+
+    try {
+      await this.prisma.client.inventoryPeriodMovementSummary.create({
+        data: {
+          orgId,
+          branchId,
+          periodId,
+          itemId: null,
+          ...branchTotal,
+          receiveValue: ZERO,
+          depletionValue: ZERO,
+          wasteValue: ZERO,
+          adjustmentValue: ZERO,
+          countVarianceValue: ZERO,
+          productionConsumeValue: ZERO,
+          productionProduceValue: ZERO,
+        },
+      });
+      summaryCount++;
+    } catch (e) {
+      if ((e as any)?.code !== 'P2002') throw e;
+    }
+
+    return summaryCount;
+  }
+
+  /**
+   * Get valuation snapshots for a period.
+   */
+  async getValuationSnapshots(
+    orgId: string,
+    periodId: string,
+  ): Promise<ValuationSnapshotLine[]> {
+    const period = await this.getPeriod(orgId, periodId);
+
+    const snapshots = await this.prisma.client.inventoryValuationSnapshot.findMany({
+      where: { periodId, orgId },
+      include: {
+        item: { select: { sku: true, name: true } },
+        location: { select: { code: true } },
+      },
+      orderBy: [{ itemId: 'asc' }, { locationId: 'asc' }],
+    });
+
+    return snapshots.map((s) => ({
+      itemId: s.itemId,
+      itemCode: s.item.sku ?? s.itemId.substring(0, 8),
+      itemName: s.item.name,
+      locationId: s.locationId,
+      locationCode: s.location.code,
+      qtyOnHand: new Decimal(s.qtyOnHand),
+      wac: new Decimal(s.wac),
+      value: new Decimal(s.value),
+    }));
+  }
+
+  /**
+   * Get movement summaries for a period.
+   */
+  async getMovementSummaries(orgId: string, periodId: string) {
+    const period = await this.getPeriod(orgId, periodId);
+
+    const summaries = await this.prisma.client.inventoryPeriodMovementSummary.findMany({
+      where: { periodId, orgId },
+      include: {
+        item: { select: { sku: true, name: true } },
+      },
+      orderBy: { itemId: 'asc' },
+    });
+
+    return summaries.map((s) => ({
+      itemId: s.itemId,
+      itemCode: s.item?.sku ?? (s.itemId ? s.itemId.substring(0, 8) : 'TOTAL'),
+      itemName: s.item?.name ?? 'Branch Total',
+      receiveQty: new Decimal(s.receiveQty),
+      depletionQty: new Decimal(s.depletionQty),
+      wasteQty: new Decimal(s.wasteQty),
+      transferInQty: new Decimal(s.transferInQty),
+      transferOutQty: new Decimal(s.transferOutQty),
+      adjustmentQty: new Decimal(s.adjustmentQty),
+      countVarianceQty: new Decimal(s.countVarianceQty),
+      productionConsumeQty: new Decimal(s.productionConsumeQty),
+      productionProduceQty: new Decimal(s.productionProduceQty),
+    }));
+  }
+
+  /**
+   * Log override usage for audit trail.
+   */
+  async logOverrideUsage(
+    orgId: string,
+    userId: string,
+    periodId: string,
+    reason: string,
+    actionType: string,
+    entityType: string,
+    entityId: string,
+  ): Promise<void> {
+    await this.auditLog.log({
+      orgId,
+      userId,
+      action: 'INVENTORY_PERIOD_OVERRIDE_USED',
+      resourceType: 'InventoryPeriod',
+      resourceId: periodId,
+      metadata: {
+        reason,
+        actionType,
+        targetEntityType: entityType,
+        targetEntityId: entityId,
+      },
+    });
+  }
+}

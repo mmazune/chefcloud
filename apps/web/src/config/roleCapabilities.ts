@@ -35,6 +35,7 @@ import {
   Zap,
   ClipboardList,
   ArchiveRestore,
+  Lock,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -280,6 +281,7 @@ export const ROLE_CAPABILITIES: Record<JobRole, RoleCapability> = {
           { label: 'Waste', href: '/inventory/waste', icon: Trash2 },
           { label: 'Recipes', href: '/inventory/recipes', icon: ClipboardList },
           { label: 'Depletions', href: '/inventory/depletions', icon: ArchiveRestore },
+          { label: 'Period Close', href: '/inventory/period-close', icon: Lock },
           { label: 'Service Providers', href: '/service-providers', icon: Truck },
         ],
       },
@@ -323,6 +325,7 @@ export const ROLE_CAPABILITIES: Record<JobRole, RoleCapability> = {
           { label: 'Waste', href: '/inventory/waste', icon: Trash2 },
           { label: 'Recipes', href: '/inventory/recipes', icon: ClipboardList },
           { label: 'Depletions', href: '/inventory/depletions', icon: ArchiveRestore },
+          { label: 'Period Close', href: '/inventory/period-close', icon: Lock },
           { label: 'Reports', href: '/reports', icon: FileText },
         ],
       },

@@ -510,6 +510,8 @@ model Org {
   lotBarcodes                    InventoryLotBarcode[]
   // M11.12: Inventory Alerts
   inventoryAlerts                InventoryAlert[]
+  // M12.1: Inventory Periods
+  inventoryPeriods               InventoryPeriod[]
 
   @@map("orgs")
 }
@@ -662,6 +664,8 @@ model Branch {
   // M11.14: Demand Forecasting + Reorder Optimization
   forecastSnapshots        DemandForecastSnapshot[]  @relation("BranchForecastSnapshots")
   optimizationRuns         ForecastOptimizationRun[] @relation("BranchOptimizationRuns")
+  // M12.1: Inventory Periods
+  inventoryPeriods         InventoryPeriod[]         @relation("InventoryPeriodBranch")
 
   @@index([orgId, id])
   @@map("branches")
@@ -861,6 +865,8 @@ model User {
   // M11.14: Demand Forecasting + Reorder Optimization
   forecastSnapshotsGenerated      DemandForecastSnapshot[]         @relation("ForecastSnapshotCreator")
   optimizationRunsCreated         ForecastOptimizationRun[]        @relation("OptimizationRunCreator")
+  // M12.1: Inventory Periods
+  inventoryPeriodsClosed          InventoryPeriod[]                @relation("InventoryPeriodCloser")
 
   @@index([orgId, id])
   @@map("users")
@@ -2150,6 +2156,9 @@ model InventoryItem {
   // M11.14: Demand Forecasting + Reorder Optimization
   forecastSnapshots      DemandForecastSnapshot[]   @relation("ItemForecastSnapshots")
   optimizationLines      ForecastOptimizationLine[] @relation("ItemOptimizationLines")
+  // M12.1: Period Snapshots + Movement Summaries
+  valuationSnapshots     InventoryValuationSnapshot[]        @relation("ValuationSnapshotItem")
+  movementSummaries      InventoryPeriodMovementSummary[]    @relation("MovementSummaryItem")
 
   @@unique([orgId, sku])
   @@index([orgId])
@@ -5694,6 +5703,8 @@ model InventoryLocation {
   // M11.10: Stocktake Sessions v2
   stocktakeSessions        StocktakeSession[]        @relation("StocktakeSessionLocation")
   stocktakeLines           StocktakeLine[]           @relation("StocktakeLineLocation")
+  // M12.1: Valuation Snapshots
+  valuationSnapshots       InventoryValuationSnapshot[] @relation("ValuationSnapshotLocation")
 
   @@unique([branchId, code])
   @@index([orgId])
@@ -7083,4 +7094,108 @@ model InventoryAlert {
   @@index([type])
   @@index([entityType, entityId])
   @@map("inventory_alerts")
+}
+
+// ============================================================================
+// M12.1: Inventory Period Close + Locking + GL Reconciliation
+// ============================================================================
+
+enum InventoryPeriodStatus {
+  OPEN
+  CLOSED
+}
+
+// Inventory Period - Branch-scoped accounting period for inventory
+model InventoryPeriod {
+  id         String                @id @default(cuid())
+  orgId      String
+  branchId   String
+  startDate  DateTime              @db.Date
+  endDate    DateTime              @db.Date // Inclusive (covers entire day)
+  status     InventoryPeriodStatus @default(OPEN)
+  closedAt   DateTime?
+  closedById String?
+  lockReason String? // e.g., "Month-end close"
+  createdAt  DateTime              @default(now())
+  updatedAt  DateTime              @updatedAt
+
+  // Relations
+  org      Org    @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  branch   Branch @relation("InventoryPeriodBranch", fields: [branchId], references: [id], onDelete: Cascade)
+  closedBy User?  @relation("InventoryPeriodCloser", fields: [closedById], references: [id], onDelete: SetNull)
+
+  valuationSnapshots InventoryValuationSnapshot[]
+  movementSummaries  InventoryPeriodMovementSummary[]
+
+  @@unique([orgId, branchId, startDate, endDate])
+  @@index([orgId, branchId])
+  @@index([status])
+  @@map("inventory_periods")
+}
+
+// Valuation Snapshot - Append-only snapshot of inventory value at period close
+model InventoryValuationSnapshot {
+  id         String   @id @default(cuid())
+  orgId      String
+  branchId   String
+  periodId   String
+  itemId     String
+  locationId String
+  qtyOnHand  Decimal  @db.Decimal(12, 4)
+  wac        Decimal  @db.Decimal(12, 4)
+  value      Decimal  @db.Decimal(12, 2)
+  asOf       DateTime // Timestamp consistent with endDate boundary
+  createdAt  DateTime @default(now())
+
+  // Relations
+  period   InventoryPeriod   @relation(fields: [periodId], references: [id], onDelete: Cascade)
+  item     InventoryItem     @relation("ValuationSnapshotItem", fields: [itemId], references: [id], onDelete: Restrict)
+  location InventoryLocation @relation("ValuationSnapshotLocation", fields: [locationId], references: [id], onDelete: Restrict)
+
+  @@unique([periodId, itemId, locationId])
+  @@index([periodId])
+  @@index([orgId, branchId])
+  @@map("inventory_valuation_snapshots")
+}
+
+// Movement Summary - Aggregated movement totals for a period
+model InventoryPeriodMovementSummary {
+  id        String  @id @default(cuid())
+  orgId     String
+  branchId  String
+  periodId  String
+  itemId    String? // null = branch total row
+  // Receive
+  receiveQty   Decimal @default(0) @db.Decimal(12, 4)
+  receiveValue Decimal @default(0) @db.Decimal(12, 2)
+  // Sales/Depletion (COGS)
+  depletionQty   Decimal @default(0) @db.Decimal(12, 4)
+  depletionValue Decimal @default(0) @db.Decimal(12, 2)
+  // Waste
+  wasteQty   Decimal @default(0) @db.Decimal(12, 4)
+  wasteValue Decimal @default(0) @db.Decimal(12, 2)
+  // Transfers
+  transferInQty  Decimal @default(0) @db.Decimal(12, 4)
+  transferOutQty Decimal @default(0) @db.Decimal(12, 4)
+  // Adjustments
+  adjustmentQty   Decimal @default(0) @db.Decimal(12, 4)
+  adjustmentValue Decimal @default(0) @db.Decimal(12, 2)
+  // Count variance (stocktake)
+  countVarianceQty   Decimal @default(0) @db.Decimal(12, 4)
+  countVarianceValue Decimal @default(0) @db.Decimal(12, 2)
+  // Production
+  productionConsumeQty   Decimal @default(0) @db.Decimal(12, 4)
+  productionConsumeValue Decimal @default(0) @db.Decimal(12, 2)
+  productionProduceQty   Decimal @default(0) @db.Decimal(12, 4)
+  productionProduceValue Decimal @default(0) @db.Decimal(12, 2)
+  createdAt              DateTime @default(now())
+
+  // Relations
+  period InventoryPeriod @relation(fields: [periodId], references: [id], onDelete: Cascade)
+  item   InventoryItem?  @relation("MovementSummaryItem", fields: [itemId], references: [id], onDelete: Restrict)
+
+  @@unique([periodId, itemId])
+  @@index([periodId])
+  @@index([orgId, branchId])
+  @@map("inventory_period_movement_summaries")
 }
