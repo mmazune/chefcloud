@@ -35,7 +35,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { apiClient } from '@/lib/api';
 import { Plus, Download, FileCheck, AlertTriangle, Lock, CheckCircle2, XCircle, RefreshCw, Calendar, Package, RotateCcw } from 'lucide-react';
 import { format } from 'date-fns';
-import { useAuth } from '@/contexts/auth-context';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface InventoryPeriod {
   id: string;
@@ -203,7 +203,7 @@ export default function PeriodClosePage() {
   const [preCloseCheckEndDate, setPreCloseCheckEndDate] = useState<Date | null>(null);
 
   // Check if user is L5 (OWNER or ADMIN)
-  const isL5 = user?.role === 'OWNER' || user?.role === 'ADMIN';
+  const isL5 = user?.roleLevel && Number(user.roleLevel) >= 5;
 
   // Fetch branches
   const { data: branches } = useQuery({
@@ -1195,11 +1195,9 @@ export default function PeriodClosePage() {
                       </div>
                       <div className="flex items-center gap-2">
                         <code className="text-xs bg-muted px-1 rounded">{exp.hash.substring(0, 16)}...</code>
-                        <Button variant="outline" size="sm" asChild>
-                          <a href={exp.url} download>
-                            <Download className="w-4 h-4" />
-                          </a>
-                        </Button>
+                        <a href={exp.url} download className="inline-flex items-center justify-center h-9 rounded-md px-3 border border-input bg-background hover:bg-accent hover:text-accent-foreground text-sm font-medium">
+                          <Download className="w-4 h-4" />
+                        </a>
                       </div>
                     </div>
                   ))}

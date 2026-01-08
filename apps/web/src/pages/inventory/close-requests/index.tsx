@@ -22,7 +22,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { apiClient } from '@/lib/api';
 import { Plus, Check, X, Download, Clock, CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
 import { format } from 'date-fns';
-import { useAuth } from '@/contexts/auth-context';
+import { useAuth } from '@/contexts/AuthContext';
 
 // ============================================
 // Types
@@ -79,8 +79,8 @@ export default function CloseRequestsPage() {
   const [rejectReason, setRejectReason] = useState('');
 
   // Check role level
-  const canApprove = user?.roleLevel && user.roleLevel >= 5; // L5+
-  const canCreate = user?.roleLevel && user.roleLevel >= 4; // L4+
+  const canApprove = user?.roleLevel && Number(user.roleLevel) >= 5; // L5+
+  const canCreate = user?.roleLevel && Number(user.roleLevel) >= 4; // L4+
 
   // ============================================
   // Queries

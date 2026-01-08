@@ -264,9 +264,10 @@ describe('M12.8 Close Ops Finalization', () => {
       expect(branch2Row).toBeDefined();
 
       // Verify no cross-branch contamination
-      // Branch 2 period is still OPEN, so openPeriodCount should be >= 1
+      // Branch 2 period is still OPEN, so currentPeriod should have status OPEN
       if (branch2Row) {
-        expect(branch2Row.openPeriodCount).toBeGreaterThanOrEqual(1);
+        expect(branch2Row.currentPeriod).toBeDefined();
+        expect(branch2Row.currentPeriod?.status).toBe('OPEN');
       }
     });
 

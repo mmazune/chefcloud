@@ -694,8 +694,8 @@ export class InventoryPeriodsController {
     @Param('id') id: string,
     @Body() body: ResolveBlockerBody,
   ) {
-    // Map user role to RoleLevel
-    const roleLevel = this.getRoleLevelFromUserRole(req.user.role);
+    // Use roleLevel directly from JWT payload (L1-L5)
+    const roleLevel = req.user.roleLevel as 'L1' | 'L2' | 'L3' | 'L4' | 'L5';
 
     const dto: ResolveBlockerDto = {
       type: body.type,

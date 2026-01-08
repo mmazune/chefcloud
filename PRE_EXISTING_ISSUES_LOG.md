@@ -274,6 +274,134 @@ Unknown argument `type`. Available options are marked with ?.
 
 ---
 
+## PRE-013: Sonner module missing in web build
+
+**Category**: build-error  
+**First Observed**: M12.9 Baseline (2026-01-08)  
+**Impact**: HIGH - Blocks web build  
+**Status**: FIXED (M12.9)
+
+**Command**:
+```
+pnpm -C apps/web build
+```
+
+**Output**:
+```
+./src/pages/inventory/accounting-mappings.tsx:26:23
+Type error: Cannot find module 'sonner' or its corresponding type declarations.
+
+  24 | import { Alert, AlertDescription } from '@/components/ui/alert';
+  25 | import { apiClient } from '@/lib/api';
+> 26 | import { toast } from 'sonner';
+     |                       ^
+```
+
+**Why Pre-Existing**: The `sonner` toast library was added as an import in `accounting-mappings.tsx` prior to M12.9 but the package was never added to `apps/web/package.json` dependencies. This is pre-existing as M12.9 does not modify this file or any web dependencies.
+
+**Fix Applied**: Added `sonner` to apps/web dependencies via `pnpm -C apps/web add sonner`.
+
+---
+
+## PRE-014: M12.2 Test Expects Missing `checklist` Field
+
+**Category**: test-api-mismatch  
+**First Observed**: M12.9 Release Gate (2026-01-08)  
+**Impact**: MEDIUM - Test failures in release gate  
+**Status**: OPEN
+
+**Summary**: The M12.2 E2E test expects `response.body.checklist` from the preclose-check endpoint, but the endpoint does not return this field.
+
+**Evidence**:
+```
+expect(received).toBeDefined()
+Received: undefined
+
+  > 116 |       expect(response.body.checklist).toBeDefined();
+```
+
+**Why Pre-Existing**: The test was written expecting an API shape that was never implemented. M12.9 does not modify the preclose-check endpoint.
+
+**Impact**: 11 test failures in inventory-m122-close-ops-v2.e2e-spec.ts
+
+---
+
+## PRE-015: M10.17 Workforce Leave Tests - Route 404s
+
+**Category**: test-api-mismatch  
+**First Observed**: M12.9 Release Gate (2026-01-08)  
+**Impact**: MEDIUM - Test failures in release gate  
+**Status**: OPEN
+
+**Summary**: M10.17 workforce leave tests expect routes that return 404 Not Found.
+
+**Evidence**:
+```
+expected 200 "OK", got 404 "Not Found"
+  > 525 |         .expect(HttpStatus.OK);
+  
+  Routes failing:
+  - POST /workforce/leave/run-monthly-accrual
+  - POST /workforce/leave/types (create)
+```
+
+**Why Pre-Existing**: Tests were written for API endpoints that were planned but never implemented. M12.9 does not modify workforce leave routes.
+
+**Impact**: 29 test failures in workforce-m1017-leave.e2e-spec.ts
+
+---
+
+## PRE-016: M9.4 Reservations Rate Limiting Flakiness
+
+**Category**: test-flaky  
+**First Observed**: M12.9 Release Gate (2026-01-08)  
+**Impact**: MEDIUM - Test failures due to rate limiting interference  
+**Status**: OPEN
+
+**Summary**: Reservation tests are affected by rate limiting, getting 429 or 500 when expecting other status codes.
+
+**Evidence**:
+```
+expect(received).toBe(expected)
+Expected: 404
+Received: 429
+
+  > 465 |       expect(res.status).toBe(404);
+  
+Expected: [200, 404]
+Received: 500
+```
+
+**Why Pre-Existing**: Rate limiting guard affects test isolation. M12.9 does not modify reservation endpoints.
+
+**Impact**: 8 test failures in reservations-m94-public-booking.e2e-spec.ts
+
+---
+
+## PRE-017: Inventory Periods Controller Using Wrong Role Field
+
+**Category**: code-bug  
+**First Observed**: M12.9 Release Gate (2026-01-08)  
+**Impact**: HIGH - Blocker resolve endpoint returns 403 incorrectly  
+**Status**: FIXED (M12.9)
+
+**Summary**: The `resolveBlocker` endpoint in inventory-periods.controller.ts was using `req.user.role` (undefined) instead of `req.user.roleLevel`.
+
+**Evidence**:
+```typescript
+// Before (broken):
+const roleLevel = this.getRoleLevelFromUserRole(req.user.role);
+
+// After (fixed):
+const roleLevel = req.user.roleLevel as 'L1' | 'L2' | 'L3' | 'L4' | 'L5';
+```
+
+**Why Categorized as Pre-Existing**: This bug existed before M12.9 work began. The endpoint was created during M12.7 with incorrect role field usage.
+
+**Fix Applied**: Changed to use `req.user.roleLevel` directly.
+
+---
+
 ## Previously Logged Issues (Reference)
 
 - PRE-001 through PRE-006: See git history for M8.x milestones
