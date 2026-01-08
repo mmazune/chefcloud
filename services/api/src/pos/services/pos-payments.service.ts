@@ -1,8 +1,13 @@
 /**
- * M13.4: POS Payments Service
+ * M13.4 / M13.5: POS Payments Service
  *
  * Handles payment lifecycle: create → authorize → capture → void/refund
  * with idempotency, audit trail, and org/branch scoping.
+ * 
+ * M13.5 additions:
+ * - Split/Partial Payments (multiple payments per order)
+ * - Tips (tipCents field, NOT counted in dueCents)
+ * - Order Payment Status (UNPAID|PARTIALLY_PAID|PAID|REFUNDED)
  */
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -14,6 +19,7 @@ import { FakeCardProvider } from '../providers/fake-card.provider';
 export interface CreatePaymentDto {
   method: 'CASH' | 'CARD' | 'MOMO' | 'OTHER';
   amountCents: number;
+  tipCents?: number; // M13.5: Tip amount (NOT counted in dueCents)
   idempotencyKey: string;
   provider?: 'INTERNAL' | 'FAKE_CARD';
   cardToken?: string;
@@ -23,6 +29,25 @@ export interface CreatePaymentDto {
 export interface RefundPaymentDto {
   amountCents: number;
   reason: string;
+}
+
+// M13.5: Payment summary for an order
+export interface PaymentSummary {
+  orderId: string;
+  orderTotalCents: number;
+  paidCents: number; // SUM(capturedCents - refundedCents) for CAPTURED payments
+  tipsCents: number; // SUM(tipCents) for CAPTURED payments
+  dueCents: number; // max(0, orderTotalCents - paidCents)
+  paymentStatus: 'UNPAID' | 'PARTIALLY_PAID' | 'PAID' | 'REFUNDED';
+  payments: {
+    id: string;
+    method: string;
+    amountCents: number;
+    capturedCents: number;
+    refundedCents: number;
+    tipCents: number;
+    posStatus: string;
+  }[];
 }
 
 @Injectable()
@@ -37,6 +62,9 @@ export class PosPaymentsService {
    * Create a payment for an order
    * - CASH: Auto-capture if autoCaptureIfCash is true (default)
    * - CARD: Authorize only, requires separate capture
+   * 
+   * M13.5: Supports partial payments (amountCents <= dueCents)
+   * M13.5: Supports tips (tipCents, NOT counted in dueCents)
    */
   async createPayment(
     orderId: string,
@@ -45,6 +73,22 @@ export class PosPaymentsService {
     branchId: string,
     userId: string,
   ): Promise<any> {
+    const tipCents = dto.tipCents || 0;
+
+    // M13.5: Validate tipCents (non-negative, max 500% of amountCents)
+    if (tipCents < 0) {
+      throw new BadRequestException({
+        code: 'INVALID_TIP',
+        message: 'Tip cannot be negative',
+      });
+    }
+    if (tipCents > dto.amountCents * 5) {
+      throw new BadRequestException({
+        code: 'TIP_TOO_HIGH',
+        message: 'Tip cannot exceed 500% of payment amount',
+      });
+    }
+
     // Validate order belongs to org/branch
     const order = await this.prisma.client.order.findFirst({
       where: {
@@ -52,6 +96,13 @@ export class PosPaymentsService {
         branch: {
           id: branchId,
           orgId,
+        },
+      },
+      include: {
+        payments: {
+          where: {
+            posStatus: { in: ['CAPTURED', 'AUTHORIZED', 'PENDING'] },
+          },
         },
       },
     });
@@ -72,12 +123,28 @@ export class PosPaymentsService {
       });
     }
 
-    // Validate amount matches order total (v1: no partials)
+    // M13.5: Calculate dueCents = max(0, orderTotalCents - paidCents)
     const orderTotalCents = Math.round(Number(order.total) * 100);
-    if (dto.amountCents !== orderTotalCents) {
+    const paidCents = order.payments.reduce((sum, p) => {
+      if (p.posStatus === 'CAPTURED') {
+        return sum + p.capturedCents - p.refundedCents;
+      }
+      return sum;
+    }, 0);
+    const dueCents = Math.max(0, orderTotalCents - paidCents);
+
+    // M13.5: Validate amount against dueCents (prevent overpayment)
+    if (dto.amountCents > dueCents) {
       throw new BadRequestException({
-        code: 'AMOUNT_MISMATCH',
-        message: `Payment amount ${dto.amountCents} must equal order total ${orderTotalCents}`,
+        code: 'OVERPAYMENT',
+        message: `Payment amount ${dto.amountCents} exceeds due amount ${dueCents}`,
+      });
+    }
+
+    if (dto.amountCents <= 0) {
+      throw new BadRequestException({
+        code: 'INVALID_AMOUNT',
+        message: 'Payment amount must be positive',
       });
     }
 
@@ -159,6 +226,7 @@ export class PosPaymentsService {
         method: dto.method,
         amountCents: dto.amountCents,
         capturedCents: status === 'CAPTURED' ? dto.amountCents : 0,
+        tipCents, // M13.5: Include tip
         amount: dto.amountCents / 100,
         currency: 'USD',
         posStatus: status,
@@ -170,10 +238,16 @@ export class PosPaymentsService {
       },
     });
 
+    // M13.5: Update order paymentStatus if payment is captured
+    if (status === 'CAPTURED') {
+      await this.updateOrderPaymentStatus(orderId, orgId, branchId);
+    }
+
     // Create audit events
     await this.createPaymentEvent(orgId, payment.id, 'CREATED', userId, {
       method: dto.method,
       amountCents: dto.amountCents,
+      tipCents,
     });
 
     if (status === 'AUTHORIZED') {
@@ -251,6 +325,9 @@ export class PosPaymentsService {
         status: 'completed', // Legacy
       },
     });
+
+    // M13.5: Update order paymentStatus
+    await this.updateOrderPaymentStatus(payment.orderId, orgId, branchId);
 
     await this.createPaymentEvent(orgId, paymentId, 'CAPTURED', userId, {
       capturedCents: payment.amountCents,
@@ -409,6 +486,9 @@ export class PosPaymentsService {
       },
     });
 
+    // M13.5: Update order paymentStatus
+    await this.updateOrderPaymentStatus(payment.orderId, orgId, branchId);
+
     await this.createPaymentEvent(orgId, paymentId, 'REFUNDED', userId, {
       amountCents: dto.amountCents,
       reason: dto.reason,
@@ -534,6 +614,127 @@ export class PosPaymentsService {
         createdById: userId,
         metadata,
       },
+    });
+  }
+
+  /**
+   * M13.5: Get payment summary for an order
+   */
+  async getPaymentSummary(
+    orderId: string,
+    orgId: string,
+    branchId: string,
+  ): Promise<PaymentSummary> {
+    const order = await this.prisma.client.order.findFirst({
+      where: {
+        id: orderId,
+        branch: {
+          id: branchId,
+          orgId,
+        },
+      },
+      include: {
+        payments: true,
+      },
+    });
+
+    if (!order) {
+      throw new BadRequestException({
+        code: 'ORDER_NOT_FOUND',
+        message: 'Order not found',
+      });
+    }
+
+    const orderTotalCents = Math.round(Number(order.total) * 100);
+    
+    // Calculate paidCents from CAPTURED payments only
+    const capturedPayments = order.payments.filter(p => p.posStatus === 'CAPTURED');
+    const paidCents = capturedPayments.reduce(
+      (sum, p) => sum + p.capturedCents - p.refundedCents, 
+      0
+    );
+    const tipsCents = capturedPayments.reduce((sum, p) => sum + p.tipCents, 0);
+    const dueCents = Math.max(0, orderTotalCents - paidCents);
+
+    // Determine paymentStatus
+    let paymentStatus: PaymentSummary['paymentStatus'] = 'UNPAID';
+    if (paidCents <= 0 && capturedPayments.some(p => p.refundedCents > 0)) {
+      paymentStatus = 'REFUNDED';
+    } else if (paidCents >= orderTotalCents) {
+      paymentStatus = 'PAID';
+    } else if (paidCents > 0) {
+      paymentStatus = 'PARTIALLY_PAID';
+    }
+
+    return {
+      orderId,
+      orderTotalCents,
+      paidCents,
+      tipsCents,
+      dueCents,
+      paymentStatus,
+      payments: order.payments.map(p => ({
+        id: p.id,
+        method: p.method,
+        amountCents: p.amountCents,
+        capturedCents: p.capturedCents,
+        refundedCents: p.refundedCents,
+        tipCents: p.tipCents,
+        posStatus: p.posStatus,
+      })),
+    };
+  }
+
+  /**
+   * M13.5: Update order's paymentStatus based on current payments
+   */
+  private async updateOrderPaymentStatus(
+    orderId: string,
+    orgId: string,
+    branchId: string,
+  ): Promise<void> {
+    const order = await this.prisma.client.order.findFirst({
+      where: {
+        id: orderId,
+        branch: {
+          id: branchId,
+          orgId,
+        },
+      },
+      include: {
+        payments: {
+          where: {
+            posStatus: 'CAPTURED',
+          },
+        },
+      },
+    });
+
+    if (!order) return;
+
+    const orderTotalCents = Math.round(Number(order.total) * 100);
+    const paidCents = order.payments.reduce(
+      (sum, p) => sum + p.capturedCents - p.refundedCents,
+      0,
+    );
+
+    let paymentStatus: 'UNPAID' | 'PARTIALLY_PAID' | 'PAID' | 'REFUNDED' = 'UNPAID';
+
+    // Check if all payments are fully refunded
+    const allRefunded = order.payments.length > 0 && 
+      order.payments.every(p => p.refundedCents >= p.capturedCents);
+
+    if (allRefunded) {
+      paymentStatus = 'REFUNDED';
+    } else if (paidCents >= orderTotalCents) {
+      paymentStatus = 'PAID';
+    } else if (paidCents > 0) {
+      paymentStatus = 'PARTIALLY_PAID';
+    }
+
+    await this.prisma.client.order.update({
+      where: { id: orderId },
+      data: { paymentStatus },
     });
   }
 }

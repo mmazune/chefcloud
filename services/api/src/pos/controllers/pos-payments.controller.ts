@@ -1,11 +1,13 @@
 /**
- * M13.4: POS Payments Controller
+ * M13.4 / M13.5: POS Payments Controller
  *
  * Endpoints for payment lifecycle:
- * - Create payment for order
+ * - Create payment for order (with partial payment + tips support)
  * - Capture authorized payment
  * - Void payment (L4+)
  * - Refund payment (L4+)
+ * - Payment summary (M13.5)
+ * - Z-Report (M13.5)
  */
 
 import {
@@ -29,6 +31,7 @@ import { IdempotencyInterceptor } from '../../common/idempotency.interceptor';
 import { PosPaymentsService, CreatePaymentDto, RefundPaymentDto } from '../services/pos-payments.service';
 import { PosReceiptsService } from '../services/pos-receipts.service';
 import { PosCashSessionsService, OpenCashSessionDto, CloseCashSessionDto } from '../services/pos-cash-sessions.service';
+import { PosZReportService } from '../services/pos-zreport.service';
 
 @ApiTags('POS Payments')
 @ApiBearerAuth()
@@ -39,6 +42,7 @@ export class PosPaymentsController {
     private paymentsService: PosPaymentsService,
     private receiptsService: PosReceiptsService,
     private cashSessionsService: PosCashSessionsService,
+    private zReportService: PosZReportService,
   ) {}
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -77,6 +81,23 @@ export class PosPaymentsController {
     @Request() req: { user: { orgId: string; branchId: string } },
   ) {
     return this.paymentsService.getOrderPayments(
+      orderId,
+      req.user.orgId,
+      req.user.branchId,
+    );
+  }
+
+  /**
+   * M13.5: Get payment summary for an order
+   */
+  @Get('orders/:id/payment-summary')
+  @Roles('L1')
+  @ApiOperation({ summary: 'Get payment summary for order (dueCents, paidCents, tips)' })
+  async getPaymentSummary(
+    @Param('id') orderId: string,
+    @Request() req: { user: { orgId: string; branchId: string } },
+  ) {
+    return this.paymentsService.getPaymentSummary(
       orderId,
       req.user.orgId,
       req.user.branchId,
@@ -310,5 +331,53 @@ export class PosPaymentsController {
     res?.setHeader('Content-Disposition', 'attachment; filename="cash-sessions.csv"');
     res?.setHeader('X-Nimbus-Export-Hash', hash);
     res?.send(csv);
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // Z-Report Endpoints (M13.5)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  /**
+   * Get Z-Report (End-of-Day Report)
+   */
+  @Get('reports/z')
+  @Roles('L4')
+  @ApiOperation({ summary: 'Get Z-Report for a date (L4+)' })
+  async getZReport(
+    @Query('branchId') branchId: string,
+    @Query('date') date: string,
+    @Request() req: { user: { orgId: string } },
+  ) {
+    if (!branchId || !date) {
+      throw new Error('branchId and date query parameters are required');
+    }
+    return this.zReportService.generateZReport(branchId, req.user.orgId, date);
+  }
+
+  /**
+   * Export Z-Report as CSV
+   */
+  @Get('export/z-report.csv')
+  @Roles('L4')
+  @ApiOperation({ summary: 'Export Z-Report CSV (L4+)' })
+  async exportZReport(
+    @Query('branchId') branchId: string,
+    @Query('date') date: string,
+    @Request() req: { user: { orgId: string } },
+    @Res() res: Response,
+  ) {
+    if (!branchId || !date) {
+      throw new Error('branchId and date query parameters are required');
+    }
+    const { csv, hash, filename } = await this.zReportService.generateZReportCsv(
+      branchId,
+      req.user.orgId,
+      date,
+    );
+
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('X-Nimbus-Export-Hash', hash);
+    res.send(csv);
   }
 }

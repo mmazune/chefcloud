@@ -78,6 +78,14 @@ enum OrderStatus {
   CLOSED
 }
 
+// M13.5: Payment status for order (separate from order lifecycle)
+enum OrderPaymentStatus {
+  UNPAID
+  PARTIALLY_PAID
+  PAID
+  REFUNDED
+}
+
 enum SubscriptionStatus {
   ACTIVE
   GRACE
@@ -1545,13 +1553,14 @@ model MenuAvailabilityRule {
 // ===== Orders =====
 
 model Order {
-  id           String      @id @default(cuid())
-  branchId     String
-  tableId      String?
-  userId       String
-  orderNumber  String
-  status       OrderStatus @default(NEW)
-  serviceType  ServiceType @default(DINE_IN)
+  id            String             @id @default(cuid())
+  branchId      String
+  tableId       String?
+  userId        String
+  orderNumber   String
+  status        OrderStatus        @default(NEW)
+  paymentStatus OrderPaymentStatus @default(UNPAID) // M13.5: Payment settlement state
+  serviceType   ServiceType        @default(DINE_IN)
   subtotal     Decimal     @default(0) @db.Decimal(12, 2)
   tax          Decimal     @default(0) @db.Decimal(12, 2)
   discount     Decimal     @default(0) @db.Decimal(10, 2)
@@ -1864,6 +1873,7 @@ model Payment {
   amountCents   Int                 @default(0) // M13.4: Integer cents for precision
   capturedCents Int                 @default(0) // M13.4: Amount captured
   refundedCents Int                 @default(0) // M13.4: Amount refunded
+  tipCents      Int                 @default(0) // M13.5: Tip amount (NOT counted in dueCents)
   currency      String              @default("USD") // M13.4: Currency code
   method        PaymentMethod
   posStatus     PosPaymentStatus    @default(PENDING) // M13.4: Lifecycle status
