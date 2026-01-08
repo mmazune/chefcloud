@@ -421,6 +421,105 @@ const roleLevel = req.user.roleLevel as 'L1' | 'L2' | 'L3' | 'L4' | 'L5';
 
 ---
 
+## PRE-018: M13.4 CashSession.create Missing branchId
+
+**Category**: test-api-mismatch  
+**First Observed**: M13.5.1 Stabilization (2026-01-09)  
+**Impact**: MEDIUM - M13.4 E2E tests fail (23 of 27)  
+**Status**: OPEN
+
+**Summary**: The `PosCashSessionsService.openSession()` method creates a CashSession without including the required `branchId` field. The schema requires `branchId String` but the service only provides `orgId`.
+
+**Evidence**:
+```
+PrismaClientValidationError:
+Invalid `this.prisma.client.cashSession.create()` invocation in
+pos-cash-sessions.service.ts:77:58
+
+→ 77 const session = await this.prisma.client.cashSession.create({
+       data: {
+         orgId: "...",
+         openedById: "...",
+         openingFloatCents: 5000,
+         status: "OPEN",
+     +   branchId: String  // <-- MISSING
+       }
+     })
+
+Argument `branchId` is missing.
+```
+
+**Why Pre-Existing**: This is a M13.4 service implementation bug. The JWT token contains `branchId` but the service doesn't extract/use it. M13.5.1 only fixes cleanup patterns and KDS qty.
+
+**Required Fix**: Add `branchId: req.user.branchId` to the `cashSession.create()` call in `pos-cash-sessions.service.ts`.
+
+**Impact**: 23 M13.4 E2E tests fail.
+
+---
+
+## PRE-019: M13.5 Payment Status Not Updating
+
+**Category**: test-api-mismatch  
+**First Observed**: M13.5.1 Stabilization (2026-01-09)  
+**Impact**: MEDIUM - M13.5 E2E tests fail (10 of 18)  
+**Status**: OPEN
+
+**Summary**: The M13.5 payment flow creates payments but doesn't update the Order.paymentStatus field. Tests expect:
+- `paymentStatus: 'PAID'` after full payment
+- `paymentStatus: 'PARTIALLY_PAID'` after partial payment
+- `paymentStatus: 'REFUNDED'` after refund
+
+But the API returns `paymentStatus: 'UNPAID'` in all cases.
+
+**Evidence**:
+```
+expect(received).toBe(expected) // Object.is equality
+Expected: "PAID"
+Received: "UNPAID"
+
+  656 |       expect(orderAfter?.paymentStatus).toBe('PAID');
+```
+
+**Why Pre-Existing**: The payment service logic to update `Order.paymentStatus` based on payment totals vs order total was either not implemented or is broken. M13.5.1 only fixes cleanup patterns and KDS qty.
+
+**Required Fix**: 
+1. After each payment, recalculate `paidCents` from all CAPTURED payments
+2. Compare to `orderTotalCents`
+3. Update `Order.paymentStatus` accordingly
+
+**Impact**: 10 M13.5 E2E tests fail.
+
+---
+
+## PRE-020: KDS Gateway Station Validation Error (Pre-existing)
+
+**Category**: runtime-error  
+**First Observed**: M13.5.1 Stabilization (2026-01-09)  
+**Impact**: LOW - Non-blocking, but logs errors during tests  
+**Status**: OPEN
+
+**Summary**: KDS Gateway broadcasts use `station: "ALL"` which is not a valid `StationTag` enum value.
+
+**Evidence**:
+```
+PrismaClientValidationError:
+Invalid `this.prisma.client.kdsTicket.findMany()` invocation in
+kds.service.ts:37:56
+
+→ 37 const tickets = await this.prisma.client.kdsTicket.findMany({
+       where: {
+         station: "ALL",
+                  ~~~~~
+
+Invalid value for argument `station`. Expected StationTag.
+```
+
+**Why Pre-Existing**: The KDS service uses "ALL" as a station value but `StationTag` enum only contains specific station names (GRILL, PREP, etc.). This is a schema/code mismatch that predates M13.5.1.
+
+**Required Fix**: Either add "ALL" to the StationTag enum, or change the query logic to not filter by station when fetching all tickets.
+
+---
+
 ## Previously Logged Issues (Reference)
 
 - PRE-001 through PRE-006: See git history for M8.x milestones

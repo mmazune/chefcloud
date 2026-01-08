@@ -71,16 +71,27 @@ describe('M13.4 POS Payments Core (e2e)', () => {
     prisma = app.get(PrismaService);
 
     // Clean up existing test data
-    await prisma.client.posReceipt.deleteMany({ where: { org: { slug: { startsWith: 'm134-test' } } } });
-    await prisma.client.cashSession.deleteMany({ where: { org: { slug: { startsWith: 'm134-test' } } } });
-    await prisma.client.posPaymentEvent.deleteMany({ where: { org: { slug: { startsWith: 'm134-test' } } } });
-    await prisma.client.payment.deleteMany({ where: { order: { branch: { org: { slug: { startsWith: 'm134-test' } } } } } });
-    await prisma.client.orderItem.deleteMany({ where: { order: { branch: { org: { slug: { startsWith: 'm134-test' } } } } } });
-    await prisma.client.order.deleteMany({ where: { branch: { org: { slug: { startsWith: 'm134-test' } } } } });
-    await prisma.client.menuItem.deleteMany({ where: { org: { slug: { startsWith: 'm134-test' } } } });
-    await prisma.client.category.deleteMany({ where: { org: { slug: { startsWith: 'm134-test' } } } });
-    await prisma.client.user.deleteMany({ where: { org: { slug: { startsWith: 'm134-test' } } } });
-    await prisma.client.branch.deleteMany({ where: { org: { slug: { startsWith: 'm134-test' } } } });
+    // M13.5.1: Use simplified cleanup - find org IDs first, then clean with orgId filter
+    // Many models (PosReceipt, CashSession, PosPaymentEvent) lack org relation
+    const testOrgs = await prisma.client.org.findMany({
+      where: { slug: { startsWith: 'm134-test' } },
+      select: { id: true },
+    });
+    const testOrgIds = testOrgs.map((o) => o.id);
+    if (testOrgIds.length > 0) {
+      // Models without org relation - use orgId directly
+      await prisma.client.posReceipt.deleteMany({ where: { orgId: { in: testOrgIds } } });
+      await prisma.client.cashSession.deleteMany({ where: { orgId: { in: testOrgIds } } });
+      // Models with org relation - standard cleanup
+      await prisma.client.posPaymentEvent.deleteMany({ where: { orgId: { in: testOrgIds } } });
+      await prisma.client.payment.deleteMany({ where: { order: { branch: { orgId: { in: testOrgIds } } } } });
+      await prisma.client.orderItem.deleteMany({ where: { order: { branch: { orgId: { in: testOrgIds } } } } });
+      await prisma.client.order.deleteMany({ where: { branch: { orgId: { in: testOrgIds } } } });
+      await prisma.client.menuItem.deleteMany({ where: { orgId: { in: testOrgIds } } });
+      await prisma.client.category.deleteMany({ where: { orgId: { in: testOrgIds } } });
+      await prisma.client.user.deleteMany({ where: { orgId: { in: testOrgIds } } });
+      await prisma.client.branch.deleteMany({ where: { orgId: { in: testOrgIds } } });
+    }
     await prisma.client.org.deleteMany({ where: { slug: { startsWith: 'm134-test' } } });
 
     // Create test organization
@@ -220,16 +231,25 @@ describe('M13.4 POS Payments Core (e2e)', () => {
 
   afterAll(async () => {
     // Clean up test data
-    await prisma.client.posReceipt.deleteMany({ where: { org: { slug: { startsWith: 'm134-test' } } } });
-    await prisma.client.cashSession.deleteMany({ where: { org: { slug: { startsWith: 'm134-test' } } } });
-    await prisma.client.posPaymentEvent.deleteMany({ where: { org: { slug: { startsWith: 'm134-test' } } } });
-    await prisma.client.payment.deleteMany({ where: { order: { branch: { org: { slug: { startsWith: 'm134-test' } } } } } });
-    await prisma.client.orderItem.deleteMany({ where: { order: { branch: { org: { slug: { startsWith: 'm134-test' } } } } } });
-    await prisma.client.order.deleteMany({ where: { branch: { org: { slug: { startsWith: 'm134-test' } } } } });
-    await prisma.client.menuItem.deleteMany({ where: { org: { slug: { startsWith: 'm134-test' } } } });
-    await prisma.client.category.deleteMany({ where: { org: { slug: { startsWith: 'm134-test' } } } });
-    await prisma.client.user.deleteMany({ where: { org: { slug: { startsWith: 'm134-test' } } } });
-    await prisma.client.branch.deleteMany({ where: { org: { slug: { startsWith: 'm134-test' } } } });
+    // M13.5.1: Use simplified cleanup - find org IDs first, then clean with orgId filter
+    const testOrgs = await prisma.client.org.findMany({
+      where: { slug: { startsWith: 'm134-test' } },
+      select: { id: true },
+    });
+    const testOrgIds = testOrgs.map((o) => o.id);
+    if (testOrgIds.length > 0) {
+      // Models without org relation - use orgId directly
+      await prisma.client.posReceipt.deleteMany({ where: { orgId: { in: testOrgIds } } });
+      await prisma.client.cashSession.deleteMany({ where: { orgId: { in: testOrgIds } } });
+      await prisma.client.posPaymentEvent.deleteMany({ where: { orgId: { in: testOrgIds } } });
+      await prisma.client.payment.deleteMany({ where: { order: { branch: { orgId: { in: testOrgIds } } } } });
+      await prisma.client.orderItem.deleteMany({ where: { order: { branch: { orgId: { in: testOrgIds } } } } });
+      await prisma.client.order.deleteMany({ where: { branch: { orgId: { in: testOrgIds } } } });
+      await prisma.client.menuItem.deleteMany({ where: { orgId: { in: testOrgIds } } });
+      await prisma.client.category.deleteMany({ where: { orgId: { in: testOrgIds } } });
+      await prisma.client.user.deleteMany({ where: { orgId: { in: testOrgIds } } });
+      await prisma.client.branch.deleteMany({ where: { orgId: { in: testOrgIds } } });
+    }
     await prisma.client.org.deleteMany({ where: { slug: { startsWith: 'm134-test' } } });
 
     await app.close();

@@ -175,7 +175,7 @@ export class KdsService {
     const items = ticket.order.orderItems.map((item: any) => ({
       id: item.id,
       name: item.menuItem.name,
-      quantity: item.qty,
+      quantity: item.quantity ?? 1, // M13.5.1: Use `quantity` from OrderItem schema
       modifiers: item.modifiers || [],
       notes: item.notes,
     }));
@@ -804,7 +804,7 @@ export class KdsService {
               create: items.map((item) => ({
                 orderItemId: item.id,
                 itemNameSnapshot: item.itemNameSnapshot || item.menuItem?.name || 'Unknown',
-                qty: item.qty,
+                qty: item.quantity ?? 1, // M13.5.1: Use `quantity` from OrderItem schema (fallback to 1)
                 modifiersSnapshot: item.selectedModifiersSnapshot || {},
                 status: 'PENDING',
               })),

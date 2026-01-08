@@ -54,7 +54,26 @@ describe('M13.5 POS Finalization (e2e)', () => {
 
     prisma = app.get(PrismaService);
 
-    // Clean up existing test data - delete org and let cascade handle the rest
+    // Clean up existing test data
+    // M13.5.1: Use explicit cleanup pattern due to lack of cascade deletes
+    const testOrgs = await prisma.client.org.findMany({
+      where: { slug: { startsWith: 'm135-test' } },
+      select: { id: true },
+    });
+    const testOrgIds = testOrgs.map((o) => o.id);
+    if (testOrgIds.length > 0) {
+      // Clean in dependency order
+      await prisma.client.posReceipt.deleteMany({ where: { orgId: { in: testOrgIds } } });
+      await prisma.client.cashSession.deleteMany({ where: { orgId: { in: testOrgIds } } });
+      await prisma.client.posPaymentEvent.deleteMany({ where: { orgId: { in: testOrgIds } } });
+      await prisma.client.payment.deleteMany({ where: { order: { branch: { orgId: { in: testOrgIds } } } } });
+      await prisma.client.orderItem.deleteMany({ where: { order: { branch: { orgId: { in: testOrgIds } } } } });
+      await prisma.client.order.deleteMany({ where: { branch: { orgId: { in: testOrgIds } } } });
+      await prisma.client.menuItem.deleteMany({ where: { orgId: { in: testOrgIds } } });
+      await prisma.client.category.deleteMany({ where: { orgId: { in: testOrgIds } } });
+      await prisma.client.user.deleteMany({ where: { orgId: { in: testOrgIds } } });
+      await prisma.client.branch.deleteMany({ where: { orgId: { in: testOrgIds } } });
+    }
     await prisma.client.org.deleteMany({ where: { slug: { startsWith: 'm135-test' } } });
 
     // Create test organization
@@ -149,7 +168,25 @@ describe('M13.5 POS Finalization (e2e)', () => {
   }, 60000);
 
   afterAll(async () => {
-    // Clean up test data - delete org and let cascade handle the rest
+    // Clean up test data
+    // M13.5.1: Use explicit cleanup pattern due to lack of cascade deletes
+    const testOrgs = await prisma.client.org.findMany({
+      where: { slug: { startsWith: 'm135-test' } },
+      select: { id: true },
+    });
+    const testOrgIds = testOrgs.map((o) => o.id);
+    if (testOrgIds.length > 0) {
+      await prisma.client.posReceipt.deleteMany({ where: { orgId: { in: testOrgIds } } });
+      await prisma.client.cashSession.deleteMany({ where: { orgId: { in: testOrgIds } } });
+      await prisma.client.posPaymentEvent.deleteMany({ where: { orgId: { in: testOrgIds } } });
+      await prisma.client.payment.deleteMany({ where: { order: { branch: { orgId: { in: testOrgIds } } } } });
+      await prisma.client.orderItem.deleteMany({ where: { order: { branch: { orgId: { in: testOrgIds } } } } });
+      await prisma.client.order.deleteMany({ where: { branch: { orgId: { in: testOrgIds } } } });
+      await prisma.client.menuItem.deleteMany({ where: { orgId: { in: testOrgIds } } });
+      await prisma.client.category.deleteMany({ where: { orgId: { in: testOrgIds } } });
+      await prisma.client.user.deleteMany({ where: { orgId: { in: testOrgIds } } });
+      await prisma.client.branch.deleteMany({ where: { orgId: { in: testOrgIds } } });
+    }
     await prisma.client.org.deleteMany({ where: { slug: { startsWith: 'm135-test' } } });
 
     await app.close();
