@@ -3,6 +3,9 @@ import { Type } from 'class-transformer';
 
 export class OrderItemModifierDto {
   @IsString()
+  groupId!: string; // M13.2: Required for modifier validation
+
+  @IsString()
   optionId!: string;
 }
 

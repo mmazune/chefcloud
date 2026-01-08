@@ -26,6 +26,8 @@ import { PromotionsService } from '../promotions/promotions.service';
 import { KpisService } from '../kpis/kpis.service';
 import { StockMovementsService, StockMovementType } from '../inventory/stock-movements.service';
 import { InventoryDepletionService } from '../inventory/inventory-depletion.service';
+import { PosMenuService } from './pos-menu.service';
+import { MenuService } from '../menu/menu.service';
 
 @Injectable()
 export class PosService {
@@ -42,6 +44,8 @@ export class PosService {
     @Optional() private promotionsService?: PromotionsService,
     @Optional() private kpisService?: KpisService,
     @Optional() private depletionService?: InventoryDepletionService,
+    @Optional() private posMenuService?: PosMenuService,
+    @Optional() private menuService?: MenuService,
   ) { }
 
   private markKpisDirty(orgId: string, branchId?: string) {
@@ -70,40 +74,120 @@ export class PosService {
       }
     }
 
-    // Fetch menu items with tax info
-    const menuItemIds = dto.items.map((item) => item.menuItemId);
-    const menuItems = await this.prisma.client.menuItem.findMany({
-      where: { id: { in: menuItemIds } },
-      include: { taxCategory: true },
-    });
+    // Get orgId for branch
+    const branch = await this.prisma.client.branch.findUnique({ where: { id: branchId } });
+    if (!branch) throw new BadRequestException('Branch not found');
+    const orgId = branch.orgId;
 
-    const menuItemMap = new Map(menuItems.map((item) => [item.id, item]));
-
-    // Calculate subtotal and tax
+    // M13.2: Validate each item with availability, modifiers, and pricing snapshots
+    const orderItemsData: any[] = [];
     let subtotal = 0;
     let tax = 0;
 
-    const orderItemsData = dto.items.map((item) => {
-      const menuItem = menuItemMap.get(item.menuItemId);
-      if (!menuItem) throw new BadRequestException(`Menu item ${item.menuItemId} not found`);
+    for (const item of dto.items) {
+      // M13.2: Get item with modifiers for validation
+      const itemData = this.posMenuService
+        ? await this.posMenuService.getItemWithModifiers(item.menuItemId, orgId, branchId)
+        : null;
 
-      const itemPrice = Number(menuItem.price);
-      const itemSubtotal = itemPrice * item.qty;
+      if (!itemData) {
+        throw new BadRequestException({
+          statusCode: 400,
+          message: `Menu item ${item.menuItemId} not found`,
+          code: 'ITEM_NOT_FOUND',
+        });
+      }
+
+      // M13.2: Check item is active
+      if (!itemData.isActive) {
+        throw new BadRequestException({
+          statusCode: 400,
+          message: `Menu item "${itemData.name}" is inactive`,
+          code: 'ITEM_INACTIVE',
+        });
+      }
+
+      // M13.2: Branch scope validation
+      if (itemData.branchId !== branchId) {
+        throw new BadRequestException({
+          statusCode: 400,
+          message: `Menu item "${itemData.name}" does not belong to this branch`,
+          code: 'BRANCH_SCOPE_VIOLATION',
+        });
+      }
+
+      // M13.2: Check availability using M13.1 service
+      if (this.menuService) {
+        const isAvailable = await this.menuService.isAvailable(item.menuItemId, branchId);
+        if (!isAvailable) {
+          throw new BadRequestException({
+            statusCode: 400,
+            message: `Menu item "${itemData.name}" is not available at this time`,
+            code: 'ITEM_UNAVAILABLE',
+          });
+        }
+      }
+
+      // M13.2: Validate modifiers
+      const modifiers = item.modifiers?.map(m => ({ groupId: m.groupId, optionId: m.optionId })) ?? [];
+      if (this.posMenuService && itemData.modifierGroups.length > 0) {
+        const validation = this.posMenuService.validateModifierSelection(modifiers, itemData.modifierGroups);
+        if (!validation.valid) {
+          throw new BadRequestException({
+            statusCode: 400,
+            message: validation.error?.message ?? 'Invalid modifier selection',
+            code: validation.error?.code ?? 'INVALID_MODIFIER_SELECTION',
+            details: validation.error?.details,
+          });
+        }
+      }
+
+      // M13.2: Calculate pricing snapshot
+      let pricingSnapshot = {
+        basePriceCents: Math.round(itemData.price * 100),
+        modifierTotalCents: 0,
+        unitPriceCents: Math.round(itemData.price * 100),
+        lineTotalCents: Math.round(itemData.price * 100) * item.qty,
+        modifiersSnapshot: [] as { groupId: string; optionId: string; name: string; priceDelta: number }[],
+      };
+
+      if (this.posMenuService && modifiers.length > 0) {
+        pricingSnapshot = this.posMenuService.calculatePricingSnapshot(
+          itemData.price,
+          item.qty,
+          modifiers,
+          itemData.modifierGroups,
+        );
+      }
+
+      // Fetch menu item with tax category for tax calculation
+      const menuItem = await this.prisma.client.menuItem.findUnique({
+        where: { id: item.menuItemId },
+        include: { taxCategory: true },
+      });
+
+      const itemSubtotal = pricingSnapshot.lineTotalCents / 100;
       subtotal += itemSubtotal;
 
-      const itemTax = menuItem.taxCategory
+      const itemTax = menuItem?.taxCategory
         ? (itemSubtotal * Number(menuItem.taxCategory.rate)) / 100
         : 0;
       tax += itemTax;
 
-      return {
+      orderItemsData.push({
         menuItemId: item.menuItemId,
         quantity: item.qty,
-        price: menuItem.price,
+        price: menuItem?.price,
         subtotal: itemSubtotal,
-        metadata: item.modifiers ? { modifiers: item.modifiers } : undefined,
-      } as any;
-    });
+        metadata: modifiers.length > 0 ? { modifiers } : undefined,
+        // M13.2: Pricing snapshots
+        itemNameSnapshot: itemData.name,
+        basePriceCentsSnapshot: pricingSnapshot.basePriceCents,
+        selectedModifiersSnapshot: pricingSnapshot.modifiersSnapshot.length > 0 ? pricingSnapshot.modifiersSnapshot : undefined,
+        unitPriceCentsSnapshot: pricingSnapshot.unitPriceCents,
+        lineTotalCentsSnapshot: pricingSnapshot.lineTotalCents,
+      });
+    }
 
     const total = subtotal + tax;
 
@@ -193,9 +277,8 @@ export class PosService {
       });
     }
 
-    // Mark KPIs dirty
-    const orgId = (await this.prisma.client.branch.findUnique({ where: { id: branchId } }))?.orgId;
-    if (orgId) this.markKpisDirty(orgId, branchId);
+    // Mark KPIs dirty (orgId already fetched above)
+    this.markKpisDirty(orgId, branchId);
 
     return order;
   }

@@ -1778,6 +1778,14 @@ model OrderItem {
   costTotal   Decimal? @db.Decimal(10, 2)
   marginTotal Decimal? @db.Decimal(10, 2)
   marginPct   Decimal? @db.Decimal(5, 2) // percentage
+
+  // M13.2: Pricing Snapshot Fields (immutable after creation)
+  itemNameSnapshot         String?  // Snapshot of item name at order time
+  basePriceCentsSnapshot   Int?     // Snapshot of item base price in cents
+  selectedModifiersSnapshot Json?   // [{groupName, optionName, priceDelta}]
+  unitPriceCentsSnapshot   Int?     // base + modifier deltas
+  lineTotalCentsSnapshot   Int?     // unitPrice * quantity
+
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
