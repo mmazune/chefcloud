@@ -240,6 +240,7 @@ export class InventoryPreCloseCheckService {
 
   /**
    * Check for failed GL postings in the period.
+   * H4: Includes depletions, receipts, and waste.
    */
   private async checkGLPostingFailed(
     orgId: string,
@@ -260,12 +261,38 @@ export class InventoryPreCloseCheckService {
       take: this.SAMPLE_LIMIT + 1,
     });
 
-    if (depletions.length > 0) {
+    // H4: Also check receipts for failed GL postings
+    const receipts = await this.prisma.client.goodsReceiptV2.findMany({
+      where: {
+        orgId,
+        branchId,
+        postedAt: { gte: startDate, lte: endDate },
+        glPostingStatus: 'FAILED',
+      },
+      select: { id: true },
+      take: this.SAMPLE_LIMIT + 1,
+    });
+
+    // H4: Also check waste for failed GL postings
+    const waste = await this.prisma.client.inventoryWaste.findMany({
+      where: {
+        orgId,
+        branchId,
+        postedAt: { gte: startDate, lte: endDate },
+        glPostingStatus: 'FAILED',
+      },
+      select: { id: true },
+      take: this.SAMPLE_LIMIT + 1,
+    });
+
+    const allFailed = [...depletions, ...receipts, ...waste];
+
+    if (allFailed.length > 0) {
       blockers.push({
         code: 'GL_POSTING_FAILED',
         category: 'GL_POSTINGS',
-        count: depletions.length > this.SAMPLE_LIMIT ? this.SAMPLE_LIMIT : depletions.length,
-        sampleIds: depletions.slice(0, this.SAMPLE_LIMIT).map((d) => d.id),
+        count: allFailed.length > this.SAMPLE_LIMIT ? this.SAMPLE_LIMIT : allFailed.length,
+        sampleIds: allFailed.slice(0, this.SAMPLE_LIMIT).map((d) => d.id),
         description: 'Failed GL postings must be resolved before close',
       });
     }

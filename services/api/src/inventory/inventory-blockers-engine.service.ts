@@ -342,7 +342,19 @@ export class InventoryBlockersEngineService {
       take: this.SAMPLE_LIMIT,
     });
 
-    const totalFailed = depletions.length + receipts.length;
+    // H4: Also check waste with failed GL
+    const waste = await this.prisma.client.inventoryWaste.findMany({
+      where: {
+        orgId,
+        branchId,
+        postedAt: { gte: startDate, lte: endDate },
+        glPostingStatus: 'FAILED',
+      },
+      select: { id: true },
+      take: this.SAMPLE_LIMIT,
+    });
+
+    const totalFailed = depletions.length + receipts.length + waste.length;
 
     if (totalFailed > 0) {
       const entityRefs: EntityRef[] = [
@@ -355,6 +367,11 @@ export class InventoryBlockersEngineService {
           id: r.id,
           type: 'GOODS_RECEIPT',
           label: `Receipt ${r.id.slice(-6)}`,
+        })),
+        ...waste.map((w) => ({
+          id: w.id,
+          type: 'INVENTORY_WASTE',
+          label: `Waste ${w.id.slice(-6)}`,
         })),
       ];
 
