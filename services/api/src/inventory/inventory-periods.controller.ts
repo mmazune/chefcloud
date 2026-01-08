@@ -45,6 +45,8 @@ import { InventoryPeriodEventsService } from './inventory-period-events.service'
 import { InventoryClosePackService } from './inventory-close-pack.service';
 import { InventoryPeriodDashboardService } from './inventory-period-dashboard.service';
 import { InventoryCloseRequestsService } from './inventory-close-requests.service';
+import { InventoryBlockersEngineService } from './inventory-blockers-engine.service';
+import { InventoryBlockerResolutionService, ResolveBlockerDto, ResolveAction } from './inventory-blocker-resolution.service';
 
 // DTO classes with validation for Swagger
 class CreatePeriodBody {
@@ -117,6 +119,23 @@ class GeneratePeriodsBody {
   toMonth: string;   // YYYY-MM
 }
 
+// M12.7 Blocker Resolution DTO
+class ResolveBlockerBody {
+  @IsString()
+  type: string;
+
+  @IsString()
+  action: string;
+
+  @IsOptional()
+  @IsString()
+  entityId?: string;
+
+  @IsOptional()
+  @IsString()
+  notes?: string;
+}
+
 // Removed unused PreCloseCheckQuery (lint cleanup)
 
 @ApiTags('Inventory Periods')
@@ -134,6 +153,8 @@ export class InventoryPeriodsController {
     private readonly closePackService: InventoryClosePackService,
     private readonly dashboardService: InventoryPeriodDashboardService,
     private readonly closeRequestsService: InventoryCloseRequestsService,
+    private readonly blockersEngineService: InventoryBlockersEngineService,
+    private readonly blockerResolutionService: InventoryBlockerResolutionService,
   ) {}
 
   /**
@@ -618,5 +639,98 @@ export class InventoryPeriodsController {
       periodId: id,
       ...closePack,
     };
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // M12.7: Enhanced Blockers Engine + Resolution
+  // ═══════════════════════════════════════════════════════════════════
+
+  /**
+   * M12.7: Run enhanced blockers engine check.
+   * Returns structured checks with entityRefs and resolutionHints.
+   */
+  @Post(':id/blockers/check')
+  @Roles('OWNER', 'ADMIN', 'MANAGER', 'SUPERVISOR')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'M12.7: Run enhanced blockers check for period' })
+  @ApiParam({ name: 'id', description: 'Period ID' })
+  @ApiResponse({ status: 200, description: 'Blockers check result with resolution hints' })
+  @ApiResponse({ status: 404, description: 'Period not found' })
+  async runBlockersCheck(@Request() req, @Param('id') id: string) {
+    const period = await this.periodsService.getPeriod(req.user.orgId, id);
+
+    const result = await this.blockersEngineService.runBlockersCheck(
+      req.user.orgId,
+      period.branchId,
+      id,
+      period.startDate,
+      period.endDate,
+    );
+
+    return {
+      periodId: id,
+      branchId: period.branchId,
+      startDate: period.startDate,
+      endDate: period.endDate,
+      ...result,
+    };
+  }
+
+  /**
+   * M12.7: Resolve a blocker.
+   * RBAC: L3 for posts, L4 for voids, L5 for force override.
+   */
+  @Post(':id/blockers/resolve')
+  @Roles('OWNER', 'ADMIN', 'MANAGER', 'SUPERVISOR')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'M12.7: Resolve a blocker' })
+  @ApiParam({ name: 'id', description: 'Period ID' })
+  @ApiBody({ type: ResolveBlockerBody })
+  @ApiResponse({ status: 200, description: 'Blocker resolved' })
+  @ApiResponse({ status: 403, description: 'Insufficient permissions' })
+  @ApiResponse({ status: 404, description: 'Period or entity not found' })
+  async resolveBlocker(
+    @Request() req,
+    @Param('id') id: string,
+    @Body() body: ResolveBlockerBody,
+  ) {
+    // Map user role to RoleLevel
+    const roleLevel = this.getRoleLevelFromUserRole(req.user.role);
+
+    const dto: ResolveBlockerDto = {
+      type: body.type,
+      action: body.action as ResolveAction,
+      entityId: body.entityId,
+      notes: body.notes,
+    };
+
+    const result = await this.blockerResolutionService.resolveBlocker(
+      req.user.orgId,
+      req.user.userId,
+      roleLevel,
+      id,
+      dto,
+    );
+
+    return result;
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // Helper Methods
+  // ═══════════════════════════════════════════════════════════════════
+
+  /**
+   * Convert user role string to RoleLevel.
+   */
+  private getRoleLevelFromUserRole(role: string): 'L1' | 'L2' | 'L3' | 'L4' | 'L5' {
+    const roleMap: Record<string, 'L1' | 'L2' | 'L3' | 'L4' | 'L5'> = {
+      STAFF: 'L1',
+      TEAM_MEMBER: 'L2',
+      SUPERVISOR: 'L3',
+      MANAGER: 'L4',
+      ADMIN: 'L5',
+      OWNER: 'L5',
+    };
+    return roleMap[role] || 'L1';
   }
 }

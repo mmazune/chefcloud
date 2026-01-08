@@ -4,7 +4,7 @@
  * Generates audit-grade close pack bundle with all exports and bundle hash.
  * Bundle hash is SHA-256 over concatenated normalized CSV content.
  */
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import * as crypto from 'crypto';
 import { InventoryPeriodExportService } from './inventory-period-export.service';
@@ -81,6 +81,13 @@ export class InventoryClosePackService {
 
     if (!period) {
       throw new NotFoundException('Period not found');
+    }
+
+    // M12.7 H10: Guard - close pack only for closed periods
+    if (period.status === 'OPEN') {
+      throw new ConflictException(
+        'Cannot generate close pack for OPEN period. Close the period first.',
+      );
     }
 
     // Get latest revision

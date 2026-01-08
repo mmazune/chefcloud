@@ -123,6 +123,9 @@ import { InventoryPeriodDashboardService } from './inventory-period-dashboard.se
 // M12.6 Close Notifications
 import { InventoryCloseNotificationsService } from './inventory-close-notifications.service';
 import { InventoryCloseNotificationsController } from './inventory-close-notifications.controller';
+// M12.7 Blockers Engine + Resolution
+import { InventoryBlockersEngineService } from './inventory-blockers-engine.service';
+import { InventoryBlockerResolutionService } from './inventory-blocker-resolution.service';
 
 @Module({
   imports: [KpisModule, AuditModule],
@@ -206,6 +209,8 @@ import { InventoryCloseNotificationsController } from './inventory-close-notific
     InventoryCloseRequestsService, // M12.4
     InventoryPeriodDashboardService, // M12.4
     InventoryCloseNotificationsService, // M12.6
+    InventoryBlockersEngineService, // M12.7
+    InventoryBlockerResolutionService, // M12.7
     RecipesService,
     WastageService,
     CountsService,
@@ -262,6 +267,8 @@ import { InventoryCloseNotificationsController } from './inventory-close-notific
     InventoryClosePackService, // M12.2
     InventoryCloseRequestsService, // M12.4
     InventoryPeriodDashboardService, // M12.4
+    InventoryBlockersEngineService, // M12.7
+    InventoryBlockerResolutionService, // M12.7
     RecipesService,
     WastageService,
     CountsService,
