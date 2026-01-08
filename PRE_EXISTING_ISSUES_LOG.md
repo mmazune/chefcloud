@@ -308,21 +308,24 @@ Type error: Cannot find module 'sonner' or its corresponding type declarations.
 **Category**: test-api-mismatch  
 **First Observed**: M12.9 Release Gate (2026-01-08)  
 **Impact**: MEDIUM - Test failures in release gate  
-**Status**: OPEN
+**Status**: FIXED (M12.10)
 
-**Summary**: The M12.2 E2E test expects `response.body.checklist` from the preclose-check endpoint, but the endpoint does not return this field.
+**Summary**: The M12.2 E2E test expected incorrect field names from API responses:
+- `checklist` instead of `blockers`
+- `created`/`existing` instead of `createdCount`/`existingCount`
+- `stocktake` model instead of `stocktakeSession`
+- `notes` instead of `lockReason` in request body
+- `response.body.events` instead of array directly
+- `response.body.exports` as array instead of object
 
-**Evidence**:
-```
-expect(received).toBeDefined()
-Received: undefined
+**Fix Applied (M12.10)**:
+1. Changed test assertions to use correct API field names
+2. Fixed stocktakeSession.create to include required `sessionNumber` field
+3. Added CREATED event logging to inventory periods service
+4. Updated events endpoint assertions (API returns array directly)
+5. Updated valuation endpoint assertions (API returns array directly)
 
-  > 116 |       expect(response.body.checklist).toBeDefined();
-```
-
-**Why Pre-Existing**: The test was written expecting an API shape that was never implemented. M12.9 does not modify the preclose-check endpoint.
-
-**Impact**: 11 test failures in inventory-m122-close-ops-v2.e2e-spec.ts
+**Evidence**: All 19 tests in inventory-m122-close-ops-v2.e2e-spec.ts now pass.
 
 ---
 
@@ -331,13 +334,22 @@ Received: undefined
 **Category**: test-api-mismatch  
 **First Observed**: M12.9 Release Gate (2026-01-08)  
 **Impact**: MEDIUM - Test failures in release gate  
-**Status**: OPEN
+**Status**: PARTIALLY FIXED (M12.10) - Route path fixed, service bugs remain
 
-**Summary**: M10.17 workforce leave tests expect routes that return 404 Not Found.
+**Summary**: M10.17 workforce leave tests expected routes at `/workforce/leave/*` but controllers used `/api/v1/workforce/leave/*`.
+
+**Fix Applied (M12.10)**: Changed controller route decorators:
+- `leave.controller.ts`: `api/v1/workforce/leave` → `workforce/leave`
+- `leave-enterprise.controller.ts`: Same fix for LeaveCalendarController and LeaveDelegationController
+
+**Remaining Issues**: After route fix, deeper service bugs were exposed:
+- Missing `orgId` in Prisma queries (`leaveTypeDefinition.findUnique`)
+- Missing endpoint implementations (`/balance`, `/balance/adjust`, `/requests/pending`, etc.)
+- These require service-level code changes beyond PRE scope
 
 **Evidence**:
-```
-expected 200 "OK", got 404 "Not Found"
+- Routes now reach controllers (no more 404 from path mismatch)
+- 4 tests pass (was 1), 26 still fail due to service bugs
   > 525 |         .expect(HttpStatus.OK);
   
   Routes failing:
@@ -351,28 +363,35 @@ expected 200 "OK", got 404 "Not Found"
 
 ---
 
-## PRE-016: M9.4 Reservations Rate Limiting Flakiness
+## PRE-016: M9.4 Reservations Test Infrastructure Issue
 
-**Category**: test-flaky  
+**Category**: test-infrastructure  
 **First Observed**: M12.9 Release Gate (2026-01-08)  
-**Impact**: MEDIUM - Test failures due to rate limiting interference  
-**Status**: OPEN
+**Impact**: MEDIUM - Test failures due to mock infrastructure  
+**Status**: OPEN (requires test rewrite)
 
-**Summary**: Reservation tests are affected by rate limiting, getting 429 or 500 when expecting other status codes.
+**Summary**: The M9.4 public booking test uses `PrismaTestModule` (mocked Prisma) instead of the real database + AppModule pattern used by passing tests. This causes:
+1. `Cannot read properties of undefined (reading 'branch')` - Mock doesn't return real data
+2. Rate limiting 429 responses due to test isolation issues
+3. 500 errors when expecting 200/404
 
 **Evidence**:
-```
-expect(received).toBe(expected)
-Expected: 404
-Received: 429
+```typescript
+// Current (broken) - uses mocked Prisma:
+imports: [
+  ReservationsModule,
+  PrismaTestModule, // <-- Mock module
+]
+.overrideProvider(PrismaService).useClass(TestPrismaService)
 
-  > 465 |       expect(res.status).toBe(404);
-  
-Expected: [200, 404]
-Received: 500
+// Working pattern (other E2E tests):
+import { createE2EApp } from '../helpers/e2e-bootstrap';
+app = await createE2EApp({ imports: [AppModule] }); // <-- Real DB
 ```
 
-**Why Pre-Existing**: Rate limiting guard affects test isolation. M12.9 does not modify reservation endpoints.
+**Root Cause**: Test was written with isolated module approach that doesn't connect to real database or seed proper test data.
+
+**Required Fix**: Rewrite test to use `createE2EApp({ imports: [AppModule] })` + `loginAs` + factory pattern like inventory-m122 tests. This is substantial work (400+ line test file).
 
 **Impact**: 8 test failures in reservations-m94-public-booking.e2e-spec.ts
 

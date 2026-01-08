@@ -42,7 +42,7 @@ import { LeaveReportingService } from './leave-reporting.service';
 @ApiTags('Leave Calendar')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Controller('api/v1/workforce/leave')
+@Controller('workforce/leave')
 export class LeaveCalendarController {
   constructor(
     private readonly calendarService: LeaveCalendarService,
@@ -327,7 +327,7 @@ export class LeaveCalendarController {
 @ApiTags('Leave Delegation')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Controller('api/v1/workforce/leave/delegates')
+@Controller('workforce/leave/delegates')
 export class LeaveDelegationController {
   constructor(private readonly delegationService: LeaveDelegationService) { }
 

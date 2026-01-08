@@ -39,7 +39,7 @@ import { LeaveReportingService } from './leave-reporting.service';
 @ApiTags('Leave Management')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Controller('api/v1/workforce/leave')
+@Controller('workforce/leave')
 export class LeaveController {
   constructor(
     private readonly leaveTypesService: LeaveTypesService,

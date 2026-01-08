@@ -359,6 +359,19 @@ export class InventoryPeriodsService {
       },
     });
 
+    // Log CREATED event (M12.2)
+    await this.periodEventsService.logEvent({
+      orgId,
+      branchId: dto.branchId,
+      periodId: period.id,
+      type: 'CREATED',
+      actorUserId: userId,
+      metadataJson: {
+        startDate: dto.startDate.toISOString(),
+        endDate: dto.endDate.toISOString(),
+      },
+    });
+
     return period;
   }
 
