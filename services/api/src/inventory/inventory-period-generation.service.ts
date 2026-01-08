@@ -6,7 +6,7 @@
  */
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
-import { startOfMonth, endOfMonth, addMonths, parse, isValid } from 'date-fns';
+import { addMonths, parse, isValid } from 'date-fns';
 import { InventoryPeriodEventsService } from './inventory-period-events.service';
 
 export interface GeneratePeriodsDto {
@@ -92,11 +92,12 @@ export class InventoryPeriodGenerationService {
     // Generate each month
     for (let i = 0; i < months; i++) {
       const monthDate = addMonths(fromDate, i);
-      const startDate = startOfMonth(monthDate);
-      const endDate = endOfMonth(monthDate);
+      const year = monthDate.getFullYear();
+      const month = monthDate.getMonth();
 
-      // Set end time to end of day
-      endDate.setHours(23, 59, 59, 999);
+      // Create UTC dates explicitly to avoid local timezone issues
+      const startDate = new Date(Date.UTC(year, month, 1, 0, 0, 0, 0));
+      const endDate = new Date(Date.UTC(year, month + 1, 0, 23, 59, 59, 999)); // Day 0 of next month = last day of current month
 
       // Check if period already exists
       const existing = await this.prisma.client.inventoryPeriod.findFirst({

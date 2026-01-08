@@ -69,10 +69,18 @@ describe('M12.4 Close Approvals + Dashboard', () => {
         ? listRes.body.periods
         : [];
 
-    const jan = periods.find((p: any) => new Date(p.startDate).toISOString().startsWith('2025-01-01'));
-    const feb = periods.find((p: any) => new Date(p.startDate).toISOString().startsWith('2025-02-01'));
+    // More robust matching: check month and year rather than exact date string
+    const jan = periods.find((p: any) => {
+      const d = new Date(p.startDate);
+      return d.getUTCFullYear() === 2025 && d.getUTCMonth() === 0; // January = month 0
+    });
+    const feb = periods.find((p: any) => {
+      const d = new Date(p.startDate);
+      return d.getUTCFullYear() === 2025 && d.getUTCMonth() === 1; // February = month 1
+    });
 
     if (!jan || !feb) {
+      console.error('Failed to find periods. Available:', JSON.stringify(periods, null, 2));
       throw new Error('Failed to locate generated Jan/Feb periods');
     }
     periodIdJan = jan.id;

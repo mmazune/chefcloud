@@ -154,63 +154,6 @@ export class InventoryPeriodsController {
   }
 
   /**
-   * Get single period by ID.
-   */
-  @Get(':id')
-  @Roles('OWNER', 'ADMIN', 'MANAGER', 'STOCK_MANAGER', 'PROCUREMENT')
-  @ApiOperation({ summary: 'Get period details' })
-  @ApiParam({ name: 'id', description: 'Period ID' })
-  @ApiResponse({ status: 200, description: 'Period details' })
-  @ApiResponse({ status: 404, description: 'Period not found' })
-  async getPeriod(@Request() req, @Param('id') id: string) {
-    return this.periodsService.getPeriod(req.user.orgId, id);
-  }
-
-  /**
-   * Create a new period (OPEN).
-   */
-  @Post()
-  @Roles('OWNER', 'ADMIN', 'MANAGER')
-  @ApiOperation({ summary: 'Create inventory period' })
-  @ApiBody({ type: CreatePeriodBody })
-  @ApiResponse({ status: 201, description: 'Period created' })
-  @ApiResponse({ status: 400, description: 'Invalid dates' })
-  @ApiResponse({ status: 409, description: 'Period overlaps' })
-  async createPeriod(@Request() req, @Body() body: CreatePeriodBody) {
-    const dto: CreatePeriodDto = {
-      branchId: body.branchId,
-      startDate: new Date(body.startDate),
-      endDate: new Date(body.endDate),
-      lockReason: body.lockReason,
-    };
-    return this.periodsService.createPeriod(req.user.orgId, req.user.sub, dto);
-  }
-
-  /**
-   * Close a period (generate snapshots + lock).
-   */
-  @Post('close')
-  @Roles('OWNER', 'ADMIN', 'MANAGER')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Close inventory period' })
-  @ApiBody({ type: ClosePeriodBody })
-  @ApiResponse({ status: 200, description: 'Period closed' })
-  @ApiResponse({ status: 400, description: 'Blocking states exist' })
-  @ApiResponse({ status: 404, description: 'Branch not found' })
-  async closePeriod(@Request() req, @Body() body: ClosePeriodBody) {
-    const dto: ClosePeriodDto = {
-      branchId: body.branchId,
-      startDate: new Date(body.startDate),
-      endDate: new Date(body.endDate),
-      lockReason: body.lockReason,
-      forceClose: body.forceClose,
-      forceCloseReason: body.forceCloseReason,
-      userRoleLevel: req.user.roleLevel,
-    };
-    return this.periodsService.closePeriod(req.user.orgId, req.user.sub, dto);
-  }
-
-  /**
    * Check blocking states before close.
    */
   @Get('check-blockers')
@@ -254,6 +197,89 @@ export class InventoryPeriodsController {
       to: to ? new Date(to) : undefined,
     };
     return this.dashboardService.getDashboard(req.user.orgId, filters);
+  }
+
+  /**
+   * M12.2: Run pre-close check.
+   * Returns READY/BLOCKED/WARNING status with details.
+   */
+  @Get('preclose-check')
+  @Roles('OWNER', 'ADMIN', 'MANAGER')
+  @ApiOperation({ summary: 'M12.2: Run pre-close validation check' })
+  @ApiQuery({ name: 'branchId', required: true })
+  @ApiQuery({ name: 'startDate', required: true })
+  @ApiQuery({ name: 'endDate', required: true })
+  @ApiResponse({ status: 200, description: 'Pre-close check result' })
+  async preCloseCheck(
+    @Request() req,
+    @Query('branchId') branchId: string,
+    @Query('startDate') startDate: string,
+    @Query('endDate') endDate: string,
+  ) {
+    return this.preCloseCheckService.runCheck(
+      req.user.orgId,
+      branchId,
+      new Date(startDate),
+      new Date(endDate),
+    );
+  }
+
+  /**
+   * Get single period by ID.
+   * NOTE: This must come AFTER static routes like /dashboard, /check-blockers, /preclose-check
+   */
+  @Get(':id')
+  @Roles('OWNER', 'ADMIN', 'MANAGER', 'STOCK_MANAGER', 'PROCUREMENT')
+  @ApiOperation({ summary: 'Get period details' })
+  @ApiParam({ name: 'id', description: 'Period ID' })
+  @ApiResponse({ status: 200, description: 'Period details' })
+  @ApiResponse({ status: 404, description: 'Period not found' })
+  async getPeriod(@Request() req, @Param('id') id: string) {
+    return this.periodsService.getPeriod(req.user.orgId, id);
+  }
+
+  /**
+   * Create a new period (OPEN).
+   */
+  @Post()
+  @Roles('OWNER', 'ADMIN', 'MANAGER')
+  @ApiOperation({ summary: 'Create inventory period' })
+  @ApiBody({ type: CreatePeriodBody })
+  @ApiResponse({ status: 201, description: 'Period created' })
+  @ApiResponse({ status: 400, description: 'Invalid dates' })
+  @ApiResponse({ status: 409, description: 'Period overlaps' })
+  async createPeriod(@Request() req, @Body() body: CreatePeriodBody) {
+    const dto: CreatePeriodDto = {
+      branchId: body.branchId,
+      startDate: new Date(body.startDate),
+      endDate: new Date(body.endDate),
+      lockReason: body.lockReason,
+    };
+    return this.periodsService.createPeriod(req.user.orgId, req.user.userId, dto);
+  }
+
+  /**
+   * Close a period (generate snapshots + lock).
+   */
+  @Post('close')
+  @Roles('OWNER', 'ADMIN', 'MANAGER')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Close inventory period' })
+  @ApiBody({ type: ClosePeriodBody })
+  @ApiResponse({ status: 200, description: 'Period closed' })
+  @ApiResponse({ status: 400, description: 'Blocking states exist' })
+  @ApiResponse({ status: 404, description: 'Branch not found' })
+  async closePeriod(@Request() req, @Body() body: ClosePeriodBody) {
+    const dto: ClosePeriodDto = {
+      branchId: body.branchId,
+      startDate: new Date(body.startDate),
+      endDate: new Date(body.endDate),
+      lockReason: body.lockReason,
+      forceClose: body.forceClose,
+      forceCloseReason: body.forceCloseReason,
+      userRoleLevel: req.user.roleLevel,
+    };
+    return this.periodsService.closePeriod(req.user.orgId, req.user.userId, dto);
   }
 
   /**
@@ -307,7 +333,7 @@ export class InventoryPeriodsController {
   ) {
     const result = await this.exportService.exportValuation(
       req.user.orgId,
-      req.user.sub,
+      req.user.userId,
       id,
     );
 
@@ -332,7 +358,7 @@ export class InventoryPeriodsController {
   ) {
     const result = await this.exportService.exportMovements(
       req.user.orgId,
-      req.user.sub,
+      req.user.userId,
       id,
     );
 
@@ -357,7 +383,7 @@ export class InventoryPeriodsController {
   ) {
     const result = await this.exportService.exportReconciliation(
       req.user.orgId,
-      req.user.sub,
+      req.user.userId,
       id,
     );
 
@@ -388,7 +414,7 @@ export class InventoryPeriodsController {
     // Log the override usage
     await this.periodsService.logOverrideUsage(
       req.user.orgId,
-      req.user.sub,
+      req.user.userId,
       id,
       body.reason,
       body.actionType,
@@ -404,33 +430,8 @@ export class InventoryPeriodsController {
   }
 
   // ═══════════════════════════════════════════════════════════════════
-  // M12.2: Pre-Close Check, Generation, Reopen, Close Pack, Events
+  // M12.2: Generation, Reopen, Close Pack, Events
   // ═══════════════════════════════════════════════════════════════════
-
-  /**
-   * M12.2: Run pre-close check.
-   * Returns READY/BLOCKED/WARNING status with details.
-   */
-  @Get('preclose-check')
-  @Roles('OWNER', 'ADMIN', 'MANAGER')
-  @ApiOperation({ summary: 'M12.2: Run pre-close validation check' })
-  @ApiQuery({ name: 'branchId', required: true })
-  @ApiQuery({ name: 'startDate', required: true })
-  @ApiQuery({ name: 'endDate', required: true })
-  @ApiResponse({ status: 200, description: 'Pre-close check result' })
-  async preCloseCheck(
-    @Request() req,
-    @Query('branchId') branchId: string,
-    @Query('startDate') startDate: string,
-    @Query('endDate') endDate: string,
-  ) {
-    return this.preCloseCheckService.runCheck(
-      req.user.orgId,
-      branchId,
-      new Date(startDate),
-      new Date(endDate),
-    );
-  }
 
   /**
    * M12.2: Generate monthly periods.
@@ -444,7 +445,7 @@ export class InventoryPeriodsController {
   async generatePeriods(@Request() req, @Body() body: GeneratePeriodsBody) {
     return this.periodGenerationService.generatePeriods(
       req.user.orgId,
-      req.user.sub,
+      req.user.userId,
       {
         branchId: body.branchId,
         fromMonth: body.fromMonth,
@@ -474,7 +475,7 @@ export class InventoryPeriodsController {
       periodId: id,
       reason: body.reason,
     };
-    return this.periodsService.reopenPeriod(req.user.orgId, req.user.sub, dto);
+    return this.periodsService.reopenPeriod(req.user.orgId, req.user.userId, dto);
   }
 
   /**
@@ -486,7 +487,7 @@ export class InventoryPeriodsController {
   @ApiParam({ name: 'id', description: 'Period ID' })
   @ApiResponse({ status: 200, description: 'Close pack summary' })
   async getClosePack(@Request() req, @Param('id') id: string) {
-    return this.closePackService.getClosePack(req.user.orgId, req.user.sub, id);
+    return this.closePackService.getClosePack(req.user.orgId, req.user.userId, id);
   }
 
   /**
@@ -504,7 +505,7 @@ export class InventoryPeriodsController {
   ) {
     const result = await this.closePackService.exportIndex(
       req.user.orgId,
-      req.user.sub,
+      req.user.userId,
       id,
     );
 
@@ -609,7 +610,7 @@ export class InventoryPeriodsController {
   async generateClosePack(@Request() req, @Param('id') id: string) {
     const closePack = await this.closePackService.getClosePack(
       req.user.orgId,
-      req.user.sub,
+      req.user.userId,
       id,
     );
 

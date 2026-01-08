@@ -71,7 +71,7 @@ export class InventoryCloseRequestsController {
     @Request() req: any,
     @Param('periodId') periodId: string,
   ): Promise<CloseRequestItem> {
-    const { orgId, branchId, sub: userId } = req.user;
+    const { orgId, branchId, userId } = req.user;
 
     return this.closeRequestsService.createCloseRequest(orgId, branchId, userId, {
       periodId,
@@ -90,7 +90,7 @@ export class InventoryCloseRequestsController {
     @Request() req: any,
     @Param('id') requestId: string,
   ): Promise<CloseRequestItem> {
-    const { orgId, sub: userId } = req.user;
+    const { orgId, userId } = req.user;
 
     return this.closeRequestsService.submitCloseRequest(orgId, userId, {
       requestId,
@@ -110,7 +110,7 @@ export class InventoryCloseRequestsController {
     @Param('id') requestId: string,
     @Body() dto: ApproveRequestDto,
   ): Promise<CloseRequestItem> {
-    const { orgId, sub: userId, roleLevel } = req.user;
+    const { orgId, userId, roleLevel } = req.user;
 
     return this.closeRequestsService.approveCloseRequest(
       orgId,
@@ -133,7 +133,7 @@ export class InventoryCloseRequestsController {
     @Param('id') requestId: string,
     @Body() dto: RejectRequestDto,
   ): Promise<CloseRequestItem> {
-    const { orgId, sub: userId, roleLevel } = req.user;
+    const { orgId, userId, roleLevel } = req.user;
 
     return this.closeRequestsService.rejectCloseRequest(
       orgId,

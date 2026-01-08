@@ -192,6 +192,7 @@ describe('M12.1 Inventory Period Close E2E', () => {
         },
       });
 
+      // Use forceClose since M12.4 requires approval workflow
       const response = await request(app.getHttpServer())
         .post('/inventory/periods/close')
         .set('Authorization', `Bearer ${ownerToken}`)
@@ -199,6 +200,8 @@ describe('M12.1 Inventory Period Close E2E', () => {
           branchId: factory.branchId,
           startDate: '2024-01-01T00:00:00.000Z',
           endDate: '2024-01-31T23:59:59.999Z',
+          forceClose: true,
+          forceCloseReason: 'M12.1 E2E test - direct close via L5 owner',
         })
         .expect(200);
 
@@ -208,6 +211,7 @@ describe('M12.1 Inventory Period Close E2E', () => {
     });
 
     it('should be idempotent on repeat close (H2)', async () => {
+      // forceClose still works for already-closed periods (idempotent)
       const response = await request(app.getHttpServer())
         .post('/inventory/periods/close')
         .set('Authorization', `Bearer ${ownerToken}`)
@@ -215,6 +219,8 @@ describe('M12.1 Inventory Period Close E2E', () => {
           branchId: factory.branchId,
           startDate: '2024-01-01T00:00:00.000Z',
           endDate: '2024-01-31T23:59:59.999Z',
+          forceClose: true,
+          forceCloseReason: 'M12.1 E2E test - idempotent repeat close',
         })
         .expect(200);
 
@@ -370,8 +376,8 @@ describe('M12.1 Inventory Period Close E2E', () => {
           const snap = response.body[0];
         // Values should be returned with proper precision (strings or numbers)
         expect(snap.qtyOnHand).toBeDefined();
-        expect(snap.unitCost).toBeDefined();
-        expect(snap.totalValue).toBeDefined();
+        expect(snap.wac).toBeDefined();
+        expect(snap.value).toBeDefined();
       }
     });
   });
