@@ -11,6 +11,7 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import * as nextRouter from 'next/router';
 
 // Mock next/router
 const mockPush = jest.fn();
@@ -248,12 +249,12 @@ describe('M11.10: Stocktake Detail Page', () => {
     jest.clearAllMocks();
 
     // Mock router with id parameter
-    jest.spyOn(require('next/router'), 'useRouter').mockReturnValue({
+    jest.spyOn(nextRouter, 'useRouter').mockReturnValue({
       push: mockPush,
       pathname: '/inventory/stocktakes/session-1',
       query: { id: 'session-1' },
       asPath: '/inventory/stocktakes/session-1',
-    });
+    } as unknown as nextRouter.NextRouter);
 
     // Mock API calls
     mockGet.mockImplementation((url: string) => {

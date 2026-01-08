@@ -514,6 +514,8 @@ model Org {
   inventoryPeriods               InventoryPeriod[]
   // M12.2: Inventory Period Events
   inventoryPeriodEvents          InventoryPeriodEvent[]
+  // M12.4: Inventory Period Close Requests
+  inventoryPeriodCloseRequests   InventoryPeriodCloseRequest[]
 
   @@map("orgs")
 }
@@ -670,6 +672,8 @@ model Branch {
   inventoryPeriods         InventoryPeriod[]         @relation("InventoryPeriodBranch")
   // M12.2: Inventory Period Events
   inventoryPeriodEvents    InventoryPeriodEvent[]
+  // M12.4: Inventory Period Close Requests
+  inventoryPeriodCloseRequests InventoryPeriodCloseRequest[]
 
   @@index([orgId, id])
   @@map("branches")
@@ -873,6 +877,9 @@ model User {
   inventoryPeriodsClosed          InventoryPeriod[]                @relation("InventoryPeriodCloser")
   // M12.2: Inventory Period Events
   inventoryPeriodEvents           InventoryPeriodEvent[]           @relation("PeriodEventActor")
+  // M12.4: Inventory Period Close Requests
+  closeRequestsCreated            InventoryPeriodCloseRequest[]    @relation("CloseRequestRequester")
+  closeRequestsApproved           InventoryPeriodCloseRequest[]    @relation("CloseRequestApprover")
 
   @@index([orgId, id])
   @@map("users")
@@ -7058,6 +7065,8 @@ enum InventoryAlertType {
   BELOW_REORDER_POINT
   HIGH_WASTE
   HIGH_VARIANCE
+  PERIOD_CLOSE_BLOCKED      // M12.4: Preclose returned blockers
+  PERIOD_CLOSE_APPROVAL_REQ // M12.4: Close request needs L5 action
 }
 
 enum InventoryAlertSeverity {
@@ -7138,6 +7147,7 @@ model InventoryPeriod {
   valuationSnapshots InventoryValuationSnapshot[]
   movementSummaries  InventoryPeriodMovementSummary[]
   events             InventoryPeriodEvent[]
+  closeRequest       InventoryPeriodCloseRequest?   // M12.4: One close request per period
 
   @@unique([orgId, branchId, startDate, endDate])
   @@index([orgId, branchId])
@@ -7221,6 +7231,50 @@ enum InventoryPeriodEventType {
   REOPENED
   OVERRIDE_USED
   EXPORT_GENERATED
+  // M12.4: Close request workflow events
+  CLOSE_REQUEST_CREATED
+  CLOSE_REQUEST_SUBMITTED
+  CLOSE_REQUEST_APPROVED
+  CLOSE_REQUEST_REJECTED
+  CLOSE_REQUEST_CANCELLED
+  FORCE_CLOSE_USED
+}
+
+// M12.4: Period Close Request Status
+enum InventoryPeriodCloseRequestStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+// M12.4: Period Close Request - Approval workflow for period closing
+model InventoryPeriodCloseRequest {
+  id              String                              @id @default(cuid())
+  orgId           String
+  branchId        String
+  periodId        String                              @unique // One request per period
+  status          InventoryPeriodCloseRequestStatus   @default(DRAFT)
+  requestedById   String
+  requestedAt     DateTime?
+  approvedById    String?
+  approvedAt      DateTime?
+  approvalNotes   String?
+  rejectionReason String?
+  createdAt       DateTime                            @default(now())
+  updatedAt       DateTime                            @updatedAt
+
+  // Relations
+  org         Org             @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  branch      Branch          @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  period      InventoryPeriod @relation(fields: [periodId], references: [id], onDelete: Cascade)
+  requestedBy User            @relation("CloseRequestRequester", fields: [requestedById], references: [id], onDelete: Restrict)
+  approvedBy  User?           @relation("CloseRequestApprover", fields: [approvedById], references: [id], onDelete: SetNull)
+
+  @@index([orgId, branchId])
+  @@index([status])
+  @@map("inventory_period_close_requests")
 }
 
 // M12.2: Inventory Period Event - Audit-grade append-only event log

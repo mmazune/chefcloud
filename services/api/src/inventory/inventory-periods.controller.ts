@@ -22,6 +22,7 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
+  import { IsString, IsDateString, IsOptional, IsBoolean } from 'class-validator';
 import { Response } from 'express';
 import {
   ApiTags,
@@ -42,45 +43,81 @@ import { InventoryPreCloseCheckService } from './inventory-preclose-check.servic
 import { InventoryPeriodGenerationService } from './inventory-period-generation.service';
 import { InventoryPeriodEventsService } from './inventory-period-events.service';
 import { InventoryClosePackService } from './inventory-close-pack.service';
+import { InventoryPeriodDashboardService } from './inventory-period-dashboard.service';
+import { InventoryCloseRequestsService } from './inventory-close-requests.service';
 
-// DTO classes for Swagger
+// DTO classes with validation for Swagger
 class CreatePeriodBody {
+  @IsString()
   branchId: string;
+
+  @IsDateString()
   startDate: string;
+
+  @IsDateString()
   endDate: string;
+
+  @IsOptional()
+  @IsString()
   lockReason?: string;
 }
 
 class ClosePeriodBody {
+  @IsString()
   branchId: string;
+
+  @IsDateString()
   startDate: string;
+
+  @IsDateString()
   endDate: string;
+
+  @IsOptional()
+  @IsString()
   lockReason?: string;
+
+  // M12.4: Approval gating and force-close support
+  @IsOptional()
+  @IsBoolean()
+  forceClose?: boolean;
+
+  @IsOptional()
+  @IsString()
+  forceCloseReason?: string;
 }
 
 class OverridePostBody {
+  @IsString()
   reason: string;
+
+  @IsString()
   actionType: string;
+
+  @IsString()
   entityType: string;
+
+  @IsString()
   entityId: string;
 }
 
 // M12.2 DTOs
 class ReopenPeriodBody {
+  @IsString()
   reason: string;
 }
 
 class GeneratePeriodsBody {
+  @IsString()
   branchId: string;
+
+  @IsString()
   fromMonth: string; // YYYY-MM
+
+  @IsString()
   toMonth: string;   // YYYY-MM
 }
 
-class PreCloseCheckQuery {
-  branchId: string;
-  startDate: string;
-  endDate: string;
-}
+// Removed unused PreCloseCheckQuery (lint cleanup)
 
 @ApiTags('Inventory Periods')
 @ApiBearerAuth()
@@ -95,6 +132,8 @@ export class InventoryPeriodsController {
     private readonly periodGenerationService: InventoryPeriodGenerationService,
     private readonly periodEventsService: InventoryPeriodEventsService,
     private readonly closePackService: InventoryClosePackService,
+    private readonly dashboardService: InventoryPeriodDashboardService,
+    private readonly closeRequestsService: InventoryCloseRequestsService,
   ) {}
 
   /**
@@ -164,6 +203,9 @@ export class InventoryPeriodsController {
       startDate: new Date(body.startDate),
       endDate: new Date(body.endDate),
       lockReason: body.lockReason,
+      forceClose: body.forceClose,
+      forceCloseReason: body.forceCloseReason,
+      userRoleLevel: req.user.roleLevel,
     };
     return this.periodsService.closePeriod(req.user.orgId, req.user.sub, dto);
   }
@@ -189,6 +231,29 @@ export class InventoryPeriodsController {
       new Date(startDate),
       new Date(endDate),
     );
+  }
+
+  /**
+   * Multi-branch period close dashboard.
+   */
+  @Get('dashboard')
+  @Roles('OWNER', 'ADMIN', 'MANAGER', 'L4', 'L5')
+  @ApiOperation({ summary: 'Get multi-branch period close dashboard' })
+  @ApiQuery({ name: 'branchId', required: false })
+  @ApiQuery({ name: 'from', required: false, description: 'Filter start (YYYY-MM-DD)' })
+  @ApiQuery({ name: 'to', required: false, description: 'Filter end (YYYY-MM-DD)' })
+  async getDashboard(
+    @Request() req,
+    @Query('branchId') branchId?: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+  ) {
+    const filters = {
+      branchId,
+      from: from ? new Date(from) : undefined,
+      to: to ? new Date(to) : undefined,
+    };
+    return this.dashboardService.getDashboard(req.user.orgId, filters);
   }
 
   /**
@@ -502,6 +567,23 @@ export class InventoryPeriodsController {
       period.startDate,
       period.endDate,
     );
+
+    // M12.4: Create blocked alert if status is BLOCKED
+    if (result.status === 'BLOCKED') {
+      const blockerCount = result.blockers.reduce((sum, b) => sum + b.count, 0);
+      const blockerSummary = result.blockers.map((b) => b.description);
+      try {
+        await this.closeRequestsService.createBlockedAlert(
+          req.user.orgId,
+          period.branchId,
+          id,
+          blockerCount,
+          blockerSummary,
+        );
+      } catch (e) {
+        // Non-fatal
+      }
+    }
 
     return {
       periodId: id,

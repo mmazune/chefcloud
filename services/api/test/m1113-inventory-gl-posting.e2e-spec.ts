@@ -141,7 +141,7 @@ describe('M11.13: Inventory GL Posting Full (E2E)', () => {
           branchId,
           code: 'MAIN',
           name: 'Main Storage',
-          type: 'STORAGE',
+          locationType: 'STORAGE',
         },
       });
     }

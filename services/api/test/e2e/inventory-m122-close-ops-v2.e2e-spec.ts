@@ -71,7 +71,7 @@ describe('M12.2 Inventory Close Ops v2 E2E', () => {
         branchId: factory.branchId,
         code: `LOC-M122-${testSuffix}`,
         name: 'M12.2 Test Location',
-        type: 'STORE',
+        locationType: 'STORAGE',
       },
     });
     locationId = loc.id;

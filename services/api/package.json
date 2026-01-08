@@ -16,7 +16,7 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e:setup": "bash test/setup-test-db.sh",
+    "test:e2e:setup": "node scripts/setup-test-db.mjs",
     "test:e2e:gate": "node scripts/e2e-gate-runner.mjs",
     "test:e2e:gate:self-check": "node scripts/e2e-gate-runner.mjs --self-check",
     "test:e2e:gate:legacy": "pnpm test:e2e:teardown-check && node scripts/e2e-runtime-matrix.mjs",

@@ -116,6 +116,10 @@ import { InventoryPreCloseCheckService } from './inventory-preclose-check.servic
 import { InventoryPeriodGenerationService } from './inventory-period-generation.service';
 import { InventoryPeriodEventsService } from './inventory-period-events.service';
 import { InventoryClosePackService } from './inventory-close-pack.service';
+// M12.4 Close Approvals + Dashboard
+import { InventoryCloseRequestsController } from './inventory-close-requests.controller';
+import { InventoryCloseRequestsService } from './inventory-close-requests.service';
+import { InventoryPeriodDashboardService } from './inventory-period-dashboard.service';
 
 @Module({
   imports: [KpisModule, AuditModule],
@@ -143,6 +147,7 @@ import { InventoryClosePackService } from './inventory-close-pack.service';
     InventoryForecastingController, // M11.14
     InventoryHealthController, // M11.15
     InventoryPeriodsController, // M12.1
+    InventoryCloseRequestsController, // M12.4
     RecipesController,
     WastageController,
     CountsController,
@@ -194,6 +199,8 @@ import { InventoryClosePackService } from './inventory-close-pack.service';
     InventoryPeriodGenerationService, // M12.2
     InventoryPeriodEventsService, // M12.2
     InventoryClosePackService, // M12.2
+    InventoryCloseRequestsService, // M12.4
+    InventoryPeriodDashboardService, // M12.4
     RecipesService,
     WastageService,
     CountsService,
@@ -248,6 +255,8 @@ import { InventoryClosePackService } from './inventory-close-pack.service';
     InventoryPeriodGenerationService, // M12.2
     InventoryPeriodEventsService, // M12.2
     InventoryClosePackService, // M12.2
+    InventoryCloseRequestsService, // M12.4
+    InventoryPeriodDashboardService, // M12.4
     RecipesService,
     WastageService,
     CountsService,

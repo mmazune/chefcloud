@@ -9,8 +9,8 @@ import { PrismaService } from '../prisma.service';
 
 export interface AuditLogEntry {
   orgId: string;
-  branchId?: string;
-  userId: string;
+  branchId?: string; // Optional - will skip logging if not provided (AuditEvent schema requires branchId)
+  userId?: string;
   action: string;
   resourceType: string;
   resourceId: string;
@@ -25,8 +25,17 @@ export class AuditLogService {
 
   /**
    * Log an audit event
+   * 
+   * Note: AuditEvent requires branchId. If branchId is not provided,
+   * the event will be logged as a debug message but not persisted to DB.
    */
   async log(entry: AuditLogEntry): Promise<void> {
+    // Skip DB logging if branchId not provided (schema requires it)
+    if (!entry.branchId) {
+      this.logger.debug(`Audit (no-persist): ${entry.action} on ${entry.resourceType}:${entry.resourceId} by ${entry.userId ?? 'system'}`);
+      return;
+    }
+
     try {
       await this.prisma.client.auditEvent.create({
         data: {

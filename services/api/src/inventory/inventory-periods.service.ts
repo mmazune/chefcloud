@@ -20,7 +20,8 @@ import { PrismaService } from '../prisma.service';
 import { AuditLogService } from '../audit/audit-log.service';
 import { InventoryCostingService } from './inventory-costing.service';
 import { InventoryPeriodEventsService } from './inventory-period-events.service';
-import { Prisma, InventoryPeriodStatus } from '@chefcloud/db';
+import { Prisma, InventoryPeriodStatus, RoleLevel } from '@chefcloud/db';
+import { InventoryCloseRequestsService } from './inventory-close-requests.service';
 
 const Decimal = Prisma.Decimal;
 type Decimal = Prisma.Decimal;
@@ -39,6 +40,10 @@ export interface ClosePeriodDto {
   startDate: Date;
   endDate: Date;
   lockReason?: string;
+  // M12.4: Approval gating + force-close
+  forceClose?: boolean;
+  forceCloseReason?: string;
+  userRoleLevel?: RoleLevel;
 }
 
 export interface ReopenPeriodDto {
@@ -119,6 +124,7 @@ export class InventoryPeriodsService {
     private readonly auditLog: AuditLogService,
     private readonly costingService: InventoryCostingService,
     private readonly periodEventsService: InventoryPeriodEventsService,
+    private readonly closeRequestsService: InventoryCloseRequestsService,
   ) {}
 
   /**
@@ -485,22 +491,7 @@ export class InventoryPeriodsService {
       return existingClosed;
     }
 
-    // Check blocking states
-    const blockCheck = await this.checkBlockingStates(
-      orgId,
-      dto.branchId,
-      dto.startDate,
-      dto.endDate,
-    );
-    if (!blockCheck.valid) {
-      throw new BadRequestException({
-        code: 'PERIOD_CLOSE_BLOCKED',
-        message: 'Cannot close period due to blocking states',
-        blockers: blockCheck.blockers,
-      });
-    }
-
-    // Find or create the period
+    // Find or create the period early so alerts/events can attach to it
     let period = await this.prisma.client.inventoryPeriod.findFirst({
       where: {
         orgId,
@@ -516,6 +507,48 @@ export class InventoryPeriodsService {
         startDate: dto.startDate,
         endDate: dto.endDate,
         lockReason: dto.lockReason,
+      });
+    }
+
+    // Check blocking states and emit BLOCKED alert if needed (M12.4)
+    const blockCheck = await this.checkBlockingStates(
+      orgId,
+      dto.branchId,
+      dto.startDate,
+      dto.endDate,
+    );
+    if (!blockCheck.valid) {
+      try {
+        await this.closeRequestsService.createBlockedAlert(
+          orgId,
+          dto.branchId,
+          period.id,
+          blockCheck.blockers.reduce((sum, b) => sum + (b.count ?? 1), 0),
+          blockCheck.blockers.map((b) => b.message),
+        );
+      } catch (e) {
+        this.logger.warn(`Failed to create blocked alert for period ${period.id}: ${String(e)}`);
+      }
+      throw new BadRequestException({
+        code: 'PERIOD_CLOSE_BLOCKED',
+        message: 'Cannot close period due to blocking states',
+        blockers: blockCheck.blockers,
+      });
+    }
+
+    // M12.4: Approval gating - require APPROVED request or valid force-close (L5+)
+    const approval = await this.closeRequestsService.validateApprovalForClose(
+      orgId,
+      period.id,
+      !!dto.forceClose,
+      dto.forceCloseReason,
+      userId,
+      dto.userRoleLevel,
+    );
+    if (!approval.approved) {
+      throw new ForbiddenException({
+        code: 'CLOSE_APPROVAL_REQUIRED',
+        message: approval.error ?? 'Approved close request required',
       });
     }
 
