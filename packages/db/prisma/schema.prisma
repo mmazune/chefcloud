@@ -1552,19 +1552,47 @@ model Order {
 }
 
 model KdsTicket {
-  id        String     @id @default(cuid())
-  orderId   String
-  station   StationTag
-  status    String     @default("QUEUED")
-  createdAt DateTime   @default(now())
-  sentAt    DateTime   @default(now()) // M1-KDS: When order was sent to kitchen/bar
-  readyAt   DateTime?
-  updatedAt DateTime   @updatedAt // M1-KDS: For polling/sync with "since" parameter
+  id             String     @id @default(cuid())
+  orderId        String
+  station        StationTag
+  status         String     @default("QUEUED") // QUEUED|IN_PROGRESS|READY|DONE|VOID
+  createdAt      DateTime   @default(now())
+  sentAt         DateTime   @default(now()) // M1-KDS: When order was sent to kitchen/bar
+  startedAt      DateTime? // M13.3: When ticket moved to IN_PROGRESS
+  readyAt        DateTime?
+  doneAt         DateTime? // M13.3: When ticket completed
+  voidedAt       DateTime? // M13.3: When voided
+  voidReason     String? // M13.3: Required for void
+  idempotencyKey String? // M13.3: For safe regeneration (orderId+station)
+  updatedAt      DateTime   @updatedAt // M1-KDS: For polling/sync with "since" parameter
 
-  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  order Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  lines KdsTicketLine[] // M13.3: Per-item tracking
 
+  @@unique([orderId, station]) // M13.3: Idempotency - one ticket per station per order
   @@index([station, status, sentAt]) // M1-KDS: Efficient filtering and ordering
   @@map("kds_tickets")
+}
+
+// M13.3: Per-item tracking on KDS tickets
+model KdsTicketLine {
+  id                String   @id @default(cuid())
+  ticketId          String
+  orderItemId       String
+  itemNameSnapshot  String // From OrderItem.itemNameSnapshot (M13.2)
+  qty               Int
+  modifiersSnapshot Json? // From OrderItem.selectedModifiersSnapshot (M13.2)
+  notesSnapshot     String?
+  status            String   @default("NEW") // NEW|IN_PROGRESS|READY|DONE|VOID
+  bumpedAt          DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  ticket    KdsTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  orderItem OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+
+  @@index([ticketId])
+  @@map("kds_ticket_lines")
 }
 
 // M1-KDS: SLA configuration for KDS colour coding
@@ -1789,8 +1817,9 @@ model OrderItem {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  order    Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  menuItem MenuItem @relation(fields: [menuItemId], references: [id], onDelete: Restrict)
+  order          Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  menuItem       MenuItem        @relation(fields: [menuItemId], references: [id], onDelete: Restrict)
+  kdsTicketLines KdsTicketLine[] // M13.3: Reverse relation for ticket lines
 
   @@map("order_items")
 }

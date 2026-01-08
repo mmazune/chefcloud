@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { PosController } from './pos.controller';
 import { PosMenuController } from './pos-menu.controller';
@@ -13,6 +13,7 @@ import { PromotionsModule } from '../promotions/promotions.module';
 import { AccountingModule } from '../accounting/accounting.module';
 import { CommonModule } from '../common/common.module';
 import { MenuModule } from '../menu/menu.module';
+import { KdsModule } from '../kds/kds.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { MenuModule } from '../menu/menu.module';
     AccountingModule,
     CommonModule,
     MenuModule, // M13.2: For menu availability checking
+    forwardRef(() => KdsModule), // M13.3: For KDS ticket generation
   ],
   controllers: [PosMenuController, PosController], // Menu controller first to avoid route shadowing
   providers: [PosService, PosMenuService, PrismaService],

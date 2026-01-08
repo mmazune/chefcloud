@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsString, IsOptional, IsInt, Min } from 'class-validator';
+import { IsEnum, IsString, IsOptional, IsInt, Min, MinLength } from 'class-validator';
 
 export enum SlaState {
   GREEN = 'GREEN',
@@ -9,7 +9,10 @@ export enum SlaState {
 
 export enum KdsTicketStatus {
   QUEUED = 'QUEUED',
+  IN_PROGRESS = 'IN_PROGRESS', // M13.3: Ticket being worked on
   READY = 'READY',
+  DONE = 'DONE', // M13.3: Ticket served/completed
+  VOID = 'VOID', // M13.3: Ticket voided (L4+ only)
   RECALLED = 'RECALLED',
 }
 
@@ -86,4 +89,29 @@ export class UpdateKdsSlaConfigDto {
   @IsInt()
   @Min(1)
   orangeThresholdSec!: number;
+}
+
+/**
+ * M13.3: Void ticket request DTO
+ */
+export class VoidTicketDto {
+  @ApiProperty({ description: 'Reason for voiding (min 10 characters)', minLength: 10 })
+  @IsString()
+  @MinLength(10, { message: 'Void reason must be at least 10 characters' })
+  reason!: string;
+}
+
+/**
+ * M13.3: KDS Board Query DTO
+ */
+export class GetKdsBoardDto {
+  @ApiProperty({ required: false, description: 'Filter by station' })
+  @IsOptional()
+  @IsString()
+  stationId?: string;
+
+  @ApiProperty({ required: false, description: 'Filter by status (QUEUED, IN_PROGRESS, READY)' })
+  @IsOptional()
+  @IsString()
+  status?: string;
 }

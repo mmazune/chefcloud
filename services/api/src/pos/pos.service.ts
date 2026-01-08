@@ -7,6 +7,8 @@ import {
   NotFoundException,
   Optional,
   Logger,
+  forwardRef,
+  Inject,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import {
@@ -28,6 +30,7 @@ import { StockMovementsService, StockMovementType } from '../inventory/stock-mov
 import { InventoryDepletionService } from '../inventory/inventory-depletion.service';
 import { PosMenuService } from './pos-menu.service';
 import { MenuService } from '../menu/menu.service';
+import { KdsService } from '../kds/kds.service';
 
 @Injectable()
 export class PosService {
@@ -46,6 +49,7 @@ export class PosService {
     @Optional() private depletionService?: InventoryDepletionService,
     @Optional() private posMenuService?: PosMenuService,
     @Optional() private menuService?: MenuService,
+    @Optional() @Inject(forwardRef(() => KdsService)) private kdsService?: KdsService,
   ) { }
 
   private markKpisDirty(orgId: string, branchId?: string) {
@@ -248,33 +252,38 @@ export class PosService {
       },
     });
 
-    // Create KDS tickets per station
-    const stationMap = new Map<string, string[]>();
-    for (const orderItem of order.orderItems) {
-      const station = orderItem.menuItem.station;
-      if (!stationMap.has(station)) {
-        stationMap.set(station, []);
+    // M13.3: Generate KDS tickets using new service method (with KdsTicketLine snapshots)
+    if (this.kdsService) {
+      await this.kdsService.generateTicketsFromOrder(order.id, orgId, branchId);
+    } else {
+      // Fallback: Create KDS tickets per station (legacy behavior)
+      const stationMap = new Map<string, string[]>();
+      for (const orderItem of order.orderItems) {
+        const station = orderItem.menuItem.station;
+        if (!stationMap.has(station)) {
+          stationMap.set(station, []);
+        }
+        stationMap.get(station)!.push(orderItem.id);
       }
-      stationMap.get(station)!.push(orderItem.id);
-    }
 
-    for (const [station] of stationMap) {
-      const ticket = await this.prisma.client.kdsTicket.create({
-        data: {
+      for (const [station] of stationMap) {
+        const ticket = await this.prisma.client.kdsTicket.create({
+          data: {
+            orderId: order.id,
+            station: station as any,
+            status: 'QUEUED',
+          },
+        });
+
+        // Publish KDS event
+        this.eventBus.publish('kds', {
+          ticketId: ticket.id,
           orderId: order.id,
-          station: station as any,
+          station,
           status: 'QUEUED',
-        },
-      });
-
-      // Publish KDS event
-      this.eventBus.publish('kds', {
-        ticketId: ticket.id,
-        orderId: order.id,
-        station,
-        status: 'QUEUED',
-        at: new Date().toISOString(),
-      });
+          at: new Date().toISOString(),
+        });
+      }
     }
 
     // Mark KPIs dirty (orgId already fetched above)

@@ -8,13 +8,15 @@ import {
   Body,
   UseGuards,
   Request,
+  Res,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { Response } from 'express';
 import { KdsService } from './kds.service';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
-import { GetKdsQueueDto, UpdateKdsSlaConfigDto } from './dto/kds-ticket.dto';
+import { GetKdsQueueDto, UpdateKdsSlaConfigDto, VoidTicketDto } from './dto/kds-ticket.dto';
 
 @ApiTags('KDS')
 @ApiBearerAuth('bearer')
@@ -82,5 +84,102 @@ export class KdsController {
   @ApiOperation({ summary: 'Recall a ticket (bump back to queue)' })
   async recallTicket(@Param('id') ticketId: string): Promise<unknown> {
     return this.kdsService.recallTicket(ticketId);
+  }
+
+  // ===== M13.3: KDS Board + Ticket Lifecycle =====
+
+  /**
+   * M13.3: Get KDS board for a branch/station with branch isolation
+   */
+  @Get('board')
+  @Roles('L2')
+  @ApiOperation({ summary: 'Get KDS board with tickets by station and status' })
+  async getBoard(
+    @Request() req: { user: { branchId: string; orgId: string } },
+    @Query('stationId') stationId?: string,
+    @Query('status') status?: string,
+  ): Promise<unknown> {
+    return this.kdsService.getBoard(req.user.orgId, req.user.branchId, stationId, status);
+  }
+
+  /**
+   * M13.3: Start working on a ticket (QUEUED → IN_PROGRESS)
+   */
+  @Post('tickets/:id/start')
+  @Roles('L2')
+  @ApiOperation({ summary: 'Start ticket (QUEUED → IN_PROGRESS)' })
+  async startTicket(
+    @Param('id') ticketId: string,
+    @Request() req: { user: { branchId: string; orgId: string; userId: string } },
+  ): Promise<unknown> {
+    return this.kdsService.startTicket(ticketId, req.user.orgId, req.user.branchId, req.user.userId);
+  }
+
+  /**
+   * M13.3: Mark ticket ready (IN_PROGRESS → READY)
+   */
+  @Post('tickets/:id/ready')
+  @Roles('L2')
+  @ApiOperation({ summary: 'Mark ticket ready (IN_PROGRESS → READY)' })
+  async readyTicket(
+    @Param('id') ticketId: string,
+    @Request() req: { user: { branchId: string; orgId: string; userId: string } },
+  ): Promise<unknown> {
+    return this.kdsService.readyTicket(ticketId, req.user.orgId, req.user.branchId, req.user.userId);
+  }
+
+  /**
+   * M13.3: Mark ticket done (READY → DONE)
+   */
+  @Post('tickets/:id/done')
+  @Roles('L2')
+  @ApiOperation({ summary: 'Mark ticket done (READY → DONE)' })
+  async doneTicket(
+    @Param('id') ticketId: string,
+    @Request() req: { user: { branchId: string; orgId: string; userId: string } },
+  ): Promise<unknown> {
+    return this.kdsService.doneTicket(ticketId, req.user.orgId, req.user.branchId, req.user.userId);
+  }
+
+  /**
+   * M13.3: Void ticket (any state → VOID, L4+ only)
+   */
+  @Post('tickets/:id/void')
+  @Roles('L4')
+  @ApiOperation({ summary: 'Void ticket (L4+ only, requires reason)' })
+  async voidTicket(
+    @Param('id') ticketId: string,
+    @Body() dto: VoidTicketDto,
+    @Request() req: { user: { branchId: string; orgId: string; userId: string } },
+  ): Promise<unknown> {
+    return this.kdsService.voidTicket(ticketId, dto.reason, req.user.orgId, req.user.branchId, req.user.userId);
+  }
+
+  /**
+   * M13.3: Export tickets to CSV
+   */
+  @Get('export/tickets.csv')
+  @Roles('L4')
+  @ApiOperation({ summary: 'Export tickets as CSV' })
+  async exportTickets(
+    @Request() req: { user: { orgId: string; branchId?: string } },
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+    @Query('branchId') branchId?: string,
+    @Query('stationId') stationId?: string,
+    @Res() res?: Response,
+  ): Promise<void> {
+    const { csv, hash } = await this.kdsService.exportTicketsCsv(
+      req.user.orgId,
+      branchId ?? req.user.branchId,
+      from,
+      to,
+      stationId,
+    );
+
+    res?.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res?.setHeader('Content-Disposition', 'attachment; filename="tickets.csv"');
+    res?.setHeader('X-Nimbus-Export-Hash', hash);
+    res?.send(csv);
   }
 }
