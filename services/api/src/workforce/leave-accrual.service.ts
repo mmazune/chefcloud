@@ -14,7 +14,7 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { Prisma } from '@chefcloud/db';
 
@@ -155,7 +155,7 @@ export class LeaveAccrualService {
         balanceAfter: newBalance,
         reason: `Monthly accrual for ${periodYear}-${String(periodMonth).padStart(2, '0')}`,
         referenceType: 'ACCRUAL',
-        referenceId: policy.id,
+        // Note: referenceId is FK to LeaveRequestV2, so we don't set it for accruals
       },
     });
 
@@ -243,6 +243,14 @@ export class LeaveAccrualService {
     reason: string,
     adjustedBy: string,
   ): Promise<any> {
+    // Validate required fields
+    if (!userId) {
+      throw new BadRequestException('User ID is required');
+    }
+    if (!leaveTypeId) {
+      throw new BadRequestException('Leave type ID is required');
+    }
+
     const currentBalance = await this.getCurrentBalance(userId, leaveTypeId);
     const delta = new Prisma.Decimal(deltaHours);
     const newBalance = currentBalance.add(delta);
@@ -278,8 +286,12 @@ export class LeaveAccrualService {
    * Get balance ledger history
    */
   async getLedgerHistory(userId: string, leaveTypeId: string, limit = 50): Promise<any[]> {
+    const where: any = { userId };
+    if (leaveTypeId && leaveTypeId.length > 0) {
+      where.leaveTypeId = leaveTypeId;
+    }
     return this.prisma.client.leaveBalanceLedger.findMany({
-      where: { userId, leaveTypeId },
+      where,
       orderBy: { createdAt: 'desc' },
       take: limit,
     });

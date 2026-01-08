@@ -51,13 +51,12 @@ export class LeavePolicyService {
     }
 
     // Check for duplicate policy (same org + leaveType + branch)
-    const existing = await this.prisma.client.leavePolicy.findUnique({
+    // Use findFirst since branchId can be null and compound unique has issues with null
+    const existing = await this.prisma.client.leavePolicy.findFirst({
       where: {
-        orgId_leaveTypeId_branchId: {
-          orgId: dto.orgId,
-          leaveTypeId: dto.leaveTypeId,
-          branchId: dto.branchId ?? null,
-        },
+        orgId: dto.orgId,
+        leaveTypeId: dto.leaveTypeId,
+        branchId: dto.branchId ?? null,
       },
     });
 
@@ -107,26 +106,22 @@ export class LeavePolicyService {
    */
   async getEffectivePolicy(orgId: string, branchId: string, leaveTypeId: string): Promise<any> {
     // Try branch-specific first
-    let policy = await this.prisma.client.leavePolicy.findUnique({
+    let policy = await this.prisma.client.leavePolicy.findFirst({
       where: {
-        orgId_leaveTypeId_branchId: {
-          orgId,
-          leaveTypeId,
-          branchId,
-        },
+        orgId,
+        leaveTypeId,
+        branchId,
       },
       include: { leaveType: true },
     });
 
     // Fall back to org-wide policy
     if (!policy) {
-      policy = await this.prisma.client.leavePolicy.findUnique({
+      policy = await this.prisma.client.leavePolicy.findFirst({
         where: {
-          orgId_leaveTypeId_branchId: {
-            orgId,
-            leaveTypeId,
-            branchId: null,
-          },
+          orgId,
+          leaveTypeId,
+          branchId: null,
         },
         include: { leaveType: true },
       });

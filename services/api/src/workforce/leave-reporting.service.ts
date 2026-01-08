@@ -357,10 +357,23 @@ export class LeaveReportingService {
       },
     });
 
+    // Upcoming leave (next 7 days)
+    const nextWeek = new Date(today);
+    nextWeek.setDate(nextWeek.getDate() + 7);
+    const upcomingLeave = await this.prisma.client.leaveRequestV2.count({
+      where: {
+        orgId,
+        ...branchFilter,
+        status: 'APPROVED',
+        startDate: { gt: today, lte: nextWeek },
+      },
+    });
+
     return {
       pendingApprovals: pendingCount,
       onLeaveToday,
       approvedThisMonth,
+      upcomingLeave,
     };
   }
 

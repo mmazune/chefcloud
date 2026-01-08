@@ -55,6 +55,14 @@ export class LeaveRequestsService {
    * Create a new leave request (DRAFT status)
    */
   async create(dto: CreateLeaveRequestDto): Promise<any> {
+    // Validate required fields
+    if (!dto.leaveTypeId) {
+      throw new BadRequestException('Leave type ID is required');
+    }
+    if (!dto.userId) {
+      throw new BadRequestException('User ID is required');
+    }
+
     // Validate dates
     if (dto.startDate >= dto.endDate) {
       throw new BadRequestException('End date must be after start date');
