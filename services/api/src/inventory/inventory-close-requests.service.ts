@@ -6,6 +6,7 @@
  * - Approve/reject requests (L5+)
  * - Force-close bypass with audit trail (L5+)
  * - Alert creation on key transitions
+ * - M12.6: Notification emission + CSV exports
  */
 import {
   Injectable,
@@ -15,6 +16,7 @@ import {
   ForbiddenException,
   ConflictException,
 } from '@nestjs/common';
+import { createHash } from 'crypto';
 import { PrismaService } from '../prisma.service';
 import { InventoryPeriodEventsService } from './inventory-period-events.service';
 import { InventoryAlertsService } from './inventory-alerts.service';
@@ -85,6 +87,7 @@ export interface CloseRequestItem {
 @Injectable()
 export class InventoryCloseRequestsService {
   private readonly logger = new Logger(InventoryCloseRequestsService.name);
+  private notificationService: any = null; // Lazy-loaded to avoid circular deps
 
   constructor(
     private readonly prisma: PrismaService,
@@ -212,6 +215,19 @@ export class InventoryCloseRequestsService {
       `Close request submitted for period ${request.period.startDate.toISOString().slice(0, 10)} - ${request.period.endDate.toISOString().slice(0, 10)}`,
     );
 
+    // M12.6: Emit notification
+    await this.emitCloseNotification(
+      orgId,
+      updated.branch.name,
+      updated.branchId,
+      InventoryPeriodEventType.CLOSE_REQUEST_SUBMITTED,
+      updated.period.startDate,
+      updated.period.endDate,
+      'SUBMITTED',
+      this.getRoleName(updated.requestedBy),
+      { requestId: updated.id },
+    );
+
     return this.mapRequest(updated);
   }
 
@@ -272,6 +288,19 @@ export class InventoryCloseRequestsService {
 
     // Resolve approval required alert
     await this.resolveAlerts(orgId, request.branchId, request.periodId, userId);
+
+    // M12.6: Emit notification
+    await this.emitCloseNotification(
+      orgId,
+      updated.branch.name,
+      updated.branchId,
+      InventoryPeriodEventType.CLOSE_REQUEST_APPROVED,
+      updated.period.startDate,
+      updated.period.endDate,
+      'APPROVED',
+      this.getRoleName(updated.approvedBy),
+      { requestId: updated.id },
+    );
 
     return this.mapRequest(updated);
   }
@@ -338,6 +367,19 @@ export class InventoryCloseRequestsService {
 
     // Resolve approval required alert
     await this.resolveAlerts(orgId, request.branchId, request.periodId, userId);
+
+    // M12.6: Emit notification
+    await this.emitCloseNotification(
+      orgId,
+      updated.branch.name,
+      updated.branchId,
+      InventoryPeriodEventType.CLOSE_REQUEST_REJECTED,
+      updated.period.startDate,
+      updated.period.endDate,
+      'REJECTED',
+      this.getRoleName(updated.approvedBy),
+      { requestId: updated.id, reason: dto.reason },
+    );
 
     return this.mapRequest(updated);
   }
@@ -585,5 +627,135 @@ export class InventoryCloseRequestsService {
         name: request.branch.name,
       },
     };
+  }
+
+  // ============================================
+  // M12.6: Notification Helpers
+  // ============================================
+
+  private getRoleName(user: any): string {
+    if (!user) return 'System';
+    // Use role label, not user ID (H3: safe subset)
+    const roleLabels: Record<string, string> = {
+      OWNER: 'Owner',
+      ADMIN: 'Admin',
+      MANAGER: 'Manager',
+      STAFF: 'Staff',
+      STOCK_MANAGER: 'Stock Manager',
+      PROCUREMENT: 'Procurement',
+    };
+    return roleLabels[user.role] || 'User';
+  }
+
+  private async emitCloseNotification(
+    orgId: string,
+    branchName: string,
+    branchId: string,
+    eventType: InventoryPeriodEventType,
+    periodStart: Date,
+    periodEnd: Date,
+    status: string,
+    actorRole: string,
+    options?: { requestId?: string; reason?: string },
+  ): Promise<void> {
+    try {
+      // Emit via NotificationOutbox (IN_APP)
+      const periodRange = `${periodStart.toISOString().slice(0, 10)} to ${periodEnd.toISOString().slice(0, 10)}`;
+      
+      await this.prisma.client.notificationOutbox.create({
+        data: {
+          orgId,
+          recipientId: null, // Broadcast
+          type: 'IN_APP',
+          event: `INVENTORY_${eventType}`,
+          subject: `[${branchName}] ${this.getEventLabel(eventType)} - ${periodRange}`,
+          body: JSON.stringify({
+            branchId,
+            branchName,
+            periodRange,
+            status,
+            requestId: options?.requestId,
+            actorRole,
+            eventType,
+            timestamp: new Date().toISOString(),
+            reason: options?.reason,
+          }),
+          status: 'PENDING',
+          metadata: { branchId, eventType, periodRange, safePayload: true },
+        },
+      });
+    } catch (e) {
+      this.logger.warn(`Failed to emit notification for ${eventType}: ${e}`);
+    }
+  }
+
+  private getEventLabel(eventType: InventoryPeriodEventType): string {
+    const labels: Record<string, string> = {
+      CLOSE_REQUEST_CREATED: 'Close Request Created',
+      CLOSE_REQUEST_SUBMITTED: 'Close Request Submitted',
+      CLOSE_REQUEST_APPROVED: 'Close Request Approved',
+      CLOSE_REQUEST_REJECTED: 'Close Request Rejected',
+      CLOSED: 'Period Closed',
+      REOPENED: 'Period Reopened',
+      FORCE_CLOSE_USED: 'Override Used',
+      OVERRIDE_USED: 'Override Used',
+    };
+    return labels[eventType] || eventType;
+  }
+
+  // ============================================
+  // M12.6: Export Close Requests as CSV
+  // ============================================
+
+  async exportCloseRequestsCsv(
+    orgId: string,
+    filters?: { branchId?: string; status?: string },
+  ): Promise<{ content: string; hash: string }> {
+    const where: any = { orgId };
+    if (filters?.branchId) where.branchId = filters.branchId;
+    if (filters?.status) where.status = filters.status;
+
+    const requests = await this.prisma.client.inventoryPeriodCloseRequest.findMany({
+      where,
+      include: { requestedBy: true, approvedBy: true, period: true, branch: true },
+      orderBy: [{ createdAt: 'desc' }, { id: 'asc' }],
+    });
+
+    const rows: string[] = [];
+    rows.push('id,branchName,periodStart,periodEnd,status,requestedBy,requestedAt,approvedBy,approvedAt,rejectionReason');
+
+    for (const r of requests) {
+      rows.push([
+        this.escapeCsv(r.id),
+        this.escapeCsv(r.branch?.name || ''),
+        r.period?.startDate?.toISOString().slice(0, 10) || '',
+        r.period?.endDate?.toISOString().slice(0, 10) || '',
+        this.escapeCsv(r.status),
+        this.escapeCsv(r.requestedBy ? `${r.requestedBy.firstName} ${r.requestedBy.lastName}` : ''),
+        r.requestedAt?.toISOString() || '',
+        this.escapeCsv(r.approvedBy ? `${r.approvedBy.firstName} ${r.approvedBy.lastName}` : ''),
+        r.approvedAt?.toISOString() || '',
+        this.escapeCsv(r.rejectionReason || ''),
+      ].join(','));
+    }
+
+    // UTF-8 BOM + LF normalized
+    const content = '\uFEFF' + rows.join('\n');
+    const hash = this.computeHash(content);
+
+    return { content, hash };
+  }
+
+  private escapeCsv(value: string): string {
+    if (!value) return '';
+    if (value.includes(',') || value.includes('"') || value.includes('\n')) {
+      return `"${value.replace(/"/g, '""')}"`;
+    }
+    return value;
+  }
+
+  private computeHash(content: string): string {
+    const normalized = content.replace(/\r\n/g, '\n');
+    return createHash('sha256').update(normalized, 'utf8').digest('hex');
   }
 }

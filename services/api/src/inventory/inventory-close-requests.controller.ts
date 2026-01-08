@@ -8,6 +8,7 @@
  * - POST /inventory/periods/close-requests/:id/reject - Reject (L5+)
  * - GET /inventory/periods/close-requests - List with filters
  * - GET /inventory/periods/:periodId/close-request - Get for period
+ * - GET /inventory/periods/close-requests/export - Export CSV (M12.6)
  */
 import {
   Controller,
@@ -18,6 +19,7 @@ import {
   Query,
   UseGuards,
   Request,
+  Res,
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
@@ -180,5 +182,33 @@ export class InventoryCloseRequestsController {
     const { orgId } = req.user;
 
     return this.closeRequestsService.getCloseRequestForPeriod(orgId, periodId);
+  }
+
+  // ============================================
+  // M12.6: Export Close Requests (CSV)
+  // ============================================
+
+  @Get('close-requests/export')
+  @Roles('L4', 'L5')
+  @ApiOperation({ summary: 'Export close requests as CSV' })
+  @ApiQuery({ name: 'branchId', required: false })
+  @ApiQuery({ name: 'status', required: false })
+  async exportCloseRequests(
+    @Request() req: any,
+    @Res() res: any,
+    @Query('branchId') branchId?: string,
+    @Query('status') status?: string,
+  ): Promise<void> {
+    const { orgId } = req.user;
+
+    const { content, hash } = await this.closeRequestsService.exportCloseRequestsCsv(
+      orgId,
+      { branchId, status },
+    );
+
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="close-requests-export.csv"`);
+    res.setHeader('X-Nimbus-Export-Hash', hash);
+    res.send(content);
   }
 }

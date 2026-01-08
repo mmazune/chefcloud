@@ -120,6 +120,9 @@ import { InventoryClosePackService } from './inventory-close-pack.service';
 import { InventoryCloseRequestsController } from './inventory-close-requests.controller';
 import { InventoryCloseRequestsService } from './inventory-close-requests.service';
 import { InventoryPeriodDashboardService } from './inventory-period-dashboard.service';
+// M12.6 Close Notifications
+import { InventoryCloseNotificationsService } from './inventory-close-notifications.service';
+import { InventoryCloseNotificationsController } from './inventory-close-notifications.controller';
 
 @Module({
   imports: [KpisModule, AuditModule],
@@ -148,6 +151,7 @@ import { InventoryPeriodDashboardService } from './inventory-period-dashboard.se
     InventoryHealthController, // M11.15
     InventoryPeriodsController, // M12.1
     InventoryCloseRequestsController, // M12.4
+    InventoryCloseNotificationsController, // M12.6
     RecipesController,
     WastageController,
     CountsController,
@@ -201,6 +205,7 @@ import { InventoryPeriodDashboardService } from './inventory-period-dashboard.se
     InventoryClosePackService, // M12.2
     InventoryCloseRequestsService, // M12.4
     InventoryPeriodDashboardService, // M12.4
+    InventoryCloseNotificationsService, // M12.6
     RecipesService,
     WastageService,
     CountsService,
