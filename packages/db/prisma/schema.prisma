@@ -110,6 +110,31 @@ enum PaymentMethod {
   CARD
   MOMO
   BANK_TRANSFER // M8.4: Bank transfer payments
+  OTHER // M13.4: Catch-all for future methods
+}
+
+// M13.4: Payment status for POS payments lifecycle
+enum PosPaymentStatus {
+  PENDING
+  AUTHORIZED
+  CAPTURED
+  VOIDED
+  REFUNDED
+  FAILED
+}
+
+// M13.4: Payment provider for card processing
+enum PosPaymentProvider {
+  INTERNAL // Cash or manual
+  FAKE_CARD // Test provider
+  STRIPE // Future
+  SQUARE // Future
+}
+
+// M13.4: Cash session status
+enum CashSessionStatus {
+  OPEN
+  CLOSED
 }
 
 enum DocumentCategory {
@@ -886,6 +911,10 @@ model User {
   // M12.4: Inventory Period Close Requests
   closeRequestsCreated            InventoryPeriodCloseRequest[]    @relation("CloseRequestRequester")
   closeRequestsApproved           InventoryPeriodCloseRequest[]    @relation("CloseRequestApprover")
+  // M13.4: POS Payments + Cash Sessions + Receipts
+  cashSessionsOpened              CashSession[]                    @relation("CashSessionOpener")
+  cashSessionsClosed              CashSession[]                    @relation("CashSessionCloser")
+  receiptsIssued                  PosReceipt[]                     @relation("ReceiptIssuer")
 
   @@index([orgId, id])
   @@map("users")
@@ -1827,22 +1856,53 @@ model OrderItem {
 // ===== Payments =====
 
 model Payment {
-  id            String        @id @default(cuid())
+  id            String              @id @default(cuid())
+  orgId         String?             // M13.4: Required for org scoping (nullable for legacy data)
+  branchId      String?             // M13.4: Required for branch scoping (nullable for legacy data)
   orderId       String
-  amount        Decimal       @db.Decimal(10, 2)
+  amount        Decimal             @db.Decimal(10, 2)
+  amountCents   Int                 @default(0) // M13.4: Integer cents for precision
+  capturedCents Int                 @default(0) // M13.4: Amount captured
+  refundedCents Int                 @default(0) // M13.4: Amount refunded
+  currency      String              @default("USD") // M13.4: Currency code
   method        PaymentMethod
-  status        String        @default("pending") // pending, completed, failed, refunded
+  posStatus     PosPaymentStatus    @default(PENDING) // M13.4: Lifecycle status
+  provider      PosPaymentProvider  @default(INTERNAL) // M13.4: Provider
+  providerRef   String?             // M13.4: External reference (auth id, etc)
+  status        String              @default("pending") // Legacy: pending, completed, failed, refunded
   transactionId String?
+  idempotencyKey String?            // M13.4: Idempotency key
   metadata      Json?
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  createdById   String?             // M13.4: User who created
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
 
-  order   Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  order   Order            @relation(fields: [orderId], references: [id], onDelete: Cascade)
   refunds Refund[]
+  events  PosPaymentEvent[] // M13.4: Audit trail
 
+  @@unique([orgId, idempotencyKey]) // M13.4: Idempotency scoped to org
   @@index([orderId]) // E54-s1: For payment lookup by order
   @@index([status, createdAt]) // E54-s1: For payment status queries
+  @@index([orgId, branchId, posStatus]) // M13.4: For org/branch queries
   @@map("payments")
+}
+
+// M13.4: Payment event audit trail (append-only)
+model PosPaymentEvent {
+  id          String   @id @default(cuid())
+  orgId       String
+  paymentId   String
+  type        String   // CREATED | AUTHORIZED | CAPTURED | VOIDED | REFUNDED | FAILED
+  metadata    Json     @default("{}")
+  createdById String
+  createdAt   DateTime @default(now())
+
+  payment Payment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+
+  @@index([paymentId])
+  @@index([orgId, type])
+  @@map("pos_payment_events")
 }
 
 model Refund {
@@ -1866,6 +1926,50 @@ model Refund {
   @@index([orderId])
   @@index([status, createdAt])
   @@map("refunds")
+}
+
+// M13.4: Cash drawer session for accountability
+model CashSession {
+  id                String            @id @default(cuid())
+  orgId             String
+  branchId          String
+  openedById        String
+  openedAt          DateTime          @default(now())
+  closedById        String?
+  closedAt          DateTime?
+  openingFloatCents Int
+  expectedCashCents Int?
+  countedCashCents  Int?
+  status            CashSessionStatus @default(OPEN)
+  note              String?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  openedBy User  @relation("CashSessionOpener", fields: [openedById], references: [id])
+  closedBy User? @relation("CashSessionCloser", fields: [closedById], references: [id])
+
+  @@index([orgId, branchId, status])
+  @@index([branchId, status]) // M13.4: For checking open session
+  @@map("cash_sessions")
+}
+
+// M13.4: POS receipt for paid orders
+model PosReceipt {
+  id             String   @id @default(cuid())
+  orgId          String
+  branchId       String
+  orderId        String
+  receiptNumber  String
+  issuedAt       DateTime @default(now())
+  issuedById     String
+  totalsSnapshot Json
+
+  issuedBy User @relation("ReceiptIssuer", fields: [issuedById], references: [id])
+
+  @@unique([orgId, receiptNumber])
+  @@unique([orgId, orderId]) // M13.4: One receipt per order
+  @@index([orgId, branchId])
+  @@map("pos_receipts")
 }
 
 model PaymentIntent {

@@ -2,8 +2,13 @@ import { Module, forwardRef } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { PosController } from './pos.controller';
 import { PosMenuController } from './pos-menu.controller';
+import { PosPaymentsController } from './controllers/pos-payments.controller';
 import { PosService } from './pos.service';
 import { PosMenuService } from './pos-menu.service';
+import { PosPaymentsService } from './services/pos-payments.service';
+import { PosReceiptsService } from './services/pos-receipts.service';
+import { PosCashSessionsService } from './services/pos-cash-sessions.service';
+import { FakeCardProvider } from './providers/fake-card.provider';
 import { PrismaService } from '../prisma.service';
 import { EfrisModule } from '../efris/efris.module';
 import { EventsModule } from '../events/events.module';
@@ -28,8 +33,16 @@ import { KdsModule } from '../kds/kds.module';
     MenuModule, // M13.2: For menu availability checking
     forwardRef(() => KdsModule), // M13.3: For KDS ticket generation
   ],
-  controllers: [PosMenuController, PosController], // Menu controller first to avoid route shadowing
-  providers: [PosService, PosMenuService, PrismaService],
-  exports: [PosMenuService], // M13.2: Export for use in POS service
+  controllers: [PosMenuController, PosController, PosPaymentsController], // M13.4: Added payments controller
+  providers: [
+    PosService,
+    PosMenuService,
+    PosPaymentsService,    // M13.4
+    PosReceiptsService,    // M13.4
+    PosCashSessionsService, // M13.4
+    FakeCardProvider,      // M13.4
+    PrismaService,
+  ],
+  exports: [PosMenuService, PosPaymentsService], // M13.4: Export payments service
 })
 export class PosModule {}
