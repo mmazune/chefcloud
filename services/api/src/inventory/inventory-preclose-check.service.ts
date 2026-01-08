@@ -210,6 +210,7 @@ export class InventoryPreCloseCheckService {
     blockers: BlockerItem[],
   ): Promise<void> {
     // Find posted receipts that should have GL journal but don't
+    // Note: Prisma's `in` operator doesn't accept null in array - use explicit OR
     const receipts = await this.prisma.client.goodsReceiptV2.findMany({
       where: {
         orgId,
@@ -217,7 +218,10 @@ export class InventoryPreCloseCheckService {
         status: 'POSTED',
         postedAt: { gte: startDate, lte: endDate },
         glJournalEntryId: null,
-        glPostingStatus: { in: ['FAILED', null] },
+        OR: [
+          { glPostingStatus: 'FAILED' },
+          { glPostingStatus: null },
+        ],
       },
       select: { id: true },
       take: this.SAMPLE_LIMIT + 1,

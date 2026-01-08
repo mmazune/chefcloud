@@ -220,7 +220,7 @@ describe('M12.2 Inventory Close Ops v2 E2E', () => {
         .expect(201);
       closedPeriodId = createRes.body.id;
 
-      // Close the period
+      // Close the period (M12.4: L5 force close required)
       await request(app.getHttpServer())
         .post('/inventory/periods/close')
         .set('Authorization', `Bearer ${ownerToken}`)
@@ -228,6 +228,8 @@ describe('M12.2 Inventory Close Ops v2 E2E', () => {
           branchId: factory.branchId,
           startDate: '2025-06-01T00:00:00.000Z',
           endDate: '2025-06-30T23:59:59.999Z',
+          forceClose: true,
+          forceCloseReason: 'M12.2 reopen workflow test - initial close',
         })
         .expect(200);
     });
@@ -246,7 +248,7 @@ describe('M12.2 Inventory Close Ops v2 E2E', () => {
     });
 
     it('should require reason of at least 10 characters', async () => {
-      // Close it again first
+      // Close it again first (M12.4: L5 force close required)
       await request(app.getHttpServer())
         .post('/inventory/periods/close')
         .set('Authorization', `Bearer ${ownerToken}`)
@@ -254,6 +256,8 @@ describe('M12.2 Inventory Close Ops v2 E2E', () => {
           branchId: factory.branchId,
           startDate: '2025-06-01T00:00:00.000Z',
           endDate: '2025-06-30T23:59:59.999Z',
+          forceClose: true,
+          forceCloseReason: 'M12.2 reopen workflow test - re-close for validation',
         });
 
       await request(app.getHttpServer())
@@ -316,6 +320,7 @@ describe('M12.2 Inventory Close Ops v2 E2E', () => {
         .expect(201);
       packPeriodId = createRes.body.id;
 
+      // M12.4: L5 force close required
       await request(app.getHttpServer())
         .post('/inventory/periods/close')
         .set('Authorization', `Bearer ${ownerToken}`)
@@ -323,6 +328,8 @@ describe('M12.2 Inventory Close Ops v2 E2E', () => {
           branchId: factory.branchId,
           startDate: '2025-08-01T00:00:00.000Z',
           endDate: '2025-08-31T23:59:59.999Z',
+          forceClose: true,
+          forceCloseReason: 'M12.2 close pack export test - closing period',
         })
         .expect(200);
     });
@@ -385,7 +392,7 @@ describe('M12.2 Inventory Close Ops v2 E2E', () => {
     });
 
     it('should log CLOSED event on period close', async () => {
-      // Close the period
+      // Close the period (M12.4: L5 force close required)
       await request(app.getHttpServer())
         .post('/inventory/periods/close')
         .set('Authorization', `Bearer ${ownerToken}`)
@@ -393,6 +400,8 @@ describe('M12.2 Inventory Close Ops v2 E2E', () => {
           branchId: factory.branchId,
           startDate: '2025-09-01T00:00:00.000Z',
           endDate: '2025-09-30T23:59:59.999Z',
+          forceClose: true,
+          forceCloseReason: 'M12.2 period events test - closing for audit log',
         })
         .expect(200);
 
@@ -444,7 +453,7 @@ describe('M12.2 Inventory Close Ops v2 E2E', () => {
         .expect(201);
       revisionPeriodId = createRes.body.id;
 
-      // Close (revision 1)
+      // Close (revision 1) - M12.4: L5 force close required
       await request(app.getHttpServer())
         .post('/inventory/periods/close')
         .set('Authorization', `Bearer ${ownerToken}`)
@@ -452,6 +461,8 @@ describe('M12.2 Inventory Close Ops v2 E2E', () => {
           branchId: factory.branchId,
           startDate: '2025-10-01T00:00:00.000Z',
           endDate: '2025-10-31T23:59:59.999Z',
+          forceClose: true,
+          forceCloseReason: 'M12.2 revision history test - initial close',
         });
 
       // Reopen
@@ -462,7 +473,7 @@ describe('M12.2 Inventory Close Ops v2 E2E', () => {
           reason: 'Creating revision 2 for testing purposes',
         });
 
-      // Close again (revision 2)
+      // Close again (revision 2) - M12.4: L5 force close required
       await request(app.getHttpServer())
         .post('/inventory/periods/close')
         .set('Authorization', `Bearer ${ownerToken}`)
@@ -470,6 +481,8 @@ describe('M12.2 Inventory Close Ops v2 E2E', () => {
           branchId: factory.branchId,
           startDate: '2025-10-01T00:00:00.000Z',
           endDate: '2025-10-31T23:59:59.999Z',
+          forceClose: true,
+          forceCloseReason: 'M12.2 revision history test - second close',
         });
     });
 
@@ -526,6 +539,7 @@ describe('M12.2 Inventory Close Ops v2 E2E', () => {
         })
         .expect(201);
 
+      // M12.4: L5 force close required
       await request(app.getHttpServer())
         .post('/inventory/periods/close')
         .set('Authorization', `Bearer ${ownerToken}`)
@@ -533,6 +547,8 @@ describe('M12.2 Inventory Close Ops v2 E2E', () => {
           branchId: factory.branchId,
           startDate: '2025-12-01T00:00:00.000Z',
           endDate: '2025-12-31T23:59:59.999Z',
+          forceClose: true,
+          forceCloseReason: 'M12.2 bundle hash determinism test - closing',
         });
 
       // Get close pack twice
