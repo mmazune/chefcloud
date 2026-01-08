@@ -256,6 +256,7 @@ async function main() {
   // Create Menu Items
   const burger = await prisma.menuItem.create({
     data: {
+      orgId: org.id,
       branchId: branch.id,
       name: 'Burger',
       itemType: 'FOOD',
@@ -268,6 +269,7 @@ async function main() {
 
   const fries = await prisma.menuItem.create({
     data: {
+      orgId: org.id,
       branchId: branch.id,
       name: 'Fries',
       itemType: 'FOOD',
@@ -280,6 +282,7 @@ async function main() {
 
   const coke = await prisma.menuItem.create({
     data: {
+      orgId: org.id,
       branchId: branch.id,
       name: 'Coke',
       itemType: 'DRINK',

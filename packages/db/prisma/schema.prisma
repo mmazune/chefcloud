@@ -516,6 +516,10 @@ model Org {
   inventoryPeriodEvents          InventoryPeriodEvent[]
   // M12.4: Inventory Period Close Requests
   inventoryPeriodCloseRequests   InventoryPeriodCloseRequest[]
+  // M13.1: Menu Foundation
+  categories                     Category[]
+  menuItems                      MenuItem[]
+  menuAvailabilityRules          MenuAvailabilityRule[]
 
   @@map("orgs")
 }
@@ -674,6 +678,8 @@ model Branch {
   inventoryPeriodEvents    InventoryPeriodEvent[]
   // M12.4: Inventory Period Close Requests
   inventoryPeriodCloseRequests InventoryPeriodCloseRequest[]
+  // M13.1: Menu Availability Rules
+  menuAvailabilityRules        MenuAvailabilityRule[]
 
   @@index([orgId, id])
   @@map("branches")
@@ -1340,45 +1346,76 @@ model AutomationLog {
 
 // ===== Menu =====
 
+// M13.1: Selection type for modifier groups
+enum ModifierSelectionType {
+  SINGLE
+  MULTI
+}
+
+// M13.1: Target type for availability rules
+enum AvailabilityTargetType {
+  CATEGORY
+  ITEM
+}
+
 model Category {
-  id        String   @id @default(cuid())
-  branchId  String
-  name      String
-  sortOrder Int      @default(0)
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id               String     @id @default(cuid())
+  orgId            String // M13.1: Org-scoped for cross-branch queries
+  branchId         String
+  name             String
+  description      String? // M13.1: Optional description
+  parentCategoryId String? // M13.1: Optional nesting
+  sortOrder        Int        @default(0)
+  isActive         Boolean    @default(true)
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
 
-  branch    Branch     @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  menuItems MenuItem[]
+  org            Org                    @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  branch         Branch                 @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  parentCategory Category?              @relation("CategoryHierarchy", fields: [parentCategoryId], references: [id], onDelete: SetNull)
+  childCategories Category[]            @relation("CategoryHierarchy")
+  menuItems      MenuItem[]
+  availabilityRules MenuAvailabilityRule[] @relation("CategoryAvailability")
 
+  @@unique([orgId, branchId, name]) // M13.1: Unique name per org+branch
   @@index([branchId])
+  @@index([orgId])
   @@map("categories")
 }
 
 model MenuItem {
-  id            String     @id @default(cuid())
-  branchId      String
-  categoryId    String?
-  name          String
-  description   String?
-  itemType      ItemType
-  station       StationTag @default(OTHER)
-  price         Decimal    @db.Decimal(10, 2)
-  taxCategoryId String?
-  isAvailable   Boolean    @default(true)
-  metadata      Json? // variations, etc.
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
+  id             String     @id @default(cuid())
+  orgId          String // M13.1: Org-scoped for cross-branch queries
+  branchId       String
+  categoryId     String?
+  name           String
+  description    String?
+  sku            String? // M13.1: Optional SKU, unique per org
+  itemType       ItemType
+  station        StationTag @default(OTHER)
+  price          Decimal    @db.Decimal(10, 2)
+  basePriceCents Int? // M13.1: Price in cents for precision (optional migration)
+  taxCategoryId  String?
+  isAvailable    Boolean    @default(true)
+  isActive       Boolean    @default(true) // M13.1: Soft delete
+  trackInventory Boolean    @default(false) // M13.1: Bridge to M11 recipes
+  sortOrder      Int        @default(0) // M13.1: Stable ordering
+  metadata       Json? // variations, etc.
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
 
-  branch            Branch             @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  category          Category?          @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-  taxCategory       TaxCategory?       @relation(fields: [taxCategoryId], references: [id], onDelete: SetNull)
+  org               Org                      @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  branch            Branch                   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  category          Category?                @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  taxCategory       TaxCategory?             @relation(fields: [taxCategoryId], references: [id], onDelete: SetNull)
   orderItems        OrderItem[]
   modifierGroups    MenuItemOnGroup[]
   recipeIngredients RecipeIngredient[]
+  availabilityRules MenuAvailabilityRule[]   @relation("ItemAvailability")
 
+  @@unique([orgId, sku]) // M13.1: SKU unique per org (if present)
   @@index([branchId])
+  @@index([orgId])
   @@map("menu_items")
 }
 
@@ -1398,19 +1435,24 @@ model TaxCategory {
 }
 
 model ModifierGroup {
-  id        String   @id @default(cuid())
-  orgId     String
-  name      String
-  min       Int      @default(0)
-  max       Int      @default(0)
-  required  Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String                 @id @default(cuid())
+  orgId         String
+  name          String
+  description   String? // M13.1: Optional description
+  selectionType ModifierSelectionType  @default(SINGLE) // M13.1: Selection type
+  min           Int                    @default(0)
+  max           Int                    @default(0)
+  required      Boolean                @default(false)
+  sortOrder     Int                    @default(0) // M13.1: Stable ordering
+  isActive      Boolean                @default(true) // M13.1: Soft delete
+  createdAt     DateTime               @default(now())
+  updatedAt     DateTime               @updatedAt
 
   org       Org               @relation(fields: [orgId], references: [id], onDelete: Cascade)
   options   ModifierOption[]
   menuItems MenuItemOnGroup[]
 
+  @@index([orgId])
   @@map("modifier_groups")
 }
 
@@ -1419,25 +1461,56 @@ model ModifierOption {
   groupId    String
   name       String
   priceDelta Decimal  @db.Decimal(10, 2)
+  sortOrder  Int      @default(0) // M13.1: Stable ordering
+  isActive   Boolean  @default(true) // M13.1: Soft delete
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
   group             ModifierGroup      @relation(fields: [groupId], references: [id], onDelete: Cascade)
   recipeIngredients RecipeIngredient[]
 
+  @@index([groupId])
   @@map("modifier_options")
 }
 
 model MenuItemOnGroup {
-  id      String @id @default(cuid())
-  itemId  String
-  groupId String
+  id        String @id @default(cuid())
+  itemId    String
+  groupId   String
+  sortOrder Int    @default(0) // M13.1: Ordering of groups on item
 
   item  MenuItem      @relation(fields: [itemId], references: [id], onDelete: Cascade)
   group ModifierGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
 
   @@unique([itemId, groupId])
   @@map("menu_item_on_group")
+}
+
+// M13.1: Menu Availability Rules
+model MenuAvailabilityRule {
+  id         String                 @id @default(cuid())
+  orgId      String
+  branchId   String? // null = all branches
+  targetType AvailabilityTargetType
+  categoryId String? // When targetType = CATEGORY
+  itemId     String? // When targetType = ITEM
+  daysOfWeek Int[]                  @default([0, 1, 2, 3, 4, 5, 6]) // 0=Sun, 6=Sat
+  startTime  String                 @default("00:00") // HH:MM format
+  endTime    String                 @default("23:59") // HH:MM format
+  isActive   Boolean                @default(true)
+  createdAt  DateTime               @default(now())
+  updatedAt  DateTime               @updatedAt
+
+  org      Org       @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  branch   Branch?   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  category Category? @relation("CategoryAvailability", fields: [categoryId], references: [id], onDelete: Cascade)
+  item     MenuItem? @relation("ItemAvailability", fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@index([orgId])
+  @@index([branchId])
+  @@index([targetType, categoryId])
+  @@index([targetType, itemId])
+  @@map("menu_availability_rules")
 }
 
 // ===== Orders =====

@@ -62,6 +62,7 @@ export async function seedTapasMenu(prisma: PrismaClient): Promise<void> {
       // Create new
       category = await prisma.category.create({
         data: {
+          orgId: ORG_TAPAS_ID,
           branchId: branch.id,
           name: catData.name,
           sortOrder: catData.displayOrder,
@@ -114,6 +115,7 @@ export async function seedTapasMenu(prisma: PrismaClient): Promise<void> {
     } else {
       await prisma.menuItem.create({
         data: {
+          orgId: ORG_TAPAS_ID,
           branchId: branch.id,
           categoryId,
           name: itemData.name,
