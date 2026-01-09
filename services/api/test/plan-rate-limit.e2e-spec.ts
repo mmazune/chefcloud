@@ -162,7 +162,9 @@ describe('Plan-Aware Rate Limiting E2E', () => {
       update: {},
       create: {
         email: 'rate-limit-free@test.local',
-        role: 'L5',
+        firstName: 'Free',
+        lastName: 'User',
+        roleLevel: 'L5',
         orgId: freeOrg.id,
       },
     });
@@ -172,7 +174,9 @@ describe('Plan-Aware Rate Limiting E2E', () => {
       update: {},
       create: {
         email: 'rate-limit-pro@test.local',
-        role: 'L5',
+        firstName: 'Pro',
+        lastName: 'User',
+        roleLevel: 'L5',
         orgId: proOrg.id,
       },
     });
@@ -182,7 +186,9 @@ describe('Plan-Aware Rate Limiting E2E', () => {
       update: {},
       create: {
         email: 'rate-limit-ent@test.local',
-        role: 'L5',
+        firstName: 'Enterprise',
+        lastName: 'User',
+        roleLevel: 'L5',
         orgId: enterpriseOrg.id,
       },
     });
@@ -191,19 +197,19 @@ describe('Plan-Aware Rate Limiting E2E', () => {
     freeUserToken = jwtService.sign({
       userId: freeUser.id,
       orgId: freeOrg.id,
-      role: 'L5',
+      roleLevel: 'L5',
     });
 
     proUserToken = jwtService.sign({
       userId: proUser.id,
       orgId: proOrg.id,
-      role: 'L5',
+      roleLevel: 'L5',
     });
 
     enterpriseUserToken = jwtService.sign({
       userId: enterpriseUser.id,
       orgId: enterpriseOrg.id,
-      role: 'L5',
+      roleLevel: 'L5',
     });
   }
 

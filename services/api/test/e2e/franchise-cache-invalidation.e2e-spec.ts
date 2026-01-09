@@ -48,7 +48,7 @@ describe('E22.D - Franchise Cache Invalidation (e2e)', () => {
       await prisma.branch.delete({ where: { id: testBranchId } }).catch(() => {});
     }
     if (testOrgId) {
-      await prisma.organization.delete({ where: { id: testOrgId } }).catch(() => {});
+      await prisma.org.delete({ where: { id: testOrgId } }).catch(() => {});
     }
 
     await cleanup(app);
@@ -56,7 +56,7 @@ describe('E22.D - Franchise Cache Invalidation (e2e)', () => {
 
   async function setupTestData() {
     // Create test organization
-    const org = await prisma.organization.create({
+    const org = await prisma.org.create({
       data: {
         name: 'E22D Test Org',
         slug: `e22d-test-${Date.now()}`,
@@ -70,8 +70,8 @@ describe('E22.D - Franchise Cache Invalidation (e2e)', () => {
       data: {
         orgId: testOrgId,
         name: 'E22D Test Branch',
-        location: 'Test Location',
-        isActive: true,
+        status: 'ACTIVE',
+        isHeadquarters: false,
       },
     });
     testBranchId = branch.id;
@@ -80,11 +80,12 @@ describe('E22.D - Franchise Cache Invalidation (e2e)', () => {
     const user = await prisma.user.create({
       data: {
         email: `e22d-test-${Date.now()}@example.com`,
-        name: 'E22D Test User',
-        password: 'hashed_password',
+        firstName: 'E22D',
+        lastName: 'TestUser',
+        passwordHash: 'hashed_password',
         orgId: testOrgId,
         branchId: testBranchId,
-        role: 'L5',
+        roleLevel: 'L5',
       },
     });
     testUserId = user.id;
@@ -105,7 +106,7 @@ describe('E22.D - Franchise Cache Invalidation (e2e)', () => {
 
     // Generate auth token (simplified - in real tests, use proper JWT)
     authToken = Buffer.from(
-      JSON.stringify({ id: testUserId, orgId: testOrgId, branchId: testBranchId, role: 'L5' }),
+      JSON.stringify({ id: testUserId, orgId: testOrgId, branchId: testBranchId, roleLevel: 'L5' }),
     ).toString('base64');
   }
 

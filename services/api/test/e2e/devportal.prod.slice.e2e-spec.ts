@@ -32,7 +32,8 @@ describe('Dev-Portal Production Endpoints (Slice E2E)', () => {
     const modRef = await createE2ETestingModuleBuilder({
       imports: [
         // Production modules
-        DevPortalModuleObservabilityModule,
+        DevPortalModule,
+        ObservabilityModule,
 
         // Test-only modules
         PrismaTestModule,

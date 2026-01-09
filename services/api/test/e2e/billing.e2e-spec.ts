@@ -4,7 +4,7 @@ import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { json } from 'express';
 import { AppModule } from '../../src/app.module';
-import { PrismaService } from '@chefcloud/db';
+import { PrismaService } from '../../src/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import { RedisService } from '../../src/common/redis.service';
 import { MetricsService } from '../../src/observability/metrics.service';
@@ -34,7 +34,7 @@ describe('Billing E2E (E24 - Auth, Authz, Rate Limiting)', () => {
   async function setupTestData() {
     // Create test org
     orgId = `billing-test-org-${Date.now()}`;
-    const org = await prisma.organization.create({
+    const org = await prisma.org.create({
       data: {
         id: orgId,
         name: 'Billing Test Org',
@@ -48,7 +48,7 @@ describe('Billing E2E (E24 - Auth, Authz, Rate Limiting)', () => {
     await prisma.branch.create({
       data: {
         id: branchId,
-        organizationId: org.id,
+        orgId: org.id,
         name: 'Main Branch',
         isHeadquarters: true,
         status: 'ACTIVE',
@@ -89,8 +89,10 @@ describe('Billing E2E (E24 - Auth, Authz, Rate Limiting)', () => {
         id: `owner-${Date.now()}`,
         email: `owner-${Date.now()}@test.com`,
         passwordHash: 'fake-hash',
-        role: 'L5',
-        organizationId: org.id,
+        firstName: 'Test',
+        lastName: 'Owner',
+        roleLevel: 'L5',
+        orgId: org.id,
         branchId,
       },
     });
@@ -101,8 +103,10 @@ describe('Billing E2E (E24 - Auth, Authz, Rate Limiting)', () => {
         id: `manager-${Date.now()}`,
         email: `manager-${Date.now()}@test.com`,
         passwordHash: 'fake-hash',
-        role: 'L4',
-        organizationId: org.id,
+        firstName: 'Test',
+        lastName: 'Manager',
+        roleLevel: 'L4',
+        orgId: org.id,
         branchId,
       },
     });
@@ -110,7 +114,7 @@ describe('Billing E2E (E24 - Auth, Authz, Rate Limiting)', () => {
     // Create subscription for the org
     await prisma.subscription.create({
       data: {
-        organizationId: org.id,
+        orgId: org.id,
         planCode: basicPlan.code,
         status: 'ACTIVE',
         startDate: new Date(),
@@ -124,7 +128,7 @@ describe('Billing E2E (E24 - Auth, Authz, Rate Limiting)', () => {
       email: owner.email,
       orgId,
       branchId,
-      role: 'L5',
+      roleLevel: 'L5',
     });
 
     managerToken = jwtService.sign({
@@ -133,7 +137,7 @@ describe('Billing E2E (E24 - Auth, Authz, Rate Limiting)', () => {
       email: manager.email,
       orgId,
       branchId,
-      role: 'L4',
+      roleLevel: 'L4',
     });
   }
 
@@ -173,14 +177,14 @@ describe('Billing E2E (E24 - Auth, Authz, Rate Limiting)', () => {
     // Clean up test data
     if (orgId) {
       await prisma.subscriptionEvent.deleteMany({
-        where: { subscription: { organizationId: orgId } },
+        where: { subscription: { orgId: orgId } },
       });
       await prisma.subscription.deleteMany({
-        where: { organizationId: orgId },
+        where: { orgId: orgId },
       });
-      await prisma.user.deleteMany({ where: { organizationId: orgId } });
-      await prisma.branch.deleteMany({ where: { organizationId: orgId } });
-      await prisma.organization.delete({ where: { id: orgId } });
+      await prisma.user.deleteMany({ where: { orgId: orgId } });
+      await prisma.branch.deleteMany({ where: { orgId: orgId } });
+      await prisma.org.delete({ where: { id: orgId } });
     }
 
     // Clean up plans

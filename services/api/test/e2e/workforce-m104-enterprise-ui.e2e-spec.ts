@@ -240,7 +240,7 @@ describe('M10.4 Workforce Enterprise UI (e2e)', () => {
         .post('/workforce/timesheets/approve')
         .set('Authorization', `Bearer ${managerToken}`)
         .send({ timeEntryIds: [] })
-        .expect(HttpStatus.OK);
+        .expect(HttpStatus.CREATED); // M13.5.5: POST returns 201
 
       expect(res.body.approved).toBe(0);
       trace('H3: Empty approval handled');
@@ -251,7 +251,7 @@ describe('M10.4 Workforce Enterprise UI (e2e)', () => {
         .post('/workforce/timesheets/reject')
         .set('Authorization', `Bearer ${managerToken}`)
         .send({ timeEntryIds: [] })
-        .expect(HttpStatus.OK);
+        .expect(HttpStatus.CREATED); // M13.5.5: POST returns 201
 
       expect(res.body.rejected).toBe(0);
       trace('H3: Empty rejection handled');

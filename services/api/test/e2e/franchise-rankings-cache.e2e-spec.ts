@@ -49,7 +49,7 @@ describe('E22.B - Franchise Rankings Caching (e2e)', () => {
       await prisma.branch.delete({ where: { id: testBranchId } }).catch(() => {});
     }
     if (testOrgId) {
-      await prisma.organization.delete({ where: { id: testOrgId } }).catch(() => {});
+      await prisma.org.delete({ where: { id: testOrgId } }).catch(() => {});
     }
 
     await cleanup(app);
@@ -57,7 +57,7 @@ describe('E22.B - Franchise Rankings Caching (e2e)', () => {
 
   async function setupTestData() {
     // Create test organization
-    const org = await prisma.organization.create({
+    const org = await prisma.org.create({
       data: {
         name: 'E22B Test Org',
         slug: `e22b-test-${Date.now()}`,
@@ -71,8 +71,8 @@ describe('E22.B - Franchise Rankings Caching (e2e)', () => {
       data: {
         orgId: testOrgId,
         name: 'E22B Test Branch',
-        location: 'Test Location',
-        isActive: true,
+        status: 'ACTIVE',
+        isHeadquarters: false,
       },
     });
     testBranchId = branch.id;
@@ -81,7 +81,8 @@ describe('E22.B - Franchise Rankings Caching (e2e)', () => {
     const user = await prisma.user.create({
       data: {
         email: `e22b-test-${Date.now()}@example.com`,
-        name: 'E22B Test User',
+        firstName: 'E22B',
+        lastName: 'TestUser',
         passwordHash: 'test-hash',
         orgId: testOrgId,
         branchId: testBranchId,
@@ -125,7 +126,7 @@ describe('E22.B - Franchise Rankings Caching (e2e)', () => {
     });
 
     it('should return cached=false on first call (cache miss)', async () => {
-      const _period = getCurrentPeriod();
+      const period = getCurrentPeriod();
 
       const response = await request(app.getHttpServer())
         .get(`/franchise/rankings?period=${period}`)
@@ -139,7 +140,7 @@ describe('E22.B - Franchise Rankings Caching (e2e)', () => {
     });
 
     it('should return cached=true on second call within TTL (cache hit)', async () => {
-      const _period = getCurrentPeriod();
+      const period = getCurrentPeriod();
 
       // First call - cache miss
       const response1 = await request(app.getHttpServer())

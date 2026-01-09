@@ -18,7 +18,6 @@ test/e2e/badge-revocation.e2e-spec.ts
 test/e2e/billing.e2e-spec.ts
 test/e2e/billing.slice.e2e-spec.ts
 test/e2e/bookings.e2e-spec.ts
-test/e2e/devportal.prod.slice.e2e-spec.ts
 test/e2e/devportal.slice.e2e-spec.ts
 test/e2e/docs.e2e-spec.ts
 test/e2e/events-isolation.e2e-spec.ts
