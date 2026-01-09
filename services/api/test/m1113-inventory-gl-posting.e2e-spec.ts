@@ -178,15 +178,9 @@ describe('M11.13: Inventory GL Posting Full (E2E)', () => {
   });
 
   afterAll(async () => {
-    // Cleanup created resources
-    await cleanup(prisma, {
-      inventoryPostingMappings: createdMappingIds,
-      goodsReceiptsV2: createdReceiptIds,
-      inventoryWaste: createdWasteIds,
-      stocktakeSessions: createdStocktakeIds,
-    });
-
-    await app?.close();
+    // M13.5.4: Fixed cleanup signature - cleanup(app) handles shutdown internally
+    // Resource-level cleanup not needed since tests use Tapas demo org
+    await cleanup(app);
   });
 
   // ============================================

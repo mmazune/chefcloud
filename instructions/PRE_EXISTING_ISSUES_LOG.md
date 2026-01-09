@@ -392,4 +392,102 @@ testOrg.users.owner.token = loginOwner.body.access_token;
 
 ---
 
-*Last Updated: 2026-01-06 (PRE-008, PRE-009 RESOLVED)*
+### PRE-010: API Lint Errors – Require Statements (2 errors)
+
+| Field | Value |
+|-------|-------|
+| **ID** | PRE-010 |
+| **Category** | lint-error |
+| **First Seen** | 2026-01-07 |
+| **Command** | `pnpm -C services/api lint` |
+| **Impact** | Low |
+| **Suggested Owner** | M13.5.4 |
+| **Status** | ✅ **RESOLVED** |
+| **Resolved Date** | 2026-01-09 |
+
+**Summary**: 2 lint errors for `@typescript-eslint/no-var-requires` – inline `require()` calls instead of ESM imports.
+
+**Affected Files**:
+- `services/api/src/pos/pos-menu.service.ts:418` – `const crypto = require('crypto');`
+- `services/api/test/pos-m132-ordering.e2e-spec.ts:193` – `const jwt = require('jsonwebtoken');`
+
+**Resolution**: M13.5.4 converted inline `require()` to top-level ESM imports:
+- `import * as crypto from 'crypto';`
+- `import * as jwt from 'jsonwebtoken';`
+
+**Evidence**:
+```
+pnpm -C services/api lint
+✖ 238 problems (0 errors, 238 warnings)
+```
+
+---
+
+### PRE-011: M11.13 Teardown Check Error – Duplicate Cleanup
+
+| Field | Value |
+|-------|-------|
+| **ID** | PRE-011 |
+| **Category** | test-error |
+| **First Seen** | 2026-01-09 |
+| **Command** | `pnpm -C services/api test:e2e:teardown-check` |
+| **Impact** | Medium |
+| **Suggested Owner** | E2E test infrastructure |
+| **Status** | ✅ **RESOLVED** |
+| **Resolved Date** | 2026-01-09 |
+
+**Summary**: `m1113-inventory-gl-posting.e2e-spec.ts` called `cleanup(prisma, {...})` with wrong signature AND `app?.close()`, triggering "duplicate cleanup" error.
+
+**Original Code**:
+```typescript
+afterAll(async () => {
+  await cleanup(prisma, { ... });  // Wrong signature
+  await app?.close();  // Duplicate - cleanup() handles this
+});
+```
+
+**Resolution**: M13.5.4 fixed to use correct `cleanup(app)` signature only:
+```typescript
+afterAll(async () => {
+  await cleanup(app);
+});
+```
+
+**Evidence**:
+```
+pnpm -C services/api test:e2e:teardown-check
+📊 Summary: Errors: 0, Warnings: 11
+⚠️  Teardown check PASSED with warnings
+```
+
+---
+
+### PRE-012: Workforce M10.4 Test Assertion Mismatch (POST returns 201, not 200)
+
+| Field | Value |
+|-------|-------|
+| **ID** | PRE-012 |
+| **Category** | test-error |
+| **First Seen** | 2026-01-09 |
+| **Command** | `pnpm -C services/api test:e2e:strict` |
+| **Impact** | Low |
+| **Suggested Owner** | Workforce / M10.4 |
+| **Status** | OPEN |
+
+**Summary**: `workforce-m104-enterprise-ui.e2e-spec.ts` expects HTTP 200 for POST `/workforce/timesheets/approve`, but API returns 201.
+
+**Error**:
+```
+expected 200 "OK", got 201 "Created"
+```
+
+**Affected Test**:
+- `M10.4 Workforce Enterprise UI (e2e) › H3: Timesheets Workflow › POST /workforce/timesheets/approve with empty array returns success`
+
+**Root Cause**: Test assertion mismatch (same pattern as M13.5.3 fixes – POST should expect 201 per REST convention).
+
+**Suggested Fix**: Change `.expect(200)` to `.expect(201)` in test file.
+
+---
+
+*Last Updated: 2026-01-09 (PRE-010, PRE-011 RESOLVED; PRE-012 OPEN)*

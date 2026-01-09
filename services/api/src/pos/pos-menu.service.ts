@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import * as crypto from 'crypto';
 import { PrismaService } from '../prisma.service';
 import { MenuService } from '../menu/menu.service';
 
@@ -415,7 +416,6 @@ export class PosMenuService {
   }
 
   private computeHash(content: string): string {
-    const crypto = require('crypto');
     return crypto.createHash('sha256').update(content, 'utf8').digest('hex');
   }
 }

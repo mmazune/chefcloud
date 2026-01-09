@@ -1,66 +1,84 @@
 {
   "metadata": {
-    "generatedAt": "2026-01-04T22:28:23.916Z",
+    "generatedAt": "2026-01-09T10:14:41.888Z",
     "platform": "win32",
     "pnpmCommand": "pnpm.cmd",
     "perFileTimeoutSeconds": 120,
-    "totalBudgetMinutes": 2,
+    "totalBudgetMinutes": 25,
     "dataset": "ALL",
     "totalFiles": 57,
-    "filesRun": 9,
-    "totalDurationMs": 128760
+    "filesRun": 57,
+    "totalDurationMs": 603455
   },
   "results": [
     {
-      "file": "test/e23-platform-access.e2e-spec.ts",
+      "file": "test/sse-security.e2e-spec.ts",
       "status": "FAIL",
-      "durationMs": 19063,
+      "durationMs": 19019,
       "durationSeconds": 19,
       "failingTests": 0,
       "errorSnippet": "",
       "exitCode": 1
     },
     {
-      "file": "test/b3-multi-tenant.e2e-spec.ts",
+      "file": "test/e2e/reports.e2e-spec.ts",
       "status": "FAIL",
-      "durationMs": 15485,
-      "durationSeconds": 15,
+      "durationMs": 17206,
+      "durationSeconds": 17,
       "failingTests": 0,
       "errorSnippet": "",
       "exitCode": 1
+    },
+    {
+      "file": "test/e24-subscriptions.e2e-spec.ts",
+      "status": "FAIL",
+      "durationMs": 16340,
+      "durationSeconds": 16,
+      "failingTests": 0,
+      "errorSnippet": "",
+      "exitCode": 1
+    },
+    {
+      "file": "test/m1-kds-enterprise.e2e-spec.ts",
+      "status": "PASS",
+      "durationMs": 15672,
+      "durationSeconds": 16,
+      "failingTests": 0,
+      "errorSnippet": "",
+      "exitCode": 0
+    },
+    {
+      "file": "test/e2e/badge-revocation.e2e-spec.ts",
+      "status": "PASS",
+      "durationMs": 15075,
+      "durationSeconds": 15,
+      "failingTests": 0,
+      "errorSnippet": "",
+      "exitCode": 0
     },
     {
       "file": "test/billing-simple.e2e-spec.ts",
       "status": "FAIL",
-      "durationMs": 14972,
-      "durationSeconds": 15,
-      "failingTests": 0,
-      "errorSnippet": "",
-      "exitCode": 1
-    },
-    {
-      "file": "test/e23-roles-access.e2e-spec.ts",
-      "status": "FAIL",
-      "durationMs": 14662,
-      "durationSeconds": 15,
-      "failingTests": 0,
-      "errorSnippet": "",
-      "exitCode": 1
-    },
-    {
-      "file": "test/e22-franchise.e2e-spec.ts",
-      "status": "FAIL",
-      "durationMs": 14547,
-      "durationSeconds": 15,
-      "failingTests": 0,
-      "errorSnippet": "",
-      "exitCode": 1
-    },
-    {
-      "file": "test/blackbox/billing.blackbox.e2e-spec.ts",
-      "status": "PASS",
-      "durationMs": 13924,
+      "durationMs": 14329,
       "durationSeconds": 14,
+      "failingTests": 0,
+      "errorSnippet": "",
+      "exitCode": 1
+    },
+    {
+      "file": "test/e2e/franchise-budgets-cache.e2e-spec.ts",
+      "status": "FAIL",
+      "durationMs": 13099,
+      "durationSeconds": 13,
+      "failingTests": 0,
+      "errorSnippet": "",
+      "exitCode": 1
+    },
+    {
+      "file": "test/b3-multi-tenant.e2e-spec.ts",
+      "status": "PASS",
+      "durationMs": 12701,
+      "durationSeconds": 13,
       "failingTests": 0,
       "errorSnippet": "",
       "exitCode": 0
@@ -68,8 +86,143 @@
     {
       "file": "test/a3-pos.e2e-spec.ts",
       "status": "FAIL",
-      "durationMs": 13834,
-      "durationSeconds": 14,
+      "durationMs": 11967,
+      "durationSeconds": 12,
+      "failingTests": 0,
+      "errorSnippet": "",
+      "exitCode": 1
+    },
+    {
+      "file": "test/e26-kpis.e2e-spec.ts",
+      "status": "FAIL",
+      "durationMs": 11863,
+      "durationSeconds": 12,
+      "failingTests": 0,
+      "errorSnippet": "",
+      "exitCode": 1
+    },
+    {
+      "file": "test/e2e/kds.slice.e2e-spec.ts",
+      "status": "PASS",
+      "durationMs": 11054,
+      "durationSeconds": 11,
+      "failingTests": 0,
+      "errorSnippet": "",
+      "exitCode": 0
+    },
+    {
+      "file": "test/e2e/inventory.slice.e2e-spec.ts",
+      "status": "PASS",
+      "durationMs": 10458,
+      "durationSeconds": 10,
+      "failingTests": 0,
+      "errorSnippet": "",
+      "exitCode": 0
+    },
+    {
+      "file": "test/m2-shifts-scheduling.e2e-spec.ts",
+      "status": "PASS",
+      "durationMs": 10208,
+      "durationSeconds": 10,
+      "failingTests": 0,
+      "errorSnippet": "",
+      "exitCode": 0
+    },
+    {
+      "file": "test/e2e/forecast.slice.e2e-spec.ts",
+      "status": "PASS",
+      "durationMs": 9976,
+      "durationSeconds": 10,
+      "failingTests": 0,
+      "errorSnippet": "",
+      "exitCode": 0
+    },
+    {
+      "file": "test/e2e/accounting.e2e-spec.ts",
+      "status": "PASS",
+      "durationMs": 9778,
+      "durationSeconds": 10,
+      "failingTests": 0,
+      "errorSnippet": "",
+      "exitCode": 0
+    },
+    {
+      "file": "test/e2e/billing.e2e-spec.ts",
+      "status": "FAIL",
+      "durationMs": 9457,
+      "durationSeconds": 9,
+      "failingTests": 0,
+      "errorSnippet": "",
+      "exitCode": 1
+    },
+    {
+      "file": "test/blackbox/billing.blackbox.e2e-spec.ts",
+      "status": "PASS",
+      "durationMs": 9380,
+      "durationSeconds": 9,
+      "failingTests": 0,
+      "errorSnippet": "",
+      "exitCode": 0
+    },
+    {
+      "file": "test/e23-roles-access.e2e-spec.ts",
+      "status": "FAIL",
+      "durationMs": 9351,
+      "durationSeconds": 9,
+      "failingTests": 0,
+      "errorSnippet": "",
+      "exitCode": 1
+    },
+    {
+      "file": "test/m7-service-providers.e2e-spec.ts",
+      "status": "PASS",
+      "durationMs": 9307,
+      "durationSeconds": 9,
+      "failingTests": 0,
+      "errorSnippet": "",
+      "exitCode": 0
+    },
+    {
+      "file": "test/smoke/minimal-boot.e2e-spec.ts",
+      "status": "FAIL",
+      "durationMs": 9251,
+      "durationSeconds": 9,
+      "failingTests": 0,
+      "errorSnippet": "",
+      "exitCode": 1
+    },
+    {
+      "file": "test/e2e/pos.e2e-spec.ts",
+      "status": "FAIL",
+      "durationMs": 9133,
+      "durationSeconds": 9,
+      "failingTests": 0,
+      "errorSnippet": "",
+      "exitCode": 1
+    },
+    {
+      "file": "test/e2e/auth.slice.e2e-spec.ts",
+      "status": "PASS",
+      "durationMs": 8899,
+      "durationSeconds": 9,
+      "failingTests": 0,
+      "errorSnippet": "",
+      "exitCode": 0
+    },
+    {
+      "file": "test/e2e/bookings.e2e-spec.ts",
+      "status": "FAIL",
+      "durationMs": 8842,
+      "durationSeconds": 9,
+      "failingTests": 0,
+      "errorSnippet": "",
+      "exitCode": 1
+    },
+    {
+      "file": "test/e2e/franchise-cache-invalidation.e2e-spec.ts",
+      "status": "FAIL",
+      "durationMs": 8583,
+      "durationSeconds": 9,
       "failingTests": 0,
       "errorSnippet": "",
       "exitCode": 1
@@ -77,20 +230,299 @@
     {
       "file": "test/b2-apikey.e2e-spec.ts",
       "status": "FAIL",
-      "durationMs": 13064,
-      "durationSeconds": 13,
+      "durationMs": 8519,
+      "durationSeconds": 9,
       "failingTests": 0,
       "errorSnippet": "",
       "exitCode": 1
     },
     {
-      "file": "test/auth.e2e-spec.ts",
+      "file": "test/plan-rate-limit.e2e-spec.ts",
       "status": "FAIL",
-      "durationMs": 9189,
-      "durationSeconds": 9,
+      "durationMs": 8455,
+      "durationSeconds": 8,
       "failingTests": 0,
       "errorSnippet": "",
       "exitCode": 1
+    },
+    {
+      "file": "test/e2e/workforce.e2e-spec.ts",
+      "status": "FAIL",
+      "durationMs": 8336,
+      "durationSeconds": 8,
+      "failingTests": 0,
+      "errorSnippet": "",
+      "exitCode": 1
+    },
+    {
+      "file": "test/e2e/auth.e2e-spec.ts",
+      "status": "PASS",
+      "durationMs": 8326,
+      "durationSeconds": 8,
+      "failingTests": 0,
+      "errorSnippet": "",
+      "exitCode": 0
+    },
+    {
+      "file": "test/e2e/purchasing.slice.e2e-spec.ts",
+      "status": "PASS",
+      "durationMs": 8093,
+      "durationSeconds": 8,
+      "failingTests": 0,
+      "errorSnippet": "",
+      "exitCode": 0
+    },
+    {
+      "file": "test/webhook-security.e2e-spec.ts",
+      "status": "FAIL",
+      "durationMs": 8061,
+      "durationSeconds": 8,
+      "failingTests": 0,
+      "errorSnippet": "",
+      "exitCode": 1
+    },
+    {
+      "file": "test/e27-costing.e2e-spec.ts",
+      "status": "PASS",
+      "durationMs": 7998,
+      "durationSeconds": 8,
+      "failingTests": 0,
+      "errorSnippet": "",
+      "exitCode": 0
+    },
+    {
+      "file": "test/e2e/inventory.e2e-spec.ts",
+      "status": "FAIL",
+      "durationMs": 7856,
+      "durationSeconds": 8,
+      "failingTests": 0,
+      "errorSnippet": "",
+      "exitCode": 1
+    },
+    {
+      "file": "test/e23-platform-access.e2e-spec.ts",
+      "status": "FAIL",
+      "durationMs": 7744,
+      "durationSeconds": 8,
+      "failingTests": 0,
+      "errorSnippet": "",
+      "exitCode": 1
+    },
+    {
+      "file": "test/e37-promotions.e2e-spec.ts",
+      "status": "FAIL",
+      "durationMs": 7604,
+      "durationSeconds": 8,
+      "failingTests": 0,
+      "errorSnippet": "",
+      "exitCode": 1
+    },
+    {
+      "file": "test/smoke/di.e2e-spec.ts",
+      "status": "FAIL",
+      "durationMs": 7601,
+      "durationSeconds": 8,
+      "failingTests": 0,
+      "errorSnippet": "",
+      "exitCode": 1
+    },
+    {
+      "file": "test/e22-franchise.e2e-spec.ts",
+      "status": "PASS",
+      "durationMs": 7572,
+      "durationSeconds": 8,
+      "failingTests": 0,
+      "errorSnippet": "",
+      "exitCode": 0
+    },
+    {
+      "file": "test/auth.e2e-spec.ts",
+      "status": "FAIL",
+      "durationMs": 7216,
+      "durationSeconds": 7,
+      "failingTests": 0,
+      "errorSnippet": "",
+      "exitCode": 1
+    },
+    {
+      "file": "test/e2e/franchise-rankings-cache.e2e-spec.ts",
+      "status": "FAIL",
+      "durationMs": 7153,
+      "durationSeconds": 7,
+      "failingTests": 0,
+      "errorSnippet": "",
+      "exitCode": 1
+    },
+    {
+      "file": "test/msr-card.e2e-spec.ts",
+      "status": "FAIL",
+      "durationMs": 6597,
+      "durationSeconds": 7,
+      "failingTests": 0,
+      "errorSnippet": "",
+      "exitCode": 1
+    },
+    {
+      "file": "test/e2e/app-bisect.e2e-spec.ts",
+      "status": "FAIL",
+      "durationMs": 6595,
+      "durationSeconds": 7,
+      "failingTests": 0,
+      "errorSnippet": "",
+      "exitCode": 1
+    },
+    {
+      "file": "test/e2e/reservations.slice.e2e-spec.ts",
+      "status": "PASS",
+      "durationMs": 5891,
+      "durationSeconds": 6,
+      "failingTests": 0,
+      "errorSnippet": "",
+      "exitCode": 0
+    },
+    {
+      "file": "test/e2e/orders.slice.e2e-spec.ts",
+      "status": "PASS",
+      "durationMs": 5817,
+      "durationSeconds": 6,
+      "failingTests": 0,
+      "errorSnippet": "",
+      "exitCode": 0
+    },
+    {
+      "file": "test/e2e/pos-isolation.e2e-spec.ts",
+      "status": "FAIL",
+      "durationMs": 5741,
+      "durationSeconds": 6,
+      "failingTests": 0,
+      "errorSnippet": "",
+      "exitCode": 1
+    },
+    {
+      "file": "test/e2e/pos-imports-bisect.e2e-spec.ts",
+      "status": "PASS",
+      "durationMs": 5189,
+      "durationSeconds": 5,
+      "failingTests": 0,
+      "errorSnippet": "",
+      "exitCode": 0
+    },
+    {
+      "file": "test/e2e/billing.slice.e2e-spec.ts",
+      "status": "PASS",
+      "durationMs": 5059,
+      "durationSeconds": 5,
+      "failingTests": 0,
+      "errorSnippet": "",
+      "exitCode": 0
+    },
+    {
+      "file": "test/e2e/inventory-kpis.e2e-spec.ts",
+      "status": "PASS",
+      "durationMs": 4845,
+      "durationSeconds": 5,
+      "failingTests": 0,
+      "errorSnippet": "",
+      "exitCode": 0
+    },
+    {
+      "file": "test/e2e/devportal.slice.e2e-spec.ts",
+      "status": "PASS",
+      "durationMs": 4803,
+      "durationSeconds": 5,
+      "failingTests": 0,
+      "errorSnippet": "",
+      "exitCode": 0
+    },
+    {
+      "file": "test/e2e/franchise.slice.e2e-spec.ts",
+      "status": "PASS",
+      "durationMs": 4749,
+      "durationSeconds": 5,
+      "failingTests": 0,
+      "errorSnippet": "",
+      "exitCode": 0
+    },
+    {
+      "file": "test/e2e/payments.slice.e2e-spec.ts",
+      "status": "PASS",
+      "durationMs": 4728,
+      "durationSeconds": 5,
+      "failingTests": 0,
+      "errorSnippet": "",
+      "exitCode": 0
+    },
+    {
+      "file": "test/e2e/transfer.invalidation.slice.e2e-spec.ts",
+      "status": "FAIL",
+      "durationMs": 4569,
+      "durationSeconds": 5,
+      "failingTests": 0,
+      "errorSnippet": "",
+      "exitCode": 1
+    },
+    {
+      "file": "test/e2e/metrics.e2e-spec.ts",
+      "status": "PASS",
+      "durationMs": 4163,
+      "durationSeconds": 4,
+      "failingTests": 0,
+      "errorSnippet": "",
+      "exitCode": 0
+    },
+    {
+      "file": "test/e2e/minimal-harness.e2e-spec.ts",
+      "status": "PASS",
+      "durationMs": 3985,
+      "durationSeconds": 4,
+      "failingTests": 0,
+      "errorSnippet": "",
+      "exitCode": 0
+    },
+    {
+      "file": "test/e2e/sse.smoke.e2e-spec.ts",
+      "status": "PASS",
+      "durationMs": 3791,
+      "durationSeconds": 4,
+      "failingTests": 0,
+      "errorSnippet": "",
+      "exitCode": 0
+    },
+    {
+      "file": "test/e2e/devportal.prod.slice.e2e-spec.ts",
+      "status": "FAIL",
+      "durationMs": 3762,
+      "durationSeconds": 4,
+      "failingTests": 0,
+      "errorSnippet": "",
+      "exitCode": 1
+    },
+    {
+      "file": "test/e2e/docs.e2e-spec.ts",
+      "status": "PASS",
+      "durationMs": 3672,
+      "durationSeconds": 4,
+      "failingTests": 0,
+      "errorSnippet": "",
+      "exitCode": 0
+    },
+    {
+      "file": "test/e2e/webhook.replay.slice.e2e-spec.ts",
+      "status": "PASS",
+      "durationMs": 3633,
+      "durationSeconds": 4,
+      "failingTests": 0,
+      "errorSnippet": "",
+      "exitCode": 0
+    },
+    {
+      "file": "test/e2e/events-isolation.e2e-spec.ts",
+      "status": "PASS",
+      "durationMs": 3488,
+      "durationSeconds": 3,
+      "failingTests": 0,
+      "errorSnippet": "",
+      "exitCode": 0
     }
   ]
 }
