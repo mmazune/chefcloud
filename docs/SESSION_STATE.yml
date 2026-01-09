@@ -3,18 +3,17 @@
 date: 2026-01-10
 repo: mmazune/nimbuspos
 branch: main
-head_sha: 3228f4d1c4131dc1528e1e539d76434b16f963a6
-objective: "Phase B — Codebase mapping (routes, API, schema, roles, seeds)"
+head_sha: d8747d3ef4359ee9fd8ee72d357fba969154f619
+objective: "Phase C — Deep cleanup (quarantine/remove dormant + incomplete features)"
 
 definition_of_done:
-  - Frontend route map generated (JSON + markdown)
-  - Backend API map generated (JSON + markdown)
-  - Schema domain map generated (JSON + markdown)
-  - Role access model documented
-  - Sample data/seeds documented
-  - Orphans report generated
+  - DORMANT_FEATURE_REGISTRY.md created with evidence
+  - QUARANTINE_RULES.md documented
+  - PHASE_C_PLAN.md created with subphase DoDs
+  - High-confidence deletions proven safe and removed
+  - WIP features quarantined with zero production imports
   - Gates pass (lint, build)
-  - Single atomic commit
+  - Atomic commits per subphase
 
 gates_required:
   - pnpm -C services/api lint
@@ -23,7 +22,9 @@ gates_required:
   - pnpm -C apps/web build
 
 notes: |
-  Phase B is mapping-only.
-  DO NOT implement features.
-  DO NOT change runtime behavior.
-  DO NOT delete code (log candidates only).
+  Phase C is cleanup-focused.
+  C1 = registry only (no deletions).
+  C2 = high-confidence deletions (proven unreferenced).
+  C3 = quarantine WIP (zero production imports).
+  C4 = medium-confidence improvements (optional).
+  DO NOT break existing functionality.
