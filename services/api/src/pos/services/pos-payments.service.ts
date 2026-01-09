@@ -73,6 +73,21 @@ export class PosPaymentsService {
     branchId: string,
     userId: string,
   ): Promise<any> {
+    // M13.5.3: Idempotency check FIRST - before any validation
+    // This ensures duplicate requests return the existing payment even if order is now fully paid
+    if (dto.idempotencyKey) {
+      const existing = await this.prisma.client.payment.findFirst({
+        where: {
+          orgId,
+          idempotencyKey: dto.idempotencyKey,
+        },
+      });
+
+      if (existing) {
+        return existing; // Return existing payment (idempotent)
+      }
+    }
+
     const tipCents = dto.tipCents || 0;
 
     // M13.5: Validate tipCents (non-negative, max 500% of amountCents)
@@ -146,20 +161,6 @@ export class PosPaymentsService {
         code: 'INVALID_AMOUNT',
         message: 'Payment amount must be positive',
       });
-    }
-
-    // Idempotency check - PRE-019 FIX: Only check if idempotencyKey is provided
-    if (dto.idempotencyKey) {
-      const existing = await this.prisma.client.payment.findFirst({
-        where: {
-          orgId,
-          idempotencyKey: dto.idempotencyKey,
-        },
-      });
-
-      if (existing) {
-        return existing; // Return existing payment (idempotent)
-      }
     }
 
     // Determine provider and initial status

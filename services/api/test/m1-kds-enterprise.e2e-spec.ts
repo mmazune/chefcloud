@@ -4,6 +4,7 @@ import request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { cleanup } from './helpers/cleanup';
 import { E2E_USERS } from './helpers/e2e-credentials';
+import { PrismaService } from '../src/prisma.service';
 
 /**
  * M1-KDS: Enterprise-grade KDS tests
@@ -17,6 +18,7 @@ import { E2E_USERS } from './helpers/e2e-credentials';
  */
 describe('M1 KDS Enterprise (e2e)', () => {
   let app: INestApplication;
+  let prisma: PrismaService;
   let waiterToken: string;
   let managerToken: string;
   let burgerId: string;
@@ -24,6 +26,8 @@ describe('M1 KDS Enterprise (e2e)', () => {
   let beerMenuItemId: string;
   let tableId: string;
   let orgId: string;
+  let branchId: string;
+  let testCategoryId: string;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -31,6 +35,7 @@ describe('M1 KDS Enterprise (e2e)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
+    prisma = moduleFixture.get<PrismaService>(PrismaService);
     app.useGlobalPipes(
       new ValidationPipe({
         whitelist: true,
@@ -55,17 +60,103 @@ describe('M1 KDS Enterprise (e2e)', () => {
     });
     managerToken = managerLogin.body.access_token;
 
-    // Get menu items
-    const menuResponse = await request(app.getHttpServer())
-      .get('/menu/items')
+    // M13.5.3: Get orgId and branchId from /me endpoint
+    const meResponse = await request(app.getHttpServer())
+      .get('/me')
       .set('Authorization', `Bearer ${waiterToken}`);
+    orgId = meResponse.body.orgId;
+    branchId = meResponse.body.branchId;
 
-    const burger = menuResponse.body.find((item: any) => item.name === 'Burger');
-    const fries = menuResponse.body.find((item: any) => item.name === 'Fries');
-    const beer = menuResponse.body.find((item: any) => item.name === 'Beer');
-    burgerId = burger?.id;
-    friesId = fries?.id;
-    beerMenuItemId = beer?.id;
+    // M13.5.3: Create test category for KDS menu items
+    const existingCategory = await prisma.client.category.findFirst({
+      where: { orgId, name: 'KDS Test Items' },
+    });
+    if (existingCategory) {
+      testCategoryId = existingCategory.id;
+    } else {
+      const category = await prisma.client.category.create({
+        data: {
+          orgId,
+          branchId,
+          name: 'KDS Test Items',
+          sortOrder: 999,
+        },
+      });
+      testCategoryId = category.id;
+    }
+
+    // M13.5.3: Create test menu items with specific KDS stations
+    // Burger -> GRILL station
+    const existingBurger = await prisma.client.menuItem.findFirst({
+      where: { orgId, name: 'KDS Test Burger' },
+    });
+    if (existingBurger) {
+      burgerId = existingBurger.id;
+    } else {
+      const burger = await prisma.client.menuItem.create({
+        data: {
+          orgId,
+          branchId,
+          categoryId: testCategoryId,
+          name: 'KDS Test Burger',
+          itemType: 'FOOD',
+          price: 15.00,
+          station: 'GRILL',
+          isAvailable: true,
+          isActive: true,
+          sortOrder: 1,
+        },
+      });
+      burgerId = burger.id;
+    }
+
+    // Fries -> FRY station
+    const existingFries = await prisma.client.menuItem.findFirst({
+      where: { orgId, name: 'KDS Test Fries' },
+    });
+    if (existingFries) {
+      friesId = existingFries.id;
+    } else {
+      const fries = await prisma.client.menuItem.create({
+        data: {
+          orgId,
+          branchId,
+          categoryId: testCategoryId,
+          name: 'KDS Test Fries',
+          itemType: 'FOOD',
+          price: 8.00,
+          station: 'FRYER',
+          isAvailable: true,
+          isActive: true,
+          sortOrder: 2,
+        },
+      });
+      friesId = fries.id;
+    }
+
+    // Beer -> BAR station
+    const existingBeer = await prisma.client.menuItem.findFirst({
+      where: { orgId, name: 'KDS Test Beer' },
+    });
+    if (existingBeer) {
+      beerMenuItemId = existingBeer.id;
+    } else {
+      const beer = await prisma.client.menuItem.create({
+        data: {
+          orgId,
+          branchId,
+          categoryId: testCategoryId,
+          name: 'KDS Test Beer',
+          itemType: 'DRINK',
+          price: 6.00,
+          station: 'BAR',
+          isAvailable: true,
+          isActive: true,
+          sortOrder: 3,
+        },
+      });
+      beerMenuItemId = beer.id;
+    }
 
     // Get table
     const floorResponse = await request(app.getHttpServer())
@@ -73,15 +164,12 @@ describe('M1 KDS Enterprise (e2e)', () => {
       .set('Authorization', `Bearer ${waiterToken}`);
 
     tableId = floorResponse.body.floorPlans[0]?.tables[0]?.id;
-
-    // Get orgId from /me endpoint
-    const meResponse = await request(app.getHttpServer())
-      .get('/me')
-      .set('Authorization', `Bearer ${waiterToken}`);
-    orgId = meResponse.body.orgId;
-  });
+  }, 60000);
 
   afterAll(async () => {
+    // M13.5.3: Skip menu item cleanup - foreign key constraint prevents deletion
+    // (order items reference menu items). Test items are idempotently created
+    // and don't affect other tests.
     await cleanup(app);
   });
 
@@ -200,7 +288,7 @@ describe('M1 KDS Enterprise (e2e)', () => {
       expect(grillTicket.station).toBe('GRILL');
 
       // M1-KDS: Verify items are filtered to this station only
-      const hasGrillItem = grillTicket.items.some((item: any) => item.name === 'Burger');
+      const hasGrillItem = grillTicket.items.some((item: any) => item.name === 'KDS Test Burger');
       expect(hasGrillItem).toBe(true);
 
       // Check FRYER station
@@ -213,7 +301,7 @@ describe('M1 KDS Enterprise (e2e)', () => {
       expect(fryerTicket).toBeDefined();
       expect(fryerTicket.station).toBe('FRYER');
 
-      const hasFryerItem = fryerTicket.items.some((item: any) => item.name === 'Fries');
+      const hasFryerItem = fryerTicket.items.some((item: any) => item.name === 'KDS Test Fries');
       expect(hasFryerItem).toBe(true);
     });
 
