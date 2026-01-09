@@ -1,6 +1,7 @@
 {
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Machine-readable pointers for LLM context anchoring in Nimbus POS / ChefCloud",
+  "updated": "2026-01-10",
   "must_read_first": [
     "AI_START_HERE.md",
     "instructions/00_START_HERE.md",
@@ -8,13 +9,24 @@
     "docs/milestones/CHEFCLOUD_MILESTONES_AND_HANDOVER.md"
   ],
   "core_maps": [
-    "instructions/BACKEND_API_MAP.md",
-    "instructions/FRONTEND_ROUTE_MAP.md",
+    "docs/overview/FRONTEND_ROUTE_MAP.md",
+    "docs/overview/BACKEND_API_MAP.md",
+    "docs/overview/SCHEMA_DOMAIN_MAP.md",
+    "docs/overview/ROLE_ACCESS_MODEL.md",
+    "docs/overview/SAMPLE_DATA_AND_SEEDS.md",
     "instructions/CODEBASE_ARCHITECTURE_MAP.md",
-    "instructions/SCHEMA_DOMAIN_MAP.md",
     "instructions/UI_ENDPOINT_MATRIX.md",
     "instructions/RBAC_VISIBILITY_MATRIX.md"
   ],
+  "generated_reports": {
+    "folder": "reports/codebase",
+    "files": [
+      "reports/codebase/frontend-routes.json",
+      "reports/codebase/backend-routes.json",
+      "reports/codebase/prisma-schema.json",
+      "reports/codebase/orphans.md"
+    ]
+  },
   "standards": [
     "instructions/standards/E2E_TESTING_STANDARD.md",
     "instructions/standards/E2E_NO_HANG_STANDARD.md",
@@ -28,7 +40,6 @@
     "docs/runbooks/DEV_GUIDE.md",
     "docs/runbooks/DEMO_DATA_PLAYBOOK.md"
   ],
-  "generated_reports_folder": "reports/codebase",
   "cleanup_candidates": "docs/cleanup/CANDIDATES.md",
   "pre_existing_issues": "PRE_EXISTING_ISSUES_LOG.md",
   "completions_folder": "docs/completions",

@@ -1,0 +1,161 @@
+{
+  "generated": "2026-01-10",
+  "source": "packages/db/prisma/schema.prisma",
+  "schemaSize": "291KB",
+  "totalModels": 226,
+  "totalEnums": 120,
+  "domains": {
+    "auth": {
+      "models": ["User", "Session", "Role", "Permission", "WebAuthnCredential", "MsrCard", "DevAdmin", "ApiKey"],
+      "description": "Authentication, authorization, and access control"
+    },
+    "organization": {
+      "models": ["Org", "OrgSettings", "OrgSubscription", "Branch", "FeatureFlag", "FlagAudit", "BranchOperatingHours", "BranchBlackout"],
+      "description": "Multi-tenant organization and branch management"
+    },
+    "workforce": {
+      "models": ["Employee", "EmployeeProfile", "EmployeeCompensationProfile", "EmployeeCompensationComponent", "EmploymentContract", "AttendanceRecord", "BreakEntry", "TimeEntry", "TimeEntryAdjustment", "TimesheetApproval", "Shift", "ShiftAssignment", "ShiftSchedule", "ShiftSwap", "ShiftSwapRequest", "ShiftTemplate", "DutyShift", "ScheduledShift", "WorkforceAvailability", "WorkforceAvailabilityException", "WorkforcePolicy", "WorkforceAuditLog", "WorkforceNotificationLog", "LeaveRequestV2", "LeaveRequestAttachment", "LeavePolicy", "LeaveTypeDefinition", "LeaveBalanceLedger", "LegacyLeaveRequest", "ApprovalDelegate", "OpenShiftClaim", "StaffAward"],
+      "description": "Staff management, scheduling, attendance, and payroll",
+      "criticalLedgers": ["LeaveBalanceLedger", "TimeEntry", "AttendanceRecord"]
+    },
+    "payroll": {
+      "models": ["PayrollRun", "PayrollRunLine", "PayrollRunJournalLink", "PayrollPostingMapping", "PayPeriod", "PayRun", "PaySlip", "Payslip", "PayslipLineItem", "PayComponent", "CompensationComponent", "CompensationRemittanceMapping", "RemittanceBatch", "RemittanceLine", "RemittanceJournalLink", "RemittanceProvider", "RemittanceSourceLink"],
+      "description": "Payroll processing and remittances",
+      "criticalLedgers": ["PayrollRun", "PayslipLineItem", "RemittanceBatch"]
+    },
+    "inventory": {
+      "models": ["InventoryItem", "InventoryLocation", "InventoryLot", "InventoryLotBarcode", "InventoryItemBarcode", "InventoryLedgerEntry", "InventoryCostLayer", "InventoryTransfer", "InventoryTransferLine", "InventoryWaste", "InventoryWasteLine", "InventoryPeriod", "InventoryPeriodCloseRequest", "InventoryPeriodEvent", "InventoryPeriodMovementSummary", "InventoryValuationSnapshot", "InventoryPostingMapping", "InventoryAlert", "GoodsReceipt", "GoodsReceiptLine", "GoodsReceiptV2", "GoodsReceiptLineV2", "PurchaseOrder", "PurchaseOrderItem", "PurchaseOrderV2", "PurchaseOrderLineV2", "Supplier", "SupplierItem", "SupplierPrice", "StockMovement", "StockAdjustment", "StockBatch", "StockCount", "StocktakeSession", "StocktakeLine", "CountSession", "CountSessionLine", "Wastage", "Recipe", "RecipeLine", "RecipeIngredient", "ProductionBatch", "ProductionBatchLine", "VendorReturn", "VendorReturnLine", "ReorderPolicy", "ReorderSuggestionRun", "ReorderSuggestionLine", "RecallCase", "RecallLotLink", "LotLedgerAllocation", "OrderInventoryDepletion", "DepletionCostBreakdown", "CostInsight"],
+      "description": "Inventory, procurement, costing, and stock control",
+      "criticalLedgers": ["InventoryLedgerEntry", "InventoryCostLayer", "InventoryPeriod", "StockMovement"]
+    },
+    "accounting": {
+      "models": ["Account", "JournalEntry", "JournalLine", "FiscalPeriod", "Currency", "ExchangeRate", "BankAccount", "BankStatement", "BankTxn", "ReconcileMatch"],
+      "description": "General ledger and financial accounting",
+      "criticalLedgers": ["JournalEntry", "JournalLine", "FiscalPeriod"]
+    },
+    "payables": {
+      "models": ["Vendor", "VendorBill", "VendorPayment", "VendorCreditNote", "VendorCreditNoteAllocation", "VendorCreditNoteRefund", "ServiceProvider", "ServiceContract", "ServicePayableReminder"],
+      "description": "Accounts payable and vendor management",
+      "criticalLedgers": ["VendorBill", "VendorPayment"]
+    },
+    "receivables": {
+      "models": ["CustomerAccount", "CustomerInvoice", "CustomerReceipt", "CustomerCreditNote", "CustomerCreditNoteAllocation", "CustomerCreditNoteRefund", "PrepaidCredit"],
+      "description": "Accounts receivable and customer management",
+      "criticalLedgers": ["CustomerInvoice", "CustomerReceipt"]
+    },
+    "budgets": {
+      "models": ["BranchBudget", "FranchiseBudget", "FranchiseRank", "OpsBudget", "LaborTarget"],
+      "description": "Budgeting and financial planning"
+    },
+    "pos": {
+      "models": ["Order", "OrderItem", "Payment", "PaymentIntent", "Refund", "PosPaymentEvent", "PosReceipt", "CashSession", "CashMovement", "TillSession", "Discount", "PaymentMethodMapping"],
+      "description": "Point of sale operations",
+      "criticalLedgers": ["Order", "Payment", "CashSession", "CashMovement"]
+    },
+    "menu": {
+      "models": ["MenuItem", "MenuItemOnGroup", "ModifierGroup", "ModifierOption", "Category", "MenuAvailabilityRule", "Promotion", "PromotionEffect", "PromotionSuggestion"],
+      "description": "Menu management and promotions"
+    },
+    "kds": {
+      "models": ["KdsTicket", "KdsTicketLine", "KdsSlaConfig"],
+      "description": "Kitchen display system"
+    },
+    "reservations": {
+      "models": ["Reservation", "ReservationDeposit", "ReservationPolicy", "ReservationReminder", "ReservationAccessToken", "Event", "EventBooking", "EventTable", "BranchCapacityRule", "WaitlistEntry"],
+      "description": "Reservations and event management",
+      "criticalLedgers": ["Reservation", "ReservationDeposit"]
+    },
+    "floor": {
+      "models": ["FloorPlan", "Table"],
+      "description": "Floor plan and table management"
+    },
+    "feedback": {
+      "models": ["Feedback"],
+      "description": "Customer feedback and NPS"
+    },
+    "documents": {
+      "models": ["Document"],
+      "description": "Document management"
+    },
+    "alerts": {
+      "models": ["AlertChannel", "ScheduledAlert", "StaffingAlert", "StaffingPlan", "StaffingPlanLine"],
+      "description": "Alerts and notifications"
+    },
+    "forecasting": {
+      "models": ["DemandForecastSnapshot", "ForecastPoint", "ForecastProfile", "ForecastOptimizationRun", "ForecastOptimizationLine", "LaborForecastSnapshot"],
+      "description": "Demand and labor forecasting"
+    },
+    "auto-scheduler": {
+      "models": ["AutoScheduleRun", "AutoScheduleSuggestion"],
+      "description": "Automated scheduling"
+    },
+    "kiosk": {
+      "models": ["KioskDevice", "KioskDeviceSession", "KioskClockEvent", "KioskEvent", "KioskEventIngest", "KioskPinAttempt", "BranchGeoFence", "GeoFenceEvent"],
+      "description": "Self-service kiosk and geofencing"
+    },
+    "hardware": {
+      "models": ["Device", "SpoutDevice", "SpoutCalibration", "SpoutEvent"],
+      "description": "Hardware device management"
+    },
+    "tax": {
+      "models": ["TaxCategory", "FiscalInvoice"],
+      "description": "Tax and fiscal compliance"
+    },
+    "notifications": {
+      "models": ["NotificationLog", "NotificationOutbox", "NotificationTemplate", "ReminderSchedule"],
+      "description": "Notification system"
+    },
+    "audit": {
+      "models": ["AuditEvent", "AutomationLog", "Adjustment"],
+      "description": "Audit trail and automation logging"
+    },
+    "analytics": {
+      "models": ["AnomalyEvent", "OwnerDigest", "ReportSubscription"],
+      "description": "Analytics and reporting"
+    },
+    "support": {
+      "models": ["SupportSession", "OpsIncident"],
+      "description": "Support and incident management"
+    },
+    "integrations": {
+      "models": ["CalendarFeedToken", "WebhookEndpoint", "WebhookEvent", "WebhookDelivery", "IdempotencyKey", "MaintenanceWindow"],
+      "description": "External integrations and webhooks"
+    },
+    "billing": {
+      "models": ["SubscriptionPlan", "SubscriptionEvent", "BadgeAsset"],
+      "description": "SaaS billing and subscriptions"
+    },
+    "procurement": {
+      "models": ["ProcurementJob"],
+      "description": "Procurement automation"
+    },
+    "uom": {
+      "models": ["UnitOfMeasure", "UnitConversion"],
+      "description": "Units of measure"
+    }
+  },
+  "enums": {
+    "accounting": ["AccountType", "JournalEntryStatus", "FiscalPeriodStatus", "ReconcileSource"],
+    "billing": ["SubscriptionStatus", "SubscriptionEventType"],
+    "inventory": ["ItemType", "CostMethod", "LotStatus", "InventoryPeriodStatus", "InventoryTransferStatus", "InventoryWasteStatus", "InventoryWasteReason", "GoodsReceiptStatus", "PurchaseOrderStatus", "StocktakeStatus", "DepletionStatus", "ProductionBatchStatus", "VendorReturnStatus", "InventoryAlertType", "InventoryAlertStatus", "InventoryAlertSeverity", "InventoryPeriodCloseRequestStatus", "InventoryPeriodEventType", "BarcodeFormat", "RecallCaseStatus", "CostSourceType", "CostInsightSeverity", "ReorderReasonCode", "GlPostingStatus"],
+    "pos": ["OrderStatus", "OrderPaymentStatus", "PaymentMethod", "CashMovementType", "CashSessionStatus", "PosPaymentStatus", "PosPaymentProvider"],
+    "workforce": ["JobRole", "EmploymentStatus", "EmploymentType", "AttendanceStatus", "AttendanceSource", "ShiftStatus", "ShiftSwapStatus", "ShiftSwapRequestStatus", "ShiftSwapRequestType", "LeaveType", "LeaveTypeCode", "LeaveRequestStatus", "TimeClockMethod", "TimesheetApprovalStatus", "SalaryType", "StaffingAlertType", "StaffingPlanStatus", "WorkforceNotificationType", "AwardCategory", "AwardPeriodType", "AvailabilityTargetType"],
+    "payroll": ["PayrollRunStatus", "PayRunStatus", "PayPeriodStatus", "PayComponentType", "PayComponentCalc", "CompensationComponentType", "RemittanceBatchStatus", "RemittanceBatchType", "RemittanceProviderType", "RoundingMode", "RoundingRule", "AccrualMethod", "CalcMethod"],
+    "reservations": ["ReservationStatus", "ReservationSource", "DepositStatus", "WaitlistStatus", "EventBookingStatus"],
+    "finance": ["BillStatus", "InvoiceStatus", "CreditNoteStatus", "PaymentTerms", "SettlementMethod", "BudgetCategory"],
+    "documents": ["DocumentCategory", "StorageProvider"],
+    "feedback": ["FeedbackChannel", "NpsCategory"],
+    "alerts": ["AlertSeverity", "ReminderType", "ReminderChannel", "ReminderStatus", "ReminderSeverity"],
+    "notifications": ["NotificationStatus", "NotificationType", "NotificationEvent", "NotificationOutboxStatus"],
+    "auth": ["RoleLevel", "MsrCardStatus", "SessionPlatform", "SessionSource"],
+    "forecasting": ["ForecastMethod", "ForecastModelType", "ForecastReasonCode", "ForecastOptimizationStatus"],
+    "scheduler": ["AutoScheduleRunStatus", "ApprovalMode"],
+    "hardware": ["StationTag", "TableStatus"],
+    "service-providers": ["ServiceProviderCategory", "ServiceType", "ContractStatus", "ContractFrequency"],
+    "webhooks": ["WebhookDeliveryStatus"],
+    "badges": ["BadgeState"],
+    "audit": ["AdjustmentStatus", "FlagAction"],
+    "promotions": ["PromotionEffectType", "SuggestionCategory", "SuggestionStatus"],
+    "procurement": ["ProcurementJobStatus", "ProcurementStrategy", "SupplierPriceSource"]
+  }
+}
