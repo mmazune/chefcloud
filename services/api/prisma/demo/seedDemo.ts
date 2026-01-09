@@ -307,13 +307,20 @@ async function seedBadges(
     include: { employeeProfile: true },
   });
 
+  // Derive org prefix from orgId (last segment for uniqueness)
+  // e.g., "00000000-0000-4000-8000-000000000001" -> "ORG1"
+  // e.g., "00000000-0000-4000-8000-000000000002" -> "ORG2"
+  const orgSuffix = orgId.slice(-1);
+  const orgPrefix = `ORG${orgSuffix}`;
+
   // Badge mapping: role-specific badges for canonical MSR flows
+  // Badge codes are globally unique in schema, so we prefix with org identifier
   const badgeConfigs = [
-    { role: 'manager', code: 'MGR001', badgeId: 'MGR001' },
-    { role: 'cashier', code: 'CASHIER001', badgeId: 'CASHIER001' },
-    { role: 'supervisor', code: 'SUP001', badgeId: 'SUP001' },
-    { role: 'waiter', code: 'WAIT001', badgeId: 'WAIT001' },
-    { role: 'chef', code: 'CHEF001', badgeId: 'CHEF001' },
+    { role: 'manager', code: `${orgPrefix}-MGR001`, badgeId: `${orgPrefix}-MGR001` },
+    { role: 'cashier', code: `${orgPrefix}-CASHIER001`, badgeId: `${orgPrefix}-CASHIER001` },
+    { role: 'supervisor', code: `${orgPrefix}-SUP001`, badgeId: `${orgPrefix}-SUP001` },
+    { role: 'waiter', code: `${orgPrefix}-WAIT001`, badgeId: `${orgPrefix}-WAIT001` },
+    { role: 'chef', code: `${orgPrefix}-CHEF001`, badgeId: `${orgPrefix}-CHEF001` },
   ];
 
   for (const config of badgeConfigs) {
@@ -341,13 +348,18 @@ async function seedBadges(
       },
     });
 
-    // Update employee profile with badge ID
-    if (user.employeeProfile) {
-      await prisma.employeeProfile.update({
-        where: { id: user.employeeProfile.id },
-        data: { badgeId: config.badgeId },
-      });
-    }
+    // Create or update employee profile with badge ID
+    // This is essential for MSR auth which looks up by employeeProfile.badgeId
+    // Use the badge code as employee code to ensure uniqueness
+    await prisma.employeeProfile.upsert({
+      where: { userId: user.id },
+      update: { badgeId: config.badgeId },
+      create: {
+        userId: user.id,
+        employeeCode: config.code, // Use badge code as unique employee code
+        badgeId: config.badgeId,
+      },
+    });
 
     console.log(`    ✅ Badge ${config.code} → ${user.email}`);
   }

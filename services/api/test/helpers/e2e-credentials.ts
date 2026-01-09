@@ -239,6 +239,26 @@ export type E2ERole =
   | 'BARTENDER';
 
 /**
+ * Badge codes for MSR authentication - org-prefixed for uniqueness
+ * These MUST match the seed (prisma/demo/seedDemo.ts)
+ */
+export const TAPAS_BADGES = {
+  manager: 'ORG1-MGR001',
+  cashier: 'ORG1-CASHIER001',
+  supervisor: 'ORG1-SUP001',
+  waiter: 'ORG1-WAIT001',
+  chef: 'ORG1-CHEF001',
+} as const;
+
+export const CAFESSERIE_BADGES = {
+  manager: 'ORG2-MGR001',
+  cashier: 'ORG2-CASHIER001',
+  supervisor: 'ORG2-SUP001',
+  waiter: 'ORG2-WAIT001',
+  chef: 'ORG2-CHEF001',
+} as const;
+
+/**
  * Get credentials for a specific role
  */
 export function getCredentials(role: E2ERole) {

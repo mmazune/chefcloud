@@ -220,6 +220,21 @@ async function main() {
       console.log(`  └─ Employee code: ${userData.employeeCode}`);
       if (userData.badgeId) {
         console.log(`  └─ Badge ID: ${userData.badgeId}`);
+
+        // Create BadgeAsset for MSR authentication
+        await prisma.badgeAsset.upsert({
+          where: { code: userData.badgeId },
+          update: {
+            assignedUserId: user.id,
+            state: 'ACTIVE',
+          },
+          create: {
+            code: userData.badgeId,
+            orgId: org.id,
+            state: 'ACTIVE',
+            assignedUserId: user.id,
+          },
+        });
       }
     }
   }

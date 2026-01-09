@@ -4,7 +4,7 @@ import { E2eAppModule } from './e2e-app.module';
 import { PrismaService } from '../src/prisma.service';
 import { createE2EApp } from './helpers/e2e-bootstrap';
 import { cleanup } from './helpers/cleanup';
-import { E2E_USERS, DEMO_DATASETS } from './helpers/e2e-credentials';
+import { E2E_USERS, DEMO_DATASETS, TAPAS_BADGES, TAPAS_CREDENTIALS } from './helpers/e2e-credentials';
 import { requireTapasOrg, requireBadges } from './helpers/require-preconditions';
 
 describe('Auth (e2e)', () => {
@@ -79,7 +79,7 @@ describe('Auth (e2e)', () => {
       const response = await request(app.getHttpServer())
         .post('/auth/pin-login')
         .send({
-          employeeCode: 'MGR001',
+          employeeCode: TAPAS_BADGES.manager, // ORG1-MGR001 - also serves as employee code
           pin: '1234',
           branchId: await getMainBranchId(),
         })
@@ -87,8 +87,8 @@ describe('Auth (e2e)', () => {
 
       expect(response.body).toHaveProperty('access_token');
       expect(response.body.user).toMatchObject({
-        firstName: 'Bob',
-        lastName: 'Manager',
+        firstName: TAPAS_CREDENTIALS.manager.firstName,
+        lastName: TAPAS_CREDENTIALS.manager.lastName,
         roleLevel: 'L4',
       });
     });
@@ -108,7 +108,7 @@ describe('Auth (e2e)', () => {
       await request(app.getHttpServer())
         .post('/auth/pin-login')
         .send({
-          employeeCode: 'MGR001',
+          employeeCode: TAPAS_BADGES.manager,
           pin: '9999',
           branchId: await getMainBranchId(),
         })
@@ -119,7 +119,7 @@ describe('Auth (e2e)', () => {
       await request(app.getHttpServer())
         .post('/auth/pin-login')
         .send({
-          employeeCode: 'MGR001',
+          employeeCode: TAPAS_BADGES.manager,
           pin: '1234',
           branchId: '00000000-0000-0000-0000-000000000000',
         })
@@ -132,14 +132,14 @@ describe('Auth (e2e)', () => {
       const response = await request(app.getHttpServer())
         .post('/auth/msr-swipe')
         .send({
-          badgeId: 'CASHIER001',
+          badgeId: `CLOUDBADGE:${TAPAS_BADGES.cashier}`,
         })
         .expect(200);
 
       expect(response.body).toHaveProperty('access_token');
       expect(response.body.user).toMatchObject({
-        firstName: 'Diana',
-        lastName: 'Cashier',
+        firstName: TAPAS_CREDENTIALS.cashier.firstName,
+        lastName: TAPAS_CREDENTIALS.cashier.lastName,
         roleLevel: 'L2',
       });
     });
@@ -148,7 +148,7 @@ describe('Auth (e2e)', () => {
       await request(app.getHttpServer())
         .post('/auth/msr-swipe')
         .send({
-          badgeId: 'UNKNOWN_BADGE',
+          badgeId: 'CLOUDBADGE:UNKNOWN_BADGE',
         })
         .expect(404);
     });
@@ -157,7 +157,7 @@ describe('Auth (e2e)', () => {
       const response = await request(app.getHttpServer())
         .post('/auth/msr-swipe')
         .send({
-          badgeId: 'CASHIER001',
+          badgeId: `CLOUDBADGE:${TAPAS_BADGES.cashier}`,
           branchId: await getMainBranchId(),
         })
         .expect(200);
@@ -245,10 +245,13 @@ describe('Auth (e2e)', () => {
     });
   });
 
-  // Helper function to get main branch ID
+  // Helper function to get Tapas main branch ID
   async function getMainBranchId(): Promise<string> {
     const branch = await prisma.client.branch.findFirst({
-      where: { name: 'Main Branch' },
+      where: { 
+        name: 'Main Branch',
+        orgId: DEMO_DATASETS.DEMO_TAPAS.orgId,
+      },
     });
     return branch?.id || '';
   }
