@@ -18,8 +18,9 @@ This document is the mandatory operating procedure for any LLM (e.g., Claude Son
 
 Before writing or editing any code, the LLM must read:
 
-- `/DEV_GUIDE.md` (or latest dev guide in repo)
-- `/project overview and status.txt` (or the repo’s latest project status doc)
+- `/docs/runbooks/DEV_GUIDE.md` (or latest dev guide in repo)
+- `/AI_START_HERE.md` (canonical LLM entrypoint)
+- `/instructions/00_START_HERE.md` (engineering contract)
 - `/instructions/VERIFY_RUNBOOK.md`
 - `/instructions/SEEDING_REFERENCE.md`
 - `/instructions/RBAC_VISIBILITY_MATRIX.md`

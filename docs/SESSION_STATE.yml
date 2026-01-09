@@ -1,0 +1,28 @@
+# Nimbus POS / ChefCloud — Session State
+
+date: 2026-01-09
+repo: mmazune/nimbuspos
+branch: main
+head_sha: cb5bce25ca3ba45f160a39abc6c741dc39e07bf0
+objective: "Phase A - Repo cleanup + docs taxonomy + AI entrypoints"
+
+definition_of_done:
+  - Root cleaned of completion/sprint/report docs
+  - Folder taxonomy created (docs/overview, runbooks, milestones, completions, archive, cleanup; instructions/standards, templates)
+  - 5 canonical files created (AI_START_HERE.md, AI_INDEX.json, docs/SESSION_STATE.yml, docs/INDEX.md, instructions/00_START_HERE.md)
+  - README clone instructions fixed (chefcloud → nimbuspos)
+  - Broken links updated
+  - Gates pass (lint, build)
+  - Single atomic commit
+
+gates_required:
+  - pnpm -C services/api lint
+  - pnpm -C apps/web lint
+  - pnpm -C services/api build
+  - pnpm -C apps/web build
+
+notes: |
+  This is a docs/structure-only phase.
+  DO NOT implement features.
+  DO NOT change runtime behavior.
+  DO NOT delete code (log candidates only).

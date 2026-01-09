@@ -372,17 +372,17 @@ apps/desktop → packages/contracts → packages/db
 - `/commitlint.config.js` - Conventional commits
 
 ### Documentation
-- `/DEV_GUIDE.md` - 18K line developer manual
+- `/docs/runbooks/DEV_GUIDE.md` - 18K line developer manual
 - `/README.md` - Project overview
 - `/CONTRIBUTING.md` - Contribution guidelines
-- `/DEPLOYMENT.md` - Deployment instructions
+- `/docs/runbooks/DEPLOYMENT.md` - Deployment instructions
 - `/SECURITY.md` - Security policies
 
-### Completion Reports
-- `/E22-*-COMPLETION.md` - Franchise feature completion
-- `/E23-*-COMPLETION.md` - Dev Portal completion
-- `/E24-*-COMPLETION.md` - Billing completion
-- `/M10-*-COMPLETION.md` - Auth & sessions completion
+### Completion Reports (moved to docs/completions/)
+- `/docs/completions/E22-*-COMPLETION.md` - Franchise feature completion
+- `/docs/completions/E23-*-COMPLETION.md` - Dev Portal completion
+- `/docs/completions/E24-*-COMPLETION.md` - Billing completion
+- `/docs/completions/M10-*-COMPLETION.md` - Auth & sessions completion
 - `/M11-*-COMPLETION.md` - POS order lifecycle completion
 - `/M33-DEMO-*-COMPLETION.md` - Demo protection completion
 

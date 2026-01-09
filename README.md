@@ -2,8 +2,8 @@
 
 **Enterprise-grade, offline-first POS for restaurants and bars in Uganda**
 
-[![CI](https://github.com/mmazune/chefcloud/actions/workflows/ci.yml/badge.svg)](https://github.com/mmazune/chefcloud/actions/workflows/ci.yml)
-[![E2E Slice Coverage](https://codecov.io/gh/mmazune/chefcloud/branch/main/graph/badge.svg?flag=e2e-slice)](https://codecov.io/gh/mmazune/chefcloud)
+[![CI](https://github.com/mmazune/nimbuspos/actions/workflows/ci.yml/badge.svg)](https://github.com/mmazune/nimbuspos/actions/workflows/ci.yml)
+[![E2E Slice Coverage](https://codecov.io/gh/mmazune/nimbuspos/branch/main/graph/badge.svg?flag=e2e-slice)](https://codecov.io/gh/mmazune/nimbuspos)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ChefCloud is a modern Point-of-Sale system designed specifically for Ugandan restaurants and bars, featuring:
@@ -69,7 +69,7 @@ chmod +x scripts/demo-reset.sh
 **Result**: Production-ready demo with 0 test failures
 
 📖 **Full guide**: [M7.6_FRESH_START_GUIDE.md](./instructions/M7.6_FRESH_START_GUIDE.md)  
-🎯 **Quick ref**: [DEMO_QUICK_REFERENCE.md](./DEMO_QUICK_REFERENCE.md)
+🎯 **Quick ref**: [DEMO_QUICK_REFERENCE.md](./docs/runbooks/DEMO_QUICK_REFERENCE.md)
 
 ---
 
@@ -85,8 +85,8 @@ chmod +x scripts/demo-reset.sh
 
 ```bash
 # Clone the repository
-git clone https://github.com/mmazune/chefcloud.git
-cd chefcloud
+git clone https://github.com/mmazune/nimbuspos.git
+cd nimbuspos
 
 # Install dependencies
 pnpm install
@@ -195,9 +195,9 @@ See [CHEFCLOUD_BLUEPRINT.md](./docs/CHEFCLOUD_BLUEPRINT.md) for full roadmap.
 
 ### Production Deployment (Railway + Vercel)
 
-**Quick Start**: See [DEPLOY_QUICK.md](./DEPLOY_QUICK.md) for fast-track 5-step deployment.
+**Quick Start**: See [DEPLOY_QUICK.md](./docs/runbooks/DEPLOY_QUICK.md) for fast-track 5-step deployment.
 
-**Full Guide**: See [DEPLOYMENT.md](./DEPLOYMENT.md) for comprehensive step-by-step instructions.
+**Full Guide**: See [DEPLOYMENT.md](./docs/runbooks/DEPLOYMENT.md) for comprehensive step-by-step instructions.
 
 **What You'll Get**:
 - ✅ Railway: API + PostgreSQL + Worker

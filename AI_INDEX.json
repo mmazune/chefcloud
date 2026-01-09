@@ -1,0 +1,36 @@
+{
+  "version": "1.0.0",
+  "description": "Machine-readable pointers for LLM context anchoring in Nimbus POS / ChefCloud",
+  "must_read_first": [
+    "AI_START_HERE.md",
+    "instructions/00_START_HERE.md",
+    "docs/SESSION_STATE.yml",
+    "docs/milestones/CHEFCLOUD_MILESTONES_AND_HANDOVER.md"
+  ],
+  "core_maps": [
+    "instructions/BACKEND_API_MAP.md",
+    "instructions/FRONTEND_ROUTE_MAP.md",
+    "instructions/CODEBASE_ARCHITECTURE_MAP.md",
+    "instructions/SCHEMA_DOMAIN_MAP.md",
+    "instructions/UI_ENDPOINT_MATRIX.md",
+    "instructions/RBAC_VISIBILITY_MATRIX.md"
+  ],
+  "standards": [
+    "instructions/standards/E2E_TESTING_STANDARD.md",
+    "instructions/standards/E2E_NO_HANG_STANDARD.md",
+    "instructions/standards/E2E_OPEN_HANDLE_POLICY.md",
+    "instructions/standards/MILESTONE_DEFINITION_OF_DONE.md",
+    "instructions/standards/DATA_PERSISTENCE_AND_CONSISTENCY_STANDARD.md"
+  ],
+  "runbooks": [
+    "instructions/VERIFY_RUNBOOK.md",
+    "instructions/SEEDING_REFERENCE.md",
+    "docs/runbooks/DEV_GUIDE.md",
+    "docs/runbooks/DEMO_DATA_PLAYBOOK.md"
+  ],
+  "generated_reports_folder": "reports/codebase",
+  "cleanup_candidates": "docs/cleanup/CANDIDATES.md",
+  "pre_existing_issues": "PRE_EXISTING_ISSUES_LOG.md",
+  "completions_folder": "docs/completions",
+  "archive_folder": "docs/archive"
+}
