@@ -120,19 +120,18 @@
 | Field | Value |
 |-------|-------|
 | **Path** | `services/api/src/app.module.ts` |
-| **Status** | DORMANT_UNREFERENCED |
-| **Action** | DELETE (C4) |
-| **Lines** | 40, 111 |
+| **Status** | ~~DORMANT_UNREFERENCED~~ DELETED |
+| **Action** | ~~DELETE (C4)~~ DONE |
+| **Lines** | ~~40, 111~~ Removed |
 
 **Evidence:**
-- Line 40: `// import { DevPortalModule } from './dev-portal/dev-portal.module'; // TEMP DISABLED`
-- Line 111: `// DevPortalModule, // TEMP DISABLED`
-- Comments reference non-existent path (folder is `dev-portal.disabled/`)
+- Was: `// import { DevPortalModule } from './dev-portal/dev-portal.module'; // TEMP DISABLED`
+- Was: `// DevPortalModule, // TEMP DISABLED`
+- Comments referenced non-existent path
 
-**Recommendation:**
-- DELETE commented lines in C4 (medium-confidence)
-- Reduces confusion
-- No runtime impact
+**Resolution:**
+- DELETED in Phase C4 (2026-01-10)
+- Commit: See git history
 
 ---
 
@@ -241,14 +240,14 @@
 |--------|-------|
 | ACTIVE | 6 |
 | DORMANT_REFERENCED | 3 |
-| DORMANT_UNREFERENCED | 1 |
-| WIP | 0 (re-classified) |
+| DORMANT_UNREFERENCED | 0 |
+| DELETED | 1 |
 
 | Action | Count |
 |--------|-------|
 | KEEP | 8 |
 | DEFER | 2 |
-| DELETE (C4) | 1 |
+| DONE | 1 |
 | QUARANTINE | 0 |
 
 ---
