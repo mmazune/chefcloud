@@ -39,7 +39,6 @@ describe('Billing E2E (E24 - Auth, Authz, Rate Limiting)', () => {
         id: orgId,
         name: 'Billing Test Org',
         slug: `billing-test-${Date.now()}`,
-        status: 'ACTIVE',
       },
     });
 
@@ -50,8 +49,6 @@ describe('Billing E2E (E24 - Auth, Authz, Rate Limiting)', () => {
         id: branchId,
         orgId: org.id,
         name: 'Main Branch',
-        isHeadquarters: true,
-        status: 'ACTIVE',
       },
     });
 
@@ -60,8 +57,9 @@ describe('Billing E2E (E24 - Auth, Authz, Rate Limiting)', () => {
       data: {
         code: `BASIC-${Date.now()}`,
         name: 'Basic Plan',
-        priceUsd: 10.0,
-        status: 'ACTIVE',
+        priceUGX: 37000,
+        features: {},
+        isActive: true,
       },
     });
 
@@ -69,8 +67,9 @@ describe('Billing E2E (E24 - Auth, Authz, Rate Limiting)', () => {
       data: {
         code: `PRO-${Date.now()}`,
         name: 'Pro Plan',
-        priceUsd: 50.0,
-        status: 'ACTIVE',
+        priceUGX: 185000,
+        features: {},
+        isActive: true,
       },
     });
 
@@ -78,8 +77,9 @@ describe('Billing E2E (E24 - Auth, Authz, Rate Limiting)', () => {
       data: {
         code: `ENTERPRISE-${Date.now()}`,
         name: 'Enterprise Plan',
-        priceUsd: 200.0,
-        status: 'ACTIVE',
+        priceUGX: 740000,
+        features: {},
+        isActive: true,
       },
     });
 
@@ -112,12 +112,12 @@ describe('Billing E2E (E24 - Auth, Authz, Rate Limiting)', () => {
     });
 
     // Create subscription for the org
-    await prisma.subscription.create({
+    await prisma.orgSubscription.create({
       data: {
         orgId: org.id,
-        planCode: basicPlan.code,
+        planId: basicPlan.id,
         status: 'ACTIVE',
-        startDate: new Date(),
+        nextRenewalAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
       },
     });
 
@@ -177,9 +177,9 @@ describe('Billing E2E (E24 - Auth, Authz, Rate Limiting)', () => {
     // Clean up test data
     if (orgId) {
       await prisma.subscriptionEvent.deleteMany({
-        where: { subscription: { orgId: orgId } },
+        where: { orgId: orgId },
       });
-      await prisma.subscription.deleteMany({
+      await prisma.orgSubscription.deleteMany({
         where: { orgId: orgId },
       });
       await prisma.user.deleteMany({ where: { orgId: orgId } });

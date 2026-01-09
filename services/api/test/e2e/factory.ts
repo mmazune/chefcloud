@@ -194,6 +194,7 @@ export async function createMenu(prisma: PrismaClient, orgId: string, branchId: 
     update: {},
     create: {
       id: `burger-${orgId}`,
+      orgId,
       branchId,
       name: 'Burger',
       itemType: 'FOOD',
@@ -207,6 +208,7 @@ export async function createMenu(prisma: PrismaClient, orgId: string, branchId: 
     update: {},
     create: {
       id: `fries-${orgId}`,
+      orgId,
       branchId,
       name: 'Fries',
       itemType: 'FOOD',
@@ -220,6 +222,7 @@ export async function createMenu(prisma: PrismaClient, orgId: string, branchId: 
     update: {},
     create: {
       id: `cola-${orgId}`,
+      orgId,
       branchId,
       name: 'Cola',
       itemType: 'DRINK',
