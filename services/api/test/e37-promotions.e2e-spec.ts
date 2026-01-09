@@ -1,5 +1,5 @@
 import { INestApplication } from '@nestjs/common';
-import * as request from 'supertest';
+import request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/prisma.service';
 import { createE2EApp } from './helpers/e2e-bootstrap';
@@ -44,7 +44,7 @@ describe('E37 - Promotions & Pricing Engine (e2e)', () => {
     userId = login.user.id;
 
     // Use existing menu category and item from seeded Tapas data
-    const category = await prisma.menuCategory.findFirst({
+    const category = await prisma.category.findFirst({
       where: { orgId },
     });
     if (!category) throw new Error('Tapas org must have at least 1 category');

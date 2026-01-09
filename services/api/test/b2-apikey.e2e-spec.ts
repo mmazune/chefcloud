@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
-import * as request from 'supertest';
+import request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/prisma.service';
 import { cleanup } from './helpers/cleanup';
@@ -57,7 +57,9 @@ describe('API Key Security (E2E)', () => {
     // Create session for auth
     const session = await prisma.session.create({
       data: {
-        userId: user.id,
+        user: { connect: { id: user.id } },
+        org: { connect: { id: orgId } },
+        branch: { connect: { id: branchId } },
         token: `test-token-${Date.now()}`,
         expiresAt: new Date(Date.now() + 86400000),
       },
