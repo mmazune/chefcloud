@@ -530,8 +530,11 @@ Invalid value for argument `station`. Expected StationTag.
 
 **Category**: test-infrastructure  
 **First Observed**: M13.5.5 (2026-01-09)  
-**Impact**: MEDIUM - ~25 gate tests fail due to schema drift  
-**Status**: OPEN
+**Last Updated**: M13.5.5 Session 2 (2026-01-09)  
+**Impact**: MEDIUM - 21 gate tests fail due to schema drift  
+**Status**: OPEN (requires dedicated test migration sprint)
+
+**Gate Status (M13.5.5 Final)**: 35/56 PASS (63%), 21/56 FAIL (37%)
 
 **Summary**: Multiple E2E test files reference outdated Prisma schema names and field conventions:
 
@@ -542,43 +545,65 @@ Invalid value for argument `station`. Expected StationTag.
 5. `SubscriptionPlan` uses `priceUGX` not `priceUsd`, requires `features` field
 6. `Subscription` model is `OrgSubscription` with `planId` not `planCode`
 7. `Branch` uses `status` enum, not `isActive` boolean
+8. `Org.tier` field doesn't exist (was planned, never implemented)
+9. `Session.create` requires `user` relation connect, not just `userId`
+10. `prisma.menuCategory.findFirst()` requires prisma client properly initialized
 
-**Affected Files**:
+**Failure Categories**:
+
+**Category A: Schema Drift (Prisma validation errors)** - 15 files
+- Field renames (organization→org, organizationId→orgId)
+- Missing required relations (Session.user, Session.org)
+- Removed fields (Org.tier, InventoryLocation.type)
 ```
-test/a3-pos.e2e-spec.ts
-test/auth.e2e-spec.ts
 test/b2-apikey.e2e-spec.ts
-test/e23-platform-access.e2e-spec.ts
-test/e23-roles-access.e2e-spec.ts
-test/e24-subscriptions.e2e-spec.ts
-test/e26-kpis.e2e-spec.ts
-test/e2e/app-bisect.e2e-spec.ts
-test/e2e/billing.e2e-spec.ts
-test/e2e/bookings.e2e-spec.ts
 test/e2e/franchise-budgets-cache.e2e-spec.ts
 test/e2e/franchise-cache-invalidation.e2e-spec.ts
 test/e2e/franchise-rankings-cache.e2e-spec.ts
 test/e2e/inventory.e2e-spec.ts
-test/e2e/pos.e2e-spec.ts
-test/e2e/pos-isolation.e2e-spec.ts
 test/e2e/reports.e2e-spec.ts
 test/e2e/workforce.e2e-spec.ts
-test/e37-promotions.e2e-spec.ts
-test/msr-card.e2e-spec.ts
+test/e23-platform-access.e2e-spec.ts
+test/e23-roles-access.e2e-spec.ts
+test/e24-subscriptions.e2e-spec.ts
+test/e26-kpis.e2e-spec.ts
 test/plan-rate-limit.e2e-spec.ts
-test/smoke/minimal-boot.e2e-spec.ts
 test/sse-security.e2e-spec.ts
 test/webhook-security.e2e-spec.ts
+test/e2e/app-bisect.e2e-spec.ts
 ```
 
-**Passing E2E Tests**:
-- `test:e2e:strict`: 41/41 PASS (workforce-m103, workforce-m104)
-- `test/billing-simple.e2e-spec.ts`: 11/11 PASS (fixed in M13.5.5)
+**Category B: Test Setup Bugs** - 3 files
+- Prisma client undefined in test (test module bootstrap issue)
+```
+test/e37-promotions.e2e-spec.ts (TypeError: prisma.menuCategory undefined)
+test/msr-card.e2e-spec.ts (Hash.update receives undefined trackData)
+test/e2e/bookings.e2e-spec.ts (PrismaTestModule doesn't provide real data)
+```
+
+**Category C: API Behavior Changes** - 3 files
+- Endpoints now require payment status for order close
+- MSR assign endpoint requires track1/track2 data
+```
+test/a3-pos.e2e-spec.ts (order close requires payment first)
+test/e2e/pos.e2e-spec.ts (expected 201, got 400 on order close)
+test/e2e/billing.e2e-spec.ts (subscription flow changed)
+```
+
+**Passing E2E Tests (35/56)**:
+- ✅ `test:e2e:strict`: 41/41 PASS (critical gate)
+- ✅ `test/billing-simple.e2e-spec.ts`: 11/11 PASS
+- ✅ `test/auth.e2e-spec.ts`: 16/16 PASS (fixed M13.5.5 - badge seeding)
+- ✅ `test/e2e/auth.e2e-spec.ts`: PASS
+- ✅ All slice tests, smoke tests, di tests
 
 **Fixes Applied in M13.5.5**:
 - Fixed `billing-simple.e2e-spec.ts` completely (schema, roleLevel, demo protection)
-- Partial fixes to `billing.e2e-spec.ts`, `franchise-*-cache.e2e-spec.ts`, `plan-rate-limit.e2e-spec.ts`
-- Removed `devportal.prod.slice.e2e-spec.ts` from test list (disabled feature)
+- Fixed badge seeding architecture (org-prefixed badge codes: ORG1-*, ORG2-*)
+- Fixed `auth.e2e-spec.ts` to use CLOUDBADGE: format and TAPAS_BADGES credentials
+- Fixed `seedDemo.ts` to create EmployeeProfile with badgeId during badge seeding
+- Fixed `seed.ts` to create BadgeAsset for Demo Restaurant users
+- Added TAPAS_BADGES and CAFESSERIE_BADGES constants to e2e-credentials.ts
 
 **Required Fix**: Each affected file needs comprehensive schema migration:
 1. Replace all organization → org
@@ -587,5 +612,9 @@ test/webhook-security.e2e-spec.ts
 4. Add firstName/lastName to user creates
 5. Fix SubscriptionPlan fields
 6. Update Branch fields
+7. Fix Session.create to use relation connect
+8. Use createE2EApp() pattern instead of manual test module setup
 
-**Why Pre-Existing**: These tests were written against an older schema version and never updated when the schema evolved.
+**Estimated Effort**: 2-3 developer days (dedicated test migration sprint)
+
+**Why Pre-Existing**: These tests were written against an older schema version and never updated when the schema evolved. The badge seeding issue was a systematic architecture problem that required org-prefixed codes to avoid global uniqueness conflicts.
