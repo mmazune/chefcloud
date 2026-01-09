@@ -1,6 +1,27 @@
 import { Injectable, CanActivate, ExecutionContext, UnauthorizedException, ForbiddenException } from '@nestjs/common';
 
 /**
+ * DI Token classes for overriding guards in tests.
+ * These match the class names from the quarantined dev-portal module.
+ * Tests use these as tokens with { provide: DevAdminGuard, useClass: TestDevAdminGuard }
+ */
+@Injectable()
+export class DevAdminGuard implements CanActivate {
+  canActivate(): boolean {
+    // This is a placeholder — tests override with TestDevAdminGuard
+    return false;
+  }
+}
+
+@Injectable()
+export class SuperDevGuard implements CanActivate {
+  canActivate(): boolean {
+    // This is a placeholder — tests override with TestSuperDevGuard
+    return false;
+  }
+}
+
+/**
  * Test stub for DevAdminGuard - NO dependency injection needed.
  * Validates x-dev-admin header and mocks devAdmin based on known test emails.
  */

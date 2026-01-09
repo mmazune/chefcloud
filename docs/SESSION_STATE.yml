@@ -3,17 +3,17 @@
 date: 2026-01-10
 repo: mmazune/nimbuspos
 branch: main
-head_sha: d8747d3ef4359ee9fd8ee72d357fba969154f619
-objective: "Phase C — Deep cleanup (quarantine/remove dormant + incomplete features)"
+head_sha: 60509b70f3746af5d50403edd422a567dc29e52c
+objective: "Phase C3.1 — Quarantine DevPortal disabled variant + document MSR/SmartSprout"
 
 definition_of_done:
-  - DORMANT_FEATURE_REGISTRY.md created with evidence
-  - QUARANTINE_RULES.md documented
-  - PHASE_C_PLAN.md created with subphase DoDs
-  - High-confidence deletions proven safe and removed
-  - WIP features quarantined with zero production imports
+  - DevPortal disabled variant moved to wip/dev-portal/api-module/
+  - MSR Login documented as ACTIVE (not WIP)
+  - Smart Sprout documented as PLANNED (no code)
+  - Test imports fixed to use stubs (not quarantine paths)
+  - Zero production imports from wip/
   - Gates pass (lint, build)
-  - Atomic commits per subphase
+  - Atomic commit with proof
 
 gates_required:
   - pnpm -C services/api lint

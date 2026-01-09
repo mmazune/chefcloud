@@ -27,27 +27,70 @@
 
 ## Registry Entries
 
-### 1. dev-portal.disabled/
+### 1. dev-portal.disabled/ (QUARANTINED)
 
 | Field | Value |
 |-------|-------|
-| **Path** | `services/api/src/dev-portal.disabled/` |
-| **Status** | DORMANT_REFERENCED |
-| **Action** | DEFER |
+| **Path** | ~~`services/api/src/dev-portal.disabled/`~~ → `wip/dev-portal/api-module/` |
+| **Status** | WIP (Owner decision: REQUIRED for future) |
+| **Action** | QUARANTINE (C3.1) |
 | **Files** | 17 files |
 
 **Evidence:**
-- Commented out in `app.module.ts` line 40: `// import { DevPortalModule }`
-- Listed in `tsconfig.json` exclude array
-- Guards still imported by test files:
-  - `test/e2e/devportal.prod.slice.e2e-spec.ts` lines 14-15
-  - `test/devportal/auth-override.module.ts` lines 5-6
+- Was excluded in `tsconfig.json` exclude array
+- Was imported by test files (now fixed to use stubs)
+- Module not wired into `app.module.ts`
 
-**Recommendation:**
-- Cannot delete without fixing test imports
-- Option A: Update tests to use stub guards only
-- Option B: Keep .disabled folder for test reference
-- DEFER until test refactoring is prioritized
+**Owner Decision (2026-01-10):**
+- DevPortal IS REQUIRED — do NOT delete
+- Quarantine the disabled variant to prevent accidental imports
+- Tests must use stubs instead of importing from quarantine
+
+**Resurrection Plan:**
+1. Wire `DevPortalModule` back into `app.module.ts`
+2. Add feature flag to control activation
+3. Re-enable routes in frontend
+4. Update E2E tests to use real module (not stubs)
+5. Update seed data for DevAdmin and DeveloperApiKey
+
+---
+
+### 1b. MSR Login / Badge Auth (ACTIVE)
+
+| Field | Value |
+|-------|-------|
+| **Path** | `services/api/src/auth/` (integrated) |
+| **Status** | ACTIVE |
+| **Action** | KEEP |
+
+**Evidence:**
+- Schema has `MsrCard`, `BadgeAsset`, `BadgeState` models
+- Auth module has `/auth/msr-swipe` endpoint
+- Auth DTOs include `MsrSwipeDto`
+- E2E tests cover badge/MSR flows (`test/auth/auth.mock.ts`)
+- README documents MSR endpoint
+
+**Classification:**
+- NOT a WIP — fully wired and production-ready
+- No quarantine needed
+
+---
+
+### 1c. Smart Sprout Integration (PLANNED)
+
+| Field | Value |
+|-------|-------|
+| **Path** | None (no code exists) |
+| **Status** | PLANNED |
+| **Action** | DOCUMENT |
+
+**Evidence:**
+- No source code found in codebase (grep returned 0 matches)
+- Only documentation placeholder in `wip/README.md`
+
+**Classification:**
+- Future integration, not yet started
+- Document as planned feature for future work
 
 ---
 

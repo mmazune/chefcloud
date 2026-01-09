@@ -57,17 +57,29 @@
 
 ### C3: Quarantine WIP / Incomplete Features
 
+**Subphase C3.1 (Current):**
+- DevPortal (disabled variant) → `wip/dev-portal/`
+- MSR Login → Document as ACTIVE (not WIP — fully wired)
+- Smart Sprout → Document as planned/no code exists
+
+**Owner Decision (2026-01-10):**
+- DevPortal IS REQUIRED — do NOT delete, only quarantine disabled variant
+- MSR/Badge login is ACTIVE — wired into auth module, production-ready
+- Smart Sprout is planned but has no code yet
+
 **Candidates:**
-1. `services/sync/` — Placeholder sync service (not ready for production)
+1. `services/api/src/dev-portal.disabled/` → Move to `wip/dev-portal/api-module/`
+2. `services/sync/` — Placeholder sync service (not ready for production)
 
 **Process:**
-- Move to `_quarantine/` folder OR document as intentional placeholder
+- Move to `wip/` folder (not `_quarantine/` — new convention)
 - Ensure zero production imports from quarantined code
-- Add README to quarantine folder explaining contents
+- Fix test imports to use stubs instead of importing from wip/
+- Add STATUS.md to each feature folder explaining resurrection plan
 
 **DoD:**
 - WIP code isolated from production import graph
-- No broken imports
+- Tests do not import from wip/ paths
 - Lint + build pass
 
 ---
