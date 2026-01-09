@@ -13,7 +13,7 @@ import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma.service';
 
 export interface OpenCashSessionDto {
-  branchId: string;
+  branchId: string; // PRE-018: Populated from JWT context by controller
   openingFloatCents: number;
 }
 

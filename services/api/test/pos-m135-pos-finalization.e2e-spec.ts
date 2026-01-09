@@ -331,7 +331,7 @@ describe('M13.5 POS Finalization (e2e)', () => {
         .set(authHeaders())
         .set('x-idempotency-key', `m135-cap-${Date.now()}`);
 
-      expect(capture.status).toBe(200);
+      expect(capture.status).toBe(201); // POST returns 201
 
       // Verify order is PAID
       const orderAfter = await prisma.client.order.findUnique({ where: { id: order.id } });

@@ -20,12 +20,19 @@ export class KdsService {
    * - SLA state calculation
    * - Ordering by sentAt (oldest first)
    * - Optional "since" parameter for incremental sync
+   * PRE-020: station="ALL" returns tickets from all stations (no station filter)
    */
   async getQueue(station: string, since?: string): Promise<KdsTicketDto[]> {
+    // PRE-020: When station is "ALL", don't filter by station
+    const isAllStations = station === 'ALL';
     const whereClause: any = {
-      station: station as any,
       status: { in: ['QUEUED', 'READY'] },
     };
+
+    // Only add station filter if not "ALL"
+    if (!isAllStations) {
+      whereClause.station = station as any;
+    }
 
     // M1-KDS: Support incremental sync with "since" parameter
     if (since) {
@@ -33,6 +40,9 @@ export class KdsService {
         gte: new Date(since),
       };
     }
+
+    // PRE-020: Build orderItems filter - only filter by station if not ALL
+    const orderItemsWhere = isAllStations ? {} : { menuItem: { station: station as any } };
 
     const tickets = await this.prisma.client.kdsTicket.findMany({
       where: whereClause,
@@ -54,11 +64,7 @@ export class KdsService {
               include: {
                 menuItem: true,
               },
-              where: {
-                menuItem: {
-                  station: station as any,
-                },
-              },
+              where: orderItemsWhere,
             },
           },
         },
@@ -67,6 +73,7 @@ export class KdsService {
     });
 
     // Get SLA config for this org and station
+    // PRE-020: Skip SLA config for "ALL" station (would require per-ticket SLA lookup)
     let orgId: string | null = null;
     if (tickets.length > 0) {
       const branch = await this.prisma.client.branch.findUnique({
@@ -77,7 +84,7 @@ export class KdsService {
     }
 
     let slaConfig: any = null;
-    if (orgId) {
+    if (orgId && !isAllStations) {
       slaConfig = await this.prisma.client.kdsSlaConfig.findUnique({
         where: {
           orgId_station: {

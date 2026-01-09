@@ -250,15 +250,18 @@ export class PosPaymentsController {
 
   /**
    * Open a new cash session (L3+)
+   * PRE-018 fix: Get branchId from JWT context, not from DTO
    */
   @Post('cash-sessions/open')
   @Roles('L3')
   @ApiOperation({ summary: 'Open cash session (L3+)' })
   async openCashSession(
     @Body() dto: OpenCashSessionDto,
-    @Request() req: { user: { userId: string; orgId: string } },
+    @Request() req: { user: { userId: string; orgId: string; branchId: string } },
   ) {
-    return this.cashSessionsService.openSession(dto, req.user.orgId, req.user.userId);
+    // PRE-018: Use branchId from user context (JWT), not from body
+    const dtoWithBranch = { ...dto, branchId: req.user.branchId };
+    return this.cashSessionsService.openSession(dtoWithBranch, req.user.orgId, req.user.userId);
   }
 
   /**

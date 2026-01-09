@@ -148,16 +148,18 @@ export class PosPaymentsService {
       });
     }
 
-    // Idempotency check
-    const existing = await this.prisma.client.payment.findFirst({
-      where: {
-        orgId,
-        idempotencyKey: dto.idempotencyKey,
-      },
-    });
+    // Idempotency check - PRE-019 FIX: Only check if idempotencyKey is provided
+    if (dto.idempotencyKey) {
+      const existing = await this.prisma.client.payment.findFirst({
+        where: {
+          orgId,
+          idempotencyKey: dto.idempotencyKey,
+        },
+      });
 
-    if (existing) {
-      return existing; // Return existing payment (idempotent)
+      if (existing) {
+        return existing; // Return existing payment (idempotent)
+      }
     }
 
     // Determine provider and initial status
@@ -656,9 +658,17 @@ export class PosPaymentsService {
     const tipsCents = capturedPayments.reduce((sum, p) => sum + p.tipCents, 0);
     const dueCents = Math.max(0, orderTotalCents - paidCents);
 
+    // Check for refunded payments (posStatus = 'REFUNDED' or has refundedCents > 0)
+    const refundedPayments = order.payments.filter(p => p.posStatus === 'REFUNDED' || p.refundedCents > 0);
+    const hasRefundedPayments = refundedPayments.length > 0;
+    const allPaymentsFullyRefunded = order.payments.length > 0 && 
+      order.payments.filter(p => ['CAPTURED', 'REFUNDED'].includes(p.posStatus)).every(
+        p => p.refundedCents >= p.capturedCents
+      );
+
     // Determine paymentStatus
     let paymentStatus: PaymentSummary['paymentStatus'] = 'UNPAID';
-    if (paidCents <= 0 && capturedPayments.some(p => p.refundedCents > 0)) {
+    if (paidCents <= 0 && (hasRefundedPayments || allPaymentsFullyRefunded)) {
       paymentStatus = 'REFUNDED';
     } else if (paidCents >= orderTotalCents) {
       paymentStatus = 'PAID';
@@ -704,7 +714,8 @@ export class PosPaymentsService {
       include: {
         payments: {
           where: {
-            posStatus: 'CAPTURED',
+            // Include both CAPTURED and REFUNDED payments for accurate status calculation
+            posStatus: { in: ['CAPTURED', 'REFUNDED'] },
           },
         },
       },

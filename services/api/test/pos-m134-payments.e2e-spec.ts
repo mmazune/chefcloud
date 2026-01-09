@@ -265,7 +265,7 @@ describe('M13.4 POS Payments Core (e2e)', () => {
       .send({
         items: [
           {
-            itemId: testItem.id,
+            menuItemId: testItem.id,
             qty: 2,
             modifiers: [],
           },
@@ -308,6 +308,7 @@ describe('M13.4 POS Payments Core (e2e)', () => {
         .send({
           method: 'CASH',
           amountCents: 2000,
+          idempotencyKey, // Include in body for service-level check
         });
 
       expect(res1.status).toBe(201);
@@ -320,6 +321,7 @@ describe('M13.4 POS Payments Core (e2e)', () => {
         .send({
           method: 'CASH',
           amountCents: 2000,
+          idempotencyKey, // Include in body for service-level check
         });
 
       expect(res2.status).toBe(201);
