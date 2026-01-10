@@ -1,5 +1,5 @@
 {
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "Machine-readable pointers for LLM context anchoring in Nimbus POS / ChefCloud",
   "updated": "2026-01-10",
   "must_read_first": [
@@ -63,14 +63,19 @@
     "docs/runbooks/DEV_GUIDE.md",
     "docs/runbooks/DEMO_DATA_PLAYBOOK.md",
     "runbooks/PRODUCTION_RELEASE_RUNBOOK.md",
-    "runbooks/ALERT_RUNBOOK.md"
+    "runbooks/ALERT_RUNBOOK.md",
+    "runbooks/PRODUCTION_GO_LIVE_CHECKLIST.md",
+    "runbooks/PRODUCTION_ROLLBACK_MATRIX.md"
   ],
   "ops": {
     "monitoring": "docs/ops/MONITORING_ALERTING.md",
     "production_env": "runbooks/PRODUCTION_ENV_MATRIX.md",
     "security_defaults": "docs/security/PRODUCTION_SECURITY_DEFAULTS.md",
     "production_preflight": "scripts/verify/production-preflight.mjs",
-    "staging_preflight": "scripts/verify/staging-preflight.mjs"
+    "staging_preflight": "scripts/verify/staging-preflight.mjs",
+    "go_live_checklist": "runbooks/PRODUCTION_GO_LIVE_CHECKLIST.md",
+    "rollback_matrix": "runbooks/PRODUCTION_ROLLBACK_MATRIX.md",
+    "production_smoke_guide": "docs/verification/PRODUCTION_SMOKE_GUIDE.md"
   },
   "pre_existing_issues": "PRE_EXISTING_ISSUES_LOG.md",
   "completions_folder": "docs/completions",
