@@ -150,6 +150,17 @@ jest.mock('@tanstack/react-query', () => ({
         }
         return { data: null, isLoading: false, error: null };
     }),
+    useMutation: jest.fn().mockReturnValue({
+        mutate: jest.fn(),
+        mutateAsync: jest.fn().mockResolvedValue({}),
+        isPending: false,
+        error: null,
+    }),
+    useQueryClient: jest.fn().mockReturnValue({
+        invalidateQueries: jest.fn(),
+        setQueryData: jest.fn(),
+        getQueryData: jest.fn(),
+    }),
 }));
 
 // Mock components that might not exist yet

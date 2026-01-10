@@ -241,6 +241,11 @@ jest.mock('@tanstack/react-query', () => ({
         isLoading: false,
         error: null,
     }),
+    useQueryClient: jest.fn().mockReturnValue({
+        invalidateQueries: jest.fn(),
+        setQueryData: jest.fn(),
+        getQueryData: jest.fn(),
+    }),
     QueryClient: jest.fn().mockImplementation(() => ({
         invalidateQueries: jest.fn(),
     })),

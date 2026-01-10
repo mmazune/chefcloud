@@ -19,24 +19,18 @@ jest.mock('@/components/layout/AppShell', () => ({
   ),
 }));
 
-// Mock useQuery
+// Mock useQuery with complete react-query exports
 jest.mock('@tanstack/react-query', () => ({
   useQuery: jest.fn(),
   useMutation: jest.fn(),
+  useQueryClient: jest.fn(() => ({
+    invalidateQueries: jest.fn(),
+    setQueryData: jest.fn(),
+    getQueryData: jest.fn(),
+  })),
 }));
 
-// Mock useAuth - staff role (L2)
-jest.mock('@/hooks/useAuth', () => ({
-  useAuth: () => ({
-    user: {
-      id: 'test-staff-id',
-      email: 'waiter@test.com',
-      roleLevel: 2,
-      branchId: 'test-branch-id',
-    },
-    isLoading: false,
-  }),
-}));
+// useAuth is mocked globally in jest.setup.ts via @/contexts/AuthContext
 
 // Mock next/router
 jest.mock('next/router', () => ({

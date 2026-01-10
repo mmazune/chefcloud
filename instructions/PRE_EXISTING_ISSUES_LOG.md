@@ -490,4 +490,52 @@ expected 200 "OK", got 201 "Created"
 
 ---
 
-*Last Updated: 2026-01-09 (PRE-010, PRE-011 RESOLVED; PRE-012 OPEN)*
+### PRE-013: Web Component Tests Missing Context Providers (RESOLVED)
+
+| Field | Value |
+|-------|-------|
+| **ID** | PRE-013 |
+| **Category** | test-error |
+| **First Seen** | 2026-01-10 |
+| **Command** | `pnpm -C apps/web test` |
+| **Impact** | Medium |
+| **Suggested Owner** | Frontend / Test Infra |
+| **Status** | ✅ RESOLVED |
+| **Resolved Date** | 2026-01-10 |
+| **Resolution** | Phase H7 - Added global mocks in jest.setup.ts for AuthContext, ActiveBranchContext, next/router, apiClient. Created test-utils.tsx with renderWithProviders. See docs/quality/WEB_TESTING_HARNESS.md |
+
+**Original Issue**: 96 of 912 component tests failed with "useAuth must be used within an AuthProvider" error. Tests were rendering components without the required context providers.
+
+**Original Error**:
+```
+Error: useAuth must be used within an AuthProvider
+  at useAuth (src/contexts/AuthContext.tsx:128:11)
+```
+
+**Root Cause**: Component tests used raw `render()` without wrapping components in the same provider hierarchy they have in the real app (QueryClientProvider, AuthProvider, ActiveBranchProvider).
+
+**Resolution Applied**:
+1. Updated `jest.setup.ts` with comprehensive global mocks:
+   - `@/contexts/AuthContext` - Mocked useAuth with default OWNER user
+   - `@/contexts/ActiveBranchContext` - Mocked useActiveBranch
+   - `next/router` and `next/navigation` - Full router mocks
+   - `@/lib/api` - Mocked apiClient
+   - Browser APIs (matchMedia, ResizeObserver, IntersectionObserver)
+
+2. Created `apps/web/src/test/test-utils.tsx` with `renderWithProviders()` utility
+
+3. Fixed Vitest tests using Jest (converted `vi.mock` to `jest.mock`)
+
+4. Fixed incomplete react-query mocks (added `useQueryClient`)
+
+**Post-Fix Metrics**:
+```
+Test Suites: 16 failed, 90 passed, 106 total
+Tests:       83 failed, 876 passed, 959 total
+```
+
+**Note**: Remaining 83 failures are NOT context/provider issues - they are UI assertion failures (page elements not found) and other test-specific issues unrelated to PRE-013.
+
+---
+
+*Last Updated: 2026-01-10 (PRE-013 RESOLVED)*

@@ -6,13 +6,43 @@
 import React from 'react';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { vi, describe, it, expect, beforeEach } from 'vitest';
 import InventoryBarcodesPage from '../src/pages/inventory/barcodes';
+import { apiClient } from '@/lib/api';
 
-// Mock the API client
-vi.mock('@/lib/api', () => ({
-  apiClient: {
-    get: vi.fn().mockImplementation((url: string) => {
+// Get the mocked apiClient from jest.setup.ts
+const mockedApiClient = apiClient as jest.Mocked<typeof apiClient>;
+
+// Mock the layout components
+jest.mock('@/components/layout/AppShell', () => ({
+  AppShell: ({ children }: { children: React.ReactNode }) => <div data-testid="app-shell">{children}</div>,
+}));
+
+jest.mock('@/components/layout/PageHeader', () => ({
+  PageHeader: ({ title, subtitle }: { title: string; subtitle: string }) => (
+    <div data-testid="page-header">
+      <h1>{title}</h1>
+      <p>{subtitle}</p>
+    </div>
+  ),
+}));
+
+// Create a wrapper with QueryClient
+function createWrapper() {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+    },
+  });
+  return ({ children }: { children: React.ReactNode }) => (
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  );
+}
+
+describe('InventoryBarcodesPage', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    // Setup specific API responses for these tests
+    mockedApiClient.get.mockImplementation((url: string) => {
       if (url.includes('/inventory/barcodes') && !url.includes('resolve') && !url.includes('export')) {
         return Promise.resolve({
           data: {
@@ -63,41 +93,9 @@ vi.mock('@/lib/api', () => ({
         });
       }
       return Promise.resolve({ data: {} });
-    }),
-    post: vi.fn().mockResolvedValue({ data: { id: 'new-bc', value: 'NEW-BARCODE' } }),
-    delete: vi.fn().mockResolvedValue({}),
-  },
-}));
-
-// Mock the layout components
-vi.mock('@/components/layout/AppShell', () => ({
-  AppShell: ({ children }: { children: React.ReactNode }) => <div data-testid="app-shell">{children}</div>,
-}));
-
-vi.mock('@/components/layout/PageHeader', () => ({
-  PageHeader: ({ title, subtitle }: { title: string; subtitle: string }) => (
-    <div data-testid="page-header">
-      <h1>{title}</h1>
-      <p>{subtitle}</p>
-    </div>
-  ),
-}));
-
-// Create a wrapper with QueryClient
-function createWrapper() {
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: { retry: false },
-    },
-  });
-  return ({ children }: { children: React.ReactNode }) => (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-  );
-}
-
-describe('InventoryBarcodesPage', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
+    });
+    mockedApiClient.post.mockResolvedValue({ data: { id: 'new-bc', value: 'NEW-BARCODE' } });
+    mockedApiClient.delete.mockResolvedValue({});
   });
 
   it('renders page header with correct title', async () => {
@@ -187,6 +185,44 @@ describe('InventoryBarcodesPage', () => {
 });
 
 describe('Barcode Scanner Simulation', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockedApiClient.get.mockImplementation((url: string) => {
+      if (url.includes('/inventory/barcodes') && !url.includes('resolve') && !url.includes('export')) {
+        return Promise.resolve({
+          data: {
+            items: [
+              {
+                id: 'bc-1',
+                value: '1234567890123',
+                format: 'EAN13',
+                type: 'ITEM',
+                entityId: 'item-1',
+                entityName: 'Test Item',
+                entitySku: 'SKU-001',
+                isPrimary: true,
+                createdAt: '2024-01-15T10:00:00Z',
+              },
+            ],
+            total: 1,
+          },
+        });
+      }
+      if (url.includes('resolve')) {
+        return Promise.resolve({
+          data: {
+            type: 'ITEM',
+            itemId: 'item-1',
+            name: 'Test Item',
+            sku: 'SKU-001',
+            isActive: true,
+          },
+        });
+      }
+      return Promise.resolve({ data: {} });
+    });
+  });
+
   it('resolves barcode and shows result', async () => {
     render(<InventoryBarcodesPage />, { wrapper: createWrapper() });
 

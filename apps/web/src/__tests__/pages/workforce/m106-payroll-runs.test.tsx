@@ -24,8 +24,12 @@ jest.mock('@/components/layout/AppShell', () => ({
 // Mock react-query
 jest.mock('@tanstack/react-query', () => ({
   useQuery: jest.fn(),
-  useMutation: jest.fn(),
-  useQueryClient: jest.fn(),
+  useMutation: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+  useQueryClient: jest.fn(() => ({
+    invalidateQueries: jest.fn(),
+    setQueryData: jest.fn(),
+    getQueryData: jest.fn(),
+  })),
 }));
 
 // Mock next/router

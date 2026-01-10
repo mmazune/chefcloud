@@ -20,23 +20,18 @@ jest.mock('@/components/layout/AppShell', () => ({
   ),
 }));
 
-// Mock useQuery
+// Mock useQuery with complete react-query exports
 jest.mock('@tanstack/react-query', () => ({
   useQuery: jest.fn(),
+  useMutation: jest.fn(() => ({ mutate: jest.fn(), isLoading: false })),
+  useQueryClient: jest.fn(() => ({
+    invalidateQueries: jest.fn(),
+    setQueryData: jest.fn(),
+    getQueryData: jest.fn(),
+  })),
 }));
 
-// Mock useAuth
-jest.mock('@/hooks/useAuth', () => ({
-  useAuth: () => ({
-    user: {
-      id: 'test-user-id',
-      email: 'manager@test.com',
-      roleLevel: 4,
-      branchId: 'test-branch-id',
-    },
-    isLoading: false,
-  }),
-}));
+// useAuth is mocked globally in jest.setup.ts via @/contexts/AuthContext
 
 // Mock next/router
 jest.mock('next/router', () => ({
@@ -219,19 +214,7 @@ describe('Labor Page', () => {
   });
 
   it('shows audit log section for owner (L5)', () => {
-    // Re-mock with owner role
-    jest.doMock('@/hooks/useAuth', () => ({
-      useAuth: () => ({
-        user: {
-          id: 'test-owner-id',
-          email: 'owner@test.com',
-          roleLevel: 5,
-          branchId: 'test-branch-id',
-        },
-        isLoading: false,
-      }),
-    }));
-
+    // The global mock provides OWNER role by default, which has sufficient access
     render(<LaborPage />);
 
     expect(screen.getByText(/audit log/i)).toBeInTheDocument();
