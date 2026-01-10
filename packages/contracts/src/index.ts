@@ -50,3 +50,6 @@ export interface VersionInfo {
   buildDate: string;
   commit?: string;
 }
+
+// RBAC - Role Capability Model
+export * from './rbac';

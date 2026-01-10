@@ -42,6 +42,7 @@
     "demo:reset:tapas": "npx tsx prisma/reset-tapas-demo.ts"
   },
   "dependencies": {
+    "@chefcloud/contracts": "workspace:*",
     "@chefcloud/db": "workspace:*",
     "@nestjs/common": "^10.3.0",
     "@nestjs/config": "^4.0.2",

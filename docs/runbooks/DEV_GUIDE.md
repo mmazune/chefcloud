@@ -1570,6 +1570,74 @@ curl -X POST http://localhost:3001/webhooks/airtel \
 
 ChefCloud uses a hierarchical role-based access control (RBAC) system with levels L1-L5. Each level inherits permissions from lower levels, and roles can be mapped to specific levels while maintaining named role semantics.
 
+### RBAC Single Source of Truth
+
+The canonical role capability model is defined in **`@chefcloud/contracts`** at:
+
+```
+packages/contracts/src/rbac/roleCapabilities.ts
+```
+
+This shared module is the **single source of truth** for both frontend and backend RBAC logic.
+
+#### Exports
+
+| Export | Type | Description |
+|--------|------|-------------|
+| `RoleKey` | Union Type | All 11 role identifiers: OWNER, MANAGER, ACCOUNTANT, etc. |
+| `CapabilityKey` | Union Type | All HIGH risk capability identifiers |
+| `RoleLevel` | Union Type | Role levels: L1, L2, L3, L4, L5 |
+| `ROLE_KEYS` | Array | All role keys for iteration |
+| `CAPABILITY_KEYS` | Array | All capability keys for iteration |
+| `roleCapabilities` | Record | Maps RoleKey → { level, label, capabilities[], ... } |
+| `roleHasCapability(role, cap)` | Function | Check if role has a specific capability |
+| `levelHasCapability(level, cap)` | Function | Check if level meets capability requirement |
+| `getRoleCapabilities(role)` | Function | Get full metadata for a role |
+| `isValidRole(role)` | TypeGuard | Validate role string |
+| `isValidCapability(cap)` | TypeGuard | Validate capability string |
+
+#### Usage (FE & BE)
+
+```typescript
+import {
+  roleHasCapability,
+  getRoleCapabilities,
+  type RoleKey,
+  type CapabilityKey,
+} from '@chefcloud/contracts';
+
+// Check capability
+if (roleHasCapability('MANAGER', 'INVENTORY_PERIOD_CLOSE')) {
+  // Manager has this L4 capability
+}
+
+// Get role metadata
+const owner = getRoleCapabilities('OWNER');
+console.log(owner.capabilities); // All 23 HIGH risk capabilities
+```
+
+#### Adding New Capabilities
+
+1. **Add to `CapabilityKey`** union in `roleCapabilities.ts`
+2. **Add to `CAPABILITY_KEYS`** array
+3. **Add to `CAPABILITY_LEVEL_MAP`** with minimum level (L3/L4/L5)
+4. **Assign to roles** in `roleCapabilities` record
+5. **Run tests**: `pnpm --filter @chefcloud/contracts test`
+6. **Update NavMap** runtime JSON files with new actions
+
+#### Test Coverage
+
+The capability model has comprehensive tests ensuring:
+- All 11 roles exist with valid metadata
+- OWNER is superset (has ALL capabilities)
+- All capability keys follow `DOMAIN_ACTION` naming
+- Helper functions work correctly
+
+Run tests:
+```bash
+pnpm --filter @chefcloud/contracts test
+```
+
 ### Role Levels
 
 | Level  | Default Roles                                                            | Description                                 |
