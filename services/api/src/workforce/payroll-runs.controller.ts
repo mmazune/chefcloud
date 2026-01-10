@@ -22,6 +22,9 @@ import { Response } from 'express';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
+import { CapabilitiesGuard } from '../auth/capabilities.guard';
+import { RequireCapability } from '../auth/require-capability.decorator';
+import { HighRiskCapability } from '../auth/capabilities';
 import { PayrollRunService, CreatePayrollRunDto, PayrollRunStatus } from './payroll-run.service';
 import { PayrollPostingService, PostPayrollDto, PayPayrollDto } from './payroll-posting.service';
 import { PayrollReportingService } from './payroll-reporting.service';
@@ -149,9 +152,12 @@ export class PayrollRunsController {
    * POST /workforce/payroll-runs/:id/post
    * Post payroll run to GL (creates journal entry)
    * RBAC: L5 only (Owner/Accountant)
+   * HIGH RISK: Requires PAYROLL_POST capability (OWNER-exclusive)
    */
   @Post(':id/post')
   @Roles('L5')
+  @UseGuards(CapabilitiesGuard)
+  @RequireCapability(HighRiskCapability.PAYROLL_POST)
   async postPayrollRun(
     @Param('id') id: string,
     @Request() req: any,

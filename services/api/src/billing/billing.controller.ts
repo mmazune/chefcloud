@@ -3,6 +3,9 @@ import { AuthGuard } from '@nestjs/passport';
 import { BillingService } from './billing.service';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
+import { CapabilitiesGuard } from '../auth/capabilities.guard';
+import { RequireCapability } from '../auth/require-capability.decorator';
+import { HighRiskCapability } from '../auth/capabilities';
 import { PlanRateLimiterGuard } from '../common/plan-rate-limiter.guard';
 import { DemoProtectionService } from '../common/demo/demo-protection.service'; // M33-DEMO-S4
 import { PrismaService } from '../prisma.service'; // M33-DEMO-S4
@@ -38,10 +41,12 @@ export class BillingController {
    * Change subscription plan
    * Protected by plan-aware rate limiting
    * M33-DEMO-S4: Blocked for demo orgs
+   * HIGH RISK: Requires BILLING_MANAGE capability (OWNER-exclusive)
    */
   @Post('plan/change')
   @Roles('L5')
-  @UseGuards(PlanRateLimiterGuard)
+  @UseGuards(CapabilitiesGuard, PlanRateLimiterGuard)
+  @RequireCapability(HighRiskCapability.BILLING_MANAGE)
   async changePlan(@Req() req: any, @Body() body: { planCode: string }) {
     // M33-DEMO-S4: Block plan changes for demo orgs
     const org = await this.prisma.client.org.findUnique({ where: { id: req.user.orgId } });
@@ -59,10 +64,12 @@ export class BillingController {
    * Cancel subscription
    * Protected by plan-aware rate limiting
    * M33-DEMO-S4: Blocked for demo orgs
+   * HIGH RISK: Requires BILLING_MANAGE capability (OWNER-exclusive)
    */
   @Post('cancel')
   @Roles('L5')
-  @UseGuards(PlanRateLimiterGuard)
+  @UseGuards(CapabilitiesGuard, PlanRateLimiterGuard)
+  @RequireCapability(HighRiskCapability.BILLING_MANAGE)
   async cancel(@Req() req: any) {
     // M33-DEMO-S4: Block cancellations for demo orgs
     const org = await this.prisma.client.org.findUnique({ where: { id: req.user.orgId } });

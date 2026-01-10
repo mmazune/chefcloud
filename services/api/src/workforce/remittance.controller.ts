@@ -21,6 +21,9 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
+import { CapabilitiesGuard } from '../auth/capabilities.guard';
+import { RequireCapability } from '../auth/require-capability.decorator';
+import { HighRiskCapability } from '../auth/capabilities';
 import {
   RemittanceService,
   CreateBatchDto,
@@ -152,9 +155,12 @@ export class RemittanceController {
 
   /**
    * Post batch (APPROVED → POSTED) - L5 only
+   * HIGH RISK: Requires REMITTANCE_SUBMIT capability (OWNER-exclusive)
    */
   @Post(':id/post')
   @Roles('L5')
+  @UseGuards(CapabilitiesGuard)
+  @RequireCapability(HighRiskCapability.REMITTANCE_SUBMIT)
   async postBatch(
     @Param('orgId') orgId: string,
     @Param('id') id: string,

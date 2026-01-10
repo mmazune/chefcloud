@@ -15,6 +15,9 @@ import { AuthGuard } from '@nestjs/passport';
 import { OpsService } from './ops.service';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
+import { CapabilitiesGuard } from '../auth/capabilities.guard';
+import { RequireCapability } from '../auth/require-capability.decorator';
+import { HighRiskCapability } from '../auth/capabilities';
 import { FeatureFlagsService } from './feature-flags.service';
 import { MaintenanceService } from './maintenance.service';
 
@@ -56,22 +59,25 @@ export class OpsController {
   }
 
   @Post('apikeys')
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(AuthGuard('jwt'), RolesGuard, CapabilitiesGuard)
   @Roles('L5')
+  @RequireCapability(HighRiskCapability.API_KEY_MANAGE)
   async createApiKey(@Req() req: any, @Body() dto: CreateApiKeyDto): Promise<any> {
     return this.opsService.createApiKey(req.user.orgId, dto.name, dto.scopes);
   }
 
   @Get('apikeys')
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(AuthGuard('jwt'), RolesGuard, CapabilitiesGuard)
   @Roles('L5')
+  @RequireCapability(HighRiskCapability.API_KEY_MANAGE)
   async listApiKeys(@Req() req: any): Promise<any> {
     return this.opsService.listApiKeys(req.user.orgId);
   }
 
   @Delete('apikeys/:id')
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(AuthGuard('jwt'), RolesGuard, CapabilitiesGuard)
   @Roles('L5')
+  @RequireCapability(HighRiskCapability.API_KEY_MANAGE)
   async deleteApiKey(@Req() req: any, @Param('id') id: string): Promise<any> {
     return this.opsService.deleteApiKey(req.user.orgId, id);
   }

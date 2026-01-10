@@ -10,6 +10,8 @@ import { SessionInvalidationService } from './session-invalidation.service';
 import { SessionsService } from './sessions.service'; // M10
 import { MsrCardService } from './msr-card.service'; // M10
 import { CacheModule } from '../common/cache.module';
+import { CapabilitiesGuard } from './capabilities.guard'; // Prompt2: HIGH risk guard
+import { HighRiskAuditService } from './highrisk-audit.service'; // Prompt2: HIGH risk audit
 
 @Module({
   imports: [
@@ -34,7 +36,9 @@ import { CacheModule } from '../common/cache.module';
     SessionInvalidationService,
     SessionsService, // M10
     MsrCardService, // M10
+    CapabilitiesGuard, // Prompt2: HIGH risk guard
+    HighRiskAuditService, // Prompt2: HIGH risk audit
   ],
-  exports: [AuthService, JwtStrategy, SessionInvalidationService, SessionsService, MsrCardService], // M10
+  exports: [AuthService, JwtStrategy, SessionInvalidationService, SessionsService, MsrCardService, CapabilitiesGuard, HighRiskAuditService], // M10 + Prompt2
 })
 export class AuthModule {}

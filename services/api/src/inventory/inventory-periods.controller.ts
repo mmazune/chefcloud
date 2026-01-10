@@ -36,6 +36,9 @@ import {
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
+import { CapabilitiesGuard } from '../auth/capabilities.guard';
+import { RequireCapability } from '../auth/require-capability.decorator';
+import { HighRiskCapability } from '../auth/capabilities';
 import { InventoryPeriodsService, ClosePeriodDto, CreatePeriodDto, ReopenPeriodDto } from './inventory-periods.service';
 import { InventoryReconciliationService } from './inventory-reconciliation.service';
 import { InventoryPeriodExportService } from './inventory-period-export.service';
@@ -477,15 +480,19 @@ export class InventoryPeriodsController {
 
   /**
    * M12.2: Reopen a closed period (L5 only).
+   * HIGH RISK: Requires FINANCE_PERIOD_REOPEN capability (OWNER-exclusive)
    */
   @Post(':id/reopen')
   @Roles('OWNER', 'ADMIN')
+  @UseGuards(CapabilitiesGuard)
+  @RequireCapability(HighRiskCapability.FINANCE_PERIOD_REOPEN)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'M12.2: Reopen closed period (L5 only)' })
   @ApiParam({ name: 'id', description: 'Period ID' })
   @ApiBody({ type: ReopenPeriodBody })
   @ApiResponse({ status: 200, description: 'Period reopened' })
   @ApiResponse({ status: 400, description: 'Period not closed or reason too short' })
+  @ApiResponse({ status: 403, description: 'Insufficient permissions - OWNER only' })
   @ApiResponse({ status: 404, description: 'Period not found' })
   async reopenPeriod(
     @Request() req,
