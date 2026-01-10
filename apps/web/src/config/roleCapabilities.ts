@@ -601,3 +601,75 @@ export function isRouteAccessible(jobRole: JobRole | string | null | undefined, 
   const navItems = getAllNavItems(jobRole);
   return navItems.some(item => route === item.href || route.startsWith(item.href + '/'));
 }
+
+/**
+ * Alias for isRouteAccessible - validates if a role can access a route
+ */
+export function canAccessRoute(jobRole: JobRole | string | null | undefined, route: string): boolean {
+  return isRouteAccessible(jobRole, route);
+}
+
+/**
+ * Get the first accessible sidebar link for a role (fallback)
+ */
+export function getFirstAccessibleRoute(jobRole: JobRole | string | null | undefined): string | null {
+  const navItems = getAllNavItems(jobRole);
+  if (navItems.length === 0) return null;
+  return navItems[0].href;
+}
+
+/**
+ * Result type for getDefaultRouteForRole
+ */
+export interface DefaultRouteResult {
+  /** The route to navigate to */
+  route: string;
+  /** Source of the route decision */
+  source: 'default' | 'fallback' | 'no-access';
+  /** Whether the user has any accessible routes */
+  hasAccess: boolean;
+}
+
+/**
+ * Get default route for a role with validation and fallback logic.
+ * 
+ * Logic:
+ * 1. Get the role's configured default route
+ * 2. Validate it's accessible using canAccessRoute
+ * 3. If invalid, fall back to first accessible sidebar link
+ * 4. If none, return a no-access indicator
+ * 
+ * @param jobRole - The user's job role
+ * @returns DefaultRouteResult with route and metadata
+ */
+export function getDefaultRouteForRole(jobRole: JobRole | string | null | undefined): DefaultRouteResult {
+  const capabilities = getRoleCapabilities(jobRole);
+  const defaultRoute = capabilities.defaultRoute;
+  
+  // Check if default route is accessible
+  if (canAccessRoute(jobRole, defaultRoute)) {
+    return {
+      route: defaultRoute,
+      source: 'default',
+      hasAccess: true,
+    };
+  }
+  
+  // Fallback to first accessible sidebar link
+  const fallbackRoute = getFirstAccessibleRoute(jobRole);
+  if (fallbackRoute) {
+    return {
+      route: fallbackRoute,
+      source: 'fallback',
+      hasAccess: true,
+    };
+  }
+  
+  // No accessible routes - will show NoAccessPage
+  return {
+    route: '/no-access',
+    source: 'no-access',
+    hasAccess: false,
+  };
+}
+

@@ -10,7 +10,7 @@ import {
   LoginCredentials,
   PinLoginCredentials,
 } from '@/lib/auth';
-import { getDefaultRoute } from '@/config/roleCapabilities';
+import { getDefaultRouteForRole, canAccessRoute } from '@/config/roleCapabilities';
 
 interface AuthContextType {
   user: AuthUser | null;
@@ -23,6 +23,38 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+/**
+ * Determine the post-login route for a user.
+ * 
+ * Logic:
+ * 1. If explicit redirect is provided and accessible, use it
+ * 2. Otherwise use role's default route (with fallback)
+ * 3. Prevent redirecting to login or already-on routes
+ */
+function getPostLoginRoute(
+  jobRole: string | undefined,
+  explicitRedirect: string | undefined,
+  currentPath: string
+): string {
+  // If explicit redirect provided, validate it
+  if (explicitRedirect && explicitRedirect !== '/login') {
+    if (canAccessRoute(jobRole, explicitRedirect)) {
+      return explicitRedirect;
+    }
+    // Explicit redirect not accessible, fall through to default
+  }
+  
+  // Get default route with validation and fallback
+  const result = getDefaultRouteForRole(jobRole);
+  
+  // Prevent loop: if already on default route, don't redirect
+  if (result.route === currentPath) {
+    return currentPath;
+  }
+  
+  return result.route;
+}
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -63,11 +95,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Small delay to ensure cookie is fully set before navigation
       await new Promise(resolve => setTimeout(resolve, 100));
       
-      // M8.1: Role-based post-login routing
-      // Use explicit redirect if provided, otherwise route based on jobRole
-      const redirect = router.query.redirect as string;
-      const defaultRoute = getDefaultRoute(userData.jobRole);
-      router.push(redirect || defaultRoute);
+      // M8.1/Prompt5: Role-based post-login routing with validation
+      const explicitRedirect = router.query.redirect as string;
+      const targetRoute = getPostLoginRoute(
+        userData.jobRole,
+        explicitRedirect,
+        router.pathname
+      );
+      router.push(targetRoute);
     } catch (err: any) {
       setError(err.message || 'Login failed');
       throw err;
@@ -86,11 +121,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Small delay to ensure cookie is fully set before navigation
       await new Promise(resolve => setTimeout(resolve, 100));
       
-      // M8.1: Role-based post-login routing
-      // Use explicit redirect if provided, otherwise route based on jobRole
-      const redirect = router.query.redirect as string;
-      const defaultRoute = getDefaultRoute(userData.jobRole);
-      router.push(redirect || defaultRoute);
+      // M8.1/Prompt5: Role-based post-login routing with validation
+      const explicitRedirect = router.query.redirect as string;
+      const targetRoute = getPostLoginRoute(
+        userData.jobRole,
+        explicitRedirect,
+        router.pathname
+      );
+      router.push(targetRoute);
     } catch (err: any) {
       setError(err.message || 'PIN login failed');
       throw err;

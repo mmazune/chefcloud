@@ -1638,6 +1638,71 @@ Run tests:
 pnpm --filter @chefcloud/contracts test
 ```
 
+### Role Landing Routes (Prompt 5)
+
+After authentication, each role lands on a validated default route. The routing logic ensures users always reach an accessible page.
+
+#### Post-Login Routing Logic
+
+```
+1. If explicit redirect (?redirect=) provided AND accessible → use it
+2. Otherwise get role's configured default route
+3. Validate route with canAccessRoute(role, route)
+4. If invalid → fall back to first accessible sidebar link
+5. If none → show /no-access page
+6. Prevent loop: if already on target route, don't redirect
+```
+
+#### Key Functions (`apps/web/src/config/roleCapabilities.ts`)
+
+| Function | Description |
+|----------|-------------|
+| `getDefaultRouteForRole(role)` | Returns `{ route, source, hasAccess }` with validation |
+| `canAccessRoute(role, route)` | Check if role can access a specific route |
+| `getFirstAccessibleRoute(role)` | Get first nav item as fallback |
+| `isRouteAccessible(role, route)` | Alias for canAccessRoute |
+
+#### Default Routes by Role
+
+| Role | Default Route | Fallback |
+|------|---------------|----------|
+| OWNER | `/workspaces/owner` | `/dashboard` |
+| MANAGER | `/workspaces/manager` | `/dashboard` |
+| ACCOUNTANT | `/workspaces/accountant` | `/finance` |
+| SUPERVISOR | `/workspaces/supervisor` | `/pos` |
+| CASHIER | `/workspaces/cashier` | `/pos` |
+| WAITER | `/workspaces/waiter` | `/pos` |
+| CHEF | `/workspaces/chef` | `/kds` |
+| BARTENDER | `/workspaces/bartender` | `/pos` |
+| PROCUREMENT | `/workspaces/procurement` | `/inventory` |
+| STOCK_MANAGER | `/workspaces/stock-manager` | `/inventory` |
+| EVENT_MANAGER | `/workspaces/event-manager` | `/reservations` |
+
+#### Integration Points
+
+1. **AuthContext** (`apps/web/src/contexts/AuthContext.tsx`):
+   - `login()` and `pinLogin()` use `getPostLoginRoute()` internally
+   - Validates explicit redirect before using
+   - Falls back to role default with validation
+
+2. **NoAccessPage** (`apps/web/src/components/NoAccessPage.tsx`):
+   - Displayed when user has no accessible routes
+   - Shows role and requested route for debugging
+
+#### Tests
+
+```bash
+# Run role landing route tests (111 tests)
+pnpm --filter @chefcloud/web jest src/__tests__/config/role-landing-routes.test.ts
+```
+
+Test coverage includes:
+- All 11 roles have accessible default routes
+- Default routes exist in nav items
+- canAccessRoute works correctly
+- Edge cases (null/undefined/invalid roles)
+- No redirect loops
+
 ### Role Levels
 
 | Level  | Default Roles                                                            | Description                                 |
