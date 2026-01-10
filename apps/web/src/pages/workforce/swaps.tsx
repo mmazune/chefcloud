@@ -46,6 +46,25 @@ import {
 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { useToast } from '@/components/ui/use-toast';
+import { definePageMeta } from '@/lib/pageMeta';
+
+/** Phase I3: Page metadata for action catalog */
+export const pageMeta = definePageMeta({
+  id: '/workforce/swaps',
+  title: 'Swap Approvals',
+  primaryActions: [
+    { label: 'Approve Swap', testId: 'swap-approve', intent: 'update' },
+    { label: 'Reject Swap', testId: 'swap-reject', intent: 'delete' },
+  ],
+  apiCalls: [
+    { method: 'GET', path: '/workforce/swaps', trigger: 'onMount', notes: 'Fetch pending swaps' },
+    { method: 'GET', path: '/workforce/swaps/history', trigger: 'onMount', notes: 'Fetch swap history' },
+    { method: 'POST', path: '/workforce/swaps/:id/approve', trigger: 'onAction', notes: 'Approve swap' },
+    { method: 'POST', path: '/workforce/swaps/:id/reject', trigger: 'onAction', notes: 'Reject swap' },
+  ],
+  risk: 'MEDIUM',
+  allowedRoles: ['OWNER', 'MANAGER', 'SUPERVISOR'],
+});
 
 interface SwapRequest {
   id: string;
@@ -238,6 +257,7 @@ export default function SwapApprovalsPage() {
               variant="outline"
               size="sm"
               onClick={() => openReviewDialog(swap, 'reject')}
+              data-testid="swap-reject"
             >
               <XCircle className="w-4 h-4 mr-1" />
               Reject
@@ -245,6 +265,7 @@ export default function SwapApprovalsPage() {
             <Button
               size="sm"
               onClick={() => openReviewDialog(swap, 'approve')}
+              data-testid="swap-approve"
             >
               <CheckCircle className="w-4 h-4 mr-1" />
               Approve

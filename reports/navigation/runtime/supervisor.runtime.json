@@ -1,0 +1,200 @@
+{
+  "role": "SUPERVISOR",
+  "capturedAt": "2026-01-10T19:00:00.000Z",
+  "captureMethod": "static-analysis-v2",
+  "routesVisited": [
+    "/workspaces/supervisor",
+    "/pos",
+    "/pos/checkout/[orderId]",
+    "/pos/cash-sessions",
+    "/reservations",
+    "/staff",
+    "/workforce/timeclock",
+    "/workforce/swaps",
+    "/dashboard",
+    "/workforce/my-availability",
+    "/workforce/my-swaps",
+    "/workforce/open-shifts",
+    "/settings"
+  ],
+  "sidebarLinks": [
+    {
+      "label": "POS",
+      "href": "/pos",
+      "navGroup": "Operations",
+      "isActive": false,
+      "probeOutcome": "ok"
+    },
+    {
+      "label": "Reservations",
+      "href": "/reservations",
+      "navGroup": "Operations",
+      "isActive": false,
+      "probeOutcome": "ok"
+    },
+    {
+      "label": "Staff",
+      "href": "/staff",
+      "navGroup": "Operations",
+      "isActive": false,
+      "probeOutcome": "ok"
+    },
+    {
+      "label": "Timeclock",
+      "href": "/workforce/timeclock",
+      "navGroup": "Workforce",
+      "isActive": false,
+      "probeOutcome": "ok"
+    },
+    {
+      "label": "Swap Approvals",
+      "href": "/workforce/swaps",
+      "navGroup": "Workforce",
+      "isActive": false,
+      "probeOutcome": "ok"
+    },
+    {
+      "label": "Dashboard",
+      "href": "/dashboard",
+      "navGroup": "Overview",
+      "isActive": false,
+      "probeOutcome": "ok"
+    },
+    {
+      "label": "My Availability",
+      "href": "/workforce/my-availability",
+      "navGroup": "My Schedule",
+      "isActive": false,
+      "probeOutcome": "ok"
+    },
+    {
+      "label": "My Swaps",
+      "href": "/workforce/my-swaps",
+      "navGroup": "My Schedule",
+      "isActive": false,
+      "probeOutcome": "ok"
+    },
+    {
+      "label": "Open Shifts",
+      "href": "/workforce/open-shifts",
+      "navGroup": "My Schedule",
+      "isActive": false,
+      "probeOutcome": "ok"
+    },
+    {
+      "label": "Settings",
+      "href": "/settings",
+      "navGroup": "Settings",
+      "isActive": false,
+      "probeOutcome": "ok"
+    }
+  ],
+  "actions": [
+    {
+      "route": "/pos",
+      "elementType": "button",
+      "testId": "pos-new-order",
+      "label": "New Order"
+    },
+    {
+      "route": "/pos",
+      "elementType": "button",
+      "testId": "pos-add-item",
+      "label": "Add Item"
+    },
+    {
+      "route": "/pos",
+      "elementType": "button",
+      "testId": "pos-send-kitchen",
+      "label": "Send to Kitchen"
+    },
+    {
+      "route": "/pos",
+      "elementType": "button",
+      "testId": "pos-checkout",
+      "label": "Take Payment",
+      "attributes": {
+        "intent": "modal",
+        "note": "Opens in-page payment modal"
+      }
+    },
+    {
+      "route": "/pos",
+      "elementType": "button",
+      "testId": "pos-void-order",
+      "label": "Void Order"
+    },
+    {
+      "route": "/pos",
+      "elementType": "button",
+      "testId": "pos-split-bill",
+      "label": "Split Bill"
+    },
+    {
+      "route": "/pos/checkout/[orderId]",
+      "elementType": "button",
+      "testId": "checkout-back",
+      "label": "Back to POS"
+    },
+    {
+      "route": "/pos/checkout/[orderId]",
+      "elementType": "button",
+      "testId": "checkout-pay-cash",
+      "label": "Pay Cash"
+    },
+    {
+      "route": "/pos/checkout/[orderId]",
+      "elementType": "button",
+      "testId": "checkout-pay-card",
+      "label": "Pay Card"
+    },
+    {
+      "route": "/pos/checkout/[orderId]",
+      "elementType": "button",
+      "testId": "checkout-complete",
+      "label": "Complete Sale"
+    },
+    {
+      "route": "/pos/cash-sessions",
+      "elementType": "button",
+      "testId": "cash-session-open",
+      "label": "Open Session"
+    },
+    {
+      "route": "/pos/cash-sessions",
+      "elementType": "button",
+      "testId": "cash-session-close",
+      "label": "Close Session"
+    },
+    {
+      "route": "/workforce/swaps",
+      "elementType": "button",
+      "testId": "swap-approve",
+      "label": "Approve Swap"
+    },
+    {
+      "route": "/workforce/swaps",
+      "elementType": "button",
+      "testId": "swap-reject",
+      "label": "Reject Swap"
+    }
+  ],
+  "apiCalls": [
+    { "route": "/pos", "method": "GET", "path": "/pos/open" },
+    { "route": "/pos", "method": "GET", "path": "/pos/menu" },
+    { "route": "/pos", "method": "POST", "path": "/pos/orders" },
+    { "route": "/pos", "method": "POST", "path": "/pos/orders/:id/lines" },
+    { "route": "/pos", "method": "POST", "path": "/pos/orders/:id/send" },
+    { "route": "/pos", "method": "POST", "path": "/pos/orders/:id/void" },
+    { "route": "/pos/checkout/[orderId]", "method": "GET", "path": "/pos/orders/:id" },
+    { "route": "/pos/checkout/[orderId]", "method": "POST", "path": "/pos/orders/:id/payments" },
+    { "route": "/pos/checkout/[orderId]", "method": "POST", "path": "/pos/orders/:id/complete" },
+    { "route": "/pos/cash-sessions", "method": "GET", "path": "/pos/cash-sessions" },
+    { "route": "/pos/cash-sessions", "method": "POST", "path": "/pos/cash-sessions/open" },
+    { "route": "/pos/cash-sessions", "method": "POST", "path": "/pos/cash-sessions/:id/close" },
+    { "route": "/workforce/swaps", "method": "GET", "path": "/workforce/swaps" },
+    { "route": "/workforce/swaps", "method": "GET", "path": "/workforce/swaps/history" },
+    { "route": "/workforce/swaps", "method": "POST", "path": "/workforce/swaps/:id/approve" },
+    { "route": "/workforce/swaps", "method": "POST", "path": "/workforce/swaps/:id/reject" }
+  ]
+}
