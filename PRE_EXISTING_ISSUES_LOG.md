@@ -4,6 +4,31 @@ This document tracks issues that predate the current milestone and are not cause
 
 ---
 
+## PRE-012: Web Component Tests Missing Context Providers
+
+**Category**: test-infrastructure  
+**First Observed**: Phase H6 Verification (2026-01-10)  
+**Impact**: LOW - 96 tests fail, but no functional bugs  
+**Status**: OPEN
+
+**Summary**: 96 of 912 web tests fail with "useAuth must be used within AuthProvider" errors. These are test setup issues where components are rendered without proper context providers.
+
+**Evidence**:
+```
+Test Suites: 23 failed, 83 passed, 106 total
+Tests:       96 failed, 816 passed, 912 total
+
+Error: useAuth must be used within AuthProvider
+  at useAuth (src/contexts/AuthContext.tsx:128:11)
+  at AnalyticsPage (src/pages/analytics/index.tsx:135:27)
+```
+
+**Root Cause**: Test files missing proper mock providers or using shallow render without context wrappers.
+
+**Recommendation**: Fix in dedicated test infrastructure improvement phase.
+
+---
+
 ## PRE-009: no-case-declarations in payroll-calculation.service.ts (FIXED)
 
 **Category**: lint-error  

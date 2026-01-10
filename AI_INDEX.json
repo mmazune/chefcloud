@@ -1,5 +1,5 @@
 {
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "Machine-readable pointers for LLM context anchoring in Nimbus POS / ChefCloud",
   "updated": "2026-01-10",
   "must_read_first": [
@@ -8,6 +8,12 @@
     "docs/SESSION_STATE.yml",
     "docs/milestones/CHEFCLOUD_MILESTONES_AND_HANDOVER.md"
   ],
+  "signoff": {
+    "functional_signoff": "docs/signoff/FUNCTIONAL_SIGNOFF.md",
+    "known_limitations": "docs/signoff/KNOWN_LIMITATIONS.md",
+    "status": "GO",
+    "phase": "H6"
+  },
   "core_maps": [
     "docs/overview/FRONTEND_ROUTE_MAP.md",
     "docs/overview/BACKEND_API_MAP.md",
