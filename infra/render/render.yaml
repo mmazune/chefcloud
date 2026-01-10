@@ -1,0 +1,136 @@
+# ============================================================================
+# ChefCloud Render Blueprint - Staging Environment
+# https://render.com/docs/infrastructure-as-code
+# ============================================================================
+#
+# This blueprint defines the staging infrastructure for ChefCloud on Render.
+# It provisions:
+#   - PostgreSQL managed database
+#   - Redis managed cache
+#   - API service (NestJS) with Docker
+#   - Web service (Next.js) with Docker
+#
+# Usage:
+#   1. Connect this repo to Render
+#   2. Create a Blueprint from this file
+#   3. Set secret environment variables in Render Dashboard
+#   4. Deploy
+#
+# ============================================================================
+
+# Databases
+databases:
+  - name: chefcloud-staging-db
+    plan: starter  # Use 'standard' for production
+    databaseName: chefcloud_staging
+    user: chefcloud
+    region: oregon  # Choose appropriate region
+    postgresMajorVersion: "16"
+    # ipAllowList: []  # Uncomment to restrict access
+
+# Redis (Key-Value Store)
+# Note: Render Redis is available on Team/Organization plans
+# For free tier, consider using Upstash or similar external Redis
+# keyValueStores:
+#   - name: chefcloud-staging-redis
+#     plan: starter
+#     region: oregon
+#     maxmemoryPolicy: allkeys-lru
+
+# Services
+services:
+  # --------------------------------------------------------------------------
+  # API Service (NestJS)
+  # --------------------------------------------------------------------------
+  - type: web
+    name: chefcloud-staging-api
+    runtime: docker
+    region: oregon
+    plan: starter  # Use 'standard' for production
+    dockerfilePath: ./services/api/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    
+    # Environment Variables
+    envVars:
+      # Database - auto-linked to managed database
+      - key: DATABASE_URL
+        fromDatabase:
+          name: chefcloud-staging-db
+          property: connectionString
+      
+      # Redis - if using external Redis, set REDIS_URL manually
+      # - key: REDIS_URL
+      #   sync: false  # Set in dashboard
+      
+      # Required secrets - SET IN RENDER DASHBOARD
+      - key: JWT_SECRET
+        sync: false  # Must be set manually in Render Dashboard
+      
+      # Server config
+      - key: NODE_ENV
+        value: staging
+      - key: PORT
+        value: "3001"
+      
+      # CORS - must match web service URL
+      - key: CORS_ORIGINS
+        value: "${RENDER_EXTERNAL_URL},https://chefcloud-staging-web.onrender.com"
+      
+      # WebAuthn
+      - key: RP_ID
+        value: "chefcloud-staging-web.onrender.com"
+      - key: ORIGIN
+        value: "https://chefcloud-staging-web.onrender.com"
+      
+      # Feature flags - disabled by default for staging
+      - key: DEVPORTAL_ENABLED
+        value: "0"
+      - key: DOCS_ENABLED
+        value: "0"
+      - key: METRICS_ENABLED
+        value: "0"
+      
+      # Logging
+      - key: LOG_LEVEL
+        value: info
+      - key: LOG_SILENCE_HEALTH
+        value: "1"
+      
+      # Demo protection
+      - key: DEMO_PROTECT_WRITES
+        value: "0"
+      
+      # Optional observability - SET IN RENDER DASHBOARD
+      # - key: SENTRY_DSN
+      #   sync: false
+
+  # --------------------------------------------------------------------------
+  # Web Service (Next.js)
+  # --------------------------------------------------------------------------
+  - type: web
+    name: chefcloud-staging-web
+    runtime: docker
+    region: oregon
+    plan: starter  # Use 'standard' for production
+    dockerfilePath: ./apps/web/Dockerfile
+    dockerContext: .
+    healthCheckPath: /
+    
+    # Build-time args for Next.js
+    buildCommand: ""
+    
+    # Environment Variables
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "3000"
+      
+      # API URL - must match API service URL
+      - key: NEXT_PUBLIC_API_URL
+        value: "https://chefcloud-staging-api.onrender.com"
+      
+      # Version
+      - key: NEXT_PUBLIC_APP_VERSION
+        value: staging
