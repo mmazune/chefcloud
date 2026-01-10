@@ -46,6 +46,10 @@
     "classification_rules": "docs/routes/ROUTE_CLASSIFICATION_RULES.md",
     "unlinked_registry": "docs/routes/UNLINKED_ROUTE_REGISTRY.md"
   },
+  "ci": {
+    "workflow": ".github/workflows/ci.yml",
+    "overview": "docs/ci/CI_OVERVIEW.md"
+  },
   "standards": [
     "instructions/standards/E2E_TESTING_STANDARD.md",
     "instructions/standards/E2E_NO_HANG_STANDARD.md",

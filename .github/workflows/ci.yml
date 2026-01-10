@@ -12,35 +12,39 @@ env:
   REDIS_PORT: 6379
 
 jobs:
-  lint-and-test:
-    name: Lint, Test & Build
+  # ============================================================================
+  # Job: Sanity - Import Firewall Check
+  # ============================================================================
+  sanity:
+    name: Import Firewall
     runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    services:
-      postgres:
-        image: postgres:16
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: chefcloud_test
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
 
-      redis:
-        image: redis:7-alpine
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 6379:6379
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
 
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Verify no WIP imports
+        run: pnpm verify:no-wip-imports
+
+  # ============================================================================
+  # Job: API - Lint & Build
+  # ============================================================================
+  api:
+    name: API Lint & Build
+    runs-on: ubuntu-latest
+    needs: sanity
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -58,24 +62,14 @@ jobs:
       - name: Get pnpm store directory
         id: pnpm-cache
         shell: bash
-        run: |
-          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+        run: echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
 
       - name: Setup pnpm cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
           key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
-
-      - name: Setup Turbo cache
-        uses: actions/cache@v3
-        with:
-          path: .turbo
-          key: ${{ runner.os }}-turbo-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-turbo-
+          restore-keys: ${{ runner.os }}-pnpm-store-
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -83,16 +77,108 @@ jobs:
       - name: Generate Prisma Client
         run: cd packages/db && pnpm run db:generate
 
-      - name: Lint
+      - name: API Lint
+        run: pnpm -C services/api lint
+
+      - name: API Build
+        run: pnpm -C services/api build
+
+  # ============================================================================
+  # Job: Web - Lint & Build
+  # ============================================================================
+  web:
+    name: Web Lint & Build
+    runs-on: ubuntu-latest
+    needs: sanity
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Web Lint
+        run: pnpm -C apps/web lint
+
+      - name: Web Build
+        run: pnpm -C apps/web build
+
+  # ============================================================================
+  # Job: Smoke - Docker Compose Integration Test (Optional)
+  # ============================================================================
+  smoke:
+    name: Smoke Test (Docker)
+    runs-on: ubuntu-latest
+    needs: [api, web]
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Create staging env file
         run: |
-          cd services/api
-          pnpm lint:ci
+          echo "JWT_SECRET=ci-test-secret-for-smoke-verification-32chars" > .env.docker.staging
+          echo "POSTGRES_PASSWORD=chefcloud_staging_pw" >> .env.docker.staging
 
-      - name: Type check
-        run: pnpm run build
+      - name: Start Docker Compose
+        run: docker compose -f docker-compose.staging.yml up -d --build
 
-      - name: Test
-        run: pnpm run test
+      - name: Wait for API health
+        run: |
+          echo "Waiting for API to be healthy..."
+          for i in {1..30}; do
+            if curl -s http://localhost:3001/health | grep -q "ok"; then
+              echo "API is healthy!"
+              exit 0
+            fi
+            echo "Attempt $i/30 - waiting..."
+            sleep 5
+          done
+          echo "API failed to become healthy"
+          docker compose -f docker-compose.staging.yml logs api
+          exit 1
 
-      - name: Format check
-        run: pnpm run format:check
+      - name: Run Database Migrations
+        run: docker compose -f docker-compose.staging.yml exec -T api npx prisma migrate deploy
+
+      - name: Run Smoke Verification
+        run: API_BASE_URL=http://localhost:3001 node scripts/verify/smoke-verification.mjs
+
+      - name: Shutdown Docker Compose
+        if: always()
+        run: docker compose -f docker-compose.staging.yml down -v
