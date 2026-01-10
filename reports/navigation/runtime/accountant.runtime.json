@@ -1,0 +1,240 @@
+{
+  "role": "ACCOUNTANT",
+  "capturedAt": "2026-01-11T10:00:00.000Z",
+  "captureMethod": "static-analysis-v2",
+  "routesVisited": [
+    "/workspaces/accountant",
+    "/finance/accounts",
+    "/finance/journal",
+    "/finance/periods",
+    "/finance/trial-balance",
+    "/finance/pnl",
+    "/finance/balance-sheet",
+    "/service-providers",
+    "/finance/ap-aging",
+    "/finance/ar-aging",
+    "/finance",
+    "/reports",
+    "/analytics",
+    "/workforce/my-availability",
+    "/workforce/my-swaps",
+    "/workforce/open-shifts"
+  ],
+  "sidebarLinks": [
+    {
+      "label": "Chart of Accounts",
+      "href": "/finance/accounts",
+      "navGroup": "General Ledger",
+      "isActive": false,
+      "probeOutcome": "ok"
+    },
+    {
+      "label": "Journal Entries",
+      "href": "/finance/journal",
+      "navGroup": "General Ledger",
+      "isActive": false,
+      "probeOutcome": "ok"
+    },
+    {
+      "label": "Fiscal Periods",
+      "href": "/finance/periods",
+      "navGroup": "General Ledger",
+      "isActive": false,
+      "probeOutcome": "ok"
+    },
+    {
+      "label": "Trial Balance",
+      "href": "/finance/trial-balance",
+      "navGroup": "Financial Statements",
+      "isActive": false,
+      "probeOutcome": "ok"
+    },
+    {
+      "label": "Profit & Loss",
+      "href": "/finance/pnl",
+      "navGroup": "Financial Statements",
+      "isActive": false,
+      "probeOutcome": "ok"
+    },
+    {
+      "label": "Balance Sheet",
+      "href": "/finance/balance-sheet",
+      "navGroup": "Financial Statements",
+      "isActive": false,
+      "probeOutcome": "ok"
+    },
+    {
+      "label": "Service Providers",
+      "href": "/service-providers",
+      "navGroup": "Payables & Receivables",
+      "isActive": false,
+      "probeOutcome": "ok"
+    },
+    {
+      "label": "AP Aging",
+      "href": "/finance/ap-aging",
+      "navGroup": "Payables & Receivables",
+      "isActive": false,
+      "probeOutcome": "ok"
+    },
+    {
+      "label": "AR Aging",
+      "href": "/finance/ar-aging",
+      "navGroup": "Payables & Receivables",
+      "isActive": false,
+      "probeOutcome": "ok"
+    },
+    {
+      "label": "Budgets",
+      "href": "/finance",
+      "navGroup": "Budgets & Reports",
+      "isActive": false,
+      "probeOutcome": "ok"
+    },
+    {
+      "label": "Reports",
+      "href": "/reports",
+      "navGroup": "Budgets & Reports",
+      "isActive": false,
+      "probeOutcome": "ok"
+    },
+    {
+      "label": "Analytics",
+      "href": "/analytics",
+      "navGroup": "Budgets & Reports",
+      "isActive": false,
+      "probeOutcome": "ok"
+    },
+    {
+      "label": "My Availability",
+      "href": "/workforce/my-availability",
+      "navGroup": "My Schedule",
+      "isActive": false,
+      "probeOutcome": "ok"
+    },
+    {
+      "label": "My Swaps",
+      "href": "/workforce/my-swaps",
+      "navGroup": "My Schedule",
+      "isActive": false,
+      "probeOutcome": "ok"
+    },
+    {
+      "label": "Open Shifts",
+      "href": "/workforce/open-shifts",
+      "navGroup": "My Schedule",
+      "isActive": false,
+      "probeOutcome": "ok"
+    }
+  ],
+  "actions": [
+    {
+      "route": "/finance/accounts",
+      "elementType": "button",
+      "testId": "coa-clear-filters",
+      "label": "Clear Filters"
+    },
+    {
+      "route": "/finance/journal",
+      "elementType": "button",
+      "testId": "journal-create",
+      "label": "New Journal Entry",
+      "attributes": {
+        "risk": "HIGH",
+        "note": "Creates financial journal entry"
+      }
+    },
+    {
+      "route": "/finance/journal",
+      "elementType": "button",
+      "testId": "journal-submit",
+      "label": "Create Entry",
+      "attributes": {
+        "risk": "HIGH",
+        "note": "Submits journal entry for posting"
+      }
+    },
+    {
+      "route": "/finance/journal",
+      "elementType": "button",
+      "testId": "journal-post",
+      "label": "Post Entry",
+      "attributes": {
+        "risk": "HIGH",
+        "note": "Posts entry to GL - irreversible"
+      }
+    },
+    {
+      "route": "/finance/journal",
+      "elementType": "button",
+      "testId": "journal-reverse",
+      "label": "Reverse Entry",
+      "attributes": {
+        "risk": "HIGH",
+        "note": "Creates reversing entry"
+      }
+    },
+    {
+      "route": "/finance/periods",
+      "elementType": "button",
+      "testId": "period-close",
+      "label": "Close Period",
+      "attributes": {
+        "risk": "HIGH",
+        "note": "Closes accounting period"
+      }
+    },
+    {
+      "route": "/finance/trial-balance",
+      "elementType": "button",
+      "testId": "tb-generate",
+      "label": "Generate Report"
+    },
+    {
+      "route": "/finance/trial-balance",
+      "elementType": "button",
+      "testId": "tb-export",
+      "label": "Export CSV"
+    },
+    {
+      "route": "/finance/pnl",
+      "elementType": "button",
+      "testId": "pnl-generate",
+      "label": "Generate Report"
+    },
+    {
+      "route": "/finance/pnl",
+      "elementType": "button",
+      "testId": "pnl-export",
+      "label": "Export CSV"
+    },
+    {
+      "route": "/finance/balance-sheet",
+      "elementType": "button",
+      "testId": "bs-generate",
+      "label": "Generate Report"
+    },
+    {
+      "route": "/finance/balance-sheet",
+      "elementType": "button",
+      "testId": "bs-export",
+      "label": "Export CSV"
+    }
+  ],
+  "apiCalls": [
+    { "route": "/finance/accounts", "method": "GET", "path": "/accounting/accounts" },
+    { "route": "/finance/journal", "method": "GET", "path": "/accounting/journal-entries" },
+    { "route": "/finance/journal", "method": "POST", "path": "/accounting/journal-entries" },
+    { "route": "/finance/journal", "method": "POST", "path": "/accounting/journal-entries/:id/post" },
+    { "route": "/finance/journal", "method": "POST", "path": "/accounting/journal-entries/:id/reverse" },
+    { "route": "/finance/periods", "method": "GET", "path": "/accounting/fiscal-periods" },
+    { "route": "/finance/periods", "method": "PUT", "path": "/accounting/fiscal-periods/:id/close" },
+    { "route": "/finance/trial-balance", "method": "GET", "path": "/accounting/trial-balance" },
+    { "route": "/finance/pnl", "method": "GET", "path": "/accounting/pnl" },
+    { "route": "/finance/balance-sheet", "method": "GET", "path": "/accounting/balance-sheet" },
+    { "route": "/finance/ap-aging", "method": "GET", "path": "/accounting/ap/aging" },
+    { "route": "/finance/ar-aging", "method": "GET", "path": "/accounting/ar/aging" },
+    { "route": "/reports", "method": "GET", "path": "/reports" },
+    { "route": "/analytics", "method": "GET", "path": "/analytics/daily" }
+  ]
+}

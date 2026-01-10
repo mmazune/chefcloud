@@ -27,6 +27,22 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { BarChart3, Download, CheckCircle, AlertCircle } from 'lucide-react';
+import { definePageMeta } from '@/lib/pageMeta';
+
+/** Phase I3: Page metadata for action catalog */
+export const pageMeta = definePageMeta({
+  id: '/finance/trial-balance',
+  title: 'Trial Balance',
+  primaryActions: [
+    { label: 'Generate Report', testId: 'tb-generate', intent: 'view' },
+    { label: 'Export CSV', testId: 'tb-export', intent: 'view' },
+  ],
+  apiCalls: [
+    { method: 'GET', path: '/accounting/trial-balance', trigger: 'onMount', notes: 'Load trial balance' },
+  ],
+  risk: 'LOW',
+  allowedRoles: ['OWNER', 'ACCOUNTANT'],
+});
 
 interface TrialBalanceAccount {
   code: string;
@@ -134,10 +150,10 @@ export default function TrialBalancePage() {
                   onChange={(e) => setEndDate(e.target.value)}
                 />
               </div>
-              <Button onClick={() => refetch()}>
+              <Button data-testid="tb-generate" onClick={() => refetch()}>
                 Generate Report
               </Button>
-              <Button variant="outline" onClick={handleExport} disabled={!data?.accounts?.length}>
+              <Button data-testid="tb-export" variant="outline" onClick={handleExport} disabled={!data?.accounts?.length}>
                 <Download className="mr-2 h-4 w-4" />
                 Export CSV
               </Button>

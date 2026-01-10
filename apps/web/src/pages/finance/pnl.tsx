@@ -19,6 +19,22 @@ import { Label } from '@/components/ui/label';
 import { RequireRole } from '@/components/RequireRole';
 import { RoleLevel } from '@/lib/auth';
 import { TrendingUp, TrendingDown, Download, DollarSign } from 'lucide-react';
+import { definePageMeta } from '@/lib/pageMeta';
+
+/** Phase I3: Page metadata for action catalog */
+export const pageMeta = definePageMeta({
+  id: '/finance/pnl',
+  title: 'Profit & Loss Statement',
+  primaryActions: [
+    { label: 'Generate Report', testId: 'pnl-generate', intent: 'view' },
+    { label: 'Export CSV', testId: 'pnl-export', intent: 'view' },
+  ],
+  apiCalls: [
+    { method: 'GET', path: '/accounting/pnl', trigger: 'onMount', notes: 'Load P&L statement' },
+  ],
+  risk: 'LOW',
+  allowedRoles: ['OWNER', 'ACCOUNTANT'],
+});
 
 interface PnLData {
   totalRevenue: number;
@@ -124,10 +140,10 @@ export default function ProfitLossPage() {
                   onChange={(e) => setEndDate(e.target.value)}
                 />
               </div>
-              <Button onClick={() => refetch()}>
+              <Button data-testid="pnl-generate" onClick={() => refetch()}>
                 Generate Report
               </Button>
-              <Button variant="outline" onClick={handleExport} disabled={!data}>
+              <Button data-testid="pnl-export" variant="outline" onClick={handleExport} disabled={!data}>
                 <Download className="mr-2 h-4 w-4" />
                 Export CSV
               </Button>

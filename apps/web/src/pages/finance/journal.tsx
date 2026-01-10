@@ -270,7 +270,7 @@ export default function JournalEntriesPage() {
               </div>
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button>
+                  <Button data-testid="journal-create">
                     <PlusCircle className="mr-2 h-4 w-4" />
                     New Journal Entry
                   </Button>
@@ -374,6 +374,7 @@ export default function JournalEntriesPage() {
                       Cancel
                     </Button>
                     <Button 
+                      data-testid="journal-submit"
                       onClick={handleSubmit} 
                       disabled={!isBalanced || createEntry.isPending}
                     >

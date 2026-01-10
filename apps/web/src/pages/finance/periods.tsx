@@ -35,6 +35,22 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Calendar, Lock, Unlock, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import { definePageMeta } from '@/lib/pageMeta';
+
+/** Phase I3: Page metadata for action catalog */
+export const pageMeta = definePageMeta({
+  id: '/finance/periods',
+  title: 'Fiscal Periods',
+  primaryActions: [
+    { label: 'Close Period', testId: 'period-close', intent: 'update' },
+  ],
+  apiCalls: [
+    { method: 'GET', path: '/accounting/fiscal-periods', trigger: 'onMount', notes: 'List periods' },
+    { method: 'PUT', path: '/accounting/fiscal-periods/:id/close', trigger: 'onAction', notes: 'Close period' },
+  ],
+  risk: 'HIGH',
+  allowedRoles: ['OWNER', 'ACCOUNTANT'],
+});
 
 interface FiscalPeriod {
   id: string;
@@ -147,7 +163,7 @@ export default function FiscalPeriodsPage() {
                 {currentPeriod.status === 'OPEN' && (
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button variant="outline">
+                      <Button data-testid="period-close" variant="outline">
                         <Lock className="mr-2 h-4 w-4" />
                         Close Period
                       </Button>

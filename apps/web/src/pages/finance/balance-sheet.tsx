@@ -19,6 +19,22 @@ import { Label } from '@/components/ui/label';
 import { RequireRole } from '@/components/RequireRole';
 import { RoleLevel } from '@/lib/auth';
 import { Download, CheckCircle, AlertCircle } from 'lucide-react';
+import { definePageMeta } from '@/lib/pageMeta';
+
+/** Phase I3: Page metadata for action catalog */
+export const pageMeta = definePageMeta({
+  id: '/finance/balance-sheet',
+  title: 'Balance Sheet',
+  primaryActions: [
+    { label: 'Generate Report', testId: 'bs-generate', intent: 'view' },
+    { label: 'Export CSV', testId: 'bs-export', intent: 'view' },
+  ],
+  apiCalls: [
+    { method: 'GET', path: '/accounting/balance-sheet', trigger: 'onMount', notes: 'Load balance sheet' },
+  ],
+  risk: 'LOW',
+  allowedRoles: ['OWNER', 'ACCOUNTANT'],
+});
 
 interface BalanceSheetData {
   totalAssets: number;
@@ -104,10 +120,10 @@ export default function BalanceSheetPage() {
                   onChange={(e) => setAsOfDate(e.target.value)}
                 />
               </div>
-              <Button onClick={() => refetch()}>
+              <Button data-testid="bs-generate" onClick={() => refetch()}>
                 Generate Report
               </Button>
-              <Button variant="outline" onClick={handleExport} disabled={!data}>
+              <Button data-testid="bs-export" variant="outline" onClick={handleExport} disabled={!data}>
                 <Download className="mr-2 h-4 w-4" />
                 Export CSV
               </Button>

@@ -1,0 +1,177 @@
+{
+  "role": "ACCOUNTANT",
+  "capturedAt": "2026-01-11T10:00:00.000Z",
+  "totalLinks": 15,
+  "results": [
+    {
+      "href": "/finance/accounts",
+      "label": "Chart of Accounts",
+      "navGroup": "General Ledger",
+      "outcome": "ok",
+      "redirectedTo": null,
+      "error": null,
+      "apiCalls": [
+        { "method": "GET", "path": "/accounting/accounts", "status": 200 }
+      ]
+    },
+    {
+      "href": "/finance/journal",
+      "label": "Journal Entries",
+      "navGroup": "General Ledger",
+      "outcome": "ok",
+      "redirectedTo": null,
+      "error": null,
+      "apiCalls": [
+        { "method": "GET", "path": "/accounting/journal-entries", "status": 200 },
+        { "method": "GET", "path": "/accounting/accounts", "status": 200 }
+      ]
+    },
+    {
+      "href": "/finance/periods",
+      "label": "Fiscal Periods",
+      "navGroup": "General Ledger",
+      "outcome": "ok",
+      "redirectedTo": null,
+      "error": null,
+      "apiCalls": [
+        { "method": "GET", "path": "/accounting/fiscal-periods", "status": 200 }
+      ]
+    },
+    {
+      "href": "/finance/trial-balance",
+      "label": "Trial Balance",
+      "navGroup": "Financial Statements",
+      "outcome": "ok",
+      "redirectedTo": null,
+      "error": null,
+      "apiCalls": [
+        { "method": "GET", "path": "/accounting/trial-balance", "status": 200 }
+      ]
+    },
+    {
+      "href": "/finance/pnl",
+      "label": "Profit & Loss",
+      "navGroup": "Financial Statements",
+      "outcome": "ok",
+      "redirectedTo": null,
+      "error": null,
+      "apiCalls": [
+        { "method": "GET", "path": "/accounting/pnl", "status": 200 }
+      ]
+    },
+    {
+      "href": "/finance/balance-sheet",
+      "label": "Balance Sheet",
+      "navGroup": "Financial Statements",
+      "outcome": "ok",
+      "redirectedTo": null,
+      "error": null,
+      "apiCalls": [
+        { "method": "GET", "path": "/accounting/balance-sheet", "status": 200 }
+      ]
+    },
+    {
+      "href": "/service-providers",
+      "label": "Service Providers",
+      "navGroup": "Payables & Receivables",
+      "outcome": "ok",
+      "redirectedTo": null,
+      "error": null,
+      "apiCalls": [
+        { "method": "GET", "path": "/service-providers", "status": 200 }
+      ]
+    },
+    {
+      "href": "/finance/ap-aging",
+      "label": "AP Aging",
+      "navGroup": "Payables & Receivables",
+      "outcome": "ok",
+      "redirectedTo": null,
+      "error": null,
+      "apiCalls": [
+        { "method": "GET", "path": "/accounting/ap/aging", "status": 200 }
+      ]
+    },
+    {
+      "href": "/finance/ar-aging",
+      "label": "AR Aging",
+      "navGroup": "Payables & Receivables",
+      "outcome": "ok",
+      "redirectedTo": null,
+      "error": null,
+      "apiCalls": [
+        { "method": "GET", "path": "/accounting/ar/aging", "status": 200 }
+      ]
+    },
+    {
+      "href": "/finance",
+      "label": "Budgets",
+      "navGroup": "Budgets & Reports",
+      "outcome": "ok",
+      "redirectedTo": null,
+      "error": null,
+      "apiCalls": []
+    },
+    {
+      "href": "/reports",
+      "label": "Reports",
+      "navGroup": "Budgets & Reports",
+      "outcome": "ok",
+      "redirectedTo": null,
+      "error": null,
+      "apiCalls": [
+        { "method": "GET", "path": "/reports", "status": 200 }
+      ]
+    },
+    {
+      "href": "/analytics",
+      "label": "Analytics",
+      "navGroup": "Budgets & Reports",
+      "outcome": "ok",
+      "redirectedTo": null,
+      "error": null,
+      "apiCalls": [
+        { "method": "GET", "path": "/analytics/daily", "status": 200 }
+      ]
+    },
+    {
+      "href": "/workforce/my-availability",
+      "label": "My Availability",
+      "navGroup": "My Schedule",
+      "outcome": "ok",
+      "redirectedTo": null,
+      "error": null,
+      "apiCalls": [
+        { "method": "GET", "path": "/workforce/availability", "status": 200 }
+      ]
+    },
+    {
+      "href": "/workforce/my-swaps",
+      "label": "My Swaps",
+      "navGroup": "My Schedule",
+      "outcome": "ok",
+      "redirectedTo": null,
+      "error": null,
+      "apiCalls": [
+        { "method": "GET", "path": "/workforce/swaps", "status": 200 }
+      ]
+    },
+    {
+      "href": "/workforce/open-shifts",
+      "label": "Open Shifts",
+      "navGroup": "My Schedule",
+      "outcome": "ok",
+      "redirectedTo": null,
+      "error": null,
+      "apiCalls": [
+        { "method": "GET", "path": "/workforce/scheduling/open-shifts", "status": 200 }
+      ]
+    }
+  ],
+  "summary": {
+    "ok": 15,
+    "redirect": 0,
+    "error": 0,
+    "forbidden": 0
+  }
+}

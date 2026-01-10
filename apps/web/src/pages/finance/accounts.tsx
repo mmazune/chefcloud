@@ -32,6 +32,21 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Search, FileText } from 'lucide-react';
+import { definePageMeta } from '@/lib/pageMeta';
+
+/** Phase I3: Page metadata for action catalog */
+export const pageMeta = definePageMeta({
+  id: '/finance/accounts',
+  title: 'Chart of Accounts',
+  primaryActions: [
+    { label: 'Clear Filters', testId: 'coa-clear-filters', intent: 'view' },
+  ],
+  apiCalls: [
+    { method: 'GET', path: '/accounting/accounts', trigger: 'onMount', notes: 'List accounts' },
+  ],
+  risk: 'LOW',
+  allowedRoles: ['OWNER', 'ACCOUNTANT'],
+});
 
 interface Account {
   id: string;
@@ -127,7 +142,7 @@ export default function ChartOfAccountsPage() {
                   <SelectItem value="EXPENSE">Expense</SelectItem>
                 </SelectContent>
               </Select>
-              <Button variant="outline" onClick={() => { setSearchTerm(''); setTypeFilter('all'); }}>
+              <Button data-testid="coa-clear-filters" variant="outline" onClick={() => { setSearchTerm(''); setTypeFilter('all'); }}>
                 Clear Filters
               </Button>
             </div>
