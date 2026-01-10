@@ -21,6 +21,25 @@ import { Dialog } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { apiClient } from '@/lib/api';
 import { Plus, Search, Edit } from 'lucide-react';
+import { definePageMeta } from '@/lib/pageMeta';
+
+/** Phase I2: Page metadata for action catalog */
+export const pageMeta = definePageMeta({
+  id: '/inventory/items',
+  title: 'Inventory Items',
+  primaryActions: [
+    { label: 'Add Item', testId: 'inventory-add-item', intent: 'create' },
+    { label: 'Edit Item', testId: 'inventory-edit-item', intent: 'update' },
+    { label: 'Toggle Active', testId: 'inventory-toggle-active', intent: 'update' },
+  ],
+  apiCalls: [
+    { method: 'GET', path: '/inventory/items', trigger: 'onMount', notes: 'Fetch all items' },
+    { method: 'POST', path: '/inventory/items', trigger: 'onSubmit', notes: 'Create item' },
+    { method: 'PATCH', path: '/inventory/items/:id', trigger: 'onSubmit', notes: 'Update item' },
+  ],
+  risk: 'MEDIUM',
+  allowedRoles: ['OWNER', 'MANAGER', 'PROCUREMENT', 'STOCK_MANAGER'],
+});
 
 interface InventoryItem {
   id: string;

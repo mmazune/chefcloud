@@ -26,6 +26,31 @@ import { PosTabsSidebar } from '@/components/pos/PosTabsSidebar';
 import { PosTabNameDialog } from '@/components/pos/PosTabNameDialog';
 import { SystemDiagnosticsPanel } from '@/components/common/SystemDiagnosticsPanel';
 import { DiagnosticsToggleButton } from '@/components/common/DiagnosticsToggleButton';
+import { definePageMeta } from '@/lib/pageMeta';
+
+/** Phase I2: Page metadata for action catalog */
+export const pageMeta = definePageMeta({
+  id: '/pos',
+  title: 'POS - Point of Sale',
+  primaryActions: [
+    { label: 'New Order', testId: 'pos-new-order', intent: 'create' },
+    { label: 'Add Item', testId: 'pos-add-item', intent: 'create' },
+    { label: 'Send to Kitchen', testId: 'pos-send-kitchen', intent: 'update' },
+    { label: 'Checkout', testId: 'pos-checkout', intent: 'navigate' },
+    { label: 'Void Order', testId: 'pos-void-order', intent: 'delete' },
+    { label: 'Split Bill', testId: 'pos-split-bill', intent: 'update' },
+  ],
+  apiCalls: [
+    { method: 'GET', path: '/pos/open', trigger: 'onMount', notes: 'Fetch open orders' },
+    { method: 'GET', path: '/pos/menu', trigger: 'onMount', notes: 'Fetch menu items' },
+    { method: 'POST', path: '/pos/orders', trigger: 'onAction', notes: 'Create new order' },
+    { method: 'POST', path: '/pos/orders/:id/lines', trigger: 'onAction', notes: 'Add item to order' },
+    { method: 'POST', path: '/pos/orders/:id/send', trigger: 'onAction', notes: 'Send to kitchen' },
+    { method: 'POST', path: '/pos/orders/:id/void', trigger: 'onAction', notes: 'Void order' },
+  ],
+  risk: 'HIGH',
+  allowedRoles: ['OWNER', 'MANAGER', 'SUPERVISOR', 'CASHIER', 'WAITER', 'BARTENDER'],
+});
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 

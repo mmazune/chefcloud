@@ -24,6 +24,8 @@
     "clean": "turbo run clean && rm -rf node_modules",
     "prepare": "husky install",
     "verify:no-wip-imports": "node scripts/verify-no-wip-imports.mjs",
+    "nav:generate": "node scripts/analysis/generate-role-nav-trees.mjs",
+    "actions:generate": "node scripts/analysis/generate-page-action-catalog.mjs",
     "staging:up": "docker compose -f docker-compose.staging.yml up -d --build",
     "staging:down": "docker compose -f docker-compose.staging.yml down",
     "staging:down:clean": "docker compose -f docker-compose.staging.yml down -v",

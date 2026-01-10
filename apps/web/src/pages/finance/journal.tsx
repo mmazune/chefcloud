@@ -46,6 +46,27 @@ import { PlusCircle, Search, BookOpen, Trash2 } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { useRouter } from 'next/router';
 import { useToast } from '@/components/ui/use-toast';
+import { definePageMeta } from '@/lib/pageMeta';
+
+/** Phase I2: Page metadata for action catalog */
+export const pageMeta = definePageMeta({
+  id: '/finance/journal',
+  title: 'Journal Entries',
+  primaryActions: [
+    { label: 'Create Entry', testId: 'journal-create', intent: 'create' },
+    { label: 'Post Entry', testId: 'journal-post', intent: 'update' },
+    { label: 'Reverse Entry', testId: 'journal-reverse', intent: 'update' },
+    { label: 'View Details', testId: 'journal-view', intent: 'view' },
+  ],
+  apiCalls: [
+    { method: 'GET', path: '/accounting/journal-entries', trigger: 'onMount', notes: 'List entries' },
+    { method: 'POST', path: '/accounting/journal-entries', trigger: 'onSubmit', notes: 'Create entry' },
+    { method: 'POST', path: '/accounting/journal-entries/:id/post', trigger: 'onAction', notes: 'Post' },
+    { method: 'POST', path: '/accounting/journal-entries/:id/reverse', trigger: 'onAction', notes: 'Reverse' },
+  ],
+  risk: 'HIGH',
+  allowedRoles: ['OWNER', 'ACCOUNTANT'],
+});
 
 interface Account {
   id: string;

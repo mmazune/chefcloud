@@ -14,6 +14,29 @@ import { useAuth } from '@/contexts/AuthContext';
 import { apiClient } from '@/lib/api';
 import { format } from 'date-fns';
 import { FileText } from 'lucide-react';
+import { definePageMeta } from '@/lib/pageMeta';
+
+/** Phase I2: Page metadata for action catalog */
+export const pageMeta = definePageMeta({
+  id: '/workforce/payroll-runs',
+  title: 'Payroll Runs',
+  primaryActions: [
+    { label: 'Create Payroll Run', testId: 'payroll-create', intent: 'create' },
+    { label: 'Calculate', testId: 'payroll-calculate', intent: 'update' },
+    { label: 'Approve', testId: 'payroll-approve', intent: 'approve' },
+    { label: 'Post', testId: 'payroll-post', intent: 'update' },
+    { label: 'Export', testId: 'payroll-export', intent: 'export' },
+  ],
+  apiCalls: [
+    { method: 'GET', path: '/workforce/payroll-runs', trigger: 'onMount', notes: 'List runs' },
+    { method: 'POST', path: '/workforce/payroll-runs', trigger: 'onSubmit', notes: 'Create run' },
+    { method: 'POST', path: '/workforce/payroll-runs/:id/calculate', trigger: 'onAction', notes: 'Calculate' },
+    { method: 'POST', path: '/workforce/payroll-runs/:id/approve', trigger: 'onAction', notes: 'Approve' },
+    { method: 'POST', path: '/workforce/payroll-runs/:id/post', trigger: 'onAction', notes: 'Post to GL' },
+  ],
+  risk: 'HIGH',
+  allowedRoles: ['OWNER', 'MANAGER', 'ACCOUNTANT'],
+});
 
 type PayrollRunStatus = 'DRAFT' | 'CALCULATED' | 'APPROVED' | 'POSTED' | 'PAID' | 'VOID';
 

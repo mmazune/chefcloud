@@ -56,6 +56,12 @@
     "classification_rules": "docs/routes/ROUTE_CLASSIFICATION_RULES.md",
     "unlinked_registry": "docs/routes/UNLINKED_ROUTE_REGISTRY.md"
   },
+  "navigation": {
+    "role_nav_trees": "docs/navigation/ROLE_NAV_TREES.md",
+    "page_action_catalog": "docs/navigation/PAGE_ACTION_CATALOG.md",
+    "role_nav_trees_json": "reports/navigation/role-nav-trees.json",
+    "page_actions_json": "reports/navigation/page-actions.json"
+  },
   "ci": {
     "workflow": ".github/workflows/ci.yml",
     "overview": "docs/ci/CI_OVERVIEW.md"

@@ -40,6 +40,25 @@ import {
   ArrowLeft
 } from 'lucide-react';
 import Link from 'next/link';
+import { definePageMeta } from '@/lib/pageMeta';
+
+/** Phase I2: Page metadata for action catalog */
+export const pageMeta = definePageMeta({
+  id: '/pos/cash-sessions',
+  title: 'Cash Sessions',
+  primaryActions: [
+    { label: 'Open Session', testId: 'cash-open-session', intent: 'create' },
+    { label: 'Close Session', testId: 'cash-close-session', intent: 'update' },
+    { label: 'View Details', testId: 'cash-view-details', intent: 'view' },
+  ],
+  apiCalls: [
+    { method: 'GET', path: '/pos/cash-sessions', trigger: 'onMount', notes: 'List sessions' },
+    { method: 'POST', path: '/pos/cash-sessions/open', trigger: 'onAction', notes: 'Open drawer' },
+    { method: 'POST', path: '/pos/cash-sessions/:id/close', trigger: 'onAction', notes: 'Close drawer' },
+  ],
+  risk: 'HIGH',
+  allowedRoles: ['OWNER', 'MANAGER', 'SUPERVISOR', 'CASHIER'],
+});
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 

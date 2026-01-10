@@ -1,0 +1,1000 @@
+{
+  "generated": "2026-01-10",
+  "generator": "scripts/analysis/generate-role-nav-trees.mjs",
+  "roleCount": 11,
+  "roles": {
+    "ACCOUNTANT": {
+      "role": "ACCOUNTANT",
+      "workspaceTitle": "Accountant Workspace",
+      "landingRoute": "/workspaces/accountant",
+      "navGroups": [
+        {
+          "title": "General Ledger",
+          "items": [
+            {
+              "label": "Chart of Accounts",
+              "href": "/finance/accounts",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "Journal Entries",
+              "href": "/finance/journal",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "Fiscal Periods",
+              "href": "/finance/periods",
+              "status": "ACTIVE"
+            }
+          ]
+        },
+        {
+          "title": "Financial Statements",
+          "items": [
+            {
+              "label": "Trial Balance",
+              "href": "/finance/trial-balance",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "Profit & Loss",
+              "href": "/finance/pnl",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "Balance Sheet",
+              "href": "/finance/balance-sheet",
+              "status": "ACTIVE"
+            }
+          ]
+        },
+        {
+          "title": "Payables & Receivables",
+          "items": [
+            {
+              "label": "Service Providers",
+              "href": "/service-providers",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "AP Aging",
+              "href": "/finance/ap-aging",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "AR Aging",
+              "href": "/finance/ar-aging",
+              "status": "ACTIVE"
+            }
+          ]
+        },
+        {
+          "title": "Budgets & Reports",
+          "items": [
+            {
+              "label": "Budgets",
+              "href": "/finance",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "Reports",
+              "href": "/reports",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "Analytics",
+              "href": "/analytics",
+              "status": "ACTIVE"
+            }
+          ]
+        },
+        {
+          "title": "My Schedule",
+          "items": [
+            {
+              "label": "My Availability",
+              "href": "/workforce/my-availability",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "My Swaps",
+              "href": "/workforce/my-swaps",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "Open Shifts",
+              "href": "/workforce/open-shifts",
+              "status": "ACTIVE"
+            }
+          ]
+        }
+      ],
+      "totalRoutes": 15
+    },
+    "BARTENDER": {
+      "role": "BARTENDER",
+      "workspaceTitle": "Bartender Station",
+      "landingRoute": "/pos",
+      "navGroups": [
+        {
+          "title": "Operations",
+          "items": [
+            {
+              "label": "POS",
+              "href": "/pos",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "Inventory",
+              "href": "/inventory",
+              "status": "ACTIVE"
+            }
+          ]
+        },
+        {
+          "title": "My Schedule",
+          "items": [
+            {
+              "label": "My Availability",
+              "href": "/workforce/my-availability",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "My Swaps",
+              "href": "/workforce/my-swaps",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "Open Shifts",
+              "href": "/workforce/open-shifts",
+              "status": "ACTIVE"
+            }
+          ]
+        },
+        {
+          "title": "Settings",
+          "items": [
+            {
+              "label": "Settings",
+              "href": "/settings",
+              "status": "ACTIVE"
+            }
+          ]
+        }
+      ],
+      "totalRoutes": 6
+    },
+    "CASHIER": {
+      "role": "CASHIER",
+      "workspaceTitle": "Cashier Station",
+      "landingRoute": "/pos",
+      "navGroups": [
+        {
+          "title": "Operations",
+          "items": [
+            {
+              "label": "POS",
+              "href": "/pos",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "Dashboard",
+              "href": "/dashboard",
+              "status": "ACTIVE"
+            }
+          ]
+        },
+        {
+          "title": "Workforce",
+          "items": [
+            {
+              "label": "Timeclock",
+              "href": "/workforce/timeclock",
+              "status": "ACTIVE"
+            }
+          ]
+        },
+        {
+          "title": "My Schedule",
+          "items": [
+            {
+              "label": "My Availability",
+              "href": "/workforce/my-availability",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "My Swaps",
+              "href": "/workforce/my-swaps",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "Open Shifts",
+              "href": "/workforce/open-shifts",
+              "status": "ACTIVE"
+            }
+          ]
+        },
+        {
+          "title": "Settings",
+          "items": [
+            {
+              "label": "Settings",
+              "href": "/settings",
+              "status": "ACTIVE"
+            }
+          ]
+        }
+      ],
+      "totalRoutes": 7
+    },
+    "CHEF": {
+      "role": "CHEF",
+      "workspaceTitle": "Chef Dashboard",
+      "landingRoute": "/workspaces/chef",
+      "navGroups": [
+        {
+          "title": "Kitchen",
+          "items": [
+            {
+              "label": "Dashboard",
+              "href": "/dashboard",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "Inventory",
+              "href": "/inventory",
+              "status": "ACTIVE"
+            }
+          ]
+        },
+        {
+          "title": "Workforce",
+          "items": [
+            {
+              "label": "Timeclock",
+              "href": "/workforce/timeclock",
+              "status": "ACTIVE"
+            }
+          ]
+        },
+        {
+          "title": "My Schedule",
+          "items": [
+            {
+              "label": "My Availability",
+              "href": "/workforce/my-availability",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "My Swaps",
+              "href": "/workforce/my-swaps",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "Open Shifts",
+              "href": "/workforce/open-shifts",
+              "status": "ACTIVE"
+            }
+          ]
+        },
+        {
+          "title": "Settings",
+          "items": [
+            {
+              "label": "Settings",
+              "href": "/settings",
+              "status": "ACTIVE"
+            }
+          ]
+        }
+      ],
+      "totalRoutes": 7
+    },
+    "EVENT_MANAGER": {
+      "role": "EVENT_MANAGER",
+      "workspaceTitle": "Event Manager Dashboard",
+      "landingRoute": "/workspaces/event-manager",
+      "navGroups": [
+        {
+          "title": "Events",
+          "items": [
+            {
+              "label": "Reservations",
+              "href": "/reservations",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "Dashboard",
+              "href": "/dashboard",
+              "status": "ACTIVE"
+            }
+          ]
+        },
+        {
+          "title": "Operations",
+          "items": [
+            {
+              "label": "POS",
+              "href": "/pos",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "Staff",
+              "href": "/staff",
+              "status": "ACTIVE"
+            }
+          ]
+        },
+        {
+          "title": "My Schedule",
+          "items": [
+            {
+              "label": "My Availability",
+              "href": "/workforce/my-availability",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "My Swaps",
+              "href": "/workforce/my-swaps",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "Open Shifts",
+              "href": "/workforce/open-shifts",
+              "status": "ACTIVE"
+            }
+          ]
+        },
+        {
+          "title": "Settings",
+          "items": [
+            {
+              "label": "Settings",
+              "href": "/settings",
+              "status": "ACTIVE"
+            }
+          ]
+        }
+      ],
+      "totalRoutes": 8
+    },
+    "MANAGER": {
+      "role": "MANAGER",
+      "workspaceTitle": "Manager Dashboard",
+      "landingRoute": "/workspaces/manager",
+      "navGroups": [
+        {
+          "title": "Overview",
+          "items": [
+            {
+              "label": "Dashboard",
+              "href": "/dashboard",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "Analytics",
+              "href": "/analytics",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "Reports",
+              "href": "/reports",
+              "status": "ACTIVE"
+            }
+          ]
+        },
+        {
+          "title": "Operations",
+          "items": [
+            {
+              "label": "POS",
+              "href": "/pos",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "Reservations",
+              "href": "/reservations",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "Inventory",
+              "href": "/inventory",
+              "status": "ACTIVE"
+            }
+          ]
+        },
+        {
+          "title": "Team",
+          "items": [
+            {
+              "label": "Staff",
+              "href": "/staff",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "Feedback",
+              "href": "/feedback",
+              "status": "ACTIVE"
+            }
+          ]
+        },
+        {
+          "title": "Workforce",
+          "items": [
+            {
+              "label": "Schedule",
+              "href": "/workforce/schedule",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "Timeclock",
+              "href": "/workforce/timeclock",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "Approvals",
+              "href": "/workforce/approvals",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "Swap Approvals",
+              "href": "/workforce/swaps",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "Labor Reports",
+              "href": "/workforce/labor",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "Labor Targets",
+              "href": "/workforce/labor-targets",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "Staffing Planner",
+              "href": "/workforce/staffing-planner",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "Staffing Alerts",
+              "href": "/workforce/staffing-alerts",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "Auto-Scheduler",
+              "href": "/workforce/auto-scheduler",
+              "status": "ACTIVE"
+            }
+          ]
+        },
+        {
+          "title": "My Schedule",
+          "items": [
+            {
+              "label": "My Availability",
+              "href": "/workforce/my-availability",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "My Swaps",
+              "href": "/workforce/my-swaps",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "Open Shifts",
+              "href": "/workforce/open-shifts",
+              "status": "ACTIVE"
+            }
+          ]
+        },
+        {
+          "title": "Settings",
+          "items": [
+            {
+              "label": "Settings",
+              "href": "/settings",
+              "status": "ACTIVE"
+            }
+          ]
+        }
+      ],
+      "totalRoutes": 21
+    },
+    "OWNER": {
+      "role": "OWNER",
+      "workspaceTitle": "Owner Dashboard",
+      "landingRoute": "/workspaces/owner",
+      "navGroups": [
+        {
+          "title": "Overview",
+          "items": [
+            {
+              "label": "Dashboard",
+              "href": "/dashboard",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "Analytics",
+              "href": "/analytics",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "Reports",
+              "href": "/reports",
+              "status": "ACTIVE"
+            }
+          ]
+        },
+        {
+          "title": "Operations",
+          "items": [
+            {
+              "label": "POS",
+              "href": "/pos",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "Reservations",
+              "href": "/reservations",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "Inventory",
+              "href": "/inventory",
+              "status": "ACTIVE"
+            }
+          ]
+        },
+        {
+          "title": "Finance",
+          "items": [
+            {
+              "label": "Finance",
+              "href": "/finance",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "Service Providers",
+              "href": "/service-providers",
+              "status": "ACTIVE"
+            }
+          ]
+        },
+        {
+          "title": "Team",
+          "items": [
+            {
+              "label": "Staff",
+              "href": "/staff",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "Feedback",
+              "href": "/feedback",
+              "status": "ACTIVE"
+            }
+          ]
+        },
+        {
+          "title": "Workforce",
+          "items": [
+            {
+              "label": "Schedule",
+              "href": "/workforce/schedule",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "Timeclock",
+              "href": "/workforce/timeclock",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "Approvals",
+              "href": "/workforce/approvals",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "Swap Approvals",
+              "href": "/workforce/swaps",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "Labor Reports",
+              "href": "/workforce/labor",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "Labor Targets",
+              "href": "/workforce/labor-targets",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "Staffing Planner",
+              "href": "/workforce/staffing-planner",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "Staffing Alerts",
+              "href": "/workforce/staffing-alerts",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "Auto-Scheduler",
+              "href": "/workforce/auto-scheduler",
+              "status": "ACTIVE"
+            }
+          ]
+        },
+        {
+          "title": "My Schedule",
+          "items": [
+            {
+              "label": "My Availability",
+              "href": "/workforce/my-availability",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "My Swaps",
+              "href": "/workforce/my-swaps",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "Open Shifts",
+              "href": "/workforce/open-shifts",
+              "status": "ACTIVE"
+            }
+          ]
+        },
+        {
+          "title": "Settings",
+          "items": [
+            {
+              "label": "Settings",
+              "href": "/settings",
+              "status": "ACTIVE"
+            }
+          ]
+        }
+      ],
+      "totalRoutes": 23
+    },
+    "PROCUREMENT": {
+      "role": "PROCUREMENT",
+      "workspaceTitle": "Procurement Dashboard",
+      "landingRoute": "/workspaces/procurement",
+      "navGroups": [
+        {
+          "title": "Procurement",
+          "items": [
+            {
+              "label": "Inventory",
+              "href": "/inventory",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "Purchase Orders",
+              "href": "/inventory/purchase-orders",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "Receipts",
+              "href": "/inventory/receipts",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "Transfers",
+              "href": "/inventory/transfers",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "Waste",
+              "href": "/inventory/waste",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "Recipes",
+              "href": "/inventory/recipes",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "Depletions",
+              "href": "/inventory/depletions",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "Period Close",
+              "href": "/inventory/period-close",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "Service Providers",
+              "href": "/service-providers",
+              "status": "ACTIVE"
+            }
+          ]
+        },
+        {
+          "title": "Reports",
+          "items": [
+            {
+              "label": "Reports",
+              "href": "/reports",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "Dashboard",
+              "href": "/dashboard",
+              "status": "ACTIVE"
+            }
+          ]
+        },
+        {
+          "title": "Settings",
+          "items": [
+            {
+              "label": "Settings",
+              "href": "/settings",
+              "status": "ACTIVE"
+            }
+          ]
+        },
+        {
+          "title": "My Schedule",
+          "items": [
+            {
+              "label": "My Availability",
+              "href": "/workforce/my-availability",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "My Swaps",
+              "href": "/workforce/my-swaps",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "Open Shifts",
+              "href": "/workforce/open-shifts",
+              "status": "ACTIVE"
+            }
+          ]
+        }
+      ],
+      "totalRoutes": 15
+    },
+    "STOCK_MANAGER": {
+      "role": "STOCK_MANAGER",
+      "workspaceTitle": "Stock Manager Dashboard",
+      "landingRoute": "/workspaces/stock-manager",
+      "navGroups": [
+        {
+          "title": "Inventory",
+          "items": [
+            {
+              "label": "Inventory",
+              "href": "/inventory",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "Purchase Orders",
+              "href": "/inventory/purchase-orders",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "Receipts",
+              "href": "/inventory/receipts",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "Transfers",
+              "href": "/inventory/transfers",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "Waste",
+              "href": "/inventory/waste",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "Recipes",
+              "href": "/inventory/recipes",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "Depletions",
+              "href": "/inventory/depletions",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "Period Close",
+              "href": "/inventory/period-close",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "Reports",
+              "href": "/reports",
+              "status": "ACTIVE"
+            }
+          ]
+        },
+        {
+          "title": "Overview",
+          "items": [
+            {
+              "label": "Dashboard",
+              "href": "/dashboard",
+              "status": "ACTIVE"
+            }
+          ]
+        },
+        {
+          "title": "Settings",
+          "items": [
+            {
+              "label": "Settings",
+              "href": "/settings",
+              "status": "ACTIVE"
+            }
+          ]
+        },
+        {
+          "title": "My Schedule",
+          "items": [
+            {
+              "label": "My Availability",
+              "href": "/workforce/my-availability",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "My Swaps",
+              "href": "/workforce/my-swaps",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "Open Shifts",
+              "href": "/workforce/open-shifts",
+              "status": "ACTIVE"
+            }
+          ]
+        }
+      ],
+      "totalRoutes": 14
+    },
+    "SUPERVISOR": {
+      "role": "SUPERVISOR",
+      "workspaceTitle": "Supervisor Dashboard",
+      "landingRoute": "/workspaces/supervisor",
+      "navGroups": [
+        {
+          "title": "Operations",
+          "items": [
+            {
+              "label": "POS",
+              "href": "/pos",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "Reservations",
+              "href": "/reservations",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "Staff",
+              "href": "/staff",
+              "status": "ACTIVE"
+            }
+          ]
+        },
+        {
+          "title": "Workforce",
+          "items": [
+            {
+              "label": "Timeclock",
+              "href": "/workforce/timeclock",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "Swap Approvals",
+              "href": "/workforce/swaps",
+              "status": "ACTIVE"
+            }
+          ]
+        },
+        {
+          "title": "Overview",
+          "items": [
+            {
+              "label": "Dashboard",
+              "href": "/dashboard",
+              "status": "ACTIVE"
+            }
+          ]
+        },
+        {
+          "title": "My Schedule",
+          "items": [
+            {
+              "label": "My Availability",
+              "href": "/workforce/my-availability",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "My Swaps",
+              "href": "/workforce/my-swaps",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "Open Shifts",
+              "href": "/workforce/open-shifts",
+              "status": "ACTIVE"
+            }
+          ]
+        },
+        {
+          "title": "Settings",
+          "items": [
+            {
+              "label": "Settings",
+              "href": "/settings",
+              "status": "ACTIVE"
+            }
+          ]
+        }
+      ],
+      "totalRoutes": 10
+    },
+    "WAITER": {
+      "role": "WAITER",
+      "workspaceTitle": "Waiter Station",
+      "landingRoute": "/pos",
+      "navGroups": [
+        {
+          "title": "Operations",
+          "items": [
+            {
+              "label": "POS",
+              "href": "/pos",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "Reservations",
+              "href": "/reservations",
+              "status": "ACTIVE"
+            }
+          ]
+        },
+        {
+          "title": "My Schedule",
+          "items": [
+            {
+              "label": "My Availability",
+              "href": "/workforce/my-availability",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "My Swaps",
+              "href": "/workforce/my-swaps",
+              "status": "ACTIVE"
+            },
+            {
+              "label": "Open Shifts",
+              "href": "/workforce/open-shifts",
+              "status": "ACTIVE"
+            }
+          ]
+        },
+        {
+          "title": "Settings",
+          "items": [
+            {
+              "label": "Settings",
+              "href": "/settings",
+              "status": "ACTIVE"
+            }
+          ]
+        }
+      ],
+      "totalRoutes": 6
+    }
+  }
+}

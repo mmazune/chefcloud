@@ -16,6 +16,28 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { CreditCard, Banknote, CheckCircle, AlertCircle, Loader2, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
+import { definePageMeta } from '@/lib/pageMeta';
+
+/** Phase I2: Page metadata for action catalog */
+export const pageMeta = definePageMeta({
+  id: '/pos/checkout/[orderId]',
+  title: 'POS Checkout',
+  primaryActions: [
+    { label: 'Pay Cash', testId: 'checkout-pay-cash', intent: 'create' },
+    { label: 'Pay Card', testId: 'checkout-pay-card', intent: 'create' },
+    { label: 'Pay Mobile', testId: 'checkout-pay-mobile', intent: 'create' },
+    { label: 'Complete Sale', testId: 'checkout-complete', intent: 'update' },
+    { label: 'Back to POS', testId: 'checkout-back', intent: 'navigate' },
+  ],
+  apiCalls: [
+    { method: 'GET', path: '/pos/orders/:id', trigger: 'onMount', notes: 'Fetch order' },
+    { method: 'POST', path: '/pos/orders/:id/payments', trigger: 'onAction', notes: 'Add payment' },
+    { method: 'POST', path: '/pos/orders/:id/complete', trigger: 'onAction', notes: 'Complete order' },
+  ],
+  risk: 'HIGH',
+  allowedRoles: ['OWNER', 'MANAGER', 'SUPERVISOR', 'CASHIER', 'WAITER', 'BARTENDER'],
+  parent: '/pos',
+});
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 

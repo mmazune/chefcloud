@@ -25,6 +25,29 @@ import { Plus, Search, Eye, Check, X, Send, ClipboardList } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { RoleLevel, hasRoleLevel } from '@/lib/auth';
+import { definePageMeta } from '@/lib/pageMeta';
+
+/** Phase I2: Page metadata for action catalog */
+export const pageMeta = definePageMeta({
+  id: '/inventory/purchase-orders',
+  title: 'Purchase Orders',
+  primaryActions: [
+    { label: 'Create PO', testId: 'po-create', intent: 'create' },
+    { label: 'Submit for Approval', testId: 'po-submit', intent: 'update' },
+    { label: 'Approve', testId: 'po-approve', intent: 'approve' },
+    { label: 'Reject', testId: 'po-reject', intent: 'reject' },
+    { label: 'View Details', testId: 'po-view', intent: 'navigate' },
+  ],
+  apiCalls: [
+    { method: 'GET', path: '/inventory/purchase-orders', trigger: 'onMount', notes: 'List POs' },
+    { method: 'POST', path: '/inventory/purchase-orders', trigger: 'onSubmit', notes: 'Create PO' },
+    { method: 'POST', path: '/inventory/purchase-orders/:id/submit', trigger: 'onAction', notes: 'Submit' },
+    { method: 'POST', path: '/inventory/purchase-orders/:id/approve', trigger: 'onAction', notes: 'Approve' },
+    { method: 'POST', path: '/inventory/purchase-orders/:id/reject', trigger: 'onAction', notes: 'Reject' },
+  ],
+  risk: 'MEDIUM',
+  allowedRoles: ['OWNER', 'MANAGER', 'PROCUREMENT', 'STOCK_MANAGER'],
+});
 
 interface PurchaseOrder {
   id: string;

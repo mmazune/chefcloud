@@ -28,6 +28,28 @@ import { KdsOrderCard } from '@/components/kds/KdsOrderCard';
 import { KdsSettingsDrawer } from '@/components/kds/KdsSettingsDrawer';
 import { KioskToggleButton } from '@/components/common/KioskToggleButton';
 import { useDeviceRole } from '@/hooks/useDeviceRole';
+import { definePageMeta } from '@/lib/pageMeta';
+
+/** Phase I2: Page metadata for action catalog */
+export const pageMeta = definePageMeta({
+  id: '/kds',
+  title: 'Kitchen Display System',
+  primaryActions: [
+    { label: 'Mark In Progress', testId: 'kds-in-progress', intent: 'update' },
+    { label: 'Mark Ready', testId: 'kds-ready', intent: 'update' },
+    { label: 'Recall Order', testId: 'kds-recall', intent: 'update' },
+    { label: 'Filter Status', testId: 'kds-filter', intent: 'view' },
+    { label: 'Settings', testId: 'kds-settings', intent: 'view' },
+  ],
+  apiCalls: [
+    { method: 'GET', path: '/kds/tickets', trigger: 'onMount', notes: 'Fetch tickets' },
+    { method: 'PATCH', path: '/kds/tickets/:id/start', trigger: 'onAction', notes: 'Start prep' },
+    { method: 'PATCH', path: '/kds/tickets/:id/ready', trigger: 'onAction', notes: 'Mark ready' },
+    { method: 'PATCH', path: '/kds/tickets/:id/recall', trigger: 'onAction', notes: 'Recall' },
+  ],
+  risk: 'LOW',
+  allowedRoles: ['OWNER', 'MANAGER', 'SUPERVISOR', 'CHEF'],
+});
 import { DEVICE_ROLE_LABELS } from '@/types/deviceRole';
 import { useAppUpdateBanner } from '@/hooks/useAppUpdateBanner';
 import { APP_VERSION } from '@/version';

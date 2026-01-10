@@ -1,0 +1,450 @@
+{
+  "generated": "2026-01-10",
+  "generator": "scripts/analysis/generate-page-action-catalog.mjs",
+  "pageCount": 8,
+  "totalActions": 36,
+  "totalApiCalls": 33,
+  "pages": {
+    "/finance/journal": {
+      "id": "/finance/journal",
+      "title": "Journal Entries",
+      "risk": "HIGH",
+      "primaryActions": [
+        {
+          "label": "Create Entry",
+          "testId": "journal-create",
+          "intent": "create"
+        },
+        {
+          "label": "Post Entry",
+          "testId": "journal-post",
+          "intent": "update"
+        },
+        {
+          "label": "Reverse Entry",
+          "testId": "journal-reverse",
+          "intent": "update"
+        },
+        {
+          "label": "View Details",
+          "testId": "journal-view",
+          "intent": "view"
+        }
+      ],
+      "apiCalls": [
+        {
+          "method": "GET",
+          "path": "/accounting/journal-entries"
+        },
+        {
+          "method": "POST",
+          "path": "/accounting/journal-entries"
+        },
+        {
+          "method": "POST",
+          "path": "/accounting/journal-entries/:id/post"
+        },
+        {
+          "method": "POST",
+          "path": "/accounting/journal-entries/:id/reverse"
+        }
+      ],
+      "allowedRoles": [
+        "OWNER",
+        "ACCOUNTANT"
+      ],
+      "sourceFile": "apps\\web\\src\\pages\\finance\\journal.tsx"
+    },
+    "/inventory/items": {
+      "id": "/inventory/items",
+      "title": "Inventory Items",
+      "risk": "MEDIUM",
+      "primaryActions": [
+        {
+          "label": "Add Item",
+          "testId": "inventory-add-item",
+          "intent": "create"
+        },
+        {
+          "label": "Edit Item",
+          "testId": "inventory-edit-item",
+          "intent": "update"
+        },
+        {
+          "label": "Toggle Active",
+          "testId": "inventory-toggle-active",
+          "intent": "update"
+        }
+      ],
+      "apiCalls": [
+        {
+          "method": "GET",
+          "path": "/inventory/items"
+        },
+        {
+          "method": "POST",
+          "path": "/inventory/items"
+        },
+        {
+          "method": "PATCH",
+          "path": "/inventory/items/:id"
+        }
+      ],
+      "allowedRoles": [
+        "OWNER",
+        "MANAGER",
+        "PROCUREMENT",
+        "STOCK_MANAGER"
+      ],
+      "sourceFile": "apps\\web\\src\\pages\\inventory\\items.tsx"
+    },
+    "/inventory/purchase-orders": {
+      "id": "/inventory/purchase-orders",
+      "title": "Purchase Orders",
+      "risk": "MEDIUM",
+      "primaryActions": [
+        {
+          "label": "Create PO",
+          "testId": "po-create",
+          "intent": "create"
+        },
+        {
+          "label": "Submit for Approval",
+          "testId": "po-submit",
+          "intent": "update"
+        },
+        {
+          "label": "Approve",
+          "testId": "po-approve",
+          "intent": "approve"
+        },
+        {
+          "label": "Reject",
+          "testId": "po-reject",
+          "intent": "reject"
+        },
+        {
+          "label": "View Details",
+          "testId": "po-view",
+          "intent": "navigate"
+        }
+      ],
+      "apiCalls": [
+        {
+          "method": "GET",
+          "path": "/inventory/purchase-orders"
+        },
+        {
+          "method": "POST",
+          "path": "/inventory/purchase-orders"
+        },
+        {
+          "method": "POST",
+          "path": "/inventory/purchase-orders/:id/submit"
+        },
+        {
+          "method": "POST",
+          "path": "/inventory/purchase-orders/:id/approve"
+        },
+        {
+          "method": "POST",
+          "path": "/inventory/purchase-orders/:id/reject"
+        }
+      ],
+      "allowedRoles": [
+        "OWNER",
+        "MANAGER",
+        "PROCUREMENT",
+        "STOCK_MANAGER"
+      ],
+      "sourceFile": "apps\\web\\src\\pages\\inventory\\purchase-orders\\index.tsx"
+    },
+    "/kds": {
+      "id": "/kds",
+      "title": "Kitchen Display System",
+      "risk": "LOW",
+      "primaryActions": [
+        {
+          "label": "Mark In Progress",
+          "testId": "kds-in-progress",
+          "intent": "update"
+        },
+        {
+          "label": "Mark Ready",
+          "testId": "kds-ready",
+          "intent": "update"
+        },
+        {
+          "label": "Recall Order",
+          "testId": "kds-recall",
+          "intent": "update"
+        },
+        {
+          "label": "Filter Status",
+          "testId": "kds-filter",
+          "intent": "view"
+        },
+        {
+          "label": "Settings",
+          "testId": "kds-settings",
+          "intent": "view"
+        }
+      ],
+      "apiCalls": [
+        {
+          "method": "GET",
+          "path": "/kds/tickets"
+        },
+        {
+          "method": "PATCH",
+          "path": "/kds/tickets/:id/start"
+        },
+        {
+          "method": "PATCH",
+          "path": "/kds/tickets/:id/ready"
+        },
+        {
+          "method": "PATCH",
+          "path": "/kds/tickets/:id/recall"
+        }
+      ],
+      "allowedRoles": [
+        "OWNER",
+        "MANAGER",
+        "SUPERVISOR",
+        "CHEF"
+      ],
+      "sourceFile": "apps\\web\\src\\pages\\kds\\index.tsx"
+    },
+    "/pos": {
+      "id": "/pos",
+      "title": "POS - Point of Sale",
+      "risk": "HIGH",
+      "primaryActions": [
+        {
+          "label": "New Order",
+          "testId": "pos-new-order",
+          "intent": "create"
+        },
+        {
+          "label": "Add Item",
+          "testId": "pos-add-item",
+          "intent": "create"
+        },
+        {
+          "label": "Send to Kitchen",
+          "testId": "pos-send-kitchen",
+          "intent": "update"
+        },
+        {
+          "label": "Checkout",
+          "testId": "pos-checkout",
+          "intent": "navigate"
+        },
+        {
+          "label": "Void Order",
+          "testId": "pos-void-order",
+          "intent": "delete"
+        },
+        {
+          "label": "Split Bill",
+          "testId": "pos-split-bill",
+          "intent": "update"
+        }
+      ],
+      "apiCalls": [
+        {
+          "method": "GET",
+          "path": "/pos/open"
+        },
+        {
+          "method": "GET",
+          "path": "/pos/menu"
+        },
+        {
+          "method": "POST",
+          "path": "/pos/orders"
+        },
+        {
+          "method": "POST",
+          "path": "/pos/orders/:id/lines"
+        },
+        {
+          "method": "POST",
+          "path": "/pos/orders/:id/send"
+        },
+        {
+          "method": "POST",
+          "path": "/pos/orders/:id/void"
+        }
+      ],
+      "allowedRoles": [
+        "OWNER",
+        "MANAGER",
+        "SUPERVISOR",
+        "CASHIER",
+        "WAITER",
+        "BARTENDER"
+      ],
+      "sourceFile": "apps\\web\\src\\pages\\pos\\index.tsx"
+    },
+    "/pos/cash-sessions": {
+      "id": "/pos/cash-sessions",
+      "title": "Cash Sessions",
+      "risk": "HIGH",
+      "primaryActions": [
+        {
+          "label": "Open Session",
+          "testId": "cash-open-session",
+          "intent": "create"
+        },
+        {
+          "label": "Close Session",
+          "testId": "cash-close-session",
+          "intent": "update"
+        },
+        {
+          "label": "View Details",
+          "testId": "cash-view-details",
+          "intent": "view"
+        }
+      ],
+      "apiCalls": [
+        {
+          "method": "GET",
+          "path": "/pos/cash-sessions"
+        },
+        {
+          "method": "POST",
+          "path": "/pos/cash-sessions/open"
+        },
+        {
+          "method": "POST",
+          "path": "/pos/cash-sessions/:id/close"
+        }
+      ],
+      "allowedRoles": [
+        "OWNER",
+        "MANAGER",
+        "SUPERVISOR",
+        "CASHIER"
+      ],
+      "sourceFile": "apps\\web\\src\\pages\\pos\\cash-sessions.tsx"
+    },
+    "/pos/checkout/[orderId]": {
+      "id": "/pos/checkout/[orderId]",
+      "title": "POS Checkout",
+      "risk": "HIGH",
+      "primaryActions": [
+        {
+          "label": "Pay Cash",
+          "testId": "checkout-pay-cash",
+          "intent": "create"
+        },
+        {
+          "label": "Pay Card",
+          "testId": "checkout-pay-card",
+          "intent": "create"
+        },
+        {
+          "label": "Pay Mobile",
+          "testId": "checkout-pay-mobile",
+          "intent": "create"
+        },
+        {
+          "label": "Complete Sale",
+          "testId": "checkout-complete",
+          "intent": "update"
+        },
+        {
+          "label": "Back to POS",
+          "testId": "checkout-back",
+          "intent": "navigate"
+        }
+      ],
+      "apiCalls": [
+        {
+          "method": "GET",
+          "path": "/pos/orders/:id"
+        },
+        {
+          "method": "POST",
+          "path": "/pos/orders/:id/payments"
+        },
+        {
+          "method": "POST",
+          "path": "/pos/orders/:id/complete"
+        }
+      ],
+      "allowedRoles": [
+        "OWNER",
+        "MANAGER",
+        "SUPERVISOR",
+        "CASHIER",
+        "WAITER",
+        "BARTENDER"
+      ],
+      "sourceFile": "apps\\web\\src\\pages\\pos\\checkout\\[orderId].tsx"
+    },
+    "/workforce/payroll-runs": {
+      "id": "/workforce/payroll-runs",
+      "title": "Payroll Runs",
+      "risk": "HIGH",
+      "primaryActions": [
+        {
+          "label": "Create Payroll Run",
+          "testId": "payroll-create",
+          "intent": "create"
+        },
+        {
+          "label": "Calculate",
+          "testId": "payroll-calculate",
+          "intent": "update"
+        },
+        {
+          "label": "Approve",
+          "testId": "payroll-approve",
+          "intent": "approve"
+        },
+        {
+          "label": "Post",
+          "testId": "payroll-post",
+          "intent": "update"
+        },
+        {
+          "label": "Export",
+          "testId": "payroll-export",
+          "intent": "export"
+        }
+      ],
+      "apiCalls": [
+        {
+          "method": "GET",
+          "path": "/workforce/payroll-runs"
+        },
+        {
+          "method": "POST",
+          "path": "/workforce/payroll-runs"
+        },
+        {
+          "method": "POST",
+          "path": "/workforce/payroll-runs/:id/calculate"
+        },
+        {
+          "method": "POST",
+          "path": "/workforce/payroll-runs/:id/approve"
+        },
+        {
+          "method": "POST",
+          "path": "/workforce/payroll-runs/:id/post"
+        }
+      ],
+      "allowedRoles": [
+        "OWNER",
+        "MANAGER",
+        "ACCOUNTANT"
+      ],
+      "sourceFile": "apps\\web\\src\\pages\\workforce\\payroll-runs\\index.tsx"
+    }
+  }
+}
