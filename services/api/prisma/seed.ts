@@ -343,6 +343,9 @@ async function main() {
   // CRITICAL: Delete in FK dependency order (children before parents)
   await prisma.recipeIngredient.deleteMany({});
   await prisma.wastage.deleteMany({});
+  await prisma.inventoryPeriodMovementSummary.deleteMany({}); // ← Must delete before inventoryItem (FK constraint)
+  await prisma.inventoryValuationSnapshot.deleteMany({}); // ← Must delete before inventoryItem (FK constraint)
+  await prisma.inventoryLedgerEntry.deleteMany({}); // ← Must delete before inventoryItem (FK constraint)
   await prisma.stockMovement.deleteMany({}); // ← Must delete before inventoryItem (FK constraint)
   await prisma.stockBatch.deleteMany({});
   await prisma.goodsReceiptLine.deleteMany({});
