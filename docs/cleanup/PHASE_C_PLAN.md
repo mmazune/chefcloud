@@ -84,6 +84,37 @@
 
 ---
 
+### C3.2: Import Firewall ✅ DONE
+
+**Objective:** Prevent future LLM or developer work from accidentally importing quarantine code.
+
+**Implementation (2026-01-10):**
+1. Created `scripts/verify-no-wip-imports.mjs` — standalone scanner
+2. Added `verify:no-wip-imports` npm script
+3. Added ESLint `no-restricted-imports` rule to `.eslintrc.js`
+4. Updated QUARANTINE_RULES.md with firewall documentation
+
+**Blocked Patterns:**
+- `wip/` — Work-in-progress quarantine
+- `_quarantine/` — Legacy quarantine folders
+
+**Verification:**
+```bash
+# Standalone check
+node scripts/verify-no-wip-imports.mjs
+
+# Via npm
+pnpm verify:no-wip-imports
+```
+
+**DoD:** ✅
+- Script created and tested
+- ESLint rule added
+- Documentation updated
+- Gates pass
+
+---
+
 ### C4: Medium-Confidence Improvements (Optional)
 
 **Candidates:**

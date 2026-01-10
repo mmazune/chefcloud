@@ -29,6 +29,22 @@ module.exports = {
     '@typescript-eslint/no-var-requires': 'error',
     'no-useless-catch': 'error',
     'no-unused-vars': 'off', // Use TS version instead
+    // Phase C3.2: Import firewall — block imports from quarantine paths
+    'no-restricted-imports': [
+      'error',
+      {
+        patterns: [
+          {
+            group: ['**/wip/**', 'wip/**', 'wip/*'],
+            message: 'Imports from wip/ are forbidden. Use test stubs instead.',
+          },
+          {
+            group: ['**/_quarantine/**', '_quarantine/**', '_quarantine/*'],
+            message: 'Imports from _quarantine/ are forbidden. Use test stubs instead.',
+          },
+        ],
+      },
+    ],
   },
   overrides: [
     {

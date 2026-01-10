@@ -176,4 +176,66 @@ Test utilities in `test/` folders that support quarantined features may remain i
 
 ---
 
+## Import Firewall (Phase C3.2)
+
+An automated import firewall prevents production code from importing quarantined paths.
+
+### Blocked Patterns
+
+The firewall blocks imports from:
+- `wip/` — Work-in-progress quarantine area
+- `_quarantine/` — Legacy quarantine folders
+
+### Enforcement Layers
+
+**1. ESLint Rule (`.eslintrc.js`)**
+
+```javascript
+'no-restricted-imports': [
+  'error',
+  {
+    patterns: [
+      { group: ['**/wip/**'], message: 'Imports from wip/ are forbidden.' },
+      { group: ['**/_quarantine/**'], message: 'Imports from _quarantine/ are forbidden.' },
+    ],
+  },
+],
+```
+
+This fails lint if any source file imports from quarantine paths.
+
+**2. Standalone Script (`scripts/verify-no-wip-imports.mjs`)**
+
+A deterministic Node.js script that scans all `.ts`, `.tsx`, `.js`, `.jsx` files:
+
+```bash
+# Run locally
+node scripts/verify-no-wip-imports.mjs
+
+# Via npm script
+pnpm verify:no-wip-imports
+```
+
+Exit codes:
+- `0` = No forbidden imports found
+- `1` = Forbidden imports detected (lists files + line numbers)
+
+### CI Integration
+
+Add to CI pipeline:
+
+```yaml
+- name: Verify no quarantine imports
+  run: node scripts/verify-no-wip-imports.mjs
+```
+
+### Bypassing the Firewall
+
+**DO NOT bypass.** If you need quarantined code:
+1. Move it out of quarantine properly
+2. Update the Dormant Feature Registry
+3. Ensure full test coverage
+
+---
+
 *Part of Phase C — Deep Cleanup. See [PHASE_C_PLAN.md](PHASE_C_PLAN.md) for overview.*

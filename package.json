@@ -22,7 +22,8 @@
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "clean": "turbo run clean && rm -rf node_modules",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "verify:no-wip-imports": "node scripts/verify-no-wip-imports.mjs"
   },
   "devDependencies": {
     "@commitlint/cli": "^18.6.0",
