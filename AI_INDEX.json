@@ -33,6 +33,15 @@
     "plan": "docs/cleanup/PHASE_C_PLAN.md",
     "candidates": "docs/cleanup/CANDIDATES.md"
   },
+  "verification": {
+    "not_dormant": "docs/verification/NOT_DORMANT_VERIFICATION.md",
+    "msr_login": "docs/verification/MSR_LOGIN_VERIFICATION.md",
+    "smoke_script": "scripts/verify/smoke-verification.mjs"
+  },
+  "devportal": {
+    "enablement": "docs/devportal/DEVPORTAL_ENABLEMENT.md",
+    "module": "services/api/src/devportal/devportal.module.ts"
+  },
   "standards": [
     "instructions/standards/E2E_TESTING_STANDARD.md",
     "instructions/standards/E2E_NO_HANG_STANDARD.md",

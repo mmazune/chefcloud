@@ -3,30 +3,28 @@
 date: 2026-01-10
 repo: mmazune/nimbuspos
 branch: main
-head_sha: e4a177425890035c4644c2a727edc8d672d5824f
-objective: "Phase C3.2 — Import firewall (block wip/quarantine imports)"
+head_sha: pending  # Updated after commit
+objective: "Phase D2 — DevPortal feature-flag wiring"
 
 definition_of_done:
-  - scripts/verify-no-wip-imports.mjs created
-  - ESLint no-restricted-imports rule added
-  - npm script verify:no-wip-imports added
-  - QUARANTINE_RULES.md updated with firewall docs
-  - PHASE_C_PLAN.md updated with C3.2 status
-  - Zero production imports from wip/ or _quarantine/
-  - Gates pass (lint, build)
+  - DevPortalModule created with OWNER-only guards
+  - Conditional import in app.module.ts (DEVPORTAL_ENABLED=1)
+  - GET /dev/status endpoint protected by L5 role
+  - DEVPORTAL_ENABLEMENT.md created
+  - verify:no-wip-imports passes
+  - lint+build pass
   - Atomic commit with proof
 
 gates_required:
+  - pnpm verify:no-wip-imports
   - pnpm -C services/api lint
   - pnpm -C apps/web lint
   - pnpm -C services/api build
   - pnpm -C apps/web build
 
 notes: |
-  Phase C is cleanup-focused.
-  C1 = registry only (no deletions).
-  C2 = high-confidence deletions (proven unreferenced).
-  C3.1 = quarantine WIP (zero production imports).
-  C3.2 = import firewall enforcement.
-  C4 = medium-confidence improvements (optional).
-  DO NOT break existing functionality.
+  Phase D is verification + safe enablement.
+  D1 = Not-Dormant verification docs + smoke script.
+  D2 = DevPortal feature-flag wiring (disabled by default).
+  DevPortal routes only exist when DEVPORTAL_ENABLED=1.
+  All dev routes require OWNER (L5) role.
