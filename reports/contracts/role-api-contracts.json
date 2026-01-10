@@ -1,0 +1,806 @@
+{
+  "roles": {
+    "CASHIER": {
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "/dashboard",
+          "count": 1
+        },
+        {
+          "method": "GET",
+          "path": "/pos/cash-sessions",
+          "count": 1
+        },
+        {
+          "method": "GET",
+          "path": "/pos/menu",
+          "count": 1
+        },
+        {
+          "method": "GET",
+          "path": "/pos/open",
+          "count": 1
+        },
+        {
+          "method": "GET",
+          "path": "/workforce/availability",
+          "count": 1
+        },
+        {
+          "method": "GET",
+          "path": "/workforce/scheduling/open-shifts",
+          "count": 1
+        },
+        {
+          "method": "GET",
+          "path": "/workforce/swaps",
+          "count": 1
+        },
+        {
+          "method": "GET",
+          "path": "/workforce/timeclock/status",
+          "count": 1
+        }
+      ],
+      "byRoute": {
+        "/dashboard": [
+          {
+            "method": "GET",
+            "path": "/dashboard"
+          }
+        ],
+        "/pos": [
+          {
+            "method": "GET",
+            "path": "/pos/menu"
+          },
+          {
+            "method": "GET",
+            "path": "/pos/open"
+          }
+        ],
+        "/pos/cash-sessions": [
+          {
+            "method": "GET",
+            "path": "/pos/cash-sessions"
+          }
+        ],
+        "/workforce/my-availability": [
+          {
+            "method": "GET",
+            "path": "/workforce/availability"
+          }
+        ],
+        "/workforce/my-swaps": [
+          {
+            "method": "GET",
+            "path": "/workforce/swaps"
+          }
+        ],
+        "/workforce/open-shifts": [
+          {
+            "method": "GET",
+            "path": "/workforce/scheduling/open-shifts"
+          }
+        ],
+        "/workforce/timeclock": [
+          {
+            "method": "GET",
+            "path": "/workforce/timeclock/status"
+          }
+        ]
+      },
+      "stats": {
+        "totalRawCalls": 8,
+        "uniqueEndpoints": 8,
+        "cappedTo": 20
+      }
+    },
+    "WAITER": {
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "/pos/menu",
+          "count": 1
+        },
+        {
+          "method": "GET",
+          "path": "/pos/orders",
+          "count": 1
+        },
+        {
+          "method": "GET",
+          "path": "/pos/orders/:id",
+          "count": 1
+        },
+        {
+          "method": "GET",
+          "path": "/reservations",
+          "count": 1
+        }
+      ],
+      "byRoute": {
+        "/pos": [
+          {
+            "method": "GET",
+            "path": "/pos/menu"
+          },
+          {
+            "method": "GET",
+            "path": "/pos/orders"
+          }
+        ],
+        "/pos/checkout/[orderId]": [
+          {
+            "method": "GET",
+            "path": "/pos/orders/:id"
+          }
+        ],
+        "/reservations": [
+          {
+            "method": "GET",
+            "path": "/reservations"
+          }
+        ]
+      },
+      "stats": {
+        "totalRawCalls": 4,
+        "uniqueEndpoints": 4,
+        "cappedTo": 20
+      }
+    },
+    "CHEF": {
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "/kds/tickets",
+          "count": 1
+        }
+      ],
+      "byRoute": {
+        "/kds": [
+          {
+            "method": "GET",
+            "path": "/kds/tickets"
+          }
+        ]
+      },
+      "stats": {
+        "totalRawCalls": 1,
+        "uniqueEndpoints": 1,
+        "cappedTo": 20
+      }
+    },
+    "BARTENDER": {
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "/pos/menu",
+          "count": 1
+        },
+        {
+          "method": "GET",
+          "path": "/pos/open",
+          "count": 1
+        },
+        {
+          "method": "GET",
+          "path": "/pos/orders/:id",
+          "count": 1
+        }
+      ],
+      "byRoute": {
+        "/pos": [
+          {
+            "method": "GET",
+            "path": "/pos/menu"
+          },
+          {
+            "method": "GET",
+            "path": "/pos/open"
+          }
+        ],
+        "/pos/checkout/[orderId]": [
+          {
+            "method": "GET",
+            "path": "/pos/orders/:id"
+          }
+        ]
+      },
+      "stats": {
+        "totalRawCalls": 3,
+        "uniqueEndpoints": 3,
+        "cappedTo": 20
+      }
+    },
+    "SUPERVISOR": {
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "/pos/cash-sessions",
+          "count": 1
+        },
+        {
+          "method": "GET",
+          "path": "/pos/menu",
+          "count": 1
+        },
+        {
+          "method": "GET",
+          "path": "/pos/open",
+          "count": 1
+        },
+        {
+          "method": "GET",
+          "path": "/pos/orders/:id",
+          "count": 1
+        },
+        {
+          "method": "GET",
+          "path": "/workforce/swaps",
+          "count": 1
+        },
+        {
+          "method": "GET",
+          "path": "/workforce/swaps/history",
+          "count": 1
+        },
+        {
+          "method": "POST",
+          "path": "/pos/cash-sessions/:id/close",
+          "count": 1
+        },
+        {
+          "method": "POST",
+          "path": "/pos/cash-sessions/open",
+          "count": 1
+        },
+        {
+          "method": "POST",
+          "path": "/pos/orders",
+          "count": 1
+        },
+        {
+          "method": "POST",
+          "path": "/pos/orders/:id/complete",
+          "count": 1
+        },
+        {
+          "method": "POST",
+          "path": "/pos/orders/:id/lines",
+          "count": 1
+        },
+        {
+          "method": "POST",
+          "path": "/pos/orders/:id/payments",
+          "count": 1
+        },
+        {
+          "method": "POST",
+          "path": "/pos/orders/:id/send",
+          "count": 1
+        },
+        {
+          "method": "POST",
+          "path": "/pos/orders/:id/void",
+          "count": 1
+        },
+        {
+          "method": "POST",
+          "path": "/workforce/swaps/:id/approve",
+          "count": 1
+        },
+        {
+          "method": "POST",
+          "path": "/workforce/swaps/:id/reject",
+          "count": 1
+        }
+      ],
+      "byRoute": {
+        "/pos": [
+          {
+            "method": "GET",
+            "path": "/pos/menu"
+          },
+          {
+            "method": "GET",
+            "path": "/pos/open"
+          },
+          {
+            "method": "POST",
+            "path": "/pos/orders"
+          },
+          {
+            "method": "POST",
+            "path": "/pos/orders/:id/lines"
+          },
+          {
+            "method": "POST",
+            "path": "/pos/orders/:id/send"
+          },
+          {
+            "method": "POST",
+            "path": "/pos/orders/:id/void"
+          }
+        ],
+        "/pos/cash-sessions": [
+          {
+            "method": "GET",
+            "path": "/pos/cash-sessions"
+          },
+          {
+            "method": "POST",
+            "path": "/pos/cash-sessions/:id/close"
+          },
+          {
+            "method": "POST",
+            "path": "/pos/cash-sessions/open"
+          }
+        ],
+        "/pos/checkout/[orderId]": [
+          {
+            "method": "GET",
+            "path": "/pos/orders/:id"
+          },
+          {
+            "method": "POST",
+            "path": "/pos/orders/:id/complete"
+          },
+          {
+            "method": "POST",
+            "path": "/pos/orders/:id/payments"
+          }
+        ],
+        "/workforce/swaps": [
+          {
+            "method": "GET",
+            "path": "/workforce/swaps"
+          },
+          {
+            "method": "GET",
+            "path": "/workforce/swaps/history"
+          },
+          {
+            "method": "POST",
+            "path": "/workforce/swaps/:id/approve"
+          },
+          {
+            "method": "POST",
+            "path": "/workforce/swaps/:id/reject"
+          }
+        ]
+      },
+      "stats": {
+        "totalRawCalls": 16,
+        "uniqueEndpoints": 16,
+        "cappedTo": 20
+      }
+    },
+    "MANAGER": {
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "/analytics/branches",
+          "count": 1
+        },
+        {
+          "method": "GET",
+          "path": "/analytics/daily",
+          "count": 1
+        },
+        {
+          "method": "GET",
+          "path": "/analytics/franchise/budget",
+          "count": 1
+        },
+        {
+          "method": "GET",
+          "path": "/analytics/franchise/forecast",
+          "count": 1
+        },
+        {
+          "method": "GET",
+          "path": "/dashboard/manager",
+          "count": 1
+        },
+        {
+          "method": "GET",
+          "path": "/inventory/items",
+          "count": 1
+        },
+        {
+          "method": "GET",
+          "path": "/inventory/purchase-orders",
+          "count": 1
+        },
+        {
+          "method": "GET",
+          "path": "/kitchen/orders",
+          "count": 1
+        },
+        {
+          "method": "GET",
+          "path": "/pos/cash-sessions",
+          "count": 1
+        },
+        {
+          "method": "GET",
+          "path": "/pos/menu",
+          "count": 1
+        },
+        {
+          "method": "GET",
+          "path": "/pos/open",
+          "count": 1
+        },
+        {
+          "method": "GET",
+          "path": "/pos/orders/:id",
+          "count": 1
+        },
+        {
+          "method": "GET",
+          "path": "/workforce/scheduling/shifts",
+          "count": 1
+        },
+        {
+          "method": "GET",
+          "path": "/workforce/swaps",
+          "count": 1
+        },
+        {
+          "method": "GET",
+          "path": "/workforce/swaps/history",
+          "count": 1
+        },
+        {
+          "method": "PATCH",
+          "path": "/inventory/items/:id",
+          "count": 1
+        },
+        {
+          "method": "POST",
+          "path": "/inventory/items",
+          "count": 1
+        },
+        {
+          "method": "POST",
+          "path": "/inventory/purchase-orders",
+          "count": 1
+        },
+        {
+          "method": "POST",
+          "path": "/kitchen/orders/:id/bump",
+          "count": 1
+        },
+        {
+          "method": "POST",
+          "path": "/kitchen/orders/:id/ready",
+          "count": 1
+        }
+      ],
+      "byRoute": {
+        "/analytics": [
+          {
+            "method": "GET",
+            "path": "/analytics/branches"
+          },
+          {
+            "method": "GET",
+            "path": "/analytics/daily"
+          },
+          {
+            "method": "GET",
+            "path": "/analytics/franchise/budget"
+          },
+          {
+            "method": "GET",
+            "path": "/analytics/franchise/forecast"
+          }
+        ],
+        "/dashboard": [
+          {
+            "method": "GET",
+            "path": "/dashboard/manager"
+          }
+        ],
+        "/inventory/items": [
+          {
+            "method": "GET",
+            "path": "/inventory/items"
+          },
+          {
+            "method": "PATCH",
+            "path": "/inventory/items/:id"
+          },
+          {
+            "method": "POST",
+            "path": "/inventory/items"
+          }
+        ],
+        "/inventory/purchase-orders": [
+          {
+            "method": "GET",
+            "path": "/inventory/purchase-orders"
+          },
+          {
+            "method": "POST",
+            "path": "/inventory/purchase-orders"
+          }
+        ],
+        "/kds": [
+          {
+            "method": "GET",
+            "path": "/kitchen/orders"
+          },
+          {
+            "method": "POST",
+            "path": "/kitchen/orders/:id/bump"
+          },
+          {
+            "method": "POST",
+            "path": "/kitchen/orders/:id/ready"
+          }
+        ],
+        "/pos": [
+          {
+            "method": "GET",
+            "path": "/pos/menu"
+          },
+          {
+            "method": "GET",
+            "path": "/pos/open"
+          },
+          {
+            "method": "POST",
+            "path": "/pos/orders"
+          },
+          {
+            "method": "POST",
+            "path": "/pos/orders/:id/lines"
+          },
+          {
+            "method": "POST",
+            "path": "/pos/orders/:id/send"
+          },
+          {
+            "method": "POST",
+            "path": "/pos/orders/:id/void"
+          }
+        ],
+        "/pos/cash-sessions": [
+          {
+            "method": "GET",
+            "path": "/pos/cash-sessions"
+          },
+          {
+            "method": "POST",
+            "path": "/pos/cash-sessions/:id/close"
+          },
+          {
+            "method": "POST",
+            "path": "/pos/cash-sessions/open"
+          }
+        ],
+        "/pos/checkout/[orderId]": [
+          {
+            "method": "GET",
+            "path": "/pos/orders/:id"
+          },
+          {
+            "method": "POST",
+            "path": "/pos/orders/:id/complete"
+          },
+          {
+            "method": "POST",
+            "path": "/pos/orders/:id/payments"
+          }
+        ],
+        "/workforce/approvals": [
+          {
+            "method": "GET",
+            "path": "/workforce/scheduling/shifts"
+          },
+          {
+            "method": "POST",
+            "path": "/workforce/scheduling/shifts/:id/approve"
+          }
+        ],
+        "/workforce/swaps": [
+          {
+            "method": "GET",
+            "path": "/workforce/swaps"
+          },
+          {
+            "method": "GET",
+            "path": "/workforce/swaps/history"
+          },
+          {
+            "method": "POST",
+            "path": "/workforce/swaps/:id/approve"
+          },
+          {
+            "method": "POST",
+            "path": "/workforce/swaps/:id/reject"
+          }
+        ]
+      },
+      "stats": {
+        "totalRawCalls": 31,
+        "uniqueEndpoints": 31,
+        "cappedTo": 20
+      }
+    },
+    "ACCOUNTANT": {
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "/accounting/accounts",
+          "count": 1
+        },
+        {
+          "method": "GET",
+          "path": "/accounting/ap/aging",
+          "count": 1
+        },
+        {
+          "method": "GET",
+          "path": "/accounting/ar/aging",
+          "count": 1
+        },
+        {
+          "method": "GET",
+          "path": "/accounting/balance-sheet",
+          "count": 1
+        },
+        {
+          "method": "GET",
+          "path": "/accounting/fiscal-periods",
+          "count": 1
+        },
+        {
+          "method": "GET",
+          "path": "/accounting/journal-entries",
+          "count": 1
+        },
+        {
+          "method": "GET",
+          "path": "/accounting/pnl",
+          "count": 1
+        },
+        {
+          "method": "GET",
+          "path": "/accounting/trial-balance",
+          "count": 1
+        },
+        {
+          "method": "GET",
+          "path": "/analytics/daily",
+          "count": 1
+        },
+        {
+          "method": "GET",
+          "path": "/reports",
+          "count": 1
+        },
+        {
+          "method": "POST",
+          "path": "/accounting/journal-entries",
+          "count": 1
+        },
+        {
+          "method": "POST",
+          "path": "/accounting/journal-entries/:id/post",
+          "count": 1
+        },
+        {
+          "method": "POST",
+          "path": "/accounting/journal-entries/:id/reverse",
+          "count": 1
+        },
+        {
+          "method": "PUT",
+          "path": "/accounting/fiscal-periods/:id/close",
+          "count": 1
+        }
+      ],
+      "byRoute": {
+        "/analytics": [
+          {
+            "method": "GET",
+            "path": "/analytics/daily"
+          }
+        ],
+        "/finance/accounts": [
+          {
+            "method": "GET",
+            "path": "/accounting/accounts"
+          }
+        ],
+        "/finance/ap-aging": [
+          {
+            "method": "GET",
+            "path": "/accounting/ap/aging"
+          }
+        ],
+        "/finance/ar-aging": [
+          {
+            "method": "GET",
+            "path": "/accounting/ar/aging"
+          }
+        ],
+        "/finance/balance-sheet": [
+          {
+            "method": "GET",
+            "path": "/accounting/balance-sheet"
+          }
+        ],
+        "/finance/journal": [
+          {
+            "method": "GET",
+            "path": "/accounting/journal-entries"
+          },
+          {
+            "method": "POST",
+            "path": "/accounting/journal-entries"
+          },
+          {
+            "method": "POST",
+            "path": "/accounting/journal-entries/:id/post"
+          },
+          {
+            "method": "POST",
+            "path": "/accounting/journal-entries/:id/reverse"
+          }
+        ],
+        "/finance/periods": [
+          {
+            "method": "GET",
+            "path": "/accounting/fiscal-periods"
+          },
+          {
+            "method": "PUT",
+            "path": "/accounting/fiscal-periods/:id/close"
+          }
+        ],
+        "/finance/pnl": [
+          {
+            "method": "GET",
+            "path": "/accounting/pnl"
+          }
+        ],
+        "/finance/trial-balance": [
+          {
+            "method": "GET",
+            "path": "/accounting/trial-balance"
+          }
+        ],
+        "/reports": [
+          {
+            "method": "GET",
+            "path": "/reports"
+          }
+        ]
+      },
+      "stats": {
+        "totalRawCalls": 14,
+        "uniqueEndpoints": 14,
+        "cappedTo": 20
+      }
+    }
+  },
+  "generatedAt": "2026-01-10T17:06:31.719Z",
+  "sourceFiles": [
+    "cashier.runtime.json",
+    "waiter.runtime.json",
+    "chef.runtime.json",
+    "bartender.runtime.json",
+    "supervisor.runtime.json",
+    "manager.runtime.json",
+    "accountant.runtime.json"
+  ],
+  "config": {
+    "maxEndpointsPerRole": 20
+  }
+}
