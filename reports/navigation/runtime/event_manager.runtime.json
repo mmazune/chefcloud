@@ -1,0 +1,350 @@
+{
+  "role": "EVENT_MANAGER",
+  "capturedAt": "2026-01-10T22:00:00.000Z",
+  "captureMethod": "static-analysis-v2",
+  "routesVisited": [
+    "/workspaces/event-manager",
+    "/dashboard",
+    "/reservations",
+    "/reservations/calendar",
+    "/reservations/policies",
+    "/reservations/today-board",
+    "/reservations/blackouts",
+    "/reservations/branch-hours",
+    "/reservations/capacity",
+    "/reservations/sla-reports",
+    "/pos",
+    "/pos/checkout/[orderId]",
+    "/staff",
+    "/waitlist",
+    "/workforce/my-availability",
+    "/workforce/my-swaps",
+    "/workforce/open-shifts",
+    "/settings"
+  ],
+  "sidebarLinks": [
+    {
+      "label": "Dashboard",
+      "href": "/dashboard",
+      "navGroup": "Events",
+      "isActive": false,
+      "probeOutcome": "ok"
+    },
+    {
+      "label": "Reservations",
+      "href": "/reservations",
+      "navGroup": "Events",
+      "isActive": false,
+      "probeOutcome": "ok"
+    },
+    {
+      "label": "POS",
+      "href": "/pos",
+      "navGroup": "Operations",
+      "isActive": false,
+      "probeOutcome": "ok"
+    },
+    {
+      "label": "Staff",
+      "href": "/staff",
+      "navGroup": "Operations",
+      "isActive": false,
+      "probeOutcome": "ok"
+    },
+    {
+      "label": "My Availability",
+      "href": "/workforce/my-availability",
+      "navGroup": "My Schedule",
+      "isActive": false,
+      "probeOutcome": "ok"
+    },
+    {
+      "label": "My Swaps",
+      "href": "/workforce/my-swaps",
+      "navGroup": "My Schedule",
+      "isActive": false,
+      "probeOutcome": "ok"
+    },
+    {
+      "label": "Open Shifts",
+      "href": "/workforce/open-shifts",
+      "navGroup": "My Schedule",
+      "isActive": false,
+      "probeOutcome": "ok"
+    },
+    {
+      "label": "Settings",
+      "href": "/settings",
+      "navGroup": "Settings",
+      "isActive": false,
+      "probeOutcome": "ok"
+    }
+  ],
+  "actions": [
+    {
+      "route": "/reservations",
+      "elementType": "button",
+      "testId": "reservation-nav-policies",
+      "label": "Policies"
+    },
+    {
+      "route": "/reservations",
+      "elementType": "button",
+      "testId": "reservation-nav-calendar",
+      "label": "Calendar View"
+    },
+    {
+      "route": "/reservations",
+      "elementType": "button",
+      "testId": "reservation-confirm",
+      "label": "Confirm",
+      "attributes": { "risk": "MEDIUM", "note": "Confirms reservation" }
+    },
+    {
+      "route": "/reservations",
+      "elementType": "button",
+      "testId": "reservation-cancel",
+      "label": "Cancel",
+      "attributes": { "risk": "MEDIUM", "note": "Cancels reservation" }
+    },
+    {
+      "route": "/reservations",
+      "elementType": "button",
+      "testId": "reservation-seat",
+      "label": "Seat",
+      "attributes": { "risk": "LOW", "note": "Seats guest" }
+    },
+    {
+      "route": "/reservations",
+      "elementType": "button",
+      "testId": "reservation-no-show",
+      "label": "No-Show",
+      "attributes": { "risk": "MEDIUM", "note": "Marks guest as no-show" }
+    },
+    {
+      "route": "/reservations",
+      "elementType": "button",
+      "testId": "reservation-cancel-confirmed",
+      "label": "Cancel (Confirmed)",
+      "attributes": { "risk": "MEDIUM", "note": "Cancels confirmed reservation" }
+    },
+    {
+      "route": "/reservations",
+      "elementType": "button",
+      "testId": "reservation-complete",
+      "label": "Complete",
+      "attributes": { "risk": "LOW", "note": "Completes seated reservation" }
+    },
+    {
+      "route": "/reservations/today-board",
+      "elementType": "button",
+      "testId": "today-board-refresh",
+      "label": "Refresh"
+    },
+    {
+      "route": "/reservations/today-board",
+      "elementType": "button",
+      "testId": "today-board-seat-guest",
+      "label": "Seat Guest"
+    },
+    {
+      "route": "/reservations/calendar",
+      "elementType": "button",
+      "testId": "calendar-prev-week",
+      "label": "Previous Week"
+    },
+    {
+      "route": "/reservations/calendar",
+      "elementType": "button",
+      "testId": "calendar-next-week",
+      "label": "Next Week"
+    },
+    {
+      "route": "/reservations/policies",
+      "elementType": "button",
+      "testId": "policy-create",
+      "label": "Create Policy"
+    },
+    {
+      "route": "/reservations/policies",
+      "elementType": "button",
+      "testId": "policy-edit",
+      "label": "Edit Policy"
+    },
+    {
+      "route": "/reservations/blackouts",
+      "elementType": "button",
+      "testId": "blackout-create",
+      "label": "Add Blackout"
+    },
+    {
+      "route": "/reservations/blackouts",
+      "elementType": "button",
+      "testId": "blackout-delete",
+      "label": "Delete Blackout"
+    },
+    {
+      "route": "/reservations/capacity",
+      "elementType": "button",
+      "testId": "capacity-update",
+      "label": "Update Capacity"
+    },
+    {
+      "route": "/waitlist",
+      "elementType": "button",
+      "testId": "waitlist-add-party",
+      "label": "Add Party",
+      "attributes": { "risk": "LOW", "note": "Adds party to waitlist" }
+    },
+    {
+      "route": "/waitlist",
+      "elementType": "button",
+      "testId": "waitlist-seat-party",
+      "label": "Seat Party",
+      "attributes": { "risk": "LOW", "note": "Seats party from waitlist" }
+    },
+    {
+      "route": "/waitlist",
+      "elementType": "button",
+      "testId": "waitlist-remove",
+      "label": "Remove",
+      "attributes": { "risk": "LOW", "note": "Removes party from waitlist" }
+    },
+    {
+      "route": "/pos",
+      "elementType": "button",
+      "testId": "pos-new-order",
+      "label": "New Order"
+    },
+    {
+      "route": "/pos",
+      "elementType": "button",
+      "testId": "pos-send-kitchen",
+      "label": "Send to Kitchen"
+    },
+    {
+      "route": "/pos",
+      "elementType": "button",
+      "testId": "pos-checkout",
+      "label": "Take Payment",
+      "attributes": { "risk": "HIGH", "note": "Processes payment" }
+    },
+    {
+      "route": "/staff",
+      "elementType": "button",
+      "testId": "staff-view-schedule",
+      "label": "View Schedule"
+    },
+    {
+      "route": "/staff",
+      "elementType": "button",
+      "testId": "staff-clock-in-out",
+      "label": "Clock In/Out"
+    }
+  ],
+  "apiCalls": [
+    { "route": "/dashboard", "method": "GET", "path": "/dashboard" },
+    { "route": "/reservations", "method": "GET", "path": "/reservations" },
+    { "route": "/reservations", "method": "GET", "path": "/bookings/list" },
+    { "route": "/reservations", "method": "POST", "path": "/reservations/:id/confirm" },
+    { "route": "/reservations", "method": "POST", "path": "/reservations/:id/cancel" },
+    { "route": "/reservations", "method": "POST", "path": "/reservations/:id/seat" },
+    { "route": "/reservations", "method": "POST", "path": "/reservations/:id/no-show" },
+    { "route": "/reservations", "method": "POST", "path": "/reservations/:id/complete" },
+    { "route": "/reservations/calendar", "method": "GET", "path": "/reservations/calendar" },
+    { "route": "/reservations/policies", "method": "GET", "path": "/reservations/policies" },
+    { "route": "/reservations/policies", "method": "POST", "path": "/reservations/policies" },
+    { "route": "/reservations/policies", "method": "PATCH", "path": "/reservations/policies/:id" },
+    { "route": "/reservations/today-board", "method": "GET", "path": "/reservations/today" },
+    { "route": "/reservations/blackouts", "method": "GET", "path": "/reservations/blackouts" },
+    { "route": "/reservations/blackouts", "method": "POST", "path": "/reservations/blackouts" },
+    { "route": "/reservations/blackouts", "method": "DELETE", "path": "/reservations/blackouts/:id" },
+    { "route": "/reservations/capacity", "method": "GET", "path": "/reservations/capacity" },
+    { "route": "/reservations/capacity", "method": "PATCH", "path": "/reservations/capacity" },
+    { "route": "/reservations/branch-hours", "method": "GET", "path": "/reservations/branch-hours" },
+    { "route": "/reservations/sla-reports", "method": "GET", "path": "/reservations/sla-reports" },
+    { "route": "/waitlist", "method": "GET", "path": "/waitlist" },
+    { "route": "/waitlist", "method": "POST", "path": "/waitlist" },
+    { "route": "/waitlist", "method": "POST", "path": "/waitlist/:id/seat" },
+    { "route": "/waitlist", "method": "DELETE", "path": "/waitlist/:id" },
+    { "route": "/pos", "method": "GET", "path": "/pos/orders" },
+    { "route": "/pos", "method": "GET", "path": "/pos/menu" },
+    { "route": "/pos/checkout/[orderId]", "method": "GET", "path": "/pos/orders/:id" },
+    { "route": "/staff", "method": "GET", "path": "/staff" },
+    { "route": "/workforce/my-availability", "method": "GET", "path": "/workforce/availability" },
+    { "route": "/workforce/my-swaps", "method": "GET", "path": "/workforce/swaps" },
+    { "route": "/workforce/open-shifts", "method": "GET", "path": "/workforce/scheduling/open-shifts" }
+  ],
+  "apiCallsByRoute": {
+    "/dashboard": [
+      { "method": "GET", "path": "/dashboard", "phase": "page-load" }
+    ],
+    "/reservations": [
+      { "method": "GET", "path": "/reservations", "phase": "page-load" },
+      { "method": "GET", "path": "/bookings/list", "phase": "page-load" },
+      { "method": "POST", "path": "/reservations/:id/confirm", "phase": "action:confirm" },
+      { "method": "POST", "path": "/reservations/:id/cancel", "phase": "action:cancel" },
+      { "method": "POST", "path": "/reservations/:id/seat", "phase": "action:seat" },
+      { "method": "POST", "path": "/reservations/:id/no-show", "phase": "action:no-show" },
+      { "method": "POST", "path": "/reservations/:id/complete", "phase": "action:complete" }
+    ],
+    "/reservations/calendar": [
+      { "method": "GET", "path": "/reservations/calendar", "phase": "page-load" }
+    ],
+    "/reservations/policies": [
+      { "method": "GET", "path": "/reservations/policies", "phase": "page-load" },
+      { "method": "POST", "path": "/reservations/policies", "phase": "action:create" },
+      { "method": "PATCH", "path": "/reservations/policies/:id", "phase": "action:edit" }
+    ],
+    "/reservations/today-board": [
+      { "method": "GET", "path": "/reservations/today", "phase": "page-load" }
+    ],
+    "/reservations/blackouts": [
+      { "method": "GET", "path": "/reservations/blackouts", "phase": "page-load" },
+      { "method": "POST", "path": "/reservations/blackouts", "phase": "action:create" },
+      { "method": "DELETE", "path": "/reservations/blackouts/:id", "phase": "action:delete" }
+    ],
+    "/reservations/capacity": [
+      { "method": "GET", "path": "/reservations/capacity", "phase": "page-load" },
+      { "method": "PATCH", "path": "/reservations/capacity", "phase": "action:update" }
+    ],
+    "/reservations/branch-hours": [
+      { "method": "GET", "path": "/reservations/branch-hours", "phase": "page-load" }
+    ],
+    "/reservations/sla-reports": [
+      { "method": "GET", "path": "/reservations/sla-reports", "phase": "page-load" }
+    ],
+    "/waitlist": [
+      { "method": "GET", "path": "/waitlist", "phase": "page-load" },
+      { "method": "POST", "path": "/waitlist", "phase": "action:add-party" },
+      { "method": "POST", "path": "/waitlist/:id/seat", "phase": "action:seat" },
+      { "method": "DELETE", "path": "/waitlist/:id", "phase": "action:remove" }
+    ],
+    "/pos": [
+      { "method": "GET", "path": "/pos/orders", "phase": "page-load" },
+      { "method": "GET", "path": "/pos/menu", "phase": "page-load" }
+    ],
+    "/pos/checkout/[orderId]": [
+      { "method": "GET", "path": "/pos/orders/:id", "phase": "page-load" }
+    ],
+    "/staff": [
+      { "method": "GET", "path": "/staff", "phase": "page-load" }
+    ],
+    "/workforce/my-availability": [
+      { "method": "GET", "path": "/workforce/availability", "phase": "page-load" }
+    ],
+    "/workforce/my-swaps": [
+      { "method": "GET", "path": "/workforce/swaps", "phase": "page-load" }
+    ],
+    "/workforce/open-shifts": [
+      { "method": "GET", "path": "/workforce/scheduling/open-shifts", "phase": "page-load" }
+    ]
+  },
+  "summary": {
+    "totalRoutes": 18,
+    "totalSidebarLinks": 8,
+    "totalActions": 25,
+    "probeOutcomes": { "ok": 8, "forbidden": 0, "redirected": 0, "error": 0 },
+    "apiCallsTotal": 31
+  }
+}

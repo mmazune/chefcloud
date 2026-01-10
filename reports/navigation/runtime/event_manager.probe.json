@@ -1,0 +1,76 @@
+{
+  "role": "EVENT_MANAGER",
+  "probeAt": "2026-01-10T22:05:00.000Z",
+  "totalLinks": 8,
+  "passedLinks": 8,
+  "failedLinks": 0,
+  "results": [
+    {
+      "label": "Dashboard",
+      "href": "/dashboard",
+      "outcome": "ok",
+      "httpStatus": 200
+    },
+    {
+      "label": "Reservations",
+      "href": "/reservations",
+      "outcome": "ok",
+      "httpStatus": 200,
+      "apiCalls": [
+        { "method": "GET", "path": "/reservations", "status": 200 }
+      ]
+    },
+    {
+      "label": "POS",
+      "href": "/pos",
+      "outcome": "ok",
+      "httpStatus": 200,
+      "apiCalls": [
+        { "method": "GET", "path": "/pos/orders", "status": 200 },
+        { "method": "GET", "path": "/pos/menu", "status": 200 }
+      ]
+    },
+    {
+      "label": "Staff",
+      "href": "/staff",
+      "outcome": "ok",
+      "httpStatus": 200,
+      "apiCalls": [
+        { "method": "GET", "path": "/staff", "status": 200 }
+      ]
+    },
+    {
+      "label": "My Availability",
+      "href": "/workforce/my-availability",
+      "outcome": "ok",
+      "httpStatus": 200,
+      "apiCalls": [
+        { "method": "GET", "path": "/workforce/availability", "status": 200 }
+      ]
+    },
+    {
+      "label": "My Swaps",
+      "href": "/workforce/my-swaps",
+      "outcome": "ok",
+      "httpStatus": 200,
+      "apiCalls": [
+        { "method": "GET", "path": "/workforce/swaps", "status": 200 }
+      ]
+    },
+    {
+      "label": "Open Shifts",
+      "href": "/workforce/open-shifts",
+      "outcome": "ok",
+      "httpStatus": 200,
+      "apiCalls": [
+        { "method": "GET", "path": "/workforce/scheduling/open-shifts", "status": 200 }
+      ]
+    },
+    {
+      "label": "Settings",
+      "href": "/settings",
+      "outcome": "ok",
+      "httpStatus": 200
+    }
+  ]
+}
