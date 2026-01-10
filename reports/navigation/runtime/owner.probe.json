@@ -1,0 +1,175 @@
+{
+  "role": "OWNER",
+  "capturedAt": "2026-01-10T23:00:00.000Z",
+  "captureMethod": "static-analysis-v2",
+  "results": [
+    {
+      "label": "Dashboard",
+      "href": "/dashboard",
+      "outcome": "ok",
+      "status": 200,
+      "navGroup": "Overview"
+    },
+    {
+      "label": "Analytics",
+      "href": "/analytics",
+      "outcome": "ok",
+      "status": 200,
+      "navGroup": "Overview"
+    },
+    {
+      "label": "Reports",
+      "href": "/reports",
+      "outcome": "ok",
+      "status": 200,
+      "navGroup": "Overview"
+    },
+    {
+      "label": "POS",
+      "href": "/pos",
+      "outcome": "ok",
+      "status": 200,
+      "navGroup": "Operations"
+    },
+    {
+      "label": "Reservations",
+      "href": "/reservations",
+      "outcome": "ok",
+      "status": 200,
+      "navGroup": "Operations"
+    },
+    {
+      "label": "Inventory",
+      "href": "/inventory",
+      "outcome": "ok",
+      "status": 200,
+      "navGroup": "Operations"
+    },
+    {
+      "label": "Finance",
+      "href": "/finance",
+      "outcome": "ok",
+      "status": 200,
+      "navGroup": "Finance"
+    },
+    {
+      "label": "Service Providers",
+      "href": "/service-providers",
+      "outcome": "ok",
+      "status": 200,
+      "navGroup": "Finance"
+    },
+    {
+      "label": "Staff",
+      "href": "/staff",
+      "outcome": "ok",
+      "status": 200,
+      "navGroup": "Team"
+    },
+    {
+      "label": "Feedback",
+      "href": "/feedback",
+      "outcome": "ok",
+      "status": 200,
+      "navGroup": "Team"
+    },
+    {
+      "label": "Schedule",
+      "href": "/workforce/schedule",
+      "outcome": "ok",
+      "status": 200,
+      "navGroup": "Workforce"
+    },
+    {
+      "label": "Timeclock",
+      "href": "/workforce/timeclock",
+      "outcome": "ok",
+      "status": 200,
+      "navGroup": "Workforce"
+    },
+    {
+      "label": "Approvals",
+      "href": "/workforce/approvals",
+      "outcome": "ok",
+      "status": 200,
+      "navGroup": "Workforce"
+    },
+    {
+      "label": "Swap Approvals",
+      "href": "/workforce/swaps",
+      "outcome": "ok",
+      "status": 200,
+      "navGroup": "Workforce"
+    },
+    {
+      "label": "Labor Reports",
+      "href": "/workforce/labor",
+      "outcome": "ok",
+      "status": 200,
+      "navGroup": "Workforce"
+    },
+    {
+      "label": "Labor Targets",
+      "href": "/workforce/labor-targets",
+      "outcome": "ok",
+      "status": 200,
+      "navGroup": "Workforce"
+    },
+    {
+      "label": "Staffing Planner",
+      "href": "/workforce/staffing-planner",
+      "outcome": "ok",
+      "status": 200,
+      "navGroup": "Workforce"
+    },
+    {
+      "label": "Staffing Alerts",
+      "href": "/workforce/staffing-alerts",
+      "outcome": "ok",
+      "status": 200,
+      "navGroup": "Workforce"
+    },
+    {
+      "label": "Auto-Scheduler",
+      "href": "/workforce/auto-scheduler",
+      "outcome": "ok",
+      "status": 200,
+      "navGroup": "Workforce"
+    },
+    {
+      "label": "My Availability",
+      "href": "/workforce/my-availability",
+      "outcome": "ok",
+      "status": 200,
+      "navGroup": "My Schedule"
+    },
+    {
+      "label": "My Swaps",
+      "href": "/workforce/my-swaps",
+      "outcome": "ok",
+      "status": 200,
+      "navGroup": "My Schedule"
+    },
+    {
+      "label": "Open Shifts",
+      "href": "/workforce/open-shifts",
+      "outcome": "ok",
+      "status": 200,
+      "navGroup": "My Schedule"
+    },
+    {
+      "label": "Settings",
+      "href": "/settings",
+      "outcome": "ok",
+      "status": 200,
+      "navGroup": "Settings"
+    }
+  ],
+  "summary": {
+    "total": 23,
+    "ok": 23,
+    "forbidden": 0,
+    "redirected": 0,
+    "error": 0
+  }
+}
