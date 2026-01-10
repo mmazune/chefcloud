@@ -1,0 +1,323 @@
+{
+  "role": "PROCUREMENT",
+  "capturedAt": "2026-01-10T21:00:00.000Z",
+  "captureMethod": "static-analysis-v2",
+  "routesVisited": [
+    "/workspaces/procurement",
+    "/dashboard",
+    "/inventory",
+    "/inventory/items",
+    "/inventory/purchase-orders",
+    "/inventory/purchase-orders/[id]",
+    "/inventory/receipts",
+    "/inventory/receipts/[id]",
+    "/inventory/transfers",
+    "/inventory/waste",
+    "/inventory/recipes",
+    "/inventory/depletions",
+    "/inventory/period-close",
+    "/service-providers",
+    "/service-providers/[id]",
+    "/reports",
+    "/workforce/my-availability",
+    "/workforce/my-swaps",
+    "/workforce/open-shifts",
+    "/settings"
+  ],
+  "sidebarLinks": [
+    {
+      "label": "Dashboard",
+      "href": "/dashboard",
+      "navGroup": "Reports",
+      "isActive": false,
+      "probeOutcome": "ok"
+    },
+    {
+      "label": "Inventory",
+      "href": "/inventory",
+      "navGroup": "Procurement",
+      "isActive": false,
+      "probeOutcome": "ok"
+    },
+    {
+      "label": "Purchase Orders",
+      "href": "/inventory/purchase-orders",
+      "navGroup": "Procurement",
+      "isActive": false,
+      "probeOutcome": "ok"
+    },
+    {
+      "label": "Receipts",
+      "href": "/inventory/receipts",
+      "navGroup": "Procurement",
+      "isActive": false,
+      "probeOutcome": "ok"
+    },
+    {
+      "label": "Transfers",
+      "href": "/inventory/transfers",
+      "navGroup": "Procurement",
+      "isActive": false,
+      "probeOutcome": "ok"
+    },
+    {
+      "label": "Waste",
+      "href": "/inventory/waste",
+      "navGroup": "Procurement",
+      "isActive": false,
+      "probeOutcome": "ok"
+    },
+    {
+      "label": "Recipes",
+      "href": "/inventory/recipes",
+      "navGroup": "Procurement",
+      "isActive": false,
+      "probeOutcome": "ok"
+    },
+    {
+      "label": "Depletions",
+      "href": "/inventory/depletions",
+      "navGroup": "Procurement",
+      "isActive": false,
+      "probeOutcome": "ok"
+    },
+    {
+      "label": "Period Close",
+      "href": "/inventory/period-close",
+      "navGroup": "Procurement",
+      "isActive": false,
+      "probeOutcome": "ok"
+    },
+    {
+      "label": "Service Providers",
+      "href": "/service-providers",
+      "navGroup": "Procurement",
+      "isActive": false,
+      "probeOutcome": "ok"
+    },
+    {
+      "label": "Reports",
+      "href": "/reports",
+      "navGroup": "Reports",
+      "isActive": false,
+      "probeOutcome": "ok"
+    },
+    {
+      "label": "My Availability",
+      "href": "/workforce/my-availability",
+      "navGroup": "My Schedule",
+      "isActive": false,
+      "probeOutcome": "ok"
+    },
+    {
+      "label": "My Swaps",
+      "href": "/workforce/my-swaps",
+      "navGroup": "My Schedule",
+      "isActive": false,
+      "probeOutcome": "ok"
+    },
+    {
+      "label": "Open Shifts",
+      "href": "/workforce/open-shifts",
+      "navGroup": "My Schedule",
+      "isActive": false,
+      "probeOutcome": "ok"
+    },
+    {
+      "label": "Settings",
+      "href": "/settings",
+      "navGroup": "Settings",
+      "isActive": false,
+      "probeOutcome": "ok"
+    }
+  ],
+  "actions": [
+    {
+      "route": "/inventory/purchase-orders",
+      "elementType": "button",
+      "testId": "create-po-btn",
+      "label": "Create Purchase Order",
+      "attributes": { "risk": "HIGH", "note": "Creates procurement commitment" }
+    },
+    {
+      "route": "/inventory/purchase-orders",
+      "elementType": "button",
+      "testId": "export-pos-btn",
+      "label": "Export POs"
+    },
+    {
+      "route": "/inventory/purchase-orders/[id]",
+      "elementType": "button",
+      "testId": "submit-po-btn",
+      "label": "Submit PO",
+      "attributes": { "risk": "HIGH", "note": "Submits PO for approval" }
+    },
+    {
+      "route": "/inventory/purchase-orders/[id]",
+      "elementType": "button",
+      "testId": "approve-po-btn",
+      "label": "Approve PO",
+      "attributes": { "risk": "HIGH", "note": "Approves purchase order" }
+    },
+    {
+      "route": "/inventory/purchase-orders/[id]",
+      "elementType": "button",
+      "testId": "reject-po-btn",
+      "label": "Reject PO"
+    },
+    {
+      "route": "/inventory/purchase-orders/[id]",
+      "elementType": "button",
+      "testId": "cancel-po-btn",
+      "label": "Cancel PO"
+    },
+    {
+      "route": "/inventory/receipts",
+      "elementType": "button",
+      "testId": "create-receipt-btn",
+      "label": "New Receipt",
+      "attributes": { "risk": "HIGH", "note": "Receives goods into inventory" }
+    },
+    {
+      "route": "/inventory/receipts/[id]",
+      "elementType": "button",
+      "testId": "finalize-receipt-btn",
+      "label": "Finalize Receipt",
+      "attributes": { "risk": "HIGH", "note": "Finalizes goods receipt - updates stock" }
+    },
+    {
+      "route": "/inventory/receipts/[id]",
+      "elementType": "button",
+      "testId": "save-receipt-draft-btn",
+      "label": "Save Draft"
+    },
+    {
+      "route": "/inventory/transfers",
+      "elementType": "button",
+      "testId": "create-transfer-btn",
+      "label": "Create Transfer",
+      "attributes": { "risk": "HIGH", "note": "Moves stock between locations" }
+    },
+    {
+      "route": "/inventory/waste",
+      "elementType": "button",
+      "testId": "record-waste-btn",
+      "label": "Record Waste",
+      "attributes": { "risk": "HIGH", "note": "Writes off inventory" }
+    },
+    {
+      "route": "/service-providers",
+      "elementType": "button",
+      "testId": "create-supplier-btn",
+      "label": "Add Supplier"
+    },
+    {
+      "route": "/service-providers",
+      "elementType": "button",
+      "testId": "export-suppliers-btn",
+      "label": "Export Suppliers"
+    },
+    {
+      "route": "/service-providers/[id]",
+      "elementType": "button",
+      "testId": "edit-supplier-btn",
+      "label": "Edit Supplier"
+    },
+    {
+      "route": "/service-providers/[id]",
+      "elementType": "button",
+      "testId": "deactivate-supplier-btn",
+      "label": "Deactivate Supplier"
+    },
+    {
+      "route": "/inventory/items",
+      "elementType": "button",
+      "testId": "create-item-btn",
+      "label": "Add Item"
+    },
+    {
+      "route": "/inventory/items",
+      "elementType": "button",
+      "testId": "export-items-btn",
+      "label": "Export Items"
+    },
+    {
+      "route": "/inventory/recipes",
+      "elementType": "button",
+      "testId": "create-recipe-btn",
+      "label": "Create Recipe"
+    },
+    {
+      "route": "/inventory/recipes",
+      "elementType": "button",
+      "testId": "export-recipes-btn",
+      "label": "Export Recipes"
+    }
+  ],
+  "apiCalls": [
+    { "route": "/dashboard", "method": "GET", "path": "/dashboard" },
+    { "route": "/inventory", "method": "GET", "path": "/inventory/items" },
+    { "route": "/inventory", "method": "GET", "path": "/inventory/on-hand" },
+    { "route": "/inventory/items", "method": "GET", "path": "/inventory/items" },
+    { "route": "/inventory/items", "method": "POST", "path": "/inventory/items" },
+    { "route": "/inventory/items", "method": "PATCH", "path": "/inventory/items/:id" },
+    { "route": "/inventory/purchase-orders", "method": "GET", "path": "/inventory/purchase-orders" },
+    { "route": "/inventory/purchase-orders", "method": "POST", "path": "/inventory/purchase-orders" },
+    { "route": "/inventory/purchase-orders/[id]", "method": "GET", "path": "/inventory/purchase-orders/:id" },
+    { "route": "/inventory/purchase-orders/[id]", "method": "PATCH", "path": "/inventory/purchase-orders/:id" },
+    { "route": "/inventory/purchase-orders/[id]", "method": "POST", "path": "/inventory/purchase-orders/:id/submit" },
+    { "route": "/inventory/purchase-orders/[id]", "method": "POST", "path": "/inventory/purchase-orders/:id/approve" },
+    { "route": "/inventory/purchase-orders/[id]", "method": "POST", "path": "/inventory/purchase-orders/:id/reject" },
+    { "route": "/inventory/purchase-orders/[id]", "method": "POST", "path": "/inventory/purchase-orders/:id/cancel" },
+    { "route": "/inventory/receipts", "method": "GET", "path": "/inventory/receipts" },
+    { "route": "/inventory/receipts", "method": "POST", "path": "/inventory/receipts" },
+    { "route": "/inventory/receipts/[id]", "method": "GET", "path": "/inventory/receipts/:id" },
+    { "route": "/inventory/receipts/[id]", "method": "POST", "path": "/inventory/receipts/:id/finalize" },
+    { "route": "/inventory/transfers", "method": "GET", "path": "/inventory/transfers" },
+    { "route": "/inventory/transfers", "method": "POST", "path": "/inventory/transfers" },
+    { "route": "/inventory/waste", "method": "GET", "path": "/inventory/waste" },
+    { "route": "/inventory/waste", "method": "POST", "path": "/inventory/waste" },
+    { "route": "/inventory/recipes", "method": "GET", "path": "/inventory/recipes" },
+    { "route": "/inventory/recipes", "method": "POST", "path": "/inventory/recipes" },
+    { "route": "/inventory/depletions", "method": "GET", "path": "/inventory/depletions" },
+    { "route": "/inventory/period-close", "method": "GET", "path": "/inventory/periods" },
+    { "route": "/service-providers", "method": "GET", "path": "/service-providers" },
+    { "route": "/service-providers", "method": "POST", "path": "/service-providers" },
+    { "route": "/service-providers/[id]", "method": "GET", "path": "/service-providers/:id" },
+    { "route": "/service-providers/[id]", "method": "PATCH", "path": "/service-providers/:id" },
+    { "route": "/reports", "method": "GET", "path": "/reports" },
+    { "route": "/workforce/my-availability", "method": "GET", "path": "/workforce/availability" },
+    { "route": "/workforce/my-swaps", "method": "GET", "path": "/workforce/swaps" },
+    { "route": "/workforce/open-shifts", "method": "GET", "path": "/workforce/scheduling/open-shifts" }
+  ],
+  "apiCallsByRoute": {
+    "/inventory/purchase-orders": [
+      { "method": "GET", "path": "/inventory/purchase-orders", "phase": "page-load" },
+      { "method": "POST", "path": "/inventory/purchase-orders", "phase": "action:create" }
+    ],
+    "/inventory/purchase-orders/[id]": [
+      { "method": "GET", "path": "/inventory/purchase-orders/:id", "phase": "page-load" },
+      { "method": "PATCH", "path": "/inventory/purchase-orders/:id", "phase": "action:update" },
+      { "method": "POST", "path": "/inventory/purchase-orders/:id/submit", "phase": "action:submit" },
+      { "method": "POST", "path": "/inventory/purchase-orders/:id/approve", "phase": "action:approve" },
+      { "method": "POST", "path": "/inventory/purchase-orders/:id/reject", "phase": "action:reject" },
+      { "method": "POST", "path": "/inventory/purchase-orders/:id/cancel", "phase": "action:cancel" }
+    ],
+    "/inventory/receipts": [
+      { "method": "GET", "path": "/inventory/receipts", "phase": "page-load" },
+      { "method": "POST", "path": "/inventory/receipts", "phase": "action:create" }
+    ],
+    "/inventory/receipts/[id]": [
+      { "method": "GET", "path": "/inventory/receipts/:id", "phase": "page-load" },
+      { "method": "POST", "path": "/inventory/receipts/:id/finalize", "phase": "action:finalize" }
+    ],
+    "/service-providers": [
+      { "method": "GET", "path": "/service-providers", "phase": "page-load" },
+      { "method": "POST", "path": "/service-providers", "phase": "action:create" }
+    ],
+    "/service-providers/[id]": [
+      { "method": "GET", "path": "/service-providers/:id", "phase": "page-load" },
+      { "method": "PATCH", "path": "/service-providers/:id", "phase": "action:update" }
+    ]
+  }
+}

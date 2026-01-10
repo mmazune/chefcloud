@@ -1,0 +1,353 @@
+{
+  "role": "STOCK_MANAGER",
+  "capturedAt": "2026-01-10T21:30:00.000Z",
+  "captureMethod": "static-analysis-v2",
+  "routesVisited": [
+    "/workspaces/stock-manager",
+    "/dashboard",
+    "/inventory",
+    "/inventory/items",
+    "/inventory/items/[id]",
+    "/inventory/purchase-orders",
+    "/inventory/receipts",
+    "/inventory/transfers",
+    "/inventory/transfers/[id]",
+    "/inventory/waste",
+    "/inventory/waste/[id]",
+    "/inventory/recipes",
+    "/inventory/depletions",
+    "/inventory/period-close",
+    "/inventory/stocktakes",
+    "/inventory/stocktakes/[id]",
+    "/inventory/lots",
+    "/inventory/lots/[id]",
+    "/inventory/adjustments",
+    "/reports",
+    "/workforce/my-availability",
+    "/workforce/my-swaps",
+    "/workforce/open-shifts",
+    "/settings"
+  ],
+  "sidebarLinks": [
+    {
+      "label": "Dashboard",
+      "href": "/dashboard",
+      "navGroup": "Overview",
+      "isActive": false,
+      "probeOutcome": "ok"
+    },
+    {
+      "label": "Inventory",
+      "href": "/inventory",
+      "navGroup": "Inventory",
+      "isActive": false,
+      "probeOutcome": "ok"
+    },
+    {
+      "label": "Purchase Orders",
+      "href": "/inventory/purchase-orders",
+      "navGroup": "Inventory",
+      "isActive": false,
+      "probeOutcome": "ok"
+    },
+    {
+      "label": "Receipts",
+      "href": "/inventory/receipts",
+      "navGroup": "Inventory",
+      "isActive": false,
+      "probeOutcome": "ok"
+    },
+    {
+      "label": "Transfers",
+      "href": "/inventory/transfers",
+      "navGroup": "Inventory",
+      "isActive": false,
+      "probeOutcome": "ok"
+    },
+    {
+      "label": "Waste",
+      "href": "/inventory/waste",
+      "navGroup": "Inventory",
+      "isActive": false,
+      "probeOutcome": "ok"
+    },
+    {
+      "label": "Recipes",
+      "href": "/inventory/recipes",
+      "navGroup": "Inventory",
+      "isActive": false,
+      "probeOutcome": "ok"
+    },
+    {
+      "label": "Depletions",
+      "href": "/inventory/depletions",
+      "navGroup": "Inventory",
+      "isActive": false,
+      "probeOutcome": "ok"
+    },
+    {
+      "label": "Period Close",
+      "href": "/inventory/period-close",
+      "navGroup": "Inventory",
+      "isActive": false,
+      "probeOutcome": "ok"
+    },
+    {
+      "label": "Reports",
+      "href": "/reports",
+      "navGroup": "Inventory",
+      "isActive": false,
+      "probeOutcome": "ok"
+    },
+    {
+      "label": "My Availability",
+      "href": "/workforce/my-availability",
+      "navGroup": "My Schedule",
+      "isActive": false,
+      "probeOutcome": "ok"
+    },
+    {
+      "label": "My Swaps",
+      "href": "/workforce/my-swaps",
+      "navGroup": "My Schedule",
+      "isActive": false,
+      "probeOutcome": "ok"
+    },
+    {
+      "label": "Open Shifts",
+      "href": "/workforce/open-shifts",
+      "navGroup": "My Schedule",
+      "isActive": false,
+      "probeOutcome": "ok"
+    },
+    {
+      "label": "Settings",
+      "href": "/settings",
+      "navGroup": "Settings",
+      "isActive": false,
+      "probeOutcome": "ok"
+    }
+  ],
+  "actions": [
+    {
+      "route": "/inventory/items",
+      "elementType": "button",
+      "testId": "create-item-btn",
+      "label": "Add Item"
+    },
+    {
+      "route": "/inventory/items",
+      "elementType": "button",
+      "testId": "export-items-btn",
+      "label": "Export Items"
+    },
+    {
+      "route": "/inventory/items/[id]",
+      "elementType": "button",
+      "testId": "edit-item-btn",
+      "label": "Edit Item"
+    },
+    {
+      "route": "/inventory/items/[id]",
+      "elementType": "button",
+      "testId": "adjust-stock-btn",
+      "label": "Adjust Stock",
+      "attributes": { "risk": "HIGH", "note": "Adjusts inventory quantities" }
+    },
+    {
+      "route": "/inventory/adjustments",
+      "elementType": "button",
+      "testId": "create-adjustment-btn",
+      "label": "Create Adjustment",
+      "attributes": { "risk": "HIGH", "note": "Creates stock adjustment" }
+    },
+    {
+      "route": "/inventory/transfers",
+      "elementType": "button",
+      "testId": "create-transfer-btn",
+      "label": "Create Transfer",
+      "attributes": { "risk": "HIGH", "note": "Moves stock between locations" }
+    },
+    {
+      "route": "/inventory/transfers/[id]",
+      "elementType": "button",
+      "testId": "complete-transfer-btn",
+      "label": "Complete Transfer",
+      "attributes": { "risk": "HIGH", "note": "Finalizes stock transfer" }
+    },
+    {
+      "route": "/inventory/transfers/[id]",
+      "elementType": "button",
+      "testId": "cancel-transfer-btn",
+      "label": "Cancel Transfer"
+    },
+    {
+      "route": "/inventory/waste",
+      "elementType": "button",
+      "testId": "record-waste-btn",
+      "label": "Record Waste",
+      "attributes": { "risk": "HIGH", "note": "Writes off inventory" }
+    },
+    {
+      "route": "/inventory/waste/[id]",
+      "elementType": "button",
+      "testId": "approve-waste-btn",
+      "label": "Approve Waste",
+      "attributes": { "risk": "HIGH", "note": "Approves waste write-off" }
+    },
+    {
+      "route": "/inventory/stocktakes",
+      "elementType": "button",
+      "testId": "create-stocktake-btn",
+      "label": "New Stocktake",
+      "attributes": { "risk": "HIGH", "note": "Creates count session" }
+    },
+    {
+      "route": "/inventory/stocktakes",
+      "elementType": "button",
+      "testId": "export-stocktakes-btn",
+      "label": "Export Stocktakes"
+    },
+    {
+      "route": "/inventory/stocktakes/[id]",
+      "elementType": "button",
+      "testId": "submit-stocktake-btn",
+      "label": "Submit Count",
+      "attributes": { "risk": "HIGH", "note": "Submits count for approval" }
+    },
+    {
+      "route": "/inventory/stocktakes/[id]",
+      "elementType": "button",
+      "testId": "approve-stocktake-btn",
+      "label": "Approve Stocktake",
+      "attributes": { "risk": "HIGH", "note": "Approves stocktake - posts adjustments" }
+    },
+    {
+      "route": "/inventory/stocktakes/[id]",
+      "elementType": "button",
+      "testId": "reject-stocktake-btn",
+      "label": "Reject Stocktake"
+    },
+    {
+      "route": "/inventory/lots",
+      "elementType": "button",
+      "testId": "view-lot-btn",
+      "label": "View Lot"
+    },
+    {
+      "route": "/inventory/lots/[id]",
+      "elementType": "button",
+      "testId": "quarantine-lot-btn",
+      "label": "Quarantine Lot",
+      "attributes": { "risk": "HIGH", "note": "Quarantines lot for quality issue" }
+    },
+    {
+      "route": "/inventory/lots/[id]",
+      "elementType": "button",
+      "testId": "release-lot-btn",
+      "label": "Release Lot"
+    },
+    {
+      "route": "/inventory/lots/[id]",
+      "elementType": "button",
+      "testId": "recall-lot-btn",
+      "label": "Recall Lot",
+      "attributes": { "risk": "HIGH", "note": "Initiates product recall" }
+    },
+    {
+      "route": "/inventory/period-close",
+      "elementType": "button",
+      "testId": "initiate-close-btn",
+      "label": "Initiate Period Close",
+      "attributes": { "risk": "HIGH", "note": "Initiates inventory period close" }
+    },
+    {
+      "route": "/inventory/period-close",
+      "elementType": "button",
+      "testId": "approve-close-btn",
+      "label": "Approve Period Close",
+      "attributes": { "risk": "HIGH", "note": "Approves period close - posts to GL" }
+    },
+    {
+      "route": "/inventory/recipes",
+      "elementType": "button",
+      "testId": "create-recipe-btn",
+      "label": "Create Recipe"
+    },
+    {
+      "route": "/inventory/depletions",
+      "elementType": "button",
+      "testId": "run-depletion-btn",
+      "label": "Run Depletion"
+    }
+  ],
+  "apiCalls": [
+    { "route": "/dashboard", "method": "GET", "path": "/dashboard" },
+    { "route": "/inventory", "method": "GET", "path": "/inventory/items" },
+    { "route": "/inventory", "method": "GET", "path": "/inventory/on-hand" },
+    { "route": "/inventory/items", "method": "GET", "path": "/inventory/items" },
+    { "route": "/inventory/items", "method": "POST", "path": "/inventory/items" },
+    { "route": "/inventory/items/[id]", "method": "GET", "path": "/inventory/items/:id" },
+    { "route": "/inventory/items/[id]", "method": "PATCH", "path": "/inventory/items/:id" },
+    { "route": "/inventory/adjustments", "method": "GET", "path": "/inventory/adjustments" },
+    { "route": "/inventory/adjustments", "method": "POST", "path": "/inventory/adjustments" },
+    { "route": "/inventory/purchase-orders", "method": "GET", "path": "/inventory/purchase-orders" },
+    { "route": "/inventory/receipts", "method": "GET", "path": "/inventory/receipts" },
+    { "route": "/inventory/transfers", "method": "GET", "path": "/inventory/transfers" },
+    { "route": "/inventory/transfers", "method": "POST", "path": "/inventory/transfers" },
+    { "route": "/inventory/transfers/[id]", "method": "GET", "path": "/inventory/transfers/:id" },
+    { "route": "/inventory/transfers/[id]", "method": "POST", "path": "/inventory/transfers/:id/complete" },
+    { "route": "/inventory/transfers/[id]", "method": "POST", "path": "/inventory/transfers/:id/cancel" },
+    { "route": "/inventory/waste", "method": "GET", "path": "/inventory/waste" },
+    { "route": "/inventory/waste", "method": "POST", "path": "/inventory/waste" },
+    { "route": "/inventory/waste/[id]", "method": "GET", "path": "/inventory/waste/:id" },
+    { "route": "/inventory/waste/[id]", "method": "POST", "path": "/inventory/waste/:id/approve" },
+    { "route": "/inventory/stocktakes", "method": "GET", "path": "/inventory/stocktakes" },
+    { "route": "/inventory/stocktakes", "method": "POST", "path": "/inventory/stocktakes" },
+    { "route": "/inventory/stocktakes/[id]", "method": "GET", "path": "/inventory/stocktakes/:id" },
+    { "route": "/inventory/stocktakes/[id]", "method": "POST", "path": "/inventory/stocktakes/:id/submit" },
+    { "route": "/inventory/stocktakes/[id]", "method": "POST", "path": "/inventory/stocktakes/:id/approve" },
+    { "route": "/inventory/stocktakes/[id]", "method": "POST", "path": "/inventory/stocktakes/:id/reject" },
+    { "route": "/inventory/lots", "method": "GET", "path": "/inventory/lots" },
+    { "route": "/inventory/lots/[id]", "method": "GET", "path": "/inventory/lots/:id" },
+    { "route": "/inventory/lots/[id]", "method": "POST", "path": "/inventory/lots/:id/quarantine" },
+    { "route": "/inventory/lots/[id]", "method": "POST", "path": "/inventory/lots/:id/release" },
+    { "route": "/inventory/lots/[id]", "method": "POST", "path": "/inventory/lots/:id/recall" },
+    { "route": "/inventory/recipes", "method": "GET", "path": "/inventory/recipes" },
+    { "route": "/inventory/recipes", "method": "POST", "path": "/inventory/recipes" },
+    { "route": "/inventory/depletions", "method": "GET", "path": "/inventory/depletions" },
+    { "route": "/inventory/depletions", "method": "POST", "path": "/inventory/depletions/run" },
+    { "route": "/inventory/period-close", "method": "GET", "path": "/inventory/periods" },
+    { "route": "/inventory/period-close", "method": "POST", "path": "/inventory/periods/:id/initiate-close" },
+    { "route": "/inventory/period-close", "method": "POST", "path": "/inventory/periods/:id/approve-close" },
+    { "route": "/reports", "method": "GET", "path": "/reports" },
+    { "route": "/workforce/my-availability", "method": "GET", "path": "/workforce/availability" },
+    { "route": "/workforce/my-swaps", "method": "GET", "path": "/workforce/swaps" },
+    { "route": "/workforce/open-shifts", "method": "GET", "path": "/workforce/scheduling/open-shifts" }
+  ],
+  "apiCallsByRoute": {
+    "/inventory": [
+      { "method": "GET", "path": "/inventory/items", "phase": "page-load" },
+      { "method": "GET", "path": "/inventory/on-hand", "phase": "page-load" }
+    ],
+    "/inventory/stocktakes": [
+      { "method": "GET", "path": "/inventory/stocktakes", "phase": "page-load" },
+      { "method": "POST", "path": "/inventory/stocktakes", "phase": "action:create" }
+    ],
+    "/inventory/stocktakes/[id]": [
+      { "method": "GET", "path": "/inventory/stocktakes/:id", "phase": "page-load" },
+      { "method": "POST", "path": "/inventory/stocktakes/:id/submit", "phase": "action:submit" },
+      { "method": "POST", "path": "/inventory/stocktakes/:id/approve", "phase": "action:approve" },
+      { "method": "POST", "path": "/inventory/stocktakes/:id/reject", "phase": "action:reject" }
+    ],
+    "/inventory/lots": [
+      { "method": "GET", "path": "/inventory/lots", "phase": "page-load" }
+    ],
+    "/inventory/lots/[id]": [
+      { "method": "GET", "path": "/inventory/lots/:id", "phase": "page-load" },
+      { "method": "POST", "path": "/inventory/lots/:id/quarantine", "phase": "action:quarantine" },
+      { "method": "POST", "path": "/inventory/lots/:id/release", "phase": "action:release" },
+      { "method": "POST", "path": "/inventory/lots/:id/recall", "phase": "action:recall" }
+    ]
+  }
+}

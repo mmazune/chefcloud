@@ -1,0 +1,93 @@
+{
+  "role": "STOCK_MANAGER",
+  "probeAt": "2026-01-10T21:35:00.000Z",
+  "totalLinks": 14,
+  "passedLinks": 14,
+  "failedLinks": 0,
+  "results": [
+    {
+      "label": "Dashboard",
+      "href": "/dashboard",
+      "outcome": "ok",
+      "httpStatus": 200
+    },
+    {
+      "label": "Inventory",
+      "href": "/inventory",
+      "outcome": "ok",
+      "httpStatus": 200
+    },
+    {
+      "label": "Purchase Orders",
+      "href": "/inventory/purchase-orders",
+      "outcome": "ok",
+      "httpStatus": 200
+    },
+    {
+      "label": "Receipts",
+      "href": "/inventory/receipts",
+      "outcome": "ok",
+      "httpStatus": 200
+    },
+    {
+      "label": "Transfers",
+      "href": "/inventory/transfers",
+      "outcome": "ok",
+      "httpStatus": 200
+    },
+    {
+      "label": "Waste",
+      "href": "/inventory/waste",
+      "outcome": "ok",
+      "httpStatus": 200
+    },
+    {
+      "label": "Recipes",
+      "href": "/inventory/recipes",
+      "outcome": "ok",
+      "httpStatus": 200
+    },
+    {
+      "label": "Depletions",
+      "href": "/inventory/depletions",
+      "outcome": "ok",
+      "httpStatus": 200
+    },
+    {
+      "label": "Period Close",
+      "href": "/inventory/period-close",
+      "outcome": "ok",
+      "httpStatus": 200
+    },
+    {
+      "label": "Reports",
+      "href": "/reports",
+      "outcome": "ok",
+      "httpStatus": 200
+    },
+    {
+      "label": "My Availability",
+      "href": "/workforce/my-availability",
+      "outcome": "ok",
+      "httpStatus": 200
+    },
+    {
+      "label": "My Swaps",
+      "href": "/workforce/my-swaps",
+      "outcome": "ok",
+      "httpStatus": 200
+    },
+    {
+      "label": "Open Shifts",
+      "href": "/workforce/open-shifts",
+      "outcome": "ok",
+      "httpStatus": 200
+    },
+    {
+      "label": "Settings",
+      "href": "/settings",
+      "outcome": "ok",
+      "httpStatus": 200
+    }
+  ]
+}

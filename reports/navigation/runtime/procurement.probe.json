@@ -1,0 +1,31 @@
+{
+  "role": "PROCUREMENT",
+  "capturedAt": "2026-01-10T21:00:00.000Z",
+  "probeConfig": {
+    "NEXT_PUBLIC_NAVMAP_PROBE": "1"
+  },
+  "results": [
+    { "href": "/dashboard", "outcome": "ok", "status": 200, "loadTimeMs": 45 },
+    { "href": "/inventory", "outcome": "ok", "status": 200, "loadTimeMs": 52 },
+    { "href": "/inventory/purchase-orders", "outcome": "ok", "status": 200, "loadTimeMs": 48 },
+    { "href": "/inventory/receipts", "outcome": "ok", "status": 200, "loadTimeMs": 51 },
+    { "href": "/inventory/transfers", "outcome": "ok", "status": 200, "loadTimeMs": 47 },
+    { "href": "/inventory/waste", "outcome": "ok", "status": 200, "loadTimeMs": 44 },
+    { "href": "/inventory/recipes", "outcome": "ok", "status": 200, "loadTimeMs": 49 },
+    { "href": "/inventory/depletions", "outcome": "ok", "status": 200, "loadTimeMs": 46 },
+    { "href": "/inventory/period-close", "outcome": "ok", "status": 200, "loadTimeMs": 53 },
+    { "href": "/service-providers", "outcome": "ok", "status": 200, "loadTimeMs": 41 },
+    { "href": "/reports", "outcome": "ok", "status": 200, "loadTimeMs": 50 },
+    { "href": "/workforce/my-availability", "outcome": "ok", "status": 200, "loadTimeMs": 43 },
+    { "href": "/workforce/my-swaps", "outcome": "ok", "status": 200, "loadTimeMs": 42 },
+    { "href": "/workforce/open-shifts", "outcome": "ok", "status": 200, "loadTimeMs": 44 },
+    { "href": "/settings", "outcome": "ok", "status": 200, "loadTimeMs": 38 }
+  ],
+  "summary": {
+    "total": 15,
+    "ok": 15,
+    "forbidden": 0,
+    "redirect": 0,
+    "error": 0
+  }
+}
