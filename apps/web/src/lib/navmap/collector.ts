@@ -1,16 +1,23 @@
 /**
- * Phase I3: Navigation Map Collector
+ * Phase I3.1: Navigation Map Collector (v2)
  * 
  * Lightweight runtime collector for navigation and actions.
  * Enabled with NEXT_PUBLIC_NAVMAP_MODE=1
+ * 
+ * v2 additions:
+ * - API call capture per route
+ * - Link probe results
  * 
  * This is a singleton that accumulates:
  * - Sidebar links as they render
  * - In-page actions (elements with data-testid)
  * - Routes visited
+ * - API calls per route
  */
 
-import type { NavmapRoleCapture, NavmapSidebarLink as _NavmapSidebarLink, NavmapAction } from './types';
+import type { NavmapRoleCapture, NavmapSidebarLink as _NavmapSidebarLink, NavmapAction, NavmapApiCall as _NavmapApiCall, NavmapProbeResult as _NavmapProbeResult } from './types';
+import { getApiCallsByRoute } from './apiCapture';
+import { getProbeResults } from './linkProbe';
 
 // Singleton state
 let enabled = false;
@@ -122,14 +129,19 @@ export function getCapture(): NavmapRoleCapture | null {
 }
 
 /**
- * Export capture data as JSON string
+ * Export capture data as JSON string (v2 with API calls and probe results)
  */
 export function exportCaptureJSON(): string {
   if (!capture) return '{}';
   
+  // Get v2 data
+  const apiCallsByRoute = getApiCallsByRoute();
+  const probeResults = getProbeResults();
+  
   // Sort for determinism
   const sorted: NavmapRoleCapture = {
     ...capture,
+    captureMethod: 'runtime-probe',
     routesVisited: [...capture.routesVisited].sort(),
     sidebarLinks: [...capture.sidebarLinks].sort((a, b) => 
       a.navGroup.localeCompare(b.navGroup) || a.label.localeCompare(b.label)
@@ -137,6 +149,8 @@ export function exportCaptureJSON(): string {
     actions: [...capture.actions].sort((a, b) => 
       a.route.localeCompare(b.route) || a.testId.localeCompare(b.testId)
     ),
+    apiCallsByRoute,
+    probeResults,
   };
   
   return JSON.stringify(sorted, null, 2);

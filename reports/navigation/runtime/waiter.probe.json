@@ -1,0 +1,49 @@
+{
+  "role": "WAITER",
+  "probedAt": "2026-01-10T16:00:00.000Z",
+  "summary": {
+    "total": 6,
+    "ok": 6,
+    "forbidden": 0,
+    "redirected": 0,
+    "error": 0
+  },
+  "results": [
+    {
+      "href": "/pos",
+      "label": "POS",
+      "navGroup": "Operations",
+      "outcome": "ok"
+    },
+    {
+      "href": "/reservations",
+      "label": "Reservations",
+      "navGroup": "Operations",
+      "outcome": "ok"
+    },
+    {
+      "href": "/workforce/my-availability",
+      "label": "My Availability",
+      "navGroup": "My Schedule",
+      "outcome": "ok"
+    },
+    {
+      "href": "/workforce/my-swaps",
+      "label": "My Swaps",
+      "navGroup": "My Schedule",
+      "outcome": "ok"
+    },
+    {
+      "href": "/workforce/open-shifts",
+      "label": "Open Shifts",
+      "navGroup": "My Schedule",
+      "outcome": "ok"
+    },
+    {
+      "href": "/settings",
+      "label": "Settings",
+      "navGroup": "Settings",
+      "outcome": "ok"
+    }
+  ]
+}

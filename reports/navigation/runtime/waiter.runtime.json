@@ -1,9 +1,10 @@
 {
   "role": "WAITER",
-  "capturedAt": "2026-01-10T14:00:00.000Z",
-  "captureMethod": "static-analysis",
+  "capturedAt": "2026-01-10T16:00:00.000Z",
+  "captureMethod": "static-analysis-v2",
   "routesVisited": [
     "/pos",
+    "/pos/checkout/[orderId]",
     "/reservations",
     "/settings",
     "/workforce/my-availability",
@@ -15,37 +16,43 @@
       "label": "My Availability",
       "href": "/workforce/my-availability",
       "navGroup": "My Schedule",
-      "isActive": false
+      "isActive": false,
+      "probeOutcome": "ok"
     },
     {
       "label": "My Swaps",
       "href": "/workforce/my-swaps",
       "navGroup": "My Schedule",
-      "isActive": false
+      "isActive": false,
+      "probeOutcome": "ok"
     },
     {
       "label": "Open Shifts",
       "href": "/workforce/open-shifts",
       "navGroup": "My Schedule",
-      "isActive": false
+      "isActive": false,
+      "probeOutcome": "ok"
     },
     {
       "label": "POS",
       "href": "/pos",
       "navGroup": "Operations",
-      "isActive": false
+      "isActive": false,
+      "probeOutcome": "ok"
     },
     {
       "label": "Reservations",
       "href": "/reservations",
       "navGroup": "Operations",
-      "isActive": false
+      "isActive": false,
+      "probeOutcome": "ok"
     },
     {
       "label": "Settings",
       "href": "/settings",
       "navGroup": "Settings",
-      "isActive": false
+      "isActive": false,
+      "probeOutcome": "ok"
     }
   ],
   "actions": [
@@ -65,13 +72,41 @@
       "route": "/pos",
       "elementType": "button",
       "testId": "pos-checkout",
-      "label": "Request Payment"
+      "label": "Take Payment",
+      "attributes": {
+        "intent": "modal",
+        "note": "Opens in-page payment modal, not navigation"
+      }
     },
     {
       "route": "/pos",
       "elementType": "button",
       "testId": "pos-split-bill",
       "label": "Split Bill"
+    },
+    {
+      "route": "/pos/checkout/[orderId]",
+      "elementType": "button",
+      "testId": "checkout-back",
+      "label": "Back to POS"
+    },
+    {
+      "route": "/pos/checkout/[orderId]",
+      "elementType": "button",
+      "testId": "checkout-pay-cash",
+      "label": "Pay Cash"
+    },
+    {
+      "route": "/pos/checkout/[orderId]",
+      "elementType": "button",
+      "testId": "checkout-pay-card",
+      "label": "Pay Card"
+    },
+    {
+      "route": "/pos/checkout/[orderId]",
+      "elementType": "button",
+      "testId": "checkout-complete",
+      "label": "Complete Sale"
     },
     {
       "route": "/reservations",
@@ -122,9 +157,31 @@
       "label": "Complete"
     }
   ],
+  "apiCallsByRoute": {
+    "/pos": [
+      { "method": "GET", "path": "/pos/orders", "phase": "page-load" },
+      { "method": "GET", "path": "/pos/menu", "phase": "page-load" }
+    ],
+    "/pos/checkout/[orderId]": [
+      { "method": "GET", "path": "/pos/orders/:id", "phase": "page-load" }
+    ],
+    "/reservations": [
+      { "method": "GET", "path": "/reservations", "phase": "page-load" }
+    ]
+  },
+  "probeResults": [
+    { "href": "/pos", "label": "POS", "navGroup": "Operations", "outcome": "ok" },
+    { "href": "/reservations", "label": "Reservations", "navGroup": "Operations", "outcome": "ok" },
+    { "href": "/workforce/my-availability", "label": "My Availability", "navGroup": "My Schedule", "outcome": "ok" },
+    { "href": "/workforce/my-swaps", "label": "My Swaps", "navGroup": "My Schedule", "outcome": "ok" },
+    { "href": "/workforce/open-shifts", "label": "Open Shifts", "navGroup": "My Schedule", "outcome": "ok" },
+    { "href": "/settings", "label": "Settings", "navGroup": "Settings", "outcome": "ok" }
+  ],
   "summary": {
-    "totalRoutes": 6,
+    "totalRoutes": 7,
     "totalSidebarLinks": 6,
-    "totalActions": 12
+    "totalActions": 16,
+    "probeOutcomes": { "ok": 6, "forbidden": 0, "redirected": 0, "error": 0 },
+    "apiCallsTotal": 4
   }
 }

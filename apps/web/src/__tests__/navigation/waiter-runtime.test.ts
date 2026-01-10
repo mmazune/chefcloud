@@ -1,10 +1,13 @@
 /**
- * Phase I3: WAITER Runtime Navigation Tests
+ * Phase I3.1: WAITER Runtime Navigation Tests (v2)
  * 
  * Tests for:
  * 1. Runtime capture file exists and has valid schema
  * 2. Critical WAITER actions have data-testid
  * 3. WAITER sidebar completeness
+ * 4. v2: Probe output schema and outcomes
+ * 5. v2: API capture output
+ * 6. v2: Checkout access (WAITER CAN access)
  */
 import fs from 'fs';
 import path from 'path';
@@ -13,11 +16,18 @@ import path from 'path';
 const ROOT = path.resolve(__dirname, '../../../../..');
 const RUNTIME_DIR = path.join(ROOT, 'reports/navigation/runtime');
 
+interface NavmapApiCall {
+  method: string;
+  path: string;
+  phase: 'page-load' | 'action';
+}
+
 interface NavmapAction {
   route: string;
   elementType: string;
   testId: string;
   label: string;
+  attributes?: Record<string, string>;
 }
 
 interface NavmapSidebarLink {
@@ -25,6 +35,16 @@ interface NavmapSidebarLink {
   href: string;
   navGroup: string;
   isActive: boolean;
+  probeOutcome?: string;
+}
+
+interface NavmapProbeResult {
+  href: string;
+  label: string;
+  navGroup: string;
+  outcome: string;
+  redirectedTo?: string;
+  error?: string;
 }
 
 interface NavmapRoleCapture {
@@ -34,6 +54,22 @@ interface NavmapRoleCapture {
   routesVisited: string[];
   sidebarLinks: NavmapSidebarLink[];
   actions: NavmapAction[];
+  apiCallsByRoute?: Record<string, NavmapApiCall[]>;
+  probeResults?: NavmapProbeResult[];
+  summary?: {
+    totalRoutes: number;
+    totalSidebarLinks: number;
+    totalActions: number;
+    probeOutcomes?: { ok: number; forbidden: number; redirected: number; error: number };
+    apiCallsTotal?: number;
+  };
+}
+
+interface ProbeOutput {
+  role: string;
+  probedAt: string;
+  summary: { total: number; ok: number; forbidden: number; redirected: number; error: number };
+  results: NavmapProbeResult[];
 }
 
 describe('WAITER Runtime Navigation (I3)', () => {
@@ -91,7 +127,7 @@ describe('WAITER Runtime Navigation (I3)', () => {
     const WAITER_POS_ACTIONS = [
       { testId: 'pos-new-order', route: '/pos', label: 'New Order' },
       { testId: 'pos-send-kitchen', route: '/pos', label: 'Send to Kitchen' },
-      { testId: 'pos-checkout', route: '/pos', label: 'Request Payment' },
+      { testId: 'pos-checkout', route: '/pos', label: 'Take Payment' },
       { testId: 'pos-split-bill', route: '/pos', label: 'Split Bill' },
     ];
 
@@ -113,6 +149,34 @@ describe('WAITER Runtime Navigation (I3)', () => {
       const voidAction = data.actions.find(a => a.testId === 'pos-void-order');
       expect(voidAction).toBeUndefined();
     });
+  });
+
+  // v2: WAITER CAN access checkout (corrected from I3)
+  describe('WAITER Checkout Access (v2 Correction)', () => {
+    it('should have /pos/checkout/[orderId] in routes visited', () => {
+      const jsonPath = path.join(RUNTIME_DIR, 'waiter.runtime.json');
+      const data: NavmapRoleCapture = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
+      
+      expect(data.routesVisited).toContain('/pos/checkout/[orderId]');
+    });
+
+    const WAITER_CHECKOUT_ACTIONS = [
+      { testId: 'checkout-back', route: '/pos/checkout/[orderId]' },
+      { testId: 'checkout-pay-cash', route: '/pos/checkout/[orderId]' },
+      { testId: 'checkout-pay-card', route: '/pos/checkout/[orderId]' },
+      { testId: 'checkout-complete', route: '/pos/checkout/[orderId]' },
+    ];
+
+    it.each(WAITER_CHECKOUT_ACTIONS)(
+      'should have checkout action $testId',
+      ({ testId, route }) => {
+        const jsonPath = path.join(RUNTIME_DIR, 'waiter.runtime.json');
+        const data: NavmapRoleCapture = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
+        
+        const action = data.actions.find(a => a.testId === testId && a.route === route);
+        expect(action).toBeDefined();
+      }
+    );
   });
 
   describe('Critical WAITER Actions (Reservations)', () => {
@@ -201,6 +265,80 @@ describe('WAITER Runtime Navigation (I3)', () => {
         const cashierData: NavmapRoleCapture = JSON.parse(fs.readFileSync(cashierPath, 'utf-8'));
         expect(cashierData.routesVisited).not.toContain('/reservations');
       }
+    });
+  });
+
+  // v2: Probe Output Tests
+  describe('v2: Probe Output', () => {
+    it('should have waiter.probe.json file', () => {
+      const probePath = path.join(RUNTIME_DIR, 'waiter.probe.json');
+      expect(fs.existsSync(probePath)).toBe(true);
+    });
+
+    it('should have valid probe schema', () => {
+      const probePath = path.join(RUNTIME_DIR, 'waiter.probe.json');
+      const data: ProbeOutput = JSON.parse(fs.readFileSync(probePath, 'utf-8'));
+      
+      expect(data.role).toBe('WAITER');
+      expect(data.probedAt).toBeTruthy();
+      expect(data.summary).toBeDefined();
+      expect(Array.isArray(data.results)).toBe(true);
+    });
+
+    it('should have 0 forbidden probe outcomes', () => {
+      const probePath = path.join(RUNTIME_DIR, 'waiter.probe.json');
+      const data: ProbeOutput = JSON.parse(fs.readFileSync(probePath, 'utf-8'));
+      
+      expect(data.summary.forbidden).toBe(0);
+    });
+
+    it('should have 0 error probe outcomes', () => {
+      const probePath = path.join(RUNTIME_DIR, 'waiter.probe.json');
+      const data: ProbeOutput = JSON.parse(fs.readFileSync(probePath, 'utf-8'));
+      
+      expect(data.summary.error).toBe(0);
+    });
+
+    it('should have all probe outcomes as ok', () => {
+      const probePath = path.join(RUNTIME_DIR, 'waiter.probe.json');
+      const data: ProbeOutput = JSON.parse(fs.readFileSync(probePath, 'utf-8'));
+      
+      expect(data.summary.ok).toBe(data.summary.total);
+    });
+  });
+
+  // v2: API Capture Tests
+  describe('v2: API Capture', () => {
+    it('should have apiCallsByRoute in runtime JSON', () => {
+      const jsonPath = path.join(RUNTIME_DIR, 'waiter.runtime.json');
+      const data: NavmapRoleCapture = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
+      
+      expect(data.apiCallsByRoute).toBeDefined();
+    });
+
+    it('should have at least one route with API calls', () => {
+      const jsonPath = path.join(RUNTIME_DIR, 'waiter.runtime.json');
+      const data: NavmapRoleCapture = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
+      
+      const routesWithCalls = Object.keys(data.apiCallsByRoute || {}).filter(
+        route => (data.apiCallsByRoute?.[route]?.length || 0) > 0
+      );
+      expect(routesWithCalls.length).toBeGreaterThanOrEqual(1);
+    });
+
+    it('should have /pos route with API calls', () => {
+      const jsonPath = path.join(RUNTIME_DIR, 'waiter.runtime.json');
+      const data: NavmapRoleCapture = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
+      
+      const posCalls = data.apiCallsByRoute?.['/pos'] || [];
+      expect(posCalls.length).toBeGreaterThanOrEqual(1);
+    });
+
+    it('should have summary with apiCallsTotal', () => {
+      const jsonPath = path.join(RUNTIME_DIR, 'waiter.runtime.json');
+      const data: NavmapRoleCapture = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
+      
+      expect(data.summary?.apiCallsTotal).toBeGreaterThanOrEqual(1);
     });
   });
 });

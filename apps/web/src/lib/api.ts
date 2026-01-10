@@ -1,5 +1,6 @@
 import axios, { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 import Cookies from 'js-cookie';
+import { recordApiCall, isApiCaptureEnabled } from '@/lib/navmap/apiCapture';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -94,6 +95,20 @@ apiClient.interceptors.response.use(
     } catch (e) {
       // Ignore logging errors
     }
+    
+    // Phase I3.1: Navmap API capture
+    if (isApiCaptureEnabled()) {
+      try {
+        recordApiCall(
+          response.config.method?.toUpperCase() || 'GET',
+          response.config.url || '',
+          response.status
+        );
+      } catch {
+        // Ignore capture errors
+      }
+    }
+    
     return response;
   },
   (error) => {
