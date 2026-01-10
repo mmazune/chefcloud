@@ -10,8 +10,9 @@
 | Priority | Count | Description |
 |----------|-------|-------------|
 | **P0** | 0 | Critical blockers (must fix for chains to pass) |
-| **P1** | 1 | High-priority issues affecting reliability |
-| **P2** | 3 | Medium-priority improvements |
+| **P1** | 0 | High-priority issues affecting reliability |
+| **P2** | 1 | Medium-priority improvements |
+| **Resolved** | 3 | Fixed in Phase H3 |
 
 ---
 
@@ -24,32 +25,19 @@
 | **ID** | IC-001 |
 | **Severity** | P1 |
 | **Chain** | All |
-| **Status** | Open |
+| **Status** | ✅ Resolved |
 | **Discovered** | 2026-01-10 |
+| **Resolved** | 2026-01-10 |
 
 **Description:**
 E2E test helpers (e.g., `requireTapasOrg`) look for `org.slug = 'tapas-demo'` but the seed.ts creates the org with a different slug format.
 
-**Reproduction Steps:**
-1. Run `npx tsx prisma/seed.ts`
-2. Query: `SELECT slug FROM organizations WHERE name LIKE '%Tapas%'`
-3. Observe slug may differ from 'tapas-demo'
+**Resolution:**
+Created `test/helpers/e2e-demo-constants.ts` as single source of truth. Updated `require-preconditions.ts` to import `TAPAS_ORG_SLUG` and `CAFESSERIE_ORG_SLUG` from centralized constants.
 
-**Expected vs Actual:**
-- Expected: `slug = 'tapas-demo'`
-- Actual: Slug may be auto-generated differently
-
-**Suspected Cause:**
-Seed.ts may generate slug dynamically or use a different value.
-
-**File Pointers:**
-- `services/api/prisma/seed.ts`
-- `services/api/test/helpers/require-preconditions.ts`
-
-**Impact:**
-E2E tests using `requireTapasOrg()` may fail to find the org.
-
-**Blocks Fully Functional:** No (workaround: verify slug matches)
+**File Changes:**
+- NEW: `services/api/test/helpers/e2e-demo-constants.ts`
+- MODIFIED: `services/api/test/helpers/require-preconditions.ts`
 
 ---
 
@@ -60,32 +48,21 @@ E2E tests using `requireTapasOrg()` may fail to find the org.
 | **ID** | IC-002 |
 | **Severity** | P2 |
 | **Chain** | A, C |
-| **Status** | Open |
+| **Status** | ✅ Resolved |
 | **Discovered** | 2026-01-10 |
+| **Resolved** | 2026-01-10 |
 
 **Description:**
 GL posting (COGS journal entries) only occurs if an `InventoryPostingMapping` exists for the item's category. Without mapping, inventory movements are recorded in the ledger but no GL entries are created.
 
-**Reproduction Steps:**
-1. Create and close a POS order
-2. Check JournalEntry table for COGS entries
-3. If no mapping exists, journal entry will be null
+**Resolution:**
+Created `seedPostingMappings.ts` that seeds org-level default InventoryPostingMapping for both Tapas and Cafesserie. Also extended Chart of Accounts with required GL accounts (GRNI, Waste Expense, Shrink Expense, Inventory Gain).
 
-**Expected vs Actual:**
-- Expected: GL posting always occurs for inventory movements
-- Actual: GL posting is conditional on mapping configuration
-
-**Suspected Cause:**
-Intentional design — allows orgs to configure GL integration optionally.
-
-**File Pointers:**
-- `services/api/src/accounting/posting.service.ts`
-- `services/api/src/inventory/inventory-gl-posting.service.ts`
-
-**Impact:**
-Demo scenarios may not show full GL integration without seed data for mappings.
-
-**Blocks Fully Functional:** No (documented behavior)
+**File Changes:**
+- NEW: `services/api/prisma/demo/seedPostingMappings.ts`
+- MODIFIED: `services/api/prisma/demo/seedDemo.ts` (extended CoA)
+- MODIFIED: `services/api/prisma/seed.ts` (extended CoA)
+- MODIFIED: `services/api/prisma/demo/seedComprehensive.ts` (orchestration)
 
 ---
 
@@ -96,31 +73,21 @@ Demo scenarios may not show full GL integration without seed data for mappings.
 | **ID** | IC-003 |
 | **Severity** | P2 |
 | **Chain** | B, C |
-| **Status** | Open |
+| **Status** | ✅ Resolved |
 | **Discovered** | 2026-01-10 |
+| **Resolved** | 2026-01-10 |
 
 **Description:**
 The seed.ts does not create an `InventoryLocation` for the Tapas demo org. Some inventory operations (waste, transfers, receipts) require a location.
 
-**Reproduction Steps:**
-1. Run seed
-2. Query: `SELECT * FROM inventory_locations WHERE org_id = '<tapas-org-id>'`
-3. May return empty or minimal locations
+**Resolution:**
+Created `seedLocations.ts` that seeds default InventoryLocation records for both orgs. Tapas gets 3 locations (MAIN, KITCHEN, BAR), Cafesserie gets 1 MAIN per branch. All location IDs are deterministic and exported from constants.
 
-**Expected vs Actual:**
-- Expected: At least one storage location per branch
-- Actual: May be missing
-
-**Suspected Cause:**
-Seed.ts focuses on menu/orders, less on inventory foundation.
-
-**File Pointers:**
-- `services/api/prisma/seed.ts`
-
-**Impact:**
-Waste/receipt posting may fail without location.
-
-**Blocks Fully Functional:** Partial (some chains work, some need location)
+**File Changes:**
+- NEW: `services/api/prisma/demo/seedLocations.ts`
+- MODIFIED: `services/api/prisma/demo/constants.ts` (added LOC_*_ID exports)
+- MODIFIED: `services/api/prisma/demo/seedComprehensive.ts` (orchestration)
+- MODIFIED: `services/api/test/helpers/e2e-demo-constants.ts` (re-exports)
 
 ---
 
@@ -162,7 +129,17 @@ Payroll tests handle this gracefully by creating if missing.
 
 ## Resolved Issues
 
-_No issues resolved yet in this phase._
+### IC-001: Tapas Org Slug Mismatch in E2E Helpers ✅
+
+Resolved 2026-01-10. See above for details.
+
+### IC-002: InventoryPostingMapping Required for GL Posting ✅
+
+Resolved 2026-01-10. See above for details.
+
+### IC-003: Seed Missing InventoryLocation for Tapas ✅
+
+Resolved 2026-01-10. See above for details.
 
 ---
 

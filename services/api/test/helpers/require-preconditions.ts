@@ -6,10 +6,11 @@
  *
  * Usage:
  *   await requireTapasOrg(prisma);
- *   await requireBadges(prisma, { orgSlug: 'tapas-demo', minCount: 1 });
+ *   await requireBadges(prisma, { orgSlug: TAPAS_ORG_SLUG, minCount: 1 });
  */
 
 import { PrismaClient } from '@chefcloud/db';
+import { TAPAS_ORG_SLUG, CAFESSERIE_ORG_SLUG } from './e2e-demo-constants';
 
 export class PreconditionError extends Error {
   constructor(
@@ -39,13 +40,13 @@ function getActiveDataset(): string {
  */
 export async function requireTapasOrg(prisma: PrismaClient): Promise<void> {
   const org = await prisma.org.findFirst({
-    where: { slug: 'tapas-demo' },
+    where: { slug: TAPAS_ORG_SLUG },
     include: { branches: true },
   });
 
   if (!org) {
     throw new PreconditionError('requireTapasOrg', getActiveDataset(), {
-      expected: 'Org with slug "tapas-demo"',
+      expected: `Org with slug "${TAPAS_ORG_SLUG}"`,
       found: null,
     });
   }
@@ -68,13 +69,13 @@ export async function requireCafesserieFranchise(
   const { minBranches = 2 } = options;
 
   const org = await prisma.org.findFirst({
-    where: { slug: 'cafesserie-demo' },
+    where: { slug: CAFESSERIE_ORG_SLUG },
     include: { branches: true },
   });
 
   if (!org) {
     throw new PreconditionError('requireCafesserieFranchise', getActiveDataset(), {
-      expected: 'Org with slug "cafesserie-demo"',
+      expected: `Org with slug "${CAFESSERIE_ORG_SLUG}"`,
       found: null,
     });
   }
@@ -94,7 +95,7 @@ export async function requireBadges(
   prisma: PrismaClient,
   options: { orgSlug?: string; minCount?: number } = {},
 ): Promise<void> {
-  const { orgSlug = 'tapas-demo', minCount = 1 } = options;
+  const { orgSlug = TAPAS_ORG_SLUG, minCount = 1 } = options;
 
   const org = await prisma.org.findFirst({
     where: { slug: orgSlug },
@@ -126,7 +127,7 @@ export async function requireMenuItems(
   prisma: PrismaClient,
   options: { orgSlug?: string; itemNames?: string[] } = {},
 ): Promise<void> {
-  const { orgSlug = 'tapas-demo', itemNames = [] } = options;
+  const { orgSlug = TAPAS_ORG_SLUG, itemNames = [] } = options;
 
   const org = await prisma.org.findFirst({
     where: { slug: orgSlug },
@@ -181,7 +182,7 @@ export async function requireFloorPlan(
   prisma: PrismaClient,
   options: { orgSlug?: string } = {},
 ): Promise<void> {
-  const { orgSlug = 'tapas-demo' } = options;
+  const { orgSlug = TAPAS_ORG_SLUG } = options;
 
   const org = await prisma.org.findFirst({
     where: { slug: orgSlug },
@@ -215,7 +216,7 @@ export async function requireInventory(
   prisma: PrismaClient,
   options: { orgSlug?: string; minCount?: number } = {},
 ): Promise<void> {
-  const { orgSlug = 'tapas-demo', minCount = 1 } = options;
+  const { orgSlug = TAPAS_ORG_SLUG, minCount = 1 } = options;
 
   const org = await prisma.org.findFirst({
     where: { slug: orgSlug },
@@ -247,7 +248,7 @@ export async function requireUsers(
   prisma: PrismaClient,
   options: { orgSlug?: string; minCount?: number; roles?: string[] } = {},
 ): Promise<void> {
-  const { orgSlug = 'tapas-demo', minCount = 1, roles = [] } = options;
+  const { orgSlug = TAPAS_ORG_SLUG, minCount = 1, roles = [] } = options;
 
   const org = await prisma.org.findFirst({
     where: { slug: orgSlug },
@@ -282,7 +283,7 @@ export async function requireBranches(
   prisma: PrismaClient,
   options: { orgSlug?: string; minCount?: number } = {},
 ): Promise<void> {
-  const { orgSlug = 'tapas-demo', minCount = 1 } = options;
+  const { orgSlug = TAPAS_ORG_SLUG, minCount = 1 } = options;
 
   const org = await prisma.org.findFirst({
     where: { slug: orgSlug },

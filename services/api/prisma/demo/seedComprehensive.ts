@@ -25,6 +25,8 @@ import {
 } from './constants';
 import { seedTapasInventory } from './tapas/inventory';
 import { seedCafesserieInventory } from './cafesserie/inventory';
+import { seedInventoryLocations } from './seedLocations';
+import { seedInventoryPostingMappings } from './seedPostingMappings';
 
 // Deterministic IDs for comprehensive data
 const TABLE_IDS = {
@@ -1627,6 +1629,8 @@ export async function seedComprehensive(prisma: PrismaClient): Promise<void> {
     await seedReservations(prisma);
     await seedSuppliers(prisma);
     await seedServiceProviders(prisma);
+    await seedInventoryLocations(prisma); // NEW: Inventory locations for waste/receipts
+    await seedInventoryPostingMappings(prisma); // NEW: GL posting mappings for inventory
     await seedInventory(prisma);          // NEW: Inventory items + stock batches
     await seedCompletedOrders(prisma);
     await seedLiveOrders(prisma);         // NEW: OPEN orders for POS

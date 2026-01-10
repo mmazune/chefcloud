@@ -698,12 +698,16 @@ async function main() {
     { code: '1100', name: 'Accounts Receivable', type: 'ASSET' },
     { code: '1200', name: 'Inventory', type: 'ASSET' },
     { code: '2000', name: 'Accounts Payable', type: 'LIABILITY' },
+    { code: '2100', name: 'GRNI - Goods Received Not Invoiced', type: 'LIABILITY' },
     { code: '3000', name: 'Equity', type: 'EQUITY' },
     { code: '4000', name: 'Sales Revenue', type: 'REVENUE' },
     { code: '4100', name: 'Service Charges', type: 'REVENUE' },
+    { code: '4200', name: 'Inventory Gain', type: 'REVENUE' },
     { code: '5000', name: 'Cost of Goods Sold', type: 'COGS' },
     { code: '6000', name: 'Operating Expenses', type: 'EXPENSE' },
     { code: '6100', name: 'Utilities', type: 'EXPENSE' },
+    { code: '6200', name: 'Waste Expense', type: 'EXPENSE' },
+    { code: '6300', name: 'Shrinkage Expense', type: 'EXPENSE' },
   ];
 
   for (const accountData of accountsData) {

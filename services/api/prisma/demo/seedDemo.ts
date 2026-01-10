@@ -381,22 +381,26 @@ async function seedChartOfAccounts(prisma: PrismaClient, orgId: string): Promise
     { code: '1300', name: 'Prepaid Expenses', type: 'ASSET' },
     // Liabilities (2xxx)
     { code: '2000', name: 'Accounts Payable', type: 'LIABILITY' },
-    { code: '2100', name: 'Accrued Expenses', type: 'LIABILITY' },
+    { code: '2100', name: 'GRNI - Goods Received Not Invoiced', type: 'LIABILITY' },
+    { code: '2200', name: 'Accrued Expenses', type: 'LIABILITY' },
     // Equity (3xxx)
     { code: '3000', name: "Owner's Equity", type: 'EQUITY' },
     { code: '3100', name: 'Retained Earnings', type: 'EQUITY' },
     // Revenue (4xxx)
     { code: '4000', name: 'Sales Revenue', type: 'REVENUE' },
     { code: '4100', name: 'Service Charges', type: 'REVENUE' },
+    { code: '4200', name: 'Inventory Gain', type: 'REVENUE' },
     // COGS (5xxx)
     { code: '5000', name: 'Cost of Goods Sold', type: 'COGS' },
     { code: '5100', name: 'Wastage', type: 'COGS' },
     // Expenses (6xxx)
     { code: '6000', name: 'Payroll Expense', type: 'EXPENSE' },
     { code: '6100', name: 'Utilities', type: 'EXPENSE' },
-    { code: '6200', name: 'Rent', type: 'EXPENSE' },
-    { code: '6300', name: 'Supplies', type: 'EXPENSE' },
-    { code: '6400', name: 'Marketing', type: 'EXPENSE' },
+    { code: '6200', name: 'Waste Expense', type: 'EXPENSE' },
+    { code: '6300', name: 'Shrinkage Expense', type: 'EXPENSE' },
+    { code: '6400', name: 'Rent', type: 'EXPENSE' },
+    { code: '6500', name: 'Supplies', type: 'EXPENSE' },
+    { code: '6600', name: 'Marketing', type: 'EXPENSE' },
   ];
 
   for (const acc of accounts) {
