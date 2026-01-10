@@ -11,7 +11,7 @@
 | ACCOUNTANT | `/workspaces/accountant` | 5 | 15 |
 | BARTENDER | `/pos` | 3 | 6 |
 | CASHIER | `/pos` | 4 | 7 |
-| CHEF | `/workspaces/chef` | 4 | 7 |
+| CHEF | `/workspaces/chef` | 4 | 8 |
 | EVENT_MANAGER | `/workspaces/event-manager` | 4 | 8 |
 | MANAGER | `/workspaces/manager` | 6 | 21 |
 | OWNER | `/workspaces/owner` | 7 | 23 |
@@ -158,12 +158,13 @@
 
 - **Landing Route**: `/workspaces/chef`
 - **Nav Groups**: 4
-- **Total Routes**: 7
+- **Total Routes**: 8
 
 ### Kitchen
 
 | Label | Route | Status |
 |-------|-------|--------|
+| KDS | `/kds` | ✅ ACTIVE |
 | Dashboard | `/dashboard` | ✅ ACTIVE |
 | Inventory | `/inventory` | ✅ ACTIVE |
 

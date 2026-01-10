@@ -138,6 +138,7 @@ export function KdsOrderCard(props: KdsOrderCardProps) {
           <button
             type="button"
             onClick={onStart}
+            data-testid="kds-in-progress"
             className="rounded-md bg-blue-600 px-2 py-1 text-[11px] font-medium text-white hover:bg-blue-700"
           >
             Start ticket
@@ -147,6 +148,7 @@ export function KdsOrderCard(props: KdsOrderCardProps) {
           <button
             type="button"
             onClick={onReady}
+            data-testid="kds-ready"
             className="rounded-md bg-emerald-600 px-2 py-1 text-[11px] font-medium text-white hover:bg-emerald-700"
           >
             Mark ready
@@ -157,6 +159,7 @@ export function KdsOrderCard(props: KdsOrderCardProps) {
             <button
               type="button"
               onClick={onRecall}
+              data-testid="kds-recall"
               className="rounded-md bg-amber-600 px-2 py-1 text-[11px] font-medium text-white hover:bg-amber-700"
             >
               Recall
@@ -164,6 +167,7 @@ export function KdsOrderCard(props: KdsOrderCardProps) {
             <button
               type="button"
               onClick={onServed}
+              data-testid="kds-served"
               className="rounded-md bg-slate-900 px-2 py-1 text-[11px] font-medium text-white hover:bg-black"
             >
               Mark served

@@ -38,7 +38,9 @@ export const pageMeta = definePageMeta({
     { label: 'Mark In Progress', testId: 'kds-in-progress', intent: 'update' },
     { label: 'Mark Ready', testId: 'kds-ready', intent: 'update' },
     { label: 'Recall Order', testId: 'kds-recall', intent: 'update' },
+    { label: 'Mark Served', testId: 'kds-served', intent: 'update' },
     { label: 'Filter Status', testId: 'kds-filter', intent: 'view' },
+    { label: 'Refresh', testId: 'kds-refresh', intent: 'view' },
     { label: 'Settings', testId: 'kds-settings', intent: 'view' },
   ],
   apiCalls: [
@@ -46,6 +48,7 @@ export const pageMeta = definePageMeta({
     { method: 'PATCH', path: '/kds/tickets/:id/start', trigger: 'onAction', notes: 'Start prep' },
     { method: 'PATCH', path: '/kds/tickets/:id/ready', trigger: 'onAction', notes: 'Mark ready' },
     { method: 'PATCH', path: '/kds/tickets/:id/recall', trigger: 'onAction', notes: 'Recall' },
+    { method: 'PATCH', path: '/kds/tickets/:id/served', trigger: 'onAction', notes: 'Mark served' },
   ],
   risk: 'LOW',
   allowedRoles: ['OWNER', 'MANAGER', 'SUPERVISOR', 'CHEF'],
@@ -216,12 +219,13 @@ export default function KdsPage() {
             </span>
           )}
 
-          <div className="inline-flex gap-1 rounded-full bg-slate-900/60 p-1">
+          <div className="inline-flex gap-1 rounded-full bg-slate-900/60 p-1" data-testid="kds-filter">
             {(['ALL', 'NEW', 'IN_PROGRESS', 'READY'] as KdsFilter[]).map(v => (
               <button
                 key={v}
                 type="button"
                 onClick={() => setFilter(v)}
+                data-testid={`kds-filter-${v.toLowerCase()}`}
                 className={`rounded-full px-2 py-0.5 text-[10px] ${
                   filter === v
                     ? 'bg-slate-100 text-slate-900'
@@ -236,6 +240,7 @@ export default function KdsPage() {
           <button
             type="button"
             onClick={() => setIsSettingsOpen(true)}
+            data-testid="kds-settings"
             className="rounded-full border border-slate-700 bg-slate-900 p-1.5 text-slate-200 hover:bg-slate-800"
             aria-label="KDS settings"
           >
@@ -252,6 +257,7 @@ export default function KdsPage() {
           <button
             type="button"
             onClick={reload}
+            data-testid="kds-refresh"
             className="rounded-md border border-slate-700 bg-slate-800 px-2 py-1 text-[11px] text-slate-100 hover:bg-slate-700"
           >
             Refresh

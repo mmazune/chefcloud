@@ -1,0 +1,87 @@
+{
+  "role": "CHEF",
+  "capturedAt": "2026-01-10T17:00:00.000Z",
+  "totalLinks": 8,
+  "results": [
+    {
+      "href": "/kds",
+      "label": "KDS",
+      "navGroup": "Kitchen",
+      "outcome": "ok",
+      "redirectedTo": null,
+      "error": null,
+      "apiCalls": [
+        { "method": "GET", "path": "/kds/tickets", "status": 200 }
+      ]
+    },
+    {
+      "href": "/dashboard",
+      "label": "Dashboard",
+      "navGroup": "Kitchen",
+      "outcome": "ok",
+      "redirectedTo": null,
+      "error": null,
+      "apiCalls": []
+    },
+    {
+      "href": "/inventory",
+      "label": "Inventory",
+      "navGroup": "Kitchen",
+      "outcome": "ok",
+      "redirectedTo": null,
+      "error": null,
+      "apiCalls": []
+    },
+    {
+      "href": "/workforce/timeclock",
+      "label": "Timeclock",
+      "navGroup": "Workforce",
+      "outcome": "ok",
+      "redirectedTo": null,
+      "error": null,
+      "apiCalls": []
+    },
+    {
+      "href": "/workforce/my-availability",
+      "label": "My Availability",
+      "navGroup": "My Schedule",
+      "outcome": "ok",
+      "redirectedTo": null,
+      "error": null,
+      "apiCalls": []
+    },
+    {
+      "href": "/workforce/my-swaps",
+      "label": "My Swaps",
+      "navGroup": "My Schedule",
+      "outcome": "ok",
+      "redirectedTo": null,
+      "error": null,
+      "apiCalls": []
+    },
+    {
+      "href": "/workforce/open-shifts",
+      "label": "Open Shifts",
+      "navGroup": "My Schedule",
+      "outcome": "ok",
+      "redirectedTo": null,
+      "error": null,
+      "apiCalls": []
+    },
+    {
+      "href": "/settings",
+      "label": "Settings",
+      "navGroup": "Settings",
+      "outcome": "ok",
+      "redirectedTo": null,
+      "error": null,
+      "apiCalls": []
+    }
+  ],
+  "summary": {
+    "ok": 8,
+    "redirected": 0,
+    "forbidden": 0,
+    "error": 0
+  }
+}

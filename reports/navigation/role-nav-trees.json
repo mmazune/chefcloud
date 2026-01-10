@@ -236,6 +236,11 @@
           "title": "Kitchen",
           "items": [
             {
+              "label": "KDS",
+              "href": "/kds",
+              "status": "ACTIVE"
+            },
+            {
               "label": "Dashboard",
               "href": "/dashboard",
               "status": "ACTIVE"
@@ -288,7 +293,7 @@
           ]
         }
       ],
-      "totalRoutes": 7
+      "totalRoutes": 8
     },
     "EVENT_MANAGER": {
       "role": "EVENT_MANAGER",

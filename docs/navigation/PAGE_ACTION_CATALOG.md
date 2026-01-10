@@ -145,7 +145,9 @@
 | Mark In Progress | `kds-in-progress` | update |
 | Mark Ready | `kds-ready` | update |
 | Recall Order | `kds-recall` | update |
+| Mark Served | `kds-served` | update |
 | Filter Status | `kds-filter` | view |
+| Refresh | `kds-refresh` | view |
 | Settings | `kds-settings` | view |
 
 **API Calls**:
@@ -156,6 +158,7 @@
 | PATCH | `/kds/tickets/:id/start` |
 | PATCH | `/kds/tickets/:id/ready` |
 | PATCH | `/kds/tickets/:id/recall` |
+| PATCH | `/kds/tickets/:id/served` |
 
 ---
 

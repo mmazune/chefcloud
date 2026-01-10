@@ -441,6 +441,7 @@ export const ROLE_CAPABILITIES: Record<JobRole, RoleCapability> = {
       {
         title: 'Kitchen',
         items: [
+          { label: 'KDS', href: '/kds', icon: ClipboardList },
           { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
           { label: 'Inventory', href: '/inventory', icon: Package },
         ],

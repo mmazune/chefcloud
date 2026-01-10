@@ -1,0 +1,142 @@
+{
+  "role": "CHEF",
+  "capturedAt": "2026-01-10T17:00:00.000Z",
+  "captureMethod": "static-analysis-v2",
+  "routesVisited": [
+    "/workspaces/chef",
+    "/kds",
+    "/dashboard",
+    "/inventory",
+    "/workforce/timeclock",
+    "/workforce/my-availability",
+    "/workforce/my-swaps",
+    "/workforce/open-shifts",
+    "/settings"
+  ],
+  "sidebarLinks": [
+    {
+      "label": "KDS",
+      "href": "/kds",
+      "navGroup": "Kitchen",
+      "isActive": false,
+      "probeOutcome": "ok"
+    },
+    {
+      "label": "Dashboard",
+      "href": "/dashboard",
+      "navGroup": "Kitchen",
+      "isActive": false,
+      "probeOutcome": "ok"
+    },
+    {
+      "label": "Inventory",
+      "href": "/inventory",
+      "navGroup": "Kitchen",
+      "isActive": false,
+      "probeOutcome": "ok"
+    },
+    {
+      "label": "Timeclock",
+      "href": "/workforce/timeclock",
+      "navGroup": "Workforce",
+      "isActive": false,
+      "probeOutcome": "ok"
+    },
+    {
+      "label": "My Availability",
+      "href": "/workforce/my-availability",
+      "navGroup": "My Schedule",
+      "isActive": false,
+      "probeOutcome": "ok"
+    },
+    {
+      "label": "My Swaps",
+      "href": "/workforce/my-swaps",
+      "navGroup": "My Schedule",
+      "isActive": false,
+      "probeOutcome": "ok"
+    },
+    {
+      "label": "Open Shifts",
+      "href": "/workforce/open-shifts",
+      "navGroup": "My Schedule",
+      "isActive": false,
+      "probeOutcome": "ok"
+    },
+    {
+      "label": "Settings",
+      "href": "/settings",
+      "navGroup": "Settings",
+      "isActive": false,
+      "probeOutcome": "ok"
+    }
+  ],
+  "actions": [
+    {
+      "route": "/kds",
+      "elementType": "button",
+      "testId": "kds-in-progress",
+      "label": "Mark In Progress"
+    },
+    {
+      "route": "/kds",
+      "elementType": "button",
+      "testId": "kds-ready",
+      "label": "Mark Ready"
+    },
+    {
+      "route": "/kds",
+      "elementType": "button",
+      "testId": "kds-recall",
+      "label": "Recall"
+    },
+    {
+      "route": "/kds",
+      "elementType": "button",
+      "testId": "kds-served",
+      "label": "Mark Served"
+    },
+    {
+      "route": "/kds",
+      "elementType": "div",
+      "testId": "kds-filter",
+      "label": "Filter Status"
+    },
+    {
+      "route": "/kds",
+      "elementType": "button",
+      "testId": "kds-refresh",
+      "label": "Refresh"
+    },
+    {
+      "route": "/kds",
+      "elementType": "button",
+      "testId": "kds-settings",
+      "label": "Settings"
+    }
+  ],
+  "apiCallsByRoute": {
+    "/kds": [
+      { "method": "GET", "path": "/kds/tickets", "phase": "page-load" }
+    ]
+  },
+  "probeResults": [
+    { "href": "/kds", "label": "KDS", "navGroup": "Kitchen", "outcome": "ok" },
+    { "href": "/dashboard", "label": "Dashboard", "navGroup": "Kitchen", "outcome": "ok" },
+    { "href": "/inventory", "label": "Inventory", "navGroup": "Kitchen", "outcome": "ok" },
+    { "href": "/workforce/timeclock", "label": "Timeclock", "navGroup": "Workforce", "outcome": "ok" },
+    { "href": "/workforce/my-availability", "label": "My Availability", "navGroup": "My Schedule", "outcome": "ok" },
+    { "href": "/workforce/my-swaps", "label": "My Swaps", "navGroup": "My Schedule", "outcome": "ok" },
+    { "href": "/workforce/open-shifts", "label": "Open Shifts", "navGroup": "My Schedule", "outcome": "ok" },
+    { "href": "/settings", "label": "Settings", "navGroup": "Settings", "outcome": "ok" }
+  ],
+  "summary": {
+    "totalRoutes": 9,
+    "totalSidebarLinks": 8,
+    "totalActions": 7,
+    "apiCallsTotal": 1,
+    "probeOk": 8,
+    "probeForbidden": 0,
+    "probeError": 0
+  }
+}
