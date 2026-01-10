@@ -1,0 +1,231 @@
+{
+  "role": "MANAGER",
+  "capturedAt": "2026-01-10T20:00:00.000Z",
+  "totalLinks": 21,
+  "results": [
+    {
+      "href": "/dashboard",
+      "label": "Dashboard",
+      "navGroup": "Overview",
+      "outcome": "ok",
+      "redirectedTo": null,
+      "error": null,
+      "apiCalls": [
+        { "method": "GET", "path": "/dashboard/manager", "status": 200 }
+      ]
+    },
+    {
+      "href": "/analytics",
+      "label": "Analytics",
+      "navGroup": "Overview",
+      "outcome": "ok",
+      "redirectedTo": null,
+      "error": null,
+      "apiCalls": [
+        { "method": "GET", "path": "/analytics/daily", "status": 200 },
+        { "method": "GET", "path": "/analytics/branches", "status": 200 }
+      ]
+    },
+    {
+      "href": "/reports",
+      "label": "Reports",
+      "navGroup": "Overview",
+      "outcome": "ok",
+      "redirectedTo": null,
+      "error": null,
+      "apiCalls": []
+    },
+    {
+      "href": "/pos",
+      "label": "POS",
+      "navGroup": "Operations",
+      "outcome": "ok",
+      "redirectedTo": null,
+      "error": null,
+      "apiCalls": [
+        { "method": "GET", "path": "/pos/open", "status": 200 },
+        { "method": "GET", "path": "/pos/menu", "status": 200 }
+      ]
+    },
+    {
+      "href": "/reservations",
+      "label": "Reservations",
+      "navGroup": "Operations",
+      "outcome": "ok",
+      "redirectedTo": null,
+      "error": null,
+      "apiCalls": [
+        { "method": "GET", "path": "/reservations", "status": 200 }
+      ]
+    },
+    {
+      "href": "/inventory",
+      "label": "Inventory",
+      "navGroup": "Operations",
+      "outcome": "ok",
+      "redirectedTo": null,
+      "error": null,
+      "apiCalls": [
+        { "method": "GET", "path": "/inventory/items", "status": 200 }
+      ]
+    },
+    {
+      "href": "/staff",
+      "label": "Staff",
+      "navGroup": "Team",
+      "outcome": "ok",
+      "redirectedTo": null,
+      "error": null,
+      "apiCalls": [
+        { "method": "GET", "path": "/staff", "status": 200 }
+      ]
+    },
+    {
+      "href": "/feedback",
+      "label": "Feedback",
+      "navGroup": "Team",
+      "outcome": "ok",
+      "redirectedTo": null,
+      "error": null,
+      "apiCalls": [
+        { "method": "GET", "path": "/feedback", "status": 200 }
+      ]
+    },
+    {
+      "href": "/workforce/schedule",
+      "label": "Schedule",
+      "navGroup": "Workforce",
+      "outcome": "ok",
+      "redirectedTo": null,
+      "error": null,
+      "apiCalls": [
+        { "method": "GET", "path": "/workforce/scheduling/shifts", "status": 200 }
+      ]
+    },
+    {
+      "href": "/workforce/timeclock",
+      "label": "Timeclock",
+      "navGroup": "Workforce",
+      "outcome": "ok",
+      "redirectedTo": null,
+      "error": null,
+      "apiCalls": [
+        { "method": "GET", "path": "/workforce/timeclock/status", "status": 200 }
+      ]
+    },
+    {
+      "href": "/workforce/approvals",
+      "label": "Approvals",
+      "navGroup": "Workforce",
+      "outcome": "ok",
+      "redirectedTo": null,
+      "error": null,
+      "apiCalls": [
+        { "method": "GET", "path": "/workforce/scheduling/shifts", "status": 200 }
+      ]
+    },
+    {
+      "href": "/workforce/swaps",
+      "label": "Swap Approvals",
+      "navGroup": "Workforce",
+      "outcome": "ok",
+      "redirectedTo": null,
+      "error": null,
+      "apiCalls": [
+        { "method": "GET", "path": "/workforce/swaps", "status": 200 },
+        { "method": "GET", "path": "/workforce/swaps/history", "status": 200 }
+      ]
+    },
+    {
+      "href": "/workforce/labor",
+      "label": "Labor Reports",
+      "navGroup": "Workforce",
+      "outcome": "ok",
+      "redirectedTo": null,
+      "error": null,
+      "apiCalls": [
+        { "method": "GET", "path": "/workforce/labor", "status": 200 }
+      ]
+    },
+    {
+      "href": "/workforce/labor-targets",
+      "label": "Labor Targets",
+      "navGroup": "Workforce",
+      "outcome": "ok",
+      "redirectedTo": null,
+      "error": null,
+      "apiCalls": [
+        { "method": "GET", "path": "/workforce/labor-targets", "status": 200 }
+      ]
+    },
+    {
+      "href": "/workforce/staffing-planner",
+      "label": "Staffing Planner",
+      "navGroup": "Workforce",
+      "outcome": "ok",
+      "redirectedTo": null,
+      "error": null,
+      "apiCalls": []
+    },
+    {
+      "href": "/workforce/staffing-alerts",
+      "label": "Staffing Alerts",
+      "navGroup": "Workforce",
+      "outcome": "ok",
+      "redirectedTo": null,
+      "error": null,
+      "apiCalls": []
+    },
+    {
+      "href": "/workforce/auto-scheduler",
+      "label": "Auto-Scheduler",
+      "navGroup": "Workforce",
+      "outcome": "ok",
+      "redirectedTo": null,
+      "error": null,
+      "apiCalls": []
+    },
+    {
+      "href": "/workforce/my-availability",
+      "label": "My Availability",
+      "navGroup": "My Schedule",
+      "outcome": "ok",
+      "redirectedTo": null,
+      "error": null,
+      "apiCalls": []
+    },
+    {
+      "href": "/workforce/my-swaps",
+      "label": "My Swaps",
+      "navGroup": "My Schedule",
+      "outcome": "ok",
+      "redirectedTo": null,
+      "error": null,
+      "apiCalls": []
+    },
+    {
+      "href": "/workforce/open-shifts",
+      "label": "Open Shifts",
+      "navGroup": "My Schedule",
+      "outcome": "ok",
+      "redirectedTo": null,
+      "error": null,
+      "apiCalls": []
+    },
+    {
+      "href": "/settings",
+      "label": "Settings",
+      "navGroup": "Settings",
+      "outcome": "ok",
+      "redirectedTo": null,
+      "error": null,
+      "apiCalls": []
+    }
+  ],
+  "summary": {
+    "ok": 21,
+    "redirected": 0,
+    "forbidden": 0,
+    "error": 0
+  }
+}

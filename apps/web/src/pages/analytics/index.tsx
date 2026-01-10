@@ -29,6 +29,25 @@ import { FranchiseForecastCard } from '@/components/analytics/franchise/Franchis
 import { FranchiseMultiMonthChart } from '@/components/analytics/franchise/FranchiseMultiMonthChart';
 import { useAuth } from '@/contexts/AuthContext';
 import { apiClient } from '@/lib/api';
+import { definePageMeta } from '@/lib/pageMeta';
+
+/** Phase I3: Page metadata for action catalog */
+export const pageMeta = definePageMeta({
+  id: '/analytics',
+  title: 'Franchise Analytics',
+  primaryActions: [
+    { label: 'Export CSV', testId: 'analytics-export-csv', intent: 'export' },
+    { label: 'Date Range Filter', testId: 'analytics-date-filter', intent: 'view' },
+  ],
+  apiCalls: [
+    { method: 'GET', path: '/analytics/daily', trigger: 'onMount', notes: 'Fetch daily metrics' },
+    { method: 'GET', path: '/analytics/branches', trigger: 'onMount', notes: 'Fetch branch metrics' },
+    { method: 'GET', path: '/analytics/franchise/budget', trigger: 'onMount', notes: 'Fetch budget variance' },
+    { method: 'GET', path: '/analytics/franchise/forecast', trigger: 'onMount', notes: 'Fetch forecast' },
+  ],
+  risk: 'LOW',
+  allowedRoles: ['OWNER', 'MANAGER'],
+});
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 

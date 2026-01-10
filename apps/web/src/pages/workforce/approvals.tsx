@@ -37,6 +37,22 @@ import {
 } from '@/components/ui/table';
 import { useToast } from '@/components/ui/use-toast';
 import { CheckCircle, Users, AlertTriangle } from 'lucide-react';
+import { definePageMeta } from '@/lib/pageMeta';
+
+/** Phase I3: Page metadata for action catalog */
+export const pageMeta = definePageMeta({
+  id: '/workforce/approvals',
+  title: 'Shift Approvals',
+  primaryActions: [
+    { label: 'Approve Shift', testId: 'shift-approve', intent: 'update' },
+  ],
+  apiCalls: [
+    { method: 'GET', path: '/workforce/scheduling/shifts', trigger: 'onMount', notes: 'Fetch shifts pending approval' },
+    { method: 'POST', path: '/workforce/scheduling/shifts/:id/approve', trigger: 'onAction', notes: 'Approve shift' },
+  ],
+  risk: 'MEDIUM',
+  allowedRoles: ['OWNER', 'MANAGER'],
+});
 
 type ShiftStatus = 'DRAFT' | 'PUBLISHED' | 'IN_PROGRESS' | 'COMPLETED' | 'APPROVED' | 'CANCELLED';
 
@@ -295,6 +311,7 @@ export default function ApprovalsPage() {
                           size="sm"
                           onClick={() => approveMutation.mutate(shift.id)}
                           disabled={approveMutation.isPending}
+                          data-testid="shift-approve"
                         >
                           <CheckCircle className="h-4 w-4 mr-1" />
                           Approve
