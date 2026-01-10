@@ -36,6 +36,8 @@
   "verification": {
     "role_journeys": "docs/verification/ROLE_JOURNEYS.md",
     "functional_backlog": "docs/verification/FUNCTIONAL_BACKLOG.md",
+    "integration_chains": "docs/verification/INTEGRATION_CHAINS.md",
+    "integration_backlog": "docs/verification/INTEGRATION_BACKLOG.md",
     "not_dormant": "docs/verification/NOT_DORMANT_VERIFICATION.md",
     "msr_login": "docs/verification/MSR_LOGIN_VERIFICATION.md",
     "smoke_script": "scripts/verify/smoke-verification.mjs"
