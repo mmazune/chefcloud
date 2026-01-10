@@ -209,6 +209,55 @@ pnpm test:e2e
 pnpm test:e2e -- e23-roles-access.e2e-spec.ts
 ```
 
+#### Role Navigation E2E Smoke Tests (UI Validation)
+
+Playwright-based smoke tests that validate the NavMap runtime JSON files actually drive the live UI for all 11 roles.
+
+**What It Validates:**
+- Each role can login and land on their allowed landing route
+- Sidebar renders expected number of links (from runtime JSON)
+- Representative sidebar links navigate successfully (HTTP 200 + page renders)
+- Forbidden routes return 403 or redirect appropriately
+
+**Run Locally:**
+```bash
+cd apps/web
+
+# Run all role navigation smoke tests
+pnpm test:e2e
+
+# Run with UI (interactive mode)
+pnpm test:e2e:ui
+
+# Run with visible browser
+pnpm test:e2e:headed
+```
+
+**Prerequisites:**
+- API server running at `http://localhost:3001` (or set `E2E_API_URL`)
+- Web app running at `http://localhost:3000` (or auto-started by Playwright)
+- Database seeded with demo users (all roles use password `Demo#123`)
+
+**11 Roles Covered:**
+| Role | Email | Landing Route |
+|------|-------|---------------|
+| OWNER | owner@tapas.demo.local | /dashboard |
+| MANAGER | manager@tapas.demo.local | /dashboard |
+| ACCOUNTANT | accountant@tapas.demo.local | /dashboard |
+| SUPERVISOR | supervisor@tapas.demo.local | /pos |
+| CASHIER | cashier@tapas.demo.local | /pos |
+| WAITER | waiter@tapas.demo.local | /pos |
+| CHEF | chef@tapas.demo.local | /kds |
+| BARTENDER | bartender@tapas.demo.local | /pos |
+| PROCUREMENT | procurement@tapas.demo.local | /inventory |
+| STOCK_MANAGER | stock@tapas.demo.local | /inventory |
+| EVENT_MANAGER | eventmgr@tapas.demo.local | /reservations |
+
+**Files:**
+- Config: `apps/web/playwright.config.ts`
+- Tests: `apps/web/e2e/role-navigation-smoke.spec.ts`
+- Runtime JSONs: `reports/navigation/runtime/*.runtime.json`
+
 #### Dev-Portal E2E Auth Strategy (Env-Gated Bypass)
 
 Dev-Portal endpoints use **environment-gated test bypasses** to avoid database dependencies in E2E tests.
