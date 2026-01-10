@@ -1,7 +1,8 @@
 /**
  * M8.2: Fiscal Periods Page
  * 
- * Manages accounting periods (open, close, lock).
+ * Manages accounting periods (open, close, lock, reopen).
+ * Period reopen is gated by FINANCE_PERIOD_REOPEN capability (L5/OWNER only).
  */
 import React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -13,7 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { RequireRole } from '@/components/RequireRole';
-import { RoleLevel } from '@/lib/auth';
+import { RoleLevel, hasRoleLevel } from '@/lib/auth';
 import {
   Table,
   TableBody,
@@ -33,7 +34,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { Calendar, Lock, Unlock, AlertTriangle } from 'lucide-react';
+import { Calendar, Lock, Unlock, AlertTriangle, RotateCcw } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { definePageMeta } from '@/lib/pageMeta';
 
@@ -43,10 +44,12 @@ export const pageMeta = definePageMeta({
   title: 'Fiscal Periods',
   primaryActions: [
     { label: 'Close Period', testId: 'period-close', intent: 'update' },
+    { label: 'Reopen Period', testId: 'period-reopen', intent: 'update' },
   ],
   apiCalls: [
-    { method: 'GET', path: '/accounting/fiscal-periods', trigger: 'onMount', notes: 'List periods' },
-    { method: 'PUT', path: '/accounting/fiscal-periods/:id/close', trigger: 'onAction', notes: 'Close period' },
+    { method: 'GET', path: '/accounting/periods', trigger: 'onMount', notes: 'List periods' },
+    { method: 'PATCH', path: '/accounting/periods/:id/close', trigger: 'onAction', notes: 'Close period' },
+    { method: 'PATCH', path: '/accounting/periods/:id/reopen', trigger: 'onAction', notes: 'Reopen period (L5 only)' },
   ],
   risk: 'HIGH',
   allowedRoles: ['OWNER', 'ACCOUNTANT'],
@@ -72,6 +75,9 @@ export default function FiscalPeriodsPage() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
+  // Check if user can reopen periods (L5/OWNER only - FINANCE_PERIOD_REOPEN capability)
+  const canReopenPeriods = user ? hasRoleLevel(user, RoleLevel.L5) : false;
+
   const { data: periods, isLoading, error } = useQuery({
     queryKey: ['fiscal-periods'],
     queryFn: async () => {
@@ -95,6 +101,25 @@ export default function FiscalPeriodsPage() {
       toast({ 
         title: 'Error', 
         description: error.response?.data?.message || 'Failed to close period',
+        variant: 'destructive' 
+      });
+    },
+  });
+
+  // Reopen period mutation (L5/OWNER only)
+  const reopenPeriod = useMutation({
+    mutationFn: async (periodId: string) => {
+      const response = await apiClient.patch(`/accounting/periods/${periodId}/reopen`);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['fiscal-periods'] });
+      toast({ title: 'Success', description: 'Period reopened successfully' });
+    },
+    onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      toast({ 
+        title: 'Error', 
+        description: error.response?.data?.message || 'Failed to reopen period. Only OWNER can reopen periods.',
         variant: 'destructive' 
       });
     },
@@ -277,9 +302,49 @@ export default function FiscalPeriodsPage() {
                                 </AlertDialogContent>
                               </AlertDialog>
                             )}
-                            {period.status !== 'OPEN' && (
+                            {period.status === 'CLOSED' && canReopenPeriods && (
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm"
+                                    data-testid="period-reopen"
+                                    title="Reopen Period (Owner Only)"
+                                  >
+                                    <RotateCcw className="h-4 w-4" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle className="flex items-center gap-2">
+                                      <AlertTriangle className="h-5 w-5 text-orange-500" />
+                                      Reopen Period?
+                                    </AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      This will reopen &quot;{period.name}&quot; and allow new journal entries.
+                                      This action is restricted to Owners only.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction 
+                                      onClick={() => reopenPeriod.mutate(period.id)}
+                                      disabled={reopenPeriod.isPending}
+                                    >
+                                      {reopenPeriod.isPending ? 'Reopening...' : 'Reopen Period'}
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            )}
+                            {period.status === 'CLOSED' && !canReopenPeriods && (
                               <span className="text-xs text-muted-foreground">
-                                {period.status === 'LOCKED' ? 'Permanently locked' : 'Closed'}
+                                Closed (Owner can reopen)
+                              </span>
+                            )}
+                            {period.status === 'LOCKED' && (
+                              <span className="text-xs text-muted-foreground">
+                                Permanently locked
                               </span>
                             )}
                           </TableCell>

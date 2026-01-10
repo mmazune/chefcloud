@@ -5,6 +5,7 @@
  * This ensures all navigation links in the app are valid.
  * 
  * @see docs/navmap/navmap.routes.index.json
+ * @jest-environment node
  */
 
 import * as fs from 'fs';
@@ -26,7 +27,7 @@ interface RouteIndex {
   }>;
 }
 
-const PAGES_DIR = path.resolve(__dirname, '../src/pages');
+const PAGES_DIR = path.resolve(__dirname, '../../../apps/web/src/pages');
 const INDEX_PATH = path.resolve(__dirname, '../../../docs/navmap/navmap.routes.index.json');
 
 /**

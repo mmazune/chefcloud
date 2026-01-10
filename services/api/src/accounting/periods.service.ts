@@ -75,6 +75,40 @@ export class PeriodsService {
     return updated;
   }
 
+  /**
+   * Reopen a closed period (L5/OWNER only - FINANCE_PERIOD_REOPEN capability)
+   * Cannot reopen LOCKED periods.
+   */
+  async reopenPeriod(periodId: string, userId: string) {
+    const period = await this.prisma.client.fiscalPeriod.findUnique({
+      where: { id: periodId },
+    });
+
+    if (!period) {
+      throw new NotFoundException(`Fiscal period ${periodId} not found`);
+    }
+
+    if (period.status === 'LOCKED') {
+      throw new BadRequestException(`Period ${period.name} is permanently locked and cannot be reopened`);
+    }
+
+    if (period.status === 'OPEN') {
+      throw new BadRequestException(`Period ${period.name} is already open`);
+    }
+
+    const updated = await this.prisma.client.fiscalPeriod.update({
+      where: { id: periodId },
+      data: { 
+        status: 'OPEN', 
+        closedById: null, 
+        closedAt: null,
+      },
+    });
+
+    this.logger.log(`Reopened fiscal period: ${period.name} by user ${userId}`);
+    return updated;
+  }
+
   async listPeriods(orgId: string, status?: 'OPEN' | 'CLOSED' | 'LOCKED') {
     return this.prisma.client.fiscalPeriod.findMany({
       where: { orgId, ...(status && { status }) },

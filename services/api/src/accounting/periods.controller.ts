@@ -4,6 +4,9 @@ import { PeriodsService } from './periods.service';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 import { User } from '../me/user.decorator';
+import { RequireCapability } from '../auth/require-capability.decorator';
+import { HighRiskCapability } from '../auth/capabilities';
+import { CapabilitiesGuard } from '../auth/capabilities.guard';
 
 @Controller('accounting/periods')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
@@ -26,6 +29,18 @@ export class PeriodsController {
   @Roles('L5')
   async lockPeriod(@User() user: any, @Param('id') periodId: string) {
     return { success: true, period: await this.periodsService.lockPeriod(periodId, user.id) };
+  }
+
+  /**
+   * Reopen a closed fiscal period (L5/OWNER only)
+   * HIGH RISK: Requires FINANCE_PERIOD_REOPEN capability
+   */
+  @Patch(':id/reopen')
+  @Roles('L5')
+  @UseGuards(CapabilitiesGuard)
+  @RequireCapability(HighRiskCapability.FINANCE_PERIOD_REOPEN)
+  async reopenPeriod(@User() user: any, @Param('id') periodId: string) {
+    return { success: true, period: await this.periodsService.reopenPeriod(periodId, user.id) };
   }
 
   @Get()
