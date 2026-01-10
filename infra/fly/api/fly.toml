@@ -1,0 +1,70 @@
+# ============================================================================
+# ChefCloud API - Fly.io Configuration
+# https://fly.io/docs/reference/configuration/
+# ============================================================================
+#
+# Usage:
+#   1. cd infra/fly/api
+#   2. fly launch --no-deploy (first time)
+#   3. fly secrets set JWT_SECRET="your-secret-32-chars-min"
+#   4. fly deploy --dockerfile ../../../services/api/Dockerfile
+#
+# ============================================================================
+
+app = "chefcloud-staging-api"
+primary_region = "sea"  # Seattle - adjust as needed
+
+[build]
+  dockerfile = "../../../services/api/Dockerfile"
+  # Build context is repo root
+  # Run from infra/fly/api: fly deploy --dockerfile ../../../services/api/Dockerfile
+
+[env]
+  # Server
+  NODE_ENV = "staging"
+  PORT = "3001"
+  
+  # Feature flags - disabled by default
+  DEVPORTAL_ENABLED = "0"
+  DOCS_ENABLED = "0"
+  METRICS_ENABLED = "0"
+  
+  # Logging
+  LOG_LEVEL = "info"
+  LOG_SILENCE_HEALTH = "1"
+  
+  # Demo protection
+  DEMO_PROTECT_WRITES = "0"
+
+# HTTP service configuration
+[http_service]
+  internal_port = 3001
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ["app"]
+
+# Health checks
+[[http_service.checks]]
+  grace_period = "30s"
+  interval = "30s"
+  method = "GET"
+  path = "/health"
+  timeout = "10s"
+
+# Machine configuration
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory_mb = 512
+
+# ============================================================================
+# Secrets (set via CLI, never commit):
+#   fly secrets set JWT_SECRET="your-secret-32-chars-min"
+#   fly secrets set DATABASE_URL="postgres://..."
+#   fly secrets set REDIS_URL="redis://..." (optional)
+#   fly secrets set SENTRY_DSN="https://..." (optional)
+#
+# See runbooks/DEPLOYMENT_RUNBOOK_FLY_STAGING.md for full setup.
+# ============================================================================
