@@ -1674,6 +1674,159 @@ model User {
 
 ---
 
+## NavMap Runtime-Driven Navigation (Phase I3)
+
+### Overview
+
+NavMap provides runtime-driven navigation, route guards, and action guards based on captured role permissions. The system uses statically-generated JSON files that map each of the 11 job roles to their allowed routes, sidebar links, and page actions.
+
+### Architecture
+
+```
+reports/navigation/runtime/       # Source of truth
+├── owner.runtime.json           # 100 routes, 23 sidebar, 54 actions
+├── manager.runtime.json
+├── waiter.runtime.json          # 7 routes, 6 sidebar, 16 actions
+└── ...11 roles total
+
+apps/web/src/navmap/             # Runtime registry
+├── index.ts                     # Public exports
+└── runtimeRegistry.ts           # Core helpers
+
+apps/web/src/components/         # UI components
+├── RouteGuard.tsx               # Route-level guard
+└── NoAccessPage.tsx             # 403 page
+
+apps/web/src/hooks/              
+└── useCan.ts                    # Action guard hook
+```
+
+### Usage
+
+#### 1. Route Guard (Wrap Protected Pages)
+
+```tsx
+import { RouteGuard } from '@/components/RouteGuard';
+
+export default function FinancePage() {
+  return (
+    <RouteGuard>
+      <h1>Finance</h1>
+      {/* Content */}
+    </RouteGuard>
+  );
+}
+```
+
+If the user's role cannot access the route, they see a 403 "No Access" page.
+
+#### 2. Action Guard (Hide/Disable Actions)
+
+```tsx
+import { useCan } from '@/hooks/useCan';
+
+function InventoryActions() {
+  const canCreate = useCan('inventory-create-item');
+  const canDelete = useCan('inventory-delete-item');
+
+  return (
+    <>
+      {canCreate && <Button>Create Item</Button>}
+      <Button disabled={!canDelete}>Delete</Button>
+    </>
+  );
+}
+```
+
+#### 3. Multiple Actions at Once
+
+```tsx
+import { useCanMultiple } from '@/hooks/useCan';
+
+function OrderActions() {
+  const perms = useCanMultiple([
+    'pos-new-order',
+    'pos-void-order',
+    'pos-refund-order',
+  ]);
+
+  return (
+    <>
+      {perms['pos-new-order'] && <Button>New Order</Button>}
+      {perms['pos-void-order'] && <Button>Void</Button>}
+      {perms['pos-refund-order'] && <Button>Refund</Button>}
+    </>
+  );
+}
+```
+
+#### 4. Direct API (Non-React)
+
+```typescript
+import { canAccessRoute, canPerformAction, getSidebarForRole } from '@/navmap';
+
+// Check route access
+canAccessRoute('WAITER', '/finance'); // false
+canAccessRoute('OWNER', '/finance');  // true
+
+// Check action permission
+canPerformAction('WAITER', 'pos-new-order'); // true
+canPerformAction('WAITER', 'inventory-delete-item'); // false
+
+// Get sidebar for rendering
+const sidebar = getSidebarForRole('MANAGER');
+// [{ title: 'Overview', links: [...] }, ...]
+```
+
+### Runtime JSON Structure
+
+Each `<role>.runtime.json` contains:
+
+```json
+{
+  "role": "WAITER",
+  "routesVisited": ["/pos", "/reservations", ...],
+  "sidebarLinks": [
+    { "label": "POS", "href": "/pos", "navGroup": "Operations" },
+    ...
+  ],
+  "actions": [
+    { "route": "/pos", "testId": "pos-new-order", "label": "New Order" },
+    ...
+  ],
+  "summary": {
+    "totalRoutes": 7,
+    "totalSidebarLinks": 6,
+    "totalActions": 16
+  }
+}
+```
+
+### Tests
+
+```bash
+# Run NavMap registry tests (53 tests)
+pnpm -C apps/web test src/__tests__/navmap/runtimeRegistry.test.ts
+
+# Run useCan hook tests (13 tests)
+pnpm -C apps/web test src/hooks/__tests__/useCan.test.ts
+
+# Run RouteGuard tests (9 tests)
+pnpm -C apps/web test src/__tests__/components/RouteGuard.test.tsx
+```
+
+### Implementation Files
+
+- **Runtime Registry**: `apps/web/src/navmap/runtimeRegistry.ts`
+- **Index Exports**: `apps/web/src/navmap/index.ts`
+- **Route Guard**: `apps/web/src/components/RouteGuard.tsx`
+- **NoAccess Page**: `apps/web/src/components/NoAccessPage.tsx`
+- **useCan Hook**: `apps/web/src/hooks/useCan.ts`
+- **Runtime Data**: `reports/navigation/runtime/*.runtime.json`
+- **Tests**: `apps/web/src/__tests__/navmap/`, `apps/web/src/hooks/__tests__/useCan.test.ts`
+
+---
+
 ## EFRIS Integration (Uganda Revenue Authority)
 
 ### Overview
