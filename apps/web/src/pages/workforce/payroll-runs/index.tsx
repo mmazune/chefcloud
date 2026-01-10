@@ -8,9 +8,12 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/router';
 import { AppShell } from '@/components/layout/AppShell';
+import { EmptyState } from '@/components/EmptyState';
+import { ErrorState } from '@/components/ErrorState';
 import { useAuth } from '@/contexts/AuthContext';
 import { apiClient } from '@/lib/api';
 import { format } from 'date-fns';
+import { FileText } from 'lucide-react';
 
 type PayrollRunStatus = 'DRAFT' | 'CALCULATED' | 'APPROVED' | 'POSTED' | 'PAID' | 'VOID';
 
@@ -47,7 +50,7 @@ export default function PayrollRunsPage() {
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [branchFilter, setBranchFilter] = useState<string>('');
 
-  const { data: runs = [], isLoading, refetch } = useQuery({
+  const { data: runs = [], isLoading, error, refetch } = useQuery({
     queryKey: ['payrollRuns', statusFilter, branchFilter],
     queryFn: async () => {
       const params = new URLSearchParams();
@@ -163,10 +166,22 @@ export default function PayrollRunsPage() {
         {/* Table */}
         {isLoading ? (
           <div className="text-center py-8">Loading...</div>
+        ) : error ? (
+          <ErrorState
+            title="Failed to load payroll runs"
+            message={error instanceof Error ? error.message : 'An unexpected error occurred'}
+            onRetry={() => refetch()}
+          />
         ) : runs.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
-            No payroll runs found. Create one to get started.
-          </div>
+          <EmptyState
+            icon={FileText}
+            title="No payroll runs yet"
+            description="Create a payroll run to process employee timecards and generate pay stubs."
+            action={canCreate ? {
+              label: 'Create Payroll Run',
+              onClick: handleCreateRun,
+            } : undefined}
+          />
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">

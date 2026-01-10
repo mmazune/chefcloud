@@ -11,6 +11,8 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AppShell } from '@/components/layout/AppShell';
 import { PageHeader } from '@/components/layout/PageHeader';
+import { EmptyState } from '@/components/EmptyState';
+import { ErrorState } from '@/components/ErrorState';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,7 +21,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { apiClient } from '@/lib/api';
-import { Plus, Search, Eye, Check, X, Send } from 'lucide-react';
+import { Plus, Search, Eye, Check, X, Send, ClipboardList } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { RoleLevel, hasRoleLevel } from '@/lib/auth';
@@ -88,7 +90,7 @@ export default function PurchaseOrdersPage() {
   }[]>([{ itemId: '', qtyOrderedInput: '', inputUomId: '', unitCost: '' }]);
 
   // Fetch POs
-  const { data: purchaseOrders, isLoading } = useQuery({
+  const { data: purchaseOrders, isLoading, error, refetch } = useQuery({
     queryKey: ['purchase-orders', statusFilter],
     queryFn: async () => {
       const params = new URLSearchParams();
@@ -276,8 +278,26 @@ export default function PurchaseOrdersPage() {
       <Card>
         {isLoading ? (
           <div className="p-8 text-center text-muted-foreground">Loading...</div>
+        ) : error ? (
+          <ErrorState
+            title="Failed to load purchase orders"
+            message={error instanceof Error ? error.message : 'An unexpected error occurred'}
+            onRetry={() => refetch()}
+            variant="compact"
+          />
         ) : filteredPOs.length === 0 ? (
-          <div className="p-8 text-center text-muted-foreground">No purchase orders found</div>
+          <EmptyState
+            icon={ClipboardList}
+            title="No purchase orders"
+            description={search || statusFilter 
+              ? "No purchase orders match your current filters. Try adjusting your search criteria."
+              : "Create a purchase order to start tracking inventory orders from suppliers."
+            }
+            action={isL3OrAbove && !search && !statusFilter ? {
+              label: 'Create PO',
+              onClick: () => setDialogOpen(true),
+            } : undefined}
+          />
         ) : (
           <div className="overflow-hidden rounded-lg">
             <table className="min-w-full divide-y divide-border">
