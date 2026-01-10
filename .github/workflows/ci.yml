@@ -13,10 +13,10 @@ env:
 
 jobs:
   # ============================================================================
-  # Job: Sanity - Import Firewall Check
+  # Job: Sanity - Import Firewall + Secret Pattern Check
   # ============================================================================
   sanity:
-    name: Import Firewall
+    name: Import Firewall & Secrets Check
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -37,6 +37,34 @@ jobs:
 
       - name: Verify no WIP imports
         run: pnpm verify:no-wip-imports
+
+      - name: Check for secret patterns in env templates
+        run: |
+          echo "🔍 Scanning env templates for obvious secret patterns..."
+          PATTERNS=(
+            "sk_live_"
+            "sk_test_"
+            "pk_live_"
+            "pk_test_"
+            "postgresql://.*:.*@"
+            "redis://.*:.*@"
+            "mongodb://.*:.*@"
+            "-----BEGIN.*PRIVATE KEY-----"
+            "ghp_[a-zA-Z0-9]{36}"
+            "gho_[a-zA-Z0-9]{36}"
+          )
+          FAIL=0
+          for pattern in "${PATTERNS[@]}"; do
+            if grep -rE "$pattern" --include="*.example" --include="*.template" --include="*.sample" . 2>/dev/null | grep -v node_modules; then
+              echo "❌ Found potential secret pattern: $pattern"
+              FAIL=1
+            fi
+          done
+          if [ $FAIL -eq 1 ]; then
+            echo "❌ Secret patterns detected in env templates!"
+            exit 1
+          fi
+          echo "✅ No obvious secret patterns found in env templates"
 
   # ============================================================================
   # Job: API - Lint & Build
