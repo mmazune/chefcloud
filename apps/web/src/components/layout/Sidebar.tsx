@@ -47,11 +47,19 @@ export function Sidebar() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.jobRole, navGroups]);
 
+  // M8.6: Get role home route for logo click
+  const roleHome = capabilities.defaultRoute;
+
   return (
     <aside className="fixed left-0 top-0 z-40 h-screen w-64 border-r bg-card flex flex-col">
-      {/* Logo/Brand */}
+      {/* Logo/Brand - M8.6: Clicking logo navigates to role home */}
       <div className="flex h-16 items-center border-b px-6">
-        <div className="flex items-center space-x-2">
+        <Link
+          href={roleHome}
+          className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
+          aria-label="Go to workspace home"
+          data-testid="sidebar-logo"
+        >
           <div className="flex h-8 w-8 items-center justify-center rounded-md bg-gradient-to-br from-chefcloud-blue to-chefcloud-lavender text-white font-bold">
             CC
           </div>
@@ -61,7 +69,7 @@ export function Sidebar() {
               {user?.jobRole ? user.jobRole.replace('_', ' ') : 'Backoffice'}
             </p>
           </div>
-        </div>
+        </Link>
       </div>
 
       {/* Navigation - M8.1: Grouped by roleCapabilities */}

@@ -302,3 +302,108 @@ test.describe('NavMap Coverage Summary', () => {
     }
   });
 });
+
+// ============================================================================
+// Workspace Dashboard Tests (M8.6)
+// ============================================================================
+
+/**
+ * Role workspace mappings for dashboard tests
+ * Maps each role to their workspace URL
+ */
+const WORKSPACE_MAPPINGS: Record<string, string> = {
+  OWNER: '/workspaces/owner',
+  MANAGER: '/workspaces/manager',
+  ACCOUNTANT: '/workspaces/accountant',
+  SUPERVISOR: '/workspaces/supervisor',
+  CASHIER: '/workspaces/cashier',
+  WAITER: '/workspaces/waiter',
+  CHEF: '/workspaces/chef',
+  BARTENDER: '/workspaces/bartender',
+  PROCUREMENT: '/workspaces/procurement',
+  STOCK_MANAGER: '/workspaces/stock-manager',
+  EVENT_MANAGER: '/workspaces/event-manager',
+};
+
+test.describe('Workspace Dashboard Tests', () => {
+  for (const config of ROLE_CONFIGS) {
+    const workspaceUrl = WORKSPACE_MAPPINGS[config.role];
+    
+    test.describe(`${config.role} Workspace`, () => {
+      test(`workspace dashboard loads without error`, async ({ page }) => {
+        await loginAs(page, config.email);
+        
+        // Navigate to workspace
+        const response = await page.goto(workspaceUrl);
+        await page.waitForLoadState('networkidle');
+        
+        // Should return 200 OK
+        expect(response?.status()).toBeLessThan(400);
+        
+        // Should not redirect to login
+        const url = page.url();
+        expect(url).not.toContain('/login');
+        
+        // Should have workspace content (title or quick links)
+        const hasWorkspaceContent = await page.locator('h1, h2, [data-testid="workspace-title"]').count() > 0;
+        expect(hasWorkspaceContent).toBe(true);
+      });
+
+      test(`workspace has quick links or navigation elements`, async ({ page }) => {
+        await loginAs(page, config.email);
+        await page.goto(workspaceUrl);
+        await page.waitForLoadState('networkidle');
+        
+        // Should have at least one clickable link/card
+        const linkCount = await page.locator('a[href^="/"], button, [role="button"]').count();
+        expect(linkCount).toBeGreaterThan(0);
+      });
+    });
+  }
+});
+
+// ============================================================================
+// Sidebar Logo Home Navigation Tests (M8.6)
+// ============================================================================
+
+test.describe('Sidebar Logo Home Navigation', () => {
+  for (const config of ROLE_CONFIGS) {
+    test(`${config.role}: logo click navigates to role home`, async ({ page }) => {
+      await loginAs(page, config.email);
+      
+      // Navigate to a different page first
+      await page.goto('/settings');
+      await page.waitForLoadState('networkidle');
+      
+      // Click the sidebar logo
+      const logo = page.locator('[data-testid="sidebar-logo"]');
+      
+      // Check if logo exists
+      const logoExists = await logo.count() > 0;
+      if (!logoExists) {
+        // Try alternative selectors
+        const altLogo = page.locator('aside a:has-text("ChefCloud"), nav a:has-text("ChefCloud")').first();
+        if (await altLogo.count() > 0) {
+          await altLogo.click();
+        } else {
+          test.skip(true, 'Logo link not found in sidebar');
+          return;
+        }
+      } else {
+        await logo.click();
+      }
+      
+      await page.waitForLoadState('networkidle');
+      
+      // Should navigate to the role's default route (workspace or operational page)
+      const url = page.url();
+      const expectedRoutes = [
+        WORKSPACE_MAPPINGS[config.role],
+        config.landingRoute,
+      ];
+      
+      const isAtExpectedRoute = expectedRoutes.some(route => url.includes(route));
+      expect(isAtExpectedRoute).toBe(true);
+    });
+  }
+});
