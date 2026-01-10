@@ -216,10 +216,10 @@ export default function ReservationsPage() {
 
       {/* M9.2: Navigation to Policies and Calendar */}
       <div className="flex gap-2 mb-6">
-        <Button variant="outline" onClick={() => window.location.href = '/reservations/policies'}>
+        <Button variant="outline" data-testid="reservation-nav-policies" onClick={() => window.location.href = '/reservations/policies'}>
           ⚙️ Policies
         </Button>
-        <Button variant="outline" onClick={() => window.location.href = '/reservations/calendar'}>
+        <Button variant="outline" data-testid="reservation-nav-calendar" onClick={() => window.location.href = '/reservations/calendar'}>
           📅 Calendar View
         </Button>
       </div>
@@ -361,6 +361,7 @@ export default function ReservationsPage() {
                           <>
                             <Button
                               size="sm"
+                              data-testid="reservation-confirm"
                               onClick={() => confirmMutation.mutate(reservation.id)}
                               disabled={confirmMutation.isPending}
                             >
@@ -369,6 +370,7 @@ export default function ReservationsPage() {
                             <Button
                               size="sm"
                               variant="outline"
+                              data-testid="reservation-cancel"
                               onClick={() => cancelMutation.mutate(reservation.id)}
                               disabled={cancelMutation.isPending}
                             >
@@ -380,6 +382,7 @@ export default function ReservationsPage() {
                           <>
                             <Button
                               size="sm"
+                              data-testid="reservation-seat"
                               onClick={() => seatMutation.mutate(reservation.id)}
                               disabled={seatMutation.isPending}
                             >
@@ -388,6 +391,7 @@ export default function ReservationsPage() {
                             <Button
                               size="sm"
                               variant="outline"
+                              data-testid="reservation-no-show"
                               onClick={() => noShowMutation.mutate(reservation.id)}
                               disabled={noShowMutation.isPending}
                             >
@@ -396,6 +400,7 @@ export default function ReservationsPage() {
                             <Button
                               size="sm"
                               variant="ghost"
+                              data-testid="reservation-cancel-confirmed"
                               onClick={() => cancelMutation.mutate(reservation.id)}
                               disabled={cancelMutation.isPending}
                             >
@@ -407,6 +412,7 @@ export default function ReservationsPage() {
                           <Button
                             size="sm"
                             className="bg-green-600 hover:bg-green-700"
+                            data-testid="reservation-complete"
                             onClick={() => completeMutation.mutate(reservation.id)}
                             disabled={completeMutation.isPending}
                           >

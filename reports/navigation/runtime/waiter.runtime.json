@@ -1,0 +1,130 @@
+{
+  "role": "WAITER",
+  "capturedAt": "2026-01-10T14:00:00.000Z",
+  "captureMethod": "static-analysis",
+  "routesVisited": [
+    "/pos",
+    "/reservations",
+    "/settings",
+    "/workforce/my-availability",
+    "/workforce/my-swaps",
+    "/workforce/open-shifts"
+  ],
+  "sidebarLinks": [
+    {
+      "label": "My Availability",
+      "href": "/workforce/my-availability",
+      "navGroup": "My Schedule",
+      "isActive": false
+    },
+    {
+      "label": "My Swaps",
+      "href": "/workforce/my-swaps",
+      "navGroup": "My Schedule",
+      "isActive": false
+    },
+    {
+      "label": "Open Shifts",
+      "href": "/workforce/open-shifts",
+      "navGroup": "My Schedule",
+      "isActive": false
+    },
+    {
+      "label": "POS",
+      "href": "/pos",
+      "navGroup": "Operations",
+      "isActive": false
+    },
+    {
+      "label": "Reservations",
+      "href": "/reservations",
+      "navGroup": "Operations",
+      "isActive": false
+    },
+    {
+      "label": "Settings",
+      "href": "/settings",
+      "navGroup": "Settings",
+      "isActive": false
+    }
+  ],
+  "actions": [
+    {
+      "route": "/pos",
+      "elementType": "button",
+      "testId": "pos-new-order",
+      "label": "New Order"
+    },
+    {
+      "route": "/pos",
+      "elementType": "button",
+      "testId": "pos-send-kitchen",
+      "label": "Send to Kitchen"
+    },
+    {
+      "route": "/pos",
+      "elementType": "button",
+      "testId": "pos-checkout",
+      "label": "Request Payment"
+    },
+    {
+      "route": "/pos",
+      "elementType": "button",
+      "testId": "pos-split-bill",
+      "label": "Split Bill"
+    },
+    {
+      "route": "/reservations",
+      "elementType": "button",
+      "testId": "reservation-nav-policies",
+      "label": "Policies"
+    },
+    {
+      "route": "/reservations",
+      "elementType": "button",
+      "testId": "reservation-nav-calendar",
+      "label": "Calendar View"
+    },
+    {
+      "route": "/reservations",
+      "elementType": "button",
+      "testId": "reservation-confirm",
+      "label": "Confirm"
+    },
+    {
+      "route": "/reservations",
+      "elementType": "button",
+      "testId": "reservation-cancel",
+      "label": "Cancel"
+    },
+    {
+      "route": "/reservations",
+      "elementType": "button",
+      "testId": "reservation-seat",
+      "label": "Seat"
+    },
+    {
+      "route": "/reservations",
+      "elementType": "button",
+      "testId": "reservation-no-show",
+      "label": "No-Show"
+    },
+    {
+      "route": "/reservations",
+      "elementType": "button",
+      "testId": "reservation-cancel-confirmed",
+      "label": "Cancel (Confirmed)"
+    },
+    {
+      "route": "/reservations",
+      "elementType": "button",
+      "testId": "reservation-complete",
+      "label": "Complete"
+    }
+  ],
+  "summary": {
+    "totalRoutes": 6,
+    "totalSidebarLinks": 6,
+    "totalActions": 12
+  }
+}
