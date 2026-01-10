@@ -1,6 +1,7 @@
 # Docker Staging Deployment Runbook
 
-> Created: 2026-01-10 | Phase E1 — Docker Staging Environment
+> Created: 2026-01-10 | Phase E1 — Docker Staging Environment  
+> Updated: 2026-01-10 | Phase E3.1 — Developer Ergonomics Scripts
 
 ---
 
@@ -14,6 +15,25 @@ This runbook provides step-by-step instructions for deploying ChefCloud in a det
 | Redis | `chefcloud-staging-redis` | 6380 | redis-cli ping |
 | API | `chefcloud-staging-api` | 3001 | GET /health |
 | Web | `chefcloud-staging-web` | 3000 | GET / |
+
+---
+
+## pnpm Scripts (Recommended)
+
+All staging operations are available as pnpm scripts from the repo root:
+
+| Script | Command | Description |
+|--------|---------|-------------|
+| `pnpm staging:up` | Build and start stack (detached) | Main entry point |
+| `pnpm staging:down` | Stop stack (preserve data) | Graceful shutdown |
+| `pnpm staging:down:clean` | Stop stack + delete volumes | Full reset |
+| `pnpm staging:logs` | Tail all container logs | Live output |
+| `pnpm staging:logs:api` | Tail API logs only | Debug API |
+| `pnpm staging:logs:web` | Tail Web logs only | Debug Web |
+| `pnpm staging:migrate` | Run prisma migrate deploy | Safe migrations |
+| `pnpm staging:seed` | Run prisma db seed | Demo data only |
+| `pnpm staging:smoke` | Run smoke verification | API health check |
+| `pnpm staging:shell` | Shell into API container | Debug access |
 
 ---
 
@@ -80,10 +100,10 @@ See [docs/runbooks/ENV_PARITY_MATRIX.md](../docs/runbooks/ENV_PARITY_MATRIX.md) 
 ## Step 3: Build and Start
 
 ```bash
-# Build and start all services
-docker compose -f docker-compose.staging.yml up --build
+# Using pnpm script (recommended)
+pnpm staging:up
 
-# Or run in detached mode
+# Or manually with docker compose
 docker compose -f docker-compose.staging.yml up --build -d
 ```
 
@@ -103,9 +123,11 @@ docker compose -f docker-compose.staging.yml up --build -d
 **⚠️ IMPORTANT:** Migrations are NOT run automatically to prevent accidental data loss.
 
 ```bash
-# Run migrations inside the API container
-docker compose -f docker-compose.staging.yml exec api \
-  npx prisma migrate deploy
+# Using pnpm script (recommended)
+pnpm staging:migrate
+
+# Or manually
+docker compose -f docker-compose.staging.yml exec api npx prisma migrate deploy
 
 # Expected output:
 # Prisma Migrate applied X migrations
@@ -115,10 +137,14 @@ docker compose -f docker-compose.staging.yml exec api \
 
 ## Step 5: Seed Demo Data (Optional)
 
+> **⚠️ Demo Only:** This seeds test data for development/demo purposes.
+
 ```bash
-# Seed demo organization, users, and sample data
-docker compose -f docker-compose.staging.yml exec api \
-  npx prisma db seed
+# Using pnpm script (recommended)
+pnpm staging:seed
+
+# Or manually
+docker compose -f docker-compose.staging.yml exec api npx prisma db seed
 
 # Expected output:
 # 🌱 Seeding complete
@@ -151,10 +177,10 @@ See [docs/overview/SAMPLE_DATA_AND_SEEDS.md](../docs/overview/SAMPLE_DATA_AND_SE
 ### 6.2 Run Smoke Verification Script
 
 ```bash
-# Install dependencies if not already
-pnpm install
+# Using pnpm script (recommended)
+pnpm staging:smoke
 
-# Run smoke verification against Docker API
+# Or manually
 API_BASE_URL=http://localhost:3001 node scripts/verify/smoke-verification.mjs
 ```
 
@@ -185,13 +211,19 @@ API_BASE_URL=http://localhost:3001 node scripts/verify/smoke-verification.mjs
 ## Step 7: View Logs
 
 ```bash
-# All services
-docker compose -f docker-compose.staging.yml logs -f
+# All services (pnpm)
+pnpm staging:logs
 
-# Specific service
+# API only (pnpm)
+pnpm staging:logs:api
+
+# Web only (pnpm)
+pnpm staging:logs:web
+
+# Or manually with docker compose
+docker compose -f docker-compose.staging.yml logs -f
 docker compose -f docker-compose.staging.yml logs -f api
 docker compose -f docker-compose.staging.yml logs -f web
-docker compose -f docker-compose.staging.yml logs -f postgres
 ```
 
 ---
@@ -201,12 +233,20 @@ docker compose -f docker-compose.staging.yml logs -f postgres
 ### Stop Services (Preserve Data)
 
 ```bash
+# Using pnpm script (recommended)
+pnpm staging:down
+
+# Or manually
 docker compose -f docker-compose.staging.yml down
 ```
 
 ### Stop and Remove Volumes (Full Reset)
 
 ```bash
+# Using pnpm script (recommended)
+pnpm staging:down:clean
+
+# Or manually
 docker compose -f docker-compose.staging.yml down -v
 ```
 
@@ -273,32 +313,26 @@ docker system prune -f
 ## Quick Reference
 
 ```bash
-# Start (foreground)
-docker compose -f docker-compose.staging.yml up --build
+# ============ pnpm Scripts (Recommended) ============
+pnpm staging:up           # Start stack (detached)
+pnpm staging:down         # Stop (preserve data)
+pnpm staging:down:clean   # Stop + delete volumes
+pnpm staging:migrate      # Run migrations
+pnpm staging:seed         # Seed demo data
+pnpm staging:smoke        # Run smoke test
+pnpm staging:logs         # Tail all logs
+pnpm staging:logs:api     # Tail API logs
+pnpm staging:shell        # Shell into API container
 
-# Start (background)
+# ============ Raw Docker Commands ============
 docker compose -f docker-compose.staging.yml up --build -d
-
-# Migrations
-docker compose -f docker-compose.staging.yml exec api npx prisma migrate deploy
-
-# Seed data
-docker compose -f docker-compose.staging.yml exec api npx prisma db seed
-
-# Smoke test
-API_BASE_URL=http://localhost:3001 node scripts/verify/smoke-verification.mjs
-
-# View logs
-docker compose -f docker-compose.staging.yml logs -f api
-
-# Shell into API container
-docker compose -f docker-compose.staging.yml exec api sh
-
-# Stop (preserve data)
 docker compose -f docker-compose.staging.yml down
-
-# Full reset
 docker compose -f docker-compose.staging.yml down -v
+docker compose -f docker-compose.staging.yml exec api npx prisma migrate deploy
+docker compose -f docker-compose.staging.yml exec api npx prisma db seed
+API_BASE_URL=http://localhost:3001 node scripts/verify/smoke-verification.mjs
+docker compose -f docker-compose.staging.yml logs -f api
+docker compose -f docker-compose.staging.yml exec api sh
 ```
 
 ---

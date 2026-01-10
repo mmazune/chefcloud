@@ -23,7 +23,17 @@
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "clean": "turbo run clean && rm -rf node_modules",
     "prepare": "husky install",
-    "verify:no-wip-imports": "node scripts/verify-no-wip-imports.mjs"
+    "verify:no-wip-imports": "node scripts/verify-no-wip-imports.mjs",
+    "staging:up": "docker compose -f docker-compose.staging.yml up -d --build",
+    "staging:down": "docker compose -f docker-compose.staging.yml down",
+    "staging:down:clean": "docker compose -f docker-compose.staging.yml down -v",
+    "staging:logs": "docker compose -f docker-compose.staging.yml logs -f",
+    "staging:logs:api": "docker compose -f docker-compose.staging.yml logs -f api",
+    "staging:logs:web": "docker compose -f docker-compose.staging.yml logs -f web",
+    "staging:migrate": "docker compose -f docker-compose.staging.yml exec api npx prisma migrate deploy",
+    "staging:seed": "docker compose -f docker-compose.staging.yml exec api npx prisma db seed",
+    "staging:smoke": "API_BASE_URL=http://localhost:3001 node scripts/verify/smoke-verification.mjs",
+    "staging:shell": "docker compose -f docker-compose.staging.yml exec api sh"
   },
   "devDependencies": {
     "@commitlint/cli": "^18.6.0",

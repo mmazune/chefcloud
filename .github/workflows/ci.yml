@@ -156,7 +156,7 @@ jobs:
           echo "POSTGRES_PASSWORD=chefcloud_staging_pw" >> .env.docker.staging
 
       - name: Start Docker Compose
-        run: docker compose -f docker-compose.staging.yml up -d --build
+        run: pnpm staging:up
 
       - name: Wait for API health
         run: |
@@ -170,15 +170,15 @@ jobs:
             sleep 5
           done
           echo "API failed to become healthy"
-          docker compose -f docker-compose.staging.yml logs api
+          pnpm staging:logs:api
           exit 1
 
       - name: Run Database Migrations
-        run: docker compose -f docker-compose.staging.yml exec -T api npx prisma migrate deploy
+        run: pnpm staging:migrate
 
       - name: Run Smoke Verification
-        run: API_BASE_URL=http://localhost:3001 node scripts/verify/smoke-verification.mjs
+        run: pnpm staging:smoke
 
       - name: Shutdown Docker Compose
         if: always()
-        run: docker compose -f docker-compose.staging.yml down -v
+        run: pnpm staging:down:clean
