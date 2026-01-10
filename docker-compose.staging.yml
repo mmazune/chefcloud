@@ -1,0 +1,166 @@
+# ============================================================================
+# ChefCloud Docker Compose - Staging Environment
+# Deterministic "staging-like" local environment
+# ============================================================================
+#
+# Usage:
+#   1. Copy .env.docker.staging.example to .env.docker.staging
+#   2. Fill in required secrets (JWT_SECRET, DATABASE_URL auto-configured)
+#   3. Run: docker compose -f docker-compose.staging.yml up --build
+#
+# ============================================================================
+
+name: chefcloud-staging
+
+services:
+  # --------------------------------------------------------------------------
+  # PostgreSQL Database
+  # --------------------------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: chefcloud-staging-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: chefcloud
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-chefcloud_staging_pw}
+      POSTGRES_DB: chefcloud_staging
+    volumes:
+      - postgres_staging_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"  # Use 5433 to avoid conflict with local postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U chefcloud -d chefcloud_staging"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - chefcloud-staging
+
+  # --------------------------------------------------------------------------
+  # Redis Cache
+  # --------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: chefcloud-staging-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_staging_data:/data
+    ports:
+      - "6380:6379"  # Use 6380 to avoid conflict with local redis
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - chefcloud-staging
+
+  # --------------------------------------------------------------------------
+  # API Service (NestJS)
+  # --------------------------------------------------------------------------
+  api:
+    build:
+      context: .
+      dockerfile: services/api/Dockerfile
+    container_name: chefcloud-staging-api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      # Database - auto-wired to compose postgres
+      DATABASE_URL: postgresql://chefcloud:${POSTGRES_PASSWORD:-chefcloud_staging_pw}@postgres:5432/chefcloud_staging?schema=public
+      
+      # Redis - auto-wired to compose redis
+      REDIS_URL: redis://redis:6379
+      
+      # Required secrets (must be provided)
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+      
+      # Server config
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: 3001
+      
+      # CORS - allow web container
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://web:3000}
+      
+      # WebAuthn
+      RP_ID: ${RP_ID:-localhost}
+      ORIGIN: ${ORIGIN:-http://localhost:3000}
+      
+      # Feature flags - DevPortal disabled by default
+      DEVPORTAL_ENABLED: ${DEVPORTAL_ENABLED:-0}
+      DOCS_ENABLED: ${DOCS_ENABLED:-0}
+      METRICS_ENABLED: ${METRICS_ENABLED:-0}
+      
+      # Logging
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      LOG_SILENCE_HEALTH: ${LOG_SILENCE_HEALTH:-1}
+      
+      # Demo protection
+      DEMO_PROTECT_WRITES: ${DEMO_PROTECT_WRITES:-0}
+      
+      # Optional observability
+      SENTRY_DSN: ${SENTRY_DSN:-}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+    ports:
+      - "3001:3001"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - chefcloud-staging
+
+  # --------------------------------------------------------------------------
+  # Web Service (Next.js)
+  # --------------------------------------------------------------------------
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        # Build-time args for Next.js
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001}
+        NEXT_PUBLIC_APP_VERSION: ${NEXT_PUBLIC_APP_VERSION:-staging}
+    container_name: chefcloud-staging-web
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+    ports:
+      - "3000:3000"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    networks:
+      - chefcloud-staging
+
+# ----------------------------------------------------------------------------
+# Volumes
+# ----------------------------------------------------------------------------
+volumes:
+  postgres_staging_data:
+    name: chefcloud-staging-postgres
+  redis_staging_data:
+    name: chefcloud-staging-redis
+
+# ----------------------------------------------------------------------------
+# Networks
+# ----------------------------------------------------------------------------
+networks:
+  chefcloud-staging:
+    name: chefcloud-staging
+    driver: bridge
