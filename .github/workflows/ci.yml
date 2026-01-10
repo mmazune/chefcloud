@@ -154,12 +154,54 @@ jobs:
         run: pnpm -C apps/web build
 
   # ============================================================================
+  # Job: Web Tests - Jest Unit & Component Tests
+  # ============================================================================
+  web-tests:
+    name: Web Tests (Jest)
+    runs-on: ubuntu-latest
+    needs: sanity
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run Web Tests
+        # TODO: Remove continue-on-error once PRE-014 is resolved (84 failing UI tests)
+        # Currently ~90% pass rate (875/959). Goal: 100% pass, then remove this flag.
+        run: pnpm -C apps/web test
+        continue-on-error: true
+
+  # ============================================================================
   # Job: Smoke - Docker Compose Integration Test (Optional)
   # ============================================================================
   smoke:
     name: Smoke Test (Docker)
     runs-on: ubuntu-latest
-    needs: [api, web]
+    needs: [api, web, web-tests]
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
     steps:
       - name: Checkout code

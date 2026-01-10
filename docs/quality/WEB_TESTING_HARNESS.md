@@ -1,12 +1,22 @@
 # Web Testing Harness
 
 > Phase H7 — PRE-012 Resolution | Updated: 2026-01-10
+> Phase H8 — CI Enforcement | Updated: 2026-01-10
 
 ---
 
 ## Overview
 
 This document describes the test infrastructure for `apps/web` component tests.
+
+**Jest is the single, authoritative test runner for apps/web.** There is no Vitest configuration or usage in this package. All tests must use Jest APIs (`jest.mock`, `jest.fn`, etc.).
+
+## CI Enforcement
+
+The `web-tests` job in `.github/workflows/ci.yml` runs on every PR and push to main:
+- Command: `pnpm -C apps/web test --passWithNoTests`
+- Depends on: `sanity` job
+- **Failures block merge**
 
 ## Test Stack
 

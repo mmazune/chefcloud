@@ -67,6 +67,9 @@
     "instructions/standards/MILESTONE_DEFINITION_OF_DONE.md",
     "instructions/standards/DATA_PERSISTENCE_AND_CONSISTENCY_STANDARD.md"
   ],
+  "quality": {
+    "web_testing_harness": "docs/quality/WEB_TESTING_HARNESS.md"
+  },
   "runbooks": [
     "instructions/VERIFY_RUNBOOK.md",
     "instructions/SEEDING_REFERENCE.md",

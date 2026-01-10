@@ -538,4 +538,36 @@ Tests:       83 failed, 876 passed, 959 total
 
 ---
 
-*Last Updated: 2026-01-10 (PRE-013 RESOLVED)*
+### PRE-014: Web UI Test Assertions (84 Remaining Failures)
+
+| Field | Value |
+|-------|-------|
+| **ID** | PRE-014 |
+| **Category** | test-error |
+| **First Seen** | 2026-01-10 |
+| **Command** | `pnpm -C apps/web test` |
+| **Impact** | Medium |
+| **Suggested Owner** | Frontend / Test Infra |
+| **Status** | OPEN |
+
+**Metrics**:
+```
+Test Suites: 17 failed, 89 passed, 106 total
+Tests:       84 failed, 875 passed, 959 total (~91% pass rate)
+```
+
+**Pattern of Failures**:
+1. **getByRole / getByText failures** - Elements not found due to async loading or missing test data
+2. **Hook return value mismatches** - `useMutation` / `useQuery` mock return values differ from expectations
+3. **Page component rendering** - Complex pages not fully rendering in test environment
+
+**CI Impact**: The `web-tests` job in CI has `continue-on-error: true` set. Once PRE-014 is resolved (100% pass rate), the flag should be removed to enforce green tests on merge.
+
+**Suggested Fix**: Triage failures into categories:
+1. Delete tests for quarantined/dormant features
+2. Fix mock setup for tests with incorrect return types
+3. Update assertions for tests with stale selectors
+
+---
+
+*Last Updated: 2026-01-10 (PRE-014 added)*
