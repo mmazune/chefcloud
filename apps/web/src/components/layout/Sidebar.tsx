@@ -1,15 +1,18 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { getRoleCapabilities } from '@/config/roleCapabilities';
+import { isNavmapEnabled, recordSidebarLinks, startCapture } from '@/lib/navmap';
 
 /**
  * M8.1: Config-driven Sidebar Navigation
  * 
  * Navigation is now fully driven by roleCapabilities.ts
  * No scattered if/else role checks - single source of truth
+ * 
+ * Phase I3: Navmap capture mode supported
  */
 export function Sidebar() {
   const router = useRouter();
@@ -22,6 +25,27 @@ export function Sidebar() {
   // M8.1: Get nav groups from roleCapabilities based on jobRole
   const capabilities = getRoleCapabilities(user?.jobRole);
   const navGroups = capabilities.navGroups;
+
+  // Phase I3: Record sidebar links for navmap capture
+  useEffect(() => {
+    if (!isNavmapEnabled() || !user?.jobRole) return;
+    
+    // Start capture for this role
+    startCapture(user.jobRole);
+    
+    // Record all sidebar links
+    navGroups.forEach(group => {
+      recordSidebarLinks(
+        group.title,
+        group.items.map(item => ({
+          label: item.label,
+          href: item.href,
+          isActive: isActive(item.href),
+        }))
+      );
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.jobRole, navGroups]);
 
   return (
     <aside className="fixed left-0 top-0 z-40 h-screen w-64 border-r bg-card flex flex-col">

@@ -1014,6 +1014,7 @@ export default function PosPage() {
               size="sm"
               onClick={() => createOrderMutation.mutate()}
               disabled={createOrderMutation.isPending}
+              data-testid="pos-new-order"
             >
               New Order
             </Button>
@@ -1223,6 +1224,7 @@ export default function PosPage() {
                     className="w-full"
                     onClick={() => sendToKitchenMutation.mutate(activeOrder.id)}
                     disabled={sendToKitchenMutation.isPending || activeOrder.items.length === 0}
+                    data-testid="pos-send-kitchen"
                   >
                     Send to Kitchen
                   </Button>
@@ -1234,6 +1236,7 @@ export default function PosPage() {
                       variant="default"
                       className="w-full"
                       onClick={handleOpenPayment}
+                      data-testid="pos-checkout"
                     >
                       Take Payment
                     </Button>
@@ -1241,6 +1244,7 @@ export default function PosPage() {
                       variant="secondary"
                       className="w-full"
                       onClick={() => setActiveSplitOrderId(activeOrder.id)}
+                      data-testid="pos-split-bill"
                     >
                       Split Bill
                     </Button>
@@ -1252,6 +1256,7 @@ export default function PosPage() {
                     variant="secondary"
                     className="w-full"
                     onClick={handleOpenVoid}
+                    data-testid="pos-void-order"
                   >
                     Void Order
                   </Button>

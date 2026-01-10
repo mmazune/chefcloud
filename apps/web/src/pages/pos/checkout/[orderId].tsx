@@ -286,7 +286,7 @@ export default function CheckoutPage() {
         title={`Checkout - Order #${order.orderNumber}`}
         actions={
           <Link href="/pos">
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" data-testid="checkout-back">
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back to POS
             </Button>
@@ -427,6 +427,7 @@ export default function CheckoutPage() {
                   variant="outline"
                   onClick={handleCashPayment}
                   disabled={isProcessing || remainingCents === 0}
+                  data-testid="checkout-pay-cash"
                 >
                   {createPayment.isPending && createPayment.variables?.method === 'CASH' ? (
                     <Loader2 className="mr-2 h-6 w-6 animate-spin" />
@@ -441,6 +442,7 @@ export default function CheckoutPage() {
                   className="h-24 text-lg"
                   onClick={handleCardPayment}
                   disabled={isProcessing || remainingCents === 0}
+                  data-testid="checkout-pay-card"
                 >
                   {createPayment.isPending && createPayment.variables?.method === 'CARD' ? (
                     <Loader2 className="mr-2 h-6 w-6 animate-spin" />
@@ -460,6 +462,7 @@ export default function CheckoutPage() {
               className="mt-4 w-full"
               onClick={handleIssueReceipt}
               disabled={isProcessing}
+              data-testid="checkout-complete"
             >
               {issueReceipt.isPending ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

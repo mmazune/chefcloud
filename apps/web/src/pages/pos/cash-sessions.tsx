@@ -49,7 +49,8 @@ export const pageMeta = definePageMeta({
   primaryActions: [
     { label: 'Open Session', testId: 'cash-open-session', intent: 'create' },
     { label: 'Close Session', testId: 'cash-close-session', intent: 'update' },
-    { label: 'View Details', testId: 'cash-view-details', intent: 'view' },
+    { label: 'Confirm Open', testId: 'cash-confirm-open', intent: 'create' },
+    { label: 'Confirm Close', testId: 'cash-confirm-close', intent: 'update' },
   ],
   apiCalls: [
     { method: 'GET', path: '/pos/cash-sessions', trigger: 'onMount', notes: 'List sessions' },
@@ -236,7 +237,7 @@ export default function CashSessionsPage() {
               Export CSV
             </Button>
             {!openSession && (
-              <Button size="sm" onClick={() => setOpenDialogVisible(true)}>
+              <Button size="sm" onClick={() => setOpenDialogVisible(true)} data-testid="cash-open-session">
                 <Plus className="mr-2 h-4 w-4" />
                 Open Session
               </Button>
@@ -278,6 +279,7 @@ export default function CashSessionsPage() {
                   setSelectedSession(openSession);
                   setCloseDialogVisible(true);
                 }}
+                data-testid="cash-close-session"
               >
                 <XCircle className="mr-2 h-4 w-4" />
                 Close Session
@@ -395,6 +397,7 @@ export default function CashSessionsPage() {
             <Button 
               onClick={handleOpenSession}
               disabled={openSessionMutation.isPending}
+              data-testid="cash-confirm-open"
             >
               {openSessionMutation.isPending ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -450,6 +453,7 @@ export default function CashSessionsPage() {
               variant="destructive"
               onClick={handleCloseSession}
               disabled={closeSessionMutation.isPending}
+              data-testid="cash-confirm-close"
             >
               {closeSessionMutation.isPending ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

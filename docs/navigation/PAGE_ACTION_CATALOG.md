@@ -9,7 +9,7 @@
 | Metric | Value |
 |--------|-------|
 | Annotated Pages | 8 |
-| Total Actions | 36 |
+| Total Actions | 37 |
 | Total API Calls | 33 |
 | HIGH Risk Pages | 5 |
 | MEDIUM Risk Pages | 2 |
@@ -203,7 +203,8 @@
 |-------|---------|--------|
 | Open Session | `cash-open-session` | create |
 | Close Session | `cash-close-session` | update |
-| View Details | `cash-view-details` | view |
+| Confirm Open | `cash-confirm-open` | create |
+| Confirm Close | `cash-confirm-close` | update |
 
 **API Calls**:
 

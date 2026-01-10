@@ -1,0 +1,140 @@
+{
+  "role": "CASHIER",
+  "capturedAt": "2026-01-10T12:00:00.000Z",
+  "captureMethod": "static-analysis",
+  "routesVisited": [
+    "/dashboard",
+    "/pos",
+    "/pos/cash-sessions",
+    "/pos/checkout/[orderId]",
+    "/settings",
+    "/workforce/my-availability",
+    "/workforce/my-swaps",
+    "/workforce/open-shifts",
+    "/workforce/timeclock"
+  ],
+  "sidebarLinks": [
+    {
+      "label": "Dashboard",
+      "href": "/dashboard",
+      "navGroup": "Operations",
+      "isActive": false
+    },
+    {
+      "label": "My Availability",
+      "href": "/workforce/my-availability",
+      "navGroup": "My Schedule",
+      "isActive": false
+    },
+    {
+      "label": "My Swaps",
+      "href": "/workforce/my-swaps",
+      "navGroup": "My Schedule",
+      "isActive": false
+    },
+    {
+      "label": "Open Shifts",
+      "href": "/workforce/open-shifts",
+      "navGroup": "My Schedule",
+      "isActive": false
+    },
+    {
+      "label": "POS",
+      "href": "/pos",
+      "navGroup": "Operations",
+      "isActive": true
+    },
+    {
+      "label": "Settings",
+      "href": "/settings",
+      "navGroup": "Settings",
+      "isActive": false
+    },
+    {
+      "label": "Timeclock",
+      "href": "/workforce/timeclock",
+      "navGroup": "Workforce",
+      "isActive": false
+    }
+  ],
+  "actions": [
+    {
+      "route": "/pos",
+      "elementType": "button",
+      "testId": "pos-new-order",
+      "label": "New Order"
+    },
+    {
+      "route": "/pos",
+      "elementType": "button",
+      "testId": "pos-send-kitchen",
+      "label": "Send to Kitchen"
+    },
+    {
+      "route": "/pos",
+      "elementType": "button",
+      "testId": "pos-checkout",
+      "label": "Take Payment"
+    },
+    {
+      "route": "/pos",
+      "elementType": "button",
+      "testId": "pos-split-bill",
+      "label": "Split Bill"
+    },
+    {
+      "route": "/pos",
+      "elementType": "button",
+      "testId": "pos-void-order",
+      "label": "Void Order"
+    },
+    {
+      "route": "/pos/cash-sessions",
+      "elementType": "button",
+      "testId": "cash-open-session",
+      "label": "Open Session"
+    },
+    {
+      "route": "/pos/cash-sessions",
+      "elementType": "button",
+      "testId": "cash-close-session",
+      "label": "Close Session"
+    },
+    {
+      "route": "/pos/cash-sessions",
+      "elementType": "button",
+      "testId": "cash-confirm-open",
+      "label": "Open Session"
+    },
+    {
+      "route": "/pos/cash-sessions",
+      "elementType": "button",
+      "testId": "cash-confirm-close",
+      "label": "Close Session"
+    },
+    {
+      "route": "/pos/checkout/[orderId]",
+      "elementType": "button",
+      "testId": "checkout-back",
+      "label": "Back to POS"
+    },
+    {
+      "route": "/pos/checkout/[orderId]",
+      "elementType": "button",
+      "testId": "checkout-pay-cash",
+      "label": "Pay Cash"
+    },
+    {
+      "route": "/pos/checkout/[orderId]",
+      "elementType": "button",
+      "testId": "checkout-pay-card",
+      "label": "Pay Card"
+    },
+    {
+      "route": "/pos/checkout/[orderId]",
+      "elementType": "button",
+      "testId": "checkout-complete",
+      "label": "Issue Receipt"
+    }
+  ]
+}

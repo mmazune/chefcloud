@@ -10,10 +10,21 @@ import { useRouter } from 'next/router';
 import { AppErrorBoundary, type ErrorBoundaryContext } from '@/components/common/AppErrorBoundary';
 import { SkipToContentLink } from '@/components/common/SkipToContentLink';
 import { SessionIdleManager } from '@/components/auth/SessionIdleManager';
+import { initNavmapCollector, useNavmapCapture } from '@/lib/navmap';
+import { DevNavmapPanel } from '@/components/dev/DevNavmapPanel';
+
+// Phase I3: Initialize navmap collector on client side
+if (typeof window !== 'undefined') {
+  initNavmapCollector();
+}
 
 export default function App({ Component, pageProps }: AppProps) {
   const router = useRouter();
   const pathname = router.pathname || '';
+  
+  // Phase I3: Capture navigation actions when enabled
+  useNavmapCapture();
+  
   const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -44,6 +55,8 @@ export default function App({ Component, pageProps }: AppProps) {
             </SessionIdleManager>
             {/* V2.1.1: Developer debug panel */}
             <DevDebugPanel />
+            {/* Phase I3: Navmap capture panel */}
+            <DevNavmapPanel />
             {process.env.NODE_ENV === 'development' && <ReactQueryDevtools />}
           </ActiveBranchProvider>
         </AuthProvider>

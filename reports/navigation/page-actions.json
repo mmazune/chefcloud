@@ -2,7 +2,7 @@
   "generated": "2026-01-10",
   "generator": "scripts/analysis/generate-page-action-catalog.mjs",
   "pageCount": 8,
-  "totalActions": 36,
+  "totalActions": 37,
   "totalApiCalls": 33,
   "pages": {
     "/finance/journal": {
@@ -304,9 +304,14 @@
           "intent": "update"
         },
         {
-          "label": "View Details",
-          "testId": "cash-view-details",
-          "intent": "view"
+          "label": "Confirm Open",
+          "testId": "cash-confirm-open",
+          "intent": "create"
+        },
+        {
+          "label": "Confirm Close",
+          "testId": "cash-confirm-close",
+          "intent": "update"
         }
       ],
       "apiCalls": [
