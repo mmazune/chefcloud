@@ -1,0 +1,70 @@
+{
+  "role": "BARTENDER",
+  "capturedAt": "2026-01-10T18:00:00.000Z",
+  "totalLinks": 6,
+  "results": [
+    {
+      "href": "/pos",
+      "label": "POS",
+      "navGroup": "Operations",
+      "outcome": "ok",
+      "redirectedTo": null,
+      "error": null,
+      "apiCalls": [
+        { "method": "GET", "path": "/pos/open", "status": 200 },
+        { "method": "GET", "path": "/pos/menu", "status": 200 }
+      ]
+    },
+    {
+      "href": "/inventory",
+      "label": "Inventory",
+      "navGroup": "Operations",
+      "outcome": "ok",
+      "redirectedTo": null,
+      "error": null,
+      "apiCalls": []
+    },
+    {
+      "href": "/workforce/my-availability",
+      "label": "My Availability",
+      "navGroup": "My Schedule",
+      "outcome": "ok",
+      "redirectedTo": null,
+      "error": null,
+      "apiCalls": []
+    },
+    {
+      "href": "/workforce/my-swaps",
+      "label": "My Swaps",
+      "navGroup": "My Schedule",
+      "outcome": "ok",
+      "redirectedTo": null,
+      "error": null,
+      "apiCalls": []
+    },
+    {
+      "href": "/workforce/open-shifts",
+      "label": "Open Shifts",
+      "navGroup": "My Schedule",
+      "outcome": "ok",
+      "redirectedTo": null,
+      "error": null,
+      "apiCalls": []
+    },
+    {
+      "href": "/settings",
+      "label": "Settings",
+      "navGroup": "Settings",
+      "outcome": "ok",
+      "redirectedTo": null,
+      "error": null,
+      "apiCalls": []
+    }
+  ],
+  "summary": {
+    "ok": 6,
+    "redirected": 0,
+    "forbidden": 0,
+    "error": 0
+  }
+}

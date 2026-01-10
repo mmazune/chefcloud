@@ -1,0 +1,138 @@
+{
+  "role": "BARTENDER",
+  "capturedAt": "2026-01-10T18:00:00.000Z",
+  "captureMethod": "static-analysis-v2",
+  "routesVisited": [
+    "/pos",
+    "/pos/checkout/[orderId]",
+    "/inventory",
+    "/settings",
+    "/workforce/my-availability",
+    "/workforce/my-swaps",
+    "/workforce/open-shifts"
+  ],
+  "sidebarLinks": [
+    {
+      "label": "POS",
+      "href": "/pos",
+      "navGroup": "Operations",
+      "isActive": false,
+      "probeOutcome": "ok"
+    },
+    {
+      "label": "Inventory",
+      "href": "/inventory",
+      "navGroup": "Operations",
+      "isActive": false,
+      "probeOutcome": "ok"
+    },
+    {
+      "label": "My Availability",
+      "href": "/workforce/my-availability",
+      "navGroup": "My Schedule",
+      "isActive": false,
+      "probeOutcome": "ok"
+    },
+    {
+      "label": "My Swaps",
+      "href": "/workforce/my-swaps",
+      "navGroup": "My Schedule",
+      "isActive": false,
+      "probeOutcome": "ok"
+    },
+    {
+      "label": "Open Shifts",
+      "href": "/workforce/open-shifts",
+      "navGroup": "My Schedule",
+      "isActive": false,
+      "probeOutcome": "ok"
+    },
+    {
+      "label": "Settings",
+      "href": "/settings",
+      "navGroup": "Settings",
+      "isActive": false,
+      "probeOutcome": "ok"
+    }
+  ],
+  "actions": [
+    {
+      "route": "/pos",
+      "elementType": "button",
+      "testId": "pos-new-order",
+      "label": "New Order"
+    },
+    {
+      "route": "/pos",
+      "elementType": "button",
+      "testId": "pos-send-kitchen",
+      "label": "Send to Kitchen"
+    },
+    {
+      "route": "/pos",
+      "elementType": "button",
+      "testId": "pos-checkout",
+      "label": "Take Payment",
+      "attributes": {
+        "intent": "modal",
+        "note": "Opens in-page payment modal, not navigation"
+      }
+    },
+    {
+      "route": "/pos",
+      "elementType": "button",
+      "testId": "pos-split-bill",
+      "label": "Split Bill"
+    },
+    {
+      "route": "/pos/checkout/[orderId]",
+      "elementType": "button",
+      "testId": "checkout-back",
+      "label": "Back to POS"
+    },
+    {
+      "route": "/pos/checkout/[orderId]",
+      "elementType": "button",
+      "testId": "checkout-pay-cash",
+      "label": "Pay Cash"
+    },
+    {
+      "route": "/pos/checkout/[orderId]",
+      "elementType": "button",
+      "testId": "checkout-pay-card",
+      "label": "Pay Card"
+    },
+    {
+      "route": "/pos/checkout/[orderId]",
+      "elementType": "button",
+      "testId": "checkout-complete",
+      "label": "Complete Sale"
+    }
+  ],
+  "apiCallsByRoute": {
+    "/pos": [
+      { "method": "GET", "path": "/pos/open", "phase": "page-load" },
+      { "method": "GET", "path": "/pos/menu", "phase": "page-load" }
+    ],
+    "/pos/checkout/[orderId]": [
+      { "method": "GET", "path": "/pos/orders/:id", "phase": "page-load" }
+    ]
+  },
+  "probeResults": [
+    { "href": "/pos", "label": "POS", "navGroup": "Operations", "outcome": "ok" },
+    { "href": "/inventory", "label": "Inventory", "navGroup": "Operations", "outcome": "ok" },
+    { "href": "/workforce/my-availability", "label": "My Availability", "navGroup": "My Schedule", "outcome": "ok" },
+    { "href": "/workforce/my-swaps", "label": "My Swaps", "navGroup": "My Schedule", "outcome": "ok" },
+    { "href": "/workforce/open-shifts", "label": "Open Shifts", "navGroup": "My Schedule", "outcome": "ok" },
+    { "href": "/settings", "label": "Settings", "navGroup": "Settings", "outcome": "ok" }
+  ],
+  "summary": {
+    "totalRoutes": 7,
+    "totalSidebarLinks": 6,
+    "totalActions": 8,
+    "apiCallsTotal": 3,
+    "probeOk": 6,
+    "probeForbidden": 0,
+    "probeError": 0
+  }
+}
