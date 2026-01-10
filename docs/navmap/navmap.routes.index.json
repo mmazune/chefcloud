@@ -1,0 +1,1780 @@
+{
+  "generatedAt": "2026-01-10T21:57:09.110Z",
+  "totalRoles": 11,
+  "totalUniqueRoutes": 111,
+  "totalSidebarLinks": 39,
+  "routes": [
+    {
+      "route": "/analytics",
+      "roles": [
+        "OWNER",
+        "MANAGER",
+        "ACCOUNTANT"
+      ],
+      "navGroups": [
+        "Overview",
+        "Budgets & Reports"
+      ],
+      "sidebarLabels": [
+        "Analytics"
+      ],
+      "isDynamic": false
+    },
+    {
+      "route": "/analytics/franchise/[branchId]",
+      "roles": [
+        "OWNER"
+      ],
+      "navGroups": [],
+      "sidebarLabels": [],
+      "isDynamic": true
+    },
+    {
+      "route": "/billing",
+      "roles": [
+        "OWNER"
+      ],
+      "navGroups": [],
+      "sidebarLabels": [],
+      "isDynamic": false
+    },
+    {
+      "route": "/dashboard",
+      "roles": [
+        "SUPERVISOR",
+        "STOCK_MANAGER",
+        "PROCUREMENT",
+        "OWNER",
+        "MANAGER",
+        "EVENT_MANAGER",
+        "CHEF",
+        "CASHIER"
+      ],
+      "navGroups": [
+        "Overview",
+        "Reports",
+        "Events",
+        "Kitchen",
+        "Operations"
+      ],
+      "sidebarLabels": [
+        "Dashboard"
+      ],
+      "isDynamic": false
+    },
+    {
+      "route": "/documents",
+      "roles": [
+        "OWNER"
+      ],
+      "navGroups": [],
+      "sidebarLabels": [],
+      "isDynamic": false
+    },
+    {
+      "route": "/feedback",
+      "roles": [
+        "OWNER",
+        "MANAGER"
+      ],
+      "navGroups": [
+        "Team"
+      ],
+      "sidebarLabels": [
+        "Feedback"
+      ],
+      "isDynamic": false
+    },
+    {
+      "route": "/finance",
+      "roles": [
+        "OWNER",
+        "ACCOUNTANT"
+      ],
+      "navGroups": [
+        "Finance",
+        "Budgets & Reports"
+      ],
+      "sidebarLabels": [
+        "Finance",
+        "Budgets"
+      ],
+      "isDynamic": false
+    },
+    {
+      "route": "/finance/accounts",
+      "roles": [
+        "OWNER",
+        "ACCOUNTANT"
+      ],
+      "navGroups": [
+        "General Ledger"
+      ],
+      "sidebarLabels": [
+        "Chart of Accounts"
+      ],
+      "isDynamic": false
+    },
+    {
+      "route": "/finance/ap-aging",
+      "roles": [
+        "OWNER",
+        "ACCOUNTANT"
+      ],
+      "navGroups": [
+        "Payables & Receivables"
+      ],
+      "sidebarLabels": [
+        "AP Aging"
+      ],
+      "isDynamic": false
+    },
+    {
+      "route": "/finance/ar-aging",
+      "roles": [
+        "OWNER",
+        "ACCOUNTANT"
+      ],
+      "navGroups": [
+        "Payables & Receivables"
+      ],
+      "sidebarLabels": [
+        "AR Aging"
+      ],
+      "isDynamic": false
+    },
+    {
+      "route": "/finance/balance-sheet",
+      "roles": [
+        "OWNER",
+        "ACCOUNTANT"
+      ],
+      "navGroups": [
+        "Financial Statements"
+      ],
+      "sidebarLabels": [
+        "Balance Sheet"
+      ],
+      "isDynamic": false
+    },
+    {
+      "route": "/finance/credit-notes",
+      "roles": [
+        "OWNER"
+      ],
+      "navGroups": [],
+      "sidebarLabels": [],
+      "isDynamic": false
+    },
+    {
+      "route": "/finance/customer-invoices",
+      "roles": [
+        "OWNER"
+      ],
+      "navGroups": [],
+      "sidebarLabels": [],
+      "isDynamic": false
+    },
+    {
+      "route": "/finance/customer-invoices/[id]",
+      "roles": [
+        "OWNER"
+      ],
+      "navGroups": [],
+      "sidebarLabels": [],
+      "isDynamic": true
+    },
+    {
+      "route": "/finance/customers",
+      "roles": [
+        "OWNER"
+      ],
+      "navGroups": [],
+      "sidebarLabels": [],
+      "isDynamic": false
+    },
+    {
+      "route": "/finance/customers/[id]",
+      "roles": [
+        "OWNER"
+      ],
+      "navGroups": [],
+      "sidebarLabels": [],
+      "isDynamic": true
+    },
+    {
+      "route": "/finance/journal",
+      "roles": [
+        "OWNER",
+        "ACCOUNTANT"
+      ],
+      "navGroups": [
+        "General Ledger"
+      ],
+      "sidebarLabels": [
+        "Journal Entries"
+      ],
+      "isDynamic": false
+    },
+    {
+      "route": "/finance/payment-methods",
+      "roles": [
+        "OWNER"
+      ],
+      "navGroups": [],
+      "sidebarLabels": [],
+      "isDynamic": false
+    },
+    {
+      "route": "/finance/periods",
+      "roles": [
+        "OWNER",
+        "ACCOUNTANT"
+      ],
+      "navGroups": [
+        "General Ledger"
+      ],
+      "sidebarLabels": [
+        "Fiscal Periods"
+      ],
+      "isDynamic": false
+    },
+    {
+      "route": "/finance/pnl",
+      "roles": [
+        "OWNER",
+        "ACCOUNTANT"
+      ],
+      "navGroups": [
+        "Financial Statements"
+      ],
+      "sidebarLabels": [
+        "Profit & Loss"
+      ],
+      "isDynamic": false
+    },
+    {
+      "route": "/finance/trial-balance",
+      "roles": [
+        "OWNER",
+        "ACCOUNTANT"
+      ],
+      "navGroups": [
+        "Financial Statements"
+      ],
+      "sidebarLabels": [
+        "Trial Balance"
+      ],
+      "isDynamic": false
+    },
+    {
+      "route": "/finance/vendor-bills",
+      "roles": [
+        "OWNER"
+      ],
+      "navGroups": [],
+      "sidebarLabels": [],
+      "isDynamic": false
+    },
+    {
+      "route": "/finance/vendor-bills/[id]",
+      "roles": [
+        "OWNER"
+      ],
+      "navGroups": [],
+      "sidebarLabels": [],
+      "isDynamic": true
+    },
+    {
+      "route": "/finance/vendors",
+      "roles": [
+        "OWNER"
+      ],
+      "navGroups": [],
+      "sidebarLabels": [],
+      "isDynamic": false
+    },
+    {
+      "route": "/finance/vendors/[id]",
+      "roles": [
+        "OWNER"
+      ],
+      "navGroups": [],
+      "sidebarLabels": [],
+      "isDynamic": true
+    },
+    {
+      "route": "/hr",
+      "roles": [
+        "OWNER"
+      ],
+      "navGroups": [],
+      "sidebarLabels": [],
+      "isDynamic": false
+    },
+    {
+      "route": "/inventory",
+      "roles": [
+        "STOCK_MANAGER",
+        "PROCUREMENT",
+        "OWNER",
+        "MANAGER",
+        "CHEF",
+        "BARTENDER"
+      ],
+      "navGroups": [
+        "Inventory",
+        "Procurement",
+        "Operations",
+        "Kitchen"
+      ],
+      "sidebarLabels": [
+        "Inventory"
+      ],
+      "isDynamic": false
+    },
+    {
+      "route": "/inventory/accounting-mappings",
+      "roles": [
+        "OWNER"
+      ],
+      "navGroups": [],
+      "sidebarLabels": [],
+      "isDynamic": false
+    },
+    {
+      "route": "/inventory/accounting-postings",
+      "roles": [
+        "OWNER"
+      ],
+      "navGroups": [],
+      "sidebarLabels": [],
+      "isDynamic": false
+    },
+    {
+      "route": "/inventory/adjustments",
+      "roles": [
+        "STOCK_MANAGER",
+        "OWNER"
+      ],
+      "navGroups": [],
+      "sidebarLabels": [],
+      "isDynamic": false
+    },
+    {
+      "route": "/inventory/analytics",
+      "roles": [
+        "OWNER"
+      ],
+      "navGroups": [],
+      "sidebarLabels": [],
+      "isDynamic": false
+    },
+    {
+      "route": "/inventory/cogs",
+      "roles": [
+        "OWNER"
+      ],
+      "navGroups": [],
+      "sidebarLabels": [],
+      "isDynamic": false
+    },
+    {
+      "route": "/inventory/depletions",
+      "roles": [
+        "STOCK_MANAGER",
+        "PROCUREMENT",
+        "OWNER"
+      ],
+      "navGroups": [
+        "Inventory",
+        "Procurement"
+      ],
+      "sidebarLabels": [
+        "Depletions"
+      ],
+      "isDynamic": false
+    },
+    {
+      "route": "/inventory/items",
+      "roles": [
+        "STOCK_MANAGER",
+        "PROCUREMENT",
+        "OWNER",
+        "MANAGER"
+      ],
+      "navGroups": [],
+      "sidebarLabels": [],
+      "isDynamic": false
+    },
+    {
+      "route": "/inventory/items/[id]",
+      "roles": [
+        "STOCK_MANAGER",
+        "OWNER"
+      ],
+      "navGroups": [],
+      "sidebarLabels": [],
+      "isDynamic": true
+    },
+    {
+      "route": "/inventory/lots",
+      "roles": [
+        "STOCK_MANAGER",
+        "OWNER"
+      ],
+      "navGroups": [],
+      "sidebarLabels": [],
+      "isDynamic": false
+    },
+    {
+      "route": "/inventory/lots/[id]",
+      "roles": [
+        "STOCK_MANAGER"
+      ],
+      "navGroups": [],
+      "sidebarLabels": [],
+      "isDynamic": true
+    },
+    {
+      "route": "/inventory/period-close",
+      "roles": [
+        "STOCK_MANAGER",
+        "PROCUREMENT",
+        "OWNER"
+      ],
+      "navGroups": [
+        "Inventory",
+        "Procurement"
+      ],
+      "sidebarLabels": [
+        "Period Close"
+      ],
+      "isDynamic": false
+    },
+    {
+      "route": "/inventory/purchase-orders",
+      "roles": [
+        "STOCK_MANAGER",
+        "PROCUREMENT",
+        "OWNER",
+        "MANAGER"
+      ],
+      "navGroups": [
+        "Inventory",
+        "Procurement"
+      ],
+      "sidebarLabels": [
+        "Purchase Orders"
+      ],
+      "isDynamic": false
+    },
+    {
+      "route": "/inventory/purchase-orders/[id]",
+      "roles": [
+        "PROCUREMENT",
+        "OWNER"
+      ],
+      "navGroups": [],
+      "sidebarLabels": [],
+      "isDynamic": true
+    },
+    {
+      "route": "/inventory/receipts",
+      "roles": [
+        "STOCK_MANAGER",
+        "PROCUREMENT",
+        "OWNER"
+      ],
+      "navGroups": [
+        "Inventory",
+        "Procurement"
+      ],
+      "sidebarLabels": [
+        "Receipts"
+      ],
+      "isDynamic": false
+    },
+    {
+      "route": "/inventory/receipts/[id]",
+      "roles": [
+        "PROCUREMENT",
+        "OWNER"
+      ],
+      "navGroups": [],
+      "sidebarLabels": [],
+      "isDynamic": true
+    },
+    {
+      "route": "/inventory/recipes",
+      "roles": [
+        "STOCK_MANAGER",
+        "PROCUREMENT",
+        "OWNER"
+      ],
+      "navGroups": [
+        "Inventory",
+        "Procurement"
+      ],
+      "sidebarLabels": [
+        "Recipes"
+      ],
+      "isDynamic": false
+    },
+    {
+      "route": "/inventory/stocktakes",
+      "roles": [
+        "STOCK_MANAGER",
+        "OWNER"
+      ],
+      "navGroups": [],
+      "sidebarLabels": [],
+      "isDynamic": false
+    },
+    {
+      "route": "/inventory/stocktakes/[id]",
+      "roles": [
+        "STOCK_MANAGER",
+        "OWNER"
+      ],
+      "navGroups": [],
+      "sidebarLabels": [],
+      "isDynamic": true
+    },
+    {
+      "route": "/inventory/transfers",
+      "roles": [
+        "STOCK_MANAGER",
+        "PROCUREMENT",
+        "OWNER"
+      ],
+      "navGroups": [
+        "Inventory",
+        "Procurement"
+      ],
+      "sidebarLabels": [
+        "Transfers"
+      ],
+      "isDynamic": false
+    },
+    {
+      "route": "/inventory/transfers/[id]",
+      "roles": [
+        "STOCK_MANAGER",
+        "OWNER"
+      ],
+      "navGroups": [],
+      "sidebarLabels": [],
+      "isDynamic": true
+    },
+    {
+      "route": "/inventory/valuation",
+      "roles": [
+        "OWNER"
+      ],
+      "navGroups": [],
+      "sidebarLabels": [],
+      "isDynamic": false
+    },
+    {
+      "route": "/inventory/waste",
+      "roles": [
+        "STOCK_MANAGER",
+        "PROCUREMENT",
+        "OWNER"
+      ],
+      "navGroups": [
+        "Inventory",
+        "Procurement"
+      ],
+      "sidebarLabels": [
+        "Waste"
+      ],
+      "isDynamic": false
+    },
+    {
+      "route": "/inventory/waste/[id]",
+      "roles": [
+        "STOCK_MANAGER",
+        "OWNER"
+      ],
+      "navGroups": [],
+      "sidebarLabels": [],
+      "isDynamic": true
+    },
+    {
+      "route": "/kds",
+      "roles": [
+        "OWNER",
+        "MANAGER",
+        "CHEF"
+      ],
+      "navGroups": [
+        "Kitchen"
+      ],
+      "sidebarLabels": [
+        "KDS"
+      ],
+      "isDynamic": false
+    },
+    {
+      "route": "/pos",
+      "roles": [
+        "WAITER",
+        "SUPERVISOR",
+        "OWNER",
+        "MANAGER",
+        "EVENT_MANAGER",
+        "CASHIER",
+        "BARTENDER"
+      ],
+      "navGroups": [
+        "Operations"
+      ],
+      "sidebarLabels": [
+        "POS"
+      ],
+      "isDynamic": false
+    },
+    {
+      "route": "/pos/cash-sessions",
+      "roles": [
+        "SUPERVISOR",
+        "OWNER",
+        "MANAGER",
+        "CASHIER"
+      ],
+      "navGroups": [],
+      "sidebarLabels": [],
+      "isDynamic": false
+    },
+    {
+      "route": "/pos/checkout/[orderId]",
+      "roles": [
+        "WAITER",
+        "SUPERVISOR",
+        "OWNER",
+        "MANAGER",
+        "EVENT_MANAGER",
+        "CASHIER",
+        "BARTENDER"
+      ],
+      "navGroups": [],
+      "sidebarLabels": [],
+      "isDynamic": true
+    },
+    {
+      "route": "/pos/receipts/[id]",
+      "roles": [
+        "OWNER"
+      ],
+      "navGroups": [],
+      "sidebarLabels": [],
+      "isDynamic": true
+    },
+    {
+      "route": "/reports",
+      "roles": [
+        "STOCK_MANAGER",
+        "PROCUREMENT",
+        "OWNER",
+        "MANAGER",
+        "ACCOUNTANT"
+      ],
+      "navGroups": [
+        "Inventory",
+        "Reports",
+        "Overview",
+        "Budgets & Reports"
+      ],
+      "sidebarLabels": [
+        "Reports"
+      ],
+      "isDynamic": false
+    },
+    {
+      "route": "/reports/budgets",
+      "roles": [
+        "OWNER"
+      ],
+      "navGroups": [],
+      "sidebarLabels": [],
+      "isDynamic": false
+    },
+    {
+      "route": "/reports/subscriptions",
+      "roles": [
+        "OWNER"
+      ],
+      "navGroups": [],
+      "sidebarLabels": [],
+      "isDynamic": false
+    },
+    {
+      "route": "/reservations",
+      "roles": [
+        "WAITER",
+        "SUPERVISOR",
+        "OWNER",
+        "MANAGER",
+        "EVENT_MANAGER"
+      ],
+      "navGroups": [
+        "Operations",
+        "Events"
+      ],
+      "sidebarLabels": [
+        "Reservations"
+      ],
+      "isDynamic": false
+    },
+    {
+      "route": "/reservations/blackouts",
+      "roles": [
+        "OWNER",
+        "EVENT_MANAGER"
+      ],
+      "navGroups": [],
+      "sidebarLabels": [],
+      "isDynamic": false
+    },
+    {
+      "route": "/reservations/branch-hours",
+      "roles": [
+        "EVENT_MANAGER"
+      ],
+      "navGroups": [],
+      "sidebarLabels": [],
+      "isDynamic": false
+    },
+    {
+      "route": "/reservations/calendar",
+      "roles": [
+        "OWNER",
+        "EVENT_MANAGER"
+      ],
+      "navGroups": [],
+      "sidebarLabels": [],
+      "isDynamic": false
+    },
+    {
+      "route": "/reservations/capacity",
+      "roles": [
+        "OWNER",
+        "EVENT_MANAGER"
+      ],
+      "navGroups": [],
+      "sidebarLabels": [],
+      "isDynamic": false
+    },
+    {
+      "route": "/reservations/policies",
+      "roles": [
+        "OWNER",
+        "EVENT_MANAGER"
+      ],
+      "navGroups": [],
+      "sidebarLabels": [],
+      "isDynamic": false
+    },
+    {
+      "route": "/reservations/sla-reports",
+      "roles": [
+        "EVENT_MANAGER"
+      ],
+      "navGroups": [],
+      "sidebarLabels": [],
+      "isDynamic": false
+    },
+    {
+      "route": "/reservations/today-board",
+      "roles": [
+        "OWNER",
+        "EVENT_MANAGER"
+      ],
+      "navGroups": [],
+      "sidebarLabels": [],
+      "isDynamic": false
+    },
+    {
+      "route": "/security",
+      "roles": [
+        "OWNER"
+      ],
+      "navGroups": [],
+      "sidebarLabels": [],
+      "isDynamic": false
+    },
+    {
+      "route": "/service-providers",
+      "roles": [
+        "PROCUREMENT",
+        "OWNER",
+        "ACCOUNTANT"
+      ],
+      "navGroups": [
+        "Procurement",
+        "Finance",
+        "Payables & Receivables"
+      ],
+      "sidebarLabels": [
+        "Service Providers"
+      ],
+      "isDynamic": false
+    },
+    {
+      "route": "/service-providers/[id]",
+      "roles": [
+        "PROCUREMENT"
+      ],
+      "navGroups": [],
+      "sidebarLabels": [],
+      "isDynamic": true
+    },
+    {
+      "route": "/settings",
+      "roles": [
+        "WAITER",
+        "SUPERVISOR",
+        "STOCK_MANAGER",
+        "PROCUREMENT",
+        "OWNER",
+        "MANAGER",
+        "EVENT_MANAGER",
+        "CHEF",
+        "CASHIER",
+        "BARTENDER"
+      ],
+      "navGroups": [
+        "Settings"
+      ],
+      "sidebarLabels": [
+        "Settings"
+      ],
+      "isDynamic": false
+    },
+    {
+      "route": "/staff",
+      "roles": [
+        "SUPERVISOR",
+        "OWNER",
+        "MANAGER",
+        "EVENT_MANAGER"
+      ],
+      "navGroups": [
+        "Operations",
+        "Team"
+      ],
+      "sidebarLabels": [
+        "Staff"
+      ],
+      "isDynamic": false
+    },
+    {
+      "route": "/staff/insights",
+      "roles": [
+        "OWNER"
+      ],
+      "navGroups": [],
+      "sidebarLabels": [],
+      "isDynamic": false
+    },
+    {
+      "route": "/waitlist",
+      "roles": [
+        "OWNER",
+        "EVENT_MANAGER"
+      ],
+      "navGroups": [],
+      "sidebarLabels": [],
+      "isDynamic": false
+    },
+    {
+      "route": "/workforce/approvals",
+      "roles": [
+        "OWNER",
+        "MANAGER"
+      ],
+      "navGroups": [
+        "Workforce"
+      ],
+      "sidebarLabels": [
+        "Approvals"
+      ],
+      "isDynamic": false
+    },
+    {
+      "route": "/workforce/auto-scheduler",
+      "roles": [
+        "OWNER",
+        "MANAGER"
+      ],
+      "navGroups": [
+        "Workforce"
+      ],
+      "sidebarLabels": [
+        "Auto-Scheduler"
+      ],
+      "isDynamic": false
+    },
+    {
+      "route": "/workforce/compensation",
+      "roles": [
+        "OWNER"
+      ],
+      "navGroups": [],
+      "sidebarLabels": [],
+      "isDynamic": false
+    },
+    {
+      "route": "/workforce/geo-fence",
+      "roles": [
+        "OWNER"
+      ],
+      "navGroups": [],
+      "sidebarLabels": [],
+      "isDynamic": false
+    },
+    {
+      "route": "/workforce/kiosk-devices",
+      "roles": [
+        "OWNER"
+      ],
+      "navGroups": [],
+      "sidebarLabels": [],
+      "isDynamic": false
+    },
+    {
+      "route": "/workforce/labor",
+      "roles": [
+        "OWNER",
+        "MANAGER"
+      ],
+      "navGroups": [
+        "Workforce"
+      ],
+      "sidebarLabels": [
+        "Labor Reports"
+      ],
+      "isDynamic": false
+    },
+    {
+      "route": "/workforce/labor-targets",
+      "roles": [
+        "OWNER",
+        "MANAGER"
+      ],
+      "navGroups": [
+        "Workforce"
+      ],
+      "sidebarLabels": [
+        "Labor Targets"
+      ],
+      "isDynamic": false
+    },
+    {
+      "route": "/workforce/my-availability",
+      "roles": [
+        "WAITER",
+        "SUPERVISOR",
+        "STOCK_MANAGER",
+        "PROCUREMENT",
+        "OWNER",
+        "MANAGER",
+        "EVENT_MANAGER",
+        "CHEF",
+        "CASHIER",
+        "BARTENDER",
+        "ACCOUNTANT"
+      ],
+      "navGroups": [
+        "My Schedule"
+      ],
+      "sidebarLabels": [
+        "My Availability"
+      ],
+      "isDynamic": false
+    },
+    {
+      "route": "/workforce/my-swaps",
+      "roles": [
+        "WAITER",
+        "SUPERVISOR",
+        "STOCK_MANAGER",
+        "PROCUREMENT",
+        "OWNER",
+        "MANAGER",
+        "EVENT_MANAGER",
+        "CHEF",
+        "CASHIER",
+        "BARTENDER",
+        "ACCOUNTANT"
+      ],
+      "navGroups": [
+        "My Schedule"
+      ],
+      "sidebarLabels": [
+        "My Swaps"
+      ],
+      "isDynamic": false
+    },
+    {
+      "route": "/workforce/open-shifts",
+      "roles": [
+        "WAITER",
+        "SUPERVISOR",
+        "STOCK_MANAGER",
+        "PROCUREMENT",
+        "OWNER",
+        "MANAGER",
+        "EVENT_MANAGER",
+        "CHEF",
+        "CASHIER",
+        "BARTENDER",
+        "ACCOUNTANT"
+      ],
+      "navGroups": [
+        "My Schedule"
+      ],
+      "sidebarLabels": [
+        "Open Shifts"
+      ],
+      "isDynamic": false
+    },
+    {
+      "route": "/workforce/pay-periods",
+      "roles": [
+        "OWNER"
+      ],
+      "navGroups": [],
+      "sidebarLabels": [],
+      "isDynamic": false
+    },
+    {
+      "route": "/workforce/payroll-export",
+      "roles": [
+        "OWNER"
+      ],
+      "navGroups": [],
+      "sidebarLabels": [],
+      "isDynamic": false
+    },
+    {
+      "route": "/workforce/payroll-mapping",
+      "roles": [
+        "OWNER"
+      ],
+      "navGroups": [],
+      "sidebarLabels": [],
+      "isDynamic": false
+    },
+    {
+      "route": "/workforce/payroll-runs",
+      "roles": [
+        "OWNER"
+      ],
+      "navGroups": [],
+      "sidebarLabels": [],
+      "isDynamic": false
+    },
+    {
+      "route": "/workforce/payroll-runs/[id]",
+      "roles": [
+        "OWNER"
+      ],
+      "navGroups": [],
+      "sidebarLabels": [],
+      "isDynamic": true
+    },
+    {
+      "route": "/workforce/payroll-runs/new",
+      "roles": [
+        "OWNER"
+      ],
+      "navGroups": [],
+      "sidebarLabels": [],
+      "isDynamic": false
+    },
+    {
+      "route": "/workforce/payslips",
+      "roles": [
+        "OWNER"
+      ],
+      "navGroups": [],
+      "sidebarLabels": [],
+      "isDynamic": false
+    },
+    {
+      "route": "/workforce/payslips/[id]",
+      "roles": [
+        "OWNER"
+      ],
+      "navGroups": [],
+      "sidebarLabels": [],
+      "isDynamic": true
+    },
+    {
+      "route": "/workforce/policies",
+      "roles": [
+        "OWNER"
+      ],
+      "navGroups": [],
+      "sidebarLabels": [],
+      "isDynamic": false
+    },
+    {
+      "route": "/workforce/remittance-mappings",
+      "roles": [
+        "OWNER"
+      ],
+      "navGroups": [],
+      "sidebarLabels": [],
+      "isDynamic": false
+    },
+    {
+      "route": "/workforce/remittance-providers",
+      "roles": [
+        "OWNER"
+      ],
+      "navGroups": [],
+      "sidebarLabels": [],
+      "isDynamic": false
+    },
+    {
+      "route": "/workforce/remittances",
+      "roles": [
+        "OWNER"
+      ],
+      "navGroups": [],
+      "sidebarLabels": [],
+      "isDynamic": false
+    },
+    {
+      "route": "/workforce/remittances/[id]",
+      "roles": [
+        "OWNER"
+      ],
+      "navGroups": [],
+      "sidebarLabels": [],
+      "isDynamic": true
+    },
+    {
+      "route": "/workforce/remittances/new",
+      "roles": [
+        "OWNER"
+      ],
+      "navGroups": [],
+      "sidebarLabels": [],
+      "isDynamic": false
+    },
+    {
+      "route": "/workforce/schedule",
+      "roles": [
+        "OWNER",
+        "MANAGER"
+      ],
+      "navGroups": [
+        "Workforce"
+      ],
+      "sidebarLabels": [
+        "Schedule"
+      ],
+      "isDynamic": false
+    },
+    {
+      "route": "/workforce/staffing-alerts",
+      "roles": [
+        "OWNER",
+        "MANAGER"
+      ],
+      "navGroups": [
+        "Workforce"
+      ],
+      "sidebarLabels": [
+        "Staffing Alerts"
+      ],
+      "isDynamic": false
+    },
+    {
+      "route": "/workforce/staffing-planner",
+      "roles": [
+        "OWNER",
+        "MANAGER"
+      ],
+      "navGroups": [
+        "Workforce"
+      ],
+      "sidebarLabels": [
+        "Staffing Planner"
+      ],
+      "isDynamic": false
+    },
+    {
+      "route": "/workforce/swaps",
+      "roles": [
+        "SUPERVISOR",
+        "OWNER",
+        "MANAGER"
+      ],
+      "navGroups": [
+        "Workforce"
+      ],
+      "sidebarLabels": [
+        "Swap Approvals"
+      ],
+      "isDynamic": false
+    },
+    {
+      "route": "/workforce/timeclock",
+      "roles": [
+        "SUPERVISOR",
+        "OWNER",
+        "MANAGER",
+        "CHEF",
+        "CASHIER"
+      ],
+      "navGroups": [
+        "Workforce"
+      ],
+      "sidebarLabels": [
+        "Timeclock"
+      ],
+      "isDynamic": false
+    },
+    {
+      "route": "/workforce/timesheets",
+      "roles": [
+        "OWNER"
+      ],
+      "navGroups": [],
+      "sidebarLabels": [],
+      "isDynamic": false
+    },
+    {
+      "route": "/workspaces/accountant",
+      "roles": [
+        "ACCOUNTANT"
+      ],
+      "navGroups": [],
+      "sidebarLabels": [],
+      "isDynamic": false
+    },
+    {
+      "route": "/workspaces/chef",
+      "roles": [
+        "CHEF"
+      ],
+      "navGroups": [],
+      "sidebarLabels": [],
+      "isDynamic": false
+    },
+    {
+      "route": "/workspaces/event-manager",
+      "roles": [
+        "EVENT_MANAGER"
+      ],
+      "navGroups": [],
+      "sidebarLabels": [],
+      "isDynamic": false
+    },
+    {
+      "route": "/workspaces/manager",
+      "roles": [
+        "MANAGER"
+      ],
+      "navGroups": [],
+      "sidebarLabels": [],
+      "isDynamic": false
+    },
+    {
+      "route": "/workspaces/owner",
+      "roles": [
+        "OWNER"
+      ],
+      "navGroups": [],
+      "sidebarLabels": [],
+      "isDynamic": false
+    },
+    {
+      "route": "/workspaces/procurement",
+      "roles": [
+        "PROCUREMENT"
+      ],
+      "navGroups": [],
+      "sidebarLabels": [],
+      "isDynamic": false
+    },
+    {
+      "route": "/workspaces/stock-manager",
+      "roles": [
+        "STOCK_MANAGER"
+      ],
+      "navGroups": [],
+      "sidebarLabels": [],
+      "isDynamic": false
+    },
+    {
+      "route": "/workspaces/supervisor",
+      "roles": [
+        "SUPERVISOR"
+      ],
+      "navGroups": [],
+      "sidebarLabels": [],
+      "isDynamic": false
+    }
+  ],
+  "sidebarLinks": [
+    {
+      "href": "/analytics",
+      "label": "Analytics",
+      "navGroup": "Overview",
+      "roles": [
+        "OWNER",
+        "MANAGER",
+        "ACCOUNTANT"
+      ]
+    },
+    {
+      "href": "/dashboard",
+      "label": "Dashboard",
+      "navGroup": "Overview",
+      "roles": [
+        "SUPERVISOR",
+        "STOCK_MANAGER",
+        "PROCUREMENT",
+        "OWNER",
+        "MANAGER",
+        "EVENT_MANAGER",
+        "CHEF",
+        "CASHIER"
+      ]
+    },
+    {
+      "href": "/feedback",
+      "label": "Feedback",
+      "navGroup": "Team",
+      "roles": [
+        "OWNER",
+        "MANAGER"
+      ]
+    },
+    {
+      "href": "/finance",
+      "label": "Finance",
+      "navGroup": "Finance",
+      "roles": [
+        "OWNER",
+        "ACCOUNTANT"
+      ]
+    },
+    {
+      "href": "/finance/accounts",
+      "label": "Chart of Accounts",
+      "navGroup": "General Ledger",
+      "roles": [
+        "ACCOUNTANT"
+      ]
+    },
+    {
+      "href": "/finance/ap-aging",
+      "label": "AP Aging",
+      "navGroup": "Payables & Receivables",
+      "roles": [
+        "ACCOUNTANT"
+      ]
+    },
+    {
+      "href": "/finance/ar-aging",
+      "label": "AR Aging",
+      "navGroup": "Payables & Receivables",
+      "roles": [
+        "ACCOUNTANT"
+      ]
+    },
+    {
+      "href": "/finance/balance-sheet",
+      "label": "Balance Sheet",
+      "navGroup": "Financial Statements",
+      "roles": [
+        "ACCOUNTANT"
+      ]
+    },
+    {
+      "href": "/finance/journal",
+      "label": "Journal Entries",
+      "navGroup": "General Ledger",
+      "roles": [
+        "ACCOUNTANT"
+      ]
+    },
+    {
+      "href": "/finance/periods",
+      "label": "Fiscal Periods",
+      "navGroup": "General Ledger",
+      "roles": [
+        "ACCOUNTANT"
+      ]
+    },
+    {
+      "href": "/finance/pnl",
+      "label": "Profit & Loss",
+      "navGroup": "Financial Statements",
+      "roles": [
+        "ACCOUNTANT"
+      ]
+    },
+    {
+      "href": "/finance/trial-balance",
+      "label": "Trial Balance",
+      "navGroup": "Financial Statements",
+      "roles": [
+        "ACCOUNTANT"
+      ]
+    },
+    {
+      "href": "/inventory",
+      "label": "Inventory",
+      "navGroup": "Inventory",
+      "roles": [
+        "STOCK_MANAGER",
+        "PROCUREMENT",
+        "OWNER",
+        "MANAGER",
+        "CHEF",
+        "BARTENDER"
+      ]
+    },
+    {
+      "href": "/inventory/depletions",
+      "label": "Depletions",
+      "navGroup": "Inventory",
+      "roles": [
+        "STOCK_MANAGER",
+        "PROCUREMENT"
+      ]
+    },
+    {
+      "href": "/inventory/period-close",
+      "label": "Period Close",
+      "navGroup": "Inventory",
+      "roles": [
+        "STOCK_MANAGER",
+        "PROCUREMENT"
+      ]
+    },
+    {
+      "href": "/inventory/purchase-orders",
+      "label": "Purchase Orders",
+      "navGroup": "Inventory",
+      "roles": [
+        "STOCK_MANAGER",
+        "PROCUREMENT"
+      ]
+    },
+    {
+      "href": "/inventory/receipts",
+      "label": "Receipts",
+      "navGroup": "Inventory",
+      "roles": [
+        "STOCK_MANAGER",
+        "PROCUREMENT"
+      ]
+    },
+    {
+      "href": "/inventory/recipes",
+      "label": "Recipes",
+      "navGroup": "Inventory",
+      "roles": [
+        "STOCK_MANAGER",
+        "PROCUREMENT"
+      ]
+    },
+    {
+      "href": "/inventory/transfers",
+      "label": "Transfers",
+      "navGroup": "Inventory",
+      "roles": [
+        "STOCK_MANAGER",
+        "PROCUREMENT"
+      ]
+    },
+    {
+      "href": "/inventory/waste",
+      "label": "Waste",
+      "navGroup": "Inventory",
+      "roles": [
+        "STOCK_MANAGER",
+        "PROCUREMENT"
+      ]
+    },
+    {
+      "href": "/kds",
+      "label": "KDS",
+      "navGroup": "Kitchen",
+      "roles": [
+        "CHEF"
+      ]
+    },
+    {
+      "href": "/pos",
+      "label": "POS",
+      "navGroup": "Operations",
+      "roles": [
+        "WAITER",
+        "SUPERVISOR",
+        "OWNER",
+        "MANAGER",
+        "EVENT_MANAGER",
+        "CASHIER",
+        "BARTENDER"
+      ]
+    },
+    {
+      "href": "/reports",
+      "label": "Reports",
+      "navGroup": "Inventory",
+      "roles": [
+        "STOCK_MANAGER",
+        "PROCUREMENT",
+        "OWNER",
+        "MANAGER",
+        "ACCOUNTANT"
+      ]
+    },
+    {
+      "href": "/reservations",
+      "label": "Reservations",
+      "navGroup": "Operations",
+      "roles": [
+        "WAITER",
+        "SUPERVISOR",
+        "OWNER",
+        "MANAGER",
+        "EVENT_MANAGER"
+      ]
+    },
+    {
+      "href": "/service-providers",
+      "label": "Service Providers",
+      "navGroup": "Procurement",
+      "roles": [
+        "PROCUREMENT",
+        "OWNER",
+        "ACCOUNTANT"
+      ]
+    },
+    {
+      "href": "/settings",
+      "label": "Settings",
+      "navGroup": "Settings",
+      "roles": [
+        "WAITER",
+        "SUPERVISOR",
+        "STOCK_MANAGER",
+        "PROCUREMENT",
+        "OWNER",
+        "MANAGER",
+        "EVENT_MANAGER",
+        "CHEF",
+        "CASHIER",
+        "BARTENDER"
+      ]
+    },
+    {
+      "href": "/staff",
+      "label": "Staff",
+      "navGroup": "Operations",
+      "roles": [
+        "SUPERVISOR",
+        "OWNER",
+        "MANAGER",
+        "EVENT_MANAGER"
+      ]
+    },
+    {
+      "href": "/workforce/approvals",
+      "label": "Approvals",
+      "navGroup": "Workforce",
+      "roles": [
+        "OWNER",
+        "MANAGER"
+      ]
+    },
+    {
+      "href": "/workforce/auto-scheduler",
+      "label": "Auto-Scheduler",
+      "navGroup": "Workforce",
+      "roles": [
+        "OWNER",
+        "MANAGER"
+      ]
+    },
+    {
+      "href": "/workforce/labor",
+      "label": "Labor Reports",
+      "navGroup": "Workforce",
+      "roles": [
+        "OWNER",
+        "MANAGER"
+      ]
+    },
+    {
+      "href": "/workforce/labor-targets",
+      "label": "Labor Targets",
+      "navGroup": "Workforce",
+      "roles": [
+        "OWNER",
+        "MANAGER"
+      ]
+    },
+    {
+      "href": "/workforce/my-availability",
+      "label": "My Availability",
+      "navGroup": "My Schedule",
+      "roles": [
+        "WAITER",
+        "SUPERVISOR",
+        "STOCK_MANAGER",
+        "PROCUREMENT",
+        "OWNER",
+        "MANAGER",
+        "EVENT_MANAGER",
+        "CHEF",
+        "CASHIER",
+        "BARTENDER",
+        "ACCOUNTANT"
+      ]
+    },
+    {
+      "href": "/workforce/my-swaps",
+      "label": "My Swaps",
+      "navGroup": "My Schedule",
+      "roles": [
+        "WAITER",
+        "SUPERVISOR",
+        "STOCK_MANAGER",
+        "PROCUREMENT",
+        "OWNER",
+        "MANAGER",
+        "EVENT_MANAGER",
+        "CHEF",
+        "CASHIER",
+        "BARTENDER",
+        "ACCOUNTANT"
+      ]
+    },
+    {
+      "href": "/workforce/open-shifts",
+      "label": "Open Shifts",
+      "navGroup": "My Schedule",
+      "roles": [
+        "WAITER",
+        "SUPERVISOR",
+        "STOCK_MANAGER",
+        "PROCUREMENT",
+        "OWNER",
+        "MANAGER",
+        "EVENT_MANAGER",
+        "CHEF",
+        "CASHIER",
+        "BARTENDER",
+        "ACCOUNTANT"
+      ]
+    },
+    {
+      "href": "/workforce/schedule",
+      "label": "Schedule",
+      "navGroup": "Workforce",
+      "roles": [
+        "OWNER",
+        "MANAGER"
+      ]
+    },
+    {
+      "href": "/workforce/staffing-alerts",
+      "label": "Staffing Alerts",
+      "navGroup": "Workforce",
+      "roles": [
+        "OWNER",
+        "MANAGER"
+      ]
+    },
+    {
+      "href": "/workforce/staffing-planner",
+      "label": "Staffing Planner",
+      "navGroup": "Workforce",
+      "roles": [
+        "OWNER",
+        "MANAGER"
+      ]
+    },
+    {
+      "href": "/workforce/swaps",
+      "label": "Swap Approvals",
+      "navGroup": "Workforce",
+      "roles": [
+        "SUPERVISOR",
+        "OWNER",
+        "MANAGER"
+      ]
+    },
+    {
+      "href": "/workforce/timeclock",
+      "label": "Timeclock",
+      "navGroup": "Workforce",
+      "roles": [
+        "SUPERVISOR",
+        "OWNER",
+        "MANAGER",
+        "CHEF",
+        "CASHIER"
+      ]
+    }
+  ],
+  "rolesSummary": {
+    "WAITER": {
+      "routeCount": 7,
+      "sidebarLinkCount": 6
+    },
+    "SUPERVISOR": {
+      "routeCount": 13,
+      "sidebarLinkCount": 10
+    },
+    "STOCK_MANAGER": {
+      "routeCount": 24,
+      "sidebarLinkCount": 14
+    },
+    "PROCUREMENT": {
+      "routeCount": 20,
+      "sidebarLinkCount": 15
+    },
+    "OWNER": {
+      "routeCount": 100,
+      "sidebarLinkCount": 23
+    },
+    "MANAGER": {
+      "routeCount": 27,
+      "sidebarLinkCount": 21
+    },
+    "EVENT_MANAGER": {
+      "routeCount": 18,
+      "sidebarLinkCount": 8
+    },
+    "CHEF": {
+      "routeCount": 9,
+      "sidebarLinkCount": 8
+    },
+    "CASHIER": {
+      "routeCount": 9,
+      "sidebarLinkCount": 7
+    },
+    "BARTENDER": {
+      "routeCount": 7,
+      "sidebarLinkCount": 6
+    },
+    "ACCOUNTANT": {
+      "routeCount": 16,
+      "sidebarLinkCount": 15
+    }
+  }
+}

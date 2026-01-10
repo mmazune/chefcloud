@@ -174,6 +174,36 @@ This script:
 
 **Safety:** Only operates on orgs with `isDemo=true` AND matching slug. Will not affect real customer data.
 
+### Route Realization Policy
+
+Every sidebar link and navigation route must resolve to a valid page. This is enforced by CI.
+
+**Route Categories:**
+- **Implemented**: Full functionality with real data wiring
+- **Stub**: Placeholder with "Coming Soon" messaging, consistent layout, quick links to related pages
+
+**Adding a New Route:**
+1. Create page in `apps/web/src/pages/` following the route path
+2. Wrap in `RouteGuard` if it requires role-based access
+3. Run `npx tsx scripts/build-route-index.ts` to regenerate the index
+4. Run `npx tsx scripts/verify-routes.ts` to validate
+
+**CI Enforcement:**
+```bash
+# Build the route index (reads runtime JSONs)
+npx tsx scripts/build-route-index.ts
+
+# Verify all routes have pages
+npx tsx scripts/verify-routes.ts
+
+# Run the route realization test
+pnpm test -- route-realization.test.ts
+```
+
+**Artifacts:**
+- `docs/navmap/navmap.routes.index.json` - Machine-readable route index
+- `docs/navmap/navmap.routes.index.md` - Human-readable documentation
+
 ### 5. Build & Test
 
 ```bash
