@@ -11,7 +11,11 @@
     "test:watch": "jest --config ./jest.config.ts --watch",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "test:e2e:headed": "playwright test --headed"
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:ui-map": "playwright test ui-owner-map.spec.ts",
+    "test:e2e:ui-map:headed": "playwright test ui-owner-map.spec.ts --headed",
+    "ui-map:report": "npx tsx e2e/ui-map/generate-report.ts",
+    "ui-map:gate": "npx tsx e2e/ui-map/testability-gate.ts"
   },
   "dependencies": {
     "@chefcloud/contracts": "workspace:*",

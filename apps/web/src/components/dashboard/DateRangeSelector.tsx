@@ -72,9 +72,9 @@ export function DateRangeSelector({
   };
 
   return (
-    <div className={cn('flex flex-wrap items-center gap-2', className)}>
+    <div className={cn('flex flex-wrap items-center gap-2', className)} data-testid="date-range-selector">
       {/* Preset buttons */}
-      <div className="flex gap-1 rounded-lg bg-muted p-1">
+      <div className="flex gap-1 rounded-lg bg-muted p-1" data-testid="date-preset-group">
         {presets.map((preset) => (
           <button
             key={preset}
@@ -85,6 +85,9 @@ export function DateRangeSelector({
                 ? 'bg-white text-chefcloud-navy shadow-sm'
                 : 'text-muted-foreground hover:text-foreground'
             )}
+            data-testid={`date-preset-${preset}`}
+            aria-pressed={activePreset === preset}
+            aria-label={`Select ${presetLabels[preset]} date range`}
           >
             {presetLabels[preset]}
           </button>
@@ -93,7 +96,7 @@ export function DateRangeSelector({
 
       {/* Custom date inputs */}
       {showCustomInputs && (
-        <div className="flex items-center gap-2 text-sm">
+        <div className="flex items-center gap-2 text-sm" data-testid="date-custom-inputs">
           <Calendar className="h-4 w-4 text-muted-foreground" />
           <input
             type="date"
@@ -103,6 +106,8 @@ export function DateRangeSelector({
               onPresetChange?.('custom');
             }}
             className="rounded-md border border-input bg-background px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-chefcloud-blue/20"
+            data-testid="date-from-input"
+            aria-label="Start date"
           />
           <span className="text-muted-foreground">to</span>
           <input
@@ -113,6 +118,8 @@ export function DateRangeSelector({
               onPresetChange?.('custom');
             }}
             className="rounded-md border border-input bg-background px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-chefcloud-blue/20"
+            data-testid="date-to-input"
+            aria-label="End date"
           />
         </div>
       )}

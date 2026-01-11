@@ -1,0 +1,3903 @@
+{
+  "role": "OWNER",
+  "generatedAt": "2026-01-11T07:13:52.257Z",
+  "baseUrl": "http://localhost:3000",
+  "routes": [
+    {
+      "route": "/dashboard",
+      "title": "",
+      "screenshot": "",
+      "visited": false,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": []
+      },
+      "visitError": "Redirected to /login"
+    },
+    {
+      "route": "/analytics",
+      "title": "",
+      "screenshot": "",
+      "visited": false,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": []
+      },
+      "visitError": "Redirected to /login"
+    },
+    {
+      "route": "/reports",
+      "title": "",
+      "screenshot": "",
+      "visited": false,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": []
+      },
+      "visitError": "Redirected to /login"
+    },
+    {
+      "route": "/pos",
+      "title": "",
+      "screenshot": "",
+      "visited": false,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": []
+      },
+      "visitError": "Redirected to /login"
+    },
+    {
+      "route": "/reservations",
+      "title": "",
+      "screenshot": "",
+      "visited": false,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": []
+      },
+      "visitError": "Redirected to /login"
+    },
+    {
+      "route": "/inventory",
+      "title": "",
+      "screenshot": "",
+      "visited": false,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": []
+      },
+      "visitError": "Redirected to /login"
+    },
+    {
+      "route": "/finance",
+      "title": "Access Denied",
+      "screenshot": "screens/finance.png",
+      "visited": true,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [
+          {
+            "id": "_finance__icon-button__open-debug-panel__0",
+            "label": "Open Debug Panel",
+            "type": "icon-button",
+            "selector": "getByRole('icon-button', { name: 'Open Debug Panel' })",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_finance__icon-button__open-tanstack-query-devtools__1",
+            "label": "Open Tanstack query devtools",
+            "type": "icon-button",
+            "selector": "button[aria-label=\"Open Tanstack query devtools\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": false
+          },
+          {
+            "id": "_finance__link__skip-to-main-content__2",
+            "label": "Skip to main content",
+            "type": "link",
+            "selector": "a[href=\"#main-content\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_finance__link__go-to-dashboard__3",
+            "label": "Go to Dashboard",
+            "type": "link",
+            "selector": "a[href=\"/dashboard\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          }
+        ],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": []
+      }
+    },
+    {
+      "route": "/service-providers",
+      "title": "",
+      "screenshot": "",
+      "visited": false,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": []
+      },
+      "visitError": "Redirected to /login"
+    },
+    {
+      "route": "/staff",
+      "title": "",
+      "screenshot": "",
+      "visited": false,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": []
+      },
+      "visitError": "Redirected to /login"
+    },
+    {
+      "route": "/feedback",
+      "title": "Access Denied",
+      "screenshot": "screens/feedback.png",
+      "visited": true,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [
+          {
+            "id": "_feedback__icon-button__open-debug-panel__0",
+            "label": "Open Debug Panel",
+            "type": "icon-button",
+            "selector": "getByRole('icon-button', { name: 'Open Debug Panel' })",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_feedback__icon-button__open-tanstack-query-devtools__1",
+            "label": "Open Tanstack query devtools",
+            "type": "icon-button",
+            "selector": "button[aria-label=\"Open Tanstack query devtools\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": false
+          },
+          {
+            "id": "_feedback__link__skip-to-main-content__2",
+            "label": "Skip to main content",
+            "type": "link",
+            "selector": "a[href=\"#main-content\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_feedback__link__go-to-dashboard__3",
+            "label": "Go to Dashboard",
+            "type": "link",
+            "selector": "a[href=\"/dashboard\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          }
+        ],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [
+          {
+            "method": "GET",
+            "path": "/feedback/analytics/nps-summary",
+            "status": 401,
+            "count": 1
+          }
+        ],
+        "uniqueEndpoints": []
+      }
+    },
+    {
+      "route": "/workforce/schedule",
+      "title": "Workforce Schedule",
+      "screenshot": "screens/workforce--schedule.png",
+      "visited": true,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [
+          {
+            "id": "_workforce_schedule__button__create-shift__0",
+            "label": "Create Shift",
+            "type": "button",
+            "selector": "getByRole('button', { name: 'Create Shift' })",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [
+              {
+                "kind": "toast",
+                "notes": "Toast shown",
+                "apiCalls": []
+              }
+            ],
+            "needsTestId": true
+          },
+          {
+            "id": "_workforce_schedule__button__publish-0-draft-__1",
+            "label": "Publish (0 Draft)",
+            "type": "button",
+            "selector": "getByRole('button', { name: 'Publish (0 Draft)' })",
+            "hasTestId": false,
+            "safeToClick": false,
+            "unsafeReason": "Control is disabled",
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_workforce_schedule__button__select-branch__2",
+            "label": "Select Branch",
+            "type": "button",
+            "selector": "getByRole('button', { name: 'Select Branch' })",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [
+              {
+                "kind": "blocked",
+                "notes": "Error: locator.click: Timeout 3000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: 'Select Branch' }).first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" aria-expanded=\"false\" class=\"flex h-10 w-full items-center justify-between rounded-md border border-gray-300 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 w-[200px]\">…</button>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is visible, enabled and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <h2 class=\"text-lg font-semibold \">Create New Shift</h2> from <div class=\"fixed inset-0 z-50 flex items-center justify-center\">…</div> subtree intercepts pointer events\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is visible, enabled and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <h2 class=\"text-lg font-semibold \">Create New Shift</h2> from <div class=\"fixed inset-0 z-50 flex items-center justify-center\">…</div> subtree intercepts pointer events\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    5 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is visible, enabled and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <h2 class=\"text-lg font-semibold \">Create New Shift</h2> from <div class=\"fixed inset-0 z-50 flex items-center justify-center\">…</div> subtree intercepts pointer events\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m      - waiting 500ms\u001b[22m\n\u001b[2m    - waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m    - element is visible, enabled and stable\u001b[22m\n\u001b[2m    - scrolling into view if needed\u001b[22m\n"
+              }
+            ],
+            "needsTestId": true
+          },
+          {
+            "id": "_workforce_schedule__icon-button__open-debug-panel__3",
+            "label": "Open Debug Panel",
+            "type": "icon-button",
+            "selector": "getByRole('icon-button', { name: 'Open Debug Panel' })",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_workforce_schedule__icon-button__open-tanstack-query-devtools__4",
+            "label": "Open Tanstack query devtools",
+            "type": "icon-button",
+            "selector": "button[aria-label=\"Open Tanstack query devtools\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": false
+          },
+          {
+            "id": "_workforce_schedule__link__skip-to-main-content__5",
+            "label": "Skip to main content",
+            "type": "link",
+            "selector": "a[href=\"#main-content\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_workforce_schedule__date-picker__-input-__6",
+            "label": "[input]",
+            "type": "date-picker",
+            "selector": "input:nth-of-type(7)",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_workforce_schedule__date-picker__-input-__7",
+            "label": "[input]",
+            "type": "date-picker",
+            "selector": "input:nth-of-type(8)",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          }
+        ],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [
+          {
+            "method": "GET",
+            "path": "/feedback/analytics/nps-summary",
+            "status": 401,
+            "count": 1
+          }
+        ],
+        "uniqueEndpoints": []
+      }
+    },
+    {
+      "route": "/workforce/timeclock",
+      "title": "Timeclock",
+      "screenshot": "screens/workforce--timeclock.png",
+      "visited": true,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [
+          {
+            "id": "_workforce_timeclock__button__clock-in__0",
+            "label": "Clock In",
+            "type": "button",
+            "selector": "getByRole('button', { name: 'Clock In' })",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [
+              {
+                "kind": "toast",
+                "notes": "Toast shown",
+                "apiCalls": []
+              }
+            ],
+            "needsTestId": true
+          },
+          {
+            "id": "_workforce_timeclock__icon-button__open-debug-panel__1",
+            "label": "Open Debug Panel",
+            "type": "icon-button",
+            "selector": "getByRole('icon-button', { name: 'Open Debug Panel' })",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_workforce_timeclock__icon-button__open-tanstack-query-devtools__2",
+            "label": "Open Tanstack query devtools",
+            "type": "icon-button",
+            "selector": "button[aria-label=\"Open Tanstack query devtools\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": false
+          },
+          {
+            "id": "_workforce_timeclock__link__skip-to-main-content__3",
+            "label": "Skip to main content",
+            "type": "link",
+            "selector": "a[href=\"#main-content\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          }
+        ],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": []
+      }
+    },
+    {
+      "route": "/workforce/approvals",
+      "title": "Shift Approvals",
+      "screenshot": "screens/workforce--approvals.png",
+      "visited": true,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [
+          {
+            "id": "_workforce_approvals__button__all-branches__0",
+            "label": "All Branches",
+            "type": "button",
+            "selector": "getByRole('button', { name: 'All Branches' })",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [
+              {
+                "kind": "toast",
+                "notes": "Toast shown",
+                "apiCalls": []
+              }
+            ],
+            "needsTestId": true
+          },
+          {
+            "id": "_workforce_approvals__button__completed__1",
+            "label": "COMPLETED",
+            "type": "button",
+            "selector": "getByRole('button', { name: 'COMPLETED' })",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [
+              {
+                "kind": "blocked",
+                "notes": "Error: locator.click: Timeout 3000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: 'COMPLETED' }).first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" aria-expanded=\"false\" class=\"flex h-10 w-full items-center justify-between rounded-md border border-gray-300 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 w-[180px]\">…</button>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is visible, enabled and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <div class=\"relative flex cursor-pointer select-none items-center px-3 py-2 hover:bg-gray-100 bg-gray-100 \">…</div> from <div class=\"relative inline-block w-full\">…</div> subtree intercepts pointer events\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is visible, enabled and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <div class=\"relative flex cursor-pointer select-none items-center px-3 py-2 hover:bg-gray-100 bg-gray-100 \">…</div> from <div class=\"relative inline-block w-full\">…</div> subtree intercepts pointer events\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    5 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is visible, enabled and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <div class=\"relative flex cursor-pointer select-none items-center px-3 py-2 hover:bg-gray-100 bg-gray-100 \">…</div> from <div class=\"relative inline-block w-full\">…</div> subtree intercepts pointer events\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m      - waiting 500ms\u001b[22m\n"
+              }
+            ],
+            "needsTestId": true
+          },
+          {
+            "id": "_workforce_approvals__icon-button__open-debug-panel__2",
+            "label": "Open Debug Panel",
+            "type": "icon-button",
+            "selector": "getByRole('icon-button', { name: 'Open Debug Panel' })",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_workforce_approvals__icon-button__open-tanstack-query-devtools__3",
+            "label": "Open Tanstack query devtools",
+            "type": "icon-button",
+            "selector": "button[aria-label=\"Open Tanstack query devtools\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": false
+          },
+          {
+            "id": "_workforce_approvals__link__skip-to-main-content__4",
+            "label": "Skip to main content",
+            "type": "link",
+            "selector": "a[href=\"#main-content\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_workforce_approvals__date-picker__-input-__5",
+            "label": "[input]",
+            "type": "date-picker",
+            "selector": "input:nth-of-type(6)",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_workforce_approvals__date-picker__-input-__6",
+            "label": "[input]",
+            "type": "date-picker",
+            "selector": "input:nth-of-type(7)",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          }
+        ],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": []
+      }
+    },
+    {
+      "route": "/workforce/swaps",
+      "title": "",
+      "screenshot": "screens/workforce--swaps.png",
+      "visited": true,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [
+          {
+            "id": "_workforce_swaps__icon-button__open-debug-panel__0",
+            "label": "Open Debug Panel",
+            "type": "icon-button",
+            "selector": "getByRole('icon-button', { name: 'Open Debug Panel' })",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_workforce_swaps__icon-button__open-tanstack-query-devtools__1",
+            "label": "Open Tanstack query devtools",
+            "type": "icon-button",
+            "selector": "button[aria-label=\"Open Tanstack query devtools\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": false
+          },
+          {
+            "id": "_workforce_swaps__link__skip-to-main-content__2",
+            "label": "Skip to main content",
+            "type": "link",
+            "selector": "a[href=\"#main-content\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          }
+        ],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [
+          {
+            "method": "GET",
+            "path": "/workforce/swaps",
+            "status": 401,
+            "count": 2
+          }
+        ],
+        "uniqueEndpoints": []
+      }
+    },
+    {
+      "route": "/workforce/labor",
+      "title": "Labor Reports",
+      "screenshot": "screens/workforce--labor.png",
+      "visited": true,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [
+          {
+            "id": "_workforce_labor__button__shifts-csv__0",
+            "label": "Shifts CSV",
+            "type": "button",
+            "selector": "getByRole('button', { name: 'Shifts CSV' })",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [
+              {
+                "kind": "toast",
+                "notes": "Toast shown",
+                "apiCalls": [
+                  {
+                    "method": "GET",
+                    "path": "/workforce/reports/export/shifts",
+                    "status": 0,
+                    "count": 1
+                  }
+                ]
+              }
+            ],
+            "needsTestId": true
+          },
+          {
+            "id": "_workforce_labor__button__time-entries-csv__1",
+            "label": "Time Entries CSV",
+            "type": "button",
+            "selector": "getByRole('button', { name: 'Time Entries CSV' })",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [
+              {
+                "kind": "toast",
+                "notes": "Toast shown",
+                "apiCalls": [
+                  {
+                    "method": "GET",
+                    "path": "/workforce/reports/export/timeentries",
+                    "status": 401,
+                    "count": 1
+                  }
+                ]
+              }
+            ],
+            "needsTestId": true
+          },
+          {
+            "id": "_workforce_labor__button__labor-summary-csv__2",
+            "label": "Labor Summary CSV",
+            "type": "button",
+            "selector": "getByRole('button', { name: 'Labor Summary CSV' })",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [
+              {
+                "kind": "toast",
+                "notes": "Toast shown",
+                "apiCalls": [
+                  {
+                    "method": "GET",
+                    "path": "/workforce/reports/export/labor",
+                    "status": 401,
+                    "count": 1
+                  }
+                ]
+              }
+            ],
+            "needsTestId": true
+          },
+          {
+            "id": "_workforce_labor__button__all-branches__3",
+            "label": "All Branches",
+            "type": "button",
+            "selector": "getByRole('button', { name: 'All Branches' })",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [
+              {
+                "kind": "toast",
+                "notes": "Toast shown",
+                "apiCalls": []
+              }
+            ],
+            "needsTestId": true
+          },
+          {
+            "id": "_workforce_labor__icon-button__open-debug-panel__4",
+            "label": "Open Debug Panel",
+            "type": "icon-button",
+            "selector": "getByRole('icon-button', { name: 'Open Debug Panel' })",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_workforce_labor__icon-button__open-tanstack-query-devtools__5",
+            "label": "Open Tanstack query devtools",
+            "type": "icon-button",
+            "selector": "button[aria-label=\"Open Tanstack query devtools\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": false
+          },
+          {
+            "id": "_workforce_labor__link__skip-to-main-content__6",
+            "label": "Skip to main content",
+            "type": "link",
+            "selector": "a[href=\"#main-content\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_workforce_labor__date-picker__-input-__7",
+            "label": "[input]",
+            "type": "date-picker",
+            "selector": "input:nth-of-type(8)",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_workforce_labor__date-picker__-input-__8",
+            "label": "[input]",
+            "type": "date-picker",
+            "selector": "input:nth-of-type(9)",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          }
+        ],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": [
+          {
+            "method": "GET",
+            "path": "/workforce/reports/export/shifts",
+            "status": 0,
+            "count": 1
+          },
+          {
+            "method": "GET",
+            "path": "/workforce/reports/export/timeentries",
+            "status": 401,
+            "count": 1
+          },
+          {
+            "method": "GET",
+            "path": "/workforce/reports/export/labor",
+            "status": 401,
+            "count": 1
+          }
+        ]
+      }
+    },
+    {
+      "route": "/workforce/labor-targets",
+      "title": "",
+      "screenshot": "screens/workforce--labor-targets.png",
+      "visited": true,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [
+          {
+            "id": "_workforce_labor-targets__icon-button__open-debug-panel__0",
+            "label": "Open Debug Panel",
+            "type": "icon-button",
+            "selector": "getByRole('icon-button', { name: 'Open Debug Panel' })",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_workforce_labor-targets__icon-button__open-tanstack-query-devtools__1",
+            "label": "Open Tanstack query devtools",
+            "type": "icon-button",
+            "selector": "button[aria-label=\"Open Tanstack query devtools\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": false
+          },
+          {
+            "id": "_workforce_labor-targets__link__skip-to-main-content__2",
+            "label": "Skip to main content",
+            "type": "link",
+            "selector": "a[href=\"#main-content\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          }
+        ],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": []
+      }
+    },
+    {
+      "route": "/workforce/staffing-planner",
+      "title": "",
+      "screenshot": "screens/workforce--staffing-planner.png",
+      "visited": true,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [
+          {
+            "id": "_workforce_staffing-planner__icon-button__open-debug-panel__0",
+            "label": "Open Debug Panel",
+            "type": "icon-button",
+            "selector": "getByRole('icon-button', { name: 'Open Debug Panel' })",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_workforce_staffing-planner__icon-button__open-tanstack-query-devtools__1",
+            "label": "Open Tanstack query devtools",
+            "type": "icon-button",
+            "selector": "button[aria-label=\"Open Tanstack query devtools\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": false
+          },
+          {
+            "id": "_workforce_staffing-planner__link__skip-to-main-content__2",
+            "label": "Skip to main content",
+            "type": "link",
+            "selector": "a[href=\"#main-content\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          }
+        ],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": []
+      }
+    },
+    {
+      "route": "/workforce/staffing-alerts",
+      "title": "",
+      "screenshot": "screens/workforce--staffing-alerts.png",
+      "visited": true,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [
+          {
+            "id": "_workforce_staffing-alerts__icon-button__open-debug-panel__0",
+            "label": "Open Debug Panel",
+            "type": "icon-button",
+            "selector": "getByRole('icon-button', { name: 'Open Debug Panel' })",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_workforce_staffing-alerts__icon-button__open-tanstack-query-devtools__1",
+            "label": "Open Tanstack query devtools",
+            "type": "icon-button",
+            "selector": "button[aria-label=\"Open Tanstack query devtools\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": false
+          },
+          {
+            "id": "_workforce_staffing-alerts__link__skip-to-main-content__2",
+            "label": "Skip to main content",
+            "type": "link",
+            "selector": "a[href=\"#main-content\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          }
+        ],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": []
+      }
+    },
+    {
+      "route": "/workforce/auto-scheduler",
+      "title": "",
+      "screenshot": "screens/workforce--auto-scheduler.png",
+      "visited": true,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [
+          {
+            "id": "_workforce_auto-scheduler__icon-button__open-debug-panel__0",
+            "label": "Open Debug Panel",
+            "type": "icon-button",
+            "selector": "getByRole('icon-button', { name: 'Open Debug Panel' })",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_workforce_auto-scheduler__icon-button__open-tanstack-query-devtools__1",
+            "label": "Open Tanstack query devtools",
+            "type": "icon-button",
+            "selector": "button[aria-label=\"Open Tanstack query devtools\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": false
+          },
+          {
+            "id": "_workforce_auto-scheduler__link__skip-to-main-content__2",
+            "label": "Skip to main content",
+            "type": "link",
+            "selector": "a[href=\"#main-content\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          }
+        ],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": []
+      }
+    },
+    {
+      "route": "/workforce/my-availability",
+      "title": "",
+      "screenshot": "screens/workforce--my-availability.png",
+      "visited": true,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [
+          {
+            "id": "_workforce_my-availability__icon-button__open-debug-panel__0",
+            "label": "Open Debug Panel",
+            "type": "icon-button",
+            "selector": "getByRole('icon-button', { name: 'Open Debug Panel' })",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_workforce_my-availability__icon-button__open-tanstack-query-devtools__1",
+            "label": "Open Tanstack query devtools",
+            "type": "icon-button",
+            "selector": "button[aria-label=\"Open Tanstack query devtools\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": false
+          },
+          {
+            "id": "_workforce_my-availability__link__skip-to-main-content__2",
+            "label": "Skip to main content",
+            "type": "link",
+            "selector": "a[href=\"#main-content\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          }
+        ],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [
+          {
+            "method": "GET",
+            "path": "/workforce/self/availability",
+            "status": 401,
+            "count": 1
+          },
+          {
+            "method": "GET",
+            "path": "/workforce/self/availability/exceptions",
+            "status": 401,
+            "count": 1
+          }
+        ],
+        "uniqueEndpoints": []
+      }
+    },
+    {
+      "route": "/workforce/my-swaps",
+      "title": "",
+      "screenshot": "screens/workforce--my-swaps.png",
+      "visited": true,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [
+          {
+            "id": "_workforce_my-swaps__icon-button__open-debug-panel__0",
+            "label": "Open Debug Panel",
+            "type": "icon-button",
+            "selector": "getByRole('icon-button', { name: 'Open Debug Panel' })",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_workforce_my-swaps__icon-button__open-tanstack-query-devtools__1",
+            "label": "Open Tanstack query devtools",
+            "type": "icon-button",
+            "selector": "button[aria-label=\"Open Tanstack query devtools\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": false
+          },
+          {
+            "id": "_workforce_my-swaps__link__skip-to-main-content__2",
+            "label": "Skip to main content",
+            "type": "link",
+            "selector": "a[href=\"#main-content\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          }
+        ],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [
+          {
+            "method": "GET",
+            "path": "/workforce/self/swaps",
+            "status": 401,
+            "count": 1
+          }
+        ],
+        "uniqueEndpoints": []
+      }
+    },
+    {
+      "route": "/workforce/open-shifts",
+      "title": "",
+      "screenshot": "screens/workforce--open-shifts.png",
+      "visited": true,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [
+          {
+            "id": "_workforce_open-shifts__icon-button__open-debug-panel__0",
+            "label": "Open Debug Panel",
+            "type": "icon-button",
+            "selector": "getByRole('icon-button', { name: 'Open Debug Panel' })",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_workforce_open-shifts__icon-button__open-tanstack-query-devtools__1",
+            "label": "Open Tanstack query devtools",
+            "type": "icon-button",
+            "selector": "button[aria-label=\"Open Tanstack query devtools\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": false
+          },
+          {
+            "id": "_workforce_open-shifts__link__skip-to-main-content__2",
+            "label": "Skip to main content",
+            "type": "link",
+            "selector": "a[href=\"#main-content\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          }
+        ],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [
+          {
+            "method": "GET",
+            "path": "/workforce/self/open-shifts",
+            "status": 401,
+            "count": 1
+          },
+          {
+            "method": "GET",
+            "path": "/workforce/self/open-shifts/claims",
+            "status": 404,
+            "count": 1
+          }
+        ],
+        "uniqueEndpoints": []
+      }
+    },
+    {
+      "route": "/settings",
+      "title": "",
+      "screenshot": "",
+      "visited": false,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": []
+      },
+      "visitError": "Redirected to /login"
+    },
+    {
+      "route": "/workspaces/owner",
+      "title": "",
+      "screenshot": "",
+      "visited": false,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": []
+      },
+      "visitError": "Redirected to /login"
+    },
+    {
+      "route": "/reports/budgets",
+      "title": "",
+      "screenshot": "",
+      "visited": false,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": []
+      },
+      "visitError": "Redirected to /login"
+    },
+    {
+      "route": "/reports/subscriptions",
+      "title": "",
+      "screenshot": "",
+      "visited": false,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": []
+      },
+      "visitError": "Redirected to /login"
+    },
+    {
+      "route": "/pos/cash-sessions",
+      "title": "",
+      "screenshot": "",
+      "visited": false,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": []
+      },
+      "visitError": "Redirected to /login"
+    },
+    {
+      "route": "/reservations/calendar",
+      "title": "",
+      "screenshot": "",
+      "visited": false,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": []
+      },
+      "visitError": "Redirected to /login"
+    },
+    {
+      "route": "/reservations/policies",
+      "title": "",
+      "screenshot": "",
+      "visited": false,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": []
+      },
+      "visitError": "Redirected to /login"
+    },
+    {
+      "route": "/reservations/today-board",
+      "title": "Today's Board",
+      "screenshot": "screens/reservations--today-board.png",
+      "visited": true,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [
+          {
+            "id": "_reservations_today-board__button__refresh__0",
+            "label": "Refresh",
+            "type": "button",
+            "selector": "getByRole('button', { name: 'Refresh' })",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [
+              {
+                "kind": "toast",
+                "notes": "Toast shown",
+                "apiCalls": [
+                  {
+                    "method": "GET",
+                    "path": "/reservations/today-board",
+                    "status": 0,
+                    "count": 1
+                  }
+                ]
+              }
+            ],
+            "needsTestId": true
+          },
+          {
+            "id": "_reservations_today-board__button__active__1",
+            "label": "active",
+            "type": "button",
+            "selector": "getByRole('button', { name: 'active' })",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [
+              {
+                "kind": "toast",
+                "notes": "Toast shown",
+                "apiCalls": [
+                  {
+                    "method": "GET",
+                    "path": "/reservations/today-board",
+                    "status": 401,
+                    "count": 1
+                  }
+                ]
+              }
+            ],
+            "needsTestId": true
+          },
+          {
+            "id": "_reservations_today-board__icon-button__open-debug-panel__2",
+            "label": "Open Debug Panel",
+            "type": "icon-button",
+            "selector": "getByRole('icon-button', { name: 'Open Debug Panel' })",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_reservations_today-board__icon-button__open-tanstack-query-devtools__3",
+            "label": "Open Tanstack query devtools",
+            "type": "icon-button",
+            "selector": "button[aria-label=\"Open Tanstack query devtools\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": false
+          },
+          {
+            "id": "_reservations_today-board__link__skip-to-main-content__4",
+            "label": "Skip to main content",
+            "type": "link",
+            "selector": "a[href=\"#main-content\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          }
+        ],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": [
+          {
+            "method": "GET",
+            "path": "/reservations/today-board",
+            "status": 0,
+            "count": 1
+          }
+        ]
+      }
+    },
+    {
+      "route": "/reservations/blackouts",
+      "title": "ChefCloud",
+      "screenshot": "screens/reservations--blackouts.png",
+      "visited": true,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [
+          {
+            "id": "_reservations_blackouts__button__email-password__0",
+            "label": "Email / Password",
+            "type": "button",
+            "selector": "getByRole('button', { name: 'Email / Password' })",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [
+              {
+                "kind": "toast",
+                "notes": "ChefCloud",
+                "apiCalls": []
+              }
+            ],
+            "needsTestId": true
+          },
+          {
+            "id": "_reservations_blackouts__button__pin-login__1",
+            "label": "PIN Login",
+            "type": "button",
+            "selector": "getByRole('button', { name: 'PIN Login' })",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [
+              {
+                "kind": "toast",
+                "notes": "ChefCloud",
+                "apiCalls": []
+              }
+            ],
+            "needsTestId": true
+          },
+          {
+            "id": "_reservations_blackouts__button__sign-in__2",
+            "label": "Sign In",
+            "type": "button",
+            "selector": "getByRole('button', { name: 'Sign In' })",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [
+              {
+                "kind": "toast",
+                "notes": "ChefCloud",
+                "apiCalls": []
+              }
+            ],
+            "needsTestId": true
+          },
+          {
+            "id": "_reservations_blackouts__button__tapas-ownertapas-bar-restauran__3",
+            "label": "Tapas OwnerTapas Bar & RestaurantOwner (L5)Click to login",
+            "type": "button",
+            "selector": "getByRole('button', { name: 'Tapas OwnerTapas Bar & RestaurantOwner (L5)Click to login' })",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [
+              {
+                "kind": "blocked",
+                "notes": "Error: locator.click: Timeout 3000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: 'Tapas OwnerTapas Bar & RestaurantOwner (L5)Click to login' }).first()\u001b[22m\n"
+              }
+            ],
+            "needsTestId": true
+          },
+          {
+            "id": "_reservations_blackouts__button__cafesserie-managercafesserie-4__4",
+            "label": "Cafesserie ManagerCafesserie (4 branches)Manager (L4)Click to login",
+            "type": "button",
+            "selector": "getByRole('button', { name: 'Cafesserie ManagerCafesserie (4 branches)Manager (L4)Click to login' })",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [
+              {
+                "kind": "blocked",
+                "notes": "Error: locator.click: Timeout 3000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: 'Cafesserie ManagerCafesserie (4 branches)Manager (L4)Click to login' }).first()\u001b[22m\n"
+              }
+            ],
+            "needsTestId": true
+          },
+          {
+            "id": "_reservations_blackouts__icon-button__open-debug-panel__5",
+            "label": "Open Debug Panel",
+            "type": "icon-button",
+            "selector": "getByRole('icon-button', { name: 'Open Debug Panel' })",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_reservations_blackouts__icon-button__open-tanstack-query-devtools__6",
+            "label": "Open Tanstack query devtools",
+            "type": "icon-button",
+            "selector": "button[aria-label=\"Open Tanstack query devtools\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": false
+          },
+          {
+            "id": "_reservations_blackouts__link__skip-to-main-content__7",
+            "label": "Skip to main content",
+            "type": "link",
+            "selector": "a[href=\"#main-content\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_reservations_blackouts__input__you-example-com__8",
+            "label": "you@example.com",
+            "type": "input",
+            "selector": "getByRole('input', { name: 'you@example.com' })",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_reservations_blackouts__input__-__9",
+            "label": "••••••••",
+            "type": "input",
+            "selector": "getByRole('input', { name: '••••••••' })",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          }
+        ],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": []
+      }
+    },
+    {
+      "route": "/reservations/capacity",
+      "title": "",
+      "screenshot": "",
+      "visited": false,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": []
+      },
+      "visitError": "Redirected to /login"
+    },
+    {
+      "route": "/waitlist",
+      "title": "",
+      "screenshot": "",
+      "visited": false,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": []
+      },
+      "visitError": "Redirected to /login"
+    },
+    {
+      "route": "/inventory/items",
+      "title": "",
+      "screenshot": "",
+      "visited": false,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": []
+      },
+      "visitError": "Redirected to /login"
+    },
+    {
+      "route": "/inventory/purchase-orders",
+      "title": "",
+      "screenshot": "",
+      "visited": false,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": []
+      },
+      "visitError": "Redirected to /login"
+    },
+    {
+      "route": "/inventory/receipts",
+      "title": "",
+      "screenshot": "",
+      "visited": false,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": []
+      },
+      "visitError": "Redirected to /login"
+    },
+    {
+      "route": "/inventory/transfers",
+      "title": "",
+      "screenshot": "",
+      "visited": false,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": []
+      },
+      "visitError": "Redirected to /login"
+    },
+    {
+      "route": "/inventory/waste",
+      "title": "",
+      "screenshot": "",
+      "visited": false,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": []
+      },
+      "visitError": "Redirected to /login"
+    },
+    {
+      "route": "/inventory/stocktakes",
+      "title": "",
+      "screenshot": "",
+      "visited": false,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": []
+      },
+      "visitError": "Redirected to /login"
+    },
+    {
+      "route": "/inventory/recipes",
+      "title": "",
+      "screenshot": "",
+      "visited": false,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": []
+      },
+      "visitError": "Redirected to /login"
+    },
+    {
+      "route": "/inventory/depletions",
+      "title": "",
+      "screenshot": "",
+      "visited": false,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": []
+      },
+      "visitError": "Redirected to /login"
+    },
+    {
+      "route": "/inventory/period-close",
+      "title": "",
+      "screenshot": "",
+      "visited": false,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": []
+      },
+      "visitError": "Redirected to /login"
+    },
+    {
+      "route": "/inventory/lots",
+      "title": "",
+      "screenshot": "",
+      "visited": false,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": []
+      },
+      "visitError": "Redirected to /login"
+    },
+    {
+      "route": "/inventory/adjustments",
+      "title": "",
+      "screenshot": "",
+      "visited": false,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": []
+      },
+      "visitError": "Redirected to /login"
+    },
+    {
+      "route": "/inventory/analytics",
+      "title": "",
+      "screenshot": "",
+      "visited": false,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": []
+      },
+      "visitError": "Redirected to /login"
+    },
+    {
+      "route": "/inventory/valuation",
+      "title": "",
+      "screenshot": "",
+      "visited": false,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": []
+      },
+      "visitError": "Redirected to /login"
+    },
+    {
+      "route": "/inventory/cogs",
+      "title": "",
+      "screenshot": "",
+      "visited": false,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": []
+      },
+      "visitError": "Redirected to /login"
+    },
+    {
+      "route": "/inventory/accounting-mappings",
+      "title": "",
+      "screenshot": "",
+      "visited": false,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": []
+      },
+      "visitError": "Redirected to /login"
+    },
+    {
+      "route": "/inventory/accounting-postings",
+      "title": "",
+      "screenshot": "",
+      "visited": false,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": []
+      },
+      "visitError": "Redirected to /login"
+    },
+    {
+      "route": "/finance/accounts",
+      "title": "Access Denied",
+      "screenshot": "screens/finance--accounts.png",
+      "visited": true,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [
+          {
+            "id": "_finance_accounts__icon-button__open-debug-panel__0",
+            "label": "Open Debug Panel",
+            "type": "icon-button",
+            "selector": "getByRole('icon-button', { name: 'Open Debug Panel' })",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_finance_accounts__icon-button__open-tanstack-query-devtools__1",
+            "label": "Open Tanstack query devtools",
+            "type": "icon-button",
+            "selector": "button[aria-label=\"Open Tanstack query devtools\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": false
+          },
+          {
+            "id": "_finance_accounts__link__skip-to-main-content__2",
+            "label": "Skip to main content",
+            "type": "link",
+            "selector": "a[href=\"#main-content\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_finance_accounts__link__go-to-dashboard__3",
+            "label": "Go to Dashboard",
+            "type": "link",
+            "selector": "a[href=\"/dashboard\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          }
+        ],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": []
+      }
+    },
+    {
+      "route": "/finance/journal",
+      "title": "Access Denied",
+      "screenshot": "screens/finance--journal.png",
+      "visited": true,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [
+          {
+            "id": "_finance_journal__icon-button__open-debug-panel__0",
+            "label": "Open Debug Panel",
+            "type": "icon-button",
+            "selector": "getByRole('icon-button', { name: 'Open Debug Panel' })",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_finance_journal__icon-button__open-tanstack-query-devtools__1",
+            "label": "Open Tanstack query devtools",
+            "type": "icon-button",
+            "selector": "button[aria-label=\"Open Tanstack query devtools\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": false
+          },
+          {
+            "id": "_finance_journal__link__skip-to-main-content__2",
+            "label": "Skip to main content",
+            "type": "link",
+            "selector": "a[href=\"#main-content\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_finance_journal__link__go-to-dashboard__3",
+            "label": "Go to Dashboard",
+            "type": "link",
+            "selector": "a[href=\"/dashboard\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          }
+        ],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": []
+      }
+    },
+    {
+      "route": "/finance/periods",
+      "title": "Access Denied",
+      "screenshot": "screens/finance--periods.png",
+      "visited": true,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [
+          {
+            "id": "_finance_periods__icon-button__open-debug-panel__0",
+            "label": "Open Debug Panel",
+            "type": "icon-button",
+            "selector": "getByRole('icon-button', { name: 'Open Debug Panel' })",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_finance_periods__icon-button__open-tanstack-query-devtools__1",
+            "label": "Open Tanstack query devtools",
+            "type": "icon-button",
+            "selector": "button[aria-label=\"Open Tanstack query devtools\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": false
+          },
+          {
+            "id": "_finance_periods__link__skip-to-main-content__2",
+            "label": "Skip to main content",
+            "type": "link",
+            "selector": "a[href=\"#main-content\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_finance_periods__link__go-to-dashboard__3",
+            "label": "Go to Dashboard",
+            "type": "link",
+            "selector": "a[href=\"/dashboard\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          }
+        ],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": []
+      }
+    },
+    {
+      "route": "/finance/trial-balance",
+      "title": "Access Denied",
+      "screenshot": "screens/finance--trial-balance.png",
+      "visited": true,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [
+          {
+            "id": "_finance_trial-balance__icon-button__open-debug-panel__0",
+            "label": "Open Debug Panel",
+            "type": "icon-button",
+            "selector": "getByRole('icon-button', { name: 'Open Debug Panel' })",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_finance_trial-balance__icon-button__open-tanstack-query-devtools__1",
+            "label": "Open Tanstack query devtools",
+            "type": "icon-button",
+            "selector": "button[aria-label=\"Open Tanstack query devtools\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": false
+          },
+          {
+            "id": "_finance_trial-balance__link__skip-to-main-content__2",
+            "label": "Skip to main content",
+            "type": "link",
+            "selector": "a[href=\"#main-content\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_finance_trial-balance__link__go-to-dashboard__3",
+            "label": "Go to Dashboard",
+            "type": "link",
+            "selector": "a[href=\"/dashboard\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          }
+        ],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": []
+      }
+    },
+    {
+      "route": "/finance/pnl",
+      "title": "Access Denied",
+      "screenshot": "screens/finance--pnl.png",
+      "visited": true,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [
+          {
+            "id": "_finance_pnl__icon-button__open-debug-panel__0",
+            "label": "Open Debug Panel",
+            "type": "icon-button",
+            "selector": "getByRole('icon-button', { name: 'Open Debug Panel' })",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_finance_pnl__icon-button__open-tanstack-query-devtools__1",
+            "label": "Open Tanstack query devtools",
+            "type": "icon-button",
+            "selector": "button[aria-label=\"Open Tanstack query devtools\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": false
+          },
+          {
+            "id": "_finance_pnl__link__skip-to-main-content__2",
+            "label": "Skip to main content",
+            "type": "link",
+            "selector": "a[href=\"#main-content\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_finance_pnl__link__go-to-dashboard__3",
+            "label": "Go to Dashboard",
+            "type": "link",
+            "selector": "a[href=\"/dashboard\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          }
+        ],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": []
+      }
+    },
+    {
+      "route": "/finance/balance-sheet",
+      "title": "Access Denied",
+      "screenshot": "screens/finance--balance-sheet.png",
+      "visited": true,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [
+          {
+            "id": "_finance_balance-sheet__icon-button__open-debug-panel__0",
+            "label": "Open Debug Panel",
+            "type": "icon-button",
+            "selector": "getByRole('icon-button', { name: 'Open Debug Panel' })",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_finance_balance-sheet__icon-button__open-tanstack-query-devtools__1",
+            "label": "Open Tanstack query devtools",
+            "type": "icon-button",
+            "selector": "button[aria-label=\"Open Tanstack query devtools\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": false
+          },
+          {
+            "id": "_finance_balance-sheet__link__skip-to-main-content__2",
+            "label": "Skip to main content",
+            "type": "link",
+            "selector": "a[href=\"#main-content\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_finance_balance-sheet__link__go-to-dashboard__3",
+            "label": "Go to Dashboard",
+            "type": "link",
+            "selector": "a[href=\"/dashboard\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          }
+        ],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": []
+      }
+    },
+    {
+      "route": "/finance/vendors",
+      "title": "Access Denied",
+      "screenshot": "screens/finance--vendors.png",
+      "visited": true,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [
+          {
+            "id": "_finance_vendors__icon-button__open-debug-panel__0",
+            "label": "Open Debug Panel",
+            "type": "icon-button",
+            "selector": "getByRole('icon-button', { name: 'Open Debug Panel' })",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_finance_vendors__icon-button__open-tanstack-query-devtools__1",
+            "label": "Open Tanstack query devtools",
+            "type": "icon-button",
+            "selector": "button[aria-label=\"Open Tanstack query devtools\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": false
+          },
+          {
+            "id": "_finance_vendors__link__skip-to-main-content__2",
+            "label": "Skip to main content",
+            "type": "link",
+            "selector": "a[href=\"#main-content\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_finance_vendors__link__go-to-dashboard__3",
+            "label": "Go to Dashboard",
+            "type": "link",
+            "selector": "a[href=\"/dashboard\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          }
+        ],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": []
+      }
+    },
+    {
+      "route": "/finance/vendor-bills",
+      "title": "Access Denied",
+      "screenshot": "screens/finance--vendor-bills.png",
+      "visited": true,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [
+          {
+            "id": "_finance_vendor-bills__icon-button__open-debug-panel__0",
+            "label": "Open Debug Panel",
+            "type": "icon-button",
+            "selector": "getByRole('icon-button', { name: 'Open Debug Panel' })",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_finance_vendor-bills__icon-button__open-tanstack-query-devtools__1",
+            "label": "Open Tanstack query devtools",
+            "type": "icon-button",
+            "selector": "button[aria-label=\"Open Tanstack query devtools\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": false
+          },
+          {
+            "id": "_finance_vendor-bills__link__skip-to-main-content__2",
+            "label": "Skip to main content",
+            "type": "link",
+            "selector": "a[href=\"#main-content\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_finance_vendor-bills__link__go-to-dashboard__3",
+            "label": "Go to Dashboard",
+            "type": "link",
+            "selector": "a[href=\"/dashboard\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          }
+        ],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": []
+      }
+    },
+    {
+      "route": "/finance/customers",
+      "title": "Access Denied",
+      "screenshot": "screens/finance--customers.png",
+      "visited": true,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [
+          {
+            "id": "_finance_customers__icon-button__open-debug-panel__0",
+            "label": "Open Debug Panel",
+            "type": "icon-button",
+            "selector": "getByRole('icon-button', { name: 'Open Debug Panel' })",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_finance_customers__icon-button__open-tanstack-query-devtools__1",
+            "label": "Open Tanstack query devtools",
+            "type": "icon-button",
+            "selector": "button[aria-label=\"Open Tanstack query devtools\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": false
+          },
+          {
+            "id": "_finance_customers__link__skip-to-main-content__2",
+            "label": "Skip to main content",
+            "type": "link",
+            "selector": "a[href=\"#main-content\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_finance_customers__link__go-to-dashboard__3",
+            "label": "Go to Dashboard",
+            "type": "link",
+            "selector": "a[href=\"/dashboard\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          }
+        ],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": []
+      }
+    },
+    {
+      "route": "/finance/customer-invoices",
+      "title": "Access Denied",
+      "screenshot": "screens/finance--customer-invoices.png",
+      "visited": true,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [
+          {
+            "id": "_finance_customer-invoices__icon-button__open-debug-panel__0",
+            "label": "Open Debug Panel",
+            "type": "icon-button",
+            "selector": "getByRole('icon-button', { name: 'Open Debug Panel' })",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_finance_customer-invoices__icon-button__open-tanstack-query-devtools__1",
+            "label": "Open Tanstack query devtools",
+            "type": "icon-button",
+            "selector": "button[aria-label=\"Open Tanstack query devtools\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": false
+          },
+          {
+            "id": "_finance_customer-invoices__link__skip-to-main-content__2",
+            "label": "Skip to main content",
+            "type": "link",
+            "selector": "a[href=\"#main-content\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_finance_customer-invoices__link__go-to-dashboard__3",
+            "label": "Go to Dashboard",
+            "type": "link",
+            "selector": "a[href=\"/dashboard\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          }
+        ],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": []
+      }
+    },
+    {
+      "route": "/finance/credit-notes",
+      "title": "Access Denied",
+      "screenshot": "screens/finance--credit-notes.png",
+      "visited": true,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [
+          {
+            "id": "_finance_credit-notes__icon-button__open-debug-panel__0",
+            "label": "Open Debug Panel",
+            "type": "icon-button",
+            "selector": "getByRole('icon-button', { name: 'Open Debug Panel' })",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_finance_credit-notes__icon-button__open-tanstack-query-devtools__1",
+            "label": "Open Tanstack query devtools",
+            "type": "icon-button",
+            "selector": "button[aria-label=\"Open Tanstack query devtools\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": false
+          },
+          {
+            "id": "_finance_credit-notes__link__skip-to-main-content__2",
+            "label": "Skip to main content",
+            "type": "link",
+            "selector": "a[href=\"#main-content\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_finance_credit-notes__link__go-to-dashboard__3",
+            "label": "Go to Dashboard",
+            "type": "link",
+            "selector": "a[href=\"/dashboard\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          }
+        ],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": []
+      }
+    },
+    {
+      "route": "/finance/payment-methods",
+      "title": "Access Denied",
+      "screenshot": "screens/finance--payment-methods.png",
+      "visited": true,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [
+          {
+            "id": "_finance_payment-methods__icon-button__open-debug-panel__0",
+            "label": "Open Debug Panel",
+            "type": "icon-button",
+            "selector": "getByRole('icon-button', { name: 'Open Debug Panel' })",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_finance_payment-methods__icon-button__open-tanstack-query-devtools__1",
+            "label": "Open Tanstack query devtools",
+            "type": "icon-button",
+            "selector": "button[aria-label=\"Open Tanstack query devtools\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": false
+          },
+          {
+            "id": "_finance_payment-methods__link__skip-to-main-content__2",
+            "label": "Skip to main content",
+            "type": "link",
+            "selector": "a[href=\"#main-content\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_finance_payment-methods__link__go-to-dashboard__3",
+            "label": "Go to Dashboard",
+            "type": "link",
+            "selector": "a[href=\"/dashboard\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          }
+        ],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": []
+      }
+    },
+    {
+      "route": "/finance/ap-aging",
+      "title": "Access Denied",
+      "screenshot": "screens/finance--ap-aging.png",
+      "visited": true,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [
+          {
+            "id": "_finance_ap-aging__icon-button__open-debug-panel__0",
+            "label": "Open Debug Panel",
+            "type": "icon-button",
+            "selector": "getByRole('icon-button', { name: 'Open Debug Panel' })",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_finance_ap-aging__icon-button__open-tanstack-query-devtools__1",
+            "label": "Open Tanstack query devtools",
+            "type": "icon-button",
+            "selector": "button[aria-label=\"Open Tanstack query devtools\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": false
+          },
+          {
+            "id": "_finance_ap-aging__link__skip-to-main-content__2",
+            "label": "Skip to main content",
+            "type": "link",
+            "selector": "a[href=\"#main-content\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_finance_ap-aging__link__go-to-dashboard__3",
+            "label": "Go to Dashboard",
+            "type": "link",
+            "selector": "a[href=\"/dashboard\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          }
+        ],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": []
+      }
+    },
+    {
+      "route": "/finance/ar-aging",
+      "title": "Access Denied",
+      "screenshot": "screens/finance--ar-aging.png",
+      "visited": true,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [
+          {
+            "id": "_finance_ar-aging__icon-button__open-debug-panel__0",
+            "label": "Open Debug Panel",
+            "type": "icon-button",
+            "selector": "getByRole('icon-button', { name: 'Open Debug Panel' })",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_finance_ar-aging__icon-button__open-tanstack-query-devtools__1",
+            "label": "Open Tanstack query devtools",
+            "type": "icon-button",
+            "selector": "button[aria-label=\"Open Tanstack query devtools\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": false
+          },
+          {
+            "id": "_finance_ar-aging__link__skip-to-main-content__2",
+            "label": "Skip to main content",
+            "type": "link",
+            "selector": "a[href=\"#main-content\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_finance_ar-aging__link__go-to-dashboard__3",
+            "label": "Go to Dashboard",
+            "type": "link",
+            "selector": "a[href=\"/dashboard\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          }
+        ],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": []
+      }
+    },
+    {
+      "route": "/staff/insights",
+      "title": "",
+      "screenshot": "",
+      "visited": false,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": []
+      },
+      "visitError": "Redirected to /login"
+    },
+    {
+      "route": "/workforce/timesheets",
+      "title": "Timesheet Approvals",
+      "screenshot": "screens/workforce--timesheets.png",
+      "visited": true,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [
+          {
+            "id": "_workforce_timesheets__button__approve-selected-0-__0",
+            "label": "Approve Selected (0)",
+            "type": "button",
+            "selector": "getByRole('button', { name: 'Approve Selected (0)' })",
+            "hasTestId": false,
+            "safeToClick": false,
+            "unsafeReason": "Destructive action pattern detected",
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_workforce_timesheets__button__reject-selected-0-__1",
+            "label": "Reject Selected (0)",
+            "type": "button",
+            "selector": "getByRole('button', { name: 'Reject Selected (0)' })",
+            "hasTestId": false,
+            "safeToClick": false,
+            "unsafeReason": "Control is disabled",
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_workforce_timesheets__icon-button__open-debug-panel__2",
+            "label": "Open Debug Panel",
+            "type": "icon-button",
+            "selector": "getByRole('icon-button', { name: 'Open Debug Panel' })",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_workforce_timesheets__icon-button__open-tanstack-query-devtools__3",
+            "label": "Open Tanstack query devtools",
+            "type": "icon-button",
+            "selector": "button[aria-label=\"Open Tanstack query devtools\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": false
+          },
+          {
+            "id": "_workforce_timesheets__link__skip-to-main-content__4",
+            "label": "Skip to main content",
+            "type": "link",
+            "selector": "a[href=\"#main-content\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          }
+        ],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": []
+      }
+    },
+    {
+      "route": "/workforce/pay-periods",
+      "title": "Pay Periods",
+      "screenshot": "screens/workforce--pay-periods.png",
+      "visited": true,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [
+          {
+            "id": "_workforce_pay-periods__button__all-statuses__0",
+            "label": "All Statuses",
+            "type": "button",
+            "selector": "getByRole('button', { name: 'All Statuses' })",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [
+              {
+                "kind": "toast",
+                "notes": "Toast shown",
+                "apiCalls": []
+              }
+            ],
+            "needsTestId": true
+          },
+          {
+            "id": "_workforce_pay-periods__icon-button__open-debug-panel__1",
+            "label": "Open Debug Panel",
+            "type": "icon-button",
+            "selector": "getByRole('icon-button', { name: 'Open Debug Panel' })",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_workforce_pay-periods__icon-button__open-tanstack-query-devtools__2",
+            "label": "Open Tanstack query devtools",
+            "type": "icon-button",
+            "selector": "button[aria-label=\"Open Tanstack query devtools\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": false
+          },
+          {
+            "id": "_workforce_pay-periods__link__skip-to-main-content__3",
+            "label": "Skip to main content",
+            "type": "link",
+            "selector": "a[href=\"#main-content\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          }
+        ],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": []
+      }
+    },
+    {
+      "route": "/workforce/payroll-runs",
+      "title": "",
+      "screenshot": "",
+      "visited": false,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": []
+      },
+      "visitError": "Redirected to /login"
+    },
+    {
+      "route": "/workforce/payroll-runs/new",
+      "title": "",
+      "screenshot": "",
+      "visited": false,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": []
+      },
+      "visitError": "Redirected to /login"
+    },
+    {
+      "route": "/workforce/payslips",
+      "title": "",
+      "screenshot": "",
+      "visited": false,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": []
+      },
+      "visitError": "Redirected to /login"
+    },
+    {
+      "route": "/workforce/compensation",
+      "title": "",
+      "screenshot": "",
+      "visited": false,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": []
+      },
+      "visitError": "Redirected to /login"
+    },
+    {
+      "route": "/workforce/remittances",
+      "title": "",
+      "screenshot": "",
+      "visited": false,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": []
+      },
+      "visitError": "Redirected to /login"
+    },
+    {
+      "route": "/workforce/remittances/new",
+      "title": "",
+      "screenshot": "",
+      "visited": false,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": []
+      },
+      "visitError": "Redirected to /login"
+    },
+    {
+      "route": "/workforce/remittance-providers",
+      "title": "",
+      "screenshot": "",
+      "visited": false,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": []
+      },
+      "visitError": "Redirected to /login"
+    },
+    {
+      "route": "/workforce/remittance-mappings",
+      "title": "",
+      "screenshot": "",
+      "visited": false,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": []
+      },
+      "visitError": "Redirected to /login"
+    },
+    {
+      "route": "/workforce/payroll-export",
+      "title": "Payroll Export",
+      "screenshot": "screens/workforce--payroll-export.png",
+      "visited": true,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [
+          {
+            "id": "_workforce_payroll-export__button__select-a-period-__0",
+            "label": "Select a period...",
+            "type": "button",
+            "selector": "getByRole('button', { name: 'Select a period...' })",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [
+              {
+                "kind": "toast",
+                "notes": "Toast shown",
+                "apiCalls": []
+              }
+            ],
+            "needsTestId": true
+          },
+          {
+            "id": "_workforce_payroll-export__button__generate-export__1",
+            "label": "Generate Export",
+            "type": "button",
+            "selector": "getByRole('button', { name: 'Generate Export' })",
+            "hasTestId": false,
+            "safeToClick": false,
+            "unsafeReason": "Control is disabled",
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_workforce_payroll-export__icon-button__open-debug-panel__2",
+            "label": "Open Debug Panel",
+            "type": "icon-button",
+            "selector": "getByRole('icon-button', { name: 'Open Debug Panel' })",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_workforce_payroll-export__icon-button__open-tanstack-query-devtools__3",
+            "label": "Open Tanstack query devtools",
+            "type": "icon-button",
+            "selector": "button[aria-label=\"Open Tanstack query devtools\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": false
+          },
+          {
+            "id": "_workforce_payroll-export__link__skip-to-main-content__4",
+            "label": "Skip to main content",
+            "type": "link",
+            "selector": "a[href=\"#main-content\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          }
+        ],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": []
+      }
+    },
+    {
+      "route": "/workforce/payroll-mapping",
+      "title": "",
+      "screenshot": "",
+      "visited": false,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": []
+      },
+      "visitError": "Redirected to /login"
+    },
+    {
+      "route": "/workforce/policies",
+      "title": "Workforce Policies",
+      "screenshot": "screens/workforce--policies.png",
+      "visited": true,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [
+          {
+            "id": "_workforce_policies__button__nearest__0",
+            "label": "NEAREST",
+            "type": "button",
+            "selector": "getByRole('button', { name: 'NEAREST' })",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [
+              {
+                "kind": "toast",
+                "notes": "Toast shown",
+                "apiCalls": []
+              }
+            ],
+            "needsTestId": true
+          },
+          {
+            "id": "_workforce_policies__button__save-policy__1",
+            "label": "Save Policy",
+            "type": "button",
+            "selector": "getByRole('button', { name: 'Save Policy' })",
+            "hasTestId": false,
+            "safeToClick": false,
+            "unsafeReason": "Control is disabled",
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_workforce_policies__icon-button__open-debug-panel__2",
+            "label": "Open Debug Panel",
+            "type": "icon-button",
+            "selector": "getByRole('icon-button', { name: 'Open Debug Panel' })",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_workforce_policies__icon-button__open-tanstack-query-devtools__3",
+            "label": "Open Tanstack query devtools",
+            "type": "icon-button",
+            "selector": "button[aria-label=\"Open Tanstack query devtools\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": false
+          },
+          {
+            "id": "_workforce_policies__link__skip-to-main-content__4",
+            "label": "Skip to main content",
+            "type": "link",
+            "selector": "a[href=\"#main-content\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_workforce_policies__input__-input-__5",
+            "label": "[input]",
+            "type": "input",
+            "selector": "input:nth-of-type(6)",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_workforce_policies__input__-input-__6",
+            "label": "[input]",
+            "type": "input",
+            "selector": "input:nth-of-type(7)",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          }
+        ],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": []
+      }
+    },
+    {
+      "route": "/workforce/kiosk-devices",
+      "title": "",
+      "screenshot": "screens/workforce--kiosk-devices.png",
+      "visited": true,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [
+          {
+            "id": "_workforce_kiosk-devices__icon-button__open-debug-panel__0",
+            "label": "Open Debug Panel",
+            "type": "icon-button",
+            "selector": "getByRole('icon-button', { name: 'Open Debug Panel' })",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_workforce_kiosk-devices__icon-button__open-tanstack-query-devtools__1",
+            "label": "Open Tanstack query devtools",
+            "type": "icon-button",
+            "selector": "button[aria-label=\"Open Tanstack query devtools\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": false
+          },
+          {
+            "id": "_workforce_kiosk-devices__link__skip-to-main-content__2",
+            "label": "Skip to main content",
+            "type": "link",
+            "selector": "a[href=\"#main-content\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          }
+        ],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [
+          {
+            "method": "GET",
+            "path": "/org/branches",
+            "status": 404,
+            "count": 1
+          }
+        ],
+        "uniqueEndpoints": []
+      }
+    },
+    {
+      "route": "/workforce/geo-fence",
+      "title": "Geo-Fence Management",
+      "screenshot": "screens/workforce--geo-fence.png",
+      "visited": true,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [
+          {
+            "id": "_workforce_geo-fence__button__export-csv__0",
+            "label": "Export CSV",
+            "type": "button",
+            "selector": "getByRole('button', { name: 'Export CSV' })",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [
+              {
+                "kind": "toast",
+                "notes": "Toast shown",
+                "apiCalls": [
+                  {
+                    "method": "GET",
+                    "path": "/workforce/geofence/export",
+                    "status": 0,
+                    "count": 1
+                  }
+                ]
+              }
+            ],
+            "needsTestId": true
+          },
+          {
+            "id": "_workforce_geo-fence__button__all__1",
+            "label": "all",
+            "type": "button",
+            "selector": "getByRole('button', { name: 'all' })",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [
+              {
+                "kind": "toast",
+                "notes": "Toast shown",
+                "apiCalls": []
+              }
+            ],
+            "needsTestId": true
+          },
+          {
+            "id": "_workforce_geo-fence__button__kpis-dashboard__2",
+            "label": "KPIs Dashboard",
+            "type": "button",
+            "selector": "getByRole('tab', { name: 'KPIs Dashboard' })",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [
+              {
+                "kind": "blocked",
+                "notes": "Error: locator.click: Timeout 3000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('tab', { name: 'KPIs Dashboard' }).first()\u001b[22m\n\u001b[2m    - locator resolved to <button role=\"tab\" type=\"button\" tabindex=\"-1\" data-state=\"active\" aria-selected=\"true\" data-orientation=\"horizontal\" data-radix-collection-item=\"\" id=\"radix-:R6km:-trigger-kpis\" aria-controls=\"radix-:R6km:-content-kpis\" class=\"inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:o…>KPIs Dashboard</button>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is visible, enabled and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <div class=\"absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md border border-gray-200 bg-white py-1 text-sm shadow-lg \">…</div> from <div class=\"rounded-lg border bg-card text-card-foreground shadow-sm\">…</div> subtree intercepts pointer events\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is visible, enabled and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <div class=\"absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md border border-gray-200 bg-white py-1 text-sm shadow-lg \">…</div> from <div class=\"rounded-lg border bg-card text-card-foreground shadow-sm\">…</div> subtree intercepts pointer events\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    6 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is visible, enabled and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <div class=\"absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md border border-gray-200 bg-white py-1 text-sm shadow-lg \">…</div> from <div class=\"rounded-lg border bg-card text-card-foreground shadow-sm\">…</div> subtree intercepts pointer events\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m      - waiting 500ms\u001b[22m\n"
+              }
+            ],
+            "needsTestId": true
+          },
+          {
+            "id": "_workforce_geo-fence__button__configurations__3",
+            "label": "Configurations",
+            "type": "button",
+            "selector": "getByRole('tab', { name: 'Configurations' })",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [
+              {
+                "kind": "toast",
+                "notes": "Toast shown",
+                "apiCalls": []
+              }
+            ],
+            "needsTestId": true
+          },
+          {
+            "id": "_workforce_geo-fence__button__event-history__4",
+            "label": "Event History",
+            "type": "button",
+            "selector": "getByRole('tab', { name: 'Event History' })",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [
+              {
+                "kind": "toast",
+                "notes": "Toast shown",
+                "apiCalls": []
+              }
+            ],
+            "needsTestId": true
+          },
+          {
+            "id": "_workforce_geo-fence__icon-button__open-debug-panel__5",
+            "label": "Open Debug Panel",
+            "type": "icon-button",
+            "selector": "getByRole('icon-button', { name: 'Open Debug Panel' })",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_workforce_geo-fence__icon-button__open-tanstack-query-devtools__6",
+            "label": "Open Tanstack query devtools",
+            "type": "icon-button",
+            "selector": "button[aria-label=\"Open Tanstack query devtools\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": false
+          },
+          {
+            "id": "_workforce_geo-fence__link__skip-to-main-content__7",
+            "label": "Skip to main content",
+            "type": "link",
+            "selector": "a[href=\"#main-content\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_workforce_geo-fence__tab__kpis-dashboard__8",
+            "label": "KPIs Dashboard",
+            "type": "tab",
+            "selector": "getByRole('tab', { name: 'KPIs Dashboard' })",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_workforce_geo-fence__tab__configurations__9",
+            "label": "Configurations",
+            "type": "tab",
+            "selector": "getByRole('tab', { name: 'Configurations' })",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_workforce_geo-fence__tab__event-history__10",
+            "label": "Event History",
+            "type": "tab",
+            "selector": "getByRole('tab', { name: 'Event History' })",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_workforce_geo-fence__date-picker__-input-__11",
+            "label": "[input]",
+            "type": "date-picker",
+            "selector": "input:nth-of-type(12)",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_workforce_geo-fence__date-picker__-input-__12",
+            "label": "[input]",
+            "type": "date-picker",
+            "selector": "input:nth-of-type(13)",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          }
+        ],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": [
+          {
+            "method": "GET",
+            "path": "/workforce/geofence/export",
+            "status": 0,
+            "count": 1
+          }
+        ]
+      }
+    },
+    {
+      "route": "/kds",
+      "title": "Unhandled Runtime Error",
+      "screenshot": "screens/kds.png",
+      "visited": true,
+      "regions": {
+        "topbar": [
+          {
+            "id": "_kds__button__all__0",
+            "label": "All",
+            "type": "button",
+            "selector": "[data-testid=\"kds-filter-all\"]",
+            "hasTestId": true,
+            "safeToClick": true,
+            "outcome": [
+              {
+                "kind": "blocked",
+                "notes": "Error: locator.click: Timeout 3000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"kds-filter-all\"]').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" data-testid=\"kds-filter-all\" class=\"rounded-full px-2 py-0.5 text-[10px] bg-slate-100 text-slate-900\">All</button>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is visible, enabled and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <nextjs-portal></nextjs-portal> intercepts pointer events\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is visible, enabled and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <nextjs-portal></nextjs-portal> intercepts pointer events\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    6 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is visible, enabled and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <nextjs-portal></nextjs-portal> intercepts pointer events\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m      - waiting 500ms\u001b[22m\n"
+              }
+            ],
+            "needsTestId": false
+          },
+          {
+            "id": "_kds__button__new__1",
+            "label": "new",
+            "type": "button",
+            "selector": "[data-testid=\"kds-filter-new\"]",
+            "hasTestId": true,
+            "safeToClick": true,
+            "outcome": [
+              {
+                "kind": "blocked",
+                "notes": "Error: locator.click: Timeout 3000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"kds-filter-new\"]').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" data-testid=\"kds-filter-new\" class=\"rounded-full px-2 py-0.5 text-[10px] text-slate-300 hover:bg-slate-800\">new</button>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is visible, enabled and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <nextjs-portal></nextjs-portal> intercepts pointer events\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is visible, enabled and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <nextjs-portal></nextjs-portal> intercepts pointer events\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    6 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is visible, enabled and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <nextjs-portal></nextjs-portal> intercepts pointer events\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m      - waiting 500ms\u001b[22m\n"
+              }
+            ],
+            "needsTestId": false
+          },
+          {
+            "id": "_kds__button__in-progress__2",
+            "label": "in progress",
+            "type": "button",
+            "selector": "[data-testid=\"kds-filter-in_progress\"]",
+            "hasTestId": true,
+            "safeToClick": true,
+            "outcome": [
+              {
+                "kind": "blocked",
+                "notes": "Error: locator.click: Timeout 3000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"kds-filter-in_progress\"]').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" data-testid=\"kds-filter-in_progress\" class=\"rounded-full px-2 py-0.5 text-[10px] text-slate-300 hover:bg-slate-800\">in progress</button>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is visible, enabled and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <nextjs-portal></nextjs-portal> intercepts pointer events\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is visible, enabled and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <nextjs-portal></nextjs-portal> intercepts pointer events\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    6 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is visible, enabled and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <nextjs-portal></nextjs-portal> intercepts pointer events\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m      - waiting 500ms\u001b[22m\n"
+              }
+            ],
+            "needsTestId": false
+          },
+          {
+            "id": "_kds__button__ready__3",
+            "label": "ready",
+            "type": "button",
+            "selector": "[data-testid=\"kds-filter-ready\"]",
+            "hasTestId": true,
+            "safeToClick": true,
+            "outcome": [
+              {
+                "kind": "blocked",
+                "notes": "Error: locator.click: Timeout 3000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"kds-filter-ready\"]').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" data-testid=\"kds-filter-ready\" class=\"rounded-full px-2 py-0.5 text-[10px] text-slate-300 hover:bg-slate-800\">ready</button>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is visible, enabled and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <nextjs-portal></nextjs-portal> intercepts pointer events\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is visible, enabled and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <nextjs-portal></nextjs-portal> intercepts pointer events\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    6 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is visible, enabled and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <nextjs-portal></nextjs-portal> intercepts pointer events\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m      - waiting 500ms\u001b[22m\n"
+              }
+            ],
+            "needsTestId": false
+          },
+          {
+            "id": "_kds__button__-__4",
+            "label": "⚙︎",
+            "type": "button",
+            "selector": "[data-testid=\"kds-settings\"]",
+            "hasTestId": true,
+            "safeToClick": true,
+            "outcome": [
+              {
+                "kind": "blocked",
+                "notes": "Error: locator.click: Timeout 3000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"kds-settings\"]').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" aria-label=\"KDS settings\" data-testid=\"kds-settings\" class=\"rounded-full border border-slate-700 bg-slate-900 p-1.5 text-slate-200 hover:bg-slate-800\">…</button>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is visible, enabled and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <nextjs-portal></nextjs-portal> intercepts pointer events\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is visible, enabled and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <nextjs-portal></nextjs-portal> intercepts pointer events\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    6 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is visible, enabled and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <nextjs-portal></nextjs-portal> intercepts pointer events\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m      - waiting 500ms\u001b[22m\n"
+              }
+            ],
+            "needsTestId": false
+          },
+          {
+            "id": "_kds__button__refresh__5",
+            "label": "Refresh",
+            "type": "button",
+            "selector": "[data-testid=\"kds-refresh\"]",
+            "hasTestId": true,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": false
+          },
+          {
+            "id": "_kds__button__-diagnostics__6",
+            "label": "ⓘDiagnostics",
+            "type": "button",
+            "selector": "getByRole('button', { name: 'ⓘDiagnostics' })",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_kds__button__-kiosk-mode__7",
+            "label": "⤢Kiosk mode",
+            "type": "button",
+            "selector": "getByRole('button', { name: '⤢Kiosk mode' })",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_kds__link__device-point-of-sale__11",
+            "label": "Device: Point of Sale",
+            "type": "link",
+            "selector": "a[href=\"/launch\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          }
+        ],
+        "sidebar": [],
+        "content": [
+          {
+            "id": "_kds__icon-button__open-debug-panel__8",
+            "label": "Open Debug Panel",
+            "type": "icon-button",
+            "selector": "getByRole('icon-button', { name: 'Open Debug Panel' })",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_kds__icon-button__open-tanstack-query-devtools__9",
+            "label": "Open Tanstack query devtools",
+            "type": "icon-button",
+            "selector": "button[aria-label=\"Open Tanstack query devtools\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": false
+          },
+          {
+            "id": "_kds__link__skip-to-main-content__10",
+            "label": "Skip to main content",
+            "type": "link",
+            "selector": "a[href=\"#main-content\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          }
+        ],
+        "modals": [
+          {
+            "title": "Component Stack",
+            "selector": "[role=\"dialog\"]:nth-of-type(1)",
+            "controls": []
+          }
+        ]
+      },
+      "apiSummary": {
+        "onLoad": [
+          {
+            "method": "GET",
+            "path": "/billing/org-subscription",
+            "status": 404,
+            "count": 1
+          },
+          {
+            "method": "GET",
+            "path": "/menu/items",
+            "status": 401,
+            "count": 1
+          },
+          {
+            "method": "GET",
+            "path": "/pos/orders",
+            "status": 401,
+            "count": 1
+          },
+          {
+            "method": "GET",
+            "path": "/kds/orders",
+            "status": 404,
+            "count": 1
+          }
+        ],
+        "uniqueEndpoints": []
+      }
+    },
+    {
+      "route": "/billing",
+      "title": "Billing & subscription",
+      "screenshot": "screens/billing.png",
+      "visited": true,
+      "regions": {
+        "topbar": [
+          {
+            "id": "_billing__button__refresh__0",
+            "label": "Refresh",
+            "type": "button",
+            "selector": "getByRole('button', { name: 'Refresh' })",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [
+              {
+                "kind": "toast",
+                "notes": "Toast shown",
+                "apiCalls": [
+                  {
+                    "method": "GET",
+                    "path": "/billing/plans",
+                    "status": 404,
+                    "count": 1
+                  },
+                  {
+                    "method": "GET",
+                    "path": "/billing/org-subscription",
+                    "status": 404,
+                    "count": 1
+                  },
+                  {
+                    "method": "GET",
+                    "path": "/billing/usage",
+                    "status": 404,
+                    "count": 1
+                  }
+                ]
+              }
+            ],
+            "needsTestId": true
+          }
+        ],
+        "sidebar": [],
+        "content": [
+          {
+            "id": "_billing__icon-button__open-debug-panel__1",
+            "label": "Open Debug Panel",
+            "type": "icon-button",
+            "selector": "getByRole('icon-button', { name: 'Open Debug Panel' })",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_billing__icon-button__open-tanstack-query-devtools__2",
+            "label": "Open Tanstack query devtools",
+            "type": "icon-button",
+            "selector": "button[aria-label=\"Open Tanstack query devtools\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": false
+          },
+          {
+            "id": "_billing__link__skip-to-main-content__3",
+            "label": "Skip to main content",
+            "type": "link",
+            "selector": "a[href=\"#main-content\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          }
+        ],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [
+          {
+            "method": "GET",
+            "path": "/billing/plans",
+            "status": 404,
+            "count": 1
+          },
+          {
+            "method": "GET",
+            "path": "/billing/org-subscription",
+            "status": 404,
+            "count": 1
+          },
+          {
+            "method": "GET",
+            "path": "/billing/usage",
+            "status": 404,
+            "count": 1
+          }
+        ],
+        "uniqueEndpoints": []
+      }
+    },
+    {
+      "route": "/security",
+      "title": "Security Settings",
+      "screenshot": "screens/security.png",
+      "visited": true,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [
+          {
+            "id": "_security__button__-register-passkey__0",
+            "label": "🔑 Register Passkey",
+            "type": "button",
+            "selector": "getByRole('button', { name: '🔑 Register Passkey' })",
+            "hasTestId": false,
+            "safeToClick": false,
+            "unsafeReason": "Destructive action pattern detected",
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_security__button__-login-with-passkey__1",
+            "label": "🔓 Login with Passkey",
+            "type": "button",
+            "selector": "getByRole('button', { name: '🔓 Login with Passkey' })",
+            "hasTestId": false,
+            "safeToClick": false,
+            "unsafeReason": "Destructive action pattern detected",
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_security__icon-button__open-debug-panel__2",
+            "label": "Open Debug Panel",
+            "type": "icon-button",
+            "selector": "getByRole('icon-button', { name: 'Open Debug Panel' })",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          },
+          {
+            "id": "_security__icon-button__open-tanstack-query-devtools__3",
+            "label": "Open Tanstack query devtools",
+            "type": "icon-button",
+            "selector": "button[aria-label=\"Open Tanstack query devtools\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": false
+          },
+          {
+            "id": "_security__link__skip-to-main-content__4",
+            "label": "Skip to main content",
+            "type": "link",
+            "selector": "a[href=\"#main-content\"]",
+            "hasTestId": false,
+            "safeToClick": true,
+            "outcome": [],
+            "needsTestId": true
+          }
+        ],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": []
+      }
+    },
+    {
+      "route": "/hr",
+      "title": "",
+      "screenshot": "",
+      "visited": false,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": []
+      },
+      "visitError": "Redirected to /login"
+    },
+    {
+      "route": "/documents",
+      "title": "",
+      "screenshot": "",
+      "visited": false,
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [],
+        "modals": []
+      },
+      "apiSummary": {
+        "onLoad": [],
+        "uniqueEndpoints": []
+      },
+      "visitError": "Redirected to /login"
+    }
+  ],
+  "coverage": {
+    "routesTotal": 84,
+    "routesVisited": 39,
+    "routesCoverage": 46.42857142857143,
+    "controlsTotal": 189,
+    "controlsMapped": 30,
+    "controlsNeedingTestId": 144,
+    "controlsUnsafe": 7
+  },
+  "unmapped": {
+    "routesMissing": [
+      {
+        "route": "/dashboard",
+        "reason": "Redirected to /login"
+      },
+      {
+        "route": "/analytics",
+        "reason": "Redirected to /login"
+      },
+      {
+        "route": "/reports",
+        "reason": "Redirected to /login"
+      },
+      {
+        "route": "/pos",
+        "reason": "Redirected to /login"
+      },
+      {
+        "route": "/reservations",
+        "reason": "Redirected to /login"
+      },
+      {
+        "route": "/inventory",
+        "reason": "Redirected to /login"
+      },
+      {
+        "route": "/service-providers",
+        "reason": "Redirected to /login"
+      },
+      {
+        "route": "/staff",
+        "reason": "Redirected to /login"
+      },
+      {
+        "route": "/settings",
+        "reason": "Redirected to /login"
+      },
+      {
+        "route": "/workspaces/owner",
+        "reason": "Redirected to /login"
+      },
+      {
+        "route": "/reports/budgets",
+        "reason": "Redirected to /login"
+      },
+      {
+        "route": "/reports/subscriptions",
+        "reason": "Redirected to /login"
+      },
+      {
+        "route": "/pos/cash-sessions",
+        "reason": "Redirected to /login"
+      },
+      {
+        "route": "/reservations/calendar",
+        "reason": "Redirected to /login"
+      },
+      {
+        "route": "/reservations/policies",
+        "reason": "Redirected to /login"
+      },
+      {
+        "route": "/reservations/capacity",
+        "reason": "Redirected to /login"
+      },
+      {
+        "route": "/waitlist",
+        "reason": "Redirected to /login"
+      },
+      {
+        "route": "/inventory/items",
+        "reason": "Redirected to /login"
+      },
+      {
+        "route": "/inventory/purchase-orders",
+        "reason": "Redirected to /login"
+      },
+      {
+        "route": "/inventory/receipts",
+        "reason": "Redirected to /login"
+      },
+      {
+        "route": "/inventory/transfers",
+        "reason": "Redirected to /login"
+      },
+      {
+        "route": "/inventory/waste",
+        "reason": "Redirected to /login"
+      },
+      {
+        "route": "/inventory/stocktakes",
+        "reason": "Redirected to /login"
+      },
+      {
+        "route": "/inventory/recipes",
+        "reason": "Redirected to /login"
+      },
+      {
+        "route": "/inventory/depletions",
+        "reason": "Redirected to /login"
+      },
+      {
+        "route": "/inventory/period-close",
+        "reason": "Redirected to /login"
+      },
+      {
+        "route": "/inventory/lots",
+        "reason": "Redirected to /login"
+      },
+      {
+        "route": "/inventory/adjustments",
+        "reason": "Redirected to /login"
+      },
+      {
+        "route": "/inventory/analytics",
+        "reason": "Redirected to /login"
+      },
+      {
+        "route": "/inventory/valuation",
+        "reason": "Redirected to /login"
+      },
+      {
+        "route": "/inventory/cogs",
+        "reason": "Redirected to /login"
+      },
+      {
+        "route": "/inventory/accounting-mappings",
+        "reason": "Redirected to /login"
+      },
+      {
+        "route": "/inventory/accounting-postings",
+        "reason": "Redirected to /login"
+      },
+      {
+        "route": "/staff/insights",
+        "reason": "Redirected to /login"
+      },
+      {
+        "route": "/workforce/payroll-runs",
+        "reason": "Redirected to /login"
+      },
+      {
+        "route": "/workforce/payroll-runs/new",
+        "reason": "Redirected to /login"
+      },
+      {
+        "route": "/workforce/payslips",
+        "reason": "Redirected to /login"
+      },
+      {
+        "route": "/workforce/compensation",
+        "reason": "Redirected to /login"
+      },
+      {
+        "route": "/workforce/remittances",
+        "reason": "Redirected to /login"
+      },
+      {
+        "route": "/workforce/remittances/new",
+        "reason": "Redirected to /login"
+      },
+      {
+        "route": "/workforce/remittance-providers",
+        "reason": "Redirected to /login"
+      },
+      {
+        "route": "/workforce/remittance-mappings",
+        "reason": "Redirected to /login"
+      },
+      {
+        "route": "/workforce/payroll-mapping",
+        "reason": "Redirected to /login"
+      },
+      {
+        "route": "/hr",
+        "reason": "Redirected to /login"
+      },
+      {
+        "route": "/documents",
+        "reason": "Redirected to /login"
+      }
+    ],
+    "controlsSkipped": []
+  }
+}

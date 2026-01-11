@@ -1,0 +1,568 @@
+{
+  "role": "OWNER",
+  "generatedAt": "2026-01-11T08:09:35.098Z",
+  "baseUrl": "http://localhost:3000",
+  "routes": [
+    {
+      "route": "/dashboard",
+      "title": "Dashboard",
+      "regions": {
+        "topbar": [
+          {
+            "id": "theme-toggle-btn",
+            "label": "Toggle theme",
+            "type": "icon-button",
+            "selector": "[data-testid=\"theme-toggle-btn\"]",
+            "hasTestId": true,
+            "hasAriaLabel": true,
+            "actionId": "theme-toggle-btn",
+            "isMapped": true,
+            "classification": "page-state",
+            "notes": "Toggles dark/light mode"
+          },
+          {
+            "id": "user-menu-trigger",
+            "label": "User menu",
+            "type": "menu-trigger",
+            "selector": "[data-testid=\"user-menu-trigger\"]",
+            "hasTestId": true,
+            "hasAriaLabel": true,
+            "actionId": "user-menu-trigger",
+            "isMapped": true,
+            "classification": "menu-open",
+            "notes": "Opens user dropdown menu with logout option"
+          },
+          {
+            "id": "logout-btn",
+            "label": "Logout",
+            "type": "menu-item",
+            "selector": "[data-testid=\"logout-btn\"]",
+            "hasTestId": true,
+            "hasAriaLabel": true,
+            "actionId": "logout-btn",
+            "isMapped": true,
+            "classification": "logout",
+            "targetRoute": "/login",
+            "notes": "Logs out user and redirects to login"
+          }
+        ],
+        "sidebar": [],
+        "content": [
+          {
+            "id": "dashboard-refresh-btn",
+            "label": "Refresh data",
+            "type": "icon-button",
+            "selector": "[data-testid=\"dashboard-refresh-btn\"]",
+            "hasTestId": true,
+            "hasAriaLabel": true,
+            "actionId": "dashboard-refresh-btn",
+            "isMapped": true,
+            "classification": "refetch",
+            "apiPattern": "GET /dashboard/*",
+            "notes": "Refreshes all dashboard data"
+          },
+          {
+            "id": "date-preset-7d",
+            "label": "7 Days",
+            "type": "button",
+            "selector": "[data-testid=\"date-preset-7d\"]",
+            "hasTestId": true,
+            "hasAriaLabel": true,
+            "actionId": "date-preset-7d",
+            "isMapped": true,
+            "classification": "filter",
+            "apiPattern": "GET /dashboard/kpis, GET /dashboard/revenue-timeseries",
+            "notes": "Sets date range to last 7 days"
+          },
+          {
+            "id": "date-preset-30d",
+            "label": "30 Days",
+            "type": "button",
+            "selector": "[data-testid=\"date-preset-30d\"]",
+            "hasTestId": true,
+            "hasAriaLabel": true,
+            "actionId": "date-preset-30d",
+            "isMapped": true,
+            "classification": "filter",
+            "apiPattern": "GET /dashboard/kpis, GET /dashboard/revenue-timeseries",
+            "notes": "Sets date range to last 30 days"
+          },
+          {
+            "id": "date-preset-90d",
+            "label": "90 Days",
+            "type": "button",
+            "selector": "[data-testid=\"date-preset-90d\"]",
+            "hasTestId": true,
+            "hasAriaLabel": true,
+            "actionId": "date-preset-90d",
+            "isMapped": true,
+            "classification": "filter",
+            "apiPattern": "GET /dashboard/kpis, GET /dashboard/revenue-timeseries",
+            "notes": "Sets date range to last 90 days"
+          },
+          {
+            "id": "date-from-input",
+            "label": "Start date",
+            "type": "date-picker",
+            "selector": "[data-testid=\"date-from-input\"]",
+            "hasTestId": true,
+            "hasAriaLabel": true,
+            "actionId": "date-from-input",
+            "isMapped": true,
+            "classification": "filter",
+            "notes": "Custom start date picker"
+          },
+          {
+            "id": "date-to-input",
+            "label": "End date",
+            "type": "date-picker",
+            "selector": "[data-testid=\"date-to-input\"]",
+            "hasTestId": true,
+            "hasAriaLabel": true,
+            "actionId": "date-to-input",
+            "isMapped": true,
+            "classification": "filter",
+            "notes": "Custom end date picker"
+          },
+          {
+            "id": "kpi-revenue",
+            "label": "Revenue",
+            "type": "card-click",
+            "selector": "[data-testid=\"kpi-revenue\"]",
+            "hasTestId": true,
+            "hasAriaLabel": true,
+            "actionId": "kpi-revenue",
+            "isMapped": true,
+            "classification": "navigate",
+            "targetRoute": "/analytics",
+            "notes": "Navigate to analytics page"
+          },
+          {
+            "id": "kpi-gross-margin",
+            "label": "Gross Margin",
+            "type": "card-click",
+            "selector": "[data-testid=\"kpi-gross-margin\"]",
+            "hasTestId": true,
+            "hasAriaLabel": true,
+            "actionId": "kpi-gross-margin",
+            "isMapped": true,
+            "classification": "navigate",
+            "targetRoute": "/analytics?view=financial",
+            "notes": "Navigate to financial analytics"
+          },
+          {
+            "id": "kpi-low-stock",
+            "label": "Low Stock",
+            "type": "card-click",
+            "selector": "[data-testid=\"kpi-low-stock\"]",
+            "hasTestId": true,
+            "hasAriaLabel": true,
+            "actionId": "kpi-low-stock",
+            "isMapped": true,
+            "classification": "navigate",
+            "targetRoute": "/inventory?filter=low-stock",
+            "notes": "Navigate to inventory with low stock filter"
+          },
+          {
+            "id": "kpi-payables-due",
+            "label": "Payables Due",
+            "type": "card-click",
+            "selector": "[data-testid=\"kpi-payables-due\"]",
+            "hasTestId": true,
+            "hasAriaLabel": true,
+            "actionId": "kpi-payables-due",
+            "isMapped": true,
+            "classification": "navigate",
+            "targetRoute": "/finance/payables",
+            "notes": "Navigate to payables page"
+          },
+          {
+            "id": "chart-revenue",
+            "label": "Revenue Chart",
+            "type": "chart-click",
+            "selector": "[data-testid=\"chart-revenue\"]",
+            "hasTestId": true,
+            "hasAriaLabel": false,
+            "actionId": "chart-revenue",
+            "isMapped": true,
+            "classification": "noop",
+            "notes": "Revenue trend chart - no click action"
+          },
+          {
+            "id": "chart-top-items",
+            "label": "Top Items Chart",
+            "type": "chart-click",
+            "selector": "[data-testid=\"chart-top-items\"]",
+            "hasTestId": true,
+            "hasAriaLabel": false,
+            "actionId": "chart-top-items",
+            "isMapped": true,
+            "classification": "noop",
+            "notes": "Top items bar chart - bar clicks navigate to item detail"
+          },
+          {
+            "id": "top-items-view-all",
+            "label": "View all",
+            "type": "link",
+            "selector": "[data-testid=\"top-items-view-all\"]",
+            "hasTestId": true,
+            "hasAriaLabel": false,
+            "actionId": "top-items-view-all",
+            "isMapped": true,
+            "classification": "navigate",
+            "targetRoute": "/reports?view=top-items",
+            "notes": "Navigate to full top items report"
+          },
+          {
+            "id": "alerts-panel",
+            "label": "Alerts Panel",
+            "type": "card-click",
+            "selector": "[data-testid=\"alerts-panel\"]",
+            "hasTestId": true,
+            "hasAriaLabel": false,
+            "actionId": "alerts-panel",
+            "isMapped": true,
+            "classification": "noop",
+            "notes": "Alerts panel - alert items may have click actions"
+          }
+        ],
+        "modals": []
+      },
+      "controlCount": 17,
+      "unresolvedCount": 0
+    },
+    {
+      "route": "/analytics",
+      "title": "analytics",
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [],
+        "modals": []
+      },
+      "controlCount": 0,
+      "unresolvedCount": 0
+    },
+    {
+      "route": "/reports",
+      "title": "reports",
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [],
+        "modals": []
+      },
+      "controlCount": 0,
+      "unresolvedCount": 0
+    },
+    {
+      "route": "/pos",
+      "title": "pos",
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [],
+        "modals": []
+      },
+      "controlCount": 0,
+      "unresolvedCount": 0
+    },
+    {
+      "route": "/reservations",
+      "title": "reservations",
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [],
+        "modals": []
+      },
+      "controlCount": 0,
+      "unresolvedCount": 0
+    },
+    {
+      "route": "/inventory",
+      "title": "inventory",
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [],
+        "modals": []
+      },
+      "controlCount": 0,
+      "unresolvedCount": 0
+    },
+    {
+      "route": "/finance",
+      "title": "finance",
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [],
+        "modals": []
+      },
+      "controlCount": 0,
+      "unresolvedCount": 0
+    },
+    {
+      "route": "/staff",
+      "title": "staff",
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [],
+        "modals": []
+      },
+      "controlCount": 0,
+      "unresolvedCount": 0
+    },
+    {
+      "route": "/feedback",
+      "title": "feedback",
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [],
+        "modals": []
+      },
+      "controlCount": 0,
+      "unresolvedCount": 0
+    },
+    {
+      "route": "/workforce/schedule",
+      "title": "schedule",
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [],
+        "modals": []
+      },
+      "controlCount": 0,
+      "unresolvedCount": 0
+    },
+    {
+      "route": "/workforce/timeclock",
+      "title": "timeclock",
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [],
+        "modals": []
+      },
+      "controlCount": 0,
+      "unresolvedCount": 0
+    },
+    {
+      "route": "/workforce/approvals",
+      "title": "approvals",
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [],
+        "modals": []
+      },
+      "controlCount": 0,
+      "unresolvedCount": 0
+    },
+    {
+      "route": "/workforce/swaps",
+      "title": "swaps",
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [],
+        "modals": []
+      },
+      "controlCount": 0,
+      "unresolvedCount": 0
+    },
+    {
+      "route": "/workforce/labor",
+      "title": "labor",
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [],
+        "modals": []
+      },
+      "controlCount": 0,
+      "unresolvedCount": 0
+    },
+    {
+      "route": "/workforce/labor-targets",
+      "title": "labor targets",
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [],
+        "modals": []
+      },
+      "controlCount": 0,
+      "unresolvedCount": 0
+    },
+    {
+      "route": "/workforce/staffing-planner",
+      "title": "staffing planner",
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [],
+        "modals": []
+      },
+      "controlCount": 0,
+      "unresolvedCount": 0
+    },
+    {
+      "route": "/workforce/staffing-alerts",
+      "title": "staffing alerts",
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [],
+        "modals": []
+      },
+      "controlCount": 0,
+      "unresolvedCount": 0
+    },
+    {
+      "route": "/workforce/auto-scheduler",
+      "title": "auto scheduler",
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [],
+        "modals": []
+      },
+      "controlCount": 0,
+      "unresolvedCount": 0
+    },
+    {
+      "route": "/workforce/my-availability",
+      "title": "my availability",
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [],
+        "modals": []
+      },
+      "controlCount": 0,
+      "unresolvedCount": 0
+    },
+    {
+      "route": "/workforce/my-swaps",
+      "title": "my swaps",
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [],
+        "modals": []
+      },
+      "controlCount": 0,
+      "unresolvedCount": 0
+    },
+    {
+      "route": "/workforce/open-shifts",
+      "title": "open shifts",
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [],
+        "modals": []
+      },
+      "controlCount": 0,
+      "unresolvedCount": 0
+    },
+    {
+      "route": "/billing",
+      "title": "billing",
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [],
+        "modals": []
+      },
+      "controlCount": 0,
+      "unresolvedCount": 0
+    },
+    {
+      "route": "/security",
+      "title": "security",
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [],
+        "modals": []
+      },
+      "controlCount": 0,
+      "unresolvedCount": 0
+    },
+    {
+      "route": "/settings",
+      "title": "settings",
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [],
+        "modals": []
+      },
+      "controlCount": 0,
+      "unresolvedCount": 0
+    },
+    {
+      "route": "/kds",
+      "title": "kds",
+      "regions": {
+        "topbar": [],
+        "sidebar": [],
+        "content": [],
+        "modals": []
+      },
+      "controlCount": 0,
+      "unresolvedCount": 0
+    }
+  ],
+  "summary": {
+    "routesTotal": 25,
+    "routesDiscovered": 1,
+    "controlsTotal": 17,
+    "controlsMapped": 17,
+    "controlsWithTestId": 17,
+    "controlsWithAriaLabel": 13,
+    "unresolvedCount": 0,
+    "byClassification": {
+      "navigate": 5,
+      "modal-open": 0,
+      "drawer-open": 0,
+      "menu-open": 1,
+      "mutate": 0,
+      "export": 0,
+      "refetch": 1,
+      "filter": 5,
+      "sort": 0,
+      "page-state": 1,
+      "logout": 1,
+      "noop": 3,
+      "unsafe": 0,
+      "unclassified": 0
+    },
+    "byType": {
+      "button": 3,
+      "link": 1,
+      "menu-trigger": 1,
+      "menu-item": 1,
+      "tab": 0,
+      "dropdown-trigger": 0,
+      "dropdown-item": 0,
+      "input": 0,
+      "date-picker": 2,
+      "select": 0,
+      "checkbox": 0,
+      "radio": 0,
+      "toggle": 0,
+      "icon-button": 2,
+      "card-click": 5,
+      "chart-click": 2,
+      "row-action": 0
+    }
+  },
+  "unresolved": []
+}

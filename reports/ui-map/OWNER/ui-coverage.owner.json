@@ -1,0 +1,9 @@
+{
+  "routesTotal": 84,
+  "routesVisited": 39,
+  "routesCoverage": 46.42857142857143,
+  "controlsTotal": 189,
+  "controlsMapped": 30,
+  "controlsNeedingTestId": 144,
+  "controlsUnsafe": 7
+}

@@ -130,7 +130,7 @@ export function TopItemsChart({
   }
 
   return (
-    <Card className={className}>
+    <Card className={className} data-testid="chart-top-items">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
@@ -141,6 +141,7 @@ export function TopItemsChart({
             <Link 
               href="/reports?view=top-items" 
               className="text-sm text-chefcloud-blue hover:underline flex items-center gap-1"
+              data-testid="top-items-view-all"
             >
               View all <ChevronRight className="h-4 w-4" />
             </Link>

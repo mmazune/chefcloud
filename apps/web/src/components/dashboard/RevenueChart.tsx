@@ -133,7 +133,7 @@ export function RevenueChart({
     );
 
     return (
-      <Card className={className}>
+      <Card className={className} data-testid="chart-revenue-multibranch">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <TrendingUp className="h-5 w-5 text-chefcloud-blue" />
@@ -195,7 +195,7 @@ export function RevenueChart({
 
   // Single line mode
   return (
-    <Card className={className}>
+    <Card className={className} data-testid="chart-revenue">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <TrendingUp className="h-5 w-5 text-chefcloud-blue" />

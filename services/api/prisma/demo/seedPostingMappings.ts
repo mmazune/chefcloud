@@ -91,33 +91,39 @@ async function seedOrgPostingMapping(prisma: PrismaClient, orgId: string, orgNam
     return;
   }
 
-  // Upsert org-level mapping (branchId = null)
-  await prisma.inventoryPostingMapping.upsert({
-    where: {
-      orgId_branchId: {
+  // Find existing org-level mapping (branchId = null) - can't use upsert with null in compound key
+  const existing = await prisma.inventoryPostingMapping.findFirst({
+    where: { orgId, branchId: null },
+  });
+
+  if (existing) {
+    // Update existing
+    await prisma.inventoryPostingMapping.update({
+      where: { id: existing.id },
+      data: {
+        inventoryAssetAccountId: accountMap.inventoryAssetAccountId,
+        cogsAccountId: accountMap.cogsAccountId,
+        wasteExpenseAccountId: accountMap.wasteExpenseAccountId,
+        shrinkExpenseAccountId: accountMap.shrinkExpenseAccountId,
+        grniAccountId: accountMap.grniAccountId,
+        inventoryGainAccountId: accountMap.inventoryGainAccountId,
+      },
+    });
+  } else {
+    // Create new
+    await prisma.inventoryPostingMapping.create({
+      data: {
         orgId,
         branchId: null,
+        inventoryAssetAccountId: accountMap.inventoryAssetAccountId,
+        cogsAccountId: accountMap.cogsAccountId,
+        wasteExpenseAccountId: accountMap.wasteExpenseAccountId,
+        shrinkExpenseAccountId: accountMap.shrinkExpenseAccountId,
+        grniAccountId: accountMap.grniAccountId,
+        inventoryGainAccountId: accountMap.inventoryGainAccountId,
       },
-    },
-    update: {
-      inventoryAssetAccountId: accountMap.inventoryAssetAccountId,
-      cogsAccountId: accountMap.cogsAccountId,
-      wasteExpenseAccountId: accountMap.wasteExpenseAccountId,
-      shrinkExpenseAccountId: accountMap.shrinkExpenseAccountId,
-      grniAccountId: accountMap.grniAccountId,
-      inventoryGainAccountId: accountMap.inventoryGainAccountId,
-    },
-    create: {
-      orgId,
-      branchId: null,
-      inventoryAssetAccountId: accountMap.inventoryAssetAccountId,
-      cogsAccountId: accountMap.cogsAccountId,
-      wasteExpenseAccountId: accountMap.wasteExpenseAccountId,
-      shrinkExpenseAccountId: accountMap.shrinkExpenseAccountId,
-      grniAccountId: accountMap.grniAccountId,
-      inventoryGainAccountId: accountMap.inventoryGainAccountId,
-    },
-  });
+    });
+  }
 
   console.log(`    ✅ ${orgName} posting mapping created`);
 }

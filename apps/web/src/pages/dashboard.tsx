@@ -178,19 +178,21 @@ export default function DashboardPage() {
   return (
     <AppShell>
       {/* Header with controls */}
-      <div className="flex flex-col gap-4 mb-6">
+      <div className="flex flex-col gap-4 mb-6" data-testid="dashboard-header">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <PageHeader
             title={isMultiBranch ? 'Franchise Dashboard' : 'Dashboard'}
             subtitle={`${user?.org?.name || 'ChefCloud'} — Overview`}
           />
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground" data-testid="dashboard-timestamp">
             <Clock className="h-4 w-4" />
             Updated {lastUpdated}
             <button 
               onClick={handleRefresh}
               className="ml-2 p-1 hover:bg-muted rounded-md transition-colors"
               title="Refresh data"
+              data-testid="dashboard-refresh-btn"
+              aria-label="Refresh dashboard data"
             >
               <RefreshCw className="h-4 w-4" />
             </button>

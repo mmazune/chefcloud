@@ -66,6 +66,9 @@ export function KPICard({
     );
   }
 
+  // Generate a stable testid from label
+  const testIdBase = `kpi-${label.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+
   return (
     <Card 
       className={cn(
@@ -75,6 +78,10 @@ export function KPICard({
         className
       )}
       onClick={onClick}
+      data-testid={testIdBase}
+      role={onClick ? 'button' : undefined}
+      aria-label={onClick ? `View ${label} details` : undefined}
+      tabIndex={onClick ? 0 : undefined}
     >
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium text-muted-foreground">{label}</CardTitle>

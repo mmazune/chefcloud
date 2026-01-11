@@ -112,14 +112,14 @@ export function AlertsPanel({
   }
 
   return (
-    <Card className={className}>
+    <Card className={className} data-testid="alerts-panel">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <Bell className="h-5 w-5" />
             Alerts
             {alerts.length > 0 && (
-              <span className="ml-2 rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-600">
+              <span className="ml-2 rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-600" data-testid="alerts-count">
                 {alerts.length}
               </span>
             )}
@@ -127,7 +127,7 @@ export function AlertsPanel({
         </div>
       </CardHeader>
       <CardContent className="pt-0">
-        <div className="space-y-2">
+        <div className="space-y-2" data-testid="alerts-list">
           {displayedAlerts.map((alert) => {
             const AlertWrapper = alert.link ? Link : 'div';
             const wrapperProps = alert.link ? { href: alert.link } : {};
@@ -141,6 +141,7 @@ export function AlertsPanel({
                   severityColors[alert.severity],
                   alert.link && 'hover:shadow-sm cursor-pointer'
                 )}
+                data-testid={`alert-item-${alert.id}`}
               >
                 <div className="flex-shrink-0 mt-0.5">
                   {alertIcons[alert.type]}

@@ -63,8 +63,8 @@ export class HighRiskAuditService {
         action: `highrisk.${entry.capability}`,
         resource: entry.resourceType,
         resourceId: entry.resourceId,
-        before: entry.before ?? undefined,
-        after: entry.after ?? undefined,
+        before: entry.before ? JSON.parse(JSON.stringify(entry.before)) : undefined,
+        after: entry.after ? JSON.parse(JSON.stringify(entry.after)) : undefined,
         metadata: {
           roleLevel: entry.roleLevel,
           jobRole: entry.jobRole,
